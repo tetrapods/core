@@ -41,7 +41,7 @@ public class Session extends ChannelInboundHandlerAdapter {
    public Session(SocketChannel channel, Dispatcher dispatcher) {
       this.channel = channel;
       this.dispatcher = dispatcher;
-      channel.pipeline().addLast(new LengthFieldBasedFrameDecoder(1024 * 1024, 4, 4));
+      channel.pipeline().addLast(new LengthFieldBasedFrameDecoder(1024 * 1024, 0, 4, 0, 4));
       channel.pipeline().addLast(this);
    }
 
@@ -126,7 +126,7 @@ public class Session extends ChannelInboundHandlerAdapter {
          logger.warn("{} handshake version does not match {}", this, theirVersion);
          close();
       }
-      logger.info("{} handshake succeeded");
+      logger.info("{} handshake succeeded", this);
       synchronized (this) {
          needsHandshake = false;
       }
@@ -155,10 +155,12 @@ public class Session extends ChannelInboundHandlerAdapter {
       synchronized (this) {
          needsHandshake = true;
       }
-      final ByteBuf buffer = channel.alloc().buffer(8);
+      final ByteBuf buffer = channel.alloc().buffer(9);
+      buffer.writeInt(9);
+      buffer.writeByte(ENVELOPE_HANDSHAKE);
       buffer.writeInt(WIRE_VERSION);
       buffer.writeInt(WIRE_OPTIONS);
-      channel.write(buffer);
+      channel.writeAndFlush(buffer);
    }
 
    public void close() {
