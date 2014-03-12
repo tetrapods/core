@@ -10,6 +10,7 @@ public class SessionTest {
       Server server = new Server(12345, dispatcher);
       server.start();
 
+      @SuppressWarnings("unused")
       Client client = new Client("localhost", 12345, dispatcher);
 
       while (true) {
