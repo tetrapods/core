@@ -97,16 +97,32 @@ class JavaGenerator implements LanguageGenerator {
       vals.put("javatype", info.base);
       vals.put("type", f.type);
       vals.put("boxed", info.boxed);
+      String defaultVal = info.defaultValue;
       if (f.defaultValue != null)
-         vals.put("default", info.defaultValueDelim + f.defaultValue + info.defaultValueDelim);
-      else
-         vals.put("default", info.defaultValue);
+         defaultVal = info.defaultValueDelim + f.defaultValue + info.defaultValueDelim;
       vals.put("tag", f.tag);
-      if (info.isPrimitive) {
-         vals.put("template", "javatemplates/field.primitives.template");
-      } else {
-         vals.put("template", "javatemplates/field.structs.template");
+      String primTemplate = "field.primitives.template";
+      String structTemplate = "field.structs.template";
+      if (f.collectionType != null) {
+         defaultVal = "null";
+         boolean isEmpty = f.defaultValue != null && f.defaultValue.equals("<empty>");
+         switch (f.collectionType) {
+            case "<array>":
+               primTemplate = "field.array.primitives.template";
+               structTemplate = "field.array.structs.template";
+               if (isEmpty)
+                  defaultVal = "new " + info.base + "[0]";
+               break;
+            case "<list>":
+               primTemplate = "field.list.primitives.template";
+               structTemplate = "field.list.structs.template";
+               if (isEmpty)
+                  defaultVal = "new ArrayList<>()";
+               break;
+         }
       }
+      vals.put("template", "javatemplates/" + (info.isPrimitive ? primTemplate : structTemplate));
+      vals.put("default", defaultVal);
       return vals;
    }
 

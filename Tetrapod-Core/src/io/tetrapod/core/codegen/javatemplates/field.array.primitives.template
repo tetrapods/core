@@ -1,0 +1,5 @@
+public {{javatype}}[] {{name}};
+{{name}} = {{default}};
+case {{tag}}: {{name}} = data.read_{{type}}_array(tag); break;
+data.write({{tag}}, {{name}});
+  

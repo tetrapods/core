@@ -19,8 +19,8 @@ public class IOStreamDataSource extends StreamDatasource {
       return d;
    }
 
-   private InputStream  in;
-   private OutputStream out;
+   protected InputStream  in;
+   protected OutputStream out;
 
    @Override
    protected int readRawByte() throws IOException {
@@ -40,8 +40,8 @@ public class IOStreamDataSource extends StreamDatasource {
    }
 
    @Override
-   protected void writeRawBytes(byte[] vals) throws IOException {
-      out.write(vals);
+   protected void writeRawBytes(byte[] vals, int offset, int count) throws IOException {
+      out.write(vals, offset, count);
    }
 
 }
