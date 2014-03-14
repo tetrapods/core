@@ -40,7 +40,7 @@ rpc TestRPC
      3: int<set> intset = {}
      4: int=>int intmap = {} 
 
-  request StructTest
+  response StructTest
      1: TestInfoStruct info
      2: TestInfoStruct<list> infolist
      3: TestInfoStruct<set> infoset
