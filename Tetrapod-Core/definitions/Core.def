@@ -1,0 +1,29 @@
+// language specific properties, note outdir is relative to current directory of the 
+// code generator and should point to root of source tree
+java package io.tetrapod.core.protocol
+java outdir src
+
+service Tetrapod version 1
+
+struct Handshake
+   1: int wireVersion 
+   2: int wireOptions
+
+struct RequestHeader
+   1: int requestId 
+   2: int fromId   
+   3: int toId
+   4: byte fromType;
+   5: byte timeout
+   6: int version
+   7: int structId
+   
+request Register 
+   1: int build   
+   
+response Register 
+   1: int entityId
+   2: int parentId
+   
+   
+   

@@ -5,7 +5,11 @@ import io.netty.channel.*;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import io.netty.util.ReferenceCountUtil;
+import io.tetrapod.core.protocol.*;
+import io.tetrapod.core.rpc.*;
+import io.tetrapod.core.serialize.datasources.ByteBufDatasource;
 
+import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.*;
@@ -43,6 +47,14 @@ public class Session extends ChannelInboundHandlerAdapter {
    public Session(SocketChannel channel, Dispatcher dispatcher) {
       this.channel = channel;
       this.dispatcher = dispatcher;
+      channel.pipeline().addLast(new ChannelInboundHandlerAdapter() {
+         @Override
+         public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+            final ByteBuf in = (ByteBuf) msg;
+            logger.debug("DEBUG: channelRead {} ", in.readableBytes());
+            ctx.fireChannelRead(msg);
+         }
+      });
       channel.pipeline().addLast(new LengthFieldBasedFrameDecoder(1024 * 1024, 0, 4, 0, 4));
       channel.pipeline().addLast(this);
    }
@@ -78,19 +90,15 @@ public class Session extends ChannelInboundHandlerAdapter {
    }
 
    @Override
-   public void channelRead(ChannelHandlerContext ctx, Object msg) {
+   public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
       lastHeardFrom.set(System.currentTimeMillis());
       try {
          final ByteBuf in = (ByteBuf) msg;
          final byte envelope = in.readByte();
+         logger.debug("channelRead {} {} ", envelope, in.readableBytes());
          if (needsHandshake()) {
-            if (envelope == ENVELOPE_HANDSHAKE) {
-               if (readHandshake(in)) {
-                  fireSessionStartEvent();
-               }
-            } else {
-               close();
-            }
+            readHandshake(in, envelope);
+            fireSessionStartEvent();
          } else {
             read(in, envelope);
          }
@@ -99,7 +107,7 @@ public class Session extends ChannelInboundHandlerAdapter {
       }
    }
 
-   private void read(final ByteBuf in, final byte envelope) {
+   private void read(final ByteBuf in, final byte envelope) throws IOException {
       logger.debug("Read message {} with {} bytes", envelope, in.readableBytes());
       switch (envelope) {
          case ENVELOPE_REQUEST:
@@ -122,28 +130,87 @@ public class Session extends ChannelInboundHandlerAdapter {
       }
    }
 
-   private boolean readHandshake(ByteBuf in) {
+   private void readHandshake(final ByteBuf in, final byte envelope) throws IOException {
+      if (envelope != ENVELOPE_HANDSHAKE) {
+         throw new IOException(this + "handshake not valid");
+      }
       int theirVersion = in.readInt();
       @SuppressWarnings("unused")
       int theirOptions = in.readInt();
       if (theirVersion != WIRE_VERSION) {
-         logger.warn("{} handshake version does not match {}", this, theirVersion);
-         close();
-         return false;
+         throw new IOException(this + "handshake version does not match " + theirVersion);
       }
       logger.info("{} handshake succeeded", this);
       synchronized (this) {
          needsHandshake = false;
       }
-      return true;
    }
 
    private void readResponse(ByteBuf in) {
       // TODO
    }
 
-   private void readRequest(ByteBuf in) {
-      // TODO
+   private void readRequest(ByteBuf in) throws IOException {
+      log(in);
+      final ByteBufDatasource reader = new ByteBufDatasource(in);
+      final RequestHeader header = new RequestHeader();
+      header.read(reader); // FIXME: Not working :-( Reading 1 byte and returning empty struct
+      final Request req = (Request) makeStruct(header.structId);
+      if (req != null) {
+         req.read(reader);
+         // FIXME: DISPATCH
+         logger.debug("Got Request {}", req);
+      } else {
+         logger.warn("Could not find structure {}", header.structId);
+      }
+   }
+
+   public Async sendRequest(Request req, int toId, int fromId, byte timeoutSeconds) {
+      final Async async = new Async(req);
+      final RequestHeader header = new RequestHeader();
+      header.requestId = -1; // FIXME - need pending map
+      header.toId = toId;
+      header.fromId = fromId;
+      header.timeout = timeoutSeconds;
+      header.structId = req.getStructId();
+      //header.fromType // FIXME
+
+      final ByteBuf buffer = channel.alloc().buffer(128);
+      final ByteBufDatasource data = new ByteBufDatasource(buffer);
+      buffer.writeInt(0);
+      buffer.writeByte(ENVELOPE_REQUEST);
+      try {
+         header.write(data);
+         req.write(data);
+         buffer.setInt(0, buffer.writerIndex() - 4); // go back and write message length
+         log(buffer);
+         channel.writeAndFlush(buffer);
+      } catch (IOException e) {
+         ReferenceCountUtil.release(buffer);
+         logger.error(e.getMessage(), e);
+         async.setResponse(null, 0); // FIXME
+      }
+      return async;
+   }
+
+   private void log(ByteBuf buf) {
+      System.out.print("BUF = ");
+      for (int i = 0; i < buf.readableBytes(); i++) {
+         byte b = buf.getByte(i);
+         System.out.print(b + " ");
+      }
+      System.out.println();
+   }
+
+   // FIXME: Need a Protocol class
+   public Structure makeStruct(int structId) {
+      switch (structId) {
+         case RegisterRequest.STRUCT_ID:
+            return new RegisterRequest();
+         case RegisterResponse.STRUCT_ID:
+            return new RegisterResponse();
+      }
+      return null;
    }
 
    @Override
