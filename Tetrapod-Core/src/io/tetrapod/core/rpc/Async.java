@@ -1,31 +1,33 @@
 package io.tetrapod.core.rpc;
 
+import io.tetrapod.core.serialize.*;
+
 import org.slf4j.*;
 
-public class Async<R extends Request<T>, T extends Response> {
+public class Async {
    public static final Logger logger = LoggerFactory.getLogger(Async.class);
 
-   public final R             request;
+   public final Request       request;
 
-   public T                   response;
-   public Handler<T>          handler;
+   public Response            response;
+   public ResponseHandler     handler;
 
-   public Async(R request) {
+   public Async(Request request) {
       this.request = request;
    }
 
-   public static interface Handler<T> {
-      public void onResponse(T res, int errorCode);
+   public static interface ResponseHandler {
+      public void onResponse(Response res, int errorCode);
    }
 
-   public synchronized void setHandler(Handler<T> handler) {
+   public synchronized void handle(ResponseHandler handler) {
       this.handler = handler;
       if (response != null) {
          handler.onResponse(response, 0);
       }
    }
 
-   public synchronized void setResponse(T res, int errorCode) {
+   public synchronized void setResponse(Response res, int errorCode) {
       response = res;
       if (handler != null) {
          handler.onResponse(res, errorCode);

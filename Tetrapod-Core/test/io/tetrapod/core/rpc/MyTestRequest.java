@@ -1,19 +1,19 @@
 package io.tetrapod.core.rpc;
 
-import io.tetrapod.core.rpc.RPCTest.MyResponse;
+import java.io.IOException;
 
-public class MyTestRequest extends Request<MyResponse> {
+import io.tetrapod.core.serialize.*;
+
+public class MyTestRequest extends Request {
+
    @Override
-   public Async makeAsync() {
-      return new Async(this);
+   public void write(DataSource data) throws IOException {
+
    }
 
-   public class Async extends io.tetrapod.core.rpc.Async<Request<MyResponse>, MyResponse> {
-      public Async(Request<MyResponse> request) {
-         super(request);
-      }
-   }
+   @Override
+   public void read(DataSource data) throws IOException {
 
-   public static interface Handler extends io.tetrapod.core.rpc.Async.Handler<RPCTest.MyResponse> {};
+   }
 
 }
