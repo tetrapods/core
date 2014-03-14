@@ -8,6 +8,8 @@ abstract public class Structure {
 
    abstract public void read(DataSource data) throws IOException;
 
+   abstract public int getStructId();
+
    @Override
    public String toString() {
       return getClass().getSimpleName();

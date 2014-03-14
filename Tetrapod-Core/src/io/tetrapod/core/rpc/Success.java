@@ -21,4 +21,9 @@ public class Success extends Response {
 
    @Override
    public void read(DataSource data) throws IOException {}
+
+   @Override
+   public int getStructId() {
+      return 0;
+   }
 }

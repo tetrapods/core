@@ -25,4 +25,9 @@ public class Error extends Response {
    public void read(DataSource data) throws IOException {
       code = data.read_int(1);
    }
+
+   @Override
+   public int getStructId() {
+      return 1;
+   }
 }

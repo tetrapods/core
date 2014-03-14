@@ -19,11 +19,13 @@ public class {{class}} extends Response {
       {{field-defaults}}
    }
    
+   @Override
    public final void write(DataSource data) throws IOException {
       {{field-writes}}
       data.writeEndTag();
    }
    
+   @Override
    public final void read(DataSource data) throws IOException {
       defaults();
       while (true) {
@@ -38,7 +40,8 @@ public class {{class}} extends Response {
          }
       }
    }
-   
+  
+   @Override 
    public final int getStructId() {
       return {{class}}.STRUCT_ID;
    }

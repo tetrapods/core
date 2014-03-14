@@ -17,16 +17,24 @@ public class RPCTest {
 
       @Override
       public void read(DataSource data) throws IOException {}
+
+      @Override
+      public int getStructId() {
+         return 10001;
+      }
    }
 
    public class MyTestRequest extends Request {
-
       @Override
       public void write(DataSource data) throws IOException {}
 
       @Override
       public void read(DataSource data) throws IOException {}
 
+      @Override
+      public int getStructId() {
+         return 10000;
+      }
    }
 
    public interface MyResponseHandler {
@@ -45,6 +53,5 @@ public class RPCTest {
       });
       async.setResponse(new MyResponse(), 0);
       async.setResponse(null, 123);
-
    }
 }
