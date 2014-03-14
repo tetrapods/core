@@ -1,0 +1,46 @@
+package {{package}};
+
+import io.tetrapod.core.serialize.*;
+import java.io.IOException;
+import java.util.*;
+
+@SuppressWarnings("unused")
+public class {{class}} extends Message {
+   
+   public static final int STRUCT_ID = {{structid}};
+    
+   public {{class}}() {
+      defaults();
+   }
+   
+   {{field-declarations}}
+
+   public final void defaults() {
+      {{field-defaults}}
+   }
+   
+   public final void write(DataSource data) throws IOException {
+      {{field-writes}}
+      data.writeEndTag();
+   }
+   
+   public final void read(DataSource data) throws IOException {
+      defaults();
+      while (true) {
+         int tag = data.readTag();
+         switch (tag) {
+            {{field-reads}}
+            case Codec.END_TAG:
+               return;
+            default:
+               data.skip(tag);
+               break;
+         }
+      }
+   }
+   
+   public final int getStructId() {
+      return {{class}}.STRUCT_ID;
+   }
+}
+

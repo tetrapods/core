@@ -1,0 +1,98 @@
+// language specific properties, note outdir is relative to current directory of the 
+// code generator and should point to root of source tree
+java package io.tetrapod.test
+java outdir src
+
+// every request/response/message/struct has to be in a group.  the various group types are
+// rpc, subscription, and misc (which is ungrouped really).  it's planned that we will generate interfaces, etc based on
+// these groups although for now they are ignored
+rpc TestRPC
+
+  request PrimTest
+     // field tags cannot be less than one, although they need not be contiguous.  low tag numbers (< 64) are encoded
+     // in one fewer byte in the wire protocol
+     1: int intval
+     2: double doubleval
+     3: boolean boolval
+     4: long longval
+     5: byte byteval
+     6: string stringval
+     
+  response PrimTest
+     1: int intval = 1
+     2: double doubleval = 3.4
+     3: boolean boolval = true
+     4: long longval = 500
+     5: byte byteval = 127
+     6: string stringval = "happy days"
+     
+  request CollPrimTest
+     1: int[] intarray
+     2: int<list> intlist
+     3: int<set> intset
+     4: int=>int intmap
+
+  // for collections, only the empty initializer is allowed (or nothing, which means null)
+  // adding full cross-language initializer support would make the parser quite a bit more complex
+  response CollPrimTest 
+     1: int[] intarray = {}
+     2: int<list> intlist = {}
+     3: int<set> intset = {}
+     4: int=>int intmap = {} 
+
+  request StructTest
+     1: TestInfoStruct info
+     2: TestInfoStruct<list> infolist
+     3: TestInfoStruct<set> infoset
+     4: int=>TestInfoStruct infomap1
+     5: TestInfoStruct=>int infomap2
+     6: TestInfoStruct=>TestInfoStruct infomap3
+
+  request StructTest
+     1: TestInfoStruct info
+     2: TestInfoStruct<list> infolist = {}
+     3: TestInfoStruct<set> infoset = {}
+     4: int=>TestInfoStruct infomap1 = {}
+     5: TestInfoStruct=>int infomap2 = {}
+     6: TestInfoStruct=>TestInfoStruct infomap3 = {}
+
+subscription TestSub
+
+  message Test
+     1: int accountId
+   
+misc
+
+   struct TestInfo
+      1: int test = 5
+   
+    
+
+   
+//   
+//   f = t s pppp
+//   
+//   t + s = compressed ints
+//   
+//   
+//   
+//   
+//   types = 
+//     byte
+//     boolean
+//     int
+//     long
+//     double
+//     string
+//     object
+//     array
+//     list
+//     
+//     
+// rrr ddddd
+// 
+// 0 = varint
+// 1 = varlong
+// 2 = 64bit
+// 3 = length encoded
+     

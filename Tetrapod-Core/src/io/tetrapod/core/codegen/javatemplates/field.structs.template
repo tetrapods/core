@@ -1,0 +1,5 @@
+public {{javatype}} {{name}};
+{{name}} = {{default}};
+case {{tag}}: {{name}} = data.read_struct(tag, {{javatype}}.class); break;
+data.write({{tag}}, {{name}});
+  
