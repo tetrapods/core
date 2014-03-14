@@ -14,7 +14,7 @@ public class Async<R extends Request<T>, T extends Response> {
       this.request = request;
    }
 
-   public interface Handler<T> {
+   public static interface Handler<T> {
       public void onResponse(T res, int errorCode);
    }
 
