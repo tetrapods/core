@@ -24,8 +24,7 @@ public class RPCTest {
          public void onResponse(MyResponse res, int errorCode) {
             logger.info("HANDLER: {} {}", res, errorCode);
          }
-      });
-      async.setHandler(req.Handler);
+      }); 
       async.setResponse(new MyResponse(), 0);
       async.setResponse(null, 123);
    }
