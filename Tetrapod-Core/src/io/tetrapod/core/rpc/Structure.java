@@ -1,4 +1,6 @@
-package io.tetrapod.core.serialize;
+package io.tetrapod.core.rpc;
+
+import io.tetrapod.core.serialize.DataSource;
 
 import java.io.IOException;
 

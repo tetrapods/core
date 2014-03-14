@@ -61,11 +61,8 @@ public class CodeGen {
             }
             return;
 
-         case "rpc":
-         case "subscription":
-         case "misc":
-            context.endGroup();
-            context.startGroup(parts);
+         case "service":
+            context.parseService(parts);
             break;
 
          case "request":
@@ -73,12 +70,11 @@ public class CodeGen {
          case "message":
          case "struct":
          case "errors":
-            context.endClass();
-            context.startClass(parts);
+            context.parseClass(parts);
             break;
 
          case "field":
-            context.appendField(parts);
+            context.parseField(parts);
             break;
       }
    }
@@ -90,7 +86,7 @@ public class CodeGen {
       if (ix >= 0)
          line = line.substring(0, ix);
       // divide into words
-      String[] clauses = { "([/\\w.-]+)", "([<>:=])", "\"([^\"]+)\"" };
+      String[] clauses = { "([/\\w.-]+)", "([\\[\\]<>:=])", "\"([^\"]+)\"" };
       String regex = clauses[0];
       for (int i = 1; i < clauses.length; i++)
          regex = regex + "|" + clauses[i];
@@ -122,6 +118,10 @@ public class CodeGen {
          if (parts.get(i).equals("<") && parts.get(i+2).equals(">")) {
             parts.set(i, "<" + parts.get(i+1) + ">");
             parts.remove(i+1);
+            parts.remove(i+1);
+         }
+         if (parts.get(i).equals("[") && parts.get(i+1).equals("]")) {
+            parts.set(i, "<array>");
             parts.remove(i+1);
          }
       }

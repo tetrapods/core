@@ -3,96 +3,65 @@
 java package io.tetrapod.test
 java outdir src
 
-// every request/response/message/struct has to be in a group.  the various group types are
-// rpc, subscription, and misc (which is ungrouped really).  it's planned that we will generate interfaces, etc based on
-// these groups although for now they are ignored
-rpc TestRPC
+service Test version 1
 
-  request PrimTest
-     // field tags cannot be less than one, although they need not be contiguous.  low tag numbers (< 64) are encoded
-     // in one fewer byte in the wire protocol
-     1: int intval
-     2: double doubleval
-     3: boolean boolval
-     4: long longval
-     5: byte byteval
-     6: string stringval
+request PrimTest
+   // field tags cannot be less than one, although they need not be contiguous.  low tag numbers (< 64) are encoded
+   // in one fewer byte in the wire protocol
+   1: int intval
+   2: double doubleval
+   3: boolean boolval
+   4: long longval
+   5: byte byteval
+   6: string stringval
      
-  response PrimTest
-     1: int intval = 1
-     2: double doubleval = 3.4
-     3: boolean boolval = true
-     4: long longval = 500
-     5: byte byteval = 127
-     6: string stringval = "happy days"
+// a tailing [###] in any class sets that as the struct ids.  otherwise a stable hash of the class name is used
+response PrimTest [117]
+   1: int intval = 1
+   2: double doubleval = 3.4
+   3: boolean boolval = true
+   4: long longval = 500
+   5: byte byteval = 127
+   6: string stringval = "happy days"
      
-  request CollPrimTest
-     1: int[] intarray
-     2: int<list> intlist
-     3: int<set> intset
-     4: int=>int intmap
+request CollPrimTest
+   1: int[] intarray
+   2: int<list> intlist
+   3: int<set> intset
+   4: int=>int intmap
 
-  // for collections, only the empty initializer is allowed (or nothing, which means null)
-  // adding full cross-language initializer support would make the parser quite a bit more complex
-  response CollPrimTest 
-     1: int[] intarray = {}
-     2: int<list> intlist = {}
-     3: int<set> intset = {}
-     4: int=>int intmap = {} 
+// for collections, only the empty initializer is allowed (or nothing, which means null)
+// adding full cross-language initializer support would make the parser quite a bit more complex
+response CollPrimTest 
+   1: int[] intarray = {}
+   2: int<list> intlist = {}
+   3: int<set> intset = {}
+   4: int=>int intmap = {} 
 
-  response StructTest
-     1: TestInfoStruct info
-     2: TestInfoStruct<list> infolist
-     3: TestInfoStruct<set> infoset
-     4: int=>TestInfoStruct infomap1
-     5: TestInfoStruct=>int infomap2
-     6: TestInfoStruct=>TestInfoStruct infomap3
+response StructTest
+   1: TestInfoStruct info
+   2: TestInfoStruct<list> infolist
+   3: TestInfoStruct<set> infoset
+   4: int=>TestInfoStruct infomap1
+   5: TestInfoStruct=>int infomap2
+   6: TestInfoStruct=>TestInfoStruct infomap3
 
-  request StructTest
-     1: TestInfoStruct info
-     2: TestInfoStruct<list> infolist = {}
-     3: TestInfoStruct<set> infoset = {}
-     4: int=>TestInfoStruct infomap1 = {}
-     5: TestInfoStruct=>int infomap2 = {}
-     6: TestInfoStruct=>TestInfoStruct infomap3 = {}
+request StructTest
+   1: TestInfoStruct info
+   2: TestInfoStruct<list> infolist = {}
+   3: TestInfoStruct<set> infoset = {}
+   4: int=>TestInfoStruct infomap1 = {}
+   5: TestInfoStruct=>int infomap2 = {}
+   6: TestInfoStruct=>TestInfoStruct infomap3 = {}
 
-subscription TestSub
+// message name is SubscriptionName.ClassName, the SubscriptionName. is optional
+message MySub.StatusUpdate
+   1: int accountId
 
-  message Test
-     1: int accountId
+message MySub.OtherUpdate
+   1: int accountId
+   2: string name
    
-misc
-
-   struct TestInfo
-      1: int test = 5
+struct TestInfo
+   1: int test = 5
    
-    
-
-   
-//   
-//   f = t s pppp
-//   
-//   t + s = compressed ints
-//   
-//   
-//   
-//   
-//   types = 
-//     byte
-//     boolean
-//     int
-//     long
-//     double
-//     string
-//     object
-//     array
-//     list
-//     
-//     
-// rrr ddddd
-// 
-// 0 = varint
-// 1 = varlong
-// 2 = 64bit
-// 3 = length encoded
-     

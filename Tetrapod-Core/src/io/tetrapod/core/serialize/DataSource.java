@@ -1,5 +1,7 @@
 package io.tetrapod.core.serialize;
 
+import io.tetrapod.core.rpc.Structure;
+
 import java.io.IOException;
 
 public interface DataSource {

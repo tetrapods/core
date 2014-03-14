@@ -2,7 +2,6 @@ package io.tetrapod.core.codegen;
 
 import io.tetrapod.core.codegen.CodeGenContext.Class;
 import io.tetrapod.core.codegen.CodeGenContext.Field;
-import io.tetrapod.core.codegen.CodeGenContext.Group;
 
 import java.io.*;
 import java.util.*;
@@ -30,22 +29,37 @@ class JavaGenerator implements LanguageGenerator {
    }
 
    public void generate(CodeGenContext context) throws IOException,ParseException {
-      for (Group g : context.groups) {
-         for (Class c : g.classes) {
-            generateClass(c);
-         }
+      StringBuilder sb = new StringBuilder();
+      for (Class c : context.classes) {
+         generateClass(c);
+         addHandlerLine(c, sb);
       }
+      generateService(context.serviceName, context.serviceVersion, sb.toString());
    }
+   
+   private void generateService(String serviceName, String serviceVersion, String handlers) throws IOException,ParseException {
+      Templater t = Templater.get(getClass(), "javatemplates/servicerpc.template");
+      Map<String,String> vals = new HashMap<>();
+      vals.put("class", "I" + serviceName + "Service");
+      vals.put("package", packageName);
+      vals.put("version", serviceVersion);
+      vals.put("handlers", handlers);
+      t.expand(vals, getFilename(vals.get("class")));
+   }
+
    
    private void generateClass(Class c) throws IOException,ParseException {
       Templater t = Templater.get(getClass(), "javatemplates/" + c.type.toLowerCase() + ".template");
       Map<String,String> vals = new HashMap<>();
       vals.put("class", c.classname());
       vals.put("package", packageName);
-      // TODO: replace hash with tags?  or at least check for collisions
-      vals.put("structid", ""+(FNVHash.hash32(c.classname()) & 0xffffff));
+      if (c.structId == null) {
+         // auto-genned hashes are never less than 10
+         c.structId = "" + ((FNVHash.hash32(c.classname()) & 0xffffff) + 10);
+      }
+      vals.put("structid", c.structId);
       addFieldValues(c.fields, vals);
-      t.expand(vals, getFilename(c));
+      t.expand(vals, getFilename(c.classname()));
    }
 
    private void addFieldValues(List<Field> fields, Map<String,String> globalVals) throws ParseException, IOException {
@@ -100,13 +114,22 @@ class JavaGenerator implements LanguageGenerator {
       return Templater.get(getClass(), template);
    }
 
-   private File getFilename(Class c) {
+   private File getFilename(String classname) {
       File f = new File(outputDir);
       for (String p : packageName.split("\\.")) {
          f = new File(f, p);
       }
       f.mkdirs();
-      return new File(f, c.classname() + ".java");
+      return new File(f, classname + ".java");
    }
+   
+   private void addHandlerLine(Class c, StringBuilder sb) {
+      if (c.type.equals("request")) {
+         if (sb.length() > 0) sb.append(",\n");
+         sb.append(c.classname());
+         sb.append(".Handler");
+      }
+   }
+
    
 }

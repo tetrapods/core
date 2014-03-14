@@ -1,6 +1,7 @@
 package io.tetrapod.core.serialize.datasources;
 
 import io.tetrapod.core.json.JSONObject;
+import io.tetrapod.core.rpc.Structure;
 import io.tetrapod.core.serialize.*;
 
 import java.io.IOException;

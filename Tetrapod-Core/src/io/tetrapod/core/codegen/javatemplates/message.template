@@ -1,6 +1,7 @@
 package {{package}};
 
 import io.tetrapod.core.serialize.*;
+import io.tetrapod.core.rpc.*;
 import java.io.IOException;
 import java.util.*;
 

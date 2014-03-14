@@ -1,0 +1,7 @@
+package  {{package}};
+
+public interface {{class}} extends 
+   {{handlers}}
+{
+   public static final int VERSION = {{version}};
+}

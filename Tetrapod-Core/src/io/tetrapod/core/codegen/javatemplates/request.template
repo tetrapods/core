@@ -1,5 +1,6 @@
 package {{package}};
 
+import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.serialize.*;
 import java.io.IOException;
 import java.util.*;
@@ -44,6 +45,17 @@ public class {{class}} extends Request {
    @Override
    public final int getStructId() {
       return {{class}}.STRUCT_ID;
+   }
+   
+   @Override
+   public final Response dispatch(IService is) {
+      if (is instanceof Handler)
+         return ((Handler)is).request(this);
+      return is.genericRequest(this);
+   }
+   
+   public static interface Handler extends IService {
+      Response request({{class}} r);
    }
 }
 
