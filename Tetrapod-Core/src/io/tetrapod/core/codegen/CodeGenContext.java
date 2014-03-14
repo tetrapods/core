@@ -12,7 +12,7 @@ class CodeGenContext {
       List<Field> fields = new ArrayList<>();
 
       public String classname() {
-         return name + CodeGen.toTitleCase(type);
+         return name + (type.equals("struct") ? "" : CodeGen.toTitleCase(type));
       }
    }
 

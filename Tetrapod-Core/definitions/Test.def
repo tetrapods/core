@@ -39,20 +39,20 @@ response CollPrimTest
    4: int=>int intmap = {} 
 
 response StructTest
-   1: TestInfoStruct info
-   2: TestInfoStruct<list> infolist
-   3: TestInfoStruct<set> infoset
-   4: int=>TestInfoStruct infomap1
-   5: TestInfoStruct=>int infomap2
-   6: TestInfoStruct=>TestInfoStruct infomap3
+   1: TestInfo info
+   2: TestInfo<list> infolist
+   3: TestInfo<set> infoset
+   4: int=>TestInfo infomap1
+   5: TestInfo=>int infomap2
+   6: TestInfo=>TestInfo infomap3
 
 request StructTest
-   1: TestInfoStruct info
-   2: TestInfoStruct<list> infolist = {}
-   3: TestInfoStruct<set> infoset = {}
-   4: int=>TestInfoStruct infomap1 = {}
-   5: TestInfoStruct=>int infomap2 = {}
-   6: TestInfoStruct=>TestInfoStruct infomap3 = {}
+   1: TestInfo info
+   2: TestInfo<list> infolist = {}
+   3: TestInfo<set> infoset = {}
+   4: int=>TestInfo infomap1 = {}
+   5: TestInfo=>int infomap2 = {}
+   6: TestInfo=>TestInfo infomap3 = {}
 
 // message name is SubscriptionName.ClassName, the SubscriptionName. is optional
 message MySub.StatusUpdate
