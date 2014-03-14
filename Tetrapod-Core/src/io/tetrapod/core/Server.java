@@ -11,6 +11,9 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.*;
 
+/**
+ * A server that speaks the tetrapod wire protocol
+ */
 public class Server implements Session.Listener {
 
    public static final Logger    logger      = LoggerFactory.getLogger(Server.class);
@@ -59,12 +62,12 @@ public class Server implements Session.Listener {
 
    @Override
    public void onSessionStart(Session ses) {
-      sessions.put(ses.getSessionId(), ses);
+      sessions.put(ses.getSessionNum(), ses);
    }
 
    @Override
    public void onSessionStop(Session ses) {
-      sessions.remove(ses.getSessionId());
+      sessions.remove(ses.getSessionNum());
    }
 
 }

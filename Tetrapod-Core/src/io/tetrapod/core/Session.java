@@ -31,7 +31,7 @@ public class Session extends ChannelInboundHandlerAdapter {
    private static final AtomicInteger sessionCounter     = new AtomicInteger();
 
    private final SocketChannel        channel;
-   private final int                  sessionId          = sessionCounter.incrementAndGet();
+   private final int                  sessionNum         = sessionCounter.incrementAndGet();
    private final Dispatcher           dispatcher;
 
    private final List<Listener>       listeners          = new LinkedList<Listener>();
@@ -54,8 +54,8 @@ public class Session extends ChannelInboundHandlerAdapter {
       public void onSessionStop(Session ses);
    }
 
-   public int getSessionId() {
-      return sessionId;
+   public int getSessionNum() {
+      return sessionNum;
    }
 
    public Dispatcher getDispatcher() {
@@ -68,7 +68,7 @@ public class Session extends ChannelInboundHandlerAdapter {
 
    @Override
    public String toString() {
-      return String.format("Session-0x%08X", sessionId);
+      return String.format("Session-0x%08X", sessionNum);
    }
 
    private synchronized boolean needsHandshake() {
