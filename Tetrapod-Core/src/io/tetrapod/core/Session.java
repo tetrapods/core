@@ -7,7 +7,8 @@ import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import io.netty.util.ReferenceCountUtil;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.*;
 
 import org.slf4j.*;
 
@@ -37,6 +38,7 @@ public class Session extends ChannelInboundHandlerAdapter {
    private final List<Listener>       listeners          = new LinkedList<Listener>();
 
    private boolean                    needsHandshake     = true;
+   private AtomicLong                 lastHeardFrom      = new AtomicLong();
 
    public Session(SocketChannel channel, Dispatcher dispatcher) {
       this.channel = channel;
@@ -77,12 +79,15 @@ public class Session extends ChannelInboundHandlerAdapter {
 
    @Override
    public void channelRead(ChannelHandlerContext ctx, Object msg) {
+      lastHeardFrom.set(System.currentTimeMillis());
       try {
          final ByteBuf in = (ByteBuf) msg;
          final byte envelope = in.readByte();
          if (needsHandshake()) {
             if (envelope == ENVELOPE_HANDSHAKE) {
-               readHandshake(in);
+               if (readHandshake(in)) {
+                  fireSessionStartEvent();
+               }
             } else {
                close();
             }
@@ -107,10 +112,9 @@ public class Session extends ChannelInboundHandlerAdapter {
             // TODO:
             break;
          case ENVELOPE_PING:
-            // TODO:
+            sendPong();
             break;
          case ENVELOPE_PONG:
-            // TODO:
             break;
          default:
             logger.error("{} Unexpected Envelope Type {}", this, envelope);
@@ -118,18 +122,20 @@ public class Session extends ChannelInboundHandlerAdapter {
       }
    }
 
-   private void readHandshake(ByteBuf in) {
+   private boolean readHandshake(ByteBuf in) {
       int theirVersion = in.readInt();
       @SuppressWarnings("unused")
       int theirOptions = in.readInt();
       if (theirVersion != WIRE_VERSION) {
          logger.warn("{} handshake version does not match {}", this, theirVersion);
          close();
+         return false;
       }
       logger.info("{} handshake succeeded", this);
       synchronized (this) {
          needsHandshake = false;
       }
+      return true;
    }
 
    private void readResponse(ByteBuf in) {
@@ -147,8 +153,14 @@ public class Session extends ChannelInboundHandlerAdapter {
    }
 
    @Override
-   public void channelActive(final ChannelHandlerContext ctx) {
+   public void channelActive(final ChannelHandlerContext ctx) throws Exception {
       writeHandshake();
+      scheduleHealthCheck();
+   }
+
+   @Override
+   public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+      fireSessionStopEvent();
    }
 
    private void writeHandshake() {
@@ -160,6 +172,20 @@ public class Session extends ChannelInboundHandlerAdapter {
       buffer.writeByte(ENVELOPE_HANDSHAKE);
       buffer.writeInt(WIRE_VERSION);
       buffer.writeInt(WIRE_OPTIONS);
+      channel.writeAndFlush(buffer);
+   }
+
+   private void sendPing() {
+      final ByteBuf buffer = channel.alloc().buffer(5);
+      buffer.writeInt(1);
+      buffer.writeByte(ENVELOPE_PING);
+      channel.writeAndFlush(buffer);
+   }
+
+   private void sendPong() {
+      final ByteBuf buffer = channel.alloc().buffer(5);
+      buffer.writeInt(1);
+      buffer.writeByte(ENVELOPE_PONG);
       channel.writeAndFlush(buffer);
    }
 
@@ -177,6 +203,55 @@ public class Session extends ChannelInboundHandlerAdapter {
       synchronized (listeners) {
          listeners.remove(listener);
       }
+   }
+
+   private void fireSessionStartEvent() {
+      logger.debug("{} Session Start", this);
+      for (Listener l : getListeners()) {
+         l.onSessionStart(this);
+      }
+   }
+
+   private void fireSessionStopEvent() {
+      logger.debug("{} Session Stop", this);
+      for (Listener l : getListeners()) {
+         l.onSessionStop(this);
+      }
+   }
+
+   private Listener[] getListeners() {
+      synchronized (listeners) {
+         return listeners.toArray(new Listener[0]);
+      }
+   }
+
+   public void checkHealth() {
+      if (isConnected()) {
+         final long now = System.currentTimeMillis();
+         if (now - lastHeardFrom.get() > 5000) {
+            sendPing();
+         } else if (now > 10000) {
+            logger.warn("{} Timeout");
+            close();
+         }
+      }
+   }
+
+   private void scheduleHealthCheck() {
+      if (isConnected()) {
+         dispatcher.dispatch(1, TimeUnit.SECONDS, new Runnable() {
+            public void run() {
+               checkHealth();
+            }
+         });
+      }
+   }
+
+   public synchronized boolean isConnected() {
+      if (channel != null) {
+         return channel.isActive();
+      }
+      return false;
    }
 
 }
