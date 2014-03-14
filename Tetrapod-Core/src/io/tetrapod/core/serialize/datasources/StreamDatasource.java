@@ -182,8 +182,8 @@ abstract public class StreamDatasource implements DataSource {
    }
 
    private void writeTag(int tag, int type) throws IOException {
-      int t = (tag << 2) | (type & 0b11);
-      writeRawByte(t);
+      int t = (tag << 3) | (type & 0b11);
+      writeVarInt(t);
    }
 
    protected void writeVarInt(int x) throws IOException {
