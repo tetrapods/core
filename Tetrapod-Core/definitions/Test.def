@@ -27,32 +27,22 @@ response PrimTest [117]
 request CollPrimTest
    1: int[] intarray
    2: int<list> intlist
-   3: int<set> intset
-   4: int=>int intmap
 
 // for collections, only the empty initializer is allowed (or nothing, which means null)
 // adding full cross-language initializer support would make the parser quite a bit more complex
 response CollPrimTest 
    1: int[] intarray = {}
    2: int<list> intlist = {}
-   3: int<set> intset = {}
-   4: int=>int intmap = {} 
 
 response StructTest
    1: TestInfo info
    2: TestInfo<list> infolist
-   3: TestInfo<set> infoset
-   4: int=>TestInfo infomap1
-   5: TestInfo=>int infomap2
-   6: TestInfo=>TestInfo infomap3
+   3: TestInfo[] infoarray
 
 request StructTest
    1: TestInfo info
    2: TestInfo<list> infolist = {}
-   3: TestInfo<set> infoset = {}
-   4: int=>TestInfo infomap1 = {}
-   5: TestInfo=>int infomap2 = {}
-   6: TestInfo=>TestInfo infomap3 = {}
+   3: TestInfo[] infoarray = {}
 
 // message name is SubscriptionName.ClassName, the SubscriptionName. is optional
 message MySub.StatusUpdate

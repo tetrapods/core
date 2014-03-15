@@ -40,8 +40,8 @@ public class ByteBufDatasource extends StreamDatasource {
    }
 
    @Override
-   protected void writeRawBytes(byte[] vals) throws IOException {
-      buffer.writeBytes(vals);
+   protected void writeRawBytes(byte[] vals, int offset, int count) throws IOException {
+      buffer.writeBytes(vals, offset, count);
    }
 
 }

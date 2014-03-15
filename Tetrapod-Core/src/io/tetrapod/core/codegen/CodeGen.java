@@ -86,7 +86,7 @@ public class CodeGen {
       if (ix >= 0)
          line = line.substring(0, ix);
       // divide into words
-      String[] clauses = { "([/\\w.-]+)", "([\\[\\]<>:=])", "\"([^\"]+)\"" };
+      String[] clauses = { "([/\\w.-]+)", "([\\[\\]<>:={}])", "\"([^\"]+)\"" };
       String regex = clauses[0];
       for (int i = 1; i < clauses.length; i++)
          regex = regex + "|" + clauses[i];
@@ -110,7 +110,7 @@ public class CodeGen {
          parts.remove(1);
          parts.add(0, "field");
       }
-      for (int i=0; i < parts.size() - 2; i++) {
+      for (int i=0; i < parts.size() - 1; i++) {
          if (parts.get(i).equals("=") && parts.get(i+1).equals(">")) {
             parts.set(i, "<maps>");
             parts.remove(i+1);
@@ -122,6 +122,10 @@ public class CodeGen {
          }
          if (parts.get(i).equals("[") && parts.get(i+1).equals("]")) {
             parts.set(i, "<array>");
+            parts.remove(i+1);
+         }
+         if (parts.get(i).equals("{") && parts.get(i+1).equals("}")) {
+            parts.set(i, "<empty>");
             parts.remove(i+1);
          }
       }
