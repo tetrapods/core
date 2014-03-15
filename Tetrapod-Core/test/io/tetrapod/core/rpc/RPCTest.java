@@ -1,7 +1,6 @@
 package io.tetrapod.core.rpc;
 
-import io.tetrapod.core.rpc.Async.ResponseHandler;
-import io.tetrapod.core.serialize.*;
+import io.tetrapod.core.serialize.DataSource;
 
 import java.io.IOException;
 
@@ -44,7 +43,7 @@ public class RPCTest {
    @Test
    public void testAsync() {
       MyTestRequest req = new MyTestRequest();
-      Async async = new Async(req);
+      Async async = new Async(req, 0);
       async.handle(new ResponseHandler() {
          @Override
          public void onResponse(Response res, int errorCode) {

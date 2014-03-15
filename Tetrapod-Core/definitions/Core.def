@@ -18,6 +18,12 @@ struct RequestHeader
    6: int version
    7: int structId
    
+   
+struct ResponseHeader
+   1: int requestId 
+   2: int structId
+   3: int toId
+   
 request Register 
    1: int build   
    

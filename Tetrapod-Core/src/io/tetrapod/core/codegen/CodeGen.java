@@ -8,7 +8,7 @@ public class CodeGen {
 
    public static void main(String[] args) {
       // just hardcode for now for testing
-      args = new String[] { "definitions/Test.def", "java" };
+      args = new String[] { "definitions/Core.def", "java" };
       if (args.length < 1) {
          System.err.println("usage: arguments are filename lang1 lang2 ..");
       }

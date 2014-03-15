@@ -32,21 +32,21 @@ public class Dispatcher {
 
          @Override
          public Thread newThread(Runnable r) {
-            return new Thread("Dispatch-Pooled-" + counter.incrementAndGet());
+            return new Thread(r, "Dispatch-Pooled-" + counter.incrementAndGet());
          }
       });
 
       sequential = Executors.newSingleThreadExecutor(new ThreadFactory() {
          @Override
          public Thread newThread(Runnable r) {
-            return new Thread("Dispatch-Sequential");
+            return new Thread(r, "Dispatch-Sequential");
          }
       });
 
       scheduled = Executors.newScheduledThreadPool(1, new ThreadFactory() {
          @Override
          public Thread newThread(Runnable r) {
-            return new Thread("Dispatch-Scheduled");
+            return new Thread(r, "Dispatch-Scheduled");
          }
       });
    }
@@ -64,7 +64,7 @@ public class Dispatcher {
    public void dispatch(final Runnable r) {
       assert r != null;
       try {
-         threadPool.execute(new Runnable() {
+         threadPool.submit(new Runnable() {
             public void run() {
                processTask(r);
             }

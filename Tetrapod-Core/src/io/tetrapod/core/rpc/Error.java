@@ -6,7 +6,9 @@ import io.tetrapod.core.serialize.*;
 
 public class Error extends Response {
 
-   public int code;
+   public static final int STRUCT_ID = 1;
+
+   public int              code;
 
    public Error(int code) {
       this.code = code;
@@ -28,6 +30,6 @@ public class Error extends Response {
 
    @Override
    public int getStructId() {
-      return 1;
+      return STRUCT_ID;
    }
 }

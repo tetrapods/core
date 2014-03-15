@@ -1,14 +1,20 @@
 package io.tetrapod.core;
 
 import io.tetrapod.core.protocol.RegisterRequest;
+import io.tetrapod.core.registry.Actor;
+import io.tetrapod.core.rpc.*;
 
 import org.junit.Test;
+import org.slf4j.*;
 
 public class SessionTest {
+
+   public static final Logger logger = LoggerFactory.getLogger(SessionTest.class);
 
    @Test
    public void testClientServer() throws Exception {
       Dispatcher dispatcher = new Dispatcher();
+
       Server server = new Server(12345, dispatcher);
       server.start();
 
@@ -17,7 +23,12 @@ public class SessionTest {
 
       RegisterRequest req = new RegisterRequest();
       req.build = 666;
-      client.getSession().sendRequest(req, 0, 0, (byte)30);
+      client.getSession().sendRequest(req, 0, 0, Actor.TYPE_CLIENT, (byte) 30).handle(new ResponseHandler() {
+         @Override
+         public void onResponse(Response res, int errorCode) {
+            logger.info("Got my response. YEY! {} {}", res, errorCode);
+         }
+      });
 
       Util.sleep(500000);
 
@@ -27,5 +38,4 @@ public class SessionTest {
 
       server.stop();
    }
-
 }

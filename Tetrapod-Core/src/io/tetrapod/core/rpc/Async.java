@@ -5,18 +5,18 @@ import org.slf4j.*;
 public class Async {
    public static final Logger logger = LoggerFactory.getLogger(Async.class);
 
+   public final int           requestId;
    public final Request       request;
 
    public Response            response;
    public ResponseHandler     handler;
 
-   public Async(Request request) {
+   public Async(Request request, int requestId) {
       this.request = request;
+      this.requestId = requestId;
    }
 
-   public static interface ResponseHandler {
-      public void onResponse(Response res, int errorCode);
-   }
+ 
 
    public synchronized void handle(ResponseHandler handler) {
       this.handler = handler;
@@ -28,7 +28,11 @@ public class Async {
    public synchronized void setResponse(Response res, int errorCode) {
       response = res;
       if (handler != null) {
-         handler.onResponse(res, errorCode);
+         try {
+            handler.onResponse(res, errorCode);
+         } catch (Throwable e) {
+            logger.error(e.getMessage(), e);
+         }
       }
    }
 

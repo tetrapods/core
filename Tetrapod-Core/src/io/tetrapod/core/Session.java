@@ -7,11 +7,12 @@ import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import io.netty.util.ReferenceCountUtil;
 import io.tetrapod.core.protocol.*;
 import io.tetrapod.core.rpc.*;
+import io.tetrapod.core.rpc.Error;
 import io.tetrapod.core.serialize.datasources.ByteBufDatasource;
 
 import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 
 import org.slf4j.*;
@@ -40,9 +41,13 @@ public class Session extends ChannelInboundHandlerAdapter {
    private final Dispatcher           dispatcher;
 
    private final List<Listener>       listeners          = new LinkedList<Listener>();
+   private final Map<Integer, Async>  pendingRequests    = new ConcurrentHashMap<>();
+   private final AtomicInteger        requestCounter     = new AtomicInteger();
 
    private boolean                    needsHandshake     = true;
    private AtomicLong                 lastHeardFrom      = new AtomicLong();
+
+   private int                        myId               = 0;
 
    public Session(SocketChannel channel, Dispatcher dispatcher) {
       this.channel = channel;
@@ -146,60 +151,139 @@ public class Session extends ChannelInboundHandlerAdapter {
       }
    }
 
-   private void readResponse(ByteBuf in) {
-      // TODO
-   }
-
-   private void readRequest(ByteBuf in) throws IOException {
-      log(in);
+   private void readResponse(final ByteBuf in) throws IOException {
       final ByteBufDatasource reader = new ByteBufDatasource(in);
-      final RequestHeader header = new RequestHeader();
-      header.read(reader); // FIXME: Not working :-( Reading 1 byte and returning empty struct
-      final Request req = (Request) makeStruct(header.structId);
-      if (req != null) {
-         req.read(reader);
-         // FIXME: DISPATCH
-         logger.debug("Got Request {}", req);
+      final ResponseHeader header = new ResponseHeader();
+      header.read(reader);
+      final Response res = (Response) makeStruct(header.structId);
+      if (res != null) {
+         res.read(reader);
+         logger.debug("Got Response: {}", res);
+         final Async async = pendingRequests.get(header.requestId);
+         if (async != null) {
+            dispatcher.dispatch(new Runnable() {
+               public void run() {
+                  if (res.getStructId() == Error.STRUCT_ID) {
+                     async.setResponse(null, ((Error) res).code);
+                  } else {
+                     async.setResponse(res, 0);
+                  }
+               }
+            });
+         } else {
+            logger.warn("Could not find pending request {} for {}", header.requestId, res);
+         }
       } else {
          logger.warn("Could not find structure {}", header.structId);
       }
    }
 
-   public Async sendRequest(Request req, int toId, int fromId, byte timeoutSeconds) {
-      final Async async = new Async(req);
+   private void readRequest(final ByteBuf in) throws IOException {
+      final ByteBufDatasource reader = new ByteBufDatasource(in);
       final RequestHeader header = new RequestHeader();
-      header.requestId = -1; // FIXME - need pending map
+      header.read(reader);
+      final Request req = (Request) makeStruct(header.structId);
+      if (req != null) {
+         req.read(reader);
+         logger.debug("Got Request: {}", req);
+         // If the request is addressed to 0, that means we want to send directly to this session owner.
+         if (header.toId == 0 || header.toId == myId) {
+            final IService svc = findServiceHandler(header.structId);
+            if (svc != null) {
+               dispatcher.dispatch(new Runnable() {
+                  public void run() {
+                     try {
+                        // TODO: RequestContexts
+                        Response res = req.dispatch(svc);
+                        if (res != null) {
+                           // TODO: Pending responses
+                           sendResponse(res, header.requestId);
+                        } else {
+                           sendResponse(new Error(0/*FIXME*/), header.requestId);
+                        }
+                     } catch (Throwable e) {
+                        logger.error(e.getMessage(), e);
+                        sendResponse(new Error(0/*FIXME*/), header.requestId);
+                     }
+                  }
+               });
+            } else {
+               logger.warn("No handler found for {} {}", header.structId, header);
+               sendResponse(new Error(0/*FIXME*/), header.requestId);
+            }
+         } else {
+            // FIXME: RELAY -- find session for toId and send on, with response handler to write back
+         }
+      } else {
+         logger.warn("Could not find structure {}", header.structId);
+         sendResponse(new Error(0/*FIXME*/), header.requestId);
+      }
+   }
+
+   public class TetrapodService implements ITetrapodService {
+      @Override
+      public Response request(RegisterRequest r) {
+         return new RegisterResponse();
+      }
+
+      @Override
+      public Response genericRequest(Request r) {
+         return new Error(0);
+      }
+   }
+
+   private IService findServiceHandler(int structId) {
+      // FIXME -- registered handlers map needed
+      if (structId == RegisterRequest.STRUCT_ID) {
+         return new TetrapodService();
+      }
+      return null;
+   }
+
+   public Async sendRequest(Request req, int toId, int fromId, byte fromType, byte timeoutSeconds) {
+      final RequestHeader header = new RequestHeader();
+      header.requestId = requestCounter.incrementAndGet();
       header.toId = toId;
       header.fromId = fromId;
       header.timeout = timeoutSeconds;
       header.structId = req.getStructId();
-      //header.fromType // FIXME
+      header.fromType = fromType;
 
-      final ByteBuf buffer = channel.alloc().buffer(128);
-      final ByteBufDatasource data = new ByteBufDatasource(buffer);
-      buffer.writeInt(0);
-      buffer.writeByte(ENVELOPE_REQUEST);
-      try {
-         header.write(data);
-         req.write(data);
-         buffer.setInt(0, buffer.writerIndex() - 4); // go back and write message length
-         log(buffer);
-         channel.writeAndFlush(buffer);
-      } catch (IOException e) {
-         ReferenceCountUtil.release(buffer);
-         logger.error(e.getMessage(), e);
+      final Async async = new Async(req, header.requestId);
+      pendingRequests.put(header.requestId, async);
+
+      if (!writeFrame(header, req, ENVELOPE_REQUEST)) {
          async.setResponse(null, 0); // FIXME
       }
       return async;
    }
 
-   private void log(ByteBuf buf) {
-      System.out.print("BUF = ");
-      for (int i = 0; i < buf.readableBytes(); i++) {
-         byte b = buf.getByte(i);
-         System.out.print(b + " ");
+   private void sendResponse(Response res, int requestId) {
+      final ResponseHeader header = new ResponseHeader();
+      header.requestId = requestId;
+      header.structId = res.getStructId();
+      if (!writeFrame(header, res, ENVELOPE_RESPONSE)) {
+         // TODO
       }
-      System.out.println();
+   }
+
+   private boolean writeFrame(Structure header, Structure payload, byte envelope) {
+      final ByteBuf buffer = channel.alloc().buffer(128);
+      final ByteBufDatasource data = new ByteBufDatasource(buffer);
+      buffer.writeInt(0);
+      buffer.writeByte(envelope);
+      try {
+         header.write(data);
+         payload.write(data);
+         // go back and write message length, now that we know it
+         buffer.setInt(0, buffer.writerIndex() - 4);
+         channel.writeAndFlush(buffer);
+         return true;
+      } catch (IOException e) {
+         ReferenceCountUtil.release(buffer);
+         logger.error(e.getMessage(), e);
+      }
+      return false;
    }
 
    // FIXME: Need a Protocol class
@@ -297,8 +381,8 @@ public class Session extends ChannelInboundHandlerAdapter {
          final long now = System.currentTimeMillis();
          if (now - lastHeardFrom.get() > 5000) {
             sendPing();
-         } else if (now > 10000) {
-            logger.warn("{} Timeout");
+         } else if (now - lastHeardFrom.get() > 10000) {
+            logger.warn("{} Timeout", this);
             close();
          }
       }
