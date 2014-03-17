@@ -2,3 +2,5 @@ public List<{{boxed}}> {{name}};
 {{name}} = {{default}};
 case {{tag}}: {{name}} = data.read_struct_list(tag, {{javatype}}.class); break;
 if ({{name}} != null) data.write_struct({{tag}}, {{name}});
+
+Lines are: 1) declaration 2) initialization 3) read 4) write

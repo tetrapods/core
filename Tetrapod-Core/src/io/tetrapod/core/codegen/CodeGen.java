@@ -8,7 +8,7 @@ public class CodeGen {
 
    public static void main(String[] args) {
       // just hardcode for now for testing
-      args = new String[] { "definitions/Core.def", "java" };
+      args = new String[] { "definitions/Test.def", "java" };
       if (args.length < 1) {
          System.err.println("usage: arguments are filename lang1 lang2 ..");
       }
@@ -76,6 +76,27 @@ public class CodeGen {
          case "field":
             context.parseField(parts);
             break;
+            
+         case "const":
+            parts.set(0, "field");
+            parts.add(1, "0");
+            context.parseField(parts);
+            break;
+            
+         case "error":
+            context.parseErrors(parts);
+            break;
+            
+         case "global":
+            if (parts.get(1).equals("scope")) {
+               context.inGlobalScope = true;
+            } else {
+               throw new ParseException("malformaed global scope line");
+            }
+            return;
+            
+         default:
+            throw new ParseException("unknown key [" + key + "]");
       }
    }
 

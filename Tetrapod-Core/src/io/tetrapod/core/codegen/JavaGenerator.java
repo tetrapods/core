@@ -31,24 +31,25 @@ class JavaGenerator implements LanguageGenerator {
    public void generate(CodeGenContext context) throws IOException,ParseException {
       StringBuilder sb = new StringBuilder();
       for (Class c : context.classes) {
-         generateClass(c);
+         generateClass(c, context.serviceName + "ServiceAPI");
          addHandlerLine(c, sb);
       }
-      generateService(context.serviceName, context.serviceVersion, sb.toString());
+      generateService(context.serviceName, context.serviceVersion, context.allErrors, sb.toString());
    }
    
-   private void generateService(String serviceName, String serviceVersion, String handlers) throws IOException,ParseException {
+   private void generateService(String serviceName, String serviceVersion, Collection<String> allErrors, String handlers) throws IOException,ParseException {
       Templater t = Templater.get(getClass(), "javatemplates/servicerpc.template");
       Map<String,String> vals = new HashMap<>();
-      vals.put("class", "I" + serviceName + "Service");
+      vals.put("class", serviceName + "ServiceAPI");
       vals.put("package", packageName);
       vals.put("version", serviceVersion);
       vals.put("handlers", handlers);
+      addErrors(allErrors, true, serviceName, vals);
       t.expand(vals, getFilename(vals.get("class")));
    }
 
    
-   private void generateClass(Class c) throws IOException,ParseException {
+   private void generateClass(Class c, String serviceName) throws IOException,ParseException {
       Templater t = Templater.get(getClass(), "javatemplates/" + c.type.toLowerCase() + ".template");
       Map<String,String> vals = new HashMap<>();
       vals.put("class", c.classname());
@@ -59,7 +60,33 @@ class JavaGenerator implements LanguageGenerator {
       }
       vals.put("structid", c.structId);
       addFieldValues(c.fields, vals);
+      addConstantValues(c.fields, vals);
+      addErrors(c.errors, false, serviceName, vals);
       t.expand(vals, getFilename(c.classname()));
+   }
+
+   private void addErrors(Collection<String> errors, boolean globalScope, String serviceName, Map<String, String> vals) throws IOException,ParseException {
+      vals.put("errors", "// only returns core errors");
+      StringBuilder sb = new StringBuilder();
+      boolean isFirst = true;
+      for (String err : errors) {
+         Map<String,String> v = new HashMap<>();
+         v.put("name", err);
+         // error hashes are never less than 100
+         v.put("hash", ""+ ((FNVHash.hash32(err) & 0xffffff) + 100));
+         v.put("service", serviceName);
+         String[] lines = getTemplater("javatemplates/field.errors.template").expand(v).split("\r\n|\n|\r");
+         String line = globalScope ? lines[0] : lines[1];
+         String newline = "\n";
+         if (isFirst) {
+            isFirst = false;
+            newline = "";
+         }
+         sb.append(newline);
+         sb.append(line);
+      }
+      if (sb.length() > 0)
+         vals.put("errors", sb.toString());
    }
 
    private void addFieldValues(List<Field> fields, Map<String,String> globalVals) throws ParseException, IOException {
@@ -67,27 +94,49 @@ class JavaGenerator implements LanguageGenerator {
       StringBuilder defaults = new StringBuilder();
       StringBuilder writes = new StringBuilder();
       StringBuilder reads = new StringBuilder();
-      Field last = fields.size() > 0 ? fields.get(fields.size() - 1) : null;
+      boolean isFirst = true;
       for (Field f : fields) {
+         if (f.isConstant())
+            continue;
          Map<String,String> vals = getTemplateValues(f);
          String[] lines = getTemplater(vals.get("template")).expand(vals).split("\r\n|\n|\r");
+         String newline = "\n";
+         if (isFirst) {
+            isFirst = false;
+            newline = "";
+         }
+         declarations.append(newline);
          declarations.append(lines[0]);
-         if (f != last) 
-            declarations.append('\n');
+         defaults.append(newline);
          defaults.append(lines[1]);
-         if (f != last) 
-            defaults.append('\n');
+         reads.append(newline);
          reads.append(lines[2]);
-         if (f != last) 
-            reads.append('\n');
+         writes.append(newline);
          writes.append(lines[3]);
-         if (f != last) 
-            writes.append('\n');
       }
       globalVals.put("field-declarations", declarations.toString());
       globalVals.put("field-defaults", defaults.toString());
       globalVals.put("field-writes", writes.toString());
       globalVals.put("field-reads", reads.toString());
+   }
+
+   private void addConstantValues(List<Field> fields, Map<String,String> globalVals) throws ParseException, IOException {
+      StringBuilder declarations = new StringBuilder();
+      boolean isFirst = true;
+      for (Field f : fields) {
+         if (!f.isConstant())
+            continue;
+         Map<String,String> vals = getTemplateValues(f);
+         String[] lines = getTemplater(vals.get("template")).expand(vals).split("\r\n|\n|\r");
+         String newline = "\n";
+         if (isFirst) {
+            isFirst = false;
+            newline = "";
+         }
+         declarations.append(newline);
+         declarations.append(lines[0]);
+      }
+      globalVals.put("constants", declarations.toString());
    }
 
    private Map<String, String> getTemplateValues(Field f) {
@@ -120,6 +169,14 @@ class JavaGenerator implements LanguageGenerator {
                   defaultVal = "new ArrayList<>()";
                break;
          }
+      } else {
+         boolean isEmpty = f.defaultValue != null && f.defaultValue.equals("<empty>");
+         if (isEmpty) {
+            defaultVal = "new " + info.base + "()";
+         }
+      }
+      if (f.isConstant()) {
+         primTemplate = structTemplate = "field.constants.template";
       }
       vals.put("template", "javatemplates/" + (info.isPrimitive ? primTemplate : structTemplate));
       vals.put("default", defaultVal);

@@ -1,0 +1,4 @@
+public static final int ERROR_{{name}} = {{hash}}; 
+@ERR public static final int ERROR_{{name}} = {{service}}.ERROR_{{name}}; 
+
+Lines are: 1) global scope 2) in class

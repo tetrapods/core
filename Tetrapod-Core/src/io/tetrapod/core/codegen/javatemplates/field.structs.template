@@ -1,5 +1,6 @@
 public {{javatype}} {{name}};
 {{name}} = {{default}};
 case {{tag}}: {{name}} = data.read_struct(tag, {{javatype}}.class); break;
-data.write({{tag}}, {{name}});
-  
+if ({{name}} != null) data.write({{tag}}, {{name}});
+
+Lines are: 1) declaration 2) initialization 3) read 4) write
