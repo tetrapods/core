@@ -1,4 +1,4 @@
 language: java
-before-script: cd Tetrapod-Core
+before_script: cd Tetrapod-Core
 notifications:
   slack: tetrapods:VLfpLy6vqGvq18Z1GS0Eat1e
