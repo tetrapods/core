@@ -57,12 +57,12 @@ public class RegisterRequest extends Request {
    @Override
    public final Response dispatch(ServiceAPI is) {
       if (is instanceof Handler)
-         return ((Handler)is).request(this);
+         return ((Handler)is).requestRegister(this);
       return is.genericRequest(this);
    }
    
    public static interface Handler extends ServiceAPI {
-      Response request(RegisterRequest r);
+      Response requestRegister(RegisterRequest r);
    }
 }
 
