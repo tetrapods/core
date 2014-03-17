@@ -92,6 +92,8 @@ public class JSONDatasource implements DataSource {
 
    @Override
    public void write(int tag, String stringval) throws IOException {
+      if (stringval == null)
+         stringval = "";
       json.put(Integer.toString(tag), stringval);
    }
 
@@ -310,12 +312,22 @@ public class JSONDatasource implements DataSource {
    @Override
    public void write(int tag, String[] array) throws IOException {
       JSONArray arr = new JSONArray(array);
+      for (int i = 0; i < array.length; i++) {
+         if (array[i] == null) {
+            arr.put(i, "");
+         }
+      }
       json.put(Integer.toString(tag), arr);
    }
 
    @Override
    public void write_string(int tag, List<String> list) throws IOException {
       JSONArray arr = new JSONArray(list);
+      for (int i = 0; i < list.size(); i++) {
+         if (list.get(i) == null) {
+            arr.put(i, "");
+         }
+      }
       json.put(Integer.toString(tag), arr);
    }
 

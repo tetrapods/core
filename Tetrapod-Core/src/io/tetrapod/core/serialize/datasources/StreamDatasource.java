@@ -40,7 +40,7 @@ abstract public class StreamDatasource implements DataSource {
    @Override
    public String read_string(int tag) throws IOException {
       int len = readVarInt();
-      return new String(readRawBytes(len), "UTF-8");
+      return len == 0 ? "" : new String(readRawBytes(len), "UTF-8");
    }
 
    @Override
@@ -378,6 +378,10 @@ abstract public class StreamDatasource implements DataSource {
    }
 
    protected void writeStringNoTag(String stringval) throws IOException {
+      if (stringval == null) {
+         writeVarInt(0);
+         return;
+      }
       final byte[] bytes = stringval.getBytes("UTF-8");
       writeVarInt(bytes.length);
       writeRawBytes(bytes);
