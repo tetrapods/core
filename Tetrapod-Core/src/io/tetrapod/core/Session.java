@@ -188,7 +188,7 @@ public class Session extends ChannelInboundHandlerAdapter {
          logger.debug("Got Request: {}", req);
          // If the request is addressed to 0, that means we want to send directly to this session owner.
          if (header.toId == 0 || header.toId == myId) {
-            final IService svc = findServiceHandler(header.structId);
+            final ServiceAPI svc = findServiceHandler(header.structId);
             if (svc != null) {
                dispatcher.dispatch(new Runnable() {
                   public void run() {
@@ -220,7 +220,7 @@ public class Session extends ChannelInboundHandlerAdapter {
       }
    }
 
-   public class TetrapodService implements ITetrapodService {
+   public class TetrapodService implements TetrapodServiceAPI {
       @Override
       public Response request(RegisterRequest r) {
          return new RegisterResponse();
@@ -232,7 +232,7 @@ public class Session extends ChannelInboundHandlerAdapter {
       }
    }
 
-   private IService findServiceHandler(int structId) {
+   private ServiceAPI findServiceHandler(int structId) {
       // FIXME -- registered handlers map needed
       if (structId == RegisterRequest.STRUCT_ID) {
          return new TetrapodService();

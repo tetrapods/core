@@ -1,5 +1,8 @@
 package io.tetrapod.core.protocol;
 
+// This is a code generated file.  All edits will be lost the next time code gen is run.
+
+import io.*;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.serialize.*;
 import java.io.IOException;
@@ -7,7 +10,11 @@ import java.util.*;
 
 @SuppressWarnings("unused")
 public class RegisterRequest extends Request {
+
    
+
+   // only returns core errors
+      
    public static final int STRUCT_ID = 10895179;
     
    public RegisterRequest() {
@@ -48,13 +55,13 @@ public class RegisterRequest extends Request {
    }
    
    @Override
-   public final Response dispatch(IService is) {
+   public final Response dispatch(ServiceAPI is) {
       if (is instanceof Handler)
          return ((Handler)is).request(this);
       return is.genericRequest(this);
    }
    
-   public static interface Handler extends IService {
+   public static interface Handler extends ServiceAPI {
       Response request(RegisterRequest r);
    }
 }

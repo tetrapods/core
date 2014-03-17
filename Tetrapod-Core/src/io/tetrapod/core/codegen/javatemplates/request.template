@@ -55,13 +55,13 @@ public class {{class}} extends Request {
    }
    
    @Override
-   public final Response dispatch(IService is) {
+   public final Response dispatch(ServiceAPI is) {
       if (is instanceof Handler)
          return ((Handler)is).request(this);
       return is.genericRequest(this);
    }
    
-   public static interface Handler extends IService {
+   public static interface Handler extends ServiceAPI {
       Response request({{class}} r);
    }
 }

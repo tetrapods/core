@@ -1,5 +1,8 @@
 package io.tetrapod.core.protocol;
 
+// This is a code generated file.  All edits will be lost the next time code gen is run.
+
+import io.*;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.serialize.*;
 import java.io.IOException;
