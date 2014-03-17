@@ -18,7 +18,7 @@ public class SessionTest {
       Server server = new Server(12346, dispatcher);
       server.start();
 
-      Client client = new Client("localhost", 12345, dispatcher);
+      Client client = new Client("localhost", 12346, dispatcher);
       Util.sleep(1000);
 
       RegisterRequest req = new RegisterRequest();
