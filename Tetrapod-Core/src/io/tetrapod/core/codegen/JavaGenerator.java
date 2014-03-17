@@ -29,12 +29,16 @@ class JavaGenerator implements LanguageGenerator {
    }
 
    public void generate(CodeGenContext context) throws IOException,ParseException {
+      Map<String,StringBuilder> subscriptions = new HashMap<>();
       StringBuilder sb = new StringBuilder();
       for (Class c : context.classes) {
          generateClass(c, context.serviceName + "ServiceAPI");
-         addHandlerLine(c, sb);
+         addHandlerLine(c, sb, subscriptions);
       }
       generateService(context.serviceName, context.serviceVersion, context.allErrors, sb.toString());
+      for (String sub : subscriptions.keySet()) {
+         generateSubscription(sub, subscriptions.get(sub).toString());
+      }
    }
    
    private void generateService(String serviceName, String serviceVersion, Collection<String> allErrors, String handlers) throws IOException,ParseException {
@@ -48,10 +52,20 @@ class JavaGenerator implements LanguageGenerator {
       t.expand(vals, getFilename(vals.get("class")));
    }
 
+   private void generateSubscription(String name, String handlers) throws IOException,ParseException {
+      Templater t = Templater.get(getClass(), "javatemplates/subscription.template");
+      Map<String,String> vals = new HashMap<>();
+      vals.put("class", name + "Subscription");
+      vals.put("package", packageName);
+      vals.put("handlers", handlers);
+      t.expand(vals, getFilename(vals.get("class")));
+   }
+
    
    private void generateClass(Class c, String serviceName) throws IOException,ParseException {
       Templater t = Templater.get(getClass(), "javatemplates/" + c.type.toLowerCase() + ".template");
       Map<String,String> vals = new HashMap<>();
+      vals.put("rawname", c.name);
       vals.put("class", c.classname());
       vals.put("package", packageName);
       if (c.structId == null) {
@@ -196,11 +210,24 @@ class JavaGenerator implements LanguageGenerator {
       return new File(f, classname + ".java");
    }
    
-   private void addHandlerLine(Class c, StringBuilder sb) {
+   private void addHandlerLine(Class c, StringBuilder sb, Map<String, StringBuilder> subscriptions) {
       if (c.type.equals("request")) {
          if (sb.length() > 0) sb.append(",\n");
          sb.append(c.classname());
          sb.append(".Handler");
+      }
+      if (c.type.equals("message")) {
+         String sub = c.subscription;
+         if (sub == null || sub.isEmpty())
+            return;
+         StringBuilder s = subscriptions.get(sub);
+         if (s == null) {
+            s = new StringBuilder();
+            subscriptions.put(sub, s);
+         }
+         if (s.length() > 0) s.append(",\n");
+         s.append(c.classname());
+         s.append(".Handler");
       }
    }
 

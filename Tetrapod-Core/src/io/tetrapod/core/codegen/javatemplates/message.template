@@ -49,5 +49,17 @@ public class {{class}} extends Message {
    public final int getStructId() {
       return {{class}}.STRUCT_ID;
    }
+   
+   @Override
+   public final void dispatch(SubscriptionAPI api) {
+      if (api instanceof Handler)
+         ((Handler)api).message{{rawname}}(this);
+      else
+         api.genericMessage(this);
+   }
+   
+   public static interface Handler extends SubscriptionAPI {
+      void message{{rawname}}({{class}} m);
+   }
 }
 
