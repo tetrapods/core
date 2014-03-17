@@ -1,4 +1,6 @@
 language: java
 before_script: cd Tetrapod-Core
 notifications:
-  slack: tetrapods:VLfpLy6vqGvq18Z1GS0Eat1e
+  slack: 
+    secure: "QtozPUxmrsxLwpzYLr945zXXGhOWeAtX/tsQGP6KF0gqKl16h1vMMj8iVpjqDEHowLt7KTBLqRmlxqcCgZ9WbKJtG2twapJ3nOW
+LQOUmuh6IN38JRGxoKcCEZEHRN1iSWtuxnYlXJvGGHfbQgebNpX9EvNcnl+g30r6YH+zwz+4="
