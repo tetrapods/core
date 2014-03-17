@@ -5,9 +5,9 @@ import io.netty.buffer.ByteBuf;
 import java.io.IOException;
 import java.nio.charset.Charset;
 
-public class ByteBufDatasource extends StreamDatasource {
+public class ByteBufDataSource extends StreamDataSource {
 
-   public ByteBufDatasource(ByteBuf buf) {
+   public ByteBufDataSource(ByteBuf buf) {
       this.buffer = buf;
    }
 
@@ -30,7 +30,11 @@ public class ByteBufDatasource extends StreamDatasource {
    @Override
    protected byte[] readRawBytes(int len) throws IOException {
       byte[] res = new byte[len];
-      buffer.readBytes(res);
+      try {
+         buffer.readBytes(res);
+      } catch (IndexOutOfBoundsException e) {
+         throw new IOException(e);
+      }
       return res;
    }
 

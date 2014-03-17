@@ -15,7 +15,7 @@ import java.util.*;
  * 
  * @author fortin
  */
-abstract public class StreamDatasource implements DataSource {
+abstract public class StreamDataSource implements DataSource {
 
    private static final int        TYPE_VAR_INT      = 0;
    private static final int        TYPE_VAR_LONG     = 1;

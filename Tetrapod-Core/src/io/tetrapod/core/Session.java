@@ -8,7 +8,7 @@ import io.netty.util.ReferenceCountUtil;
 import io.tetrapod.core.protocol.*;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.rpc.Error;
-import io.tetrapod.core.serialize.datasources.ByteBufDatasource;
+import io.tetrapod.core.serialize.datasources.ByteBufDataSource;
 
 import java.io.IOException;
 import java.util.*;
@@ -152,7 +152,7 @@ public class Session extends ChannelInboundHandlerAdapter {
    }
 
    private void readResponse(final ByteBuf in) throws IOException {
-      final ByteBufDatasource reader = new ByteBufDatasource(in);
+      final ByteBufDataSource reader = new ByteBufDataSource(in);
       final ResponseHeader header = new ResponseHeader();
       header.read(reader);
       final Response res = (Response) makeStruct(header.structId);
@@ -179,7 +179,7 @@ public class Session extends ChannelInboundHandlerAdapter {
    }
 
    private void readRequest(final ByteBuf in) throws IOException {
-      final ByteBufDatasource reader = new ByteBufDatasource(in);
+      final ByteBufDataSource reader = new ByteBufDataSource(in);
       final RequestHeader header = new RequestHeader();
       header.read(reader);
       final Request req = (Request) makeStruct(header.structId);
@@ -269,7 +269,7 @@ public class Session extends ChannelInboundHandlerAdapter {
 
    private boolean writeFrame(Structure header, Structure payload, byte envelope) {
       final ByteBuf buffer = channel.alloc().buffer(128);
-      final ByteBufDatasource data = new ByteBufDatasource(buffer);
+      final ByteBufDataSource data = new ByteBufDataSource(buffer);
       buffer.writeInt(0);
       buffer.writeByte(envelope);
       try {

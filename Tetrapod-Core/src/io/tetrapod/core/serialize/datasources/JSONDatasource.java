@@ -8,16 +8,16 @@ import java.io.IOException;
 import java.lang.reflect.Array;
 import java.util.*;
 
-public class JSONDatasource implements DataSource {
+public class JSONDataSource implements DataSource {
 
    private JSONObject       json;
    private Iterator<String> keysIterator;
 
-   public JSONDatasource() {
+   public JSONDataSource() {
       this.json = new JSONObject();
    }
    
-   public JSONDatasource(JSONObject json) {
+   public JSONDataSource(JSONObject json) {
       this.json = json;
    }
    
@@ -112,7 +112,7 @@ public class JSONDatasource implements DataSource {
       try {
          JSONObject jo = json.getJSONObject(Integer.toString(tag));
          T inst = structClass.newInstance();
-         inst.read(new JSONDatasource(jo));
+         inst.read(new JSONDataSource(jo));
          return inst;
       } catch (InstantiationException | IllegalAccessException e) {
          throw new IOException("cannot instantiate class", e);
@@ -121,7 +121,7 @@ public class JSONDatasource implements DataSource {
 
    @Override
    public <T extends Structure> void write(int tag, T struct) throws IOException {
-      JSONDatasource jd = new JSONDatasource();
+      JSONDataSource jd = new JSONDataSource();
       struct.write(jd);
       json.put(Integer.toString(tag), jd.getJSON());
    }
@@ -340,7 +340,7 @@ public class JSONDatasource implements DataSource {
          for (int i = 0; i < res.length; i++) {
             JSONObject jo = json.getJSONObject(Integer.toString(tag));
             T inst = structClass.newInstance();
-            inst.read(new JSONDatasource(jo));
+            inst.read(new JSONDataSource(jo));
             res[i] = inst;
          }
          return res;
@@ -358,7 +358,7 @@ public class JSONDatasource implements DataSource {
          for (int i = 0; i < arr.length(); i++) {
             JSONObject jo = json.getJSONObject(Integer.toString(tag));
             T inst = structClass.newInstance();
-            inst.read(new JSONDatasource(jo));
+            inst.read(new JSONDataSource(jo));
             res.add(inst);
          }
          return res;
@@ -372,7 +372,7 @@ public class JSONDatasource implements DataSource {
    public <T extends Structure> void write(int tag, T[] array) throws IOException {
       JSONArray arr = new JSONArray();
       for (T x : array) {
-         JSONDatasource jd = new JSONDatasource();
+         JSONDataSource jd = new JSONDataSource();
          x.write(jd);
          arr.put(jd.getJSON());
       }
@@ -383,7 +383,7 @@ public class JSONDatasource implements DataSource {
    public <T extends Structure> void write_struct(int tag, List<T> list) throws IOException {
       JSONArray arr = new JSONArray();
       for (T x : list) {
-         JSONDatasource jd = new JSONDatasource();
+         JSONDataSource jd = new JSONDataSource();
          x.write(jd);
          arr.put(jd.getJSON());
       }

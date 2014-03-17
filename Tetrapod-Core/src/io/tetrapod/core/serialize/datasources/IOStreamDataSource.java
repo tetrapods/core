@@ -2,7 +2,7 @@ package io.tetrapod.core.serialize.datasources;
 
 import java.io.*;
 
-public class IOStreamDataSource extends StreamDatasource {
+public class IOStreamDataSource extends StreamDataSource {
 
    public static IOStreamDataSource forReading(InputStream in) {
       return forReadWrite(in, null);
