@@ -1,5 +1,5 @@
 public List<{{boxed}}> {{name}};
 {{name}} = {{default}};
 case {{tag}}: {{name}} = data.read_{{type}}_list(tag); break;
-data.write_{{type}}({{tag}}, {{name}});
+if ({{name}} != null) data.write_{{type}}({{tag}}, {{name}});
   
