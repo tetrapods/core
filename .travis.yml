@@ -1,5 +1,7 @@
 language: java
 jdk:
   - oraclejdk7
-before-install:
+notifications:
+  slack: tetrapods:VLfpLy6vqGvq18Z1GS0Eat1e
+before-script:
   - cd Tetrapod-Core
