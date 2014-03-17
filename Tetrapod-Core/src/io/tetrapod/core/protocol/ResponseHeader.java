@@ -58,4 +58,3 @@ public class ResponseHeader extends Structure {
       return ResponseHeader.STRUCT_ID;
    }
 }
-

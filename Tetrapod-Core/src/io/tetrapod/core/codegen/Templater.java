@@ -72,7 +72,26 @@ public class Templater {
          expand(values, bw);
       }
    }
-   
+
+   /**
+    * Expand, getting rid of consecutive whitespace-only lines.
+    */
+   public void expandAndTrim(Map<String, String> values, File file) throws IOException {
+      String s = expand(values);
+      String[] lines = s.split("\n|\r\n");
+      try (BufferedWriter bw = new BufferedWriter(new FileWriter(file))) {
+         boolean prevWasWhitespace = false;
+         for (String line : lines) {
+            boolean isWhitespace = line.trim().length() == 0;
+            if (!prevWasWhitespace || !isWhitespace) {
+               bw.append(line);
+               bw.append("\n");
+            }
+            prevWasWhitespace = isWhitespace;
+         }
+      }
+   }
+
    public void expand(Map<String, String> values, Writer out) throws IOException {
       int indent = 0;
       int n = chars.length;

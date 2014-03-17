@@ -54,4 +54,3 @@ public class Handshake extends Structure {
       return Handshake.STRUCT_ID;
    }
 }
-

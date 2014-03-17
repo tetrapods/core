@@ -9,6 +9,7 @@ class CodeGenContext {
       String       type;
       String       subscription;
       String       structId;
+      String       security;
       List<Field>  fields = new ArrayList<>();
       Set<String>  errors = new TreeSet<>();
 
@@ -33,11 +34,22 @@ class CodeGenContext {
    public ArrayList<Field> globalConstants = new ArrayList<>();
    public String           serviceName;
    public String           serviceVersion;
+   public String           defaultSecurity = "internal";
    public Set<String>      allErrors       = new TreeSet<>();
    public boolean          inGlobalScope   = true;
 
-   public void parseClass(List<String> parts) throws ParseException {
+   public void parseClass(ArrayList<String> parts) throws ParseException {
       Class c = new Class();
+      c.security = defaultSecurity;
+      switch (parts.get(0)) {
+         case "public":
+         case "protected":
+         case "internal":
+         case "admin":
+            c.security = parts.get(0);
+            parts.remove(0);
+            break;
+      }
       c.type = parts.get(0);
       switch (c.type) {
          case "request":

@@ -54,4 +54,3 @@ public class RegisterResponse extends Response {
       return RegisterResponse.STRUCT_ID;
    }
 }
-

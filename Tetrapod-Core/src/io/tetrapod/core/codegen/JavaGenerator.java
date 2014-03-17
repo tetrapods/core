@@ -49,7 +49,7 @@ class JavaGenerator implements LanguageGenerator {
       vals.put("version", serviceVersion);
       vals.put("handlers", handlers);
       addErrors(allErrors, true, serviceName, vals);
-      t.expand(vals, getFilename(vals.get("class")));
+      t.expandAndTrim(vals, getFilename(vals.get("class")));
    }
 
    private void generateSubscription(String name, String handlers) throws IOException,ParseException {
@@ -58,7 +58,7 @@ class JavaGenerator implements LanguageGenerator {
       vals.put("class", name + "Subscription");
       vals.put("package", packageName);
       vals.put("handlers", handlers);
-      t.expand(vals, getFilename(vals.get("class")));
+      t.expandAndTrim(vals, getFilename(vals.get("class")));
    }
 
    
@@ -68,6 +68,7 @@ class JavaGenerator implements LanguageGenerator {
       vals.put("rawname", c.name);
       vals.put("class", c.classname());
       vals.put("package", packageName);
+      vals.put("security", c.security.toUpperCase());
       if (c.structId == null) {
          // auto-genned hashes are never less than 10
          c.structId = "" + ((FNVHash.hash32(c.classname()) & 0xffffff) + 10);
@@ -76,11 +77,10 @@ class JavaGenerator implements LanguageGenerator {
       addFieldValues(c.fields, vals);
       addConstantValues(c.fields, vals);
       addErrors(c.errors, false, serviceName, vals);
-      t.expand(vals, getFilename(c.classname()));
+      t.expandAndTrim(vals, getFilename(c.classname()));
    }
 
    private void addErrors(Collection<String> errors, boolean globalScope, String serviceName, Map<String, String> vals) throws IOException,ParseException {
-      vals.put("errors", "// only returns core errors");
       StringBuilder sb = new StringBuilder();
       boolean isFirst = true;
       for (String err : errors) {
@@ -99,8 +99,7 @@ class JavaGenerator implements LanguageGenerator {
          sb.append(newline);
          sb.append(line);
       }
-      if (sb.length() > 0)
-         vals.put("errors", sb.toString());
+      vals.put("errors", sb.toString());
    }
 
    private void addFieldValues(List<Field> fields, Map<String,String> globalVals) throws ParseException, IOException {

@@ -11,17 +11,17 @@ import java.util.*;
 @SuppressWarnings("unused")
 public class RegisterRequest extends Request {
 
-   
-
-   // only returns core errors
-      
    public static final int STRUCT_ID = 10895179;
-    
+   
    public RegisterRequest() {
       defaults();
    }
    
    public int build;
+
+   public final Request.Security getSecurity() {
+      return Security.PUBLIC;
+   }
 
    public final void defaults() {
       build = 0;
@@ -65,4 +65,3 @@ public class RegisterRequest extends Request {
       Response requestRegister(RegisterRequest r);
    }
 }
-

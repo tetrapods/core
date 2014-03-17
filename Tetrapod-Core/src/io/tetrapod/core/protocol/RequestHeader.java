@@ -74,4 +74,3 @@ public class RequestHeader extends Structure {
       return RequestHeader.STRUCT_ID;
    }
 }
-

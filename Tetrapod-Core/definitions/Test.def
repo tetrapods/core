@@ -4,11 +4,12 @@ java package io.tetrapod.test
 java outdir src
 
 service Test version 1
+default security protected // possible values are public, protected, internal, admin. default is internal
 
 // global constants appear in the general service class
 const int GLOBAL_CONST = 42
 
-request Test
+internal request Test [998]
    // field tags cannot be less than one, although they need not be contiguous.  low tag numbers (< 64) are encoded
    // in one fewer byte in the wire protocol
    1: int intval
@@ -52,6 +53,14 @@ response Test [117]
    10: TestInfo<list> infolist = {}
    11: TestInfo[] infoarray = {}
 
+public request AnotherTest
+   1: int accountId
+   2: string userName
+   3: string commandType
+
+request ThirdTest
+   1: int accountId
+   
 // message name is SubscriptionName.ClassName, the SubscriptionName. is optional
 message MySub.StatusUpdate 
    1: int accountId

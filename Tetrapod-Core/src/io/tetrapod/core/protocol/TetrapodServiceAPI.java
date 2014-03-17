@@ -11,5 +11,4 @@ public interface TetrapodServiceAPI extends
 {
    public static final int VERSION = 1;
    
-   // only returns core errors
 }

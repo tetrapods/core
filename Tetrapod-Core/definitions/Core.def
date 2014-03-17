@@ -24,7 +24,7 @@ struct ResponseHeader
    2: int structId
    3: int toId
    
-request Register 
+public request Register 
    1: int build   
    
 response Register 

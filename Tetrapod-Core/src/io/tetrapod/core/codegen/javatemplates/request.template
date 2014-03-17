@@ -12,16 +12,19 @@ import java.util.*;
 public class {{class}} extends Request {
 
    {{constants}}
-
+   public static final int STRUCT_ID = {{structid}};
+   
    {{errors}}
       
-   public static final int STRUCT_ID = {{structid}};
-    
    public {{class}}() {
       defaults();
    }
    
    {{field-declarations}}
+
+   public final Request.Security getSecurity() {
+      return Security.{{security}};
+   }
 
    public final void defaults() {
       {{field-defaults}}

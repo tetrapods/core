@@ -8,7 +8,7 @@ public class CodeGen {
 
    public static void main(String[] args) {
       // just hardcode for now for testing
-      args = new String[] { "definitions/Test.def", "java" };
+      args = new String[] { "definitions/Core.def", "java" };
       if (args.length < 1) {
          System.err.println("usage: arguments are filename lang1 lang2 ..");
       }
@@ -64,12 +64,22 @@ public class CodeGen {
          case "service":
             context.parseService(parts);
             break;
-
+            
+         case "default":
+            String t = parts.get(1);
+            if (t.equals("security")) {
+               context.defaultSecurity = parts.get(2);
+            }
+            break;
+            
          case "request":
          case "response":
          case "message":
          case "struct":
-         case "errors":
+         case "public":
+         case "protected":
+         case "internal":
+         case "admin":
             context.parseClass(parts);
             break;
 
