@@ -222,7 +222,7 @@ public class Session extends ChannelInboundHandlerAdapter {
 
    public class TetrapodService implements TetrapodServiceAPI {
       @Override
-      public Response request(RegisterRequest r) {
+      public Response requestRegister(RegisterRequest r) {
          return new RegisterResponse();
       }
 
