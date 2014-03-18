@@ -1,11 +1,12 @@
 package io.tetrapod.core.codegen;
 
+import io.tetrapod.core.codegen.CodeGen.TokenizedLine;
+
 import java.io.IOException;
-import java.util.List;
 
 interface LanguageGenerator {
 
-   void parseOption(List<String> components) throws ParseException;
+   void parseOption(TokenizedLine line) throws ParseException;
 
    void generate(CodeGenContext context) throws IOException, ParseException;
 

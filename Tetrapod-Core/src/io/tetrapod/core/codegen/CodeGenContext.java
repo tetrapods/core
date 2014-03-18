@@ -1,5 +1,7 @@
 package io.tetrapod.core.codegen;
 
+import io.tetrapod.core.codegen.CodeGen.TokenizedLine;
+
 import java.util.*;
 
 class CodeGenContext {
@@ -10,6 +12,7 @@ class CodeGenContext {
       String       subscription;
       String       structId;
       String       security;
+      String       comment;
       List<Field>  fields = new ArrayList<>();
       Set<String>  errors = new TreeSet<>();
 
@@ -24,6 +27,7 @@ class CodeGenContext {
       String collectionType;
       String defaultValue;
       String tag;
+      String comment;
 
       public boolean isConstant() {
          return tag.equals("0");
@@ -34,13 +38,16 @@ class CodeGenContext {
    public ArrayList<Field> globalConstants = new ArrayList<>();
    public String           serviceName;
    public String           serviceVersion;
+   public String           serviceComment;
    public String           defaultSecurity = "internal";
    public Set<String>      allErrors       = new TreeSet<>();
    public boolean          inGlobalScope   = true;
 
-   public void parseClass(ArrayList<String> parts) throws ParseException {
+   public void parseClass(TokenizedLine line) throws ParseException {
+      ArrayList<String> parts = line.parts;
       Class c = new Class();
       c.security = defaultSecurity;
+      c.comment = line.comment;
       switch (parts.get(0)) {
          case "public":
          case "protected":
@@ -80,7 +87,7 @@ class CodeGenContext {
       classes.add(c);
    }
 
-   public void parseField(List<String> parts) throws ParseException {
+   public void parseField(TokenizedLine line) throws ParseException {
       // field 1 string name = scott
       // field 2 string passwordHash = unknown
       // field 6 string <maps> int map
@@ -88,7 +95,7 @@ class CodeGenContext {
       // field 3 int priority
       // const int X = 7
       // const int <list> = {}
-      
+      List<String> parts = line.parts;
       String tag = parts.get(1);
       String type = parts.get(2);
       int nameIx = 3;
@@ -108,6 +115,7 @@ class CodeGenContext {
          defaultValue = parts.get(nameIx + 2);
       }
       Field f = new Field();
+      f.comment = line.comment;
       f.tag = tag;
       f.type = type;
       f.name = name;
@@ -122,16 +130,18 @@ class CodeGenContext {
       }
    }
 
-   public void parseService(ArrayList<String> parts) throws ParseException {
+   public void parseService(TokenizedLine line) throws ParseException {
       // service NAME version NUM
-      if (parts.size() != 4)
+      if (line.parts.size() != 4)
          throw new ParseException("expected exactly four tokens for service");
-      serviceName = parts.get(1);
-      serviceVersion = parts.get(3);
+      serviceName = line.parts.get(1);
+      serviceVersion = line.parts.get(3);
+      serviceComment = line.comment;
    }
 
-   public void parseErrors(ArrayList<String> parts) throws ParseException {
+   public void parseErrors(TokenizedLine line) throws ParseException {
       // error A B C ...
+      ArrayList<String> parts = line.parts;
       if (inGlobalScope || !classes.get(classes.size() - 1).type.equals("request"))
          throw new ParseException("errors must be defined inside a request");
       

@@ -1,18 +1,22 @@
-// language specific properties, note outdir is relative to current directory of the 
-// code generator and should point to root of source tree
-java package io.tetrapod.test
-java outdir src
+
+# Comments: # starts a template comment
+#          // starts a comment that is attached to the next generated class (struct, message, request, response), service, 
+#             or field. It can be before or on the same line as the element
+
+java package io.tetrapod.test       # language specific
+java outdir src                     # should point to root of source tree
 
 service Test version 1
-default security protected // possible values are public, protected, internal, admin. default is internal
+default security protected          # possible values are public, protected, internal, admin. default is internal
 
-// global constants appear in the general service class
+# global constants appear in the general service class
 const int GLOBAL_CONST = 42
 
+# field tags cannot be less than one, although they need not be contiguous.  low tag numbers (< 64) 
+# are encoded in one fewer byte in the wire protocol
+// my test request
 internal request Test [998]
-   // field tags cannot be less than one, although they need not be contiguous.  low tag numbers (< 64) are encoded
-   // in one fewer byte in the wire protocol
-   1: int intval
+   1: int intval // an integer vlaue
    2: double doubleval
    3: boolean boolval
    4: long longval
@@ -21,35 +25,33 @@ internal request Test [998]
    7: int[] intarray
    8: int<list> intlist
    9: TestInfo info
-   10: TestInfo<list> infolist
+   10: TestInfo<list> infolist // a list of structures
    11: TestInfo[] infoarray
    
-   // supported values for numbers are decimal integers, decimal floats, and hex integers 
+   # supported values for numbers are decimal integers, decimal floats, and hex integers 
    const int MY_CONST = 1223
    const int MY_OTHER_CONST = 0x2234
    
-   // errors are integer constants, the value is a stable hash of the error name.  they can only be
-   // declared inside of requests.  the error gets defined in the global service class and referenced
-   // in the specific request class.  in some opeational modes requests return codes are checked to
-   // make sure they are from this set.  all requests are assumed to be able to return UNKNOWN_ERROR and
-   // as such its declaration is not needed
-   error TOO_MUCH_AWESOME
+   # errors are integer constants, the value is a stable hash of the error name.  they can only be
+   # declared inside of requests.  the error gets defined in the global service class and referenced
+   # in the specific request class.  in some opeational modes requests return codes are checked to
+   # make sure they are from this set.  all requests are assumed to be able to return UNKNOWN_ERROR and
+   # as such its declaration is not needed
+   error TOO_MUCH_AWESOME // genned comments don't attach to errors alas
    error NOT_ENOUGH_LAME
-   error AAA, BBB,CC // multiple errors may be specified on one line
+   error AAA, BBB, CC          # multiple errors may be specified on one line
    
-// a tailing [###] in any class sets that as the struct ids.  otherwise a stable hash of the class name is used
-response Test [117]
+
+response Test [117]            # a tailing [###] in any class sets that as the struct ids.  otherwise a stable hash of the class name is used
    1: int intval = 1
    2: double doubleval = 3.4
    3: boolean boolval = true
    4: long longval = 500
    5: byte byteval = 127
-   6: string stringval = "happy days"
-   // for collections, only the empty initializer is allowed (or nothing, which means null)
-   7: int[] intarray = {}
+   6: string stringval = "happy\" da\\ys # //"    # \ escapes work in strings
+   7: int[] intarray = {}                         # for collections, only the empty initializer is allowed (or nothing, which means null)
    8: int<list> intlist = {}
-   // for general objects, again {} is allowed which means the no-args constucter
-   9: TestInfo info = {}
+   9: TestInfo info = {}                          # for general objects, again {} is allowed which means the no-args constucter
    10: TestInfo<list> infolist = {}
    11: TestInfo[] infoarray = {}
 
@@ -61,21 +63,19 @@ public request AnotherTest
 request ThirdTest
    1: int accountId
    
-// message name is SubscriptionName.ClassName, the SubscriptionName. is optional
-message MySub.StatusUpdate 
+# message name is SubscriptionName.ClassName, the SubscriptionName is optional
+message MySub.StatusUpdate
    1: int accountId
-
 
 message MySub.OtherUpdate 
    1: int accountId
    2: string name
 
-   
 struct TestInfo 
    1: int test = 5
 
-// use the global scope line to reintroduce the global scope for defining constants.  or, just put them
-// at the top of the file like a sane person ;)
+# use the global scope line to reintroduce the global scope for defining constants.  or, just put them
+# at the top of the file like a sane person ;)
 global scope
 
 const int ANOTHER_GLOBAL_CONST = 43

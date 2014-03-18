@@ -1,13 +1,14 @@
-// language specific properties, note outdir is relative to current directory of the 
-// code generator and should point to root of source tree
+# language specific properties, note outdir is relative to current directory of the 
+# code generator and should point to root of source tree 
 java package io.tetrapod.core.protocol
 java outdir src
 
+// The core tetrapod service
 service Tetrapod version 1
 
-struct Handshake
-   1: int wireVersion 
-   2: int wireOptions
+struct Handshake 
+   1: int wireVersion  
+   2: int wireOptions 
 
 struct RequestHeader
    1: int requestId 

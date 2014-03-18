@@ -21,11 +21,21 @@ public class CodeGen {
          cg.run(args[0], args[i]);
       }
    }
+   
+   protected static class TokenizedLine {
+      ArrayList<String> parts = new ArrayList<>();
+      String comment;
+      
+      public boolean isEmpty() { return parts.isEmpty(); }
+      public String key() { return parts.get(0); }
+   }
 
    private Map<String, LanguageGenerator> languages = new HashMap<>();
    private int                            currentLineNumber;
    private String                         currentLine;
    private CodeGenContext                 context;
+   private TokenizedLine                  tokenizedLine = new TokenizedLine();
+   private StringBuilder                  commentInProgress = new StringBuilder();
 
    public void run(String filename, String language) {
       try (BufferedReader br = new BufferedReader(new FileReader(filename))) {
@@ -45,11 +55,20 @@ public class CodeGen {
    }
 
    private void parse(String line) throws ParseException {
-      ArrayList<String> parts = tokenize(line);
-      if (parts == null || parts.size() == 0)
+      tokenizedLine.parts.clear();
+      tokenizedLine.comment = null;
+      tokenize(line, tokenizedLine);
+      if (tokenizedLine.comment != null) {
+         commentInProgress.append(tokenizedLine.comment);
+         commentInProgress.append(" ");
+      }
+      if (tokenizedLine.isEmpty()) {
          return;
-      combineTokens(parts);
-      String key = parts.get(0);
+      }
+      tokenizedLine.comment = commentInProgress.toString();
+      commentInProgress = new StringBuilder();
+      combineTokens();
+      String key = tokenizedLine.key();
       switch (key) {
          case "java":
          case "javascript":
@@ -57,18 +76,18 @@ public class CodeGen {
          case "c++":
             LanguageGenerator gen = languages.get(key);
             if (gen != null) {
-               gen.parseOption(parts);
+               gen.parseOption(tokenizedLine);
             }
             return;
 
          case "service":
-            context.parseService(parts);
+            context.parseService(tokenizedLine);
             break;
             
          case "default":
-            String t = parts.get(1);
+            String t = tokenizedLine.parts.get(1);
             if (t.equals("security")) {
-               context.defaultSecurity = parts.get(2);
+               context.defaultSecurity = tokenizedLine.parts.get(2);
             }
             break;
             
@@ -80,25 +99,25 @@ public class CodeGen {
          case "protected":
          case "internal":
          case "admin":
-            context.parseClass(parts);
+            context.parseClass(tokenizedLine);
             break;
 
          case "field":
-            context.parseField(parts);
+            context.parseField(tokenizedLine);
             break;
             
          case "const":
-            parts.set(0, "field");
-            parts.add(1, "0");
-            context.parseField(parts);
+            tokenizedLine.parts.set(0, "field");
+            tokenizedLine.parts.add(1, "0");
+            context.parseField(tokenizedLine);
             break;
             
          case "error":
-            context.parseErrors(parts);
+            context.parseErrors(tokenizedLine);
             break;
             
          case "global":
-            if (parts.get(1).equals("scope")) {
+            if (tokenizedLine.parts.get(1).equals("scope")) {
                context.inGlobalScope = true;
             } else {
                throw new ParseException("malformaed global scope line");
@@ -110,29 +129,8 @@ public class CodeGen {
       }
    }
 
-   private static ArrayList<String> tokenize(String line) {
-      ArrayList<String> tokens = new ArrayList<String>();
-      // drop comments
-      int ix = line.indexOf("//");
-      if (ix >= 0)
-         line = line.substring(0, ix);
-      // divide into words
-      String[] clauses = { "([/\\w.-]+)", "([\\[\\]<>:={}])", "\"([^\"]+)\"" };
-      String regex = clauses[0];
-      for (int i = 1; i < clauses.length; i++)
-         regex = regex + "|" + clauses[i];
-      Matcher m = Pattern.compile(regex).matcher(line);
-      while (m.find()) {
-         for (int i = 1; i <= clauses.length; i++) {
-            String token = m.group(i);
-            if (m.group(i) != null)
-               tokens.add(token);
-         }
-      }
-      return tokens;
-   }
-   
-   private static void combineTokens(ArrayList<String> parts) {
+   private void combineTokens() {
+      ArrayList<String> parts = tokenizedLine.parts;
       if (parts.get(0).equals(":")) {
          parts.remove(0);
          parts.add(0, "tag");
@@ -142,10 +140,6 @@ public class CodeGen {
          parts.add(0, "field");
       }
       for (int i=0; i < parts.size() - 1; i++) {
-         if (parts.get(i).equals("=") && parts.get(i+1).equals(">")) {
-            parts.set(i, "<maps>");
-            parts.remove(i+1);
-         }
          if (parts.get(i).equals("<") && parts.get(i+2).equals(">")) {
             parts.set(i, "<" + parts.get(i+1) + ">");
             parts.remove(i+1);
@@ -192,5 +186,94 @@ public class CodeGen {
             return Character.toUpperCase(s.charAt(0)) + s.substring(1).toLowerCase();
       }
    }
+   
+   private static enum TokenizeStates { OUT_WORD, IN_WORD, IN_STRING };
+   
+   private static void tokenize(String line, TokenizedLine out) {
+      TokenizeStates state = TokenizeStates.OUT_WORD;
+      StringBuilder word = null;
+      int i = 0;
+      int N = line.length();
+      while (i <= N) {
+         char c = i == N ? 0 : line.charAt(i);
+         char peek = i >= N-1 ? 0 : line.charAt(i+1);
+         switch (state) {
+            case OUT_WORD:
+               if (c == '#') {
+                  return;
+               }
+               if (c == '/' && peek == '/') {
+                  out.comment = line.substring(i+2).trim();
+                  return;
+               }
+               if (isWord(c) || isDivider(c)) {
+                  state = TokenizeStates.IN_WORD;
+                  word = new StringBuilder();
+                  break;
+               }
+               if (c == '"') {
+                  i++;
+                  state = TokenizeStates.IN_STRING;
+                  word = new StringBuilder();
+                  break;
+               }
+               // all other characters skipped
+               i++;
+               break;
+            case IN_WORD:
+               if (isWord(c)) {
+                  word.append(c);
+                  i++;
+                  break;
+               }
+               if (word.length() > 0) {
+                  out.parts.add(word.toString());
+                  word = new StringBuilder();
+               }
+               if (isDivider(c)) {
+                  i++;
+                  out.parts.add("" + c);
+               }
+               state = TokenizeStates.OUT_WORD;
+               break;
+            case IN_STRING:
+               if (c == '"') {
+                  i++;
+                  if (word.length() > 0) {
+                     out.parts.add(word.toString());
+                     word = new StringBuilder();
+                  }
+                  state = TokenizeStates.OUT_WORD;
+                  break;
+               }
+               if (c == '\\' && peek > 0) {
+                  i++;
+                  c = peek;
+               }
+               i++;
+               word.append(c);
+               break;
+         }
+      }
+   }
+
+   private static boolean isWord(char c) {
+      if (Character.isAlphabetic(c)) return true;
+      if (Character.isDigit(c)) return true;
+      return c == '_' || c == '.' || c == '-';
+   }
+
+   private static boolean isDivider(char c) {
+      return "[]<>:={}".indexOf(c) >= 0;
+   }
+   
+   @SuppressWarnings("unused")
+   private static void testTokenize() {
+      TokenizedLine out = new TokenizedLine();
+      tokenize(": 1th-is1[] <i.s> // _a \"# te\\\\\\\"st\"", out);
+      System.out.println(out.parts);
+      System.out.println(out.comment);
+   }
+   
 
 }

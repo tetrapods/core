@@ -1,5 +1,6 @@
 package io.tetrapod.core.codegen;
 
+import io.tetrapod.core.codegen.CodeGen.TokenizedLine;
 import io.tetrapod.core.codegen.CodeGenContext.Class;
 import io.tetrapod.core.codegen.CodeGenContext.Field;
 
@@ -11,11 +12,11 @@ class JavaGenerator implements LanguageGenerator {
    private String packageName;
    private String outputDir;
    
-   public void parseOption(List<String> components) throws ParseException {
+   public void parseOption(TokenizedLine line) throws ParseException {
 //      java package io.tetrapod.identity.protocol
 //      java outdir src
-      String opt = components.get(1);
-      String val = components.get(2);
+      String opt = line.parts.get(1);
+      String val = line.parts.get(2);
       switch (opt) {
          case "package":
             packageName = val;
@@ -35,20 +36,21 @@ class JavaGenerator implements LanguageGenerator {
          generateClass(c, context.serviceName + "ServiceAPI");
          addHandlerLine(c, sb, subscriptions);
       }
-      generateService(context.serviceName, context.serviceVersion, context.allErrors, sb.toString());
+      generateService(context, sb.toString());
       for (String sub : subscriptions.keySet()) {
          generateSubscription(sub, subscriptions.get(sub).toString());
       }
    }
    
-   private void generateService(String serviceName, String serviceVersion, Collection<String> allErrors, String handlers) throws IOException,ParseException {
+   private void generateService(CodeGenContext context, String handlers) throws IOException,ParseException {
       Templater t = Templater.get(getClass(), "javatemplates/servicerpc.template");
       Map<String,String> vals = new HashMap<>();
-      vals.put("class", serviceName + "ServiceAPI");
+      vals.put("class", context.serviceName + "ServiceAPI");
       vals.put("package", packageName);
-      vals.put("version", serviceVersion);
+      vals.put("version", context.serviceVersion);
       vals.put("handlers", handlers);
-      addErrors(allErrors, true, serviceName, vals);
+      vals.put("classcomment", generateComment(context.serviceComment));
+      addErrors(context.allErrors, true, context.serviceName, vals);
       t.expandAndTrim(vals, getFilename(vals.get("class")));
    }
 
@@ -69,6 +71,7 @@ class JavaGenerator implements LanguageGenerator {
       vals.put("class", c.classname());
       vals.put("package", packageName);
       vals.put("security", c.security.toUpperCase());
+      vals.put("classcomment", generateComment(c.comment));
       if (c.structId == null) {
          // auto-genned hashes are never less than 10
          c.structId = "" + ((FNVHash.hash32(c.classname()) & 0xffffff) + 10);
@@ -119,6 +122,9 @@ class JavaGenerator implements LanguageGenerator {
             newline = "";
          }
          declarations.append(newline);
+         if (f.comment != null && !f.comment.trim().isEmpty()) {
+            declarations.append(generateComment(f.comment.trim()));
+         }
          declarations.append(lines[0]);
          defaults.append(newline);
          defaults.append(lines[1]);
@@ -160,8 +166,11 @@ class JavaGenerator implements LanguageGenerator {
       vals.put("type", f.type);
       vals.put("boxed", info.boxed);
       String defaultVal = info.defaultValue;
-      if (f.defaultValue != null)
+      if (f.defaultValue != null) {
+         if (f.type.equals("string"))
+            f.defaultValue = escape(f.defaultValue);
          defaultVal = info.defaultValueDelim + f.defaultValue + info.defaultValueDelim;
+      }
       vals.put("tag", f.tag);
       String primTemplate = "field.primitives.template";
       String structTemplate = "field.structs.template";
@@ -228,6 +237,23 @@ class JavaGenerator implements LanguageGenerator {
          s.append(c.classname());
          s.append(".Handler");
       }
+   }
+   
+   private String generateComment(String comment) {
+      if (comment == null)
+         return "";
+      comment = comment.trim();
+      if (comment.isEmpty())
+         return "";
+      StringBuilder sb = new StringBuilder();
+      sb.append("\n/**\n * " + comment + "\n */\n");
+      return sb.toString();
+   }
+   
+   private String escape(String s) {
+      s = s.replace("\\", "\\\\");
+      s = s.replace("\"", "\\\"");
+      return s;
    }
 
    

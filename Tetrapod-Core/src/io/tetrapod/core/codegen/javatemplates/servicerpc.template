@@ -5,6 +5,7 @@ package  {{package}};
 import io.*;
 import java.util.*;
 
+{{classcomment}}
 @SuppressWarnings("unused")
 public interface {{class}} extends 
    {{handlers}}

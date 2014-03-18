@@ -8,6 +8,7 @@ import io.tetrapod.core.rpc.*;
 import java.io.IOException;
 import java.util.*;
 
+{{classcomment}}
 @SuppressWarnings("unused")
 public class {{class}} extends Message {
    
