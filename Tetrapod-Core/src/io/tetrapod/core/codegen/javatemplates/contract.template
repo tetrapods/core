@@ -4,21 +4,31 @@ package  {{package}};
 
 import io.*;
 import java.util.*;
+import io.tetrapod.core.*;
 
 {{classcomment}}
 @SuppressWarnings("unused")
-public class {{class}} {
+public class {{class}} extends Contract {
    public static final int VERSION = {{version}};
+   public static final String NAME = "{{name}}";
    
-   {{requestInterface}}
+   public static interface API extends
+      {{handlers}}
+      {}
    
-   {{subscriptionInterfaces}}
+   public void addRequests(StructureFactory factory, int dynamicId) {
+      {{requestAdds}}
+   }
+   
+   public void addResponses(StructureFactory factory, int dynamicId) {
+      {{responseAdds}}
+   }
+   
+   public void addMessages(StructureFactory factory, int dynamicId) {
+      {{messageAdds}}
+   }
 
-   {{requestAdds}}
-
-   {{responseAdds}}
-   
-   {{subscriptionAdds}}
+   {{subscriptions}}
    
    {{errors}}
 }

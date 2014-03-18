@@ -7,6 +7,7 @@ import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.serialize.*;
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.*;
 
 @SuppressWarnings("unused")
 public class RegisterRequest extends Request {
@@ -63,5 +64,11 @@ public class RegisterRequest extends Request {
    
    public static interface Handler extends ServiceAPI {
       Response requestRegister(RegisterRequest r);
+   }
+   
+   public static Callable<Structure> getInstanceFactory() {
+      return new Callable<Structure>() {
+         public Structure call() { return new RegisterRequest(); }
+      };
    }
 }

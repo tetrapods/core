@@ -7,6 +7,7 @@ import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.serialize.*;
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.*;
 
 @SuppressWarnings("unused")
 public class RegisterResponse extends Response {
@@ -52,5 +53,11 @@ public class RegisterResponse extends Response {
    @Override 
    public final int getStructId() {
       return RegisterResponse.STRUCT_ID;
+   }
+      
+   public static Callable<Structure> getInstanceFactory() {
+      return new Callable<Structure>() {
+         public Structure call() { return new RegisterResponse(); }
+      };
    }
 }

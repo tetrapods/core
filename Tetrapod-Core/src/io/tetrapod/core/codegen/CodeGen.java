@@ -2,13 +2,12 @@ package io.tetrapod.core.codegen;
 
 import java.io.*;
 import java.util.*;
-import java.util.regex.*;
 
 public class CodeGen {
 
    public static void main(String[] args) {
       // just hardcode for now for testing
-      args = new String[] { "definitions/Core.def", "java" };
+      args = new String[] { "definitions", "java" };
       if (args.length < 1) {
          System.err.println("usage: arguments are filename lang1 lang2 ..");
       }
@@ -38,7 +37,24 @@ public class CodeGen {
    private StringBuilder                  commentInProgress = new StringBuilder();
 
    public void run(String filename, String language) {
-      try (BufferedReader br = new BufferedReader(new FileReader(filename))) {
+      ArrayList<File> files = new ArrayList<>();
+      files.add(new File(filename));
+      int ix = 0;
+      
+      while (ix < files.size()) {
+         File file = files.get(ix);
+         if (file.isDirectory()) {
+            files.addAll(Arrays.asList(file.listFiles()));
+         } else {
+            runFile(file, language);
+         }
+         ix++;
+      }
+   }
+   
+   private void runFile(File f, String language) {
+      System.out.println("Generating " + f.getName() + " for " + language);
+      try (BufferedReader br = new BufferedReader(new FileReader(f))) {
          init(language);
          while (true) {
             currentLineNumber++;
@@ -183,7 +199,7 @@ public class CodeGen {
          case 1:
             return s.toUpperCase();
          default:
-            return Character.toUpperCase(s.charAt(0)) + s.substring(1).toLowerCase();
+            return Character.toUpperCase(s.charAt(0)) + s.substring(1);
       }
    }
    

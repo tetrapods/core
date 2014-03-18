@@ -9,15 +9,15 @@ public class StructureFactory {
 
    private final Map<Integer, Callable<Structure>> knownStructs = new HashMap<>();
    
-   public synchronized void add(int structId, int apiId, Callable<Structure> factory) {
-      int key = makeKey(structId, apiId);
+   public synchronized void add(int dynamicId, int structId, Callable<Structure> factory) {
+      int key = makeKey(dynamicId, structId);
       knownStructs.put(key, factory);
    }
    
    // OPTIMIZE: could make this class immutable using a builder pattern and avoid 
    //           this synchronize. adds are rare and usually upfront
-   public synchronized Structure makeStructure(int structId, int apiId) {
-      int key = makeKey(structId, apiId);
+   public synchronized Structure make(int dynamicId, int structId) {
+      int key = makeKey(dynamicId, structId);
       Callable<Structure> c = knownStructs.get(key);
       if (c != null) {
          try {
@@ -27,7 +27,7 @@ public class StructureFactory {
       return null;
    }
    
-   private final int makeKey(int structId, int apiId) {
-      return (apiId << 20) & structId;
+   private final int makeKey(int dynamicId, int structId) {
+      return (dynamicId << 20) | structId;
    }
 }

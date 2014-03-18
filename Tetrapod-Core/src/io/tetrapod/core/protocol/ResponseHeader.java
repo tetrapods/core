@@ -7,6 +7,7 @@ import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.serialize.*;
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.*;
 
 @SuppressWarnings("unused")
 public class ResponseHeader extends Structure {
@@ -56,5 +57,11 @@ public class ResponseHeader extends Structure {
    @Override
    public final int getStructId() {
       return ResponseHeader.STRUCT_ID;
+   }
+   
+   public static Callable<Structure> getInstanceFactory() {
+      return new Callable<Structure>() {
+         public Structure call() { return new ResponseHeader(); }
+      };
    }
 }

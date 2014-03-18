@@ -50,10 +50,13 @@ public class Session extends ChannelInboundHandlerAdapter {
    private AtomicLong                 lastHeardFrom      = new AtomicLong();
 
    private int                        myId               = 0;
+   
+   private StructureFactory           structureFactory   = null;
 
-   public Session(SocketChannel channel, Dispatcher dispatcher) {
+   public Session(SocketChannel channel, Dispatcher dispatcher, StructureFactory factory) {
       this.channel = channel;
       this.dispatcher = dispatcher;
+      this.structureFactory = factory;
       channel.pipeline().addLast(new ChannelInboundHandlerAdapter() {
          @Override
          public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
@@ -157,7 +160,7 @@ public class Session extends ChannelInboundHandlerAdapter {
       final ByteBufDataSource reader = new ByteBufDataSource(in);
       final ResponseHeader header = new ResponseHeader();
       header.read(reader);
-      final Response res = (Response) makeStruct(header.structId);
+      final Response res = (Response) structureFactory.make(0 /* FIXME - dynamicId */, header.structId);
       if (res != null) {
          res.read(reader);
          logger.debug("Got Response: {}", res);
@@ -184,7 +187,7 @@ public class Session extends ChannelInboundHandlerAdapter {
       final ByteBufDataSource reader = new ByteBufDataSource(in);
       final RequestHeader header = new RequestHeader();
       header.read(reader);
-      final Request req = (Request) makeStruct(header.structId);
+      final Request req = (Request)structureFactory.make(0 /* FIXME - dynamicId */, header.structId);
       if (req != null) {
          req.read(reader);
          logger.debug("Got Request: {}", req);
@@ -282,17 +285,6 @@ public class Session extends ChannelInboundHandlerAdapter {
          logger.error(e.getMessage(), e);
       }
       return false;
-   }
-
-   // FIXME: Need a Protocol class
-   public Structure makeStruct(int structId) {
-      switch (structId) {
-         case RegisterRequest.STRUCT_ID:
-            return new RegisterRequest();
-         case RegisterResponse.STRUCT_ID:
-            return new RegisterResponse();
-      }
-      return null;
    }
 
    @Override

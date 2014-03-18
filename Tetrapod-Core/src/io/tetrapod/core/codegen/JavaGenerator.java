@@ -42,30 +42,49 @@ class JavaGenerator implements LanguageGenerator {
       vals.put("class", context.serviceName + "Contract");
       vals.put("package", packageName);
       vals.put("version", context.serviceVersion);
-      vals.put("requestInterface", genContractInterface(context, "API", "request", null));
+      vals.put("handlers", genHandlers(context, "request", null));
       vals.put("requestAdds", genContractAdds(context, "request", null));
       vals.put("responseAdds", genContractAdds(context, "response", null));
-      StringBuilder sbInterfaces = new StringBuilder();
-      StringBuilder sbAdds = new StringBuilder();
+      vals.put("messageAdds", genContractAdds(context, "message", ""));
+      vals.put("name", context.serviceName);
+      StringBuilder sb = new StringBuilder();
       for (String sub : context.subscriptions) {
-         sbInterfaces.append(genContractInterface(context, sub + "Subscription", "message", sub));
-         sbAdds.append(genContractAdds(context, "message", sub));
+         sb.append(genSubscriptions(context, sub));
       }
-      vals.put("subscriptionInterfaces", sbInterfaces.toString());
-      vals.put("subscriptionAdds", sbAdds.toString());
+      vals.put("subscriptions", sb.toString());
       vals.put("classcomment", generateComment(context.serviceComment));
       addErrors(context.allErrors, true, context.serviceName, vals);
       t.expandAndTrim(vals, getFilename(vals.get("class")));
    }
 
-   private String genContractAdds(CodeGenContext context, String type, String subscription) {
-      // TODO Auto-generated method stub
-      return null;
+   private String genSubscriptions(CodeGenContext context, String subscription) throws IOException {
+      Templater t = Templater.get(getClass(), "javatemplates/contract.subscription.template");
+      Map<String,String> vals = new HashMap<>();
+      vals.put("name", subscription);
+      vals.put("handlers", genHandlers(context, "message", subscription));
+      vals.put("adds", genContractAdds(context, "message", subscription));
+      return t.expand(vals);
+      
    }
 
-   private String genContractInterface(CodeGenContext context, String name, String type, String subscription) {
-      // TODO Auto-generated method stub
-      return null;
+   private String genContractAdds(CodeGenContext context, String type, String subscription) throws IOException {
+      StringWriter w = new StringWriter();
+      for (Class c : context.classesByType(type)) {
+         if (subscription != null && !subscription.equals(c.subscription))
+            continue;
+         addAddsLine(c, w);
+      }
+      return w.toString();      
+   }
+
+   private String genHandlers(CodeGenContext context, String type, String subscription) {
+      StringBuilder sb = new StringBuilder();
+      for (Class c : context.classesByType(type)) {
+         if (subscription != null && !subscription.equals(c.subscription))
+            continue;
+         addHandlerLine(c, sb);
+      }
+      return sb.toString();
    }
 
    private void generateClass(Class c, String serviceName) throws IOException,ParseException {
@@ -222,25 +241,17 @@ class JavaGenerator implements LanguageGenerator {
       return new File(f, classname + ".java");
    }
    
-   private void addHandlerLine(Class c, StringBuilder sb, Map<String, StringBuilder> subscriptions) {
-      if (c.type.equals("request")) {
-         if (sb.length() > 0) sb.append(",\n");
-         sb.append(c.classname());
-         sb.append(".Handler");
-      }
-      if (c.type.equals("message")) {
-         String sub = c.subscription;
-         if (sub == null || sub.isEmpty())
-            return;
-         StringBuilder s = subscriptions.get(sub);
-         if (s == null) {
-            s = new StringBuilder();
-            subscriptions.put(sub, s);
-         }
-         if (s.length() > 0) s.append(",\n");
-         s.append(c.classname());
-         s.append(".Handler");
-      }
+   private void addHandlerLine(Class c, StringBuilder sb) {
+      if (sb.length() > 0) sb.append(",\n");
+      sb.append(c.classname());
+      sb.append(".Handler");
+   }
+   
+   private void addAddsLine(Class c, StringWriter w) throws IOException {
+      Templater t = Templater.get(getClass(), "javatemplates/contract.adds.call.template");
+      Map<String,String> vals = new HashMap<>();
+      vals.put("class", c.classname());
+      t.expand(vals, w);
    }
    
    private String generateComment(String comment) {

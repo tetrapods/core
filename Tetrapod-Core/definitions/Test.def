@@ -70,6 +70,10 @@ message MySub.StatusUpdate
 message MySub.OtherUpdate 
    1: int accountId
    2: string name
+   
+message NonSub 
+   1: int accountId
+   2: string name
 
 struct TestInfo 
    1: int test = 5

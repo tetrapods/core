@@ -6,18 +6,22 @@ import java.util.*;
 
 class CodeGenContext {
 
-   public static class Class {
-      String       name;
-      String       type;
-      String       subscription;
-      String       structId;
-      String       security;
-      String       comment;
-      List<Field>  fields = new ArrayList<>();
-      Set<String>  errors = new TreeSet<>();
+   public static class Class implements Comparable<Class> {
+      String      name;
+      String      type;
+      String      subscription;
+      String      structId;
+      String      security;
+      String      comment;
+      List<Field> fields = new ArrayList<>();
+      Set<String> errors = new TreeSet<>();
 
       public String classname() {
          return name + (type.equals("struct") ? "" : CodeGen.toTitleCase(type));
+      }
+
+      public int compareTo(Class o) {
+         return name.compareTo(o.name);
       }
    }
 
@@ -34,15 +38,17 @@ class CodeGenContext {
       }
    }
 
-   public ArrayList<Class> classes         = new ArrayList<>();
-   public ArrayList<Field> globalConstants = new ArrayList<>();
-   public String           serviceName;
-   public String           serviceVersion;
-   public String           serviceComment;
-   public String           defaultSecurity = "internal";
-   public Set<String>      allErrors       = new TreeSet<>();
-   public Set<String>      subscriptions   = new TreeSet<>();
-   public boolean          inGlobalScope   = true;
+   public ArrayList<Class>         classes         = new ArrayList<>();
+   public ArrayList<Field>         globalConstants = new ArrayList<>();
+   public String                   serviceName;
+   public String                   serviceVersion;
+   public String                   serviceComment;
+   public String                   defaultSecurity = "internal";
+   public Set<String>              allErrors       = new TreeSet<>();
+   public Set<String>              subscriptions   = new TreeSet<>();
+   public boolean                  inGlobalScope   = true;
+
+   private Map<String, Set<Class>> classesByType   = new HashMap<>();
 
    public void parseClass(TokenizedLine line) throws ParseException {
       ArrayList<String> parts = line.parts;
@@ -74,11 +80,12 @@ class CodeGenContext {
                subscriptions.add(c.subscription);
                c.name = n.substring(ix + 1);
             } else {
+               c.subscription = "";
                c.name = n;
             }
             inGlobalScope = false;
             break;
-            
+
          default:
             throw new ParseException("unknown class: " + c.type);
       }
@@ -87,6 +94,12 @@ class CodeGenContext {
          c.structId = parts.get(n - 2);
       }
       classes.add(c);
+      Set<Class> set = classesByType.get(c.type);
+      if (set == null) {
+         set = new TreeSet<Class>();
+         classesByType.put(c.type, set);
+      }
+      set.add(c);
    }
 
    public void parseField(TokenizedLine line) throws ParseException {
@@ -146,13 +159,18 @@ class CodeGenContext {
       ArrayList<String> parts = line.parts;
       if (inGlobalScope || !classes.get(classes.size() - 1).type.equals("request"))
          throw new ParseException("errors must be defined inside a request");
-      
+
       Class myClass = classes.get(classes.size() - 1);
       for (int i = 1; i < parts.size(); i++) {
          String err = parts.get(i);
          myClass.errors.add(err);
          allErrors.add(err);
       }
+   }
+
+   public Collection<Class> classesByType(String type) {
+      Set<Class> c = classesByType.get(type);
+      return c == null ? new ArrayList<Class>() : c;
    }
 
 }
