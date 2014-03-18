@@ -27,6 +27,10 @@ public class {{class}} extends Contract {
    public void addMessages(StructureFactory factory, int dynamicId) {
       {{messageAdds}}
    }
+   
+   public String getName() {
+      return {{class}}.NAME;
+   } 
 
    {{subscriptions}}
    

@@ -12,6 +12,17 @@ import java.util.concurrent.*;
 @SuppressWarnings("unused")
 public class Actor extends Structure {
    
+   public static final byte TYPE_TETRAPOD = 1; 
+   public static final byte TYPE_SERVICE = 2; 
+   public static final byte TYPE_ADMIN = 3; 
+   public static final byte TYPE_CLIENT = 4; 
+   public static final byte TYPE_ANONYMOUS = 5; 
+   public static final int STATUS_INIT = 1; 
+   public static final int STATUS_PAUSED = 2; 
+   public static final int STATUS_GONE = 4; 
+   public static final int STATUS_BUSY = 8; 
+   public static final int STATUS_OVERLOADED = 16; 
+   
    public static final int STRUCT_ID = 4840548;
     
    public Actor() {

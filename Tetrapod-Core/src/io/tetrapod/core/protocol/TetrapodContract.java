@@ -29,5 +29,9 @@ public class TetrapodContract extends Contract {
    public void addMessages(StructureFactory factory, int dynamicId) {
       
    }
+   
+   public String getName() {
+      return TetrapodContract.NAME;
+   } 
 
 }

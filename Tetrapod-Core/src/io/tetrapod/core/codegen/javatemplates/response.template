@@ -13,6 +13,8 @@ import java.util.concurrent.*;
 @SuppressWarnings("unused")
 public class {{class}} extends Response {
    
+   {{constants}}
+   
    public static final int STRUCT_ID = {{structid}};
     
    public {{class}}() {
