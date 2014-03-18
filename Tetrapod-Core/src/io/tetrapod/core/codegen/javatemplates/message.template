@@ -7,6 +7,7 @@ import io.tetrapod.core.serialize.*;
 import io.tetrapod.core.rpc.*;
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.*;
 
 {{classcomment}}
 @SuppressWarnings("unused")
@@ -61,6 +62,12 @@ public class {{class}} extends Message {
    
    public static interface Handler extends SubscriptionAPI {
       void message{{rawname}}({{class}} m);
+   }
+   
+   public static Callable<Structure> getInstanceFactory() {
+      return new Callable<Structure>() {
+         public Structure call() { return new {{class}}(); }
+      };
    }
 }
 

@@ -15,6 +15,8 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 
+import static io.tetrapod.core.rpc.Request.*;
+
 import org.slf4j.*;
 
 /**
@@ -195,32 +197,28 @@ public class Session extends ChannelInboundHandlerAdapter {
                      try {
                         // TODO: RequestContexts
                         Response res = req.dispatch(svc);
-                        if (res != null) {
-                           // TODO: Pending responses
-                           sendResponse(res, header.requestId);
-                        } else {
-                           sendResponse(new Error(0/*FIXME*/), header.requestId);
-                        }
+                        // TODO: Pending responses
+                        sendResponse(res, header.requestId);
                      } catch (Throwable e) {
                         logger.error(e.getMessage(), e);
-                        sendResponse(new Error(0/*FIXME*/), header.requestId);
+                        sendResponse(new Error(ERROR_UNKNOWN), header.requestId);
                      }
                   }
                });
             } else {
                logger.warn("No handler found for {} {}", header.structId, header);
-               sendResponse(new Error(0/*FIXME*/), header.requestId);
+               sendResponse(new Error(ERROR_UNKNOWN_REQUEST), header.requestId);
             }
          } else {
             // FIXME: RELAY -- find session for toId and send on, with response handler to write back
          }
       } else {
          logger.warn("Could not find structure {}", header.structId);
-         sendResponse(new Error(0/*FIXME*/), header.requestId);
+         sendResponse(new Error(ERROR_SERIALIZATION), header.requestId);
       }
    }
 
-   public class TetrapodService implements TetrapodServiceAPI {
+   public class TetrapodService implements TetrapodContract.API {
       @Override
       public Response requestRegister(RegisterRequest r) {
          return new RegisterResponse();
@@ -228,7 +226,7 @@ public class Session extends ChannelInboundHandlerAdapter {
 
       @Override
       public Response genericRequest(Request r) {
-         return new Error(0);
+         return new Error(ERROR_UNKNOWN_REQUEST);
       }
    }
 

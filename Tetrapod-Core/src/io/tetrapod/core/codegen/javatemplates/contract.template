@@ -7,10 +7,18 @@ import java.util.*;
 
 {{classcomment}}
 @SuppressWarnings("unused")
-public interface {{class}} extends 
-   {{handlers}}
-{
+public class {{class}} {
    public static final int VERSION = {{version}};
+   
+   {{requestInterface}}
+   
+   {{subscriptionInterfaces}}
+
+   {{requestAdds}}
+
+   {{responseAdds}}
+   
+   {{subscriptionAdds}}
    
    {{errors}}
 }

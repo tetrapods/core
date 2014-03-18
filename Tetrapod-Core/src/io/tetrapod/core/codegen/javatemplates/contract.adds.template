@@ -1,0 +1,3 @@
+public static void add{{name}}(StructureFactory factory, int dynamicId) {
+   {{adds}}
+}

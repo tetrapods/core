@@ -30,40 +30,44 @@ class JavaGenerator implements LanguageGenerator {
    }
 
    public void generate(CodeGenContext context) throws IOException,ParseException {
-      Map<String,StringBuilder> subscriptions = new HashMap<>();
-      StringBuilder sb = new StringBuilder();
       for (Class c : context.classes) {
          generateClass(c, context.serviceName + "ServiceAPI");
-         addHandlerLine(c, sb, subscriptions);
       }
-      generateService(context, sb.toString());
-      for (String sub : subscriptions.keySet()) {
-         generateSubscription(sub, subscriptions.get(sub).toString());
-      }
+      generateContract(context);
    }
    
-   private void generateService(CodeGenContext context, String handlers) throws IOException,ParseException {
-      Templater t = Templater.get(getClass(), "javatemplates/servicerpc.template");
+   private void generateContract(CodeGenContext context) throws IOException,ParseException {
+      Templater t = Templater.get(getClass(), "javatemplates/contract.template");
       Map<String,String> vals = new HashMap<>();
-      vals.put("class", context.serviceName + "ServiceAPI");
+      vals.put("class", context.serviceName + "Contract");
       vals.put("package", packageName);
       vals.put("version", context.serviceVersion);
-      vals.put("handlers", handlers);
+      vals.put("requestInterface", genContractInterface(context, "API", "request", null));
+      vals.put("requestAdds", genContractAdds(context, "request", null));
+      vals.put("responseAdds", genContractAdds(context, "response", null));
+      StringBuilder sbInterfaces = new StringBuilder();
+      StringBuilder sbAdds = new StringBuilder();
+      for (String sub : context.subscriptions) {
+         sbInterfaces.append(genContractInterface(context, sub + "Subscription", "message", sub));
+         sbAdds.append(genContractAdds(context, "message", sub));
+      }
+      vals.put("subscriptionInterfaces", sbInterfaces.toString());
+      vals.put("subscriptionAdds", sbAdds.toString());
       vals.put("classcomment", generateComment(context.serviceComment));
       addErrors(context.allErrors, true, context.serviceName, vals);
       t.expandAndTrim(vals, getFilename(vals.get("class")));
    }
 
-   private void generateSubscription(String name, String handlers) throws IOException,ParseException {
-      Templater t = Templater.get(getClass(), "javatemplates/subscription.template");
-      Map<String,String> vals = new HashMap<>();
-      vals.put("class", name + "Subscription");
-      vals.put("package", packageName);
-      vals.put("handlers", handlers);
-      t.expandAndTrim(vals, getFilename(vals.get("class")));
+   private String genContractAdds(CodeGenContext context, String type, String subscription) {
+      // TODO Auto-generated method stub
+      return null;
    }
 
-   
+   private String genContractInterface(CodeGenContext context, String name, String type, String subscription) {
+      // TODO Auto-generated method stub
+      return null;
+   }
+
    private void generateClass(Class c, String serviceName) throws IOException,ParseException {
       Templater t = Templater.get(getClass(), "javatemplates/" + c.type.toLowerCase() + ".template");
       Map<String,String> vals = new HashMap<>();

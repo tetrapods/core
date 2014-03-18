@@ -41,6 +41,7 @@ class CodeGenContext {
    public String           serviceComment;
    public String           defaultSecurity = "internal";
    public Set<String>      allErrors       = new TreeSet<>();
+   public Set<String>      subscriptions   = new TreeSet<>();
    public boolean          inGlobalScope   = true;
 
    public void parseClass(TokenizedLine line) throws ParseException {
@@ -70,6 +71,7 @@ class CodeGenContext {
             int ix = n.indexOf('.');
             if (ix >= 0) {
                c.subscription = n.substring(0, ix);
+               subscriptions.add(c.subscription);
                c.name = n.substring(ix + 1);
             } else {
                c.name = n;

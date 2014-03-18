@@ -1,0 +1,3 @@
+public static interface {{name}} extends
+   {{handlers}}
+   {}
