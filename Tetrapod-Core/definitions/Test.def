@@ -34,7 +34,7 @@ internal request Test [998]
    
    # errors are integer constants, the value is a stable hash of the error name.  they can only be
    # declared inside of requests.  the error gets defined in the global service class and referenced
-   # in the specific request class.  in some opeational modes requests return codes are checked to
+   # in the specific request class.  in some operational modes requests return codes are checked to
    # make sure they are from this set.  all requests are assumed to be able to return UNKNOWN_ERROR and
    # as such its declaration is not needed
    error TOO_MUCH_AWESOME // genned comments don't attach to errors alas

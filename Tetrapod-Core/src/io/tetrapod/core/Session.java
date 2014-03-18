@@ -50,7 +50,7 @@ public class Session extends ChannelInboundHandlerAdapter {
    private AtomicLong                 lastHeardFrom      = new AtomicLong();
 
    private int                        myId               = 0;
-   
+
    private StructureFactory           structureFactory   = null;
 
    public Session(SocketChannel channel, Dispatcher dispatcher, StructureFactory factory) {
@@ -187,7 +187,7 @@ public class Session extends ChannelInboundHandlerAdapter {
       final ByteBufDataSource reader = new ByteBufDataSource(in);
       final RequestHeader header = new RequestHeader();
       header.read(reader);
-      final Request req = (Request)structureFactory.make(0 /* FIXME - dynamicId */, header.structId);
+      final Request req = (Request) structureFactory.make(0 /* FIXME - dynamicId */, header.structId);
       if (req != null) {
          req.read(reader);
          logger.debug("Got Request: {}", req);

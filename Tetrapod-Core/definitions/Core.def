@@ -6,18 +6,41 @@ java outdir src
 // The core tetrapod service
 service Tetrapod version 1
 
+struct Actor
+   1: int actorId  
+   2: int parentId  
+   3: long reclaimToken  
+   4: string host
+   5: int status
+   6: byte type
+   7: string name
+   8: int build  
+   9: int version  
+   
+   const byte TYPE_TETRAPOD = 1
+   const byte TYPE_SERVICE = 2
+   const byte TYPE_ADMIN = 3
+   const byte TYPE_CLIENT = 4
+   const byte TYPE_ANONYMOUS = 5
+    
+   const int     STATUS_INIT       = 1
+   const int     STATUS_PAUSED     = 2
+   const int     STATUS_GONE       = 4
+   const int     STATUS_BUSY       = 8
+   const int     STATUS_OVERLOADED = 16
+
 struct Handshake 
    1: int wireVersion  
    2: int wireOptions 
 
 struct RequestHeader
-   1: int requestId 
-   2: int fromId   
-   3: int toId
-   4: byte fromType;
-   5: byte timeout
-   6: int version
-   7: int structId
+   1: int 	requestId 
+   2: int 	fromId   
+   3: int 	toId
+   4: byte 	fromType;
+   5: byte 	timeout
+   6: int 	version
+   7: int 	structId
    
    
 struct ResponseHeader
