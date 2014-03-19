@@ -5,6 +5,9 @@ import io.netty.buffer.ByteBuf;
 import java.io.IOException;
 import java.nio.charset.Charset;
 
+/**
+ * A binary protocol datasource to/from a netty ByteBuf. 
+ */
 public class ByteBufDataSource extends StreamDataSource {
 
    public ByteBufDataSource(ByteBuf buf) {
@@ -20,7 +23,6 @@ public class ByteBufDataSource extends StreamDataSource {
 
    @Override
    public String read_string(int tag) throws IOException {
-      // more efficient that copying into a byte[] first
       int len = readVarInt();
       String s = buffer.toString(buffer.readerIndex(), len, Charset.forName("UTF-8"));
       buffer.skipBytes(len);

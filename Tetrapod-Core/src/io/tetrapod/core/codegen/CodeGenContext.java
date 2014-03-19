@@ -103,13 +103,6 @@ class CodeGenContext {
    }
 
    public void parseField(TokenizedLine line) throws ParseException {
-      // field 1 string name = scott
-      // field 2 string passwordHash = unknown
-      // field 6 string <maps> int map
-      // field 5 int <list> password
-      // field 3 int priority
-      // const int X = 7
-      // const int <list> = {}
       List<String> parts = line.parts;
       String tag = parts.get(1);
       String type = parts.get(2);
@@ -146,7 +139,6 @@ class CodeGenContext {
    }
 
    public void parseService(TokenizedLine line) throws ParseException {
-      // service NAME version NUM
       if (line.parts.size() != 4)
          throw new ParseException("expected exactly four tokens for service");
       serviceName = line.parts.get(1);
@@ -155,7 +147,6 @@ class CodeGenContext {
    }
 
    public void parseErrors(TokenizedLine line) throws ParseException {
-      // error A B C ...
       ArrayList<String> parts = line.parts;
       if (inGlobalScope || !classes.get(classes.size() - 1).type.equals("request"))
          throw new ParseException("errors must be defined inside a request");

@@ -3,13 +3,20 @@ package io.tetrapod.core.codegen;
 import java.io.*;
 import java.util.*;
 
+/**
+ * Main class for code generation.  Does the low level tokeninzing and then passes
+ * off to a CodeGenContext class that does more of a semantic parse and stores the
+ * result of the parse. Then it passes that to a LanguageGenerator to write the 
+ * final language specific files.
+ */
 public class CodeGen {
 
    public static void main(String[] args) {
       // just hardcode for now for testing
       args = new String[] { "definitions", "java" };
       if (args.length < 1) {
-         System.err.println("usage: arguments are filename lang1 lang2 ..");
+         System.err.println("usage: arguments are filename lang1 lang2 ...");
+         System.err.println("       if filename is a folder it will recursively run on all the files");
       }
       CodeGen cg = new CodeGen();
       if (args.length == 1) {

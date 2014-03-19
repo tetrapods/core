@@ -9,6 +9,7 @@ import io.tetrapod.core.*;
 /**
  * The core tetrapod service
  */
+
 @SuppressWarnings("unused")
 public class TetrapodContract extends Contract {
    public static final int VERSION = 1;
@@ -20,10 +21,12 @@ public class TetrapodContract extends Contract {
    
    public void addRequests(StructureFactory factory, int dynamicId) {
       factory.add(dynamicId, RegisterRequest.STRUCT_ID, RegisterRequest.getInstanceFactory());
+      
    }
    
    public void addResponses(StructureFactory factory, int dynamicId) {
       factory.add(dynamicId, RegisterResponse.STRUCT_ID, RegisterResponse.getInstanceFactory());
+      
    }
    
    public void addMessages(StructureFactory factory, int dynamicId) {

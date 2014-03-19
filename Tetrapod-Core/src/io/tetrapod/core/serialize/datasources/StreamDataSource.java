@@ -8,10 +8,8 @@ import java.lang.reflect.Array;
 import java.util.*;
 
 /**
- * A datasource based on streaming. This is basically our wire protocol although the actual
+ * A datasource based on streaming. This is basically the wire protocol although the actual
  * streaming of bytes is left to subclasses.
- * <p>
- * This does not support random access by tag.
  * 
  * @author fortin
  */

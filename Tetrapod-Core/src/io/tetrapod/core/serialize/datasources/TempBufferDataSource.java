@@ -2,6 +2,13 @@ package io.tetrapod.core.serialize.datasources;
 
 import java.io.ByteArrayOutputStream;
 
+/**
+ * A reusable data source that gives access to its internal buffer.  Used in
+ * the streaming protocol as a temporary destination for variable length fields
+ * so that the byte count can be prefixed to the field data.
+ * <p>
+ * This datasource can only be used as a write target.
+ */
 public class TempBufferDataSource extends IOStreamDataSource {
 
    private static class MyByteArrayOutputStream extends ByteArrayOutputStream {

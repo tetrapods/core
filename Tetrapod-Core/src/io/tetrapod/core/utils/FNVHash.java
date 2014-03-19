@@ -1,4 +1,4 @@
-package io.tetrapod.core.codegen;
+package io.tetrapod.core.utils;
 
 
 /*

@@ -8,6 +8,12 @@ import java.io.IOException;
 import java.lang.reflect.Array;
 import java.util.*;
 
+/**
+ * A datasource that supports reading and writing to json objects.  The fields
+ * are keyed by the tag so it's not very readable.  Using the field names would
+ * be more readable but would require introducing a constraint that field names 
+ * could not change. 
+ */
 public class JSONDataSource implements DataSource {
 
    private JSONObject       json;

@@ -1,4 +1,4 @@
-package io.tetrapod.core.codegen;
+package io.tetrapod.core.templates;
 
 import java.io.*;
 import java.util.*;
@@ -7,14 +7,11 @@ import java.util.*;
  * Simple templating system.  Templates can have {{key}} in them.  Upon expanding the keys
  * are looked up in a passed in map and replaced.  Templates optionally memoized (on by default).
  * <p>
- * 
  * If a value has embedded new lines in it, each line will be indented so that it lines up with
  * the start of the {{key}} in the the template.
  * <p>
- * 
- * Opening but not closing a {{key}} throws a parse error as an IOException.
- * 
- * @author fortin
+ * Opening but not closing a {{key}} throws a parse error as an IOException.  Keys which are have
+ * no value to expand are left as-is in the output.
  */
 public class Templater {
    
@@ -61,13 +58,13 @@ public class Templater {
       return this;
    }
 
-   public String expand(Map<String, String> values) throws IOException {
+   public String expand(TemplateValues values) throws IOException {
       StringWriter sw = new StringWriter();
       expand(values, sw);
       return sw.toString();
    }
 
-   public void expand(Map<String, String> values, File file) throws IOException {
+   public void expand(TemplateValues values, File file) throws IOException {
       try (BufferedWriter bw = new BufferedWriter(new FileWriter(file))) {
          expand(values, bw);
       }
@@ -76,7 +73,7 @@ public class Templater {
    /**
     * Expand, getting rid of consecutive whitespace-only lines.
     */
-   public void expandAndTrim(Map<String, String> values, File file) throws IOException {
+   public void expandAndTrim(TemplateValues values, File file) throws IOException {
       String s = expand(values);
       String[] lines = s.split("\n|\r\n");
       try (BufferedWriter bw = new BufferedWriter(new FileWriter(file))) {
@@ -92,7 +89,7 @@ public class Templater {
       }
    }
 
-   public void expand(Map<String, String> values, Writer out) throws IOException {
+   public void expand(TemplateValues values, Writer out) throws IOException {
       int indent = 0;
       int n = chars.length;
       for (int i = 0; i < n; i++) {
@@ -108,26 +105,17 @@ public class Templater {
       }
    }
 
-   private int doExpand(int startIx, Map<String, String> values, int indent, Writer out) throws IOException {
+   private int doExpand(int startIx, TemplateValues values, int indent, Writer out) throws IOException {
       int endIx = startIx + 1;
       while (endIx < chars.length && chars[endIx] != '}')
          endIx++;
       if (endIx + 1 >= chars.length || chars[endIx + 1] != '}')
          throw new IOException("unclosed templated string");
       String key = new String(chars, startIx, endIx - startIx);
-      String val = values.get(key);
-      if (val == null) {
-         out.append("{{" + key + "}}");
+      if (values.has(key)) {
+         values.write(key, out, indent);
       } else {
-         String[] lines = val.split("\n");
-         out.append(lines[0]);
-         for (int k = 1; k < lines.length; k++) {
-            out.write('\n');
-            for (int ii = 0; ii < indent; ii++) {
-               out.write(' ');
-            }
-            out.write(lines[k]);
-         }
+         out.append("{{" + key + "}}");
       }
       return endIx + 1;
    }

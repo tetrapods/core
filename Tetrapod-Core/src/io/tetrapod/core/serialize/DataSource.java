@@ -5,6 +5,10 @@ import io.tetrapod.core.rpc.Structure;
 import java.io.IOException;
 import java.util.List;
 
+/**
+ * A fairly lengthy interface defining read/write interface for serializing code
+ * generate objects.
+ */
 public interface DataSource {
    
    public int readTag() throws IOException;

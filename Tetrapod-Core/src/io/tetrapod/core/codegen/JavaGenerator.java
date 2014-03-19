@@ -3,6 +3,8 @@ package io.tetrapod.core.codegen;
 import io.tetrapod.core.codegen.CodeGen.TokenizedLine;
 import io.tetrapod.core.codegen.CodeGenContext.Class;
 import io.tetrapod.core.codegen.CodeGenContext.Field;
+import io.tetrapod.core.templates.*;
+import io.tetrapod.core.utils.FNVHash;
 
 import java.io.*;
 import java.util.*;
@@ -31,108 +33,100 @@ class JavaGenerator implements LanguageGenerator {
 
    public void generate(CodeGenContext context) throws IOException,ParseException {
       for (Class c : context.classes) {
-         generateClass(c, context.serviceName + "ServiceAPI");
+         generateClass(c, context.serviceName + "Contract");
       }
       generateContract(context);
    }
    
    private void generateContract(CodeGenContext context) throws IOException,ParseException {
-      Templater t = Templater.get(getClass(), "javatemplates/contract.template");
-      Map<String,String> vals = new HashMap<>();
-      vals.put("class", context.serviceName + "Contract");
-      vals.put("package", packageName);
-      vals.put("version", context.serviceVersion);
-      vals.put("handlers", genHandlers(context, "request", null));
-      vals.put("requestAdds", genContractAdds(context, "request", null));
-      vals.put("responseAdds", genContractAdds(context, "response", null));
-      vals.put("messageAdds", genContractAdds(context, "message", ""));
-      vals.put("name", context.serviceName);
-      StringBuilder sb = new StringBuilder();
-      for (String sub : context.subscriptions) {
-         sb.append(genSubscriptions(context, sub));
+      Templater t = template("contract");
+      TemplateValues vals = new TemplateValues();
+      vals.add("class", context.serviceName + "Contract");
+      vals.add("package", packageName);
+      vals.add("version", context.serviceVersion);
+      vals.add("name", context.serviceName);
+      for (String sub : context.subscriptions)
+         vals.add("subscriptions", genSubscriptions(context, sub));      
+      vals.setSeperator("handlers", ",\n");
+      vals.setSeperator("requestAdds", "\n");
+      vals.setSeperator("responseAdds", "\n");
+      vals.setSeperator("messageAdds", "\n");
+      for (Class c : context.classesByType("request")) {
+         vals.add("handlers", c.classname() + ".Handler");
+         vals.add("requestAdds", template("contract.adds.call").expand(new TemplateValues("class", c.classname())));
       }
-      vals.put("subscriptions", sb.toString());
-      vals.put("classcomment", generateComment(context.serviceComment));
+      for (Class c : context.classesByType("response")) {
+         vals.add("responseAdds", template("contract.adds.call").expand(new TemplateValues("class", c.classname())));
+      }
+      for (Class c : context.classesByType("message")) {
+         if (c.subscription.isEmpty())
+            vals.add("messageAdds", template("contract.adds.call").expand(new TemplateValues("class", c.classname())));
+      }
+      vals.setIfEmpty("handlers", "");
+      vals.setIfEmpty("requestAdds", "");
+      vals.setIfEmpty("responseAdds", "");
+      vals.setIfEmpty("messageAdds", "");
+      vals.setIfEmpty("subscriptions", "");
+      vals.add("classcomment", generateComment(context.serviceComment));
       addErrors(context.allErrors, true, context.serviceName, vals);
       t.expandAndTrim(vals, getFilename(vals.get("class")));
    }
 
    private String genSubscriptions(CodeGenContext context, String subscription) throws IOException {
-      Templater t = Templater.get(getClass(), "javatemplates/contract.subscription.template");
-      Map<String,String> vals = new HashMap<>();
-      vals.put("name", subscription);
-      vals.put("handlers", genHandlers(context, "message", subscription));
-      vals.put("adds", genContractAdds(context, "message", subscription));
+      Templater t = template("contract.subscription");
+      TemplateValues vals = new TemplateValues();
+      vals.setSeperator("handlers", ",\n");
+      vals.setSeperator("adds", "\n");
+      vals.add("name", subscription);
+      for (Class c : context.classesByType("message")) {
+         if (subscription.equals(c.subscription)) {
+            vals.add("handlers", c.classname() + ".Handler");
+            vals.add("adds", template("contract.adds.call").expand(new TemplateValues("class", c.classname())));
+         }
+      }
       return t.expand(vals);
-      
-   }
-
-   private String genContractAdds(CodeGenContext context, String type, String subscription) throws IOException {
-      StringWriter w = new StringWriter();
-      for (Class c : context.classesByType(type)) {
-         if (subscription != null && !subscription.equals(c.subscription))
-            continue;
-         addAddsLine(c, w);
-      }
-      return w.toString();      
-   }
-
-   private String genHandlers(CodeGenContext context, String type, String subscription) {
-      StringBuilder sb = new StringBuilder();
-      for (Class c : context.classesByType(type)) {
-         if (subscription != null && !subscription.equals(c.subscription))
-            continue;
-         addHandlerLine(c, sb);
-      }
-      return sb.toString();
    }
 
    private void generateClass(Class c, String serviceName) throws IOException,ParseException {
       Templater t = Templater.get(getClass(), "javatemplates/" + c.type.toLowerCase() + ".template");
-      Map<String,String> vals = new HashMap<>();
-      vals.put("rawname", c.name);
-      vals.put("class", c.classname());
-      vals.put("package", packageName);
-      vals.put("security", c.security.toUpperCase());
-      vals.put("classcomment", generateComment(c.comment));
+      TemplateValues vals = new TemplateValues();
+      vals.add("rawname", c.name);
+      vals.add("class", c.classname());
+      vals.add("package", packageName);
+      vals.add("security", c.security.toUpperCase());
+      vals.add("classcomment", generateComment(c.comment));
       if (c.structId == null) {
          // auto-genned hashes are never less than 10
          c.structId = "" + ((FNVHash.hash32(c.classname()) & 0xffffff) + 10);
       }
-      vals.put("structid", c.structId);
+      vals.add("structid", c.structId);
       addFieldValues(c.fields, vals);
       addConstantValues(c.fields, vals);
       addErrors(c.errors, false, serviceName, vals);
       if (c.fields.size() > 0)
-         vals.put("full-constructor", Templater.get(getClass(), "javatemplates/full.constructor.template").expand(vals));
+         vals.add("full-constructor", Templater.get(getClass(), "javatemplates/full.constructor.template").expand(vals));
       else
-         vals.put("full-constructor", "");
+         vals.add("full-constructor", "");
       t.expandAndTrim(vals, getFilename(c.classname()));
    }
 
-   private void addErrors(Collection<String> errors, boolean globalScope, String serviceName, Map<String, String> vals) throws IOException,ParseException {
-      StringBuilder sb = new StringBuilder();
-      boolean isFirst = true;
+   private void addErrors(Collection<String> errors, boolean globalScope, String serviceName, TemplateValues vals) throws IOException,ParseException {
+      Templater t = template("field.errors");
+      vals.setSeperator("errors", "\n");
       for (String err : errors) {
-         Map<String,String> v = new HashMap<>();
-         v.put("name", err);
+         TemplateValues v = new TemplateValues();
+         v.add("name", err);
          // error hashes are never less than 100
-         v.put("hash", ""+ ((FNVHash.hash32(err) & 0xffffff) + 100));
-         v.put("service", serviceName);
-         String[] lines = getTemplater("javatemplates/field.errors.template").expand(v).split("\r\n|\n|\r");
+         v.add("hash", ""+ ((FNVHash.hash32(err) & 0xffffff) + 100));
+         v.add("service", serviceName);
+         String[] lines = t.expand(v).split("\r\n|\n|\r");
          String line = globalScope ? lines[0] : lines[1];
-         String newline = "\n";
-         if (isFirst) {
-            isFirst = false;
-            newline = "";
-         }
-         sb.append(newline);
-         sb.append(line);
+         vals.add("errors", line);
       }
-      vals.put("errors", sb.toString());
+      vals.setIfEmpty("errors", "");
    }
 
-   private void addFieldValues(List<Field> fields, Map<String,String> globalVals) throws ParseException, IOException {
+   private void addFieldValues(List<Field> fields, TemplateValues globalVals) throws ParseException, IOException {
       StringBuilder declarations = new StringBuilder();
       StringBuilder defaults = new StringBuilder();
       StringBuilder writes = new StringBuilder();
@@ -143,8 +137,8 @@ class JavaGenerator implements LanguageGenerator {
       for (Field f : fields) {
          if (f.isConstant())
             continue;
-         Map<String,String> vals = getTemplateValues(f);
-         String[] lines = getTemplater(vals.get("template")).expand(vals).split("\r\n|\n|\r");
+         TemplateValues vals = getTemplateValues(f);
+         String[] lines = template(vals.get("template")).expand(vals).split("\r\n|\n|\r");
          String newline = "\n";
          String comma = ", ";
          if (isFirst) {
@@ -168,62 +162,55 @@ class JavaGenerator implements LanguageGenerator {
          inlineInitializers.append(newline);
          inlineInitializers.append(lines[5]);
       }
-      globalVals.put("field-declarations", declarations.toString());
-      globalVals.put("field-defaults", defaults.toString());
-      globalVals.put("field-writes", writes.toString());
-      globalVals.put("field-reads", reads.toString());
-      globalVals.put("inline-declarations", inlineDeclarations.toString());
-      globalVals.put("inline-initializers", inlineInitializers.toString());
+      globalVals.add("field-declarations", declarations.toString());
+      globalVals.add("field-defaults", defaults.toString());
+      globalVals.add("field-writes", writes.toString());
+      globalVals.add("field-reads", reads.toString());
+      globalVals.add("inline-declarations", inlineDeclarations.toString());
+      globalVals.add("inline-initializers", inlineInitializers.toString());
    }
 
-   private void addConstantValues(List<Field> fields, Map<String,String> globalVals) throws ParseException, IOException {
-      StringBuilder declarations = new StringBuilder();
-      boolean isFirst = true;
+   private void addConstantValues(List<Field> fields, TemplateValues globalVals) throws ParseException, IOException {
+      globalVals.setSeperator("constants", "\n");
       for (Field f : fields) {
          if (!f.isConstant())
             continue;
-         Map<String,String> vals = getTemplateValues(f);
-         String[] lines = getTemplater(vals.get("template")).expand(vals).split("\r\n|\n|\r");
-         String newline = "\n";
-         if (isFirst) {
-            isFirst = false;
-            newline = "";
-         }
-         declarations.append(newline);
-         declarations.append(lines[0]);
+         TemplateValues vals = getTemplateValues(f);
+         String[] lines = template(vals.get("template")).expand(vals).split("\r\n|\n|\r");
+         globalVals.add("constants", lines[0]);
       }
-      globalVals.put("constants", declarations.toString());
+      globalVals.setIfEmpty("constants", "");
    }
 
-   private Map<String, String> getTemplateValues(Field f) {
-      Map<String,String> vals = new HashMap<>();
+   private TemplateValues getTemplateValues(Field f) {
+      TemplateValues vals = new TemplateValues();
       JavaTypes.Info info = JavaTypes.get(f.type);
-      vals.put("name", f.name);
-      vals.put("javatype", info.base);
-      vals.put("type", f.type);
-      vals.put("boxed", info.boxed);
+      vals.add("name", f.name);
+      vals.add("javatype", info.base);
+      vals.add("type", f.type);
+      vals.add("boxed", info.boxed);
       String defaultVal = info.defaultValue;
       if (f.defaultValue != null) {
          if (f.type.equals("string"))
             f.defaultValue = escape(f.defaultValue);
          defaultVal = info.defaultValueDelim + f.defaultValue + info.defaultValueDelim;
       }
-      vals.put("tag", f.tag);
-      String primTemplate = "field.primitives.template";
-      String structTemplate = "field.structs.template";
+      vals.add("tag", f.tag);
+      String primTemplate = "field.primitives";
+      String structTemplate = "field.structs";
       if (f.collectionType != null) {
          defaultVal = "null";
          boolean isEmpty = f.defaultValue != null && f.defaultValue.equals("<empty>");
          switch (f.collectionType) {
             case "<array>":
-               primTemplate = "field.array.primitives.template";
-               structTemplate = "field.array.structs.template";
+               primTemplate = "field.array.primitives";
+               structTemplate = "field.array.structs";
                if (isEmpty)
                   defaultVal = "new " + info.base + "[0]";
                break;
             case "<list>":
-               primTemplate = "field.list.primitives.template";
-               structTemplate = "field.list.structs.template";
+               primTemplate = "field.list.primitives";
+               structTemplate = "field.list.structs";
                if (isEmpty)
                   defaultVal = "new ArrayList<>()";
                break;
@@ -235,15 +222,11 @@ class JavaGenerator implements LanguageGenerator {
          }
       }
       if (f.isConstant()) {
-         primTemplate = structTemplate = "field.constants.template";
+         primTemplate = structTemplate = "field.constants";
       }
-      vals.put("template", "javatemplates/" + (info.isPrimitive ? primTemplate : structTemplate));
-      vals.put("default", defaultVal);
+      vals.add("template", (info.isPrimitive ? primTemplate : structTemplate));
+      vals.add("default", defaultVal);
       return vals;
-   }
-
-   private Templater getTemplater(String template) throws IOException {
-      return Templater.get(getClass(), template);
    }
 
    private File getFilename(String classname) {
@@ -253,19 +236,6 @@ class JavaGenerator implements LanguageGenerator {
       }
       f.mkdirs();
       return new File(f, classname + ".java");
-   }
-   
-   private void addHandlerLine(Class c, StringBuilder sb) {
-      if (sb.length() > 0) sb.append(",\n");
-      sb.append(c.classname());
-      sb.append(".Handler");
-   }
-   
-   private void addAddsLine(Class c, StringWriter w) throws IOException {
-      Templater t = Templater.get(getClass(), "javatemplates/contract.adds.call.template");
-      Map<String,String> vals = new HashMap<>();
-      vals.put("class", c.classname());
-      t.expand(vals, w);
    }
    
    private String generateComment(String comment) {
@@ -284,6 +254,8 @@ class JavaGenerator implements LanguageGenerator {
       s = s.replace("\"", "\\\"");
       return s;
    }
-
    
+   private Templater template(String name) throws IOException {
+      return Templater.get(getClass(), "javatemplates/" + name + ".template");
+   }
 }
