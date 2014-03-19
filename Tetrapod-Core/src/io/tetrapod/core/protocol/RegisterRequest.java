@@ -17,7 +17,11 @@ public class RegisterRequest extends Request {
    public RegisterRequest() {
       defaults();
    }
-   
+
+   public RegisterRequest(int build) {
+      this.build = build;
+   }   
+
    public int build;
 
    public final Request.Security getSecurity() {

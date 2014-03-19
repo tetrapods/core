@@ -22,7 +22,9 @@ public class {{class}} extends Request {
    public {{class}}() {
       defaults();
    }
-   
+
+   {{full-constructor}}   
+
    {{field-declarations}}
 
    public final Request.Security getSecurity() {

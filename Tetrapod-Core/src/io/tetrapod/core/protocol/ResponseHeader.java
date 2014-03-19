@@ -17,6 +17,12 @@ public class ResponseHeader extends Structure {
    public ResponseHeader() {
       defaults();
    }
+
+   public ResponseHeader(int requestId, int structId, int toId) {
+      this.requestId = requestId;
+      this.structId = structId;
+      this.toId = toId;
+   }   
    
    public int requestId;
    public int structId;

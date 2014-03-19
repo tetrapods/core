@@ -2,5 +2,7 @@ public List<{{boxed}}> {{name}};
 {{name}} = {{default}};
 case {{tag}}: {{name}} = data.read_{{type}}_list(tag); break;
 if ({{name}} != null) data.write_{{type}}({{tag}}, {{name}});
+List<{{boxed}}> {{name}}
+this.{{name}} = {{name}};
 
-Lines are: 1) declaration 2) initialization 3) read 4) write
+Lines are: 1) declaration 2) initialization 3) read 4) write 5) constructor declaration 6) constructor initilizer 

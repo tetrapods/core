@@ -20,6 +20,8 @@ public class {{class}} extends Message {
    public {{class}}() {
       defaults();
    }
+
+   {{full-constructor}}   
    
    {{field-declarations}}
 

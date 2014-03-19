@@ -103,6 +103,10 @@ class JavaGenerator implements LanguageGenerator {
       addFieldValues(c.fields, vals);
       addConstantValues(c.fields, vals);
       addErrors(c.errors, false, serviceName, vals);
+      if (c.fields.size() > 0)
+         vals.put("full-constructor", Templater.get(getClass(), "javatemplates/full.constructor.template").expand(vals));
+      else
+         vals.put("full-constructor", "");
       t.expandAndTrim(vals, getFilename(c.classname()));
    }
 
@@ -133,6 +137,8 @@ class JavaGenerator implements LanguageGenerator {
       StringBuilder defaults = new StringBuilder();
       StringBuilder writes = new StringBuilder();
       StringBuilder reads = new StringBuilder();
+      StringBuilder inlineDeclarations = new StringBuilder();
+      StringBuilder inlineInitializers = new StringBuilder();
       boolean isFirst = true;
       for (Field f : fields) {
          if (f.isConstant())
@@ -140,9 +146,11 @@ class JavaGenerator implements LanguageGenerator {
          Map<String,String> vals = getTemplateValues(f);
          String[] lines = getTemplater(vals.get("template")).expand(vals).split("\r\n|\n|\r");
          String newline = "\n";
+         String comma = ", ";
          if (isFirst) {
             isFirst = false;
             newline = "";
+            comma = "";
          }
          declarations.append(newline);
          if (f.comment != null && !f.comment.trim().isEmpty()) {
@@ -155,11 +163,17 @@ class JavaGenerator implements LanguageGenerator {
          reads.append(lines[2]);
          writes.append(newline);
          writes.append(lines[3]);
+         inlineDeclarations.append(comma);
+         inlineDeclarations.append(lines[4]);
+         inlineInitializers.append(newline);
+         inlineInitializers.append(lines[5]);
       }
       globalVals.put("field-declarations", declarations.toString());
       globalVals.put("field-defaults", defaults.toString());
       globalVals.put("field-writes", writes.toString());
       globalVals.put("field-reads", reads.toString());
+      globalVals.put("inline-declarations", inlineDeclarations.toString());
+      globalVals.put("inline-initializers", inlineInitializers.toString());
    }
 
    private void addConstantValues(List<Field> fields, Map<String,String> globalVals) throws ParseException, IOException {

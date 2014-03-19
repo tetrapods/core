@@ -17,6 +17,11 @@ public class RegisterResponse extends Response {
    public RegisterResponse() {
       defaults();
    }
+
+   public RegisterResponse(int entityId, int parentId) {
+      this.entityId = entityId;
+      this.parentId = parentId;
+   }   
    
    public int entityId;
    public int parentId;

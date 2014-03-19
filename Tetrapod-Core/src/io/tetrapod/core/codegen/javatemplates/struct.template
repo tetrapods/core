@@ -20,6 +20,8 @@ public class {{class}} extends Structure {
    public {{class}}() {
       defaults();
    }
+
+   {{full-constructor}}   
    
    {{field-declarations}}
 

@@ -17,6 +17,16 @@ public class RequestHeader extends Structure {
    public RequestHeader() {
       defaults();
    }
+
+   public RequestHeader(int requestId, int fromId, int toId, byte fromType, byte timeout, int version, int structId) {
+      this.requestId = requestId;
+      this.fromId = fromId;
+      this.toId = toId;
+      this.fromType = fromType;
+      this.timeout = timeout;
+      this.version = version;
+      this.structId = structId;
+   }   
    
    public int requestId;
    public int fromId;

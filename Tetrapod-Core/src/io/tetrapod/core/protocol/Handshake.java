@@ -17,6 +17,11 @@ public class Handshake extends Structure {
    public Handshake() {
       defaults();
    }
+
+   public Handshake(int wireVersion, int wireOptions) {
+      this.wireVersion = wireVersion;
+      this.wireOptions = wireOptions;
+   }   
    
    public int wireVersion;
    public int wireOptions;

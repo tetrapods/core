@@ -28,6 +28,18 @@ public class Actor extends Structure {
    public Actor() {
       defaults();
    }
+
+   public Actor(int actorId, int parentId, long reclaimToken, String host, int status, byte type, String name, int build, int version) {
+      this.actorId = actorId;
+      this.parentId = parentId;
+      this.reclaimToken = reclaimToken;
+      this.host = host;
+      this.status = status;
+      this.type = type;
+      this.name = name;
+      this.build = build;
+      this.version = version;
+   }   
    
    public int actorId;
    public int parentId;
