@@ -1,7 +1,7 @@
 package io.tetrapod.core.rpc;
 
 import io.tetrapod.core.Session;
-import io.tetrapod.core.protocol.RequestHeader;
+import io.tetrapod.protocol.core.RequestHeader;
 
 public class RequestContext {
 

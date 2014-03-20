@@ -1,6 +1,6 @@
 package io.tetrapod.core.registry;
 
-import io.tetrapod.core.protocol.Entity;
+import io.tetrapod.protocol.core.Entity;
 
 import java.util.Map;
 

@@ -1,6 +1,4 @@
-# language specific properties, note outdir is relative to current directory of the 
-# code generator and should point to root of source tree 
-java package io.tetrapod.core.protocol
+java package io.tetrapod.protocol.core
 java outdir src
 
 // The core tetrapod service
@@ -68,4 +66,8 @@ private request Relay
 private response Relay
     1: int structId
     2: byte[] data
+    
+internal message ServiceInfo.ServiceAdded
+    1: int contractId
+    2: string name
  

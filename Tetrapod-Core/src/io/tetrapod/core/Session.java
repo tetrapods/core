@@ -1,21 +1,20 @@
 package io.tetrapod.core;
 
+import static io.tetrapod.core.rpc.Request.*;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.*;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import io.netty.util.ReferenceCountUtil;
-import io.tetrapod.core.protocol.*;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.rpc.Error;
 import io.tetrapod.core.serialize.datasources.ByteBufDataSource;
+import io.tetrapod.protocol.core.*;
 
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
-
-import static io.tetrapod.core.rpc.Request.*;
 
 import org.slf4j.*;
 

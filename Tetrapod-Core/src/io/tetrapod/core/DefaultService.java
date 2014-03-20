@@ -1,16 +1,18 @@
 package io.tetrapod.core;
 
 import io.netty.channel.ChannelFuture;
-import io.tetrapod.core.protocol.*;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.rpc.Error;
 import io.tetrapod.core.utils.Properties;
+import io.tetrapod.protocol.core.*;
 
 import java.util.concurrent.*;
 
+import io.tetrapod.protocol.service.*;
+
 import org.slf4j.*;
 
-public class DefaultService implements Service {
+public class DefaultService implements Service, BaseServiceContract.API, TetrapodContract.ServiceInfo.API {
    public static final Logger logger = LoggerFactory.getLogger(DefaultService.class);
 
    private final Dispatcher    dispatcher;
@@ -28,6 +30,7 @@ public class DefaultService implements Service {
    public void serviceInit(Properties props) {
       // add in root level contracts
       addContract(new TetrapodContract(), TetrapodContract.CONTRACT_ID);
+      addContract(new BaseServiceContract(), BaseServiceContract.CONTRACT_ID);
    }
    
    public void networkInit(Properties props) throws Exception {
@@ -46,19 +49,26 @@ public class DefaultService implements Service {
       this.peerContracts = contracts;
    }
    
-   protected void messageContractAdded(String name, int contractId) {
-      if (contract.getName().equals(name))
-         addContract(contract, contractId);
-      for (Contract c : peerContracts)
-         if (c.getName().equals(name))
-            addContract(c, contractId);
-   }
-   
    private void addContract(Contract c, int contractId) {
       c.addRequests(factory, contractId);
       c.addResponses(factory, contractId);
       c.addMessages(factory, contractId);
    }
+   
+   // Generic handlers for all request/subscriptions
+   
+   @Override
+   public Response genericRequest(Request r) {
+      logger.error("unhandled request " + r.dump());
+      return new Error(Request.ERROR_UNKNOWN_REQUEST);
+   }
+
+   @Override
+   public void genericMessage(Message message) {
+      logger.error("unhandled message " + message.dump());
+   }
+   
+   // Session.Help implementation
 
    @Override
    public Structure make(int contractId, int structId) {
@@ -81,11 +91,39 @@ public class DefaultService implements Service {
       return this;
    }
 
+   // Base service implementation
+   
    @Override
-   public Response genericRequest(Request r) {
-      logger.error("unhandled request " + r.dump());
-      return new Error(Request.ERROR_UNKNOWN_REQUEST);
+   public Response requestPause(PauseRequest r) {
+      return Response.SUCCESS;
    }
+
+   @Override
+   public Response requestUnpause(UnpauseRequest r) {
+      return Response.SUCCESS;
+   }
+
+   @Override
+   public Response requestRestart(RestartRequest r) {
+      return Response.SUCCESS;
+   }
+
+   @Override
+   public Response requestShutdown(ShutdownRequest r) {
+      return Response.SUCCESS;
+   }
+
+   // ServiceInfo subscription
+   
+   @Override
+   public void messageServiceAdded(ServiceAddedMessage m) {
+      if (contract.getName().equals(m.name))
+         addContract(contract, m.contractId);
+      for (Contract c : peerContracts)
+         if (c.getName().equals(m.name))
+            addContract(c, m.contractId);
+   }
+
 
 
 }

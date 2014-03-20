@@ -1,9 +1,9 @@
 package io.tetrapod.core;
 
 import io.netty.buffer.ByteBuf;
-import io.tetrapod.core.protocol.*;
 import io.tetrapod.core.registry.*;
 import io.tetrapod.core.rpc.*;
+import io.tetrapod.protocol.core.*;
 
 import java.security.SecureRandom;
 import java.util.Map;
