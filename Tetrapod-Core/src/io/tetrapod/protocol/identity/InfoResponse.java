@@ -1,4 +1,4 @@
-package io.tetrapod.core.protocol;
+package io.tetrapod.protocol.identity;
 
 // This is a code generated file.  All edits will be lost the next time code gen is run.
 
@@ -10,35 +10,31 @@ import java.util.*;
 import java.util.concurrent.*;
 
 @SuppressWarnings("unused")
-public class RegisterResponse extends Response {
+public class InfoResponse extends Response {
    
-   public static final int STRUCT_ID = 13376201;
+   public static final int STRUCT_ID = 3624488;
     
-   public RegisterResponse() {
+   public InfoResponse() {
       defaults();
    }
 
-   public RegisterResponse(int entityId, int parentId) {
-      this.entityId = entityId;
-      this.parentId = parentId;
+   public InfoResponse(String username) {
+      this.username = username;
    }   
    
-   public int entityId;
-   public int parentId;
+   public String username;
 
    public final Structure.Security getSecurity() {
-      return Security.PUBLIC;
+      return Security.PROTECTED;
    }
 
    public final void defaults() {
-      entityId = 0;
-      parentId = 0;
+      username = null;
    }
    
    @Override
    public final void write(DataSource data) throws IOException {
-      data.write(1, this.entityId);
-      data.write(2, this.parentId);
+      data.write(1, this.username);
       data.writeEndTag();
    }
    
@@ -48,8 +44,7 @@ public class RegisterResponse extends Response {
       while (true) {
          int tag = data.readTag();
          switch (tag) {
-            case 1: this.entityId = data.read_int(tag); break;
-            case 2: this.parentId = data.read_int(tag); break;
+            case 1: this.username = data.read_string(tag); break;
             case Codec.END_TAG:
                return;
             default:
@@ -61,12 +56,12 @@ public class RegisterResponse extends Response {
   
    @Override 
    public final int getStructId() {
-      return RegisterResponse.STRUCT_ID;
+      return InfoResponse.STRUCT_ID;
    }
       
    public static Callable<Structure> getInstanceFactory() {
       return new Callable<Structure>() {
-         public Structure call() { return new RegisterResponse(); }
+         public Structure call() { return new InfoResponse(); }
       };
    }
 }

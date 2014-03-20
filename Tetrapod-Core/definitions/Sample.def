@@ -1,12 +1,12 @@
-
+#
 # Comments: # starts a template comment
 #          // starts a comment that is attached to the next generated class (struct, message, request, response), service, 
 #             or field. It can be before or on the same line as the element
 
-java package io.tetrapod.test       # language specific
-java outdir src                     # should point to root of source tree
+java package io.tetrapod.protocol.sample        # language specific
+java outdir src                                 # should point to root of source tree
 
-service Test version 1
+service Example version 1
 default security protected          # possible values are public, protected, internal, admin. default is internal
 
 # global constants appear in the general service class

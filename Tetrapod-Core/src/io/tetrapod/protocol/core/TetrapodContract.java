@@ -1,4 +1,4 @@
-package  io.tetrapod.core.protocol;
+package  io.tetrapod.protocol.core;
 
 // This is a code generated file.  All edits will be lost the next time code gen is run.
 
@@ -43,4 +43,18 @@ public class TetrapodContract extends Contract {
       return TetrapodContract.NAME;
    } 
 
+   public static class ServiceInfo extends Contract {
+      public static interface API extends
+         ServiceAddedMessage.Handler
+         {}
+         
+      public void addMessages(StructureFactory factory, int dynamicId) {
+         factory.add(dynamicId, ServiceAddedMessage.STRUCT_ID, ServiceAddedMessage.getInstanceFactory());
+      }
+      
+      public String getName() {
+         return TetrapodContract.NAME;
+      } 
+   }
+      
 }

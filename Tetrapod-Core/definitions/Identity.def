@@ -1,0 +1,30 @@
+java package io.tetrapod.protocol.identity
+java outdir src
+
+// The base contract every service must support
+service Identity version 1
+
+const int CONTRACT_ID = 2 // hardcoded contract id, < 20 is reserved for core services
+
+public request Login
+   1: string email
+   2: string passwordHash
+   
+   error UNKNOWN_USERNAME, WRONG_PASSWORD
+   
+public response Login
+   1: int accountId
+
+public request Create
+   1: string username
+   2: string email
+   3: string password
+   
+public response Create
+   1: int accountId
+   
+protected request Info
+   1: int accountId
+   
+protected response Info
+   1: string username 

@@ -1,4 +1,4 @@
-package io.tetrapod.core.protocol;
+package io.tetrapod.protocol.core;
 
 // This is a code generated file.  All edits will be lost the next time code gen is run.
 
@@ -52,7 +52,7 @@ public class Entity extends Structure {
    public int version;
 
    public final Structure.Security getSecurity() {
-      return Security.INTERNAL;
+      return Security.PUBLIC;
    }
 
   public final void defaults() {

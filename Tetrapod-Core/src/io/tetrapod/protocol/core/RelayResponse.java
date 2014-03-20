@@ -1,4 +1,4 @@
-package io.tetrapod.core.protocol;
+package io.tetrapod.protocol.core;
 
 // This is a code generated file.  All edits will be lost the next time code gen is run.
 
@@ -10,43 +10,35 @@ import java.util.*;
 import java.util.concurrent.*;
 
 @SuppressWarnings("unused")
-public class ResponseHeader extends Structure {
+public class RelayResponse extends Response {
    
-   public static final int STRUCT_ID = 675609;
+   public static final int STRUCT_ID = 14411391;
     
-   public ResponseHeader() {
+   public RelayResponse() {
       defaults();
    }
 
-   public ResponseHeader(int requestId, int structId, int toId, int contractId) {
-      this.requestId = requestId;
+   public RelayResponse(int structId, byte[] data) {
       this.structId = structId;
-      this.toId = toId;
-      this.contractId = contractId;
+      this.data = data;
    }   
    
-   public int requestId;
    public int structId;
-   public int toId;
-   public int contractId;
+   public byte[] data;
 
    public final Structure.Security getSecurity() {
-      return Security.INTERNAL;
+      return Security.PRIVATE;
    }
 
-  public final void defaults() {
-      requestId = 0;
+   public final void defaults() {
       structId = 0;
-      toId = 0;
-      contractId = 0;
+      data = null;
    }
    
    @Override
    public final void write(DataSource data) throws IOException {
-      data.write(1, this.requestId);
-      data.write(2, this.structId);
-      data.write(3, this.toId);
-      data.write(4, this.contractId);
+      data.write(1, this.structId);
+      if (this.data != null) data.write(2, this.data);
       data.writeEndTag();
    }
    
@@ -56,10 +48,8 @@ public class ResponseHeader extends Structure {
       while (true) {
          int tag = data.readTag();
          switch (tag) {
-            case 1: this.requestId = data.read_int(tag); break;
-            case 2: this.structId = data.read_int(tag); break;
-            case 3: this.toId = data.read_int(tag); break;
-            case 4: this.contractId = data.read_int(tag); break;
+            case 1: this.structId = data.read_int(tag); break;
+            case 2: this.data = data.read_byte_array(tag); break;
             case Codec.END_TAG:
                return;
             default:
@@ -68,15 +58,15 @@ public class ResponseHeader extends Structure {
          }
       }
    }
-   
-   @Override
+  
+   @Override 
    public final int getStructId() {
-      return ResponseHeader.STRUCT_ID;
+      return RelayResponse.STRUCT_ID;
    }
-   
+      
    public static Callable<Structure> getInstanceFactory() {
       return new Callable<Structure>() {
-         public Structure call() { return new ResponseHeader(); }
+         public Structure call() { return new RelayResponse(); }
       };
    }
 }
