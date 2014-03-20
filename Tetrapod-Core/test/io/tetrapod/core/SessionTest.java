@@ -3,6 +3,7 @@ package io.tetrapod.core;
 import io.tetrapod.core.protocol.RegisterRequest;
 import io.tetrapod.core.registry.Actor;
 import io.tetrapod.core.rpc.*;
+import io.tetrapod.core.utils.Util;
 
 import org.junit.Test;
 import org.slf4j.*;
