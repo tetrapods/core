@@ -5,7 +5,6 @@ import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
-import io.tetrapod.core.protocol.TetrapodContract;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -24,30 +23,15 @@ public class Server implements Session.Listener {
    private EventLoopGroup        bossGroup   = new NioEventLoopGroup();
    private EventLoopGroup        workerGroup = new NioEventLoopGroup();
 
-   private Dispatcher            dispatcher;
    private int                   port;
-   private StructureFactory      factory     = new StructureFactory();
+   private final Service service;
 
-   public Server(int port, Dispatcher dispatcher) {
+   public Server(int port, Service service) {
+      this.service = service;
       this.port = port;
-      this.dispatcher = dispatcher;
-      this.incomingAPI(new TetrapodContract(), 0);
-      this.outgoingAPI(new TetrapodContract(), 0);
    }
    
-   public void incomingAPI(Contract c, int dynamicId) {
-      c.addRequests(factory, dynamicId);
-   }
-   
-   public void outgoingAPI(Contract c, int dynamicId) {
-      c.addResponses(factory, dynamicId);
-   }
-   
-   public void incomingMessages(Contract s, int dynamicId) {
-      s.addMessages(factory, dynamicId);
-   }
-   
-   public void start() throws Exception {
+   public ChannelFuture start() throws Exception {
       ServerBootstrap b = new ServerBootstrap();
       b.group(bossGroup, workerGroup).channel(NioServerSocketChannel.class).childHandler(new ChannelInitializer<SocketChannel>() {
          @Override
@@ -55,8 +39,7 @@ public class Server implements Session.Listener {
             startSession(ch);
          }
       }).option(ChannelOption.SO_BACKLOG, 128).childOption(ChannelOption.SO_KEEPALIVE, true);
-      b.bind(port).sync();
-      logger.info("Listening on port {}", port);
+      return b.bind(port);
    }
 
    public void stop() {
@@ -72,7 +55,7 @@ public class Server implements Session.Listener {
       logger.info("Connection from {}", ch);
       // TODO: add ssl to pipeline if configured 
       // ch.pipeline().addLast(sslEngine);
-      Session session = new Session(ch, dispatcher, factory);
+      Session session = new Session(ch, service);
       session.addSessionListener(this);
    }
 

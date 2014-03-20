@@ -6,5 +6,9 @@ public static class {{name}} extends Contract {
    public void addMessages(StructureFactory factory, int dynamicId) {
       {{adds}}
    }
+   
+   public String getName() {
+      return {{enclosingClass}}.NAME;
+   } 
 }
    

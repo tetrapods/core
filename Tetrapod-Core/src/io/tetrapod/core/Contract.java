@@ -1,6 +1,7 @@
 package io.tetrapod.core;
 
-public class Contract {
+
+abstract public class Contract {
 
    public void addRequests(StructureFactory factory, int dynamicId) {
    }
@@ -10,4 +11,6 @@ public class Contract {
    
    public void addMessages(StructureFactory factory, int dynamicId) {
    }
+   
+   abstract public String getName();
 }

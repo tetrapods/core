@@ -18,27 +18,31 @@ public class ResponseHeader extends Structure {
       defaults();
    }
 
-   public ResponseHeader(int requestId, int structId, int toId) {
+   public ResponseHeader(int requestId, int structId, int toId, int contractId) {
       this.requestId = requestId;
       this.structId = structId;
       this.toId = toId;
+      this.contractId = contractId;
    }   
    
    public int requestId;
    public int structId;
    public int toId;
+   public int contractId;
 
    public final void defaults() {
       requestId = 0;
       structId = 0;
       toId = 0;
+      contractId = 0;
    }
    
    @Override
    public final void write(DataSource data) throws IOException {
-      data.write(1, requestId);
-      data.write(2, structId);
-      data.write(3, toId);
+      data.write(1, this.requestId);
+      data.write(2, this.structId);
+      data.write(3, this.toId);
+      data.write(4, this.contractId);
       data.writeEndTag();
    }
    
@@ -48,9 +52,10 @@ public class ResponseHeader extends Structure {
       while (true) {
          int tag = data.readTag();
          switch (tag) {
-            case 1: requestId = data.read_int(tag); break;
-            case 2: structId = data.read_int(tag); break;
-            case 3: toId = data.read_int(tag); break;
+            case 1: this.requestId = data.read_int(tag); break;
+            case 2: this.structId = data.read_int(tag); break;
+            case 3: this.toId = data.read_int(tag); break;
+            case 4: this.contractId = data.read_int(tag); break;
             case Codec.END_TAG:
                return;
             default:

@@ -6,6 +6,8 @@ java outdir src
 // The core tetrapod service
 service Tetrapod version 1
 
+const int CONTRACT_ID = 1 // hardcoded contract id, < 20 is reserved for core services
+
 struct Actor
    1: int actorId  
    2: int parentId  
@@ -37,16 +39,20 @@ struct RequestHeader
    1: int 	requestId 
    2: int 	fromId   
    3: int 	toId
-   4: byte 	fromType;
+   4: byte 	fromType
    5: byte 	timeout
    6: int 	version
    7: int 	structId
+   8: int   contractId
    
+   const int TO_ID_DIRECT = 1 // request is sent to service on other end of socket 
+   const int TO_ID_SERVICE = 2 // request is sent to any service matching the contract id 
    
 struct ResponseHeader
    1: int requestId 
    2: int structId
    3: int toId
+   4: int contractId
    
 public request Register 
    1: int build   

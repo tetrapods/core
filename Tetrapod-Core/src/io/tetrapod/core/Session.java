@@ -40,23 +40,21 @@ public class Session extends ChannelInboundHandlerAdapter {
 
    private final SocketChannel        channel;
    private final int                  sessionNum         = sessionCounter.incrementAndGet();
-   private final Dispatcher           dispatcher;
 
    private final List<Listener>       listeners          = new LinkedList<Listener>();
    private final Map<Integer, Async>  pendingRequests    = new ConcurrentHashMap<>();
    private final AtomicInteger        requestCounter     = new AtomicInteger();
-
+   
+   private final Session.Helper       helper;
    private boolean                    needsHandshake     = true;
    private AtomicLong                 lastHeardFrom      = new AtomicLong();
 
    private int                        myId               = 0;
 
-   private StructureFactory           structureFactory   = null;
 
-   public Session(SocketChannel channel, Dispatcher dispatcher, StructureFactory factory) {
+   public Session(SocketChannel channel, Session.Helper helper) {
       this.channel = channel;
-      this.dispatcher = dispatcher;
-      this.structureFactory = factory;
+      this.helper = helper;
       channel.pipeline().addLast(new ChannelInboundHandlerAdapter() {
          @Override
          public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
@@ -72,18 +70,24 @@ public class Session extends ChannelInboundHandlerAdapter {
    /**
     * Listeners of session life-cycle events
     */
-   public interface Listener {
+   public static interface Listener {
       public void onSessionStart(Session ses);
 
       public void onSessionStop(Session ses);
    }
+   
+   /**
+    * Provides global helper functions
+    */
+   public static interface Helper {
+      Structure make(int contractId, int structId);
+      void execute(Runnable runnable);
+      ScheduledFuture<?> execute(int delay, TimeUnit unit, Runnable runnable);
+      ServiceAPI getHandler(int contractId);
+   }
 
    public int getSessionNum() {
       return sessionNum;
-   }
-
-   public Dispatcher getDispatcher() {
-      return dispatcher;
    }
 
    public SocketChannel getChannel() {
@@ -160,13 +164,13 @@ public class Session extends ChannelInboundHandlerAdapter {
       final ByteBufDataSource reader = new ByteBufDataSource(in);
       final ResponseHeader header = new ResponseHeader();
       header.read(reader);
-      final Response res = (Response) structureFactory.make(0 /* FIXME - dynamicId */, header.structId);
+      final Response res = (Response)helper.make(header.contractId, header.structId);
       if (res != null) {
          res.read(reader);
          logger.debug("Got Response: {}", res);
          final Async async = pendingRequests.get(header.requestId);
          if (async != null) {
-            dispatcher.dispatch(new Runnable() {
+            helper.execute(new Runnable() {
                public void run() {
                   if (res.getStructId() == Error.STRUCT_ID) {
                      async.setResponse(null, ((Error) res).code);
@@ -187,33 +191,38 @@ public class Session extends ChannelInboundHandlerAdapter {
       final ByteBufDataSource reader = new ByteBufDataSource(in);
       final RequestHeader header = new RequestHeader();
       header.read(reader);
-      final Request req = (Request) structureFactory.make(0 /* FIXME - dynamicId */, header.structId);
+      final Request req = (Request) helper.make(header.contractId, header.structId);
       if (req != null) {
          req.read(reader);
          logger.debug("Got Request: {}", req);
-         // If the request is addressed to 0, that means we want to send directly to this session owner.
-         if (header.toId == 0 || header.toId == myId) {
-            final ServiceAPI svc = findServiceHandler(header.structId);
-            if (svc != null) {
-               dispatcher.dispatch(new Runnable() {
-                  public void run() {
-                     try {
-                        // TODO: RequestContexts
-                        Response res = req.dispatch(svc);
-                        // TODO: Pending responses
-                        sendResponse(res, header.requestId);
-                     } catch (Throwable e) {
-                        logger.error(e.getMessage(), e);
-                        sendResponse(new Error(ERROR_UNKNOWN), header.requestId);
-                     }
+         boolean forceLocal = header.toId == RequestHeader.TO_ID_DIRECT || header.toId == myId;
+         ServiceAPI service = null;
+         if (forceLocal || header.toId == RequestHeader.TO_ID_SERVICE) {
+            service = helper.getHandler(header.contractId);
+         }
+         if (service != null) {
+            final ServiceAPI svc = service;
+            helper.execute(new Runnable() {
+               public void run() {
+                  try {
+                     // TODO: RequestContexts
+                     Response res = req.dispatch(svc);
+                     // TODO: Pending responses
+                     sendResponse(res, header.requestId);
+                  } catch (Throwable e) {
+                     logger.error(e.getMessage(), e);
+                     sendResponse(new Error(ERROR_UNKNOWN), header.requestId);
                   }
-               });
-            } else {
+               }
+            });
+         } else {
+            // no local handler found
+            if (forceLocal) {
                logger.warn("No handler found for {} {}", header.structId, header);
                sendResponse(new Error(ERROR_UNKNOWN_REQUEST), header.requestId);
+            } else {
+               // FIXME: RELAY -- find session for toId and send on, with response handler to write back
             }
-         } else {
-            // FIXME: RELAY -- find session for toId and send on, with response handler to write back
          }
       } else {
          logger.warn("Could not find structure {}", header.structId);
@@ -233,17 +242,10 @@ public class Session extends ChannelInboundHandlerAdapter {
       }
    }
 
-   private ServiceAPI findServiceHandler(int structId) {
-      // FIXME -- registered handlers map needed
-      if (structId == RegisterRequest.STRUCT_ID) {
-         return new TetrapodService();
-      }
-      return null;
-   }
-
-   public Async sendRequest(Request req, int toId, int fromId, byte fromType, byte timeoutSeconds) {
+   public Async sendRequest(Request req, int contractId, int toId, int fromId, byte fromType, byte timeoutSeconds) {
       final RequestHeader header = new RequestHeader();
       header.requestId = requestCounter.incrementAndGet();
+      header.contractId = contractId;
       header.toId = toId;
       header.fromId = fromId;
       header.timeout = timeoutSeconds;
@@ -380,7 +382,7 @@ public class Session extends ChannelInboundHandlerAdapter {
 
    private void scheduleHealthCheck() {
       if (isConnected()) {
-         dispatcher.dispatch(1, TimeUnit.SECONDS, new Runnable() {
+         helper.execute(1, TimeUnit.SECONDS, new Runnable() {
             public void run() {
                checkHealth();
             }
@@ -394,5 +396,5 @@ public class Session extends ChannelInboundHandlerAdapter {
       }
       return false;
    }
-
+   
 }

@@ -46,7 +46,7 @@ class JavaGenerator implements LanguageGenerator {
       vals.add("version", context.serviceVersion);
       vals.add("name", context.serviceName);
       for (String sub : context.subscriptions)
-         vals.add("subscriptions", genSubscriptions(context, sub));      
+         vals.add("subscriptions", genSubscriptions(context, sub, vals.get("class")));      
       vals.setSeperator("handlers", ",\n");
       vals.setSeperator("requestAdds", "\n");
       vals.setSeperator("responseAdds", "\n");
@@ -73,12 +73,13 @@ class JavaGenerator implements LanguageGenerator {
       t.expandAndTrim(vals, getFilename(vals.get("class")));
    }
 
-   private String genSubscriptions(CodeGenContext context, String subscription) throws IOException {
+   private String genSubscriptions(CodeGenContext context, String subscription, String enclosingClass) throws IOException {
       Templater t = template("contract.subscription");
       TemplateValues vals = new TemplateValues();
       vals.setSeperator("handlers", ",\n");
       vals.setSeperator("adds", "\n");
       vals.add("name", subscription);
+      vals.add("enclosingClass", enclosingClass);
       for (Class c : context.classesByType("message")) {
          if (subscription.equals(c.subscription)) {
             vals.add("handlers", c.classname() + ".Handler");

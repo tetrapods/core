@@ -4,7 +4,6 @@ import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
-import io.tetrapod.core.protocol.TetrapodContract;
 
 import org.slf4j.*;
 
@@ -15,10 +14,13 @@ public class Client implements Session.Listener {
    public static final Logger logger = LoggerFactory.getLogger(Client.class);
 
    private Session            session;
-   private StructureFactory   factory     = new StructureFactory();
+   private Service            service;
 
-   public Client(final String host, final int port, final Dispatcher dispatcher) throws Exception {
-      outgoingAPI(new TetrapodContract(), 0);
+   public Client(Service service) {
+      this.service = service;
+   }
+   
+   public ChannelFuture connect(String host, int port, Dispatcher dispatcher) throws Exception {
       Bootstrap b = new Bootstrap();
       b.group(dispatcher.getWorkerGroup());
       b.channel(NioSocketChannel.class);
@@ -26,27 +28,19 @@ public class Client implements Session.Listener {
       b.handler(new ChannelInitializer<SocketChannel>() {
          @Override
          public void initChannel(SocketChannel ch) throws Exception {
-            startSession(ch, dispatcher);
+            startSession(ch);
          }
       });
-      b.connect(host, port).sync();
+      return b.connect(host, port).sync();
    }
 
-   private void startSession(SocketChannel ch, Dispatcher dispatcher) {
+   private void startSession(SocketChannel ch) {
       logger.info("Connection to {}", ch);
       // TODO: ch.pipeline().addLast(sslEngine);
-      session = new Session(ch, dispatcher, factory);
+      session = new Session(ch, service);
       session.addSessionListener(this);
    }
    
-   public void outgoingAPI(Contract c, int dynamicId) {
-      c.addResponses(factory, dynamicId);
-   }
-   
-   public void incomingMessages(Contract s, int dynamicId) {
-      s.addMessages(factory, dynamicId);
-   }
-
    public void close() {
       session.close();
    }
@@ -64,4 +58,6 @@ public class Client implements Session.Listener {
    public void onSessionStop(Session ses) {
       logger.debug("Connection Closed", ses);
    }
+
+
 }

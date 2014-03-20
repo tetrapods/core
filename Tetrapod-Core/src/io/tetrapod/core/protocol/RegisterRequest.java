@@ -34,7 +34,7 @@ public class RegisterRequest extends Request {
    
    @Override
    public final void write(DataSource data) throws IOException {
-      data.write(1, build);
+      data.write(1, this.build);
       data.writeEndTag();
    }
    
@@ -44,7 +44,7 @@ public class RegisterRequest extends Request {
       while (true) {
          int tag = data.readTag();
          switch (tag) {
-            case 1: build = data.read_int(tag); break;
+            case 1: this.build = data.read_int(tag); break;
             case Codec.END_TAG:
                return;
             default:

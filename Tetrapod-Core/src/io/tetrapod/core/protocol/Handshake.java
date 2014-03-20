@@ -33,8 +33,8 @@ public class Handshake extends Structure {
    
    @Override
    public final void write(DataSource data) throws IOException {
-      data.write(1, wireVersion);
-      data.write(2, wireOptions);
+      data.write(1, this.wireVersion);
+      data.write(2, this.wireOptions);
       data.writeEndTag();
    }
    
@@ -44,8 +44,8 @@ public class Handshake extends Structure {
       while (true) {
          int tag = data.readTag();
          switch (tag) {
-            case 1: wireVersion = data.read_int(tag); break;
-            case 2: wireOptions = data.read_int(tag); break;
+            case 1: this.wireVersion = data.read_int(tag); break;
+            case 2: this.wireOptions = data.read_int(tag); break;
             case Codec.END_TAG:
                return;
             default:
