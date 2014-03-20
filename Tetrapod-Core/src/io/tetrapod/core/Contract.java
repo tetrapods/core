@@ -5,6 +5,10 @@ abstract public class Contract {
 
    public static final int UNASSIGNED = 0;
 
+   abstract public String getName();
+
+   abstract public int getContractId();
+
    public void addRequests(StructureFactory factory, int dynamicId) {
    }
 
@@ -14,8 +18,10 @@ abstract public class Contract {
    public void addMessages(StructureFactory factory, int dynamicId) {
    }
    
-   abstract public String getName();
-   
    public void setContractId(int id) {
+   }
+   
+   public boolean isCoreContract() {
+      return getContractId() < 10;
    }
 }

@@ -14,7 +14,7 @@ import io.tetrapod.core.*;
 public class TetrapodContract extends Contract {
    public static final int VERSION = 1;
    public static final String NAME = "Tetrapod";
-   public static volatile int CONTRACT_ID = 1;
+   public static final int CONTRACT_ID = 1;
    
    public static interface API extends
       RegisterRequest.Handler
@@ -37,7 +37,11 @@ public class TetrapodContract extends Contract {
    } 
    
    public void setContractId(int id) {
-      TetrapodContract.CONTRACT_ID = id;
+      
+   }
+
+   public int getContractId() {
+      return TetrapodContract.CONTRACT_ID;
    }
 
    public static class ServiceInfo extends Contract {

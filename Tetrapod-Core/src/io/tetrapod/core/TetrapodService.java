@@ -29,13 +29,15 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    public Server                      privateServer;
    public Server                      publicServer;
 
-   public void serviceInit(Properties props) {
-      super.serviceInit(props);
-      setContract(new TetrapodContract());
+   public TetrapodService() {
+      addContracts(new TetrapodContract());
+   }
 
+   public void startNetwork(String hostAndPort, String token) throws Exception {
+      super.startNetwork(hostAndPort, token);
       registry.setParentId(getEntityId());
-      publicServer = new Server(props.optInt("tetrapod.public.port", DEFAULT_PUBLIC_PORT), this);
-      privateServer = new Server(props.optInt("tetrapod.private.port", DEFAULT_PRIVATE_PORT), this);
+      publicServer = new Server(DEFAULT_PUBLIC_PORT, this);
+      privateServer = new Server(DEFAULT_PRIVATE_PORT, this);
       start();
    }
 
@@ -43,6 +45,9 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    public int getEntityId() {
       return 1; // FIXME -- each tetrapod service needs to be issued a unique id
    }
+
+   @Override
+   public void onRegistered() {}
 
    private void start() {
       logger.info("START");

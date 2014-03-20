@@ -54,11 +54,13 @@ public class Client implements Session.Listener {
    @Override
    public void onSessionStart(Session ses) {
       logger.debug("Connection Started", ses);
+      service.onClientStart(this);
    }
 
    @Override
    public void onSessionStop(Session ses) {
       logger.debug("Connection Closed", ses);
+      service.onClientStop(this);
    }
 
 }

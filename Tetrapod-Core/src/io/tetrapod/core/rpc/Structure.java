@@ -38,7 +38,6 @@ abstract public class Structure {
       Field f[] = clazz.getDeclaredFields();
 
       for (int i = 0; i < f.length; i++) {
-         f[i].setAccessible(true);
          try {
             sb.append("  ");
             sb.append(f[i].getName() + "=" + f[i].get(o) + "\n");
@@ -46,8 +45,6 @@ abstract public class Structure {
             e.printStackTrace();
          }
       }
-      if (clazz.getSuperclass() != null)
-         dump(o, clazz.getSuperclass(), sb);
    }
    
    public Security getSecurity() {

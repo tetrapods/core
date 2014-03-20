@@ -2,80 +2,110 @@ package io.tetrapod.core;
 
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.rpc.Error;
-import io.tetrapod.core.utils.Properties;
 import io.tetrapod.protocol.core.*;
 import io.tetrapod.protocol.service.*;
 
+import java.util.*;
 import java.util.concurrent.*;
 
 import org.slf4j.*;
 
-public class DefaultService implements Service, BaseServiceContract.API, TetrapodContract.ServiceInfo.API {
-   public static final Logger     logger = LoggerFactory.getLogger(DefaultService.class);
+abstract public class DefaultService implements Service, BaseServiceContract.API, TetrapodContract.ServiceInfo.API {
+   public static final Logger     logger        = LoggerFactory.getLogger(DefaultService.class);
 
    protected final Dispatcher     dispatcher;
    private final StructureFactory factory;
    private final Client           cluster;
-   private Contract               contract;
-   private Contract[]             peerContracts;
-   private long                   reclaimToken;
+   // private Server                 directConnections; // TODO: implement direct connections
+   private List<Contract>         contracts     = new ArrayList<>();
+   private List<Contract>         peerContracts = new ArrayList<>();
+
+   protected int                  entityId;
+   protected int                  parentId;
+   protected long                 reclaimToken;
 
    public DefaultService() {
       dispatcher = new Dispatcher();
       factory = new StructureFactory();
       cluster = new Client(this);
+      addContracts(new BaseServiceContract());
+      addPeerContracts(new TetrapodContract());
    }
 
-   public void serviceInit(Properties props) {
-      // add in root level contracts
-      addPeerContract(new TetrapodContract(), TetrapodContract.CONTRACT_ID);
-      addContract(new BaseServiceContract(), BaseServiceContract.CONTRACT_ID);
+   // Service protocol
+
+   @Override
+   public void startNetwork(String hostAndPort, String token) throws Exception {
+      if (hostAndPort != null) {
+         int ix = hostAndPort.indexOf(':');
+         String host = ix < 0 ? hostAndPort : hostAndPort.substring(0, ix);
+         int port = ix < 0 ? TetrapodService.DEFAULT_PRIVATE_PORT : Integer.parseInt(hostAndPort.substring(ix + 1));
+         cluster.connect(host, port, dispatcher).sync();
+      }
    }
 
-   public void networkInit(Properties props) throws Exception {
-      cluster.connect(props.optString("clusterHost", "localhost"), props.optInt("clusterPort", TetrapodService.DEFAULT_PRIVATE_PORT),
-            dispatcher).sync();
-      cluster.getSession().addSessionListener(new Session.Listener() {
+   @Override
+   public void onClientStart(Client client) {
+      logger.debug("Sending register request");
+      sendRequest(new RegisterRequest(222/*FIXME*/), RequestHeader.TO_ID_DIRECT).handle(new ResponseHandler() {
          @Override
-         public void onSessionStop(Session ses) {
-            // TODO: reconnect loop needed to handle disconnections            
-         }
+         public void onResponse(Response res, int errorCode) {
+            if (res != null) {
+               RegisterResponse r = (RegisterResponse) res;
+               entityId = r.entityId;
+               parentId = r.parentId;
+               reclaimToken = r.reclaimToken;
 
-         @Override
-         public void onSessionStart(Session ses) {
-            register();
+               logger.info(String.format("%s My entityId is 0x%08X", cluster.getSession(), r.entityId));
+               cluster.getSession().setEntityId(r.entityId);
+               onRegistered();
+            } else {
+               fail("Unable to register", errorCode);
+            }
          }
       });
-      // TODO: Lets worry about this much later...
-      //      directConnections = new Server(props.optInt("directConnectPort", 11124), this);
-      //      ChannelFuture f = directConnections.start();
-      //      f.sync();
    }
 
-   public int getEntityId() {
-      return cluster.getSession().getEntityId();
+   abstract public void onRegistered();
+
+   @Override
+   public void onClientStop(Client client) {
+      // TODO reconnection loop to handle unexpected disconnections
    }
 
-   protected void setContract(Contract contract) {
-      this.contract = contract;
+   @Override
+   public void onServerStart(Server server) {}
+
+   @Override
+   public void onServerStop(Server server) {}
+
+   // subclass utils
+
+   protected void addContracts(Contract... contracts) {
+      for (Contract c : contracts) {
+         this.contracts.add(c);
+         applyContract(c, false);
+      }
    }
 
-   protected void setPeerContracts(Contract... contracts) {
-      this.peerContracts = contracts;
+   protected void addPeerContracts(Contract... contracts) {
+      for (Contract c : contracts) {
+         this.peerContracts.add(c);
+         applyContract(c, true);
+      }
    }
 
-   private void addContract(Contract c, int contractId) {
-      c.setContractId(contractId);
-      c.addRequests(factory, contractId);
-      c.addResponses(factory, contractId);
-      c.addMessages(factory, contractId);
+   protected int getEntityId() {
+      return entityId;
    }
 
-   private void addPeerContract(Contract c, int contractId) {
-      c.setContractId(contractId);
-      c.addRequests(factory, contractId);
-      c.addResponses(factory, contractId);
-      c.addMessages(factory, contractId);
+   protected int getParentId() {
+      return parentId;
+   }
+
+   protected void fail(String reason, int errorCode) {
+      // move into failure state
+      // TODO implement
    }
 
    public Async sendRequest(Request req, int toEntityId) {
@@ -128,7 +158,6 @@ public class DefaultService implements Service, BaseServiceContract.API, Tetrapo
 
    @Override
    public Response requestPause(PauseRequest r, RequestContext ctx) {
-      logger.info("PAUSE");
       return Response.SUCCESS;
    }
 
@@ -151,29 +180,29 @@ public class DefaultService implements Service, BaseServiceContract.API, Tetrapo
 
    @Override
    public void messageServiceAdded(ServiceAddedMessage m) {
-      if (contract.getName().equals(m.name))
-         addContract(contract, m.contractId);
+      for (Contract c : contracts)
+         if (c.getName().equals(m.name)) {
+            c.setContractId(m.contractId);
+            applyContract(c, false);
+            return;
+         }
       for (Contract c : peerContracts)
-         if (c.getName().equals(m.name))
-            addPeerContract(c, m.contractId);
+         if (c.getName().equals(m.name)) {
+            c.setContractId(m.contractId);
+            applyContract(c, true);
+            return;
+         }
    }
 
-   /**
-    * Register as an entity with the cluster
-    */
-   private void register() {
-      // TODO: reclaims
-      sendRequest(new RegisterRequest(666/*FIXME*/), RequestHeader.TO_ID_DIRECT).handle(new ResponseHandler() {
-         @Override
-         public void onResponse(Response res, int errorCode) {
-            if (res != null) {
-               RegisterResponse r = (RegisterResponse) res;
-               logger.info(String.format("%s My ID is 0x%08X", cluster.getSession(), r.entityId));
-               reclaimToken = r.reclaimToken;
-               cluster.getSession().setEntityId(r.entityId);
-            }
-         }
-      });
+   // private methods
+
+   private void applyContract(Contract c, boolean isPeer) {
+      if (c.getContractId() != Contract.UNASSIGNED) {
+         if (!isPeer)
+            c.addRequests(factory, c.getContractId());
+         c.addResponses(factory, c.getContractId());
+         c.addMessages(factory, c.getContractId());
+      }
    }
 
 }

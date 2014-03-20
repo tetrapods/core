@@ -45,7 +45,15 @@ class JavaGenerator implements LanguageGenerator {
       vals.add("package", packageName);
       vals.add("version", context.serviceVersion);
       vals.add("name", context.serviceName);
-      vals.add("contractId", context.serviceId.equals("dynamic") ? "Contract.UNASSIGNED" : context.serviceId);
+      if (context.serviceId.equals("dynamic")) {
+         vals.add("contractId", "Contract.UNASSIGNED");
+         vals.add("contractIdVolatile", "volatile");
+         vals.add("contractIdSet", vals.get("class") + ".CONTRACT_ID = id;");
+      } else {
+         vals.add("contractId", context.serviceId);
+         vals.add("contractIdVolatile", "final");
+         vals.add("contractIdSet", "");
+      }
       for (String sub : context.subscriptions)
          vals.add("subscriptions", genSubscriptions(context, sub, vals.get("class")));      
       vals.setSeperator("handlers", ",\n");

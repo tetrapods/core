@@ -46,6 +46,10 @@ public class IdentityContract extends Contract {
       IdentityContract.CONTRACT_ID = id;
    }
 
+   public int getContractId() {
+      return IdentityContract.CONTRACT_ID;
+   }
+
    public static final int ERROR_UNKNOWN_USERNAME = 983354; 
    public static final int ERROR_WRONG_PASSWORD = 8315566; 
 }
