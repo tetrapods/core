@@ -27,7 +27,7 @@ public class {{class}} extends Request {
 
    {{field-declarations}}
 
-   public final Request.Security getSecurity() {
+   public final Structure.Security getSecurity() {
       return Security.{{security}};
    }
 

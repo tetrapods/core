@@ -53,12 +53,12 @@ class CodeGenContext {
    public void parseClass(TokenizedLine line) throws ParseException {
       ArrayList<String> parts = line.parts;
       Class c = new Class();
-      c.security = defaultSecurity;
       c.comment = line.comment;
       switch (parts.get(0)) {
          case "public":
          case "protected":
          case "internal":
+         case "private":
          case "admin":
             c.security = parts.get(0);
             parts.remove(0);
@@ -93,6 +93,7 @@ class CodeGenContext {
       if (n > 3 && parts.get(n - 3).equals("[") && parts.get(n - 1).equals("]")) {
          c.structId = parts.get(n - 2);
       }
+      verifySecurity(c);
       classes.add(c);
       Set<Class> set = classesByType.get(c.type);
       if (set == null) {
@@ -162,6 +163,24 @@ class CodeGenContext {
    public Collection<Class> classesByType(String type) {
       Set<Class> c = classesByType.get(type);
       return c == null ? new ArrayList<Class>() : c;
+   }
+   
+   private void verifySecurity(Class c) throws ParseException {
+      if (c.type.equals("response")) {
+         for (Class other : classes) {
+            if (other.type.equals("request") && other.name.equals(c.name)) {
+               if (c.security == null)
+                  c.security = other.security;
+               if (!c.security.equals(other.security)) {
+                  throw new ParseException("security for request and response [" + c.name + "]  do not match");
+               }
+               return;
+            }
+         }
+      }
+      if (c.security == null) {
+         c.security = defaultSecurity;
+      }
    }
 
 }

@@ -25,7 +25,11 @@ public class {{class}} extends Structure {
    
    {{field-declarations}}
 
-   public final void defaults() {
+   public final Structure.Security getSecurity() {
+      return Security.{{security}};
+   }
+
+  public final void defaults() {
       {{field-defaults}}
    }
    

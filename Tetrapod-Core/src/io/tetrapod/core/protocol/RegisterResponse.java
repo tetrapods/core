@@ -26,6 +26,10 @@ public class RegisterResponse extends Response {
    public int entityId;
    public int parentId;
 
+   public final Structure.Security getSecurity() {
+      return Security.PUBLIC;
+   }
+
    public final void defaults() {
       entityId = 0;
       parentId = 0;

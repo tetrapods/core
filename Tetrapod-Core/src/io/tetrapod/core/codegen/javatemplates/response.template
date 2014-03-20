@@ -25,6 +25,10 @@ public class {{class}} extends Response {
    
    {{field-declarations}}
 
+   public final Structure.Security getSecurity() {
+      return Security.{{security}};
+   }
+
    public final void defaults() {
       {{field-defaults}}
    }

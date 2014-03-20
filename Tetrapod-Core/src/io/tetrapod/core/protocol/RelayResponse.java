@@ -26,6 +26,10 @@ public class RelayResponse extends Response {
    public int structId;
    public byte[] data;
 
+   public final Structure.Security getSecurity() {
+      return Security.INTERNAL;
+   }
+
    public final void defaults() {
       structId = 0;
       data = null;

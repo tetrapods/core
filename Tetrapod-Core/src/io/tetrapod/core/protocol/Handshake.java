@@ -26,7 +26,11 @@ public class Handshake extends Structure {
    public int wireVersion;
    public int wireOptions;
 
-   public final void defaults() {
+   public final Structure.Security getSecurity() {
+      return Security.INTERNAL;
+   }
+
+  public final void defaults() {
       wireVersion = 0;
       wireOptions = 0;
    }

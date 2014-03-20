@@ -6,6 +6,14 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 
 abstract public class Structure {
+   
+   public static enum Security {
+      PUBLIC,     // open to services and unauthorized users
+      PROTECTED,  // open to services and authorized users
+      INTERNAL,   // open to services
+      PRIVATE,    // open to exact same service only
+      ADMIN       // open to admin user only
+   }
 
    abstract public void write(DataSource data) throws IOException;
 
@@ -38,6 +46,10 @@ abstract public class Structure {
       }
       if (clazz.getSuperclass() != null)
          dump(o, clazz.getSuperclass(), sb);
+   }
+   
+   public Security getSecurity() {
+      return Security.INTERNAL;
    }
 
 

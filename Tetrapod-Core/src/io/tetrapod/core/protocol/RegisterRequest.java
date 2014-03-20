@@ -24,7 +24,7 @@ public class RegisterRequest extends Request {
 
    public int build;
 
-   public final Request.Security getSecurity() {
+   public final Structure.Security getSecurity() {
       return Security.PUBLIC;
    }
 

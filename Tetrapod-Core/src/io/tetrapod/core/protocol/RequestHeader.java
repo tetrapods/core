@@ -48,7 +48,11 @@ public class RequestHeader extends Structure {
    public int structId;
    public int contractId;
 
-   public final void defaults() {
+   public final Structure.Security getSecurity() {
+      return Security.INTERNAL;
+   }
+
+  public final void defaults() {
       requestId = 0;
       fromId = 0;
       toId = 0;

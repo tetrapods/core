@@ -51,7 +51,11 @@ public class Entity extends Structure {
    public int build;
    public int version;
 
-   public final void defaults() {
+   public final Structure.Security getSecurity() {
+      return Security.INTERNAL;
+   }
+
+  public final void defaults() {
       entityId = 0;
       parentId = 0;
       reclaimToken = 0;

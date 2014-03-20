@@ -119,6 +119,7 @@ public class CodeGen {
          case "message":
          case "struct":
          case "public":
+         case "private":
          case "protected":
          case "internal":
          case "admin":

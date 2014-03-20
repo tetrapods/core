@@ -30,7 +30,11 @@ public class ResponseHeader extends Structure {
    public int toId;
    public int contractId;
 
-   public final void defaults() {
+   public final Structure.Security getSecurity() {
+      return Security.INTERNAL;
+   }
+
+  public final void defaults() {
       requestId = 0;
       structId = 0;
       toId = 0;

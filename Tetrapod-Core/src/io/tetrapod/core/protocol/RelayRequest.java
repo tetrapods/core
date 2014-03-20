@@ -26,7 +26,7 @@ public class RelayRequest extends Request {
    public int structId;
    public byte[] data;
 
-   public final Request.Security getSecurity() {
+   public final Structure.Security getSecurity() {
       return Security.INTERNAL;
    }
 
