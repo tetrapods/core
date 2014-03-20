@@ -80,4 +80,8 @@ public class RestartRequest extends Request {
          public Structure call() { return new RestartRequest(); }
       };
    }
+   
+   public final int getContractId() {
+      return BaseServiceContract.CONTRACT_ID;
+   }
 }

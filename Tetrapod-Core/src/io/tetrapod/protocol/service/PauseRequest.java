@@ -69,4 +69,8 @@ public class PauseRequest extends Request {
          public Structure call() { return new PauseRequest(); }
       };
    }
+   
+   public final int getContractId() {
+      return BaseServiceContract.CONTRACT_ID;
+   }
 }

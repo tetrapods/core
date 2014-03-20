@@ -64,4 +64,8 @@ public class CreateResponse extends Response {
          public Structure call() { return new CreateResponse(); }
       };
    }
+      
+   public final int getContractId() {
+      return IdentityContract.CONTRACT_ID;
+   }
 }

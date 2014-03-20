@@ -75,4 +75,8 @@ public class InfoRequest extends Request {
          public Structure call() { return new InfoRequest(); }
       };
    }
+   
+   public final int getContractId() {
+      return IdentityContract.CONTRACT_ID;
+   }
 }

@@ -69,4 +69,8 @@ public class ResponseHeader extends Structure {
          public Structure call() { return new ResponseHeader(); }
       };
    }
+   
+   public final int getContractId() {
+      return TetrapodContract.CONTRACT_ID;
+   }
 }

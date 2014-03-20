@@ -64,4 +64,8 @@ public class LoginResponse extends Response {
          public Structure call() { return new LoginResponse(); }
       };
    }
+      
+   public final int getContractId() {
+      return IdentityContract.CONTRACT_ID;
+   }
 }

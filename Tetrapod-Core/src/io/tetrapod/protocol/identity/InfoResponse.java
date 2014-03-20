@@ -64,4 +64,8 @@ public class InfoResponse extends Response {
          public Structure call() { return new InfoResponse(); }
       };
    }
+      
+   public final int getContractId() {
+      return IdentityContract.CONTRACT_ID;
+   }
 }

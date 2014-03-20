@@ -85,4 +85,8 @@ public class CreateRequest extends Request {
          public Structure call() { return new CreateRequest(); }
       };
    }
+   
+   public final int getContractId() {
+      return IdentityContract.CONTRACT_ID;
+   }
 }

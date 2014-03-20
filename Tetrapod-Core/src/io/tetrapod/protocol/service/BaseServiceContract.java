@@ -14,11 +14,7 @@ import io.tetrapod.core.*;
 public class BaseServiceContract extends Contract {
    public static final int VERSION = 1;
    public static final String NAME = "BaseService";
-   
-   /**
-    * hardcoded contract id, < 20 is reserved for core contracts
-    */
-   public static final int CONTRACT_ID = 2; 
+   public static volatile int CONTRACT_ID = 2;
    
    public static interface API extends
       PauseRequest.Handler,
@@ -45,5 +41,9 @@ public class BaseServiceContract extends Contract {
    public String getName() {
       return BaseServiceContract.NAME;
    } 
+   
+   public void setContractId(int id) {
+      BaseServiceContract.CONTRACT_ID = id;
+   }
 
 }

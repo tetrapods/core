@@ -75,4 +75,8 @@ public class RegisterRequest extends Request {
          public Structure call() { return new RegisterRequest(); }
       };
    }
+   
+   public final int getContractId() {
+      return TetrapodContract.CONTRACT_ID;
+   }
 }
