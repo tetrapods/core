@@ -21,7 +21,7 @@ public class ServiceDef {
    /**
     * A list of clients that provide this service
     */
-   public final Set<Actor> providers = new HashSet<>();
+   public final Set<EntityInfo> providers = new HashSet<>();
 
    public ServiceDef(String name, String iconURL, int serviceId) {
       this.name = name;

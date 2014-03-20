@@ -48,13 +48,13 @@ public class RequestHeader extends Structure {
    
    @Override
    public final void write(DataSource data) throws IOException {
-      data.write(1, requestId);
-      data.write(2, fromId);
-      data.write(3, toId);
-      data.write(4, fromType);
-      data.write(5, timeout);
-      data.write(6, version);
-      data.write(7, structId);
+      data.write(1, this.requestId);
+      data.write(2, this.fromId);
+      data.write(3, this.toId);
+      data.write(4, this.fromType);
+      data.write(5, this.timeout);
+      data.write(6, this.version);
+      data.write(7, this.structId);
       data.writeEndTag();
    }
    
@@ -64,13 +64,13 @@ public class RequestHeader extends Structure {
       while (true) {
          int tag = data.readTag();
          switch (tag) {
-            case 1: requestId = data.read_int(tag); break;
-            case 2: fromId = data.read_int(tag); break;
-            case 3: toId = data.read_int(tag); break;
-            case 4: fromType = data.read_byte(tag); break;
-            case 5: timeout = data.read_byte(tag); break;
-            case 6: version = data.read_int(tag); break;
-            case 7: structId = data.read_int(tag); break;
+            case 1: this.requestId = data.read_int(tag); break;
+            case 2: this.fromId = data.read_int(tag); break;
+            case 3: this.toId = data.read_int(tag); break;
+            case 4: this.fromType = data.read_byte(tag); break;
+            case 5: this.timeout = data.read_byte(tag); break;
+            case 6: this.version = data.read_int(tag); break;
+            case 7: this.structId = data.read_int(tag); break;
             case Codec.END_TAG:
                return;
             default:

@@ -42,6 +42,8 @@ public class Session extends ChannelInboundHandlerAdapter {
    private final int                  sessionNum         = sessionCounter.incrementAndGet();
    private final Dispatcher           dispatcher;
 
+   private RelayHandler               relay;
+
    private final List<Listener>       listeners          = new LinkedList<Listener>();
    private final Map<Integer, Async>  pendingRequests    = new ConcurrentHashMap<>();
    private final AtomicInteger        requestCounter     = new AtomicInteger();
@@ -187,37 +189,45 @@ public class Session extends ChannelInboundHandlerAdapter {
       final ByteBufDataSource reader = new ByteBufDataSource(in);
       final RequestHeader header = new RequestHeader();
       header.read(reader);
-      final Request req = (Request) structureFactory.make(0 /* FIXME - dynamicId */, header.structId);
-      if (req != null) {
-         req.read(reader);
-         logger.debug("Got Request: {}", req);
-         // If the request is addressed to 0, that means we want to send directly to this session owner.
-         if (header.toId == 0 || header.toId == myId) {
-            final ServiceAPI svc = findServiceHandler(header.structId);
-            if (svc != null) {
-               dispatcher.dispatch(new Runnable() {
-                  public void run() {
-                     try {
-                        // TODO: RequestContexts
-                        Response res = req.dispatch(svc);
-                        // TODO: Pending responses
-                        sendResponse(res, header.requestId);
-                     } catch (Throwable e) {
-                        logger.error(e.getMessage(), e);
-                        sendResponse(new Error(ERROR_UNKNOWN), header.requestId);
-                     }
-                  }
-               });
-            } else {
-               logger.warn("No handler found for {} {}", header.structId, header);
-               sendResponse(new Error(ERROR_UNKNOWN_REQUEST), header.requestId);
-            }
+      // requests addressed to 0 are intended for us
+      if (header.toId == 0 || header.toId == myId) {
+         final Request req = (Request) structureFactory.make(0 /* FIXME - dynamicId */, header.structId);
+         if (req != null) {
+            req.read(reader);
+            dispatchRequest(header, req);
          } else {
-            // FIXME: RELAY -- find session for toId and send on, with response handler to write back
+            logger.warn("Could not find structure {}", header.structId);
+            sendResponse(new Error(ERROR_SERIALIZATION), header.requestId);
          }
       } else {
-         logger.warn("Could not find structure {}", header.structId);
-         sendResponse(new Error(ERROR_SERIALIZATION), header.requestId);
+         if (relay != null) {
+            relay.relayRequest(header, in, this);
+         } else {
+            logger.warn("Could not route request for {}", header.toId);
+         }
+      }
+   }
+
+   private void dispatchRequest(final RequestHeader header, final Request req) {
+      logger.debug("Got Request: {}", req);
+      final ServiceAPI svc = findServiceHandler(header.structId);
+      if (svc != null) {
+         dispatcher.dispatch(new Runnable() {
+            public void run() {
+               try {
+                  // TODO: RequestContexts
+                  Response res = req.dispatch(svc);
+                  // TODO: Pending responses
+                  sendResponse(res, header.requestId);
+               } catch (Throwable e) {
+                  logger.error(e.getMessage(), e);
+                  sendResponse(new Error(ERROR_UNKNOWN), header.requestId);
+               }
+            }
+         });
+      } else {
+         logger.warn("No handler found for {} {}", header.structId, header);
+         sendResponse(new Error(ERROR_UNKNOWN_REQUEST), header.requestId);
       }
    }
 
@@ -254,7 +264,17 @@ public class Session extends ChannelInboundHandlerAdapter {
       pendingRequests.put(header.requestId, async);
 
       if (!writeFrame(header, req, ENVELOPE_REQUEST)) {
-         async.setResponse(null, 0); // FIXME
+         async.setResponse(null, Request.ERROR_SERIALIZATION);
+      }
+      return async;
+   }
+
+   public Async sendRequest(final RequestHeader header, final Request req) {
+      final Async async = new Async(req, header.requestId);
+      pendingRequests.put(header.requestId, async);
+
+      if (!writeFrame(header, req, ENVELOPE_REQUEST)) {
+         async.setResponse(null, Request.ERROR_SERIALIZATION);
       }
       return async;
    }
@@ -393,6 +413,10 @@ public class Session extends ChannelInboundHandlerAdapter {
          return channel.isActive();
       }
       return false;
+   }
+
+   public synchronized void setRelayHandler(RelayHandler handler) {
+      this.relay = handler;
    }
 
 }

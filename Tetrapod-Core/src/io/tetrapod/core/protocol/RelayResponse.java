@@ -10,31 +10,31 @@ import java.util.*;
 import java.util.concurrent.*;
 
 @SuppressWarnings("unused")
-public class Handshake extends Structure {
+public class RelayResponse extends Response {
    
-   public static final int STRUCT_ID = 7261648;
+   public static final int STRUCT_ID = 14411391;
     
-   public Handshake() {
+   public RelayResponse() {
       defaults();
    }
 
-   public Handshake(int wireVersion, int wireOptions) {
-      this.wireVersion = wireVersion;
-      this.wireOptions = wireOptions;
+   public RelayResponse(int structId, byte[] data) {
+      this.structId = structId;
+      this.data = data;
    }   
    
-   public int wireVersion;
-   public int wireOptions;
+   public int structId;
+   public byte[] data;
 
    public final void defaults() {
-      wireVersion = 0;
-      wireOptions = 0;
+      structId = 0;
+      data = null;
    }
    
    @Override
    public final void write(DataSource data) throws IOException {
-      data.write(1, this.wireVersion);
-      data.write(2, this.wireOptions);
+      data.write(1, this.structId);
+      if (this.data != null) data.write(2, this.data);
       data.writeEndTag();
    }
    
@@ -44,8 +44,8 @@ public class Handshake extends Structure {
       while (true) {
          int tag = data.readTag();
          switch (tag) {
-            case 1: this.wireVersion = data.read_int(tag); break;
-            case 2: this.wireOptions = data.read_int(tag); break;
+            case 1: this.structId = data.read_int(tag); break;
+            case 2: this.data = data.read_byte_array(tag); break;
             case Codec.END_TAG:
                return;
             default:
@@ -54,15 +54,15 @@ public class Handshake extends Structure {
          }
       }
    }
-   
-   @Override
+  
+   @Override 
    public final int getStructId() {
-      return Handshake.STRUCT_ID;
+      return RelayResponse.STRUCT_ID;
    }
-   
+      
    public static Callable<Structure> getInstanceFactory() {
       return new Callable<Structure>() {
-         public Structure call() { return new Handshake(); }
+         public Structure call() { return new RelayResponse(); }
       };
    }
 }

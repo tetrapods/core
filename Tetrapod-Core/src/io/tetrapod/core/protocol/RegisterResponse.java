@@ -33,8 +33,8 @@ public class RegisterResponse extends Response {
    
    @Override
    public final void write(DataSource data) throws IOException {
-      data.write(1, entityId);
-      data.write(2, parentId);
+      data.write(1, this.entityId);
+      data.write(2, this.parentId);
       data.writeEndTag();
    }
    
@@ -44,8 +44,8 @@ public class RegisterResponse extends Response {
       while (true) {
          int tag = data.readTag();
          switch (tag) {
-            case 1: entityId = data.read_int(tag); break;
-            case 2: parentId = data.read_int(tag); break;
+            case 1: this.entityId = data.read_int(tag); break;
+            case 2: this.parentId = data.read_int(tag); break;
             case Codec.END_TAG:
                return;
             default:

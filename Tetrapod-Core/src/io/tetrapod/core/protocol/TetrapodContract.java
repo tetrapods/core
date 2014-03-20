@@ -16,15 +16,18 @@ public class TetrapodContract extends Contract {
    public static final String NAME = "Tetrapod";
    
    public static interface API extends
-      RegisterRequest.Handler
+      RegisterRequest.Handler,
+      RelayRequest.Handler
       {}
    
    public void addRequests(StructureFactory factory, int dynamicId) {
       factory.add(dynamicId, RegisterRequest.STRUCT_ID, RegisterRequest.getInstanceFactory());
+      factory.add(dynamicId, RelayRequest.STRUCT_ID, RelayRequest.getInstanceFactory());
    }
    
    public void addResponses(StructureFactory factory, int dynamicId) {
       factory.add(dynamicId, RegisterResponse.STRUCT_ID, RegisterResponse.getInstanceFactory());
+      factory.add(dynamicId, RelayResponse.STRUCT_ID, RelayResponse.getInstanceFactory());
    }
    
    public void addMessages(StructureFactory factory, int dynamicId) {

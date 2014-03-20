@@ -1,7 +1,7 @@
 package io.tetrapod.core;
 
 import io.tetrapod.core.protocol.RegisterRequest;
-import io.tetrapod.core.registry.Actor;
+import io.tetrapod.core.registry.EntityInfo;
 import io.tetrapod.core.rpc.*;
 
 import org.junit.Test;
@@ -23,7 +23,7 @@ public class SessionTest {
 
       RegisterRequest req = new RegisterRequest();
       req.build = 666;
-      client.getSession().sendRequest(req, 0, 0, Actor.TYPE_CLIENT, (byte) 30).handle(new ResponseHandler() {
+      client.getSession().sendRequest(req, 0, 0, EntityInfo.TYPE_CLIENT, (byte) 30).handle(new ResponseHandler() {
          @Override
          public void onResponse(Response res, int errorCode) {
             logger.info("Got my response. YEY! {} {}", res, errorCode);

@@ -10,31 +10,35 @@ import java.util.*;
 import java.util.concurrent.*;
 
 @SuppressWarnings("unused")
-public class RegisterRequest extends Request {
+public class RelayRequest extends Request {
 
-   public static final int STRUCT_ID = 10895179;
+   public static final int STRUCT_ID = 4188601;
    
-   public RegisterRequest() {
+   public RelayRequest() {
       defaults();
    }
 
-   public RegisterRequest(int build) {
-      this.build = build;
+   public RelayRequest(int structId, byte[] data) {
+      this.structId = structId;
+      this.data = data;
    }   
 
-   public int build;
+   public int structId;
+   public byte[] data;
 
    public final Request.Security getSecurity() {
-      return Security.PUBLIC;
+      return Security.INTERNAL;
    }
 
    public final void defaults() {
-      build = 0;
+      structId = 0;
+      data = null;
    }
    
    @Override
    public final void write(DataSource data) throws IOException {
-      data.write(1, this.build);
+      data.write(1, this.structId);
+      if (this.data != null) data.write(2, this.data);
       data.writeEndTag();
    }
    
@@ -44,7 +48,8 @@ public class RegisterRequest extends Request {
       while (true) {
          int tag = data.readTag();
          switch (tag) {
-            case 1: this.build = data.read_int(tag); break;
+            case 1: this.structId = data.read_int(tag); break;
+            case 2: this.data = data.read_byte_array(tag); break;
             case Codec.END_TAG:
                return;
             default:
@@ -56,23 +61,23 @@ public class RegisterRequest extends Request {
    
    @Override
    public final int getStructId() {
-      return RegisterRequest.STRUCT_ID;
+      return RelayRequest.STRUCT_ID;
    }
    
    @Override
    public final Response dispatch(ServiceAPI is) {
       if (is instanceof Handler)
-         return ((Handler)is).requestRegister(this);
+         return ((Handler)is).requestRelay(this);
       return is.genericRequest(this);
    }
    
    public static interface Handler extends ServiceAPI {
-      Response requestRegister(RegisterRequest r);
+      Response requestRelay(RelayRequest r);
    }
    
    public static Callable<Structure> getInstanceFactory() {
       return new Callable<Structure>() {
-         public Structure call() { return new RegisterRequest(); }
+         public Structure call() { return new RelayRequest(); }
       };
    }
 }

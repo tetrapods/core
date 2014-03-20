@@ -6,8 +6,8 @@ java outdir src
 // The core tetrapod service
 service Tetrapod version 1
 
-struct Actor
-   1: int actorId  
+struct Entity
+   1: int entityId  
    2: int parentId  
    3: long reclaimToken  
    4: string host
@@ -42,7 +42,6 @@ struct RequestHeader
    6: int 	version
    7: int 	structId
    
-   
 struct ResponseHeader
    1: int requestId 
    2: int structId
@@ -55,5 +54,11 @@ response Register
    1: int entityId
    2: int parentId
    
+internal request Relay
+   1: int structId
+   2: byte[] data
    
-   
+ response Relay
+    1: int structId
+    2: byte[] data
+ 

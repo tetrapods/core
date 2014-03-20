@@ -36,9 +36,9 @@ public class ResponseHeader extends Structure {
    
    @Override
    public final void write(DataSource data) throws IOException {
-      data.write(1, requestId);
-      data.write(2, structId);
-      data.write(3, toId);
+      data.write(1, this.requestId);
+      data.write(2, this.structId);
+      data.write(3, this.toId);
       data.writeEndTag();
    }
    
@@ -48,9 +48,9 @@ public class ResponseHeader extends Structure {
       while (true) {
          int tag = data.readTag();
          switch (tag) {
-            case 1: requestId = data.read_int(tag); break;
-            case 2: structId = data.read_int(tag); break;
-            case 3: toId = data.read_int(tag); break;
+            case 1: this.requestId = data.read_int(tag); break;
+            case 2: this.structId = data.read_int(tag); break;
+            case 3: this.toId = data.read_int(tag); break;
             case Codec.END_TAG:
                return;
             default:
