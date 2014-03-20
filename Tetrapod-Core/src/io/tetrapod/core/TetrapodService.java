@@ -16,12 +16,15 @@ import org.slf4j.*;
  * of client connections
  */
 public class TetrapodService extends DefaultService implements TetrapodContract.API {
-   public static final Logger         logger   = LoggerFactory.getLogger(TetrapodService.class);
+   public static final Logger         logger               = LoggerFactory.getLogger(TetrapodService.class);
 
-   public final SecureRandom          random   = new SecureRandom();
-   public final Map<Integer, Session> sessions = new ConcurrentHashMap<>();
+   public static final int            DEFAULT_PUBLIC_PORT  = 9800;
+   public static final int            DEFAULT_PRIVATE_PORT = 9900;
 
-   public final Registry              registry = new Registry();
+   public final SecureRandom          random               = new SecureRandom();
+   public final Map<Integer, Session> sessions             = new ConcurrentHashMap<>();
+
+   public final Registry              registry             = new Registry();
 
    public Server                      privateServer;
    public Server                      publicServer;
@@ -30,8 +33,8 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       super.serviceInit(props);
       setContract(new TetrapodContract());
 
-      publicServer = new Server(9800, this);
-      privateServer = new Server(9900, this);
+      publicServer = new Server(props.optInt("tetrapod.public.port", DEFAULT_PUBLIC_PORT), this);
+      privateServer = new Server(props.optInt("tetrapod.private.port", DEFAULT_PRIVATE_PORT), this);
       start();
    }
 

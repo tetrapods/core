@@ -16,7 +16,7 @@ public class DefaultService implements Service, BaseServiceContract.API, Tetrapo
 
    protected final Dispatcher     dispatcher;
    private final StructureFactory factory;
-   private Client                 cluster;
+   private final Client           cluster;
    private Server                 directConnections;
    private Contract               contract;
    private Contract[]             peerContracts;
@@ -24,6 +24,7 @@ public class DefaultService implements Service, BaseServiceContract.API, Tetrapo
    public DefaultService() {
       dispatcher = new Dispatcher();
       factory = new StructureFactory();
+      cluster = new Client(this);
    }
 
    public void serviceInit(Properties props) {
@@ -33,10 +34,11 @@ public class DefaultService implements Service, BaseServiceContract.API, Tetrapo
    }
 
    public void networkInit(Properties props) throws Exception {
-      cluster = new Client(this);
       directConnections = new Server(props.optInt("directConnectPort", 11124), this);
       ChannelFuture f = directConnections.start();
-      cluster.connect(props.optString("clusterHost", "localhost"), props.optInt("clusterPort", 11123), dispatcher).sync();
+      // TODO: reconnect loop needed to handle disconnections
+      cluster.connect(props.optString("clusterHost", "localhost"), props.optInt("clusterPort", TetrapodService.DEFAULT_PRIVATE_PORT),
+            dispatcher).sync();
       f.sync();
    }
 
@@ -52,6 +54,10 @@ public class DefaultService implements Service, BaseServiceContract.API, Tetrapo
       c.addRequests(factory, contractId);
       c.addResponses(factory, contractId);
       c.addMessages(factory, contractId);
+   }
+
+   public Async sendRequest(Request req, int toEntityId) {
+      return cluster.getSession().sendRequest(req, toEntityId, (byte) 30);
    }
 
    // Generic handlers for all request/subscriptions

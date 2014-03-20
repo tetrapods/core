@@ -28,24 +28,26 @@ public class Client implements Session.Listener {
       b.handler(new ChannelInitializer<SocketChannel>() {
          @Override
          public void initChannel(SocketChannel ch) throws Exception {
+            logger.info("Connection to {}", ch.remoteAddress());
             startSession(ch);
          }
       });
       return b.connect(host, port).sync();
    }
 
-   private void startSession(SocketChannel ch) {
-      logger.info("Connection to {}", ch);
+   private synchronized void startSession(SocketChannel ch) {
       // TODO: ch.pipeline().addLast(sslEngine);
       session = new Session(ch, service);
       session.addSessionListener(this);
    }
 
-   public void close() {
-      session.close();
+   public synchronized void close() {
+      if (session != null) {
+         session.close();
+      }
    }
 
-   public Session getSession() {
+   public synchronized Session getSession() {
       return session;
    }
 

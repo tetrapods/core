@@ -2,9 +2,9 @@ package io.tetrapod.core.utils;
 
 import java.io.*;
 
-public class Properties  {
-   
-   java.util.Properties props;
+public class Properties {
+
+   final java.util.Properties props = new java.util.Properties();
 
    public void load(Class<?> context, String resourceName) throws IOException {
       try (BufferedReader br = new BufferedReader(new InputStreamReader(context.getResourceAsStream(resourceName)))) {
@@ -19,10 +19,9 @@ public class Properties  {
    }
 
    public void load(Reader reader) throws IOException {
-      props = new java.util.Properties();
       props.load(reader);
    }
-   
+
    public boolean optBoolean(String key, boolean defaultVal) {
       if (props.containsKey(key)) {
          return Boolean.parseBoolean(props.getProperty(key));
