@@ -1,6 +1,5 @@
 package io.tetrapod.core;
 
-import io.netty.buffer.ByteBuf;
 import io.tetrapod.core.registry.*;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.utils.Properties;
@@ -22,28 +21,26 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    public final SecureRandom          random   = new SecureRandom();
    public final Map<Integer, Session> sessions = new ConcurrentHashMap<>();
 
-   public final Dispatcher            dispatcher;
-   public final Registry              registry;
-   public final Server                privateServer;
-   public final Server                publicServer;
+   public final Registry              registry = new Registry();
 
-   // TODO: Configuration
-   public TetrapodService() {
-      dispatcher = new Dispatcher();
-      registry = new Registry(getEntityid());
-      publicServer = null; // new Server(9800, dispatcher);
-      privateServer = null; // new Server(9900, dispatcher);
-   }
+   public Server                      privateServer;
+   public Server                      publicServer;
 
    public void serviceInit(Properties props) {
+      super.serviceInit(props);
       setContract(new TetrapodContract());
+
+      publicServer = new Server(9800, this);
+      privateServer = new Server(9900, this);
+      start();
    }
 
    public int getEntityid() {
       return 1; // FIXME -- each service needs to be issued a unique id
    }
 
-   public void start() {
+   private void start() {
+      logger.info("START");
       try {
          privateServer.start();
          publicServer.start();
@@ -53,38 +50,35 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       }
    }
 
+   public void stop() {
+      logger.info("STOP");
+      try {
+         privateServer.stop();
+         publicServer.stop();
+         dispatcher.shutdown();
+      } catch (Exception e) {
+         // FIXME: fail service
+         logger.error(e.getMessage(), e);
+      }
+   }
+
    private Session findSession(final EntityInfo entity) {
       if (entity.parentId == getEntityid()) {
-
+         return sessions.get(entity.entityId);
       } else {
-         // return session to parent registry
+         return sessions.get(entity.parentId);
       }
-      return null;
    }
 
    @Override
-   public void relayRequest(final RequestHeader header, final ByteBuf in, final Session fromSession) {
-      final EntityInfo entity = registry.getEntity(header.toId);
+   public Session getRelaySession(int entityId) {
+      final EntityInfo entity = registry.getEntity(entityId);
       if (entity != null) {
-         final Session ses = findSession(entity);
-         if (ses != null) {
-            // OPTIMIZE: if we could avoid this alloc, this would be far more efficient
-            final byte[] data = new byte[in.readableBytes()];
-            in.readBytes(data);
-            final RelayRequest req = new RelayRequest(header.structId, data);
-            ses.sendRequest(header, req).handle(new ResponseHandler() {
-               @Override
-               public void onResponse(Response res, int errorCode) {
-                  // TODO: forward the response back to 
-                  fromSession.sendResponse(res, errorCode);
-               }
-            });
-         } else {
-            logger.warn("Could not find a session for {}", entity);
-         }
+         return findSession(entity);
       } else {
-         logger.warn("Could not find an entity for {}", header.toId);
+         logger.warn("Could not find an entity for {}", entityId);
       }
+      return null;
    }
 
    @Override
@@ -97,18 +91,10 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       info.type = 0; // TODO
       info.version = 0; // TODO;
       registry.register(info);
-      sessions.put(info.entityId, null); // FIXME: Need RequestContext to obtain Session
+      ctx.session.setEntityId(info.entityId);
+      //ctx.session.setEntityType(info.type);      
+      sessions.put(info.entityId, ctx.session);
       return new RegisterResponse(info.entityId, info.parentId);
-   }
-
-   @Override
-   public Response genericRequest(Request r, RequestContext ctx) {
-      return null;
-   }
-
-   @Override
-   public Response requestRelay(RelayRequest r, RequestContext ctx) {
-      return null; // HMMM
    }
 
 }

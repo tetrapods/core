@@ -12,15 +12,18 @@ public class Registry {
    public static final int                PARENT_ID_MASK = 0x7FF00000;               // top bytes denotes the parent
    private static final int               MAX_ID         = 0x000FFFFF;
 
-   private final int                      parentId;
+   private int                            parentId;
    private int                            counter;
 
    private final Map<Integer, EntityInfo> entities       = new ConcurrentHashMap<>();
    private final Map<Integer, ServiceDef> services       = new ConcurrentHashMap<>();
 
-   public Registry(int parentId) {
-      this.parentId = parentId;
+   public Registry() {
       counter = 0;
+   }
+
+   public void setParentId(int id) {
+      this.parentId = id;
    }
 
    public void register(EntityInfo entity) {

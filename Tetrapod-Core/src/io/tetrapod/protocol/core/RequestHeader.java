@@ -13,7 +13,7 @@ import java.util.concurrent.*;
 public class RequestHeader extends Structure {
    
    /**
-    * request is sent to service on other end of socket
+    * Hmmmmmm, aaron don't like request is sent to service on other end of socket
     */
    public static final int TO_ID_DIRECT = 1; 
    

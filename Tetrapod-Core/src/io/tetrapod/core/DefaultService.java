@@ -1,22 +1,20 @@
 package io.tetrapod.core;
 
-import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelFuture;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.rpc.Error;
 import io.tetrapod.core.utils.Properties;
 import io.tetrapod.protocol.core.*;
+import io.tetrapod.protocol.service.*;
 
 import java.util.concurrent.*;
-
-import io.tetrapod.protocol.service.*;
 
 import org.slf4j.*;
 
 public class DefaultService implements Service, BaseServiceContract.API, TetrapodContract.ServiceInfo.API {
    public static final Logger     logger = LoggerFactory.getLogger(DefaultService.class);
 
-   private final Dispatcher       dispatcher;
+   protected final Dispatcher     dispatcher;
    private final StructureFactory factory;
    private Client                 cluster;
    private Server                 directConnections;
@@ -87,10 +85,9 @@ public class DefaultService implements Service, BaseServiceContract.API, Tetrapo
    }
 
    @Override
-   public void relayRequest(RequestHeader header, ByteBuf in, Session fromSession) {
-      logger.warn("Could not route request for {} to {}", fromSession, header);
-      // FIXME: Add core error for this?
-      fromSession.sendResponse(new Error(Request.ERROR_UNKNOWN), header.requestId);
+   public Session getRelaySession(int entityId) {
+      logger.warn("This service does not relay requests {}", entityId);
+      return null;
    }
 
    @Override

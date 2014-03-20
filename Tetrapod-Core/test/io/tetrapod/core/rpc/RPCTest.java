@@ -43,7 +43,7 @@ public class RPCTest {
    @Test
    public void testAsync() {
       MyTestRequest req = new MyTestRequest();
-      Async async = new Async(req, 0);
+      Async async = new Async(req, null);
       async.handle(new ResponseHandler() {
          @Override
          public void onResponse(Response res, int errorCode) {

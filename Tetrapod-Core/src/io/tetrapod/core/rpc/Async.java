@@ -1,22 +1,24 @@
 package io.tetrapod.core.rpc;
 
+import io.tetrapod.protocol.core.RequestHeader;
+
 import org.slf4j.*;
 
 public class Async {
    public static final Logger logger = LoggerFactory.getLogger(Async.class);
 
-   public final int           requestId;
+   // TODO: Timeouts
+
+   public final RequestHeader header;
    public final Request       request;
 
    public Response            response;
    public ResponseHandler     handler;
 
-   public Async(Request request, int requestId) {
+   public Async(Request request, RequestHeader header) {
       this.request = request;
-      this.requestId = requestId;
+      this.header = header;
    }
-
- 
 
    public synchronized void handle(ResponseHandler handler) {
       this.handler = handler;

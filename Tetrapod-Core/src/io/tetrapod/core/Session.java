@@ -32,7 +32,7 @@ public class Session extends ChannelInboundHandlerAdapter {
 
       public ServiceAPI getHandler(int contractId);
 
-      public void relayRequest(final RequestHeader header, final ByteBuf in, final Session fromSession);
+      public Session getRelaySession(int entityId);
    }
 
    public static final Logger         logger             = LoggerFactory.getLogger(Session.class);
@@ -62,6 +62,7 @@ public class Session extends ChannelInboundHandlerAdapter {
    private boolean                    needsHandshake     = true;
 
    private int                        myId               = 0;
+   private byte                       myType             = Entity.TYPE_SERVICE;
 
    public Session(SocketChannel channel, Session.Helper helper) {
       this.channel = channel;
@@ -165,26 +166,30 @@ public class Session extends ChannelInboundHandlerAdapter {
       final ByteBufDataSource reader = new ByteBufDataSource(in);
       final ResponseHeader header = new ResponseHeader();
       header.read(reader);
-      final Response res = (Response) helper.make(header.contractId, header.structId);
-      if (res != null) {
-         res.read(reader);
-         logger.debug("Got Response: {}", res);
-         final Async async = pendingRequests.get(header.requestId);
-         if (async != null) {
-            helper.execute(new Runnable() {
-               public void run() {
-                  if (res.getStructId() == Error.STRUCT_ID) {
-                     async.setResponse(null, ((Error) res).code);
-                  } else {
-                     async.setResponse(res, 0);
+      final Async async = pendingRequests.remove(header.requestId);
+      if (async != null) {
+         if (async.header.fromId == myId) {
+            final Response res = (Response) helper.make(async.header.contractId, header.structId);
+            if (res != null) {
+               res.read(reader);
+               logger.debug("{}, Got Response: {}", this, res);
+               helper.execute(new Runnable() {
+                  public void run() {
+                     if (res.getStructId() == Error.STRUCT_ID) {
+                        async.setResponse(null, ((Error) res).code);
+                     } else {
+                        async.setResponse(res, 0);
+                     }
                   }
-               }
-            });
+               });
+            } else {
+               logger.warn("{} Could not find structure {}", this, header.structId);
+            }
          } else {
-            logger.warn("Could not find pending request {} for {}", header.requestId, res);
+            relayResponse(header, async, in);
          }
       } else {
-         logger.warn("Could not find structure {}", header.structId);
+         logger.warn("{} Could not find pending request {} for {}", this, header.dump());
       }
    }
 
@@ -203,13 +208,41 @@ public class Session extends ChannelInboundHandlerAdapter {
             sendResponse(new Error(ERROR_SERIALIZATION), header.requestId);
          }
       } else {
-         helper.relayRequest(header, in, this);
+         relayRequest(header, in);
+      }
+   }
+
+   private void relayRequest(final RequestHeader header, final ByteBuf in) {
+      final Session ses = helper.getRelaySession(header.toId);
+      if (ses != null) {
+         final Async async = new Async(null, header);
+         pendingRequests.put(header.requestId, async);
+
+         // Not sure we can do this, unless in is always guaranteed to contain just one frame
+         in.resetReaderIndex();
+         assert (in.getByte(4) == ENVELOPE_REQUEST);
+         ses.write(in);
+
+      } else {
+         logger.warn("Could not find a relay session for {}", header.toId);
+      }
+   }
+
+   private void relayResponse(ResponseHeader header, Async async, ByteBuf in) {
+      final Session ses = helper.getRelaySession(async.header.fromId);
+      if (ses != null) {
+         // Not sure we can do this, unless in is always guaranteed to contain just one frame
+         in.resetReaderIndex();
+         assert (in.getByte(4) == ENVELOPE_RESPONSE);
+         ses.write(in);
+      } else {
+         logger.warn("Could not find a relay session for {}", async.header.fromId);
       }
    }
 
    private void dispatchRequest(final RequestHeader header, final Request req) {
       logger.debug("Got Request: {}", req);
-      final ServiceAPI svc = findServiceHandler(header.structId);
+      final ServiceAPI svc = helper.getHandler(header.contractId);
       if (svc != null) {
          helper.execute(new Runnable() {
             public void run() {
@@ -222,7 +255,7 @@ public class Session extends ChannelInboundHandlerAdapter {
             }
          });
       } else {
-         logger.warn("No handler found for {} {}", header.structId, header);
+         logger.warn("{} No handler found for {}", this, header.dump());
          sendResponse(new Error(ERROR_UNKNOWN_REQUEST), header.requestId);
       }
    }
@@ -238,24 +271,16 @@ public class Session extends ChannelInboundHandlerAdapter {
       }
    }
 
-   private ServiceAPI findServiceHandler(int structId) {
-      // FIXME -- registered handlers map needed
-      if (structId == RegisterRequest.STRUCT_ID) {
-         // return new TetrapodService();
-      }
-      return null;
-   }
-
-   public Async sendRequest(Request req, int toId, int fromId, byte fromType, byte timeoutSeconds) {
+   public Async sendRequest(Request req, int toId, byte timeoutSeconds) {
       final RequestHeader header = new RequestHeader();
       header.requestId = requestCounter.incrementAndGet();
       header.toId = toId;
-      header.fromId = fromId;
+      header.fromId = myId;
       header.timeout = timeoutSeconds;
       header.structId = req.getStructId();
-      header.fromType = fromType;
+      header.fromType = myType;
 
-      final Async async = new Async(req, header.requestId);
+      final Async async = new Async(req, header);
       pendingRequests.put(header.requestId, async);
 
       if (!writeFrame(header, req, ENVELOPE_REQUEST)) {
@@ -264,23 +289,8 @@ public class Session extends ChannelInboundHandlerAdapter {
       return async;
    }
 
-   public Async sendRequest(final RequestHeader header, final Request req) {
-      final Async async = new Async(req, header.requestId);
-      pendingRequests.put(header.requestId, async);
-
-      if (!writeFrame(header, req, ENVELOPE_REQUEST)) {
-         async.setResponse(null, Request.ERROR_SERIALIZATION);
-      }
-      return async;
-   }
-
-   protected void sendResponse(Response res, int requestId) {
-      final ResponseHeader header = new ResponseHeader();
-      header.requestId = requestId;
-      header.structId = res.getStructId();
-      if (!writeFrame(header, res, ENVELOPE_RESPONSE)) {
-         // TODO
-      }
+   private void sendResponse(Response res, int requestId) {
+      writeFrame(new ResponseHeader(requestId, res.getStructId()), res, ENVELOPE_RESPONSE);
    }
 
    private boolean writeFrame(Structure header, Structure payload, byte envelope) {
@@ -293,14 +303,18 @@ public class Session extends ChannelInboundHandlerAdapter {
          payload.write(data);
          // go back and write message length, now that we know it
          buffer.setInt(0, buffer.writerIndex() - 4);
-         channel.writeAndFlush(buffer);
-         lastSentTo.set(System.currentTimeMillis());
+         write(buffer);
          return true;
       } catch (IOException e) {
          ReferenceCountUtil.release(buffer);
          logger.error(e.getMessage(), e);
       }
       return false;
+   }
+
+   private ChannelFuture write(ByteBuf in) {
+      lastSentTo.set(System.currentTimeMillis());
+      return channel.writeAndFlush(in);
    }
 
    @Override
@@ -318,6 +332,7 @@ public class Session extends ChannelInboundHandlerAdapter {
    @Override
    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
       fireSessionStopEvent();
+      // TODO: cancel all pending requests
    }
 
    private void writeHandshake() {
@@ -396,6 +411,7 @@ public class Session extends ChannelInboundHandlerAdapter {
             close();
          }
       }
+      // TODO: Timeout pending requests past their due
    }
 
    private void scheduleHealthCheck() {
@@ -413,6 +429,10 @@ public class Session extends ChannelInboundHandlerAdapter {
          return channel.isActive();
       }
       return false;
+   }
+
+   public synchronized void setEntityId(int entityId) {
+      this.myId = entityId;
    }
 
 }

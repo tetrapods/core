@@ -43,14 +43,13 @@ public struct RequestHeader
    7: int 	structId
    8: int   contractId
    
+   // Hmmmmmm, aaron don't like
    const int TO_ID_DIRECT = 1 // request is sent to service on other end of socket 
    const int TO_ID_SERVICE = 2 // request is sent to any service matching the contract id 
 
 public struct ResponseHeader
    1: int requestId 
    2: int structId
-   3: int toId
-   4: int contractId
    
 public request Register 
    1: int build   
@@ -58,14 +57,6 @@ public request Register
 public response Register 
    1: int entityId
    2: int parentId
-   
-private request Relay
-   1: int structId
-   2: byte[] data
-   
-private response Relay
-    1: int structId
-    2: byte[] data
     
 internal message ServiceInfo.ServiceAdded
     1: int contractId
