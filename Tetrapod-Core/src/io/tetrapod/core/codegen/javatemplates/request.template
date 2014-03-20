@@ -63,14 +63,14 @@ public class {{class}} extends Request {
    }
    
    @Override
-   public final Response dispatch(ServiceAPI is) {
+   public final Response dispatch(ServiceAPI is, RequestContext ctx) {
       if (is instanceof Handler)
-         return ((Handler)is).request{{rawname}}(this);
-      return is.genericRequest(this);
+         return ((Handler)is).request{{rawname}}(this, ctx);
+      return is.genericRequest(this, ctx);
    }
    
    public static interface Handler extends ServiceAPI {
-      Response request{{rawname}}({{class}} r);
+      Response request{{rawname}}({{class}} r, RequestContext ctx);
    }
    
    public static Callable<Structure> getInstanceFactory() {

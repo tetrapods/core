@@ -60,14 +60,14 @@ public class InfoRequest extends Request {
    }
    
    @Override
-   public final Response dispatch(ServiceAPI is) {
+   public final Response dispatch(ServiceAPI is, RequestContext ctx) {
       if (is instanceof Handler)
-         return ((Handler)is).requestInfo(this);
-      return is.genericRequest(this);
+         return ((Handler)is).requestInfo(this, ctx);
+      return is.genericRequest(this, ctx);
    }
    
    public static interface Handler extends ServiceAPI {
-      Response requestInfo(InfoRequest r);
+      Response requestInfo(InfoRequest r, RequestContext ctx);
    }
    
    public static Callable<Structure> getInstanceFactory() {

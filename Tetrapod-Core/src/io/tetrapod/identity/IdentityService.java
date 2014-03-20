@@ -1,7 +1,7 @@
 package io.tetrapod.identity;
 
 import io.tetrapod.core.DefaultService;
-import io.tetrapod.core.rpc.Response;
+import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.utils.Properties;
 import io.tetrapod.protocol.identity.*;
 
@@ -15,17 +15,17 @@ public class IdentityService extends DefaultService implements IdentityContract.
    }
 
    @Override
-   public Response requestCreate(CreateRequest r) {
+   public Response requestCreate(CreateRequest r, RequestContext ctx) {
       return null;
    }
 
    @Override
-   public Response requestInfo(InfoRequest r) {
+   public Response requestInfo(InfoRequest r, RequestContext ctx) {
       return null;
    }
 
    @Override
-   public Response requestLogin(LoginRequest r) {
+   public Response requestLogin(LoginRequest r, RequestContext ctx) {
       return null;
    }
 

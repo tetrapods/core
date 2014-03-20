@@ -16,7 +16,7 @@ public class BaseServiceContract extends Contract {
    public static final String NAME = "BaseService";
    
    /**
-    * hardcoded contract id, < 20 is reserved for core services
+    * hardcoded contract id, < 20 is reserved for core contracts
     */
    public static final int CONTRACT_ID = 2; 
    

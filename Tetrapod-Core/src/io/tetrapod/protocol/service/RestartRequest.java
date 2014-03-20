@@ -65,14 +65,14 @@ public class RestartRequest extends Request {
    }
    
    @Override
-   public final Response dispatch(ServiceAPI is) {
+   public final Response dispatch(ServiceAPI is, RequestContext ctx) {
       if (is instanceof Handler)
-         return ((Handler)is).requestRestart(this);
-      return is.genericRequest(this);
+         return ((Handler)is).requestRestart(this, ctx);
+      return is.genericRequest(this, ctx);
    }
    
    public static interface Handler extends ServiceAPI {
-      Response requestRestart(RestartRequest r);
+      Response requestRestart(RestartRequest r, RequestContext ctx);
    }
    
    public static Callable<Structure> getInstanceFactory() {

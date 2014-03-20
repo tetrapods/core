@@ -214,10 +214,7 @@ public class Session extends ChannelInboundHandlerAdapter {
          helper.execute(new Runnable() {
             public void run() {
                try {
-                  // TODO: RequestContexts
-                  Response res = req.dispatch(svc);
-                  // TODO: Pending responses
-                  sendResponse(res, header.requestId);
+                  dispatchRequest(svc, header, req);
                } catch (Throwable e) {
                   logger.error(e.getMessage(), e);
                   sendResponse(new Error(ERROR_UNKNOWN), header.requestId);
@@ -227,6 +224,17 @@ public class Session extends ChannelInboundHandlerAdapter {
       } else {
          logger.warn("No handler found for {} {}", header.structId, header);
          sendResponse(new Error(ERROR_UNKNOWN_REQUEST), header.requestId);
+      }
+   }
+
+   private void dispatchRequest(final ServiceAPI svc, final RequestHeader header, final Request req) {
+      final RequestContext ctx = new RequestContext(header, this);
+      final Response res = req.dispatch(svc, ctx);
+      // TODO: Pending responses
+      if (res != null) {
+         sendResponse(res, header.requestId);
+      } else {
+         sendResponse(new Error(ERROR_UNKNOWN), header.requestId);
       }
    }
 

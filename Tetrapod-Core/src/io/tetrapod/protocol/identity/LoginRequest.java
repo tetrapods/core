@@ -68,14 +68,14 @@ public class LoginRequest extends Request {
    }
    
    @Override
-   public final Response dispatch(ServiceAPI is) {
+   public final Response dispatch(ServiceAPI is, RequestContext ctx) {
       if (is instanceof Handler)
-         return ((Handler)is).requestLogin(this);
-      return is.genericRequest(this);
+         return ((Handler)is).requestLogin(this, ctx);
+      return is.genericRequest(this, ctx);
    }
    
    public static interface Handler extends ServiceAPI {
-      Response requestLogin(LoginRequest r);
+      Response requestLogin(LoginRequest r, RequestContext ctx);
    }
    
    public static Callable<Structure> getInstanceFactory() {

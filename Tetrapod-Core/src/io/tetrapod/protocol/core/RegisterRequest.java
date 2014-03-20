@@ -60,14 +60,14 @@ public class RegisterRequest extends Request {
    }
    
    @Override
-   public final Response dispatch(ServiceAPI is) {
+   public final Response dispatch(ServiceAPI is, RequestContext ctx) {
       if (is instanceof Handler)
-         return ((Handler)is).requestRegister(this);
-      return is.genericRequest(this);
+         return ((Handler)is).requestRegister(this, ctx);
+      return is.genericRequest(this, ctx);
    }
    
    public static interface Handler extends ServiceAPI {
-      Response requestRegister(RegisterRequest r);
+      Response requestRegister(RegisterRequest r, RequestContext ctx);
    }
    
    public static Callable<Structure> getInstanceFactory() {

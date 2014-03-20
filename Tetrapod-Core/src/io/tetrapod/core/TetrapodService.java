@@ -3,6 +3,7 @@ package io.tetrapod.core;
 import io.netty.buffer.ByteBuf;
 import io.tetrapod.core.registry.*;
 import io.tetrapod.core.rpc.*;
+import io.tetrapod.core.utils.Properties;
 import io.tetrapod.protocol.core.*;
 
 import java.security.SecureRandom;
@@ -32,6 +33,10 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       registry = new Registry(getEntityid());
       publicServer = null; // new Server(9800, dispatcher);
       privateServer = null; // new Server(9900, dispatcher);
+   }
+
+   public void serviceInit(Properties props) {
+      setContract(new TetrapodContract());
    }
 
    public int getEntityid() {
@@ -83,7 +88,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    }
 
    @Override
-   public Response requestRegister(RegisterRequest r) {
+   public Response requestRegister(RegisterRequest r, RequestContext ctx) {
       final EntityInfo info = new EntityInfo();
       info.reclaimToken = random.nextLong();
       info.build = r.build;
@@ -97,12 +102,12 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    }
 
    @Override
-   public Response genericRequest(Request r) {
+   public Response genericRequest(Request r, RequestContext ctx) {
       return null;
    }
 
    @Override
-   public Response requestRelay(RelayRequest r) {
+   public Response requestRelay(RelayRequest r, RequestContext ctx) {
       return null; // HMMM
    }
 

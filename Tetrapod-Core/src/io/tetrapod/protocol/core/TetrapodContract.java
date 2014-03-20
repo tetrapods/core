@@ -16,7 +16,7 @@ public class TetrapodContract extends Contract {
    public static final String NAME = "Tetrapod";
    
    /**
-    * hardcoded contract id, < 20 is reserved for core services
+    * hardcoded contract id, < 20 is reserved for core contracts
     */
    public static final int CONTRACT_ID = 1; 
    

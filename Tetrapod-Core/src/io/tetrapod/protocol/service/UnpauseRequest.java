@@ -54,14 +54,14 @@ public class UnpauseRequest extends Request {
    }
    
    @Override
-   public final Response dispatch(ServiceAPI is) {
+   public final Response dispatch(ServiceAPI is, RequestContext ctx) {
       if (is instanceof Handler)
-         return ((Handler)is).requestUnpause(this);
-      return is.genericRequest(this);
+         return ((Handler)is).requestUnpause(this, ctx);
+      return is.genericRequest(this, ctx);
    }
    
    public static interface Handler extends ServiceAPI {
-      Response requestUnpause(UnpauseRequest r);
+      Response requestUnpause(UnpauseRequest r, RequestContext ctx);
    }
    
    public static Callable<Structure> getInstanceFactory() {

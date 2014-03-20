@@ -70,14 +70,14 @@ public class CreateRequest extends Request {
    }
    
    @Override
-   public final Response dispatch(ServiceAPI is) {
+   public final Response dispatch(ServiceAPI is, RequestContext ctx) {
       if (is instanceof Handler)
-         return ((Handler)is).requestCreate(this);
-      return is.genericRequest(this);
+         return ((Handler)is).requestCreate(this, ctx);
+      return is.genericRequest(this, ctx);
    }
    
    public static interface Handler extends ServiceAPI {
-      Response requestCreate(CreateRequest r);
+      Response requestCreate(CreateRequest r, RequestContext ctx);
    }
    
    public static Callable<Structure> getInstanceFactory() {

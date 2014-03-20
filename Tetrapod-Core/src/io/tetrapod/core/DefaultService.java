@@ -59,7 +59,7 @@ public class DefaultService implements Service, BaseServiceContract.API, Tetrapo
    // Generic handlers for all request/subscriptions
 
    @Override
-   public Response genericRequest(Request r) {
+   public Response genericRequest(Request r, RequestContext ctx) {
       logger.error("unhandled request " + r.dump());
       return new Error(Request.ERROR_UNKNOWN_REQUEST);
    }
@@ -89,6 +89,8 @@ public class DefaultService implements Service, BaseServiceContract.API, Tetrapo
    @Override
    public void relayRequest(RequestHeader header, ByteBuf in, Session fromSession) {
       logger.warn("Could not route request for {} to {}", fromSession, header);
+      // FIXME: Add core error for this?
+      fromSession.sendResponse(new Error(Request.ERROR_UNKNOWN), header.requestId);
    }
 
    @Override
@@ -100,22 +102,22 @@ public class DefaultService implements Service, BaseServiceContract.API, Tetrapo
    // Base service implementation
 
    @Override
-   public Response requestPause(PauseRequest r) {
+   public Response requestPause(PauseRequest r, RequestContext ctx) {
       return Response.SUCCESS;
    }
 
    @Override
-   public Response requestUnpause(UnpauseRequest r) {
+   public Response requestUnpause(UnpauseRequest r, RequestContext ctx) {
       return Response.SUCCESS;
    }
 
    @Override
-   public Response requestRestart(RestartRequest r) {
+   public Response requestRestart(RestartRequest r, RequestContext ctx) {
       return Response.SUCCESS;
    }
 
    @Override
-   public Response requestShutdown(ShutdownRequest r) {
+   public Response requestShutdown(ShutdownRequest r, RequestContext ctx) {
       return Response.SUCCESS;
    }
 

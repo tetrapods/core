@@ -54,14 +54,14 @@ public class ShutdownRequest extends Request {
    }
    
    @Override
-   public final Response dispatch(ServiceAPI is) {
+   public final Response dispatch(ServiceAPI is, RequestContext ctx) {
       if (is instanceof Handler)
-         return ((Handler)is).requestShutdown(this);
-      return is.genericRequest(this);
+         return ((Handler)is).requestShutdown(this, ctx);
+      return is.genericRequest(this, ctx);
    }
    
    public static interface Handler extends ServiceAPI {
-      Response requestShutdown(ShutdownRequest r);
+      Response requestShutdown(ShutdownRequest r, RequestContext ctx);
    }
    
    public static Callable<Structure> getInstanceFactory() {
