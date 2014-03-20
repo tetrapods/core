@@ -9,6 +9,11 @@ public static class {{name}} extends Contract {
    
    public String getName() {
       return {{enclosingClass}}.NAME;
+   }
+   
+   public int getContractId() {
+      return {{enclosingClass}}.CONTRACT_ID;
    } 
+    
 }
    

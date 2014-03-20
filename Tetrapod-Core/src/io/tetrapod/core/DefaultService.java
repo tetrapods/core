@@ -29,7 +29,7 @@ public class DefaultService implements Service, BaseServiceContract.API, Tetrapo
 
    public void serviceInit(Properties props) {
       // add in root level contracts
-      addContract(new TetrapodContract(), TetrapodContract.CONTRACT_ID); // FIXME: addPeerContract?
+      addPeerContract(new TetrapodContract(), TetrapodContract.CONTRACT_ID); // FIXME: addPeerContract?
       addContract(new BaseServiceContract(), BaseServiceContract.CONTRACT_ID);
    }
 
@@ -51,7 +51,14 @@ public class DefaultService implements Service, BaseServiceContract.API, Tetrapo
    }
 
    private void addContract(Contract c, int contractId) {
+      c.setContractId(contractId);
       c.addRequests(factory, contractId);
+      c.addResponses(factory, contractId);
+      c.addMessages(factory, contractId);
+   }
+
+   private void addPeerContract(Contract c, int contractId) {
+      c.setContractId(contractId);
       c.addResponses(factory, contractId);
       c.addMessages(factory, contractId);
    }
@@ -132,7 +139,7 @@ public class DefaultService implements Service, BaseServiceContract.API, Tetrapo
          addContract(contract, m.contractId);
       for (Contract c : peerContracts)
          if (c.getName().equals(m.name))
-            addContract(c, m.contractId);
+            addPeerContract(c, m.contractId);
    }
 
 }

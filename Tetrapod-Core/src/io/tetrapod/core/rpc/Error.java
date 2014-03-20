@@ -3,6 +3,7 @@ package io.tetrapod.core.rpc;
 import java.io.IOException;
 
 import io.tetrapod.core.serialize.*;
+import io.tetrapod.protocol.core.TetrapodContract;
 
 public class Error extends Response {
 
@@ -31,5 +32,9 @@ public class Error extends Response {
    @Override
    public int getStructId() {
       return STRUCT_ID;
+   }
+   
+   public int getContractId() {
+      return TetrapodContract.CONTRACT_ID;
    }
 }

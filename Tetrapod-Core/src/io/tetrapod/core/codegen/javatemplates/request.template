@@ -78,5 +78,9 @@ public class {{class}} extends Request {
          public Structure call() { return new {{class}}(); }
       };
    }
+   
+   public final int getContractId() {
+      return {{service}}.CONTRACT_ID;
+   }
 }
 

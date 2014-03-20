@@ -45,6 +45,7 @@ class JavaGenerator implements LanguageGenerator {
       vals.add("package", packageName);
       vals.add("version", context.serviceVersion);
       vals.add("name", context.serviceName);
+      vals.add("contractId", context.serviceId.equals("dynamic") ? "Contract.UNASSIGNED" : context.serviceId);
       for (String sub : context.subscriptions)
          vals.add("subscriptions", genSubscriptions(context, sub, vals.get("class")));      
       vals.setSeperator("handlers", ",\n");
@@ -102,6 +103,7 @@ class JavaGenerator implements LanguageGenerator {
          c.structId = "" + ((FNVHash.hash32(c.classname()) & 0xffffff) + 10);
       }
       vals.add("structid", c.structId);
+      vals.add("service", serviceName);
       addFieldValues(c.fields, vals);
       addConstantValues(c.fields, vals);
       addErrors(c.errors, false, serviceName, vals);

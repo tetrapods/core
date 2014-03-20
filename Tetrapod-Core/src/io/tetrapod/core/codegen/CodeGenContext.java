@@ -43,6 +43,7 @@ class CodeGenContext {
    public String                   serviceName;
    public String                   serviceVersion;
    public String                   serviceComment;
+   public String                   serviceId;
    public String                   defaultSecurity = "internal";
    public Set<String>              allErrors       = new TreeSet<>();
    public Set<String>              subscriptions   = new TreeSet<>();
@@ -140,10 +141,15 @@ class CodeGenContext {
    }
 
    public void parseService(TokenizedLine line) throws ParseException {
-      if (line.parts.size() != 4)
-         throw new ParseException("expected exactly four tokens for service");
+      if (line.parts.size() < 4)
+         throw new ParseException("expected at least four tokens for service");
       serviceName = line.parts.get(1);
       serviceVersion = line.parts.get(3);
+      if (line.parts.size() > 4) {
+         serviceId = line.parts.get(5);
+      } else {
+         serviceId = "dynamic";
+      }
       serviceComment = line.comment;
    }
 
