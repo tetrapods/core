@@ -10,35 +10,31 @@ import java.util.*;
 import java.util.concurrent.*;
 
 @SuppressWarnings("unused")
-public class ResponseHeader extends Structure {
+public class RelayResponse extends Response {
    
-   public static final int STRUCT_ID = 675609;
+   public static final int STRUCT_ID = 14411391;
     
-   public ResponseHeader() {
+   public RelayResponse() {
       defaults();
    }
 
-   public ResponseHeader(int requestId, int structId, int toId) {
-      this.requestId = requestId;
+   public RelayResponse(int structId, byte[] data) {
       this.structId = structId;
-      this.toId = toId;
+      this.data = data;
    }   
    
-   public int requestId;
    public int structId;
-   public int toId;
+   public byte[] data;
 
    public final void defaults() {
-      requestId = 0;
       structId = 0;
-      toId = 0;
+      data = null;
    }
    
    @Override
    public final void write(DataSource data) throws IOException {
-      data.write(1, this.requestId);
-      data.write(2, this.structId);
-      data.write(3, this.toId);
+      data.write(1, this.structId);
+      if (this.data != null) data.write(2, this.data);
       data.writeEndTag();
    }
    
@@ -48,9 +44,8 @@ public class ResponseHeader extends Structure {
       while (true) {
          int tag = data.readTag();
          switch (tag) {
-            case 1: this.requestId = data.read_int(tag); break;
-            case 2: this.structId = data.read_int(tag); break;
-            case 3: this.toId = data.read_int(tag); break;
+            case 1: this.structId = data.read_int(tag); break;
+            case 2: this.data = data.read_byte_array(tag); break;
             case Codec.END_TAG:
                return;
             default:
@@ -59,15 +54,15 @@ public class ResponseHeader extends Structure {
          }
       }
    }
-   
-   @Override
+  
+   @Override 
    public final int getStructId() {
-      return ResponseHeader.STRUCT_ID;
+      return RelayResponse.STRUCT_ID;
    }
-   
+      
    public static Callable<Structure> getInstanceFactory() {
       return new Callable<Structure>() {
-         public Structure call() { return new ResponseHeader(); }
+         public Structure call() { return new RelayResponse(); }
       };
    }
 }

@@ -8,8 +8,8 @@ service Tetrapod version 1
 
 const int CONTRACT_ID = 1 // hardcoded contract id, < 20 is reserved for core services
 
-struct Actor
-   1: int actorId  
+struct Entity
+   1: int entityId  
    2: int parentId  
    3: long reclaimToken  
    4: string host
@@ -47,7 +47,6 @@ struct RequestHeader
    
    const int TO_ID_DIRECT = 1 // request is sent to service on other end of socket 
    const int TO_ID_SERVICE = 2 // request is sent to any service matching the contract id 
-   
 struct ResponseHeader
    1: int requestId 
    2: int structId
@@ -61,5 +60,11 @@ response Register
    1: int entityId
    2: int parentId
    
+internal request Relay
+   1: int structId
+   2: byte[] data
    
-   
+ response Relay
+    1: int structId
+    2: byte[] data
+ 

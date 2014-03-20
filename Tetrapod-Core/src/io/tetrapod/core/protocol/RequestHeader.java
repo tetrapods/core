@@ -12,23 +12,13 @@ import java.util.concurrent.*;
 @SuppressWarnings("unused")
 public class RequestHeader extends Structure {
    
-   /**
-    * request is sent to service on other end of socket
-    */
-   public static final int TO_ID_DIRECT = 1; 
-   
-   /**
-    * request is sent to any service matching the service id
-    */
-   public static final int TO_ID_SERVICE = 2; 
-   
    public static final int STRUCT_ID = 7165109;
     
    public RequestHeader() {
       defaults();
    }
 
-   public RequestHeader(int requestId, int fromId, int toId, byte fromType, byte timeout, int version, int structId, int contractId) {
+   public RequestHeader(int requestId, int fromId, int toId, byte fromType, byte timeout, int version, int structId) {
       this.requestId = requestId;
       this.fromId = fromId;
       this.toId = toId;
@@ -36,7 +26,6 @@ public class RequestHeader extends Structure {
       this.timeout = timeout;
       this.version = version;
       this.structId = structId;
-      this.contractId = contractId;
    }   
    
    public int requestId;
@@ -46,7 +35,6 @@ public class RequestHeader extends Structure {
    public byte timeout;
    public int version;
    public int structId;
-   public int contractId;
 
    public final void defaults() {
       requestId = 0;
@@ -56,7 +44,6 @@ public class RequestHeader extends Structure {
       timeout = 0;
       version = 0;
       structId = 0;
-      contractId = 0;
    }
    
    @Override
@@ -68,7 +55,6 @@ public class RequestHeader extends Structure {
       data.write(5, this.timeout);
       data.write(6, this.version);
       data.write(7, this.structId);
-      data.write(8, this.contractId);
       data.writeEndTag();
    }
    
@@ -85,7 +71,6 @@ public class RequestHeader extends Structure {
             case 5: this.timeout = data.read_byte(tag); break;
             case 6: this.version = data.read_int(tag); break;
             case 7: this.structId = data.read_int(tag); break;
-            case 8: this.contractId = data.read_int(tag); break;
             case Codec.END_TAG:
                return;
             default:

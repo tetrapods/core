@@ -10,7 +10,7 @@ import java.util.*;
 import java.util.concurrent.*;
 
 @SuppressWarnings("unused")
-public class Actor extends Structure {
+public class Entity extends Structure {
    
    public static final byte TYPE_TETRAPOD = 1; 
    public static final byte TYPE_SERVICE = 2; 
@@ -23,14 +23,14 @@ public class Actor extends Structure {
    public static final int STATUS_BUSY = 8; 
    public static final int STATUS_OVERLOADED = 16; 
    
-   public static final int STRUCT_ID = 4840548;
+   public static final int STRUCT_ID = 10171140;
     
-   public Actor() {
+   public Entity() {
       defaults();
    }
 
-   public Actor(int actorId, int parentId, long reclaimToken, String host, int status, byte type, String name, int build, int version) {
-      this.actorId = actorId;
+   public Entity(int entityId, int parentId, long reclaimToken, String host, int status, byte type, String name, int build, int version) {
+      this.entityId = entityId;
       this.parentId = parentId;
       this.reclaimToken = reclaimToken;
       this.host = host;
@@ -41,7 +41,7 @@ public class Actor extends Structure {
       this.version = version;
    }   
    
-   public int actorId;
+   public int entityId;
    public int parentId;
    public long reclaimToken;
    public String host;
@@ -52,7 +52,7 @@ public class Actor extends Structure {
    public int version;
 
    public final void defaults() {
-      actorId = 0;
+      entityId = 0;
       parentId = 0;
       reclaimToken = 0;
       host = null;
@@ -65,7 +65,7 @@ public class Actor extends Structure {
    
    @Override
    public final void write(DataSource data) throws IOException {
-      data.write(1, this.actorId);
+      data.write(1, this.entityId);
       data.write(2, this.parentId);
       data.write(3, this.reclaimToken);
       data.write(4, this.host);
@@ -83,7 +83,7 @@ public class Actor extends Structure {
       while (true) {
          int tag = data.readTag();
          switch (tag) {
-            case 1: this.actorId = data.read_int(tag); break;
+            case 1: this.entityId = data.read_int(tag); break;
             case 2: this.parentId = data.read_int(tag); break;
             case 3: this.reclaimToken = data.read_long(tag); break;
             case 4: this.host = data.read_string(tag); break;
@@ -103,12 +103,12 @@ public class Actor extends Structure {
    
    @Override
    public final int getStructId() {
-      return Actor.STRUCT_ID;
+      return Entity.STRUCT_ID;
    }
    
    public static Callable<Structure> getInstanceFactory() {
       return new Callable<Structure>() {
-         public Structure call() { return new Actor(); }
+         public Structure call() { return new Entity(); }
       };
    }
 }

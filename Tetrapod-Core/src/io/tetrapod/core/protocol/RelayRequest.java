@@ -10,35 +10,35 @@ import java.util.*;
 import java.util.concurrent.*;
 
 @SuppressWarnings("unused")
-public class ResponseHeader extends Structure {
+public class RelayRequest extends Request {
+
+   public static final int STRUCT_ID = 4188601;
    
-   public static final int STRUCT_ID = 675609;
-    
-   public ResponseHeader() {
+   public RelayRequest() {
       defaults();
    }
 
-   public ResponseHeader(int requestId, int structId, int toId) {
-      this.requestId = requestId;
+   public RelayRequest(int structId, byte[] data) {
       this.structId = structId;
-      this.toId = toId;
+      this.data = data;
    }   
-   
-   public int requestId;
+
    public int structId;
-   public int toId;
+   public byte[] data;
+
+   public final Request.Security getSecurity() {
+      return Security.INTERNAL;
+   }
 
    public final void defaults() {
-      requestId = 0;
       structId = 0;
-      toId = 0;
+      data = null;
    }
    
    @Override
    public final void write(DataSource data) throws IOException {
-      data.write(1, this.requestId);
-      data.write(2, this.structId);
-      data.write(3, this.toId);
+      data.write(1, this.structId);
+      if (this.data != null) data.write(2, this.data);
       data.writeEndTag();
    }
    
@@ -48,9 +48,8 @@ public class ResponseHeader extends Structure {
       while (true) {
          int tag = data.readTag();
          switch (tag) {
-            case 1: this.requestId = data.read_int(tag); break;
-            case 2: this.structId = data.read_int(tag); break;
-            case 3: this.toId = data.read_int(tag); break;
+            case 1: this.structId = data.read_int(tag); break;
+            case 2: this.data = data.read_byte_array(tag); break;
             case Codec.END_TAG:
                return;
             default:
@@ -62,12 +61,23 @@ public class ResponseHeader extends Structure {
    
    @Override
    public final int getStructId() {
-      return ResponseHeader.STRUCT_ID;
+      return RelayRequest.STRUCT_ID;
+   }
+   
+   @Override
+   public final Response dispatch(ServiceAPI is) {
+      if (is instanceof Handler)
+         return ((Handler)is).requestRelay(this);
+      return is.genericRequest(this);
+   }
+   
+   public static interface Handler extends ServiceAPI {
+      Response requestRelay(RelayRequest r);
    }
    
    public static Callable<Structure> getInstanceFactory() {
       return new Callable<Structure>() {
-         public Structure call() { return new ResponseHeader(); }
+         public Structure call() { return new RelayRequest(); }
       };
    }
 }
