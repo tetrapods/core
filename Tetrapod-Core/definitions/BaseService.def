@@ -4,7 +4,7 @@ java outdir src
 // The base contract every service must support
 service BaseService version 1
 
-const int CONTRACT_ID = 2 // hardcoded contract id, < 20 is reserved for core services
+const int CONTRACT_ID = 2 // hardcoded contract id, < 20 is reserved for core contracts
 
 internal request Pause
 
