@@ -1,4 +1,4 @@
-package io.tetrapod.core;
+package io.tetrapod.core.utils;
 
 public class Util {
 
