@@ -41,7 +41,7 @@ public struct RequestHeader
    7: int 	structId
    8: int   contractId
    
-   // Hmmmmmm, aaron don't like
+   // Hmmmmmm, aaron don't like:
    const int TO_ID_DIRECT = 1 // request is sent to service on other end of socket 
    const int TO_ID_SERVICE = 2 // request is sent to any service matching the contract id 
 

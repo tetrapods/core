@@ -1,5 +1,6 @@
 package io.tetrapod.core.rpc;
 
+import io.tetrapod.core.Session;
 import io.tetrapod.protocol.core.RequestHeader;
 
 import org.slf4j.*;
@@ -11,13 +12,15 @@ public class Async {
 
    public final RequestHeader header;
    public final Request       request;
+   public final Session       session;
 
    public Response            response;
    public ResponseHandler     handler;
 
-   public Async(Request request, RequestHeader header) {
+   public Async(Request request, RequestHeader header, Session session) {
       this.request = request;
       this.header = header;
+      this.session = session;
    }
 
    public synchronized void handle(ResponseHandler handler) {

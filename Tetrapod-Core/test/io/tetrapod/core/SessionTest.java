@@ -14,12 +14,17 @@ public class SessionTest {
 
    @Test
    public void testClientServer() throws Exception {
+
       TetrapodService service = new TetrapodService();
       service.serviceInit(new Properties());
+
+      Util.sleep(1000);
 
       IdentityService svc1 = new IdentityService();
       svc1.networkInit(new Properties());
       svc1.serviceInit(new Properties());
+
+      Util.sleep(1000);
 
       IdentityService svc2 = new IdentityService();
       svc2.networkInit(new Properties());
@@ -34,7 +39,7 @@ public class SessionTest {
          }
       });
 
-      Util.sleep(2000000);
+      Util.sleep(2000);
 
       service.stop();
    }

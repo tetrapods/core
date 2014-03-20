@@ -21,6 +21,11 @@ public class RPCTest {
       public int getStructId() {
          return 10001;
       }
+
+      @Override
+      public int getContractId() {
+         return 1;
+      }
    }
 
    public class MyTestRequest extends Request {
@@ -34,6 +39,11 @@ public class RPCTest {
       public int getStructId() {
          return 10000;
       }
+
+      @Override
+      public int getContractId() {
+         return 1;
+      }
    }
 
    public interface MyResponseHandler {
@@ -43,7 +53,7 @@ public class RPCTest {
    @Test
    public void testAsync() {
       MyTestRequest req = new MyTestRequest();
-      Async async = new Async(req, null);
+      Async async = new Async(req, null, null);
       async.handle(new ResponseHandler() {
          @Override
          public void onResponse(Response res, int errorCode) {

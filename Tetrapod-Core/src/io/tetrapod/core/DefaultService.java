@@ -1,6 +1,5 @@
 package io.tetrapod.core;
 
-import io.netty.channel.ChannelFuture;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.rpc.Error;
 import io.tetrapod.core.utils.Properties;
@@ -29,7 +28,7 @@ public class DefaultService implements Service, BaseServiceContract.API, Tetrapo
 
    public void serviceInit(Properties props) {
       // add in root level contracts
-      addPeerContract(new TetrapodContract(), TetrapodContract.CONTRACT_ID); // FIXME: addPeerContract?
+      addPeerContract(new TetrapodContract(), TetrapodContract.CONTRACT_ID);
       addContract(new BaseServiceContract(), BaseServiceContract.CONTRACT_ID);
    }
 
@@ -47,8 +46,6 @@ public class DefaultService implements Service, BaseServiceContract.API, Tetrapo
             register();
          }
       });
-      register();
-
       // TODO: Lets worry about this much later...
       //      directConnections = new Server(props.optInt("directConnectPort", 11124), this);
       //      ChannelFuture f = directConnections.start();
@@ -76,6 +73,7 @@ public class DefaultService implements Service, BaseServiceContract.API, Tetrapo
 
    private void addPeerContract(Contract c, int contractId) {
       c.setContractId(contractId);
+      c.addRequests(factory, contractId);
       c.addResponses(factory, contractId);
       c.addMessages(factory, contractId);
    }
@@ -130,6 +128,7 @@ public class DefaultService implements Service, BaseServiceContract.API, Tetrapo
 
    @Override
    public Response requestPause(PauseRequest r, RequestContext ctx) {
+      logger.info("PAUSE");
       return Response.SUCCESS;
    }
 
@@ -164,13 +163,12 @@ public class DefaultService implements Service, BaseServiceContract.API, Tetrapo
     */
    private void register() {
       // TODO: reclaims
-      sendRequest(new RegisterRequest(666/*FIXME*/), 0).handle(new ResponseHandler() {
+      sendRequest(new RegisterRequest(666/*FIXME*/), RequestHeader.TO_ID_DIRECT).handle(new ResponseHandler() {
          @Override
          public void onResponse(Response res, int errorCode) {
             if (res != null) {
-               logger.info("{}", res.dump());
                RegisterResponse r = (RegisterResponse) res;
-               logger.info(String.format("My ID is 0x%08X", r.entityId));
+               logger.info(String.format("%s My ID is 0x%08X", cluster.getSession(), r.entityId));
                reclaimToken = r.reclaimToken;
                cluster.getSession().setEntityId(r.entityId);
             }

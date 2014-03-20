@@ -70,12 +70,10 @@ public class Session extends ChannelInboundHandlerAdapter {
       channel.pipeline().addLast(new ChannelInboundHandlerAdapter() {
          @Override
          public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-            final ByteBuf in = (ByteBuf) msg;
-            logger.debug("DEBUG: channelRead {} ", in.readableBytes());
             ctx.fireChannelRead(msg);
          }
       });
-      channel.pipeline().addLast(new LengthFieldBasedFrameDecoder(1024 * 1024, 0, 4, 0, 4));
+      channel.pipeline().addLast(new LengthFieldBasedFrameDecoder(1024 * 1024, 0, 4, 0, 0));
       channel.pipeline().addLast(this);
    }
 
@@ -98,7 +96,7 @@ public class Session extends ChannelInboundHandlerAdapter {
 
    @Override
    public String toString() {
-      return String.format("Session-0x%08X", sessionNum);
+      return String.format("Ses%d[0x%08X]", sessionNum, myId);
    }
 
    private synchronized boolean needsHandshake() {
@@ -110,21 +108,23 @@ public class Session extends ChannelInboundHandlerAdapter {
       lastHeardFrom.set(System.currentTimeMillis());
       try {
          final ByteBuf in = (ByteBuf) msg;
+         final int len = in.readInt() - 1;
          final byte envelope = in.readByte();
-         logger.debug("channelRead {} {} ", envelope, in.readableBytes());
+         logger.trace("{} channelRead {}", this, envelope);
          if (needsHandshake()) {
             readHandshake(in, envelope);
             fireSessionStartEvent();
          } else {
-            read(in, envelope);
+            read(in, len, envelope);
          }
       } finally {
          ReferenceCountUtil.release(msg);
       }
    }
 
-   private void read(final ByteBuf in, final byte envelope) throws IOException {
-      logger.debug("Read message {} with {} bytes", envelope, in.readableBytes());
+   private void read(final ByteBuf in, final int len, final byte envelope) throws IOException {
+      assert (len == in.readableBytes());
+      logger.trace("Read message {} with {} bytes", envelope, len);
       switch (envelope) {
          case ENVELOPE_REQUEST:
             readRequest(in);
@@ -166,6 +166,8 @@ public class Session extends ChannelInboundHandlerAdapter {
       final ByteBufDataSource reader = new ByteBufDataSource(in);
       final ResponseHeader header = new ResponseHeader();
       header.read(reader);
+
+      logger.debug("{}, READ RESPONSE: [{}]", this, header.requestId);
       final Async async = pendingRequests.remove(header.requestId);
       if (async != null) {
          if (async.header.fromId == myId) {
@@ -189,7 +191,7 @@ public class Session extends ChannelInboundHandlerAdapter {
             relayResponse(header, async, in);
          }
       } else {
-         logger.warn("{} Could not find pending request {} for {}", this, header.dump());
+         logger.warn("{} Could not find pending request for {}", this, header.dump());
       }
    }
 
@@ -197,7 +199,7 @@ public class Session extends ChannelInboundHandlerAdapter {
       final ByteBufDataSource reader = new ByteBufDataSource(in);
       final RequestHeader header = new RequestHeader();
       header.read(reader);
-      // requests addressed to 0 are intended for us
+      logger.debug("{}, READ REQUEST: [{}]", this, header.requestId);
       if (header.toId == RequestHeader.TO_ID_DIRECT || header.toId == myId) {
          final Request req = (Request) helper.make(header.contractId, header.structId);
          if (req != null) {
@@ -215,13 +217,22 @@ public class Session extends ChannelInboundHandlerAdapter {
    private void relayRequest(final RequestHeader header, final ByteBuf in) {
       final Session ses = helper.getRelaySession(header.toId);
       if (ses != null) {
-         final Async async = new Async(null, header);
-         pendingRequests.put(header.requestId, async);
 
-         // Not sure we can do this, unless in is always guaranteed to contain just one frame
-         in.resetReaderIndex();
-         assert (in.getByte(4) == ENVELOPE_REQUEST);
-         ses.write(in);
+         final Async async = new Async(null, header, this);
+         //pendingRequests.put(header.requestId, async);
+
+         //         // Not sure we can do this, unless it is always guaranteed to contain just one frame
+         //         assert (in.getByte(4) == ENVELOPE_REQUEST);
+         //         in.resetReaderIndex();
+         //         in.setInt(5, requestId); // HACK: over-write the requestId in payload
+         //         in.retain();
+         //         ses.write(in);
+
+         final byte[] payload = new byte[in.readableBytes()];
+         in.getBytes(in.readerIndex(), payload);
+         // We need a different requestId for the relay request 
+         //header.requestId = requestCounter.incrementAndGet();
+         ses.sendRelayRequest(async, payload);
 
       } else {
          logger.warn("Could not find a relay session for {}", header.toId);
@@ -229,15 +240,17 @@ public class Session extends ChannelInboundHandlerAdapter {
    }
 
    private void relayResponse(ResponseHeader header, Async async, ByteBuf in) {
-      final Session ses = helper.getRelaySession(async.header.fromId);
-      if (ses != null) {
-         // Not sure we can do this, unless in is always guaranteed to contain just one frame
-         in.resetReaderIndex();
-         assert (in.getByte(4) == ENVELOPE_RESPONSE);
-         ses.write(in);
-      } else {
-         logger.warn("Could not find a relay session for {}", async.header.fromId);
-      }
+      // Not sure we can do this, unless it is always guaranteed to contain just one frame
+      //      assert (in.getByte(0) == ENVELOPE_RESPONSE);
+      //      in.resetReaderIndex();
+      //      in.setInt(5, async.header.requestId); // HACK: over-write the original requestId in payload
+      //      in.retain();
+      //      async.session.write(in);
+
+      final byte[] payload = new byte[in.readableBytes()];
+      in.getBytes(in.readerIndex(), payload);
+      async.session.sendRelayResponse(new ResponseHeader(async.header.requestId, header.structId), payload);
+
    }
 
    private void dispatchRequest(final RequestHeader header, final Request req) {
@@ -277,11 +290,11 @@ public class Session extends ChannelInboundHandlerAdapter {
       header.toId = toId;
       header.fromId = myId;
       header.timeout = timeoutSeconds;
-      header.contractId = TetrapodContract.CONTRACT_ID; // FIXME: need an efficient way to get contractId from req
+      header.contractId = req.getContractId();
       header.structId = req.getStructId();
       header.fromType = myType;
 
-      final Async async = new Async(req, header);
+      final Async async = new Async(req, header, this);
       pendingRequests.put(header.requestId, async);
 
       if (!writeFrame(header, req, ENVELOPE_REQUEST)) {
@@ -291,6 +304,7 @@ public class Session extends ChannelInboundHandlerAdapter {
    }
 
    private void sendResponse(Response res, int requestId) {
+      logger.debug("{} sending response [{}]", this, requestId);
       writeFrame(new ResponseHeader(requestId, res.getStructId()), res, ENVELOPE_RESPONSE);
    }
 
@@ -302,6 +316,56 @@ public class Session extends ChannelInboundHandlerAdapter {
       try {
          header.write(data);
          payload.write(data);
+         // go back and write message length, now that we know it
+         buffer.setInt(0, buffer.writerIndex() - 4);
+         write(buffer);
+         return true;
+      } catch (IOException e) {
+         ReferenceCountUtil.release(buffer);
+         logger.error(e.getMessage(), e);
+      }
+      return false;
+   }
+
+   private boolean sendRelayRequest(final Async async, byte[] payload) {
+      // We need a different requestId for the relay request
+      int origRequestId = async.header.requestId;
+      async.header.requestId = requestCounter.incrementAndGet();
+      pendingRequests.put(async.header.requestId, async);
+
+      logger.debug("{} RELAYING REQUEST: [{}] ", this, async.header.requestId);
+
+      final ByteBuf buffer = channel.alloc().buffer(32 + payload.length);
+      final ByteBufDataSource data = new ByteBufDataSource(buffer);
+      buffer.writeInt(0);
+      buffer.writeByte(ENVELOPE_REQUEST);
+
+      try {
+         async.header.write(data);
+         async.header.requestId = origRequestId;
+         buffer.writeBytes(payload);
+         // go back and write message length, now that we know it
+         buffer.setInt(0, buffer.writerIndex() - 4);
+         write(buffer);
+         return true;
+      } catch (IOException e) {
+         ReferenceCountUtil.release(buffer);
+         logger.error(e.getMessage(), e);
+      }
+      return false;
+   }
+
+   private boolean sendRelayResponse(ResponseHeader header, byte[] payload) {
+      logger.debug("{} RELAYING RESPONSE: [{}]" + header.dump(), this, header.requestId);
+
+      final ByteBuf buffer = channel.alloc().buffer(32 + payload.length);
+      final ByteBufDataSource data = new ByteBufDataSource(buffer);
+      buffer.writeInt(0);
+      buffer.writeByte(ENVELOPE_RESPONSE);
+
+      try {
+         header.write(data);
+         buffer.writeBytes(payload);
          // go back and write message length, now that we know it
          buffer.setInt(0, buffer.writerIndex() - 4);
          write(buffer);
@@ -337,6 +401,7 @@ public class Session extends ChannelInboundHandlerAdapter {
    }
 
    private void writeHandshake() {
+      logger.debug("{} Writing handshake", this);
       synchronized (this) {
          needsHandshake = true;
       }
