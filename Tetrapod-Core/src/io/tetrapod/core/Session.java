@@ -24,13 +24,15 @@ import org.slf4j.*;
 public class Session extends ChannelInboundHandlerAdapter {
 
    public static interface Helper {
-      Structure make(int contractId, int structId);
+      public Structure make(int contractId, int structId);
 
-      void execute(Runnable runnable);
+      public void execute(Runnable runnable);
 
-      ScheduledFuture<?> execute(int delay, TimeUnit unit, Runnable runnable);
+      public ScheduledFuture<?> execute(int delay, TimeUnit unit, Runnable runnable);
 
-      ServiceAPI getHandler(int contractId);
+      public ServiceAPI getHandler(int contractId);
+
+      public void relayRequest(final RequestHeader header, final ByteBuf in, final Session fromSession);
    }
 
    public static final Logger         logger             = LoggerFactory.getLogger(Session.class);
@@ -49,8 +51,6 @@ public class Session extends ChannelInboundHandlerAdapter {
 
    private final SocketChannel        channel;
    private final int                  sessionNum         = sessionCounter.incrementAndGet();
-
-   private RelayHandler               relay;
 
    private final List<Listener>       listeners          = new LinkedList<Listener>();
    private final Map<Integer, Async>  pendingRequests    = new ConcurrentHashMap<>();
@@ -203,11 +203,7 @@ public class Session extends ChannelInboundHandlerAdapter {
             sendResponse(new Error(ERROR_SERIALIZATION), header.requestId);
          }
       } else {
-         if (relay != null) {
-            relay.relayRequest(header, in, this);
-         } else {
-            logger.warn("Could not route request for {}", header.toId);
-         }
+         helper.relayRequest(header, in, this);
       }
    }
 
@@ -409,10 +405,6 @@ public class Session extends ChannelInboundHandlerAdapter {
          return channel.isActive();
       }
       return false;
-   }
-
-   public synchronized void setRelayHandler(RelayHandler handler) {
-      this.relay = handler;
    }
 
 }

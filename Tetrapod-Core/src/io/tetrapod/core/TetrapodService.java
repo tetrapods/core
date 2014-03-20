@@ -15,7 +15,7 @@ import org.slf4j.*;
  * The tetrapod service is the core cluster service which handles message routing, cluster management, service discovery, and load balancing
  * of client connections
  */
-public class TetrapodService implements TetrapodContract.API, RelayHandler {
+public class TetrapodService extends DefaultService implements TetrapodContract.API {
    public static final Logger         logger   = LoggerFactory.getLogger(TetrapodService.class);
 
    public final SecureRandom          random   = new SecureRandom();
@@ -102,7 +102,7 @@ public class TetrapodService implements TetrapodContract.API, RelayHandler {
    }
 
    @Override
-   public Response requestRelay(RelayRequest r) { 
+   public Response requestRelay(RelayRequest r) {
       return null; // HMMM
    }
 
