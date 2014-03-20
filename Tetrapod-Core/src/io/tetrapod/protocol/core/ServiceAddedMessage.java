@@ -81,4 +81,8 @@ public class ServiceAddedMessage extends Message {
          public Structure call() { return new ServiceAddedMessage(); }
       };
    }
+   
+   public final int getContractId() {
+      return TetrapodContract.CONTRACT_ID;
+   }
 }

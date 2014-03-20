@@ -14,11 +14,7 @@ import io.tetrapod.core.*;
 public class IdentityContract extends Contract {
    public static final int VERSION = 1;
    public static final String NAME = "Identity";
-   
-   /**
-    * hardcoded contract id, < 20 is reserved for core services
-    */
-   public static final int CONTRACT_ID = 2; 
+   public static volatile int CONTRACT_ID = Contract.UNASSIGNED;
    
    public static interface API extends
       CreateRequest.Handler,
@@ -45,6 +41,10 @@ public class IdentityContract extends Contract {
    public String getName() {
       return IdentityContract.NAME;
    } 
+   
+   public void setContractId(int id) {
+      IdentityContract.CONTRACT_ID = id;
+   }
 
    public static final int ERROR_UNKNOWN_USERNAME = 983354; 
    public static final int ERROR_WRONG_PASSWORD = 8315566; 

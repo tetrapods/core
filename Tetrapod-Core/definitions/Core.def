@@ -2,9 +2,7 @@ java package io.tetrapod.protocol.core
 java outdir src
 
 // The core tetrapod service
-service Tetrapod version 1
-
-const int CONTRACT_ID = 1 // hardcoded contract id, < 20 is reserved for core contracts
+service Tetrapod version 1 [1]
 
 public struct Entity
    1: int entityId  

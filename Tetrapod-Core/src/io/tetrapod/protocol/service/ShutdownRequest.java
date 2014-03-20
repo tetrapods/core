@@ -69,4 +69,8 @@ public class ShutdownRequest extends Request {
          public Structure call() { return new ShutdownRequest(); }
       };
    }
+   
+   public final int getContractId() {
+      return BaseServiceContract.CONTRACT_ID;
+   }
 }

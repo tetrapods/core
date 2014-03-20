@@ -20,6 +20,8 @@ abstract public class Structure {
    abstract public void read(DataSource data) throws IOException;
 
    abstract public int getStructId();
+   
+   abstract public int getContractId();
 
    @Override
    public String toString() {

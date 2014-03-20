@@ -11,6 +11,7 @@ import io.tetrapod.core.*;
 public class {{class}} extends Contract {
    public static final int VERSION = {{version}};
    public static final String NAME = "{{name}}";
+   public static volatile int CONTRACT_ID = {{contractId}};
    
    {{constants}}
    
@@ -33,6 +34,10 @@ public class {{class}} extends Contract {
    public String getName() {
       return {{class}}.NAME;
    } 
+   
+   public void setContractId(int id) {
+      {{class}}.CONTRACT_ID = id;
+   }
 
    {{subscriptions}}
    

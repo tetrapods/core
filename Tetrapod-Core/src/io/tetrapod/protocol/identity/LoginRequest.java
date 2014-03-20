@@ -83,4 +83,8 @@ public class LoginRequest extends Request {
          public Structure call() { return new LoginRequest(); }
       };
    }
+   
+   public final int getContractId() {
+      return IdentityContract.CONTRACT_ID;
+   }
 }

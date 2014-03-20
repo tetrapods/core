@@ -74,4 +74,8 @@ public class RegisterResponse extends Response {
          public Structure call() { return new RegisterResponse(); }
       };
    }
+      
+   public final int getContractId() {
+      return TetrapodContract.CONTRACT_ID;
+   }
 }

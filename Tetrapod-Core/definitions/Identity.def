@@ -4,8 +4,6 @@ java outdir src
 // The base contract every service must support
 service Identity version 1
 
-const int CONTRACT_ID = 2 // hardcoded contract id, < 20 is reserved for core services
-
 public request Login
    1: string email
    2: string passwordHash

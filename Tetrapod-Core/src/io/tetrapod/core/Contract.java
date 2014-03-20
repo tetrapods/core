@@ -3,6 +3,8 @@ package io.tetrapod.core;
 
 abstract public class Contract {
 
+   public static final int UNASSIGNED = 0;
+
    public void addRequests(StructureFactory factory, int dynamicId) {
    }
 
@@ -13,4 +15,7 @@ abstract public class Contract {
    }
    
    abstract public String getName();
+   
+   public void setContractId(int id) {
+   }
 }

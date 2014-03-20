@@ -109,4 +109,8 @@ public class RequestHeader extends Structure {
          public Structure call() { return new RequestHeader(); }
       };
    }
+   
+   public final int getContractId() {
+      return TetrapodContract.CONTRACT_ID;
+   }
 }

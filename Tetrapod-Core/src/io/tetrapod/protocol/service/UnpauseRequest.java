@@ -69,4 +69,8 @@ public class UnpauseRequest extends Request {
          public Structure call() { return new UnpauseRequest(); }
       };
    }
+   
+   public final int getContractId() {
+      return BaseServiceContract.CONTRACT_ID;
+   }
 }

@@ -115,4 +115,8 @@ public class Entity extends Structure {
          public Structure call() { return new Entity(); }
       };
    }
+   
+   public final int getContractId() {
+      return TetrapodContract.CONTRACT_ID;
+   }
 }

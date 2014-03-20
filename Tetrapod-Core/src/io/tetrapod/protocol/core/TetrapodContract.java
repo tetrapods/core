@@ -14,11 +14,7 @@ import io.tetrapod.core.*;
 public class TetrapodContract extends Contract {
    public static final int VERSION = 1;
    public static final String NAME = "Tetrapod";
-   
-   /**
-    * hardcoded contract id, < 20 is reserved for core contracts
-    */
-   public static final int CONTRACT_ID = 1; 
+   public static volatile int CONTRACT_ID = 1;
    
    public static interface API extends
       RegisterRequest.Handler
@@ -39,6 +35,10 @@ public class TetrapodContract extends Contract {
    public String getName() {
       return TetrapodContract.NAME;
    } 
+   
+   public void setContractId(int id) {
+      TetrapodContract.CONTRACT_ID = id;
+   }
 
    public static class ServiceInfo extends Contract {
       public static interface API extends
@@ -51,7 +51,12 @@ public class TetrapodContract extends Contract {
       
       public String getName() {
          return TetrapodContract.NAME;
+      }
+      
+      public int getContractId() {
+         return TetrapodContract.CONTRACT_ID;
       } 
+       
    }
       
 }

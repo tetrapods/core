@@ -69,4 +69,8 @@ public class Handshake extends Structure {
          public Structure call() { return new Handshake(); }
       };
    }
+   
+   public final int getContractId() {
+      return TetrapodContract.CONTRACT_ID;
+   }
 }

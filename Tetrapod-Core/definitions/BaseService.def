@@ -2,9 +2,7 @@ java package io.tetrapod.protocol.service
 java outdir src
 
 // The base contract every service must support
-service BaseService version 1
-
-const int CONTRACT_ID = 2 // hardcoded contract id, < 20 is reserved for core contracts
+service BaseService version 1 [2]
 
 internal request Pause
 
