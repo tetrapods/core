@@ -21,6 +21,10 @@ public class RPCTest {
       public int getStructId() {
          return 10001;
       }
+      
+      public int getContractId() {
+         return 1;
+      }
    }
 
    public class MyTestRequest extends Request {
@@ -34,7 +38,11 @@ public class RPCTest {
       public int getStructId() {
          return 10000;
       }
-   }
+
+      public int getContractId() {
+         return 1;
+      }
+}
 
    public interface MyResponseHandler {
       public void onResponse(MyResponse res, int errorCode);
