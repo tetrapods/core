@@ -24,13 +24,13 @@ public class Server implements Session.Listener {
    private EventLoopGroup        workerGroup = new NioEventLoopGroup();
 
    private int                   port;
-   private final Service service;
+   private final Service         service;
 
    public Server(int port, Service service) {
       this.service = service;
       this.port = port;
    }
-   
+
    public ChannelFuture start() throws Exception {
       ServerBootstrap b = new ServerBootstrap();
       b.group(bossGroup, workerGroup).channel(NioServerSocketChannel.class).childHandler(new ChannelInitializer<SocketChannel>() {
@@ -53,7 +53,7 @@ public class Server implements Session.Listener {
 
    private void startSession(SocketChannel ch) {
       logger.info("Connection from {}", ch);
-      // TODO: add ssl to pipeline if configured 
+      // TODO: add ssl to pipeline if configured
       // ch.pipeline().addLast(sslEngine);
       Session session = new Session(ch, service);
       session.addSessionListener(this);

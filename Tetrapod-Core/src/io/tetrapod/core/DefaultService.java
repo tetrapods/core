@@ -61,8 +61,8 @@ public class DefaultService implements Service {
    }
 
    @Override
-   public Structure make(int serviceId, int structId) {
-      return factory.make(serviceId, structId);
+   public Structure make(int contractId, int structId) {
+      return factory.make(contractId, structId);
    }
 
    @Override

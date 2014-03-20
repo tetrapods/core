@@ -19,7 +19,7 @@ public class Client implements Session.Listener {
    public Client(Service service) {
       this.service = service;
    }
-   
+
    public ChannelFuture connect(String host, int port, Dispatcher dispatcher) throws Exception {
       Bootstrap b = new Bootstrap();
       b.group(dispatcher.getWorkerGroup());
@@ -40,7 +40,7 @@ public class Client implements Session.Listener {
       session = new Session(ch, service);
       session.addSessionListener(this);
    }
-   
+
    public void close() {
       session.close();
    }
@@ -58,6 +58,5 @@ public class Client implements Session.Listener {
    public void onSessionStop(Session ses) {
       logger.debug("Connection Closed", ses);
    }
-
 
 }

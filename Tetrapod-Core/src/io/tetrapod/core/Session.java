@@ -23,7 +23,14 @@ import org.slf4j.*;
  * Manages a session between two tetrapods
  */
 public class Session extends ChannelInboundHandlerAdapter {
-
+   
+   public static interface Helper {
+      Structure make(int contractId, int structId);
+      void execute(Runnable runnable);
+      ScheduledFuture<?> execute(int delay, TimeUnit unit, Runnable runnable);
+      ServiceAPI getHandler(int contractId);
+   }
+   
    public static final Logger         logger             = LoggerFactory.getLogger(Session.class);
 
    private static final int           WIRE_VERSION       = 1;
@@ -40,25 +47,22 @@ public class Session extends ChannelInboundHandlerAdapter {
 
    private final SocketChannel        channel;
    private final int                  sessionNum         = sessionCounter.incrementAndGet();
-   private final Dispatcher           dispatcher;
 
    private RelayHandler               relay;
 
    private final List<Listener>       listeners          = new LinkedList<Listener>();
    private final Map<Integer, Async>  pendingRequests    = new ConcurrentHashMap<>();
    private final AtomicInteger        requestCounter     = new AtomicInteger();
+   private final Session.Helper       helper;
 
    private boolean                    needsHandshake     = true;
    private AtomicLong                 lastHeardFrom      = new AtomicLong();
 
    private int                        myId               = 0;
 
-   private StructureFactory           structureFactory   = null;
-
-   public Session(SocketChannel channel, Dispatcher dispatcher, StructureFactory factory) {
+   public Session(SocketChannel channel, Session.Helper helper) {
       this.channel = channel;
-      this.dispatcher = dispatcher;
-      this.structureFactory = factory;
+      this.helper = helper;
       channel.pipeline().addLast(new ChannelInboundHandlerAdapter() {
          @Override
          public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
@@ -82,10 +86,6 @@ public class Session extends ChannelInboundHandlerAdapter {
 
    public int getSessionNum() {
       return sessionNum;
-   }
-
-   public Dispatcher getDispatcher() {
-      return dispatcher;
    }
 
    public SocketChannel getChannel() {
@@ -162,13 +162,13 @@ public class Session extends ChannelInboundHandlerAdapter {
       final ByteBufDataSource reader = new ByteBufDataSource(in);
       final ResponseHeader header = new ResponseHeader();
       header.read(reader);
-      final Response res = (Response) structureFactory.make(0 /* FIXME - dynamicId */, header.structId);
+      final Response res = (Response)helper.make(header.contractId, header.structId);
       if (res != null) {
          res.read(reader);
          logger.debug("Got Response: {}", res);
          final Async async = pendingRequests.get(header.requestId);
          if (async != null) {
-            dispatcher.dispatch(new Runnable() {
+            helper.execute(new Runnable() {
                public void run() {
                   if (res.getStructId() == Error.STRUCT_ID) {
                      async.setResponse(null, ((Error) res).code);
@@ -190,8 +190,8 @@ public class Session extends ChannelInboundHandlerAdapter {
       final RequestHeader header = new RequestHeader();
       header.read(reader);
       // requests addressed to 0 are intended for us
-      if (header.toId == 0 || header.toId == myId) {
-         final Request req = (Request) structureFactory.make(0 /* FIXME - dynamicId */, header.structId);
+      if (header.toId == RequestHeader.TO_ID_DIRECT || header.toId == myId) {
+         final Request req = (Request)helper.make(header.contractId, header.structId);
          if (req != null) {
             req.read(reader);
             dispatchRequest(header, req);
@@ -212,7 +212,7 @@ public class Session extends ChannelInboundHandlerAdapter {
       logger.debug("Got Request: {}", req);
       final ServiceAPI svc = findServiceHandler(header.structId);
       if (svc != null) {
-         dispatcher.dispatch(new Runnable() {
+         helper.execute(new Runnable() {
             public void run() {
                try {
                   // TODO: RequestContexts
@@ -388,7 +388,7 @@ public class Session extends ChannelInboundHandlerAdapter {
 
    private void scheduleHealthCheck() {
       if (isConnected()) {
-         dispatcher.dispatch(1, TimeUnit.SECONDS, new Runnable() {
+         helper.execute(1, TimeUnit.SECONDS, new Runnable() {
             public void run() {
                checkHealth();
             }
