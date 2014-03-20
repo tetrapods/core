@@ -23,14 +23,17 @@ import org.slf4j.*;
  * Manages a session between two tetrapods
  */
 public class Session extends ChannelInboundHandlerAdapter {
-   
+
    public static interface Helper {
       Structure make(int contractId, int structId);
+
       void execute(Runnable runnable);
+
       ScheduledFuture<?> execute(int delay, TimeUnit unit, Runnable runnable);
+
       ServiceAPI getHandler(int contractId);
    }
-   
+
    public static final Logger         logger             = LoggerFactory.getLogger(Session.class);
 
    private static final int           WIRE_VERSION       = 1;
@@ -54,9 +57,10 @@ public class Session extends ChannelInboundHandlerAdapter {
    private final Map<Integer, Async>  pendingRequests    = new ConcurrentHashMap<>();
    private final AtomicInteger        requestCounter     = new AtomicInteger();
    private final Session.Helper       helper;
+   private final AtomicLong           lastHeardFrom      = new AtomicLong();
+   private final AtomicLong           lastSentTo         = new AtomicLong();
 
    private boolean                    needsHandshake     = true;
-   private AtomicLong                 lastHeardFrom      = new AtomicLong();
 
    private int                        myId               = 0;
 
@@ -162,7 +166,7 @@ public class Session extends ChannelInboundHandlerAdapter {
       final ByteBufDataSource reader = new ByteBufDataSource(in);
       final ResponseHeader header = new ResponseHeader();
       header.read(reader);
-      final Response res = (Response)helper.make(header.contractId, header.structId);
+      final Response res = (Response) helper.make(header.contractId, header.structId);
       if (res != null) {
          res.read(reader);
          logger.debug("Got Response: {}", res);
@@ -191,7 +195,7 @@ public class Session extends ChannelInboundHandlerAdapter {
       header.read(reader);
       // requests addressed to 0 are intended for us
       if (header.toId == RequestHeader.TO_ID_DIRECT || header.toId == myId) {
-         final Request req = (Request)helper.make(header.contractId, header.structId);
+         final Request req = (Request) helper.make(header.contractId, header.structId);
          if (req != null) {
             req.read(reader);
             dispatchRequest(header, req);
@@ -287,6 +291,7 @@ public class Session extends ChannelInboundHandlerAdapter {
          // go back and write message length, now that we know it
          buffer.setInt(0, buffer.writerIndex() - 4);
          channel.writeAndFlush(buffer);
+         lastSentTo.set(System.currentTimeMillis());
          return true;
       } catch (IOException e) {
          ReferenceCountUtil.release(buffer);
@@ -322,6 +327,7 @@ public class Session extends ChannelInboundHandlerAdapter {
       buffer.writeInt(WIRE_VERSION);
       buffer.writeInt(WIRE_OPTIONS);
       channel.writeAndFlush(buffer);
+      lastSentTo.set(System.currentTimeMillis());
    }
 
    private void sendPing() {
@@ -329,6 +335,7 @@ public class Session extends ChannelInboundHandlerAdapter {
       buffer.writeInt(1);
       buffer.writeByte(ENVELOPE_PING);
       channel.writeAndFlush(buffer);
+      lastSentTo.set(System.currentTimeMillis());
    }
 
    private void sendPong() {
@@ -336,6 +343,7 @@ public class Session extends ChannelInboundHandlerAdapter {
       buffer.writeInt(1);
       buffer.writeByte(ENVELOPE_PONG);
       channel.writeAndFlush(buffer);
+      lastSentTo.set(System.currentTimeMillis());
    }
 
    public void close() {
@@ -374,10 +382,11 @@ public class Session extends ChannelInboundHandlerAdapter {
       }
    }
 
+   // TODO: needs configurable timeouts
    public void checkHealth() {
       if (isConnected()) {
          final long now = System.currentTimeMillis();
-         if (now - lastHeardFrom.get() > 5000) {
+         if (now - lastHeardFrom.get() > 5000 || now - lastSentTo.get() > 5000) {
             sendPing();
          } else if (now - lastHeardFrom.get() > 10000) {
             logger.warn("{} Timeout", this);
