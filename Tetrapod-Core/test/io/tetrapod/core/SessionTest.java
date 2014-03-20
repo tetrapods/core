@@ -3,7 +3,7 @@ package io.tetrapod.core;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.utils.*;
 import io.tetrapod.identity.IdentityService;
-import io.tetrapod.protocol.core.RegisterRequest;
+import io.tetrapod.protocol.core.*;
 
 import org.junit.Test;
 import org.slf4j.*;

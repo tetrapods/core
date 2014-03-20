@@ -183,7 +183,7 @@ public class Session extends ChannelInboundHandlerAdapter {
                   }
                });
             } else {
-               logger.warn("{} Could not find structure {}", this, header.structId);
+               logger.warn("{} Could not find response structure {}", this, header.structId);
             }
          } else {
             relayResponse(header, async, in);
@@ -204,7 +204,7 @@ public class Session extends ChannelInboundHandlerAdapter {
             req.read(reader);
             dispatchRequest(header, req);
          } else {
-            logger.warn("Could not find structure {}", header.structId);
+            logger.warn("Could not find request structure {}", header.structId);
             sendResponse(new Error(ERROR_SERIALIZATION), header.requestId);
          }
       } else {
@@ -277,6 +277,7 @@ public class Session extends ChannelInboundHandlerAdapter {
       header.toId = toId;
       header.fromId = myId;
       header.timeout = timeoutSeconds;
+      header.contractId = TetrapodContract.CONTRACT_ID; // FIXME: need an efficient way to get contractId from req
       header.structId = req.getStructId();
       header.fromType = myType;
 
