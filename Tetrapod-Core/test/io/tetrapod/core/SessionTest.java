@@ -33,23 +33,7 @@ public class SessionTest {
          }
       });
 
-      //      Client client = new Client("localhost", 12346, dispatcher);
-      //      Util.sleep(1000);
-      //
-      //      RegisterRequest req = new RegisterRequest();
-      //      req.build = 666;
-      //      client.getSession().sendRequest(req, 0, 0, EntityInfo.TYPE_CLIENT, (byte) 30).handle(new ResponseHandler() {
-      //         @Override
-      //         public void onResponse(Response res, int errorCode) {
-      //            logger.info("Got my response. YEY! {} {}", res, errorCode);
-      //         }
-      //      });
-      //
-      //      Util.sleep(2000);
-      //
-      //      client.close();
-      //
-      Util.sleep(200000);
+      Util.sleep(2000);
 
       service.stop();
    }
