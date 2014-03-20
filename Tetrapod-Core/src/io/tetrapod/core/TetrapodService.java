@@ -18,8 +18,8 @@ public class TetrapodService implements TetrapodContract.API {
    public TetrapodService() {
       dispatcher = new Dispatcher();
       registry = new Registry(1); // FIXME -- each service needs to be issued a unique id
-      publicServer = new Server(9800, dispatcher);
-      privateServer = new Server(9900, dispatcher);
+      publicServer = null; // new Server(9800, dispatcher);
+      privateServer = null; // new Server(9900, dispatcher);
 
    }
 
