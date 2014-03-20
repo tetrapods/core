@@ -57,6 +57,7 @@ public request Register
 public response Register 
    1: int entityId
    2: int parentId
+   3: long reclaimToken
     
 internal message ServiceInfo.ServiceAdded
     1: int contractId

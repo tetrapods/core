@@ -17,9 +17,9 @@ public class DefaultService implements Service, BaseServiceContract.API, Tetrapo
    protected final Dispatcher     dispatcher;
    private final StructureFactory factory;
    private final Client           cluster;
-   private Server                 directConnections;
    private Contract               contract;
    private Contract[]             peerContracts;
+   private long                   reclaimToken;
 
    public DefaultService() {
       dispatcher = new Dispatcher();
@@ -34,12 +34,29 @@ public class DefaultService implements Service, BaseServiceContract.API, Tetrapo
    }
 
    public void networkInit(Properties props) throws Exception {
-      directConnections = new Server(props.optInt("directConnectPort", 11124), this);
-      ChannelFuture f = directConnections.start();
-      // TODO: reconnect loop needed to handle disconnections
       cluster.connect(props.optString("clusterHost", "localhost"), props.optInt("clusterPort", TetrapodService.DEFAULT_PRIVATE_PORT),
             dispatcher).sync();
-      f.sync();
+      cluster.getSession().addSessionListener(new Session.Listener() {
+         @Override
+         public void onSessionStop(Session ses) {
+            // TODO: reconnect loop needed to handle disconnections            
+         }
+
+         @Override
+         public void onSessionStart(Session ses) {
+            register();
+         }
+      });
+      register();
+
+      // TODO: Lets worry about this much later...
+      //      directConnections = new Server(props.optInt("directConnectPort", 11124), this);
+      //      ChannelFuture f = directConnections.start();
+      //      f.sync();
+   }
+
+   public int getEntityId() {
+      return cluster.getSession().getEntityId();
    }
 
    protected void setContract(Contract contract) {
@@ -133,6 +150,25 @@ public class DefaultService implements Service, BaseServiceContract.API, Tetrapo
       for (Contract c : peerContracts)
          if (c.getName().equals(m.name))
             addContract(c, m.contractId);
+   }
+
+   /**
+    * Register as an entity with the cluster
+    */
+   private void register() {
+      // TODO: reclaims
+      sendRequest(new RegisterRequest(666/*FIXME*/), 0).handle(new ResponseHandler() {
+         @Override
+         public void onResponse(Response res, int errorCode) {
+            if (res != null) {
+               logger.info("{}", res.dump());
+               RegisterResponse r = (RegisterResponse) res;
+               logger.info(String.format("My ID is 0x%08X", r.entityId));
+               reclaimToken = r.reclaimToken;
+               cluster.getSession().setEntityId(r.entityId);
+            }
+         }
+      });
    }
 
 }

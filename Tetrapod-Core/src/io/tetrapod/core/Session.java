@@ -436,4 +436,8 @@ public class Session extends ChannelInboundHandlerAdapter {
       this.myId = entityId;
    }
 
+   public synchronized int getEntityId() {
+      return myId;
+   }
+
 }

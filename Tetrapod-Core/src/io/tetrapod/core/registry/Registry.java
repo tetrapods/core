@@ -26,7 +26,7 @@ public class Registry {
       this.parentId = id;
    }
 
-   public void register(EntityInfo entity) {
+   public synchronized void register(EntityInfo entity) {
       entity.entityId = issueId();
       entities.put(entity.entityId, entity);
    }
@@ -42,9 +42,9 @@ public class Registry {
     */
    private synchronized int issueId() {
       while (true) {
-         int id = ++counter % MAX_ID;
+         int id = (parentId << 20) | (++counter % MAX_ID);
          if (!entities.containsKey(id)) {
-            return parentId | id;
+            return id;
          }
       }
    }

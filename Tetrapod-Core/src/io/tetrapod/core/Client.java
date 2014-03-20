@@ -20,7 +20,7 @@ public class Client implements Session.Listener {
       this.service = service;
    }
 
-   public ChannelFuture connect(String host, int port, Dispatcher dispatcher) throws Exception {
+   public ChannelFuture connect(final String host, final int port, final Dispatcher dispatcher) throws Exception {
       Bootstrap b = new Bootstrap();
       b.group(dispatcher.getWorkerGroup());
       b.channel(NioSocketChannel.class);
@@ -28,7 +28,7 @@ public class Client implements Session.Listener {
       b.handler(new ChannelInitializer<SocketChannel>() {
          @Override
          public void initChannel(SocketChannel ch) throws Exception {
-            logger.info("Connection to {}", ch.remoteAddress());
+            logger.info("Connection to {}:{}", host, port);
             startSession(ch);
          }
       });

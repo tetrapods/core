@@ -33,13 +33,15 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       super.serviceInit(props);
       setContract(new TetrapodContract());
 
+      registry.setParentId(getEntityId());
       publicServer = new Server(props.optInt("tetrapod.public.port", DEFAULT_PUBLIC_PORT), this);
       privateServer = new Server(props.optInt("tetrapod.private.port", DEFAULT_PRIVATE_PORT), this);
       start();
    }
 
-   public int getEntityid() {
-      return 1; // FIXME -- each service needs to be issued a unique id
+   @Override
+   public int getEntityId() {
+      return 1; // FIXME -- each tetrapod service needs to be issued a unique id
    }
 
    private void start() {
@@ -55,18 +57,12 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
    public void stop() {
       logger.info("STOP");
-      try {
-         privateServer.stop();
-         publicServer.stop();
-         dispatcher.shutdown();
-      } catch (Exception e) {
-         // FIXME: fail service
-         logger.error(e.getMessage(), e);
-      }
+      privateServer.stop();
+      publicServer.stop();
    }
 
    private Session findSession(final EntityInfo entity) {
-      if (entity.parentId == getEntityid()) {
+      if (entity.parentId == getEntityId()) {
          return sessions.get(entity.entityId);
       } else {
          return sessions.get(entity.parentId);
@@ -88,6 +84,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    public Response requestRegister(RegisterRequest r, RequestContext ctx) {
       final EntityInfo info = new EntityInfo();
       info.reclaimToken = random.nextLong();
+      info.parentId = getEntityId();
       info.build = r.build;
       info.host = "TODO";// TODO
       info.name = "TODO";// TODO
@@ -97,7 +94,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       ctx.session.setEntityId(info.entityId);
       //ctx.session.setEntityType(info.type);      
       sessions.put(info.entityId, ctx.session);
-      return new RegisterResponse(info.entityId, info.parentId);
+      return new RegisterResponse(info.entityId, info.parentId, info.reclaimToken);
    }
 
 }
