@@ -29,7 +29,7 @@ internal request Test [998]
    11: TestInfo[] infoarray
    
    # supported values for numbers are decimal integers, decimal floats, and hex integers 
-   const int MY_CONST = 1223
+   const int MY_CONST = 1223 // genned comments do attach to constants
    const int MY_OTHER_CONST = 0x2234
    
    # errors are integer constants, the value is a stable hash of the error name.  they can only be

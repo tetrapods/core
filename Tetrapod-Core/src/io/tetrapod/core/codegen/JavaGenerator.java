@@ -69,6 +69,7 @@ class JavaGenerator implements LanguageGenerator {
       vals.setIfEmpty("subscriptions", "");
       vals.add("classcomment", generateComment(context.serviceComment));
       addErrors(context.allErrors, true, context.serviceName, vals);
+      addConstantValues(context.globalConstants, vals);
       t.expandAndTrim(vals, getFilename(vals.get("class")));
    }
 
@@ -177,7 +178,11 @@ class JavaGenerator implements LanguageGenerator {
             continue;
          TemplateValues vals = getTemplateValues(f);
          String[] lines = template(vals.get("template")).expand(vals).split("\r\n|\n|\r");
-         globalVals.add("constants", lines[0]);
+         String comment = "";
+         if (f.comment != null && !f.comment.trim().isEmpty()) {
+            comment = generateComment(f.comment.trim());
+         }
+         globalVals.add("constants", comment + lines[0]);
       }
       globalVals.setIfEmpty("constants", "");
    }

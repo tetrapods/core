@@ -12,6 +12,8 @@ public class {{class}} extends Contract {
    public static final int VERSION = {{version}};
    public static final String NAME = "{{name}}";
    
+   {{constants}}
+   
    public static interface API extends
       {{handlers}}
       {}
