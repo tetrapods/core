@@ -9,8 +9,8 @@ public class StructureFactory {
 
    private final Map<Long, Callable<Structure>> knownStructs = new HashMap<>();
    
-   public synchronized void add(int serviceId, int structId, Callable<Structure> factory) {
-      long key = makeKey(serviceId, structId);
+   public synchronized void add(int contractId, int structId, Callable<Structure> factory) {
+      long key = makeKey(contractId, structId);
       knownStructs.put(key, factory);
    }
    

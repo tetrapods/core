@@ -62,11 +62,13 @@ public class Server implements Session.Listener {
    @Override
    public void onSessionStart(Session ses) {
       sessions.put(ses.getSessionNum(), ses);
+      service.onServerStart(this);
    }
 
    @Override
    public void onSessionStop(Session ses) {
       sessions.remove(ses.getSessionNum());
+      service.onServerStop(this);
    }
 
 }

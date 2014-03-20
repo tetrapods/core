@@ -2,7 +2,6 @@ package io.tetrapod.core;
 
 import io.tetrapod.core.registry.*;
 import io.tetrapod.core.rpc.*;
-import io.tetrapod.core.utils.Properties;
 import io.tetrapod.protocol.core.*;
 
 import java.security.SecureRandom;
@@ -29,17 +28,19 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    public Server                      privateServer;
    public Server                      publicServer;
 
-   public void serviceInit(Properties props) {
-      super.serviceInit(props);
-      setContract(new TetrapodContract());
-
-      publicServer = new Server(props.optInt("tetrapod.public.port", DEFAULT_PUBLIC_PORT), this);
-      privateServer = new Server(props.optInt("tetrapod.private.port", DEFAULT_PRIVATE_PORT), this);
+   public TetrapodService() {
+      addContracts(new TetrapodContract());
+   }
+   
+   public void startNetwork(String hostAndPort, String token) throws Exception {
+      super.startNetwork(hostAndPort, token);
+      publicServer = new Server(DEFAULT_PUBLIC_PORT, this);
+      privateServer = new Server(DEFAULT_PRIVATE_PORT, this);
       start();
    }
-
-   public int getEntityid() {
-      return 1; // FIXME -- each service needs to be issued a unique id
+   
+   @Override
+   public void onRegistered() {
    }
 
    private void start() {
@@ -66,7 +67,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    }
 
    private Session findSession(final EntityInfo entity) {
-      if (entity.parentId == getEntityid()) {
+      if (entity.parentId == getEntityId()) {
          return sessions.get(entity.entityId);
       } else {
          return sessions.get(entity.parentId);
