@@ -70,6 +70,7 @@ public class TetrapodService implements TetrapodContract.API, RelayHandler {
             ses.sendRequest(header, req).handle(new ResponseHandler() {
                @Override
                public void onResponse(Response res, int errorCode) {
+                  // TODO: forward the response back to 
                   fromSession.sendResponse(res, errorCode);
                }
             });
@@ -98,6 +99,11 @@ public class TetrapodService implements TetrapodContract.API, RelayHandler {
    @Override
    public Response genericRequest(Request r) {
       return null;
+   }
+
+   @Override
+   public Response requestRelay(RelayRequest r) { 
+      return null; // HMMM
    }
 
 }

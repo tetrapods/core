@@ -231,22 +231,10 @@ public class Session extends ChannelInboundHandlerAdapter {
       }
    }
 
-   public class TetrapodService implements TetrapodContract.API {
-      @Override
-      public Response requestRegister(RegisterRequest r) {
-         return new RegisterResponse();
-      }
-
-      @Override
-      public Response genericRequest(Request r) {
-         return new Error(ERROR_UNKNOWN_REQUEST);
-      }
-   }
-
    private ServiceAPI findServiceHandler(int structId) {
       // FIXME -- registered handlers map needed
       if (structId == RegisterRequest.STRUCT_ID) {
-         return new TetrapodService();
+         // return new TetrapodService();
       }
       return null;
    }
@@ -279,7 +267,7 @@ public class Session extends ChannelInboundHandlerAdapter {
       return async;
    }
 
-   private void sendResponse(Response res, int requestId) {
+   protected void sendResponse(Response res, int requestId) {
       final ResponseHeader header = new ResponseHeader();
       header.requestId = requestId;
       header.structId = res.getStructId();
