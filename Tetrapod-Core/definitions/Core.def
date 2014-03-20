@@ -4,7 +4,7 @@ java outdir src
 // The core tetrapod service
 service Tetrapod version 1
 
-const int CONTRACT_ID = 1 // hardcoded contract id, < 20 is reserved for core services
+const int CONTRACT_ID = 1 // hardcoded contract id, < 20 is reserved for core contracts
 
 public struct Entity
    1: int entityId  
