@@ -17,7 +17,7 @@ public class SessionTest {
    public void testClientServer() throws Exception {
 
       TetrapodService service = new TetrapodService();
-      service.startNetwork(null, null);
+      service.startNetwork(null, "e:1");
 
       Util.sleep(1000);
       IdentityService svc1 = new IdentityService();

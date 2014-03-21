@@ -66,6 +66,7 @@ public class Session extends ChannelInboundHandlerAdapter {
    private int                        myId               = 0;
    private byte                       myType             = Core.TYPE_SERVICE;
    private int                        myContractId;
+   private boolean                    untrusted          = true;
 
    public Session(SocketChannel channel, Session.Helper helper) {
       this.channel = channel;
@@ -203,6 +204,9 @@ public class Session extends ChannelInboundHandlerAdapter {
       final ByteBufDataSource reader = new ByteBufDataSource(in);
       final RequestHeader header = new RequestHeader();
       header.read(reader);
+      if (untrusted && header.fromType != TYPE_ANONYMOUS && header.fromType != TYPE_CLIENT) {
+         header.fromType = TYPE_ANONYMOUS;
+      }
       logger.debug("{}, READ REQUEST: [{}]", this, header.requestId);
       if ((header.toId == UNADDRESSED && header.contractId == myContractId) || header.toId == myId) {
          final Request req = (Request) helper.make(header.contractId, header.structId);
@@ -507,6 +511,14 @@ public class Session extends ChannelInboundHandlerAdapter {
 
    public synchronized int getEntityId() {
       return myId;
+   }
+
+   public void setEntityType(byte type) {
+      myType = type;
+   }
+
+   public void setUntrusted(boolean b) {
+      untrusted = b;
    }
 
 }

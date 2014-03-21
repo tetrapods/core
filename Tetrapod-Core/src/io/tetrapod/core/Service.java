@@ -10,8 +10,8 @@ public interface Service extends Session.Helper, ServiceAPI {
 
    void onClientStop(Client client);
 
-   void onServerStart(Server server);
+   void onServerStop(Server server, Session ses);
 
-   void onServerStop(Server server);
+   void onServerStart(Server server, Session ses);
    
 }

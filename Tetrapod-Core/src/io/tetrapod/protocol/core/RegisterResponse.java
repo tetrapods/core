@@ -18,15 +18,15 @@ public class RegisterResponse extends Response {
       defaults();
    }
 
-   public RegisterResponse(int entityId, int parentId, long reclaimToken) {
+   public RegisterResponse(int entityId, int parentId, String token) {
       this.entityId = entityId;
       this.parentId = parentId;
-      this.reclaimToken = reclaimToken;
+      this.token = token;
    }   
    
    public int entityId;
    public int parentId;
-   public long reclaimToken;
+   public String token;
 
    public final Structure.Security getSecurity() {
       return Security.PUBLIC;
@@ -35,14 +35,14 @@ public class RegisterResponse extends Response {
    public final void defaults() {
       entityId = 0;
       parentId = 0;
-      reclaimToken = 0;
+      token = null;
    }
    
    @Override
    public final void write(DataSource data) throws IOException {
       data.write(1, this.entityId);
       data.write(2, this.parentId);
-      data.write(3, this.reclaimToken);
+      data.write(3, this.token);
       data.writeEndTag();
    }
    
@@ -54,7 +54,7 @@ public class RegisterResponse extends Response {
          switch (tag) {
             case 1: this.entityId = data.read_int(tag); break;
             case 2: this.parentId = data.read_int(tag); break;
-            case 3: this.reclaimToken = data.read_long(tag); break;
+            case 3: this.token = data.read_string(tag); break;
             case Codec.END_TAG:
                return;
             default:

@@ -20,7 +20,7 @@ abstract public class DefaultService implements Service, BaseServiceContract.API
 
    protected int                  entityId;
    protected int                  parentId;
-   protected long                 reclaimToken;
+   protected String               token;
 
    public DefaultService() {
       dispatcher = new Dispatcher();
@@ -35,6 +35,7 @@ abstract public class DefaultService implements Service, BaseServiceContract.API
    @Override
    public void startNetwork(String hostAndPort, String token) throws Exception {
       if (hostAndPort != null) {
+         this.token = token;
          int ix = hostAndPort.indexOf(':');
          String host = ix < 0 ? hostAndPort : hostAndPort.substring(0, ix);
          int port = ix < 0 ? TetrapodService.DEFAULT_PRIVATE_PORT : Integer.parseInt(hostAndPort.substring(ix + 1));
@@ -45,14 +46,14 @@ abstract public class DefaultService implements Service, BaseServiceContract.API
    @Override
    public void onClientStart(Client client) {
       logger.debug("Sending register request");
-      sendRequest(new RegisterRequest(222/*FIXME*/), Core.UNADDRESSED).handle(new ResponseHandler() {
+      sendRequest(new RegisterRequest(222/*FIXME*/, token), Core.UNADDRESSED).handle(new ResponseHandler() {
          @Override
          public void onResponse(Response res, int errorCode) {
             if (res != null) {
                RegisterResponse r = (RegisterResponse) res;
                entityId = r.entityId;
                parentId = r.parentId;
-               reclaimToken = r.reclaimToken;
+               token = r.token;
 
                logger.info(String.format("%s My entityId is 0x%08X", cluster.getSession(), r.entityId));
                cluster.getSession().setEntityId(r.entityId);
@@ -72,10 +73,10 @@ abstract public class DefaultService implements Service, BaseServiceContract.API
    }
 
    @Override
-   public void onServerStart(Server server) {}
+   public void onServerStart(Server server, Session ses) {}
 
    @Override
-   public void onServerStop(Server server) {}
+   public void onServerStop(Server server, Session ses) {}
 
    // subclass utils
    

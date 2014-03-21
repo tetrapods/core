@@ -58,11 +58,12 @@ public struct ResponseHeader
    
 public request Register 
    1: int build   
+   2: string token
    
 public response Register 
    1: int entityId
    2: int parentId
-   3: long reclaimToken
+   3: string token
     
 internal message ServiceInfo.ServiceAdded
     1: int contractId
