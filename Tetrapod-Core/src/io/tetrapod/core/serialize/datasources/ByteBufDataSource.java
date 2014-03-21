@@ -49,5 +49,15 @@ public class ByteBufDataSource extends StreamDataSource {
    protected void writeRawBytes(byte[] vals, int offset, int count) throws IOException {
       buffer.writeBytes(vals, offset, count);
    }
+   
+   @Override
+   public void writeVarInt(int x) throws IOException {
+      super.writeVarInt(x);
+   }
+   
+   @Override
+   public int readVarInt() throws IOException {
+      return super.readVarInt();
+   }
 
 }
