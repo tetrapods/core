@@ -42,19 +42,19 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          onRegistered();
       }
    }
-   
+
    @Override
    public void onClientStart(Client client) {
       client.getSession().setEntityType(Core.TYPE_TETRAPOD);
       super.onClientStart(client);
    }
-   
+
    @Override
    public void onServerStart(Server server, Session session) {
       session.setUntrusted(server == publicServer);
       super.onServerStart(server, session);
    }
-   
+
    @Override
    public void onRegistered() {
       registry.setParentId(getEntityId());
@@ -107,18 +107,21 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          info = registry.getEntity(t.entityId);
          if (info != null && info.reclaimToken != t.nonce) {
             info = null;
+         } else {
+            info.parentId = getEntityId(); // they may have changed parents
          }
       }
       if (info == null) {
          info = makeInfo(r.build, t.entityId, "NAME" /* TODO */, ctx);
          registry.register(info);
       }
+
       ctx.session.setEntityId(info.entityId);
-      ctx.session.setEntityType(info.type);      
+      ctx.session.setEntityType(info.type);
       sessions.put(info.entityId, ctx.session);
       return new RegisterResponse(info.entityId, info.parentId, Token.encode(info.entityId, info.reclaimToken));
    }
-   
+
    private EntityInfo makeInfo(int build, int requestedEntityId, String name, RequestContext ctx) {
       final EntityInfo info = new EntityInfo();
       info.type = ctx.header.fromType;
@@ -129,16 +132,16 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       info.name = name;
       info.reclaimToken = random.nextLong();
       if (requestedEntityId > 0 && info.type == Core.TYPE_TETRAPOD) {
-         // tetrapods joining can choose their own eneityId as long as it wasn't in use
+         // tetrapods joining can choose their own enityId as long as it wasn't in use
          info.entityId = requestedEntityId;
       }
       return info;
    }
-   
+
    private static class Token {
-      int entityId = 0;
-      long nonce = 0;
-      
+      int  entityId = 0;
+      long nonce    = 0;
+
       public static Token decode(String token) {
          if (token == null)
             return null;
@@ -147,15 +150,15 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          String[] parts = token.split(":");
          for (int i = 0; i < parts.length; i += 2) {
             if (parts[i].equals("e")) {
-               t.entityId = Integer.parseInt(parts[i+1]);
+               t.entityId = Integer.parseInt(parts[i + 1]);
             }
             if (parts[i].equals("r")) {
-               t.nonce = Long.parseLong(parts[i+1]);
+               t.nonce = Long.parseLong(parts[i + 1]);
             }
          }
          return t;
       }
-      
+
       public static String encode(int entityId, long reclaimNonce) {
          return "e:" + entityId + ":r:" + reclaimNonce;
       }
