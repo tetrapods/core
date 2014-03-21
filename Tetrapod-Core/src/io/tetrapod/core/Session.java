@@ -356,7 +356,7 @@ public class Session extends ChannelInboundHandlerAdapter {
    }
 
    private boolean sendRelayResponse(ResponseHeader header, byte[] payload) {
-      logger.debug("{} RELAYING RESPONSE: [{}]" + header.dump(), this, header.requestId);
+      logger.debug("{} RELAYING RESPONSE: [{}]", this, header.requestId);
 
       final ByteBuf buffer = channel.alloc().buffer(32 + payload.length);
       final ByteBufDataSource data = new ByteBufDataSource(buffer);
