@@ -36,12 +36,12 @@ public class CodeGen {
       public String key() { return parts.get(0); }
    }
 
-   private Map<String, LanguageGenerator> languages = new HashMap<>();
+   private LanguageGenerator              generator;
    private int                            currentLineNumber;
    private String                         currentLine;
    private CodeGenContext                 context;
    private TokenizedLine                  tokenizedLine = new TokenizedLine();
-   private StringBuilder                  commentInProgress = new StringBuilder();
+   private StringBuilder                  commentInProgress;
 
    public void run(String filename, String language) {
       ArrayList<File> files = new ArrayList<>();
@@ -97,10 +97,7 @@ public class CodeGen {
          case "javascript":
          case "objc":
          case "c++":
-            LanguageGenerator gen = languages.get(key);
-            if (gen != null) {
-               gen.parseOption(tokenizedLine);
-            }
+            generator.parseOption(tokenizedLine);
             return;
 
          case "service":
@@ -181,10 +178,7 @@ public class CodeGen {
    }
 
    private void flushAll() throws IOException, ParseException {
-      for (LanguageGenerator gen : languages.values()) {
-         gen.generate(context);
-      }
-      // System.out.println(context.toString());
+      generator.generate(context);
    }
 
    private void init(String language) throws ParseException {
@@ -193,7 +187,7 @@ public class CodeGen {
       currentLineNumber = 0;
       switch (language) {
          case "java":
-            languages.put("java", new JavaGenerator());
+            generator = new JavaGenerator();
             break;
          default:
             throw new ParseException("unknowm language: " + language);
