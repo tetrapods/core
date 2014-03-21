@@ -18,6 +18,8 @@ class JavaGenerator implements LanguageGenerator {
    public void parseOption(TokenizedLine line) throws ParseException {
 //      java package io.tetrapod.identity.protocol
 //      java outdir src
+      if (!line.parts.get(0).equals("java"))
+         return;
       String opt = line.parts.get(1);
       String val = line.parts.get(2);
       switch (opt) {
@@ -33,6 +35,9 @@ class JavaGenerator implements LanguageGenerator {
    }
 
    public void generate(CodeGenContext context) throws IOException,ParseException {
+      for (File f : getFilename("c").getParentFile().listFiles()) {
+         f.delete();
+      }
       for (Class c : context.classes) {
          generateClass(c, context.serviceName + "Contract");
       }
