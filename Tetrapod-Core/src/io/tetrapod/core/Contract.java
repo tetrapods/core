@@ -18,10 +18,4 @@ abstract public class Contract {
    public void addMessages(StructureFactory factory, int dynamicId) {
    }
    
-   public void setContractId(int id) {
-   }
-   
-   public boolean isCoreContract() {
-      return getContractId() < 10;
-   }
 }

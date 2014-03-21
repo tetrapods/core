@@ -2,7 +2,6 @@ package io.tetrapod.core;
 
 import io.tetrapod.core.registry.*;
 import io.tetrapod.core.rpc.*;
-import io.tetrapod.core.utils.Properties;
 import io.tetrapod.protocol.core.*;
 
 import java.security.SecureRandom;
@@ -30,7 +29,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    public Server                      publicServer;
 
    public TetrapodService() {
-      addContracts(new TetrapodContract());
+      setMainContract(new TetrapodContract());
    }
 
    public void startNetwork(String hostAndPort, String token) throws Exception {

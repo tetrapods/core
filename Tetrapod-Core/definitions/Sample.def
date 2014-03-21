@@ -6,7 +6,7 @@
 java package io.tetrapod.protocol.sample        # language specific
 java outdir src                                 # should point to root of source tree
 
-service Example version 1
+service Sample version 1 [999999]
 default security protected          # possible values are public, protected, internal, admin. default is internal
 
 # global constants appear in the general service class

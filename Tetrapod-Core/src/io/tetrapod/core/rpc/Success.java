@@ -6,6 +6,7 @@ import io.tetrapod.core.serialize.*;
 import io.tetrapod.protocol.core.TetrapodContract;
 
 public class Success extends Response {
+   public static final int STRUCT_ID = 2;
 
    @Override
    public void write(DataSource data) throws IOException {}
@@ -15,7 +16,7 @@ public class Success extends Response {
 
    @Override
    public int getStructId() {
-      return 0;
+      return Success.STRUCT_ID;
    }
    
    public int getContractId() {

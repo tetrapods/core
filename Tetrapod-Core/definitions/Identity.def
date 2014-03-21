@@ -2,7 +2,7 @@ java package io.tetrapod.protocol.identity
 java outdir src
 
 // The base contract every service must support
-service Identity version 1
+service Identity version 1 [3]
 
 public request Login
    1: string email

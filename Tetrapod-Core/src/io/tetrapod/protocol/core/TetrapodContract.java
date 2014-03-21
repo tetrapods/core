@@ -36,10 +36,6 @@ public class TetrapodContract extends Contract {
       return TetrapodContract.NAME;
    } 
    
-   public void setContractId(int id) {
-      
-   }
-
    public int getContractId() {
       return TetrapodContract.CONTRACT_ID;
    }

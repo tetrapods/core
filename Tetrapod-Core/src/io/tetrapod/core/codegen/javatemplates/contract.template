@@ -35,10 +35,6 @@ public class {{class}} extends Contract {
       return {{class}}.NAME;
    } 
    
-   public void setContractId(int id) {
-      {{contractIdSet}}
-   }
-
    public int getContractId() {
       return {{class}}.CONTRACT_ID;
    }

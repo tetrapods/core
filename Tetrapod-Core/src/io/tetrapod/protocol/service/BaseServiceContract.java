@@ -42,10 +42,6 @@ public class BaseServiceContract extends Contract {
       return BaseServiceContract.NAME;
    } 
    
-   public void setContractId(int id) {
-      
-   }
-
    public int getContractId() {
       return BaseServiceContract.CONTRACT_ID;
    }

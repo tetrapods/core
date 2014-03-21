@@ -14,7 +14,7 @@ import io.tetrapod.core.*;
 public class IdentityContract extends Contract {
    public static final int VERSION = 1;
    public static final String NAME = "Identity";
-   public static volatile int CONTRACT_ID = Contract.UNASSIGNED;
+   public static final int CONTRACT_ID = 3;
    
    public static interface API extends
       CreateRequest.Handler,
@@ -42,10 +42,6 @@ public class IdentityContract extends Contract {
       return IdentityContract.NAME;
    } 
    
-   public void setContractId(int id) {
-      IdentityContract.CONTRACT_ID = id;
-   }
-
    public int getContractId() {
       return IdentityContract.CONTRACT_ID;
    }

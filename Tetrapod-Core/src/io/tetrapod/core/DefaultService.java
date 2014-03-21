@@ -5,20 +5,18 @@ import io.tetrapod.core.rpc.Error;
 import io.tetrapod.protocol.core.*;
 import io.tetrapod.protocol.service.*;
 
-import java.util.*;
 import java.util.concurrent.*;
 
 import org.slf4j.*;
 
-abstract public class DefaultService implements Service, BaseServiceContract.API, TetrapodContract.ServiceInfo.API {
+abstract public class DefaultService implements Service, BaseServiceContract.API {
    public static final Logger     logger        = LoggerFactory.getLogger(DefaultService.class);
 
    protected final Dispatcher     dispatcher;
    private final StructureFactory factory;
    private final Client           cluster;
    // private Server                 directConnections; // TODO: implement direct connections
-   private List<Contract>         contracts     = new ArrayList<>();
-   private List<Contract>         peerContracts = new ArrayList<>();
+   private Contract               contract;
 
    protected int                  entityId;
    protected int                  parentId;
@@ -80,18 +78,24 @@ abstract public class DefaultService implements Service, BaseServiceContract.API
    public void onServerStop(Server server) {}
 
    // subclass utils
+   
+   protected void setMainContract(Contract c) {
+      addContracts(c);
+      contract = c;
+   }
 
    protected void addContracts(Contract... contracts) {
       for (Contract c : contracts) {
-         this.contracts.add(c);
-         applyContract(c, false);
+         c.addRequests(factory, c.getContractId());
+         c.addResponses(factory, c.getContractId());
+         c.addMessages(factory, c.getContractId());
       }
    }
 
    protected void addPeerContracts(Contract... contracts) {
       for (Contract c : contracts) {
-         this.peerContracts.add(c);
-         applyContract(c, true);
+         c.addResponses(factory, c.getContractId());
+         c.addMessages(factory, c.getContractId());
       }
    }
 
@@ -107,6 +111,15 @@ abstract public class DefaultService implements Service, BaseServiceContract.API
       // move into failure state
       // TODO implement
    }
+   
+   protected String getShortName() {
+      return contract.getName();
+   }
+   
+   protected String getFullName() {
+      String s = contract.getClass().getCanonicalName();
+      return s.substring(0, s.length() - "Contract".length());
+   }
 
    public Async sendRequest(Request req, int toEntityId) {
       return cluster.getSession().sendRequest(req, toEntityId, (byte) 30);
@@ -114,13 +127,11 @@ abstract public class DefaultService implements Service, BaseServiceContract.API
 
    // Generic handlers for all request/subscriptions
 
-   @Override
    public Response genericRequest(Request r, RequestContext ctx) {
       logger.error("unhandled request " + r.dump());
       return new Error(Request.ERROR_UNKNOWN_REQUEST);
    }
 
-   @Override
    public void genericMessage(Message message) {
       logger.error("unhandled message " + message.dump());
    }
@@ -176,33 +187,7 @@ abstract public class DefaultService implements Service, BaseServiceContract.API
       return Response.SUCCESS;
    }
 
-   // ServiceInfo subscription
-
-   @Override
-   public void messageServiceAdded(ServiceAddedMessage m) {
-      for (Contract c : contracts)
-         if (c.getName().equals(m.name)) {
-            c.setContractId(m.contractId);
-            applyContract(c, false);
-            return;
-         }
-      for (Contract c : peerContracts)
-         if (c.getName().equals(m.name)) {
-            c.setContractId(m.contractId);
-            applyContract(c, true);
-            return;
-         }
-   }
-
    // private methods
 
-   private void applyContract(Contract c, boolean isPeer) {
-      if (c.getContractId() != Contract.UNASSIGNED) {
-         if (!isPeer)
-            c.addRequests(factory, c.getContractId());
-         c.addResponses(factory, c.getContractId());
-         c.addMessages(factory, c.getContractId());
-      }
-   }
 
 }

@@ -11,6 +11,10 @@ public class Error extends Response {
 
    public int              code;
 
+   public Error() {
+      this(Request.ERROR_UNKNOWN);
+   }
+
    public Error(int code) {
       this.code = code;
    }

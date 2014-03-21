@@ -1,6 +1,7 @@
 package io.tetrapod.core;
 
 import io.tetrapod.core.rpc.*;
+import io.tetrapod.core.rpc.Error;
 
 import java.util.*;
 import java.util.concurrent.Callable;
@@ -17,8 +18,11 @@ public class StructureFactory {
    // OPTIMIZE: could make this class immutable using a builder pattern and avoid 
    //           this synchronize. adds are rare and usually upfront
    public synchronized Structure make(int serviceId, int structId) {
-      if (structId == 0) {
+      if (structId == Success.STRUCT_ID) {
          return Response.SUCCESS;
+      }
+      if (structId == Error.STRUCT_ID) {
+         return new Error();
       }
       long key = makeKey(serviceId, structId);
       Callable<Structure> c = knownStructs.get(key);

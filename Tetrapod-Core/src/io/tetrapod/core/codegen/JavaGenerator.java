@@ -49,6 +49,7 @@ class JavaGenerator implements LanguageGenerator {
          vals.add("contractId", "Contract.UNASSIGNED");
          vals.add("contractIdVolatile", "volatile");
          vals.add("contractIdSet", vals.get("class") + ".CONTRACT_ID = id;");
+         throw new ParseException("dynamic contract id's not supported yet");
       } else {
          vals.add("contractId", context.serviceId);
          vals.add("contractIdVolatile", "final");
