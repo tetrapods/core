@@ -18,11 +18,13 @@ public class LoginResponse extends Response {
       defaults();
    }
 
-   public LoginResponse(int accountId) {
+   public LoginResponse(int accountId, String authToken) {
       this.accountId = accountId;
+      this.authToken = authToken;
    }   
    
    public int accountId;
+   public String authToken;
 
    public final Structure.Security getSecurity() {
       return Security.PUBLIC;
@@ -30,11 +32,13 @@ public class LoginResponse extends Response {
 
    public final void defaults() {
       accountId = 0;
+      authToken = null;
    }
    
    @Override
    public final void write(DataSource data) throws IOException {
       data.write(1, this.accountId);
+      data.write(2, this.authToken);
       data.writeEndTag();
    }
    
@@ -45,6 +49,7 @@ public class LoginResponse extends Response {
          int tag = data.readTag();
          switch (tag) {
             case 1: this.accountId = data.read_int(tag); break;
+            case 2: this.authToken = data.read_string(tag); break;
             case Codec.END_TAG:
                return;
             default:

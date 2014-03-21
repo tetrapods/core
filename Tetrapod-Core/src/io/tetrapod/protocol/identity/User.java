@@ -10,35 +10,52 @@ import java.util.*;
 import java.util.concurrent.*;
 
 @SuppressWarnings("unused")
-public class InfoResponse extends Response {
+public class User extends Structure {
    
-   public static final int STRUCT_ID = 3624488;
+   public static final int PROPS_DEVELOPER = 1; 
+   public static final int PROPS_ADMIN_T1 = 2; 
+   public static final int PROPS_ADMIN_T2 = 4; 
+   public static final int PROPS_ADMIN_T3 = 8; 
+   public static final int PROPS_ADMIN_T4 = 16; 
+   public static final int PROPS_BANNED_T1 = 32; 
+   public static final int PROPS_BANNED_T2 = 64; 
+   public static final int PROPS_BANNED_T3 = 128; 
+   
+   public static final int STRUCT_ID = 10894876;
     
-   public InfoResponse() {
+   public User() {
       defaults();
    }
 
-   public InfoResponse(String username, int properties) {
+   public User(String username, int accountId, int properties) {
       this.username = username;
+      this.accountId = accountId;
       this.properties = properties;
    }   
    
    public String username;
+   public int accountId;
+   
+   /**
+    * bitmap
+    */
    public int properties;
 
    public final Structure.Security getSecurity() {
-      return Security.PROTECTED;
+      return Security.INTERNAL;
    }
 
    public final void defaults() {
       username = null;
+      accountId = 0;
       properties = 0;
    }
    
    @Override
    public final void write(DataSource data) throws IOException {
       data.write(1, this.username);
-      data.write(2, this.properties);
+      data.write(2, this.accountId);
+      data.write(3, this.properties);
       data.writeEndTag();
    }
    
@@ -49,7 +66,8 @@ public class InfoResponse extends Response {
          int tag = data.readTag();
          switch (tag) {
             case 1: this.username = data.read_string(tag); break;
-            case 2: this.properties = data.read_int(tag); break;
+            case 2: this.accountId = data.read_int(tag); break;
+            case 3: this.properties = data.read_int(tag); break;
             case Codec.END_TAG:
                return;
             default:
@@ -58,19 +76,19 @@ public class InfoResponse extends Response {
          }
       }
    }
-  
-   @Override 
+   
+   @Override
    public final int getStructId() {
-      return InfoResponse.STRUCT_ID;
+      return User.STRUCT_ID;
    }
-      
-   public static Callable<Structure> getInstanceFactory() {
-      return new Callable<Structure>() {
-         public Structure call() { return new InfoResponse(); }
-      };
-   }
-      
+   
    public final int getContractId() {
       return IdentityContract.CONTRACT_ID;
    }
+   public static Callable<Structure> getInstanceFactory() {
+      return new Callable<Structure>() {
+         public Structure call() { return new User(); }
+      };
+   }
+   
 }

@@ -1,17 +1,16 @@
 java package io.tetrapod.protocol.identity
 java outdir src
 
-// The base contract every service must support
-service Identity version 1 [3]
+service Identity version 1 [4]
 
 public request Login
    1: string email
-   2: string passwordHash
-   
+   2: string password  
    error UNKNOWN_USERNAME, WRONG_PASSWORD
    
 public response Login
    1: int accountId
+   2: string authToken
 
 public request Create
    1: string username
@@ -20,9 +19,31 @@ public request Create
    
 public response Create
    1: int accountId
+   2: string authToken
    
 protected request Info
    1: int accountId
+   2: string authToken
    
 protected response Info
    1: string username 
+   2: int properties
+   
+admin request UpdateProperties
+   1: int accountId
+   2: int properties // new properties values
+   3: int mask       // which properties to update
+   
+struct User
+   1: string username
+   2: int accountId
+   3: int properties // bitmap
+   
+   const int PROPS_DEVELOPER  = 1
+   const int PROPS_ADMIN_T1   = 2
+   const int PROPS_ADMIN_T2   = 4 
+   const int PROPS_ADMIN_T3   = 8
+   const int PROPS_ADMIN_T4   = 16
+   const int PROPS_BANNED_T1  = 32
+   const int PROPS_BANNED_T2  = 64
+   const int PROPS_BANNED_T3  = 128

@@ -21,13 +21,13 @@ public class LoginRequest extends Request {
       defaults();
    }
 
-   public LoginRequest(String email, String passwordHash) {
+   public LoginRequest(String email, String password) {
       this.email = email;
-      this.passwordHash = passwordHash;
+      this.password = password;
    }   
 
    public String email;
-   public String passwordHash;
+   public String password;
 
    public final Structure.Security getSecurity() {
       return Security.PUBLIC;
@@ -35,13 +35,13 @@ public class LoginRequest extends Request {
 
    public final void defaults() {
       email = null;
-      passwordHash = null;
+      password = null;
    }
    
    @Override
    public final void write(DataSource data) throws IOException {
       data.write(1, this.email);
-      data.write(2, this.passwordHash);
+      data.write(2, this.password);
       data.writeEndTag();
    }
    
@@ -52,7 +52,7 @@ public class LoginRequest extends Request {
          int tag = data.readTag();
          switch (tag) {
             case 1: this.email = data.read_string(tag); break;
-            case 2: this.passwordHash = data.read_string(tag); break;
+            case 2: this.password = data.read_string(tag); break;
             case Codec.END_TAG:
                return;
             default:

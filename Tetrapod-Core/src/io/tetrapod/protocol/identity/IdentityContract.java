@@ -6,26 +6,24 @@ import io.*;
 import java.util.*;
 import io.tetrapod.core.*;
 
-/**
- * The base contract every service must support
- */
-
 @SuppressWarnings("unused")
 public class IdentityContract extends Contract {
    public static final int VERSION = 1;
    public static final String NAME = "Identity";
-   public static final int CONTRACT_ID = 3;
+   public static final int CONTRACT_ID = 4;
    
    public static interface API extends
       CreateRequest.Handler,
       InfoRequest.Handler,
-      LoginRequest.Handler
+      LoginRequest.Handler,
+      UpdatePropertiesRequest.Handler
       {}
    
    public void addRequests(StructureFactory factory, int dynamicId) {
       factory.add(dynamicId, CreateRequest.STRUCT_ID, CreateRequest.getInstanceFactory());
       factory.add(dynamicId, InfoRequest.STRUCT_ID, InfoRequest.getInstanceFactory());
       factory.add(dynamicId, LoginRequest.STRUCT_ID, LoginRequest.getInstanceFactory());
+      factory.add(dynamicId, UpdatePropertiesRequest.STRUCT_ID, UpdatePropertiesRequest.getInstanceFactory());
    }
    
    public void addResponses(StructureFactory factory, int dynamicId) {

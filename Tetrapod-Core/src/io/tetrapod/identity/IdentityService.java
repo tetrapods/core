@@ -26,4 +26,9 @@ public class IdentityService extends DefaultService implements IdentityContract.
       return null;
    }
 
+   @Override
+   public Response requestUpdateProperties(UpdatePropertiesRequest r, RequestContext ctx) {
+      return null;
+   }
+
 }

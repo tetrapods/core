@@ -10,35 +10,47 @@ import java.util.*;
 import java.util.concurrent.*;
 
 @SuppressWarnings("unused")
-public class InfoRequest extends Request {
+public class UpdatePropertiesRequest extends Request {
 
-   public static final int STRUCT_ID = 14709500;
+   public static final int STRUCT_ID = 1362696;
    
-   public InfoRequest() {
+   public UpdatePropertiesRequest() {
       defaults();
    }
 
-   public InfoRequest(int accountId, String authToken) {
+   public UpdatePropertiesRequest(int accountId, int properties, int mask) {
       this.accountId = accountId;
-      this.authToken = authToken;
+      this.properties = properties;
+      this.mask = mask;
    }   
 
    public int accountId;
-   public String authToken;
+   
+   /**
+    * new properties values
+    */
+   public int properties;
+   
+   /**
+    * which properties to update
+    */
+   public int mask;
 
    public final Structure.Security getSecurity() {
-      return Security.PROTECTED;
+      return Security.ADMIN;
    }
 
    public final void defaults() {
       accountId = 0;
-      authToken = null;
+      properties = 0;
+      mask = 0;
    }
    
    @Override
    public final void write(DataSource data) throws IOException {
       data.write(1, this.accountId);
-      data.write(2, this.authToken);
+      data.write(2, this.properties);
+      data.write(3, this.mask);
       data.writeEndTag();
    }
    
@@ -49,7 +61,8 @@ public class InfoRequest extends Request {
          int tag = data.readTag();
          switch (tag) {
             case 1: this.accountId = data.read_int(tag); break;
-            case 2: this.authToken = data.read_string(tag); break;
+            case 2: this.properties = data.read_int(tag); break;
+            case 3: this.mask = data.read_int(tag); break;
             case Codec.END_TAG:
                return;
             default:
@@ -61,23 +74,23 @@ public class InfoRequest extends Request {
    
    @Override
    public final int getStructId() {
-      return InfoRequest.STRUCT_ID;
+      return UpdatePropertiesRequest.STRUCT_ID;
    }
    
    @Override
    public final Response dispatch(ServiceAPI is, RequestContext ctx) {
       if (is instanceof Handler)
-         return ((Handler)is).requestInfo(this, ctx);
+         return ((Handler)is).requestUpdateProperties(this, ctx);
       return is.genericRequest(this, ctx);
    }
    
    public static interface Handler extends ServiceAPI {
-      Response requestInfo(InfoRequest r, RequestContext ctx);
+      Response requestUpdateProperties(UpdatePropertiesRequest r, RequestContext ctx);
    }
    
    public static Callable<Structure> getInstanceFactory() {
       return new Callable<Structure>() {
-         public Structure call() { return new InfoRequest(); }
+         public Structure call() { return new UpdatePropertiesRequest(); }
       };
    }
    

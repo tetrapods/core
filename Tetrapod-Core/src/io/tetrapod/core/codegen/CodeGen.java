@@ -185,6 +185,7 @@ public class CodeGen {
       context = new CodeGenContext();
       currentLine = null;
       currentLineNumber = 0;
+      commentInProgress = new StringBuilder();
       switch (language) {
          case "java":
             generator = new JavaGenerator();
