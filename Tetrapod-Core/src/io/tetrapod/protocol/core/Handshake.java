@@ -30,7 +30,7 @@ public class Handshake extends Structure {
       return Security.PUBLIC;
    }
 
-  public final void defaults() {
+   public final void defaults() {
       wireVersion = 0;
       wireOptions = 0;
    }
@@ -64,13 +64,13 @@ public class Handshake extends Structure {
       return Handshake.STRUCT_ID;
    }
    
+   public final int getContractId() {
+      return TetrapodContract.CONTRACT_ID;
+   }
    public static Callable<Structure> getInstanceFactory() {
       return new Callable<Structure>() {
          public Structure call() { return new Handshake(); }
       };
    }
    
-   public final int getContractId() {
-      return TetrapodContract.CONTRACT_ID;
-   }
 }

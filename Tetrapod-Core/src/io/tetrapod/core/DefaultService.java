@@ -45,7 +45,7 @@ abstract public class DefaultService implements Service, BaseServiceContract.API
    @Override
    public void onClientStart(Client client) {
       logger.debug("Sending register request");
-      sendRequest(new RegisterRequest(222/*FIXME*/), RequestHeader.TO_ID_DIRECT).handle(new ResponseHandler() {
+      sendRequest(new RegisterRequest(222/*FIXME*/), Core.UNADDRESSED).handle(new ResponseHandler() {
          @Override
          public void onResponse(Response res, int errorCode) {
             if (res != null) {
@@ -129,7 +129,7 @@ abstract public class DefaultService implements Service, BaseServiceContract.API
 
    public Response genericRequest(Request r, RequestContext ctx) {
       logger.error("unhandled request " + r.dump());
-      return new Error(Request.ERROR_UNKNOWN_REQUEST);
+      return new Error(Core.ERROR_UNKNOWN_REQUEST);
    }
 
    public void genericMessage(Message message) {
@@ -163,6 +163,11 @@ abstract public class DefaultService implements Service, BaseServiceContract.API
    public ServiceAPI getHandler(int contractId) {
       // this method allows us to have delegate objects that directly handle some contracts
       return this;
+   }
+   
+   @Override
+   public int getContractId() {
+      return contract == null ? 0 : contract.getContractId();
    }
 
    // Base service implementation

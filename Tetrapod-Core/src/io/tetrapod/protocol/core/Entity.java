@@ -12,17 +12,6 @@ import java.util.concurrent.*;
 @SuppressWarnings("unused")
 public class Entity extends Structure {
    
-   public static final byte TYPE_TETRAPOD = 1; 
-   public static final byte TYPE_SERVICE = 2; 
-   public static final byte TYPE_ADMIN = 3; 
-   public static final byte TYPE_CLIENT = 4; 
-   public static final byte TYPE_ANONYMOUS = 5; 
-   public static final int STATUS_INIT = 1; 
-   public static final int STATUS_PAUSED = 2; 
-   public static final int STATUS_GONE = 4; 
-   public static final int STATUS_BUSY = 8; 
-   public static final int STATUS_OVERLOADED = 16; 
-   
    public static final int STRUCT_ID = 10171140;
     
    public Entity() {
@@ -55,7 +44,7 @@ public class Entity extends Structure {
       return Security.PUBLIC;
    }
 
-  public final void defaults() {
+   public final void defaults() {
       entityId = 0;
       parentId = 0;
       reclaimToken = 0;
@@ -110,13 +99,13 @@ public class Entity extends Structure {
       return Entity.STRUCT_ID;
    }
    
+   public final int getContractId() {
+      return TetrapodContract.CONTRACT_ID;
+   }
    public static Callable<Structure> getInstanceFactory() {
       return new Callable<Structure>() {
          public Structure call() { return new Entity(); }
       };
    }
    
-   public final int getContractId() {
-      return TetrapodContract.CONTRACT_ID;
-   }
 }

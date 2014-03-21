@@ -2,6 +2,7 @@ package io.tetrapod.core.codegen;
 
 import io.tetrapod.core.codegen.CodeGen.TokenizedLine;
 import io.tetrapod.core.codegen.CodeGenContext.Class;
+import io.tetrapod.core.codegen.CodeGenContext.Err;
 import io.tetrapod.core.codegen.CodeGenContext.Field;
 import io.tetrapod.core.templates.*;
 import io.tetrapod.core.utils.FNVHash;
@@ -116,25 +117,31 @@ class JavaGenerator implements LanguageGenerator {
       addFieldValues(c.fields, vals);
       addConstantValues(c.fields, vals);
       addErrors(c.errors, false, serviceName, vals);
-      if (c.fields.size() > 0)
+      int instanceFields = 0;
+      for (Field f : c.fields)
+         if (!f.isConstant()) instanceFields++;
+      if (instanceFields > 0)
          vals.add("full-constructor", Templater.get(getClass(), "javatemplates/full.constructor.template").expand(vals));
       else
          vals.add("full-constructor", "");
       t.expandAndTrim(vals, getFilename(c.classname()));
    }
 
-   private void addErrors(Collection<String> errors, boolean globalScope, String serviceName, TemplateValues vals) throws IOException,ParseException {
+   private void addErrors(Collection<Err> errors, boolean globalScope, String serviceName, TemplateValues vals) throws IOException,ParseException {
       Templater t = template("field.errors");
       vals.setSeperator("errors", "\n");
-      for (String err : errors) {
+      for (Err err : errors) {
          TemplateValues v = new TemplateValues();
-         v.add("name", err);
+         v.add("name", err.name);
          // error hashes are never less than 100
-         v.add("hash", ""+ ((FNVHash.hash32(err) & 0xffffff) + 100));
+         int hash = err.value;
+         if (hash == 0)
+            hash = (FNVHash.hash32(err.name) & 0xffffff) + 100;
+         v.add("hash", "" + hash);
          v.add("service", serviceName);
          String[] lines = t.expand(v).split("\r\n|\n|\r");
          String line = globalScope ? lines[0] : lines[1];
-         vals.add("errors", line);
+         vals.add("errors", generateComment(err.comment) + line);
       }
       vals.setIfEmpty("errors", "");
    }

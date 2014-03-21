@@ -15,6 +15,8 @@ public class {{class}} extends Structure {
    
    {{constants}}
    
+   {{errors}}
+   
    public static final int STRUCT_ID = {{structid}};
     
    public {{class}}() {
@@ -29,7 +31,7 @@ public class {{class}} extends Structure {
       return Security.{{security}};
    }
 
-  public final void defaults() {
+   public final void defaults() {
       {{field-defaults}}
    }
    
@@ -60,13 +62,13 @@ public class {{class}} extends Structure {
       return {{class}}.STRUCT_ID;
    }
    
+   public final int getContractId() {
+      return {{service}}.CONTRACT_ID;
+   }
    public static Callable<Structure> getInstanceFactory() {
       return new Callable<Structure>() {
          public Structure call() { return new {{class}}(); }
       };
    }
    
-   public final int getContractId() {
-      return {{service}}.CONTRACT_ID;
-   }
 }

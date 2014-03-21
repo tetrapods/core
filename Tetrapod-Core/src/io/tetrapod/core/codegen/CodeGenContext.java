@@ -14,7 +14,7 @@ class CodeGenContext {
       String      security;
       String      comment;
       List<Field> fields = new ArrayList<>();
-      Set<String> errors = new TreeSet<>();
+      Set<Err>    errors = new TreeSet<>();
 
       public String classname() {
          return name + (type.equals("struct") ? "" : CodeGen.toTitleCase(type));
@@ -37,6 +37,27 @@ class CodeGenContext {
          return tag.equals("0");
       }
    }
+   
+   public static class Err implements Comparable<Err> {
+      String name;
+      String comment;
+      int value = 0;
+      
+      @Override
+      public int hashCode() {
+         return name.hashCode();
+      }
+      
+      @Override
+      public boolean equals(Object obj) {
+         return name.equals(obj);
+      }
+      
+      @Override
+      public int compareTo(Err o) {
+         return name.compareTo(o.name);
+      }
+   }
 
    public ArrayList<Class>         classes         = new ArrayList<>();
    public ArrayList<Field>         globalConstants = new ArrayList<>();
@@ -45,7 +66,7 @@ class CodeGenContext {
    public String                   serviceComment;
    public String                   serviceId;
    public String                   defaultSecurity = "internal";
-   public Set<String>              allErrors       = new TreeSet<>();
+   public Set<Err>                 allErrors       = new TreeSet<>();
    public Set<String>              subscriptions   = new TreeSet<>();
    public boolean                  inGlobalScope   = true;
 
@@ -155,14 +176,22 @@ class CodeGenContext {
 
    public void parseErrors(TokenizedLine line) throws ParseException {
       ArrayList<String> parts = line.parts;
-      if (inGlobalScope || !classes.get(classes.size() - 1).type.equals("request"))
-         throw new ParseException("errors must be defined inside a request");
+      if (inGlobalScope)
+         throw new ParseException("errors must be defined inside a class");
 
       Class myClass = classes.get(classes.size() - 1);
+      Err e = null;
       for (int i = 1; i < parts.size(); i++) {
          String err = parts.get(i);
-         myClass.errors.add(err);
-         allErrors.add(err);
+         if (err.equals("=")) {
+            e.value = Integer.parseInt(parts.get(i+1));
+            break;
+         }
+         e = new Err();
+         e.name = err;
+         e.comment = line.comment;
+         myClass.errors.add(e);
+         allErrors.add(e);
       }
    }
 
