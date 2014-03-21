@@ -10,7 +10,7 @@ import java.util.concurrent.*;
 import org.slf4j.*;
 
 abstract public class DefaultService implements Service, BaseServiceContract.API {
-   public static final Logger     logger        = LoggerFactory.getLogger(DefaultService.class);
+   public static final Logger     logger = LoggerFactory.getLogger(DefaultService.class);
 
    protected final Dispatcher     dispatcher;
    private final StructureFactory factory;
@@ -79,7 +79,7 @@ abstract public class DefaultService implements Service, BaseServiceContract.API
    public void onServerStop(Server server, Session ses) {}
 
    // subclass utils
-   
+
    protected void setMainContract(Contract c) {
       addContracts(c);
       contract = c;
@@ -112,11 +112,11 @@ abstract public class DefaultService implements Service, BaseServiceContract.API
       // move into failure state
       // TODO implement
    }
-   
+
    protected String getShortName() {
       return contract.getName();
    }
-   
+
    protected String getFullName() {
       String s = contract.getClass().getCanonicalName();
       return s.substring(0, s.length() - "Contract".length());
@@ -124,6 +124,10 @@ abstract public class DefaultService implements Service, BaseServiceContract.API
 
    public Async sendRequest(Request req, int toEntityId) {
       return cluster.getSession().sendRequest(req, toEntityId, (byte) 30);
+   }
+
+   public void sendMessage(Message msg, int toEntityId, int topicId) {
+      cluster.getSession().sendMessage(msg, toEntityId, topicId);
    }
 
    // Generic handlers for all request/subscriptions
@@ -165,7 +169,7 @@ abstract public class DefaultService implements Service, BaseServiceContract.API
       // this method allows us to have delegate objects that directly handle some contracts
       return this;
    }
-   
+
    @Override
    public int getContractId() {
       return contract == null ? 0 : contract.getContractId();
@@ -194,6 +198,5 @@ abstract public class DefaultService implements Service, BaseServiceContract.API
    }
 
    // private methods
-
 
 }

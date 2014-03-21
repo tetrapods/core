@@ -18,7 +18,7 @@ struct Core
    const int   STATUS_GONE       = 4
    const int   STATUS_BUSY       = 8
    const int   STATUS_OVERLOADED = 16
-   
+
    # assigning values to errors should only be done for core errors
    error UNKNOWN              = 1 // catch all error
    error SERVICE_UNAVAILABLE  = 2 // No service exists to which to relay the request
@@ -27,16 +27,14 @@ struct Core
    error PROTOCOL_MISMATCH    = 5 // Protocol versions are not compatible
    error UNKNOWN_REQUEST      = 6 // Service exists and received request, but doen't know how to handle it
 
-public struct Entity
-   1: int entityId  
-   2: int parentId  
-   3: long reclaimToken  
-   4: string host
-   5: int status
-   6: byte type
-   7: string name
-   8: int build  
-   9: int version  
+   const byte  ENVELOPE_HANDSHAKE  = 1
+   const byte  ENVELOPE_REQUEST    = 2
+   const byte  ENVELOPE_RESPONSE   = 3
+   const byte  ENVELOPE_MESSAGE    = 4
+   const byte  ENVELOPE_PING       = 5
+   const byte  ENVELOPE_PONG       = 6
+   
+################################# CORE WIRE #################################
    
 public struct Handshake 
    1: int wireVersion  
@@ -56,6 +54,28 @@ public struct ResponseHeader
    1: int requestId 
    2: int structId
    
+public struct MessageHeader
+   1: int fromId
+   2: int topicId       
+   3: int toId
+   4: int contractId
+   5: int structId
+
+################################# STRUCTURES #################################
+
+public struct Entity
+   1: int entityId  
+   2: int parentId  
+   3: long reclaimToken  
+   4: string host
+   5: int status
+   6: byte type
+   7: string name
+   8: int build  
+   9: int version  
+
+################################# REQUESTS #################################
+  
 public request Register 
    1: int build   
    2: string token

@@ -107,14 +107,14 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          info = registry.getEntity(t.entityId);
          if (info != null && info.reclaimToken != t.nonce) {
             info = null;
-         } else {
-            info.parentId = getEntityId(); // they may have changed parents
          }
       }
       if (info == null) {
          info = makeInfo(r.build, t.entityId, "NAME" /* TODO */, ctx);
          registry.register(info);
       }
+
+      info.parentId = getEntityId(); // they may have changed parents
 
       ctx.session.setEntityId(info.entityId);
       ctx.session.setEntityType(info.type);

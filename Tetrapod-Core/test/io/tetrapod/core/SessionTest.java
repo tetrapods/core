@@ -4,6 +4,7 @@ import static org.junit.Assert.assertTrue;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.utils.Util;
 import io.tetrapod.identity.IdentityService;
+import io.tetrapod.protocol.core.*;
 import io.tetrapod.protocol.service.PauseRequest;
 
 import org.junit.Test;
@@ -36,6 +37,10 @@ public class SessionTest {
             logger.info("Got my response. YEY! {} {}", res, errorCode);
          }
       });
+
+      Util.sleep(2000);
+
+      svc2.sendMessage(new ServiceAddedMessage(999, "Test!"), svc1.getEntityId(), Core.UNADDRESSED);
 
       Util.sleep(2000);
 
