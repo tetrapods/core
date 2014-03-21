@@ -27,7 +27,8 @@ public class Registry {
    }
 
    public synchronized void register(EntityInfo entity) {
-      entity.entityId = issueId();
+      if (entity.entityId <= 0)
+         entity.entityId = issueId();
       entities.put(entity.entityId, entity);
    }
 

@@ -18,11 +18,13 @@ public class RegisterRequest extends Request {
       defaults();
    }
 
-   public RegisterRequest(int build) {
+   public RegisterRequest(int build, String token) {
       this.build = build;
+      this.token = token;
    }   
 
    public int build;
+   public String token;
 
    public final Structure.Security getSecurity() {
       return Security.PUBLIC;
@@ -30,11 +32,13 @@ public class RegisterRequest extends Request {
 
    public final void defaults() {
       build = 0;
+      token = null;
    }
    
    @Override
    public final void write(DataSource data) throws IOException {
       data.write(1, this.build);
+      data.write(2, this.token);
       data.writeEndTag();
    }
    
@@ -45,6 +49,7 @@ public class RegisterRequest extends Request {
          int tag = data.readTag();
          switch (tag) {
             case 1: this.build = data.read_int(tag); break;
+            case 2: this.token = data.read_string(tag); break;
             case Codec.END_TAG:
                return;
             default:

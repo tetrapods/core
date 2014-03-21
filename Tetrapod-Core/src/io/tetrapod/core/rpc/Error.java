@@ -3,7 +3,7 @@ package io.tetrapod.core.rpc;
 import java.io.IOException;
 
 import io.tetrapod.core.serialize.*;
-import io.tetrapod.protocol.core.TetrapodContract;
+import io.tetrapod.protocol.core.*;
 
 public class Error extends Response {
 
@@ -12,7 +12,7 @@ public class Error extends Response {
    public int              code;
 
    public Error() {
-      this(Request.ERROR_UNKNOWN);
+      this(Core.ERROR_UNKNOWN);
    }
 
    public Error(int code) {

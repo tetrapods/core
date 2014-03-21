@@ -30,7 +30,7 @@ public class ResponseHeader extends Structure {
       return Security.PUBLIC;
    }
 
-  public final void defaults() {
+   public final void defaults() {
       requestId = 0;
       structId = 0;
    }
@@ -64,13 +64,13 @@ public class ResponseHeader extends Structure {
       return ResponseHeader.STRUCT_ID;
    }
    
+   public final int getContractId() {
+      return TetrapodContract.CONTRACT_ID;
+   }
    public static Callable<Structure> getInstanceFactory() {
       return new Callable<Structure>() {
          public Structure call() { return new ResponseHeader(); }
       };
    }
    
-   public final int getContractId() {
-      return TetrapodContract.CONTRACT_ID;
-   }
 }

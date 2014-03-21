@@ -59,4 +59,33 @@ public class TetrapodContract extends Contract {
        
    }
       
+   /**
+    * Protocol versions are not compatible
+    */
+   public static final int ERROR_PROTOCOL_MISMATCH = 5; 
+   
+   /**
+    * Unable to deserialize the request
+    */
+   public static final int ERROR_SERIALIZATION = 4; 
+   
+   /**
+    * No service exists to which to relay the request
+    */
+   public static final int ERROR_SERVICE_UNAVAILABLE = 2; 
+   
+   /**
+    * Request timed out without returning a response
+    */
+   public static final int ERROR_TIMEOUT = 3; 
+   
+   /**
+    * catch all error
+    */
+   public static final int ERROR_UNKNOWN = 1; 
+   
+   /**
+    * Service exists and received request, but doen't know how to handle it
+    */
+   public static final int ERROR_UNKNOWN_REQUEST = 6; 
 }

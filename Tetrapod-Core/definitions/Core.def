@@ -4,6 +4,29 @@ java outdir src
 // The core tetrapod service
 service Tetrapod version 1 [1]
 
+struct Core
+   const int   UNADDRESSED    = 0 // request is not addressed to a specific entity 
+   
+   const byte  TYPE_TETRAPOD  = 1
+   const byte  TYPE_SERVICE   = 2
+   const byte  TYPE_ADMIN     = 3
+   const byte  TYPE_CLIENT    = 4
+   const byte  TYPE_ANONYMOUS = 5
+    
+   const int   STATUS_INIT       = 1  # bitmask
+   const int   STATUS_PAUSED     = 2
+   const int   STATUS_GONE       = 4
+   const int   STATUS_BUSY       = 8
+   const int   STATUS_OVERLOADED = 16
+   
+   # assigning values to errors should only be done for core errors
+   error UNKNOWN              = 1 // catch all error
+   error SERVICE_UNAVAILABLE  = 2 // No service exists to which to relay the request
+   error TIMEOUT              = 3 // Request timed out without returning a response
+   error SERIALIZATION        = 4 // Unable to deserialize the request
+   error PROTOCOL_MISMATCH    = 5 // Protocol versions are not compatible
+   error UNKNOWN_REQUEST      = 6 // Service exists and received request, but doen't know how to handle it
+
 public struct Entity
    1: int entityId  
    2: int parentId  
@@ -15,18 +38,6 @@ public struct Entity
    8: int build  
    9: int version  
    
-   const byte TYPE_TETRAPOD = 1
-   const byte TYPE_SERVICE = 2
-   const byte TYPE_ADMIN = 3
-   const byte TYPE_CLIENT = 4
-   const byte TYPE_ANONYMOUS = 5
-    
-   const int     STATUS_INIT       = 1
-   const int     STATUS_PAUSED     = 2
-   const int     STATUS_GONE       = 4
-   const int     STATUS_BUSY       = 8
-   const int     STATUS_OVERLOADED = 16
-
 public struct Handshake 
    1: int wireVersion  
    2: int wireOptions 
@@ -41,21 +52,18 @@ public struct RequestHeader
    7: int 	structId
    8: int   contractId
    
-   // Hmmmmmm, aaron don't like:
-   const int TO_ID_DIRECT = 1 // request is sent to service on other end of socket 
-   const int TO_ID_SERVICE = 2 // request is sent to any service matching the contract id 
-
 public struct ResponseHeader
    1: int requestId 
    2: int structId
    
 public request Register 
    1: int build   
+   2: string token
    
 public response Register 
    1: int entityId
    2: int parentId
-   3: long reclaimToken
+   3: string token
     
 internal message ServiceInfo.ServiceAdded
     1: int contractId

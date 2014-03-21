@@ -12,16 +12,6 @@ import java.util.concurrent.*;
 @SuppressWarnings("unused")
 public class RequestHeader extends Structure {
    
-   /**
-    * Hmmmmmm, aaron don't like request is sent to service on other end of socket
-    */
-   public static final int TO_ID_DIRECT = 1; 
-   
-   /**
-    * request is sent to any service matching the contract id
-    */
-   public static final int TO_ID_SERVICE = 2; 
-   
    public static final int STRUCT_ID = 7165109;
     
    public RequestHeader() {
@@ -52,7 +42,7 @@ public class RequestHeader extends Structure {
       return Security.PUBLIC;
    }
 
-  public final void defaults() {
+   public final void defaults() {
       requestId = 0;
       fromId = 0;
       toId = 0;
@@ -104,13 +94,13 @@ public class RequestHeader extends Structure {
       return RequestHeader.STRUCT_ID;
    }
    
+   public final int getContractId() {
+      return TetrapodContract.CONTRACT_ID;
+   }
    public static Callable<Structure> getInstanceFactory() {
       return new Callable<Structure>() {
          public Structure call() { return new RequestHeader(); }
       };
    }
    
-   public final int getContractId() {
-      return TetrapodContract.CONTRACT_ID;
-   }
 }

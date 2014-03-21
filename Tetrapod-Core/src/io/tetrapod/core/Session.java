@@ -1,6 +1,6 @@
 package io.tetrapod.core;
 
-import static io.tetrapod.core.rpc.Request.*;
+import static io.tetrapod.protocol.core.Core.*;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.*;
 import io.netty.channel.socket.SocketChannel;
@@ -33,6 +33,8 @@ public class Session extends ChannelInboundHandlerAdapter {
       public ServiceAPI getHandler(int contractId);
 
       public Session getRelaySession(int entityId);
+
+      public int getContractId();
    }
 
    public static final Logger         logger             = LoggerFactory.getLogger(Session.class);
@@ -62,11 +64,14 @@ public class Session extends ChannelInboundHandlerAdapter {
    private boolean                    needsHandshake     = true;
 
    private int                        myId               = 0;
-   private byte                       myType             = Entity.TYPE_SERVICE;
+   private byte                       myType             = Core.TYPE_SERVICE;
+   private int                        myContractId;
+   private boolean                    untrusted          = true;
 
    public Session(SocketChannel channel, Session.Helper helper) {
       this.channel = channel;
       this.helper = helper;
+      this.myContractId = helper.getContractId();
       channel.pipeline().addLast(new ChannelInboundHandlerAdapter() {
          @Override
          public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
@@ -199,8 +204,11 @@ public class Session extends ChannelInboundHandlerAdapter {
       final ByteBufDataSource reader = new ByteBufDataSource(in);
       final RequestHeader header = new RequestHeader();
       header.read(reader);
+      if (untrusted && header.fromType != TYPE_ANONYMOUS && header.fromType != TYPE_CLIENT) {
+         header.fromType = TYPE_ANONYMOUS;
+      }
       logger.debug("{}, READ REQUEST: [{}]", this, header.requestId);
-      if (header.toId == RequestHeader.TO_ID_DIRECT || header.toId == myId) {
+      if ((header.toId == UNADDRESSED && header.contractId == myContractId) || header.toId == myId) {
          final Request req = (Request) helper.make(header.contractId, header.structId);
          if (req != null) {
             req.read(reader);
@@ -298,7 +306,7 @@ public class Session extends ChannelInboundHandlerAdapter {
       pendingRequests.put(header.requestId, async);
 
       if (!writeFrame(header, req, ENVELOPE_REQUEST)) {
-         async.setResponse(null, Request.ERROR_SERIALIZATION);
+         async.setResponse(null, ERROR_SERIALIZATION);
       }
       return async;
    }
@@ -503,6 +511,14 @@ public class Session extends ChannelInboundHandlerAdapter {
 
    public synchronized int getEntityId() {
       return myId;
+   }
+
+   public void setEntityType(byte type) {
+      myType = type;
+   }
+
+   public void setUntrusted(boolean b) {
+      untrusted = b;
    }
 
 }
