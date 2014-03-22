@@ -11,13 +11,13 @@ import org.slf4j.*;
  * A client that speaks the tetrapod wire protocol
  */
 public class Client implements Session.Listener {
-   public static final Logger logger = LoggerFactory.getLogger(Client.class);
+   public static final Logger   logger = LoggerFactory.getLogger(Client.class);
 
-   private Session            session;
-   private Service            service;
+   private final SessionFactory factory;
+   private Session              session;
 
-   public Client(Service service) {
-      this.service = service;
+   public Client(SessionFactory factory) {
+      this.factory = factory;
    }
 
    public ChannelFuture connect(final String host, final int port, final Dispatcher dispatcher) throws Exception {
@@ -37,7 +37,7 @@ public class Client implements Session.Listener {
 
    private synchronized void startSession(SocketChannel ch) {
       // TODO: ch.pipeline().addLast(sslEngine);
-      session = new Session(ch, service);
+      session = factory.makeSession(ch);
       session.addSessionListener(this);
    }
 
@@ -53,14 +53,12 @@ public class Client implements Session.Listener {
 
    @Override
    public void onSessionStart(Session ses) {
-      logger.debug("Connection Started", ses);
-      service.onClientStart(this);
+      logger.trace("Connection Started", ses);
    }
 
    @Override
    public void onSessionStop(Session ses) {
-      logger.debug("Connection Closed", ses);
-      service.onClientStop(this);
+      logger.trace("Connection Closed", ses);
    }
 
 }

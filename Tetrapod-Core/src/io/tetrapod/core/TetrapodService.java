@@ -1,5 +1,8 @@
 package io.tetrapod.core;
 
+import io.netty.buffer.ByteBuf;
+import io.netty.channel.socket.SocketChannel;
+import io.tetrapod.core.Session.RelayHandler;
 import io.tetrapod.core.registry.*;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.protocol.core.*;
@@ -14,7 +17,7 @@ import org.slf4j.*;
  * The tetrapod service is the core cluster service which handles message routing, cluster management, service discovery, and load balancing
  * of client connections
  */
-public class TetrapodService extends DefaultService implements TetrapodContract.API {
+public class TetrapodService extends DefaultService implements TetrapodContract.API, RelayHandler {
    public static final Logger         logger               = LoggerFactory.getLogger(TetrapodService.class);
 
    public static final int            DEFAULT_PUBLIC_PORT  = 9800;
@@ -43,23 +46,45 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       }
    }
 
-   @Override
-   public void onClientStart(Client client) {
-      client.getSession().setEntityType(Core.TYPE_TETRAPOD);
-      super.onClientStart(client);
+   public byte getEntityType() {
+      return Core.TYPE_TETRAPOD;
    }
 
-   @Override
-   public void onServerStart(Server server, Session session) {
-      session.setUntrusted(server == publicServer);
-      super.onServerStart(server, session);
+   private class TrustedSessionFactory implements SessionFactory {
+      private final boolean trusted;
+
+      private TrustedSessionFactory(boolean trusted) {
+         this.trusted = trusted;
+      }
+
+      /**
+       * Session factory for our sessions from clients and services
+       */
+      @Override
+      public Session makeSession(SocketChannel ch) {
+         final Session ses = new Session(ch, TetrapodService.this);
+         ses.setUntrusted(!trusted);
+         ses.setRelayHandler(TetrapodService.this);
+         ses.addSessionListener(new Session.Listener() {
+            @Override
+            public void onSessionStop(Session ses) {
+               // TODO: stuff, set this entity as GONE, etc...
+            }
+
+            @Override
+            public void onSessionStart(Session ses) {
+               // TODO: stuff
+            }
+         });
+         return ses;
+      }
    }
 
    @Override
    public void onRegistered() {
       registry.setParentId(getEntityId());
-      publicServer = new Server(DEFAULT_PUBLIC_PORT, this);
-      privateServer = new Server(DEFAULT_PRIVATE_PORT, this);
+      publicServer = new Server(DEFAULT_PUBLIC_PORT, new TrustedSessionFactory(false));
+      privateServer = new Server(DEFAULT_PRIVATE_PORT, new TrustedSessionFactory(true));
       start();
    }
 
@@ -97,6 +122,11 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          logger.warn("Could not find an entity for {}", entityId);
       }
       return null;
+   }
+
+   @Override
+   public void broadcast(MessageHeader header, ByteBuf buf) {
+      // TODO: stuff
    }
 
    @Override

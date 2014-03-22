@@ -24,10 +24,10 @@ public class Server implements Session.Listener {
    private EventLoopGroup        workerGroup = new NioEventLoopGroup();
 
    private int                   port;
-   private final Service         service;
+   private final SessionFactory  sessionFactory;
 
-   public Server(int port, Service service) {
-      this.service = service;
+   public Server(int port, SessionFactory sessionFactory) {
+      this.sessionFactory = sessionFactory;
       this.port = port;
    }
 
@@ -55,20 +55,18 @@ public class Server implements Session.Listener {
       logger.info("Connection from {}", ch);
       // TODO: add ssl to pipeline if configured
       // ch.pipeline().addLast(sslEngine);
-      Session session = new Session(ch, service);
+      Session session = sessionFactory.makeSession(ch);
       session.addSessionListener(this);
    }
 
    @Override
    public void onSessionStart(Session ses) {
       sessions.put(ses.getSessionNum(), ses);
-      service.onServerStart(this, ses);
    }
 
    @Override
    public void onSessionStop(Session ses) {
       sessions.remove(ses.getSessionNum());
-      service.onServerStop(this, ses);
    }
 
 }

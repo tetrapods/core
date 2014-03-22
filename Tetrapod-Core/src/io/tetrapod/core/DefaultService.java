@@ -1,19 +1,18 @@
 package io.tetrapod.core;
 
+import io.netty.channel.socket.SocketChannel;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.rpc.Error;
 import io.tetrapod.protocol.core.*;
 import io.tetrapod.protocol.service.*;
 
-import java.util.concurrent.*;
-
 import org.slf4j.*;
 
-abstract public class DefaultService implements Service, BaseServiceContract.API {
+abstract public class DefaultService implements Service, BaseServiceContract.API, SessionFactory {
    public static final Logger     logger = LoggerFactory.getLogger(DefaultService.class);
 
    protected final Dispatcher     dispatcher;
-   private final StructureFactory factory;
+   private final StructureFactory structFactory;
    private final Client           cluster;
    // private Server                 directConnections; // TODO: implement direct connections
    private Contract               contract;
@@ -24,10 +23,14 @@ abstract public class DefaultService implements Service, BaseServiceContract.API
 
    public DefaultService() {
       dispatcher = new Dispatcher();
-      factory = new StructureFactory();
+      structFactory = new StructureFactory();
       cluster = new Client(this);
       addContracts(new BaseServiceContract());
       addPeerContracts(new TetrapodContract());
+   }
+
+   public byte getEntityType() {
+      return Core.TYPE_SERVICE;
    }
 
    // Service protocol
@@ -43,8 +46,30 @@ abstract public class DefaultService implements Service, BaseServiceContract.API
       }
    }
 
+   abstract public void onRegistered();
+
+   /**
+    * Session factory for our session to our parent TetrapodService
+    */
    @Override
-   public void onClientStart(Client client) {
+   public Session makeSession(SocketChannel ch) {
+      final Session ses = new Session(ch, DefaultService.this);
+      ses.setEntityType(getEntityType());
+      ses.addSessionListener(new Session.Listener() {
+         @Override
+         public void onSessionStop(Session ses) {
+            onDisconnectedFromCluster();
+         }
+
+         @Override
+         public void onSessionStart(Session ses) {
+            onConnectedToCluster();
+         }
+      });
+      return ses;
+   }
+
+   public void onConnectedToCluster() {
       logger.debug("Sending register request");
       sendRequest(new RegisterRequest(222/*FIXME*/, token), Core.UNADDRESSED).handle(new ResponseHandler() {
          @Override
@@ -65,18 +90,9 @@ abstract public class DefaultService implements Service, BaseServiceContract.API
       });
    }
 
-   abstract public void onRegistered();
-
-   @Override
-   public void onClientStop(Client client) {
+   public void onDisconnectedFromCluster() {
       // TODO reconnection loop to handle unexpected disconnections
    }
-
-   @Override
-   public void onServerStart(Server server, Session ses) {}
-
-   @Override
-   public void onServerStop(Server server, Session ses) {}
 
    // subclass utils
 
@@ -87,16 +103,16 @@ abstract public class DefaultService implements Service, BaseServiceContract.API
 
    protected void addContracts(Contract... contracts) {
       for (Contract c : contracts) {
-         c.addRequests(factory, c.getContractId());
-         c.addResponses(factory, c.getContractId());
-         c.addMessages(factory, c.getContractId());
+         c.addRequests(structFactory, c.getContractId());
+         c.addResponses(structFactory, c.getContractId());
+         c.addMessages(structFactory, c.getContractId());
       }
    }
 
    protected void addPeerContracts(Contract... contracts) {
       for (Contract c : contracts) {
-         c.addResponses(factory, c.getContractId());
-         c.addMessages(factory, c.getContractId());
+         c.addResponses(structFactory, c.getContractId());
+         c.addMessages(structFactory, c.getContractId());
       }
    }
 
@@ -145,23 +161,12 @@ abstract public class DefaultService implements Service, BaseServiceContract.API
 
    @Override
    public Structure make(int contractId, int structId) {
-      return factory.make(contractId, structId);
+      return structFactory.make(contractId, structId);
    }
 
    @Override
-   public void execute(Runnable runnable) {
-      dispatcher.dispatch(runnable);
-   }
-
-   @Override
-   public ScheduledFuture<?> execute(int delay, TimeUnit unit, Runnable runnable) {
-      return dispatcher.dispatch(delay, unit, runnable);
-   }
-
-   @Override
-   public Session getRelaySession(int entityId) {
-      logger.warn("This service does not relay requests {}", entityId);
-      return null;
+   public Dispatcher getDispatcher() {
+      return dispatcher;
    }
 
    @Override

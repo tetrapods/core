@@ -8,6 +8,7 @@ import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import io.netty.util.ReferenceCountUtil;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.rpc.Error;
+import io.tetrapod.core.serialize.DataSource;
 import io.tetrapod.core.serialize.datasources.ByteBufDataSource;
 import io.tetrapod.protocol.core.*;
 
@@ -26,15 +27,19 @@ public class Session extends ChannelInboundHandlerAdapter {
    public static interface Helper {
       public Structure make(int contractId, int structId);
 
-      public void execute(Runnable runnable);
-
-      public ScheduledFuture<?> execute(int delay, TimeUnit unit, Runnable runnable);
+      public Dispatcher getDispatcher();
 
       public ServiceAPI getHandler(int contractId);
 
+      public int getContractId();
+   }
+
+   public static interface RelayHandler {
+
       public Session getRelaySession(int entityId);
 
-      public int getContractId();
+      public void broadcast(MessageHeader header, ByteBuf buf);
+
    }
 
    public static final Logger         logger          = LoggerFactory.getLogger(Session.class);
@@ -51,6 +56,7 @@ public class Session extends ChannelInboundHandlerAdapter {
    private final Map<Integer, Async>  pendingRequests = new ConcurrentHashMap<>();
    private final AtomicInteger        requestCounter  = new AtomicInteger();
    private final Session.Helper       helper;
+   private RelayHandler               relayHandler;
    private final AtomicLong           lastHeardFrom   = new AtomicLong();
    private final AtomicLong           lastSentTo      = new AtomicLong();
 
@@ -82,6 +88,10 @@ public class Session extends ChannelInboundHandlerAdapter {
       public void onSessionStart(Session ses);
 
       public void onSessionStop(Session ses);
+   }
+
+   public Dispatcher getDispatcher() {
+      return helper.getDispatcher();
    }
 
    public int getSessionNum() {
@@ -165,7 +175,7 @@ public class Session extends ChannelInboundHandlerAdapter {
       final ResponseHeader header = new ResponseHeader();
       header.read(reader);
 
-      logger.debug("{}, READ RESPONSE: [{}]", this, header.requestId);
+      logger.info("{}, READ RESPONSE: [{}]", this, header.requestId);
       final Async async = pendingRequests.remove(header.requestId);
       if (async != null) {
          if (async.header.fromId == myId) {
@@ -173,7 +183,7 @@ public class Session extends ChannelInboundHandlerAdapter {
             if (res != null) {
                res.read(reader);
                logger.debug("{}, Got Response: {}", this, res);
-               helper.execute(new Runnable() {
+               getDispatcher().dispatch(new Runnable() {
                   public void run() {
                      if (res.getStructId() == Error.STRUCT_ID) {
                         async.setResponse(null, ((Error) res).code);
@@ -185,7 +195,7 @@ public class Session extends ChannelInboundHandlerAdapter {
             } else {
                logger.warn("{} Could not find response structure {}", this, header.structId);
             }
-         } else {
+         } else if (relayHandler != null) {
             relayResponse(header, async, in);
          }
       } else {
@@ -210,7 +220,7 @@ public class Session extends ChannelInboundHandlerAdapter {
             logger.warn("Could not find request structure {}", header.structId);
             sendResponse(new Error(ERROR_SERIALIZATION), header.requestId);
          }
-      } else {
+      } else if (relayHandler != null) {
          relayRequest(header, in);
       }
    }
@@ -228,57 +238,16 @@ public class Session extends ChannelInboundHandlerAdapter {
          } else {
             logger.warn("Could not find message structure {}", header.structId);
          }
-      } else {
+      } else if (relayHandler != null) {
          relayMessage(header, in);
       }
-   }
-
-   private void relayMessage(MessageHeader header, ByteBuf in) {
-      final ByteBuf buffer = channel.alloc().buffer(in.writableBytes());
-      try {
-         buffer.writeBytes(in, 0, in.writerIndex());
-      } catch (Exception e) {
-         ReferenceCountUtil.release(buffer);
-         logger.error(e.getMessage(), e);
-         return;
-      }
-
-      logger.debug("{}, RELAY MESSAGE: [{}]", this, header.dump());
-      if (header.toId == UNADDRESSED) {
-         // TODO: Broadcast to all sessions we need to
-      } else {
-         final Session ses = helper.getRelaySession(header.toId);
-         if (ses != null) {
-            ses.write(buffer);
-         }
-      }
-   }
-
-   private void relayRequest(final RequestHeader header, final ByteBuf in) {
-      final Session ses = helper.getRelaySession(header.toId);
-      if (ses != null) {
-         // OPTIMIZE: Find a way to relay without the byte[] allocation & copy
-         final Async async = new Async(null, header, this);
-         final byte[] payload = new byte[in.readableBytes()];
-         in.getBytes(in.readerIndex(), payload);
-         ses.sendRelayRequest(async, payload);
-      } else {
-         logger.warn("Could not find a relay session for {}", header.toId);
-      }
-   }
-
-   private void relayResponse(ResponseHeader header, Async async, ByteBuf in) {
-      // OPTIMIZE: Find a way to relay without the byte[] allocation & copy
-      final byte[] payload = new byte[in.readableBytes()];
-      in.getBytes(in.readerIndex(), payload);
-      async.session.sendRelayResponse(new ResponseHeader(async.header.requestId, header.structId), payload);
    }
 
    private void dispatchRequest(final RequestHeader header, final Request req) {
       logger.debug("Got Request: {}", req);
       final ServiceAPI svc = helper.getHandler(header.contractId);
       if (svc != null) {
-         helper.execute(new Runnable() {
+         getDispatcher().dispatch(new Runnable() {
             public void run() {
                try {
                   dispatchRequest(svc, header, req);
@@ -305,9 +274,14 @@ public class Session extends ChannelInboundHandlerAdapter {
       }
    }
 
-   private void dispatchMessage(MessageHeader header, Message msg) {
-      // FIXME: Execute dispatch on sequential queue for sender
-      logger.info("{} I GOT A MESSAGE: {}", this, msg.dump());
+   private void dispatchMessage(final MessageHeader header, final Message msg) {
+      // OPTIMIZE: use senderId to queue instead of using this single threaded queue 
+      getDispatcher().dispatchSequential(new Runnable() {
+         public void run() {
+            logger.info("{} I GOT A MESSAGE: {}", this, msg.dump());
+            // TODO: fire to listeners
+         }
+      });
    }
 
    public Async sendRequest(Request req, int toId, byte timeoutSeconds) {
@@ -358,59 +332,9 @@ public class Session extends ChannelInboundHandlerAdapter {
       return false;
    }
 
-   private boolean sendRelayRequest(final Async async, byte[] payload) {
-      // We need a different requestId for the relay request
-      int origRequestId = async.header.requestId;
-      async.header.requestId = requestCounter.incrementAndGet();
-      pendingRequests.put(async.header.requestId, async);
-
-      logger.debug("{} RELAYING REQUEST: [{}] ", this, async.header.requestId);
-
-      final ByteBuf buffer = channel.alloc().buffer(32 + payload.length);
-      final ByteBufDataSource data = new ByteBufDataSource(buffer);
-      buffer.writeInt(0);
-      buffer.writeByte(ENVELOPE_REQUEST);
-
-      try {
-         async.header.write(data);
-         async.header.requestId = origRequestId;
-         buffer.writeBytes(payload);
-         // go back and write message length, now that we know it
-         buffer.setInt(0, buffer.writerIndex() - 4);
-         write(buffer);
-         return true;
-      } catch (IOException e) {
-         ReferenceCountUtil.release(buffer);
-         logger.error(e.getMessage(), e);
-      }
-      return false;
-   }
-
-   private boolean sendRelayResponse(ResponseHeader header, byte[] payload) {
-      logger.debug("{} RELAYING RESPONSE: [{}]", this, header.requestId);
-
-      final ByteBuf buffer = channel.alloc().buffer(32 + payload.length);
-      final ByteBufDataSource data = new ByteBufDataSource(buffer);
-      buffer.writeInt(0);
-      buffer.writeByte(ENVELOPE_RESPONSE);
-
-      try {
-         header.write(data);
-         buffer.writeBytes(payload);
-         // go back and write message length, now that we know it
-         buffer.setInt(0, buffer.writerIndex() - 4);
-         write(buffer);
-         return true;
-      } catch (IOException e) {
-         ReferenceCountUtil.release(buffer);
-         logger.error(e.getMessage(), e);
-      }
-      return false;
-   }
-
-   private ChannelFuture write(ByteBuf in) {
+   protected ChannelFuture write(ByteBuf buffer) {
       lastSentTo.set(System.currentTimeMillis());
-      return channel.writeAndFlush(in);
+      return channel.writeAndFlush(buffer);
    }
 
    @Override
@@ -513,7 +437,7 @@ public class Session extends ChannelInboundHandlerAdapter {
 
    private void scheduleHealthCheck() {
       if (isConnected()) {
-         helper.execute(1, TimeUnit.SECONDS, new Runnable() {
+         getDispatcher().dispatch(1, TimeUnit.SECONDS, new Runnable() {
             public void run() {
                checkHealth();
             }
@@ -543,5 +467,118 @@ public class Session extends ChannelInboundHandlerAdapter {
    public void setUntrusted(boolean b) {
       untrusted = b;
    }
+
+   private int addPendingRequest(Async async) {
+      async.header.requestId = requestCounter.incrementAndGet();
+      pendingRequests.put(async.header.requestId, async);
+      return async.header.requestId;
+   }
+
+   ///////////////////////////////////// RELAY /////////////////////////////////////
+
+   public synchronized void setRelayHandler(RelayHandler relayHandler) {
+      this.relayHandler = relayHandler;
+   }
+
+   private void relayRequest(final RequestHeader header, final ByteBuf in) {
+      final Session ses = relayHandler.getRelaySession(header.toId);
+      if (ses != null) {
+         // OPTIMIZE: Find a way to relay without the byte[] allocation & copy
+         final ByteBuf buffer = channel.alloc().buffer(32 + in.readableBytes());
+         final ByteBufDataSource data = new ByteBufDataSource(buffer);
+
+         final Async async = new Async(null, header, this);
+         int origRequestId = async.header.requestId;
+         try {
+            ses.addPendingRequest(async);
+            logger.debug("{} RELAYING REQUEST: [{}] was " + origRequestId, this, async.header.requestId);
+            buffer.writeInt(0); // length placeholder
+            buffer.writeByte(ENVELOPE_REQUEST);
+            async.header.write(data);
+            buffer.writeBytes(in);
+            buffer.setInt(0, buffer.writerIndex() - 4); // go back and write message length, now that we know it
+            ses.write(buffer);
+         } catch (IOException e) {
+            ReferenceCountUtil.release(buffer);
+            logger.error(e.getMessage(), e);
+         } finally {
+            header.requestId = origRequestId;
+         }
+      } else {
+         logger.warn("Could not find a relay session for {}", header.toId);
+      }
+   }
+
+   private void relayResponse(ResponseHeader header, Async async, ByteBuf in) {
+      logger.debug("{} RELAYING RESPONSE: [{}]", this, header.requestId);
+      // OPTIMIZE: Find a way to relay without the extra allocation & copy
+      final ByteBuf buffer = channel.alloc().buffer(32 + in.readableBytes());
+      final ByteBufDataSource data = new ByteBufDataSource(buffer);
+      try {
+         buffer.writeInt(0);
+         buffer.writeByte(ENVELOPE_RESPONSE);
+         header.requestId = async.header.requestId;
+         header.write(data);
+         buffer.writeBytes(in);
+         buffer.setInt(0, buffer.writerIndex() - 4); // Write message length, now that we know it
+         async.session.write(buffer);
+      } catch (IOException e) {
+         ReferenceCountUtil.release(buffer);
+         logger.error(e.getMessage(), e);
+      }
+   }
+
+   private void relayMessage(MessageHeader header, ByteBuf payload) {
+      logger.debug("{}, RELAY MESSAGE: [{}]", this, header.structId);
+      if (header.toId == UNADDRESSED) {
+         // TODO: Broadcast to all sessions we need to
+         relayHandler.broadcast(header, payload);
+      } else {
+         final Session ses = relayHandler.getRelaySession(header.toId);
+         if (ses != null) {
+            payload.resetReaderIndex();
+            payload.retain();
+            ses.write(payload);
+         }
+      }
+   }
+
+   public static String dumpBuffer(ByteBuf buf) {
+      StringBuilder sb = new StringBuilder();
+      for (int i = 0; i < buf.writerIndex(); i++) {
+         sb.append(buf.getByte(i));
+         sb.append(' ');
+      }
+      return sb.toString();
+   }
+
+   //   public static class RelayRequest extends Request {
+   //      final RequestHeader header;
+   //      final byte[]        payload;
+   //
+   //      RelayRequest(RequestHeader header, ByteBuf buf) {
+   //         this.header = header;
+   //         this.payload = new byte[buf.readableBytes()];
+   //         buf.readBytes(payload);
+   //      }
+   //
+   //      @Override
+   //      public void write(DataSource data) throws IOException {
+   //         // godammit
+   //      }
+   //
+   //      @Override
+   //      public void read(DataSource data) throws IOException {}
+   //
+   //      @Override
+   //      public int getStructId() {
+   //         return header.structId;
+   //      }
+   //
+   //      @Override
+   //      public int getContractId() {
+   //         return header.contractId;
+   //      }
+   //   }
 
 }
