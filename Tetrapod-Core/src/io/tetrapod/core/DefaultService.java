@@ -75,6 +75,8 @@ abstract public class DefaultService implements Service, BaseServiceContract.API
                @Override
                public void onResponse(Response res) {
                   if (res.isError()) {
+                     fail("Unable to register", res.errorCode());
+                  } else {
                      RegisterResponse r = (RegisterResponse) res;
                      entityId = r.entityId;
                      parentId = r.parentId;
@@ -86,8 +88,6 @@ abstract public class DefaultService implements Service, BaseServiceContract.API
                      cluster.getSession().setMyEntityType(Core.TYPE_SERVICE);
                      cluster.getSession().setTheirEntityType(Core.TYPE_TETRAPOD);
                      onRegistered();
-                  } else {
-                     fail("Unable to register", res.errorCode());
                   }
                }
             });
