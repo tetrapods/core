@@ -75,8 +75,7 @@ class JavaGenerator implements LanguageGenerator {
          vals.add("responseAdds", template("contract.adds.call").expand(new TemplateValues("class", c.classname())));
       }
       for (Class c : context.classesByType("message")) {
-         if (c.subscription.isEmpty())
-            vals.add("messageAdds", template("contract.adds.call").expand(new TemplateValues("class", c.classname())));
+         vals.add("messageAdds", template("contract.adds.call").expand(new TemplateValues("class", c.classname())));
       }
       vals.setIfEmpty("handlers", "");
       vals.setIfEmpty("requestAdds", "");
