@@ -19,26 +19,30 @@ import org.slf4j.*;
  * The tetrapod service is the core cluster service which handles message routing, cluster management, service discovery, and load balancing
  * of client connections
  */
-public class TetrapodService extends DefaultService implements TetrapodContract.API, RelayHandler {
-   public static final Logger         logger               = LoggerFactory.getLogger(TetrapodService.class);
+public class TetrapodService extends DefaultService implements TetrapodContract.API, RelayHandler, Registry.RegistryBroadcaster {
+   public static final Logger          logger               = LoggerFactory.getLogger(TetrapodService.class);
 
-   public static final int            DEFAULT_PUBLIC_PORT  = 9800;
-   public static final int            DEFAULT_PRIVATE_PORT = 9900;
+   public static final int             DEFAULT_PUBLIC_PORT  = 9800;
+   public static final int             DEFAULT_PRIVATE_PORT = 9900;
 
-   public final SecureRandom          random               = new SecureRandom();
-   public final Map<Integer, Session> sessions             = new ConcurrentHashMap<>();
+   private final SecureRandom          random               = new SecureRandom();
+   private final Map<Integer, Session> sessions             = new ConcurrentHashMap<>();
 
-   public final Registry              registry             = new Registry();
+   public final Registry               registry;
 
-   public Server                      privateServer;
-   public Server                      publicServer;
+   private Topic                       registryTopic;
+
+   private Server                      privateServer;
+   private Server                      publicServer;
 
    public TetrapodService() {
+      registry = new Registry(this);
       setMainContract(new TetrapodContract());
    }
 
+   @Override
    public void startNetwork(String hostAndPort, String token) throws Exception {
-      super.startNetwork(hostAndPort, token);
+      this.token = token;
       if (hostAndPort == null) {
          // were not connecting anywhere, have to self register
          this.entityId = registry.setParentId(1);
@@ -47,8 +51,20 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
                0);
          registry.register(e);
          logger.info(String.format("I AM THE FIRST: 0x%08X %s", entityId, e));
+         onRegistered();
          onReadyToServe();
+      } else {
+         // TODO: Join existing cluster via non-default mechanism
       }
+   }
+
+   @Override
+   public void onConnectedToCluster() {
+      logger.info("Connected to Self");
+      cluster.getSession().setMyEntityId(entityId);
+      cluster.getSession().setTheirEntityId(entityId);
+      cluster.getSession().setMyEntityType(Core.TYPE_TETRAPOD);
+      cluster.getSession().setTheirEntityType(Core.TYPE_TETRAPOD);
    }
 
    public byte getEntityType() {
@@ -89,7 +105,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
    @Override
    public void onRegistered() {
-      // TODO start sync with cluster
+      registryTopic = registry.publish(entityId);
    }
 
    /**
@@ -103,10 +119,12 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       try {
          privateServer.start();
          publicServer.start();
+         super.startNetwork("localhost:" + DEFAULT_PRIVATE_PORT, token);
       } catch (Exception e) {
          // FIXME: fail service
          logger.error(e.getMessage(), e);
       }
+
       scheduleHealthCheck();
       // TODO: at this point we can clear the INIT status or some-such...
    }
@@ -166,6 +184,13 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       } else {
          logger.error("Could not find publisher entity {}", header.fromId);
       }
+   }
+
+   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+   @Override
+   public void broadcastRegistryMessage(Message msg) {
+      sendMessage(msg, 0, registryTopic.topicId);
    }
 
    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

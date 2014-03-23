@@ -56,11 +56,11 @@ public class RPCTest {
       Async async = new Async(req, null, null);
       async.handle(new ResponseHandler() {
          @Override
-         public void onResponse(Response res, int errorCode) {
-            logger.info("HANDLER: {} {}", res, errorCode);
+         public void onResponse(Response res) {
+            logger.info("HANDLER: {} {}", res, res.errorCode());
          }
       });
-      async.setResponse(new MyResponse(), 0);
-      async.setResponse(null, 123);
+      async.setResponse(new MyResponse());
+      async.setResponse(new Error(123));
    }
 }

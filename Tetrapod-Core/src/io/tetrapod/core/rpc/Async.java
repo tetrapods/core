@@ -26,15 +26,19 @@ public class Async {
    public synchronized void handle(ResponseHandler handler) {
       this.handler = handler;
       if (response != null) {
-         handler.onResponse(response, 0);
+         handler.onResponse(response);
       }
    }
 
-   public synchronized void setResponse(Response res, int errorCode) {
+   public synchronized void setResponse(int errorCode) {
+      setResponse(new Error(errorCode));
+   }
+
+   public synchronized void setResponse(Response res) {
       response = res;
       if (handler != null) {
          try {
-            handler.onResponse(res, errorCode);
+            handler.onResponse(res);
          } catch (Throwable e) {
             logger.error(e.getMessage(), e);
          }

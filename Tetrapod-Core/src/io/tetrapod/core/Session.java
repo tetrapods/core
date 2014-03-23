@@ -114,7 +114,7 @@ public class Session extends ChannelInboundHandlerAdapter {
          final ByteBuf in = (ByteBuf) msg;
          final int len = in.readInt() - 1;
          final byte envelope = in.readByte();
-         logger.debug("{} channelRead {}", this, envelope);
+         logger.trace("{} channelRead {}", this, envelope);
          if (needsHandshake()) {
             readHandshake(in, envelope);
             fireSessionStartEvent();
@@ -160,7 +160,7 @@ public class Session extends ChannelInboundHandlerAdapter {
       if (theirVersion != WIRE_VERSION) {
          throw new IOException(this + "handshake version does not match " + theirVersion);
       }
-      logger.info("{} handshake succeeded", this);
+      logger.trace("{} handshake succeeded", this);
       synchronized (this) {
          needsHandshake = false;
       }
@@ -181,11 +181,7 @@ public class Session extends ChannelInboundHandlerAdapter {
                logger.debug("{}, Got Response: {}", this, res);
                getDispatcher().dispatch(new Runnable() {
                   public void run() {
-                     if (res.getStructId() == Error.STRUCT_ID) {
-                        async.setResponse(null, ((Error) res).code);
-                     } else {
-                        async.setResponse(res, 0);
-                     }
+                     async.setResponse(res);
                   }
                });
             } else {
@@ -301,24 +297,37 @@ public class Session extends ChannelInboundHandlerAdapter {
       final Async async = new Async(req, header, this);
       pendingRequests.put(header.requestId, async);
 
-      if (!writeFrame(header, req, ENVELOPE_REQUEST)) {
-         async.setResponse(null, ERROR_SERIALIZATION);
+      final ByteBuf buffer = makeFrame(header, req, ENVELOPE_REQUEST);
+      if (buffer != null) {
+         write(buffer);
+      } else {
+         async.setResponse(ERROR_SERIALIZATION);
       }
       return async;
    }
 
    private void sendResponse(Response res, int requestId) {
       logger.debug("{} sending response [{}]", this, requestId);
-      writeFrame(new ResponseHeader(requestId, res.getStructId()), res, ENVELOPE_RESPONSE);
+      final ByteBuf buffer = makeFrame(new ResponseHeader(requestId, res.getStructId()), res, ENVELOPE_RESPONSE);
+      if (buffer != null) {
+         write(buffer);
+      }
    }
 
    public void sendMessage(Message msg, int toEntityId, int topicId) {
       logger.debug("{} sending message [{}]", this, msg.getStructId());
-      writeFrame(new MessageHeader(getMyEntityId(), topicId, toEntityId, msg.getContractId(), msg.getStructId()), msg, ENVELOPE_MESSAGE);
+      final ByteBuf buffer = makeFrame(new MessageHeader(getMyEntityId(), topicId, toEntityId, msg.getContractId(), msg.getStructId()),
+            msg, ENVELOPE_MESSAGE);
+      if (buffer != null) {
+         write(buffer);
+      }
    }
 
-   private boolean writeFrame(Structure header, Structure payload, byte envelope) {
-      final ByteBuf buffer = channel.alloc().buffer(128);
+   private ByteBuf makeFrame(Structure header, Structure payload, byte envelope) {
+      return makeFrame(header, payload, envelope, channel.alloc().buffer(128));
+   }
+
+   public static ByteBuf makeFrame(Structure header, Structure payload, byte envelope, ByteBuf buffer) {
       final ByteBufDataSource data = new ByteBufDataSource(buffer);
       buffer.writeInt(0);
       buffer.writeByte(envelope);
@@ -327,13 +336,12 @@ public class Session extends ChannelInboundHandlerAdapter {
          payload.write(data);
          // go back and write message length, now that we know it
          buffer.setInt(0, buffer.writerIndex() - 4);
-         write(buffer);
-         return true;
+         return buffer;
       } catch (IOException e) {
          ReferenceCountUtil.release(buffer);
          logger.error(e.getMessage(), e);
+         return null;
       }
-      return false;
    }
 
    protected ChannelFuture write(ByteBuf buffer) {
@@ -360,7 +368,7 @@ public class Session extends ChannelInboundHandlerAdapter {
    }
 
    private void writeHandshake() {
-      logger.debug("{} Writing handshake", this);
+      logger.trace("{} Writing handshake", this);
       synchronized (this) {
          needsHandshake = true;
       }
@@ -571,34 +579,5 @@ public class Session extends ChannelInboundHandlerAdapter {
       }
       return sb.toString();
    }
-
-   //   public static class RelayRequest extends Request {
-   //      final RequestHeader header;
-   //      final byte[]        payload;
-   //
-   //      RelayRequest(RequestHeader header, ByteBuf buf) {
-   //         this.header = header;
-   //         this.payload = new byte[buf.readableBytes()];
-   //         buf.readBytes(payload);
-   //      }
-   //
-   //      @Override
-   //      public void write(DataSource data) throws IOException {
-   //         // godammit
-   //      }
-   //
-   //      @Override
-   //      public void read(DataSource data) throws IOException {}
-   //
-   //      @Override
-   //      public int getStructId() {
-   //         return header.structId;
-   //      }
-   //
-   //      @Override
-   //      public int getContractId() {
-   //         return header.contractId;
-   //      }
-   //   }
 
 }

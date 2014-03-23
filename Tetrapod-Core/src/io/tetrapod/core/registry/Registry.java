@@ -42,7 +42,15 @@ public class Registry implements TetrapodContract.RegistryTopic.API {
    @SuppressWarnings("unused")
    private final Map<Integer, List<EntityInfo>> services        = new ConcurrentHashMap<>();
 
-   public Registry() {}
+   public static interface RegistryBroadcaster {
+      public void broadcastRegistryMessage(Message msg);
+   }
+
+   private final RegistryBroadcaster broadcaster;
+
+   public Registry(RegistryBroadcaster broadcaster) {
+      this.broadcaster = broadcaster;
+   }
 
    public synchronized int setParentId(int id) {
       assert id < 0x07FF;
@@ -59,7 +67,7 @@ public class Registry implements TetrapodContract.RegistryTopic.API {
          // register their service in our services list
       }
       if (entity.parentId == parentId) {
-         broadcast(new EntityRegisteredMessage(entity, null));
+         broadcaster.broadcastRegistryMessage(new EntityRegisteredMessage(entity, null));
       }
 
    }
@@ -79,7 +87,7 @@ public class Registry implements TetrapodContract.RegistryTopic.API {
          entities.remove(e.entityId);
 
          if (e.parentId == parentId) {
-            broadcast(new EntityUnregisteredMessage(entityId));
+            broadcaster.broadcastRegistryMessage(new EntityUnregisteredMessage(entityId));
          }
       } else {
          logger.error("Could not find entity {} to unregister", entityId);
@@ -91,7 +99,7 @@ public class Registry implements TetrapodContract.RegistryTopic.API {
     */
    private synchronized int issueId() {
       while (true) {
-         int id = (parentId << PARENT_ID_SHIFT) | (++counter % MAX_ID);
+         int id = parentId | (++counter % MAX_ID);
          if (!entities.containsKey(id)) {
             return id;
          }
@@ -196,20 +204,13 @@ public class Registry implements TetrapodContract.RegistryTopic.API {
 
    //////////////////////////////////////////////////////////////////////////////////////////
 
-   /**
-    * Broadcasts a message on our Registry topic
-    */
-   private void broadcast(Message msg) {
-
-   }
-
    public void logStats() {
-      logger.info("======================================================================");
+      logger.info("===================== TETRAPOD CLUSTER REGISTRY =======================");
       for (EntityInfo e : entities.values()) {
-         logger.info(String.format("0x%08X %20s status=%08X topics=%d subscriptions=%d", e.entityId, e.name, e.status, e.getNumTopics(),
+         logger.info(String.format("0x%08X %-15s status=%08X topics=%d subscriptions=%d", e.entityId, e.name, e.status, e.getNumTopics(),
                e.getNumSubscriptions()));
       }
-      logger.info("======================================================================");
+      logger.info("=======================================================================\n");
 
    }
 

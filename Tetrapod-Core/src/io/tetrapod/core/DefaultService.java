@@ -9,17 +9,17 @@ import io.tetrapod.protocol.service.*;
 import org.slf4j.*;
 
 abstract public class DefaultService implements Service, BaseServiceContract.API, SessionFactory {
-   public static final Logger     logger = LoggerFactory.getLogger(DefaultService.class);
+   public static final Logger       logger = LoggerFactory.getLogger(DefaultService.class);
 
-   protected final Dispatcher     dispatcher;
-   private final StructureFactory structFactory;
-   private final Client           cluster;
-   // private Server                 directConnections; // TODO: implement direct connections
-   private Contract               contract;
+   protected final Dispatcher       dispatcher;
+   protected final StructureFactory structFactory;
+   protected final Client           cluster;
+   // protected Server                 directConnections; // TODO: implement direct connections
+   protected Contract               contract;
 
-   protected int                  entityId;
-   protected int                  parentId;
-   protected String               token;
+   protected int                    entityId;
+   protected int                    parentId;
+   protected String                 token;
 
    public DefaultService() {
       dispatcher = new Dispatcher();
@@ -70,12 +70,11 @@ abstract public class DefaultService implements Service, BaseServiceContract.API
    }
 
    public void onConnectedToCluster() {
-      logger.debug("Sending register request");
       sendRequest(new RegisterRequest(222/*FIXME*/, token, getContractId(), getShortName()), Core.UNADDRESSED).handle(
             new ResponseHandler() {
                @Override
-               public void onResponse(Response res, int errorCode) {
-                  if (res != null) {
+               public void onResponse(Response res) {
+                  if (res.isError()) {
                      RegisterResponse r = (RegisterResponse) res;
                      entityId = r.entityId;
                      parentId = r.parentId;
@@ -88,10 +87,11 @@ abstract public class DefaultService implements Service, BaseServiceContract.API
                      cluster.getSession().setTheirEntityType(Core.TYPE_TETRAPOD);
                      onRegistered();
                   } else {
-                     fail("Unable to register", errorCode);
+                     fail("Unable to register", res.errorCode());
                   }
                }
             });
+
    }
 
    public void onDisconnectedFromCluster() {

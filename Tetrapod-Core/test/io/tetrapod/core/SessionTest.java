@@ -33,8 +33,8 @@ public class SessionTest {
 
       svc1.sendRequest(new PauseRequest(), svc2.getEntityId()).handle(new ResponseHandler() {
          @Override
-         public void onResponse(Response res, int errorCode) {
-            logger.info("Got my response. YEY! {} {}", res, errorCode);
+         public void onResponse(Response res) {
+            logger.info("Got my response. YEY! {} {}", res, res.errorCode());
          }
       });
 
