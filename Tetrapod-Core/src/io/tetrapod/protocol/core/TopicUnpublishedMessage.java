@@ -3,54 +3,42 @@ package io.tetrapod.protocol.core;
 // This is a code generated file.  All edits will be lost the next time code gen is run.
 
 import io.*;
-import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.serialize.*;
+import io.tetrapod.core.rpc.*;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
 
 @SuppressWarnings("unused")
-public class MessageHeader extends Structure {
+public class TopicUnpublishedMessage extends Message {
    
-   public static final int STRUCT_ID = 11760427;
+   public static final int STRUCT_ID = 6594504;
     
-   public MessageHeader() {
+   public TopicUnpublishedMessage() {
       defaults();
    }
 
-   public MessageHeader(int fromId, int topicId, int toId, int contractId, int structId) {
-      this.fromId = fromId;
+   public TopicUnpublishedMessage(int ownerId, int topicId) {
+      this.ownerId = ownerId;
       this.topicId = topicId;
-      this.toId = toId;
-      this.contractId = contractId;
-      this.structId = structId;
    }   
    
-   public int fromId;
+   public int ownerId;
    public int topicId;
-   public int toId;
-   public int contractId;
-   public int structId;
 
    public final Structure.Security getSecurity() {
-      return Security.PUBLIC;
+      return Security.INTERNAL;
    }
 
    public final void defaults() {
-      fromId = 0;
+      ownerId = 0;
       topicId = 0;
-      toId = 0;
-      contractId = 0;
-      structId = 0;
    }
    
    @Override
    public final void write(DataSource data) throws IOException {
-      data.write(1, this.fromId);
+      data.write(1, this.ownerId);
       data.write(2, this.topicId);
-      data.write(3, this.toId);
-      data.write(4, this.contractId);
-      data.write(5, this.structId);
       data.writeEndTag();
    }
    
@@ -60,11 +48,8 @@ public class MessageHeader extends Structure {
       while (true) {
          int tag = data.readTag();
          switch (tag) {
-            case 1: this.fromId = data.read_int(tag); break;
+            case 1: this.ownerId = data.read_int(tag); break;
             case 2: this.topicId = data.read_int(tag); break;
-            case 3: this.toId = data.read_int(tag); break;
-            case 4: this.contractId = data.read_int(tag); break;
-            case 5: this.structId = data.read_int(tag); break;
             case Codec.END_TAG:
                return;
             default:
@@ -76,16 +61,28 @@ public class MessageHeader extends Structure {
    
    @Override
    public final int getStructId() {
-      return MessageHeader.STRUCT_ID;
+      return TopicUnpublishedMessage.STRUCT_ID;
+   }
+   
+   @Override
+   public final void dispatch(SubscriptionAPI api) {
+      if (api instanceof Handler)
+         ((Handler)api).messageTopicUnpublished(this);
+      else
+         api.genericMessage(this);
+   }
+   
+   public static interface Handler extends SubscriptionAPI {
+      void messageTopicUnpublished(TopicUnpublishedMessage m);
+   }
+   
+   public static Callable<Structure> getInstanceFactory() {
+      return new Callable<Structure>() {
+         public Structure call() { return new TopicUnpublishedMessage(); }
+      };
    }
    
    public final int getContractId() {
       return TetrapodContract.CONTRACT_ID;
    }
-   public static Callable<Structure> getInstanceFactory() {
-      return new Callable<Structure>() {
-         public Structure call() { return new MessageHeader(); }
-      };
-   }
-   
 }

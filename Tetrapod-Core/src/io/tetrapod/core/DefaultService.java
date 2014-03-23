@@ -54,7 +54,7 @@ abstract public class DefaultService implements Service, BaseServiceContract.API
    @Override
    public Session makeSession(SocketChannel ch) {
       final Session ses = new Session(ch, DefaultService.this);
-      ses.setEntityType(getEntityType());
+      ses.setMyEntityType(getEntityType());
       ses.addSessionListener(new Session.Listener() {
          @Override
          public void onSessionStop(Session ses) {
@@ -71,23 +71,27 @@ abstract public class DefaultService implements Service, BaseServiceContract.API
 
    public void onConnectedToCluster() {
       logger.debug("Sending register request");
-      sendRequest(new RegisterRequest(222/*FIXME*/, token), Core.UNADDRESSED).handle(new ResponseHandler() {
-         @Override
-         public void onResponse(Response res, int errorCode) {
-            if (res != null) {
-               RegisterResponse r = (RegisterResponse) res;
-               entityId = r.entityId;
-               parentId = r.parentId;
-               token = r.token;
+      sendRequest(new RegisterRequest(222/*FIXME*/, token, getContractId(), getShortName()), Core.UNADDRESSED).handle(
+            new ResponseHandler() {
+               @Override
+               public void onResponse(Response res, int errorCode) {
+                  if (res != null) {
+                     RegisterResponse r = (RegisterResponse) res;
+                     entityId = r.entityId;
+                     parentId = r.parentId;
+                     token = r.token;
 
-               logger.info(String.format("%s My entityId is 0x%08X", cluster.getSession(), r.entityId));
-               cluster.getSession().setEntityId(r.entityId);
-               onRegistered();
-            } else {
-               fail("Unable to register", errorCode);
-            }
-         }
-      });
+                     logger.info(String.format("%s My entityId is 0x%08X", cluster.getSession(), r.entityId));
+                     cluster.getSession().setMyEntityId(r.entityId);
+                     cluster.getSession().setTheirEntityId(r.parentId);
+                     cluster.getSession().setMyEntityType(Core.TYPE_SERVICE);
+                     cluster.getSession().setTheirEntityType(Core.TYPE_TETRAPOD);
+                     onRegistered();
+                  } else {
+                     fail("Unable to register", errorCode);
+                  }
+               }
+            });
    }
 
    public void onDisconnectedFromCluster() {
@@ -130,10 +134,16 @@ abstract public class DefaultService implements Service, BaseServiceContract.API
    }
 
    protected String getShortName() {
+      if (contract == null) {
+         return null;
+      }
       return contract.getName();
    }
 
    protected String getFullName() {
+      if (contract == null) {
+         return null;
+      }
       String s = contract.getClass().getCanonicalName();
       return s.substring(0, s.length() - "Contract".length());
    }

@@ -17,19 +17,25 @@ public class TetrapodContract extends Contract {
    public static final int CONTRACT_ID = 1;
    
    public static interface API extends
+      PublishRequest.Handler,
       RegisterRequest.Handler
       {}
    
    public void addRequests(StructureFactory factory, int dynamicId) {
+      factory.add(dynamicId, PublishRequest.STRUCT_ID, PublishRequest.getInstanceFactory());
       factory.add(dynamicId, RegisterRequest.STRUCT_ID, RegisterRequest.getInstanceFactory());
    }
    
    public void addResponses(StructureFactory factory, int dynamicId) {
+      factory.add(dynamicId, PublishResponse.STRUCT_ID, PublishResponse.getInstanceFactory());
       factory.add(dynamicId, RegisterResponse.STRUCT_ID, RegisterResponse.getInstanceFactory());
    }
    
    public void addMessages(StructureFactory factory, int dynamicId) {
-      
+      factory.add(dynamicId, TopicPublishedMessage.STRUCT_ID, TopicPublishedMessage.getInstanceFactory());
+      factory.add(dynamicId, TopicSubscribedMessage.STRUCT_ID, TopicSubscribedMessage.getInstanceFactory());
+      factory.add(dynamicId, TopicUnpublishedMessage.STRUCT_ID, TopicUnpublishedMessage.getInstanceFactory());
+      factory.add(dynamicId, TopicUnsubscribedMessage.STRUCT_ID, TopicUnsubscribedMessage.getInstanceFactory());
    }
    
    public String getName() {
@@ -59,6 +65,11 @@ public class TetrapodContract extends Contract {
        
    }
       
+   /**
+    * Caller does not have sufficient rights to call this Request
+    */
+   public static final int ERROR_INVALID_RIGHTS = 7; 
+   
    /**
     * Protocol versions are not compatible
     */

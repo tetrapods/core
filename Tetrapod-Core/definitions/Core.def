@@ -26,6 +26,7 @@ struct Core
    error SERIALIZATION        = 4 // Unable to deserialize the request
    error PROTOCOL_MISMATCH    = 5 // Protocol versions are not compatible
    error UNKNOWN_REQUEST      = 6 // Service exists and received request, but doen't know how to handle it
+   error INVALID_RIGHTS       = 7 // Caller does not have sufficient rights to call this Request
 
    const byte  ENVELOPE_HANDSHAKE  = 1
    const byte  ENVELOPE_REQUEST    = 2
@@ -75,16 +76,43 @@ public struct Entity
    9: int version  
 
 ################################# REQUESTS #################################
-  
+
 public request Register 
    1: int build   
    2: string token
+   3: int contractId
+   4: string name
    
 public response Register 
    1: int entityId
    2: int parentId
    3: string token
+
+internal request Publish 
+   
+internal response Publish 
+   1: int topicId
     
+################################# MESSAGES #################################
+
+internal message TopicPublished
+   1: int ownerId
+   2: int topicId
+
+internal message TopicUnpublished
+   1: int ownerId
+   2: int topicId
+
+internal message TopicSubscribed
+   1: int ownerId
+   2: int topicId
+   3: int entityId
+
+internal message TopicUnsubscribed
+   1: int ownerId
+   2: int topicId
+   3: int entityId
+
 internal message ServiceInfo.ServiceAdded
     1: int contractId
     2: string name

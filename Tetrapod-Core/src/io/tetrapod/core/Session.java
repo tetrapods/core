@@ -8,7 +8,6 @@ import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import io.netty.util.ReferenceCountUtil;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.rpc.Error;
-import io.tetrapod.core.serialize.DataSource;
 import io.tetrapod.core.serialize.datasources.ByteBufDataSource;
 import io.tetrapod.protocol.core.*;
 
@@ -63,9 +62,12 @@ public class Session extends ChannelInboundHandlerAdapter {
    private boolean                    needsHandshake  = true;
 
    private int                        myId            = 0;
-   private byte                       myType          = Core.TYPE_SERVICE;
+   private byte                       myType          = Core.TYPE_ANONYMOUS;
+
+   private int                        theirId         = 0;
+   private byte                       theirType       = Core.TYPE_ANONYMOUS;
+
    private int                        myContractId;
-   private boolean                    untrusted       = true;
 
    public Session(SocketChannel channel, Session.Helper helper) {
       this.channel = channel;
@@ -207,9 +209,13 @@ public class Session extends ChannelInboundHandlerAdapter {
       final ByteBufDataSource reader = new ByteBufDataSource(in);
       final RequestHeader header = new RequestHeader();
       header.read(reader);
-      if (untrusted && header.fromType != TYPE_ANONYMOUS && header.fromType != TYPE_CLIENT) {
-         header.fromType = TYPE_ANONYMOUS;
+
+      // set/clobber with known details, unless it's from a trusted tetrapod
+      if (theirType != TYPE_TETRAPOD) {
+         header.fromId = theirId;
+         header.fromType = theirType;
       }
+
       logger.debug("{}, READ REQUEST: [{}]", this, header.requestId);
       if ((header.toId == UNADDRESSED && header.contractId == myContractId) || header.toId == myId) {
          final Request req = (Request) helper.make(header.contractId, header.structId);
@@ -229,6 +235,10 @@ public class Session extends ChannelInboundHandlerAdapter {
       final ByteBufDataSource reader = new ByteBufDataSource(in);
       final MessageHeader header = new MessageHeader();
       header.read(reader);
+      if (theirType != TYPE_TETRAPOD) {
+         // fromId MUST be their id, unless it's a tetrapod session, which could be relaying
+         header.fromId = theirId;
+      }
       logger.debug("{}, READ MESSAGE: [{}]", this, header.dump());
       if ((header.toId == UNADDRESSED && header.contractId == myContractId) || header.toId == myId) {
          final Message msg = (Message) helper.make(header.contractId, header.structId);
@@ -310,7 +320,7 @@ public class Session extends ChannelInboundHandlerAdapter {
 
    public void sendMessage(Message msg, int toEntityId, int topicId) {
       logger.debug("{} sending message [{}]", this, msg.getStructId());
-      writeFrame(new MessageHeader(getEntityId(), topicId, toEntityId, msg.getStructId(), msg.getContractId()), msg, ENVELOPE_MESSAGE);
+      writeFrame(new MessageHeader(getMyEntityId(), topicId, toEntityId, msg.getContractId(), msg.getStructId()), msg, ENVELOPE_MESSAGE);
    }
 
    private boolean writeFrame(Structure header, Structure payload, byte envelope) {
@@ -452,20 +462,32 @@ public class Session extends ChannelInboundHandlerAdapter {
       return false;
    }
 
-   public synchronized void setEntityId(int entityId) {
+   public synchronized void setMyEntityId(int entityId) {
       this.myId = entityId;
    }
 
-   public synchronized int getEntityId() {
+   public synchronized int getMyEntityId() {
       return myId;
    }
 
-   public void setEntityType(byte type) {
+   public void setMyEntityType(byte type) {
       myType = type;
    }
 
-   public void setUntrusted(boolean b) {
-      untrusted = b;
+   public synchronized void setTheirEntityId(int entityId) {
+      this.theirId = entityId;
+   }
+
+   public synchronized int getTheirEntityId() {
+      return theirId;
+   }
+
+   public synchronized byte getTheirEntityType() {
+      return theirType;
+   }
+
+   public void setTheirEntityType(byte type) {
+      theirType = type;
    }
 
    private int addPendingRequest(Async async) {
@@ -528,7 +550,7 @@ public class Session extends ChannelInboundHandlerAdapter {
       }
    }
 
-   private void relayMessage(MessageHeader header, ByteBuf payload) {
+   private void relayMessage(final MessageHeader header, final ByteBuf payload) {
       logger.debug("{}, RELAY MESSAGE: [{}]", this, header.structId);
       if (header.toId == UNADDRESSED) {
          // TODO: Broadcast to all sessions we need to
@@ -536,11 +558,15 @@ public class Session extends ChannelInboundHandlerAdapter {
       } else {
          final Session ses = relayHandler.getRelaySession(header.toId);
          if (ses != null) {
-            payload.resetReaderIndex();
-            payload.retain();
-            ses.write(payload);
+            ses.forwardMessage(header, payload);
          }
       }
+   }
+
+   protected void forwardMessage(MessageHeader header, ByteBuf payload) {
+      payload.resetReaderIndex();
+      payload.retain();
+      write(payload);
    }
 
    public static String dumpBuffer(ByteBuf buf) {

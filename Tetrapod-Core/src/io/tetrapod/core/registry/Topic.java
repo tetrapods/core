@@ -38,11 +38,11 @@ public class Topic {
     * 
     * @return true if we fully unsubscribed the client
     */
-   public synchronized boolean unsubscribe(int id) {
-      Subscriber sub = subscribers.get(id);
+   public synchronized boolean unsubscribe(int id, boolean all) {
+      final Subscriber sub = subscribers.get(id);
       if (sub != null) {
          sub.counter--;
-         if (sub.counter == 0) {
+         if (sub.counter == 0 || all) {
             subscribers.remove(id);
             return true;
          }
@@ -60,5 +60,13 @@ public class Topic {
     */
    public int getNumScubscribers() {
       return subscribers.size();
+   }
+
+   public Collection<Subscriber> getSubscribers() {
+      return subscribers.values();
+   }
+
+   public long key() {
+      return ((long) (ownerId) << 32) | (long) topicId;
    }
 }

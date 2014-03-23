@@ -5,6 +5,7 @@ import io.netty.channel.socket.SocketChannel;
 import io.tetrapod.core.Session.RelayHandler;
 import io.tetrapod.core.registry.*;
 import io.tetrapod.core.rpc.*;
+import io.tetrapod.core.rpc.Error;
 import io.tetrapod.protocol.core.*;
 
 import java.security.SecureRandom;
@@ -63,7 +64,9 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       @Override
       public Session makeSession(SocketChannel ch) {
          final Session ses = new Session(ch, TetrapodService.this);
-         ses.setUntrusted(!trusted);
+         ses.setMyEntityId(getEntityId());
+         ses.setMyEntityType(Core.TYPE_TETRAPOD);
+         ses.setTheirEntityType(trusted ? Core.TYPE_SERVICE : Core.TYPE_CLIENT);
          ses.setRelayHandler(TetrapodService.this);
          ses.addSessionListener(new Session.Listener() {
             @Override
@@ -105,6 +108,8 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       publicServer.stop();
    }
 
+   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
    private Session findSession(final EntityInfo entity) {
       if (entity.parentId == getEntityId()) {
          return sessions.get(entity.entityId);
@@ -126,49 +131,35 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
    @Override
    public void broadcast(MessageHeader header, ByteBuf buf) {
-      // TODO: stuff
-   }
-
-   @Override
-   public Response requestRegister(RegisterRequest r, RequestContext ctx) {
-      EntityInfo info = null;
-      Token t = Token.decode(r.token);
-      if (t != null) {
-         info = registry.getEntity(t.entityId);
-         if (info != null) {
-            if (info.reclaimToken != t.nonce) {
-               info = null;
-            } else {
-               info.parentId = getEntityId(); // they may have changed parents
+      // OPTIMIZE: Place on queue for each publisher
+      final EntityInfo publisher = registry.getEntity(header.fromId);
+      if (publisher != null) {
+         final Topic topic = publisher.getTopic(header.topicId);
+         if (topic != null) {
+            synchronized (topic) { // FIXME: Won't need this sync if all topics processed on same thread
+               for (Subscriber s : topic.getSubscribers()) {
+                  final EntityInfo e = registry.getEntity(s.id);
+                  if (e != null) {
+                     if (e.parentId == getEntityId() || e.isTetrapod()) {
+                        final Session session = findSession(e);
+                        if (session != null) {
+                           session.forwardMessage(header, buf);
+                        }
+                     }
+                  } else {
+                     logger.error("Could not find subscriber {} for topic {}", s, topic);
+                  }
+               }
             }
+         } else {
+            logger.error("Could not find topic {} for entity {}", header.topicId, publisher);
          }
+      } else {
+         logger.error("Could not find publisher entity {}", header.fromId);
       }
-      if (info == null) {
-         info = makeInfo(r.build, t.entityId, "NAME" /* TODO */, ctx);
-         registry.register(info);
-      }
-
-      ctx.session.setEntityId(info.entityId);
-      ctx.session.setEntityType(info.type);
-      sessions.put(info.entityId, ctx.session);
-      return new RegisterResponse(info.entityId, info.parentId, Token.encode(info.entityId, info.reclaimToken));
    }
 
-   private EntityInfo makeInfo(int build, int requestedEntityId, String name, RequestContext ctx) {
-      final EntityInfo info = new EntityInfo();
-      info.type = ctx.header.fromType;
-      info.version = ctx.header.version;
-      info.parentId = getEntityId();
-      info.build = build;
-      info.host = ctx.session.getChannel().remoteAddress().getHostString();
-      info.name = name;
-      info.reclaimToken = random.nextLong();
-      if (requestedEntityId > 0 && info.type == Core.TYPE_TETRAPOD) {
-         // tetrapods joining can choose their own enityId as long as it wasn't in use
-         info.entityId = requestedEntityId;
-      }
-      return info;
-   }
+   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
    private static class Token {
       int  entityId = 0;
@@ -194,6 +185,59 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       public static String encode(int entityId, long reclaimNonce) {
          return "e:" + entityId + ":r:" + reclaimNonce;
       }
+   }
+
+   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+   @Override
+   public Response requestRegister(RegisterRequest r, RequestContext ctx) {
+      EntityInfo info = null;
+      final Token t = Token.decode(r.token);
+      if (t != null) {
+         info = registry.getEntity(t.entityId);
+         if (info != null) {
+            if (info.reclaimToken != t.nonce) {
+               info = null;
+            }
+         }
+      }
+      if (info == null) {
+         info = new EntityInfo();
+         info.version = ctx.header.version;
+         info.build = r.build;
+         info.host = ctx.session.getChannel().remoteAddress().getHostString();
+         info.name = r.name;
+         info.reclaimToken = random.nextLong();
+
+         // FIXME: Going to handle tetrapod cluster, registration, etc... separately
+         // if (t.entityId > 0 && info.type == Core.TYPE_TETRAPOD) { 
+         //   info.entityId = t.entityId;   // tetrapods joining can choose their own enityId as long as it wasn't in use
+         // }
+
+         registry.register(info);
+      }
+
+      info.parentId = getEntityId();
+      info.type = ctx.session.getTheirEntityType();
+      if (info.type == Core.TYPE_ANONYMOUS) {
+         info.type = Core.TYPE_CLIENT;
+      }
+
+      ctx.session.setTheirEntityId(info.entityId);
+      ctx.session.setTheirEntityType(info.type);
+      sessions.put(info.entityId, ctx.session);
+      return new RegisterResponse(info.entityId, info.parentId, Token.encode(info.entityId, info.reclaimToken));
+   }
+
+   @Override
+   public Response requestPublish(PublishRequest r, RequestContext ctx) {
+      if (ctx.header.fromType == Core.TYPE_TETRAPOD || ctx.header.fromType == Core.TYPE_SERVICE) {
+         final Topic t = registry.publish(ctx.header.fromId);
+         if (t != null) {
+            return new PublishResponse(t.topicId);
+         }
+      }
+      return new Error(Core.ERROR_INVALID_RIGHTS);
    }
 
 }

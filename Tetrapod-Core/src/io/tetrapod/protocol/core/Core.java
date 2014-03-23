@@ -34,6 +34,11 @@ public class Core extends Structure {
    public static final byte ENVELOPE_PONG = 6; 
    
    /**
+    * Caller does not have sufficient rights to call this Request
+    */
+   @ERR public static final int ERROR_INVALID_RIGHTS = TetrapodContract.ERROR_INVALID_RIGHTS; 
+   
+   /**
     * Protocol versions are not compatible
     */
    @ERR public static final int ERROR_PROTOCOL_MISMATCH = TetrapodContract.ERROR_PROTOCOL_MISMATCH; 

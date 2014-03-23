@@ -15,13 +15,13 @@ public class RegistryTest {
       topic.subscribe(400);
       topic.subscribe(300);
       Assert.assertEquals(4, topic.getNumScubscribers());
-      Assert.assertEquals(false, topic.unsubscribe(100));
+      Assert.assertEquals(false, topic.unsubscribe(100, false));
       Assert.assertEquals(4, topic.getNumScubscribers());
-      Assert.assertEquals(true, topic.unsubscribe(400));
+      Assert.assertEquals(true, topic.unsubscribe(400, false));
       Assert.assertEquals(3, topic.getNumScubscribers());
-      Assert.assertEquals(false, topic.unsubscribe(100));
+      Assert.assertEquals(false, topic.unsubscribe(100, false));
       Assert.assertEquals(3, topic.getNumScubscribers());
-      Assert.assertEquals(true, topic.unsubscribe(100));
+      Assert.assertEquals(true, topic.unsubscribe(100, false));
       Assert.assertEquals(2, topic.getNumScubscribers());
    }
 
