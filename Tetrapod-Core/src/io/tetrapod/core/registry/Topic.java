@@ -1,5 +1,7 @@
 package io.tetrapod.core.registry;
 
+import io.tetrapod.protocol.core.Subscriber;
+
 import java.util.*;
 
 /**
@@ -26,7 +28,7 @@ public class Topic {
    public synchronized boolean subscribe(int id) {
       Subscriber sub = subscribers.get(id);
       if (sub == null) {
-         sub = new Subscriber(id);
+         sub = new Subscriber(id, 0);
          subscribers.put(id, sub);
       }
       sub.counter++;
@@ -58,11 +60,11 @@ public class Topic {
    /**
     * Get the total number of unique subscribers to this topic
     */
-   public int getNumScubscribers() {
+   public synchronized int getNumScubscribers() {
       return subscribers.size();
    }
 
-   public Collection<Subscriber> getSubscribers() {
+   public synchronized Collection<Subscriber> getSubscribers() {
       return subscribers.values();
    }
 

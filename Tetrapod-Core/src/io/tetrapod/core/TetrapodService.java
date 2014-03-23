@@ -6,11 +6,12 @@ import io.tetrapod.core.Session.RelayHandler;
 import io.tetrapod.core.registry.*;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.rpc.Error;
+import io.tetrapod.core.utils.Util;
 import io.tetrapod.protocol.core.*;
 
 import java.security.SecureRandom;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.*;
 
 import org.slf4j.*;
 
@@ -40,10 +41,13 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       super.startNetwork(hostAndPort, token);
       if (hostAndPort == null) {
          // were not connecting anywhere, have to self register
-         entityId = Token.decode(token).entityId;
-         if (entityId == 0)
-            throw new RuntimeException("eneitytId must be non zero to start a tetrapod");
-         onRegistered();
+         this.entityId = registry.setParentId(1);
+
+         final EntityInfo e = new EntityInfo(entityId, 0, random.nextLong(), Util.getHostName(), 0, Core.TYPE_TETRAPOD, getShortName(), 0,
+               0);
+         registry.register(e);
+         logger.info(String.format("I AM THE FIRST: 0x%08X %s", entityId, e));
+         onReadyToServe();
       }
    }
 
@@ -85,13 +89,16 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
    @Override
    public void onRegistered() {
-      registry.setParentId(getEntityId());
-      publicServer = new Server(DEFAULT_PUBLIC_PORT, new TrustedSessionFactory(false));
-      privateServer = new Server(DEFAULT_PRIVATE_PORT, new TrustedSessionFactory(true));
-      start();
+      // TODO start sync with cluster
    }
 
-   private void start() {
+   /**
+    * As a Tetrapod service, we can't start serving as one until we've registered & fully sync'ed with the cluster, or self-registered if we
+    * are the first one. We call this once this criteria has been reached
+    */
+   private void onReadyToServe() {
+      publicServer = new Server(DEFAULT_PUBLIC_PORT, new TrustedSessionFactory(false));
+      privateServer = new Server(DEFAULT_PRIVATE_PORT, new TrustedSessionFactory(true));
       logger.info("START");
       try {
          privateServer.start();
@@ -100,6 +107,8 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          // FIXME: fail service
          logger.error(e.getMessage(), e);
       }
+      scheduleHealthCheck();
+      // TODO: at this point we can clear the INIT status or some-such...
    }
 
    public void stop() {
@@ -138,7 +147,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          if (topic != null) {
             synchronized (topic) { // FIXME: Won't need this sync if all topics processed on same thread
                for (Subscriber s : topic.getSubscribers()) {
-                  final EntityInfo e = registry.getEntity(s.id);
+                  final EntityInfo e = registry.getEntity(s.entityId);
                   if (e != null) {
                      if (e.parentId == getEntityId() || e.isTetrapod()) {
                         final Session session = findSession(e);
@@ -187,6 +196,23 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       }
    }
 
+   //////////////////////////////////////////////////////////////////////////////////////////
+
+   private void scheduleHealthCheck() {
+      dispatcher.dispatch(10, TimeUnit.SECONDS, new Runnable() {
+         public void run() {
+            if (dispatcher.isRunning()) {
+               healthCheck();
+               scheduleHealthCheck();
+            }
+         }
+      });
+   }
+
+   private void healthCheck() {
+      registry.logStats();
+   }
+
    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
    @Override
@@ -208,12 +234,6 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          info.host = ctx.session.getChannel().remoteAddress().getHostString();
          info.name = r.name;
          info.reclaimToken = random.nextLong();
-
-         // FIXME: Going to handle tetrapod cluster, registration, etc... separately
-         // if (t.entityId > 0 && info.type == Core.TYPE_TETRAPOD) { 
-         //   info.entityId = t.entityId;   // tetrapods joining can choose their own enityId as long as it wasn't in use
-         // }
-
          registry.register(info);
       }
 

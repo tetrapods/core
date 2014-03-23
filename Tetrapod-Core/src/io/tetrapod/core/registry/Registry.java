@@ -1,5 +1,8 @@
 package io.tetrapod.core.registry;
 
+import io.tetrapod.core.rpc.Message;
+import io.tetrapod.protocol.core.*;
+
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -10,12 +13,13 @@ import org.slf4j.*;
  * 
  * Each tetrapod service owns a shard of the registry and has a full replica of all other shards.
  */
-public class Registry {
+public class Registry implements TetrapodContract.RegistryTopic.API {
 
-   public static final Logger                   logger         = LoggerFactory.getLogger(Registry.class);
+   protected static final Logger                logger          = LoggerFactory.getLogger(Registry.class);
 
-   public static final int                      PARENT_ID_MASK = 0x7FF00000;                             // top bytes denotes the parent
-   private static final int                     MAX_ID         = 0x000FFFFF;
+   protected static final int                   PARENT_ID_SHIFT = 20;
+   protected static final int                   PARENT_ID_MASK  = 0x7FF << PARENT_ID_SHIFT;
+   protected static final int                   MAX_ID          = 0x000FFFFF;
 
    /**
     * Our entityId
@@ -30,17 +34,20 @@ public class Registry {
    /**
     * Maps entityId => EntityInfo
     */
-   private final Map<Integer, EntityInfo>       entities       = new ConcurrentHashMap<>();
+   private final Map<Integer, EntityInfo>       entities        = new ConcurrentHashMap<>();
 
    /**
     * Maps contractId => List of EntityInfos that provide that service
     */
-   private final Map<Integer, List<EntityInfo>> services       = new ConcurrentHashMap<>();
+   @SuppressWarnings("unused")
+   private final Map<Integer, List<EntityInfo>> services        = new ConcurrentHashMap<>();
 
    public Registry() {}
 
-   public synchronized void setParentId(int id) {
-      this.parentId = id;
+   public synchronized int setParentId(int id) {
+      assert id < 0x07FF;
+      this.parentId = id << PARENT_ID_SHIFT;
+      return this.parentId;
    }
 
    public synchronized void register(EntityInfo entity) {
@@ -51,19 +58,32 @@ public class Registry {
       if (entity.isService()) {
          // register their service in our services list
       }
+      if (entity.parentId == parentId) {
+         broadcast(new EntityRegisteredMessage(entity, null));
+      }
+
    }
 
-   public synchronized void unregister(EntityInfo entity) {
-      // Unpublish all their topics
-      for (Topic topic : entity.getTopics()) {
-         unpublish(entity, topic.topicId);
-      }
-      // Unsubscribe from all subscriptions
-      for (Topic topic : entity.getSubscriptions()) {
-         unsubscribe(entity, topic);
-      }
+   public synchronized void unregister(int entityId) {
+      final EntityInfo e = getEntity(entityId);
+      if (e != null) {
+         // Unpublish all their topics
+         for (Topic topic : e.getTopics()) {
+            unpublish(e, topic.topicId);
+         }
+         // Unsubscribe from all subscriptions
+         for (Topic topic : e.getSubscriptions()) {
+            unsubscribe(e, topic);
+         }
 
-      entities.remove(entity.entityId);
+         entities.remove(e.entityId);
+
+         if (e.parentId == parentId) {
+            broadcast(new EntityUnregisteredMessage(entityId));
+         }
+      } else {
+         logger.error("Could not find entity {} to unregister", entityId);
+      }
    }
 
    /**
@@ -71,7 +91,7 @@ public class Registry {
     */
    private synchronized int issueId() {
       while (true) {
-         int id = (parentId << 20) | (++counter % MAX_ID);
+         int id = (parentId << PARENT_ID_SHIFT) | (++counter % MAX_ID);
          if (!entities.containsKey(id)) {
             return id;
          }
@@ -107,7 +127,7 @@ public class Registry {
       if (topic != null) {
          // clean up all the subscriptions to this topic
          for (Subscriber sub : topic.getSubscribers()) {
-            final EntityInfo e = getEntity(sub.id);
+            final EntityInfo e = getEntity(sub.entityId);
             if (e != null) {
                unsubscribe(e, topic);
             }
@@ -136,6 +156,61 @@ public class Registry {
          return topic.unsubscribe(entity.parentId, false);
          // FIXME: there's a minor bug here if they subscribed more than once
       }
+   }
+
+   //////////////////////////////////////////////////////////////////////////////////////////
+
+   @Override
+   public void genericMessage(Message message) {}
+
+   @Override
+   public void messageEntityRegistered(EntityRegisteredMessage m) {
+      final EntityInfo e = new EntityInfo(m.entity);
+      register(e);
+   }
+
+   @Override
+   public void messageEntityUnregistered(EntityUnregisteredMessage m) {
+      unregister(m.entityId);
+   }
+
+   @Override
+   public void messageTopicPublished(TopicPublishedMessage m) {
+
+   }
+
+   @Override
+   public void messageTopicSubscribed(TopicSubscribedMessage m) {
+
+   }
+
+   @Override
+   public void messageTopicUnpublished(TopicUnpublishedMessage m) {
+
+   }
+
+   @Override
+   public void messageTopicUnsubscribed(TopicUnsubscribedMessage m) {
+
+   }
+
+   //////////////////////////////////////////////////////////////////////////////////////////
+
+   /**
+    * Broadcasts a message on our Registry topic
+    */
+   private void broadcast(Message msg) {
+
+   }
+
+   public void logStats() {
+      logger.info("======================================================================");
+      for (EntityInfo e : entities.values()) {
+         logger.info(String.format("0x%08X %20s status=%08X topics=%d subscriptions=%d", e.entityId, e.name, e.status, e.getNumTopics(),
+               e.getNumSubscriptions()));
+      }
+      logger.info("======================================================================");
+
    }
 
 }

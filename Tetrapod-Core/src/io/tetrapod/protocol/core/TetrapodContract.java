@@ -32,10 +32,7 @@ public class TetrapodContract extends Contract {
    }
    
    public void addMessages(StructureFactory factory, int dynamicId) {
-      factory.add(dynamicId, TopicPublishedMessage.STRUCT_ID, TopicPublishedMessage.getInstanceFactory());
-      factory.add(dynamicId, TopicSubscribedMessage.STRUCT_ID, TopicSubscribedMessage.getInstanceFactory());
-      factory.add(dynamicId, TopicUnpublishedMessage.STRUCT_ID, TopicUnpublishedMessage.getInstanceFactory());
-      factory.add(dynamicId, TopicUnsubscribedMessage.STRUCT_ID, TopicUnsubscribedMessage.getInstanceFactory());
+      
    }
    
    public String getName() {
@@ -46,7 +43,35 @@ public class TetrapodContract extends Contract {
       return TetrapodContract.CONTRACT_ID;
    }
 
-   public static class ServiceInfo extends Contract {
+   public static class RegistryTopic extends Contract {
+      public static interface API extends
+         EntityRegisteredMessage.Handler,
+         EntityUnregisteredMessage.Handler,
+         TopicPublishedMessage.Handler,
+         TopicSubscribedMessage.Handler,
+         TopicUnpublishedMessage.Handler,
+         TopicUnsubscribedMessage.Handler
+         {}
+         
+      public void addMessages(StructureFactory factory, int dynamicId) {
+         factory.add(dynamicId, EntityRegisteredMessage.STRUCT_ID, EntityRegisteredMessage.getInstanceFactory());
+         factory.add(dynamicId, EntityUnregisteredMessage.STRUCT_ID, EntityUnregisteredMessage.getInstanceFactory());
+         factory.add(dynamicId, TopicPublishedMessage.STRUCT_ID, TopicPublishedMessage.getInstanceFactory());
+         factory.add(dynamicId, TopicSubscribedMessage.STRUCT_ID, TopicSubscribedMessage.getInstanceFactory());
+         factory.add(dynamicId, TopicUnpublishedMessage.STRUCT_ID, TopicUnpublishedMessage.getInstanceFactory());
+         factory.add(dynamicId, TopicUnsubscribedMessage.STRUCT_ID, TopicUnsubscribedMessage.getInstanceFactory());
+      }
+      
+      public String getName() {
+         return TetrapodContract.NAME;
+      }
+      
+      public int getContractId() {
+         return TetrapodContract.CONTRACT_ID;
+      } 
+       
+   }
+      public static class ServiceInfo extends Contract {
       public static interface API extends
          ServiceAddedMessage.Handler
          {}

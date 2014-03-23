@@ -75,6 +75,15 @@ public struct Entity
    8: int build  
    9: int version  
 
+internal struct Subscriber
+   1: int entityId  
+   2: int counter  
+
+// a flattened Topic object for serialization
+internal struct FlatTopic
+	1: int topicId
+	2: Subscriber[] subscriber; 
+
 ################################# REQUESTS #################################
 
 public request Register 
@@ -95,25 +104,33 @@ internal response Publish
     
 ################################# MESSAGES #################################
 
-internal message TopicPublished
-   1: int ownerId
-   2: int topicId
-
-internal message TopicUnpublished
-   1: int ownerId
-   2: int topicId
-
-internal message TopicSubscribed
-   1: int ownerId
-   2: int topicId
-   3: int entityId
-
-internal message TopicUnsubscribed
-   1: int ownerId
-   2: int topicId
-   3: int entityId
-
 internal message ServiceInfo.ServiceAdded
     1: int contractId
     2: string name
+    
+internal message Registry.EntityRegistered
+	1: Entity entity
+	2: FlatTopic[] topics;
+	 
+internal message Registry.EntityUnregistered
+	1: int entityId;
+	
+internal message Registry.TopicPublished
+   1: int ownerId
+   2: int topicId
+
+internal message Registry.TopicUnpublished
+   1: int ownerId
+   2: int topicId
+
+internal message Registry.TopicSubscribed
+   1: int ownerId
+   2: int topicId
+   3: int entityId
+
+internal message Registry.TopicUnsubscribed
+   1: int ownerId
+   2: int topicId
+   3: int entityId
+
  

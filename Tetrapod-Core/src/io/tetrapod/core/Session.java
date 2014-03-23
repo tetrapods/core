@@ -73,12 +73,6 @@ public class Session extends ChannelInboundHandlerAdapter {
       this.channel = channel;
       this.helper = helper;
       this.myContractId = helper.getContractId();
-      channel.pipeline().addLast(new ChannelInboundHandlerAdapter() {
-         @Override
-         public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-            ctx.fireChannelRead(msg);
-         }
-      });
       channel.pipeline().addLast(new LengthFieldBasedFrameDecoder(1024 * 1024, 0, 4, 0, 0));
       channel.pipeline().addLast(this);
    }
@@ -120,7 +114,7 @@ public class Session extends ChannelInboundHandlerAdapter {
          final ByteBuf in = (ByteBuf) msg;
          final int len = in.readInt() - 1;
          final byte envelope = in.readByte();
-         logger.trace("{} channelRead {}", this, envelope);
+         logger.debug("{} channelRead {}", this, envelope);
          if (needsHandshake()) {
             readHandshake(in, envelope);
             fireSessionStartEvent();

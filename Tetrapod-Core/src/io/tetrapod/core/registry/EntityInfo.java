@@ -9,8 +9,6 @@ import java.util.*;
  */
 public class EntityInfo extends Entity {
 
-   // TODO: stats
-
    protected int                 topicCounter;
 
    /**
@@ -26,6 +24,16 @@ public class EntityInfo extends Entity {
     * Maps topic key => Topic
     */
    protected Map<Long, Topic>    subscriptions;
+
+   public EntityInfo() {}
+
+   public EntityInfo(Entity e) {
+      this(e.entityId, e.parentId, e.reclaimToken, e.host, e.status, e.type, e.name, e.build, e.version);
+   }
+
+   public EntityInfo(int entityId, int parentId, long reclaimToken, String host, int status, byte type, String name, int build, int version) {
+      super(entityId, parentId, reclaimToken, host, status, type, name, build, version);
+   }
 
    public boolean isTetrapod() {
       return type == Core.TYPE_TETRAPOD;
@@ -49,15 +57,27 @@ public class EntityInfo extends Entity {
    }
 
    public synchronized Topic unpublish(int topicId) {
-      return topics.remove(topicId);
+      if (topics != null) {
+         return topics.remove(topicId);
+      } else {
+         return null;
+      }
    }
 
    public synchronized Collection<Topic> getTopics() {
-      return topics.values();
+      return topics == null ? new ArrayList<Topic>() : topics.values();
    }
 
    public synchronized Collection<Topic> getSubscriptions() {
-      return subscriptions.values();
+      return subscriptions == null ? new ArrayList<Topic>(0) : subscriptions.values();
+   }
+
+   public synchronized int getNumTopics() {
+      return topics == null ? 0 : topics.size();
+   }
+
+   public synchronized int getNumSubscriptions() {
+      return subscriptions == null ? 0 : subscriptions.size();
    }
 
 }
