@@ -28,7 +28,9 @@ public class Session extends ChannelInboundHandlerAdapter {
 
       public Dispatcher getDispatcher();
 
-      public ServiceAPI getHandler(int contractId);
+      public ServiceAPI getServiceHandler(int contractId);
+
+      public SubscriptionAPI getMessageHandler(int contractId);
 
       public int getContractId();
    }
@@ -245,7 +247,7 @@ public class Session extends ChannelInboundHandlerAdapter {
 
    private void dispatchRequest(final RequestHeader header, final Request req) {
       logger.debug("Got Request: {}", req);
-      final ServiceAPI svc = helper.getHandler(header.contractId);
+      final ServiceAPI svc = helper.getServiceHandler(header.contractId);
       if (svc != null) {
          getDispatcher().dispatch(new Runnable() {
             public void run() {
@@ -278,8 +280,11 @@ public class Session extends ChannelInboundHandlerAdapter {
       // OPTIMIZE: use senderId to queue instead of using this single threaded queue 
       getDispatcher().dispatchSequential(new Runnable() {
          public void run() {
-            logger.info("{} I GOT A MESSAGE: {}", this, msg.dump());
-            // TODO: fire to listeners
+            logger.debug("{} I GOT A MESSAGE: {}", this, msg.dump());
+            final SubscriptionAPI svc = helper.getMessageHandler(header.contractId);
+            if (svc != null) {
+               msg.dispatch(svc);
+            }
          }
       });
    }

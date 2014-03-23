@@ -38,6 +38,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    public TetrapodService() {
       registry = new Registry(this);
       setMainContract(new TetrapodContract());
+      addPeerContracts(new TetrapodContract.Registry());
    }
 
    @Override
@@ -191,6 +192,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    @Override
    public void broadcastRegistryMessage(Message msg) {
       sendMessage(msg, 0, registryTopic.topicId);
+      logger.info("BROADCASTING {} {}", registryTopic, msg.dump());
    }
 
    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -227,7 +229,11 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       dispatcher.dispatch(10, TimeUnit.SECONDS, new Runnable() {
          public void run() {
             if (dispatcher.isRunning()) {
-               healthCheck();
+               try {
+                  healthCheck();
+               } catch (Throwable e) {
+                  logger.error(e.getMessage(), e);
+               }
                scheduleHealthCheck();
             }
          }
@@ -283,6 +289,12 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          }
       }
       return new Error(Core.ERROR_INVALID_RIGHTS);
+   }
+
+   @Override
+   public Response requestRegistrySubscribe(RegistrySubscribeRequest r, RequestContext ctx) {
+      sendMessage(new TopicSubscribedMessage(registryTopic.ownerId, registryTopic.topicId, ctx.header.fromId), 0, 0);
+      return Response.SUCCESS;
    }
 
 }

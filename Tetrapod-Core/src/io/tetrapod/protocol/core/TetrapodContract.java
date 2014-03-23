@@ -18,12 +18,14 @@ public class TetrapodContract extends Contract {
    
    public static interface API extends
       PublishRequest.Handler,
-      RegisterRequest.Handler
+      RegisterRequest.Handler,
+      RegistrySubscribeRequest.Handler
       {}
    
    public void addRequests(StructureFactory factory, int dynamicId) {
       factory.add(dynamicId, PublishRequest.STRUCT_ID, PublishRequest.getInstanceFactory());
       factory.add(dynamicId, RegisterRequest.STRUCT_ID, RegisterRequest.getInstanceFactory());
+      factory.add(dynamicId, RegistrySubscribeRequest.STRUCT_ID, RegistrySubscribeRequest.getInstanceFactory());
    }
    
    public void addResponses(StructureFactory factory, int dynamicId) {
@@ -43,7 +45,7 @@ public class TetrapodContract extends Contract {
       return TetrapodContract.CONTRACT_ID;
    }
 
-   public static class RegistryTopic extends Contract {
+   public static class Registry extends Contract {
       public static interface API extends
          EntityRegisteredMessage.Handler,
          EntityUnregisteredMessage.Handler,

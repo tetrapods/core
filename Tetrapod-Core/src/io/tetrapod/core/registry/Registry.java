@@ -13,7 +13,7 @@ import org.slf4j.*;
  * 
  * Each tetrapod service owns a shard of the registry and has a full replica of all other shards.
  */
-public class Registry implements TetrapodContract.RegistryTopic.API {
+public class Registry implements TetrapodContract.Registry.API {
 
    protected static final Logger                logger          = LoggerFactory.getLogger(Registry.class);
 

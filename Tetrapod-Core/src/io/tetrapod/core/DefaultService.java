@@ -180,9 +180,14 @@ abstract public class DefaultService implements Service, BaseServiceContract.API
    }
 
    @Override
-   public ServiceAPI getHandler(int contractId) {
+   public ServiceAPI getServiceHandler(int contractId) {
       // this method allows us to have delegate objects that directly handle some contracts
       return this;
+   }
+
+   @Override
+   public SubscriptionAPI getMessageHandler(int contractId) {
+      return null; // FIXME: how's this magic work?
    }
 
    @Override

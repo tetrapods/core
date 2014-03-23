@@ -6,15 +6,20 @@ import io.tetrapod.core.rpc.Error;
 import java.util.*;
 import java.util.concurrent.Callable;
 
+import org.slf4j.*;
+
 public class StructureFactory {
 
+   protected static final Logger                logger       = LoggerFactory.getLogger(StructureFactory.class);
+
    private final Map<Long, Callable<Structure>> knownStructs = new HashMap<>();
-   
+
    public synchronized void add(int contractId, int structId, Callable<Structure> factory) {
       long key = makeKey(contractId, structId);
       knownStructs.put(key, factory);
+      logger.debug("Adding {} {}", contractId, structId);
    }
-   
+
    // OPTIMIZE: could make this class immutable using a builder pattern and avoid 
    //           this synchronize. adds are rare and usually upfront
    public synchronized Structure make(int serviceId, int structId) {
@@ -29,13 +34,15 @@ public class StructureFactory {
       if (c != null) {
          try {
             return c.call();
-         } catch (Exception e) {}
+         } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+         }
       }
       return null;
    }
-   
+
    private final long makeKey(int serviceId, int structId) {
-      return ((long)serviceId << 32) | (long)structId;
+      return ((long) serviceId << 32) | (long) structId;
    }
-   
+
 }

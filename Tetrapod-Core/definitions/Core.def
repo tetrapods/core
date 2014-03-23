@@ -102,6 +102,8 @@ internal request Publish
 internal response Publish 
    1: int topicId
     
+internal request RegistrySubscribe
+
 ################################# MESSAGES #################################
 
 internal message ServiceInfo.ServiceAdded
