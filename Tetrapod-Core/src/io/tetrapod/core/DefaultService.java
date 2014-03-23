@@ -6,6 +6,9 @@ import io.tetrapod.core.rpc.Error;
 import io.tetrapod.protocol.core.*;
 import io.tetrapod.protocol.service.*;
 
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+
 import org.slf4j.*;
 
 abstract public class DefaultService implements Service, BaseServiceContract.API, SessionFactory {
@@ -20,6 +23,8 @@ abstract public class DefaultService implements Service, BaseServiceContract.API
    protected int                    entityId;
    protected int                    parentId;
    protected String                 token;
+   
+   private final Map<Integer, MessageHandlers> messageHandlers = new ConcurrentHashMap<>();
 
    public DefaultService() {
       dispatcher = new Dispatcher();
@@ -187,12 +192,28 @@ abstract public class DefaultService implements Service, BaseServiceContract.API
 
    @Override
    public SubscriptionAPI getMessageHandler(int contractId) {
-      return null; // FIXME: how's this magic work?
+      return messageHandlers.get(contractId);
    }
 
    @Override
    public int getContractId() {
       return contract == null ? 0 : contract.getContractId();
+   }
+   
+   public void addMessageHandler(int contractId, SubscriptionAPI handler) {
+      MessageHandlers md = messageHandlers.get(contractId);
+      if (md == null) {
+         md = new MessageHandlers();
+         messageHandlers.put(contractId, md);
+      }
+      md.add(handler);
+   }
+
+   public void removeMessageHandler(int contractId, SubscriptionAPI handler) {
+      MessageHandlers md = messageHandlers.get(contractId);
+      if (md != null) {
+         md.remove(handler);
+      }
    }
 
    // Base service implementation
