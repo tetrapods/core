@@ -37,16 +37,20 @@ public class Dispatcher {
       });
 
       sequential = new ThreadPoolExecutor(0, 1, 1L, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(), new ThreadFactory() {
+         private final AtomicInteger counter = new AtomicInteger();
+
          @Override
          public Thread newThread(Runnable r) {
-            return new Thread(r, "Dispatch-Sequential");
+            return new Thread(r, "Dispatch-Sequential-" + counter.incrementAndGet());
          }
       });
 
-      scheduled = Executors.newScheduledThreadPool(0, new ThreadFactory() {
+      scheduled = Executors.newScheduledThreadPool(1, new ThreadFactory() {
+         private final AtomicInteger counter = new AtomicInteger();
+
          @Override
          public Thread newThread(Runnable r) {
-            return new Thread(r, "Dispatch-Scheduled");
+            return new Thread(r, "Dispatch-Scheduled-" + counter.incrementAndGet());
          }
       });
    }
@@ -136,6 +140,10 @@ public class Dispatcher {
       if (workerGroup != null) {
          workerGroup.shutdownGracefully();
       }
+   }
+
+   public boolean isRunning() {
+      return !threadPool.isShutdown();
    }
 
 }
