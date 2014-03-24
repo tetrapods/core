@@ -65,15 +65,15 @@ public class ServiceAddedMessage extends Message {
    }
    
    @Override
-   public final void dispatch(SubscriptionAPI api) {
+   public final void dispatch(SubscriptionAPI api, MessageContext ctx) {
       if (api instanceof Handler)
-         ((Handler)api).messageServiceAdded(this);
+         ((Handler)api).messageServiceAdded(this, ctx);
       else
-         api.genericMessage(this);
+         api.genericMessage(this, ctx);
    }
    
    public static interface Handler extends SubscriptionAPI {
-      void messageServiceAdded(ServiceAddedMessage m);
+      void messageServiceAdded(ServiceAddedMessage m, MessageContext ctx);
    }
    
    public static Callable<Structure> getInstanceFactory() {

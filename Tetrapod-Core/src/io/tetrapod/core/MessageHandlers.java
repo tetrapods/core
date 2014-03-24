@@ -13,9 +13,9 @@ public class MessageHandlers implements SubscriptionAPI {
    private Queue<SubscriptionAPI> listeners = new ConcurrentLinkedQueue<>();
 
    @Override
-   public void genericMessage(Message message) {
+   public void genericMessage(Message message, MessageContext ctx) {
       for (SubscriptionAPI api : listeners)
-         message.dispatch(api);
+         message.dispatch(api, ctx);
    }
    
    public void add(SubscriptionAPI listener) {

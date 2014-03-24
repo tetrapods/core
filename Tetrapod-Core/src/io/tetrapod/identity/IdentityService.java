@@ -18,37 +18,37 @@ public class IdentityService extends DefaultService implements IdentityContract.
 
       addMessageHandler(TetrapodContract.CONTRACT_ID, new TetrapodContract.Registry.API() {
          @Override
-         public void messageTopicUnsubscribed(TopicUnsubscribedMessage m) {
+         public void messageTopicUnsubscribed(TopicUnsubscribedMessage m, MessageContext ctx) {
             logger.info(m.dump());
          }
 
          @Override
-         public void messageTopicUnpublished(TopicUnpublishedMessage m) {
+         public void messageTopicUnpublished(TopicUnpublishedMessage m, MessageContext ctx) {
             logger.info(m.dump());
          }
 
          @Override
-         public void messageTopicSubscribed(TopicSubscribedMessage m) {
+         public void messageTopicSubscribed(TopicSubscribedMessage m, MessageContext ctx) {
             logger.info(m.dump());
          }
 
          @Override
-         public void messageTopicPublished(TopicPublishedMessage m) {
+         public void messageTopicPublished(TopicPublishedMessage m, MessageContext ctx) {
             logger.info(m.dump());
          }
 
          @Override
-         public void messageEntityUnregistered(EntityUnregisteredMessage m) {
+         public void messageEntityUnregistered(EntityUnregisteredMessage m, MessageContext ctx) {
             logger.info(m.dump());
          }
 
          @Override
-         public void genericMessage(Message message) {
+         public void genericMessage(Message message, MessageContext ctx) {
             logger.info("genericMessage({})", message.dump());
          }
 
          @Override
-         public void messageEntityRegistered(EntityRegisteredMessage m) {
+         public void messageEntityRegistered(EntityRegisteredMessage m, MessageContext ctx) {
             logger.info(m.dump());
          }
       });

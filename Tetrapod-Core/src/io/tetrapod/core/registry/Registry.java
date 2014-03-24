@@ -1,6 +1,6 @@
 package io.tetrapod.core.registry;
 
-import io.tetrapod.core.rpc.Message;
+import io.tetrapod.core.rpc.*;
 import io.tetrapod.protocol.core.*;
 
 import java.util.*;
@@ -175,31 +175,34 @@ public class Registry implements TetrapodContract.Registry.API {
    //////////////////////////////////////////////////////////////////////////////////////////
 
    @Override
-   public void genericMessage(Message message) {}
+   public void genericMessage(Message message, MessageContext ctx) {}
 
    @Override
-   public void messageEntityRegistered(EntityRegisteredMessage m) {
-      final EntityInfo e = new EntityInfo(m.entity);
-      register(e);
+   public void messageEntityRegistered(EntityRegisteredMessage m, MessageContext ctx) {
+      if (ctx.header.topicId != 0 && ctx.header.fromId != parentId) {
+         register(new EntityInfo(m.entity));
+      }
    }
 
    @Override
-   public void messageEntityUnregistered(EntityUnregisteredMessage m) {
-      unregister(m.entityId);
+   public void messageEntityUnregistered(EntityUnregisteredMessage m, MessageContext ctx) {
+      if (ctx.header.topicId != 0 && ctx.header.fromId != parentId) {
+         unregister(m.entityId);
+      }
    }
 
    @Override
-   public void messageTopicPublished(TopicPublishedMessage m) {
+   public void messageTopicPublished(TopicPublishedMessage m, MessageContext ctx) {
       logger.info(m.dump());
    }
 
    @Override
-   public void messageTopicUnpublished(TopicUnpublishedMessage m) {
+   public void messageTopicUnpublished(TopicUnpublishedMessage m, MessageContext ctx) {
       logger.info(m.dump());
    }
 
    @Override
-   public void messageTopicSubscribed(TopicSubscribedMessage m) {
+   public void messageTopicSubscribed(TopicSubscribedMessage m, MessageContext ctx) {
       final EntityInfo owner = getEntity(m.ownerId);
       if (owner != null) {
          final Topic topic = owner.getTopic(m.topicId);
@@ -219,7 +222,7 @@ public class Registry implements TetrapodContract.Registry.API {
    }
 
    @Override
-   public void messageTopicUnsubscribed(TopicUnsubscribedMessage m) {
+   public void messageTopicUnsubscribed(TopicUnsubscribedMessage m, MessageContext ctx) {
       final EntityInfo owner = getEntity(m.ownerId);
       if (owner != null) {
          final Topic topic = owner.getTopic(m.topicId);
@@ -236,6 +239,7 @@ public class Registry implements TetrapodContract.Registry.API {
       } else {
          logger.info("Could not find publisher entity {}", m.ownerId);
       }
+
    }
 
    //////////////////////////////////////////////////////////////////////////////////////////

@@ -278,12 +278,13 @@ public class Session extends ChannelInboundHandlerAdapter {
 
    private void dispatchMessage(final MessageHeader header, final Message msg) {
       // OPTIMIZE: use senderId to queue instead of using this single threaded queue 
+      final MessageContext ctx = new MessageContext(header, this);
       getDispatcher().dispatchSequential(new Runnable() {
          public void run() {
             logger.debug("{} I GOT A MESSAGE: {}", this, msg.dump());
             final SubscriptionAPI svc = helper.getMessageHandler(header.contractId);
             if (svc != null) {
-               msg.dispatch(svc);
+               msg.dispatch(svc, ctx);
             }
          }
       });

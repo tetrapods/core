@@ -12,18 +12,18 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.slf4j.*;
 
 abstract public class DefaultService implements Service, BaseServiceContract.API, SessionFactory {
-   public static final Logger       logger = LoggerFactory.getLogger(DefaultService.class);
+   public static final Logger                  logger          = LoggerFactory.getLogger(DefaultService.class);
 
-   protected final Dispatcher       dispatcher;
-   protected final StructureFactory structFactory;
-   protected final Client           cluster;
+   protected final Dispatcher                  dispatcher;
+   protected final StructureFactory            structFactory;
+   protected final Client                      cluster;
    // protected Server                 directConnections; // TODO: implement direct connections
-   protected Contract               contract;
+   protected Contract                          contract;
 
-   protected int                    entityId;
-   protected int                    parentId;
-   protected String                 token;
-   
+   protected int                               entityId;
+   protected int                               parentId;
+   protected String                            token;
+
    private final Map<Integer, MessageHandlers> messageHandlers = new ConcurrentHashMap<>();
 
    public DefaultService() {
@@ -46,7 +46,7 @@ abstract public class DefaultService implements Service, BaseServiceContract.API
          this.token = token;
          int ix = hostAndPort.indexOf(':');
          String host = ix < 0 ? hostAndPort : hostAndPort.substring(0, ix);
-         int port = ix < 0 ? TetrapodService.DEFAULT_PRIVATE_PORT : Integer.parseInt(hostAndPort.substring(ix + 1));
+         int port = ix < 0 ? TetrapodService.DEFAULT_SERVICE_PORT : Integer.parseInt(hostAndPort.substring(ix + 1));
          cluster.connect(host, port, dispatcher).sync();
       }
    }
@@ -199,7 +199,7 @@ abstract public class DefaultService implements Service, BaseServiceContract.API
    public int getContractId() {
       return contract == null ? 0 : contract.getContractId();
    }
-   
+
    public void addMessageHandler(int contractId, SubscriptionAPI handler) {
       MessageHandlers md = messageHandlers.get(contractId);
       if (md == null) {

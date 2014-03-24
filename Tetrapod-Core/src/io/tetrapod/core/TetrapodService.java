@@ -22,8 +22,9 @@ import org.slf4j.*;
 public class TetrapodService extends DefaultService implements TetrapodContract.API, RelayHandler, Registry.RegistryBroadcaster {
    public static final Logger          logger               = LoggerFactory.getLogger(TetrapodService.class);
 
-   public static final int             DEFAULT_PUBLIC_PORT  = 9800;
-   public static final int             DEFAULT_PRIVATE_PORT = 9900;
+   public static final int             DEFAULT_PUBLIC_PORT  = 9900;
+   public static final int             DEFAULT_SERVICE_PORT = 9901;
+   public static final int             DEFAULT_CLUSTER_PORT = 9902;
 
    private final SecureRandom          random               = new SecureRandom();
    private final Map<Integer, Session> sessions             = new ConcurrentHashMap<>();
@@ -32,7 +33,8 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
    private Topic                       registryTopic;
 
-   private Server                      privateServer;
+   private Server                      clusterServer;
+   private Server                      serviceServer;
    private Server                      publicServer;
 
    public TetrapodService() {
@@ -42,7 +44,6 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
    @Override
    public void startNetwork(String hostAndPort, String token) throws Exception {
-      this.token = token;
       if (hostAndPort == null) {
          // were not connecting anywhere, have to self register
          this.entityId = registry.setParentId(1);
@@ -51,15 +52,18 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
                0);
          registry.register(e);
          logger.info(String.format("I AM THE FIRST: 0x%08X %s", entityId, e));
+         this.token = Token.encode(entityId, e.reclaimToken);
          onRegistered();
          onReadyToServe();
       } else {
+         this.token = token;
          // TODO: Join existing cluster via non-default mechanism
       }
    }
 
    @Override
    public void onConnectedToCluster() {
+      super.onConnectedToCluster();
       logger.info("Connected to Self");
       cluster.getSession().setMyEntityId(entityId);
       cluster.getSession().setTheirEntityId(entityId);
@@ -72,11 +76,11 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       return Core.TYPE_TETRAPOD;
    }
 
-   private class TrustedSessionFactory implements SessionFactory {
-      private final boolean trusted;
+   private class ServerSessionFactory implements SessionFactory {
+      private final Server server;
 
-      private TrustedSessionFactory(boolean trusted) {
-         this.trusted = trusted;
+      private ServerSessionFactory(Server server) {
+         this.server = server;
       }
 
       /**
@@ -87,7 +91,14 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          final Session ses = new Session(ch, TetrapodService.this);
          ses.setMyEntityId(getEntityId());
          ses.setMyEntityType(Core.TYPE_TETRAPOD);
-         ses.setTheirEntityType(trusted ? Core.TYPE_SERVICE : Core.TYPE_CLIENT);
+
+         ses.setTheirEntityType(Core.TYPE_ANONYMOUS);
+         if (server == clusterServer) {
+            ses.setTheirEntityType(Core.TYPE_TETRAPOD);
+         } else if (server == serviceServer) {
+            ses.setTheirEntityType(Core.TYPE_SERVICE);
+         }
+
          ses.setRelayHandler(TetrapodService.this);
          ses.addSessionListener(new Session.Listener() {
             @Override
@@ -114,13 +125,14 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
     * are the first one. We call this once this criteria has been reached
     */
    private void onReadyToServe() {
-      publicServer = new Server(DEFAULT_PUBLIC_PORT, new TrustedSessionFactory(false));
-      privateServer = new Server(DEFAULT_PRIVATE_PORT, new TrustedSessionFactory(true));
-      logger.info("START");
+      publicServer = new Server(DEFAULT_PUBLIC_PORT, new ServerSessionFactory(publicServer));
+      serviceServer = new Server(DEFAULT_SERVICE_PORT, new ServerSessionFactory(serviceServer));
+      clusterServer = new Server(DEFAULT_CLUSTER_PORT, new ServerSessionFactory(clusterServer));
       try {
-         privateServer.start();
+         clusterServer.start();
+         serviceServer.start();
          publicServer.start();
-         super.startNetwork("localhost:" + DEFAULT_PRIVATE_PORT, token);
+         super.startNetwork("localhost:" + DEFAULT_CLUSTER_PORT, token); // FIXME
       } catch (Exception e) {
          // FIXME: fail service
          logger.error(e.getMessage(), e);
@@ -132,8 +144,9 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
    public void stop() {
       logger.info("STOP");
-      privateServer.stop();
       publicServer.stop();
+      serviceServer.stop();
+      clusterServer.stop();
    }
 
    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -241,7 +254,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    }
 
    private void healthCheck() {
-      registry.logStats();
+      // registry.logStats();
    }
 
    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -269,7 +282,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          info.name = r.name;
          info.reclaimToken = random.nextLong();
          info.parentId = getEntityId();
-         registry.register(info); 
+         registry.register(info);
       }
 
       info.type = ctx.session.getTheirEntityType();
