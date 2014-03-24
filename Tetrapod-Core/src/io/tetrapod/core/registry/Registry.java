@@ -66,7 +66,7 @@ public class Registry implements TetrapodContract.Registry.API {
       if (entity.isService()) {
          // register their service in our services list
       }
-      if (entity.parentId == parentId) {
+      if (entity.parentId == parentId && entity.entityId != parentId) {
          broadcaster.broadcastRegistryMessage(new EntityRegisteredMessage(entity, null));
       }
    }

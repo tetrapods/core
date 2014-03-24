@@ -133,9 +133,14 @@ abstract public class DefaultService implements Service, BaseServiceContract.API
       return parentId;
    }
 
+   protected void updateStatus(int status) {
+      this.status = status;
+      sendRequest(new ServiceStatusUpdateRequest(status), Core.UNADDRESSED);
+   }
+
    protected void fail(Throwable error) {
       logger.error(error.getMessage(), error);
-      status |= Core.STATUS_FAILED;
+      updateStatus(status | Core.STATUS_FAILED);
       sendRequest(new ServiceStatusUpdateRequest(status), Core.UNADDRESSED);
    }
 

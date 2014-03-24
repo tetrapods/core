@@ -69,11 +69,8 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       final EntityInfo e = new EntityInfo(entityId, 0, random.nextLong(), Util.getHostName(), 0, Core.TYPE_TETRAPOD, getShortName(), 0, 0);
       registry.register(e);
       logger.info(String.format("SELF-REGISTERING: 0x%08X %s", entityId, e));
-      onRegistered();
-
       clusterServer.start().sync();
-
-      // connect to self
+      // connect to self on localhost
       super.startNetwork("localhost:" + DEFAULT_CLUSTER_PORT, Token.encode(entityId, e.reclaimToken));
    }
 
@@ -117,6 +114,8 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
             @Override
             public void onSessionStop(Session ses) {
                // TODO: stuff, set this entity as GONE, etc...
+               registry.updateStatus(ses.getTheirEntityId(), status | Core.STATUS_GONE);
+               // TODO: set all children to gone as well
             }
 
             @Override
