@@ -1,17 +1,18 @@
 package io.tetrapod.core.web;
 
 import static io.tetrapod.protocol.core.Core.*;
+import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.http.*;
 import io.netty.handler.codec.http.websocketx.*;
 import io.netty.util.ReferenceCountUtil;
-import io.tetrapod.core.Session;
+import io.tetrapod.core.*;
 import io.tetrapod.core.json.JSONObject;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.rpc.Error;
-import io.tetrapod.core.serialize.datasources.JSONDataSource;
-import io.tetrapod.protocol.core.RequestHeader;
+import io.tetrapod.core.serialize.datasources.*;
+import io.tetrapod.protocol.core.*;
 
 import java.io.IOException;
 
@@ -49,8 +50,7 @@ class WebSocketSession extends Session {
                sendResponse(new Error(ERROR_SERIALIZATION), header.requestId);
             }
          } else if (relayHandler != null) {
-            // TODO implement
-            // relayRequest(header, jo);
+            relayRequest(header, jo);
          }
 
       } catch (IOException e) {
@@ -87,5 +87,36 @@ class WebSocketSession extends Session {
       // TODO
    }
 
+   private void relayRequest(final RequestHeader header, final JSONObject jo) {
+      final WireSession ses = relayHandler.getRelaySession(header.toId);
+      if (ses != null) {
+         // OPTIMIZE: Find a way to relay without the byte[] allocation & copy
+         String s = jo.toString();
+         final ByteBuf buffer = channel.alloc().buffer(32 + s.length());
+         final ByteBufDataSource data = new ByteBufDataSource(buffer);
+
+         final Async async = new Async(null, header, this);
+         int origRequestId = async.header.requestId;
+         try {
+            ses.addPendingRequest(async);
+            logger.debug("{} RELAYING REQUEST: [{}] was " + origRequestId, this, async.header.requestId);
+            buffer.writeInt(0); // length placeholder
+            buffer.writeByte(ENVELOPE_JSON_REQUEST);
+            async.header.write(data);
+            WrappedJSON wj = new WrappedJSON(s);
+            wj.write(data);
+            buffer.setInt(0, buffer.writerIndex() - 4); // go back and write message length, now
+                                                        // that we know it
+            ses.write(buffer);
+         } catch (IOException e) {
+            ReferenceCountUtil.release(buffer);
+            logger.error(e.getMessage(), e);
+         } finally {
+            header.requestId = origRequestId;
+         }
+      } else {
+         logger.warn("Could not find a relay session for {}", header.toId);
+      }
+   }
 
 }

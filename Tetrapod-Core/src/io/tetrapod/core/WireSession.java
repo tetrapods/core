@@ -6,9 +6,11 @@ import io.netty.channel.*;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import io.netty.util.ReferenceCountUtil;
+import io.tetrapod.core.json.JSONObject;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.rpc.Error;
-import io.tetrapod.core.serialize.datasources.ByteBufDataSource;
+import io.tetrapod.core.serialize.DataSource;
+import io.tetrapod.core.serialize.datasources.*;
 import io.tetrapod.protocol.core.*;
 
 import java.io.IOException;
@@ -65,7 +67,10 @@ public class WireSession extends Session {
       logger.trace("Read message {} with {} bytes", envelope, len);
       switch (envelope) {
          case ENVELOPE_REQUEST:
-            readRequest(in);
+            readRequest(in, false);
+            break;
+         case ENVELOPE_JSON_REQUEST:
+            readRequest(in, true);
             break;
          case ENVELOPE_RESPONSE:
             readResponse(in);
@@ -128,8 +133,8 @@ public class WireSession extends Session {
       }
    }
 
-   private void readRequest(final ByteBuf in) throws IOException {
-      final ByteBufDataSource reader = new ByteBufDataSource(in);
+   private void readRequest(final ByteBuf in, boolean isJSONWrapped) throws IOException {
+      DataSource reader = new ByteBufDataSource(in);
       final RequestHeader header = new RequestHeader();
       header.read(reader);
 
@@ -143,6 +148,11 @@ public class WireSession extends Session {
       if ((header.toId == UNADDRESSED && header.contractId == myContractId) || header.toId == myId) {
          final Request req = (Request) helper.make(header.contractId, header.structId);
          if (req != null) {
+            if (isJSONWrapped) {
+               WrappedJSON wrapped = new WrappedJSON();
+               wrapped.read(reader);
+               reader = new JSONDataSource(new JSONObject(wrapped.json));
+            }
             req.read(reader);
             dispatchRequest(header, req);
          } else {
@@ -153,7 +163,7 @@ public class WireSession extends Session {
          relayRequest(header, in);
       }
    }
-
+   
    private void readMessage(ByteBuf in) throws IOException {
       final ByteBufDataSource reader = new ByteBufDataSource(in);
       final MessageHeader header = new MessageHeader();
@@ -238,7 +248,7 @@ public class WireSession extends Session {
       }
    }
 
-   protected ChannelFuture write(ByteBuf buffer) {
+   public ChannelFuture write(ByteBuf buffer) {
       lastSentTo.set(System.currentTimeMillis());
       return channel.writeAndFlush(buffer);
    }

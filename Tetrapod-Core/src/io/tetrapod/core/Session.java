@@ -218,7 +218,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
       theirType = type;
    }
 
-   protected int addPendingRequest(Async async) {
+   public int addPendingRequest(Async async) {
       async.header.requestId = requestCounter.incrementAndGet();
       pendingRequests.put(async.header.requestId, async);
       return async.header.requestId;
