@@ -65,15 +65,15 @@ public class TopicPublishedMessage extends Message {
    }
    
    @Override
-   public final void dispatch(SubscriptionAPI api) {
+   public final void dispatch(SubscriptionAPI api, MessageContext ctx) {
       if (api instanceof Handler)
-         ((Handler)api).messageTopicPublished(this);
+         ((Handler)api).messageTopicPublished(this, ctx);
       else
-         api.genericMessage(this);
+         api.genericMessage(this, ctx);
    }
    
    public static interface Handler extends SubscriptionAPI {
-      void messageTopicPublished(TopicPublishedMessage m);
+      void messageTopicPublished(TopicPublishedMessage m, MessageContext ctx);
    }
    
    public static Callable<Structure> getInstanceFactory() {

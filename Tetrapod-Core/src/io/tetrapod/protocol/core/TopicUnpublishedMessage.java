@@ -65,15 +65,15 @@ public class TopicUnpublishedMessage extends Message {
    }
    
    @Override
-   public final void dispatch(SubscriptionAPI api) {
+   public final void dispatch(SubscriptionAPI api, MessageContext ctx) {
       if (api instanceof Handler)
-         ((Handler)api).messageTopicUnpublished(this);
+         ((Handler)api).messageTopicUnpublished(this, ctx);
       else
-         api.genericMessage(this);
+         api.genericMessage(this, ctx);
    }
    
    public static interface Handler extends SubscriptionAPI {
-      void messageTopicUnpublished(TopicUnpublishedMessage m);
+      void messageTopicUnpublished(TopicUnpublishedMessage m, MessageContext ctx);
    }
    
    public static Callable<Structure> getInstanceFactory() {

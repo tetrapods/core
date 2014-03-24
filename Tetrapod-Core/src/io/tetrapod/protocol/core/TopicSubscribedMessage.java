@@ -70,15 +70,15 @@ public class TopicSubscribedMessage extends Message {
    }
    
    @Override
-   public final void dispatch(SubscriptionAPI api) {
+   public final void dispatch(SubscriptionAPI api, MessageContext ctx) {
       if (api instanceof Handler)
-         ((Handler)api).messageTopicSubscribed(this);
+         ((Handler)api).messageTopicSubscribed(this, ctx);
       else
-         api.genericMessage(this);
+         api.genericMessage(this, ctx);
    }
    
    public static interface Handler extends SubscriptionAPI {
-      void messageTopicSubscribed(TopicSubscribedMessage m);
+      void messageTopicSubscribed(TopicSubscribedMessage m, MessageContext ctx);
    }
    
    public static Callable<Structure> getInstanceFactory() {

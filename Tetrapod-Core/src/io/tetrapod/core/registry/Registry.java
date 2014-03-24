@@ -1,6 +1,6 @@
 package io.tetrapod.core.registry;
 
-import io.tetrapod.core.rpc.Message;
+import io.tetrapod.core.rpc.*;
 import io.tetrapod.protocol.core.*;
 
 import java.util.*;
@@ -169,36 +169,36 @@ public class Registry implements TetrapodContract.Registry.API {
    //////////////////////////////////////////////////////////////////////////////////////////
 
    @Override
-   public void genericMessage(Message message) {}
+   public void genericMessage(Message message, MessageContext ctx) {}
 
    @Override
-   public void messageEntityRegistered(EntityRegisteredMessage m) {
+   public void messageEntityRegistered(EntityRegisteredMessage m, MessageContext ctx) {
       final EntityInfo e = new EntityInfo(m.entity);
       register(e);
    }
 
    @Override
-   public void messageEntityUnregistered(EntityUnregisteredMessage m) {
+   public void messageEntityUnregistered(EntityUnregisteredMessage m, MessageContext ctx) {
       unregister(m.entityId);
    }
 
    @Override
-   public void messageTopicPublished(TopicPublishedMessage m) {
+   public void messageTopicPublished(TopicPublishedMessage m, MessageContext ctx) {
 
    }
 
    @Override
-   public void messageTopicSubscribed(TopicSubscribedMessage m) {
+   public void messageTopicSubscribed(TopicSubscribedMessage m, MessageContext ctx) {
 
    }
 
    @Override
-   public void messageTopicUnpublished(TopicUnpublishedMessage m) {
+   public void messageTopicUnpublished(TopicUnpublishedMessage m, MessageContext ctx) {
 
    }
 
    @Override
-   public void messageTopicUnsubscribed(TopicUnsubscribedMessage m) {
+   public void messageTopicUnsubscribed(TopicUnsubscribedMessage m, MessageContext ctx) {
 
    }
 

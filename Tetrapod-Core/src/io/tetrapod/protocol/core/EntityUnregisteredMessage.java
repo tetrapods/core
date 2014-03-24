@@ -60,15 +60,15 @@ public class EntityUnregisteredMessage extends Message {
    }
    
    @Override
-   public final void dispatch(SubscriptionAPI api) {
+   public final void dispatch(SubscriptionAPI api, MessageContext ctx) {
       if (api instanceof Handler)
-         ((Handler)api).messageEntityUnregistered(this);
+         ((Handler)api).messageEntityUnregistered(this, ctx);
       else
-         api.genericMessage(this);
+         api.genericMessage(this, ctx);
    }
    
    public static interface Handler extends SubscriptionAPI {
-      void messageEntityUnregistered(EntityUnregisteredMessage m);
+      void messageEntityUnregistered(EntityUnregisteredMessage m, MessageContext ctx);
    }
    
    public static Callable<Structure> getInstanceFactory() {
