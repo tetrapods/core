@@ -10,7 +10,7 @@ abstract public class Response extends Structure {
 
    public int errorCode() {
       if (isError()) {
-         return ((Error) this).errorCode();
+         return ((Error) this).code;
       }
       return 0;
    }
