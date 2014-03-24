@@ -44,31 +44,44 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
    @Override
    public void startNetwork(String hostAndPort, String token) throws Exception {
-      if (hostAndPort == null) {
-         // were not connecting anywhere, have to self register
-         this.entityId = registry.setParentId(1);
 
-         final EntityInfo e = new EntityInfo(entityId, 0, random.nextLong(), Util.getHostName(), 0, Core.TYPE_TETRAPOD, getShortName(), 0,
-               0);
-         registry.register(e);
-         logger.info(String.format("I AM THE FIRST: 0x%08X %s", entityId, e));
-         this.token = Token.encode(entityId, e.reclaimToken);
-         onRegistered();
+      publicServer = new Server(DEFAULT_PUBLIC_PORT, new ServerSessionFactory(publicServer));
+      serviceServer = new Server(DEFAULT_SERVICE_PORT, new ServerSessionFactory(serviceServer));
+      clusterServer = new Server(DEFAULT_CLUSTER_PORT, new ServerSessionFactory(clusterServer));
+
+      if (hostAndPort == null) {
+         // We're the first, so bootstrapping here
+         // were not connecting anywhere, have to self register
+         selfRegister(1);
          onReadyToServe();
       } else {
          this.token = token;
-         // TODO: Join existing cluster via non-default mechanism
+         // TODO: Join existing cluster:
+         // 1: Connect and obtain a unique tetrapodId from cluster consensus
+         // 2: selfRegister(tetrapodId)
+         // 3: sync with all tetrapod registries
+         // 4: onReadyToServe() to become active
       }
+   }
+
+   private void selfRegister(int tetrapodId) throws Exception {
+      this.entityId = registry.setParentId(tetrapodId);
+      final EntityInfo e = new EntityInfo(entityId, 0, random.nextLong(), Util.getHostName(), 0, Core.TYPE_TETRAPOD, getShortName(), 0, 0);
+      registry.register(e);
+      logger.info(String.format("SELF-REGISTERING: 0x%08X %s", entityId, e));
+      onRegistered();
+
+      clusterServer.start().sync();
+
+      // connect to self
+      super.startNetwork("localhost:" + DEFAULT_CLUSTER_PORT, Token.encode(entityId, e.reclaimToken));
    }
 
    @Override
    public void onConnectedToCluster() {
       super.onConnectedToCluster();
       logger.info("Connected to Self");
-      cluster.getSession().setMyEntityId(entityId);
-      cluster.getSession().setTheirEntityId(entityId);
-      cluster.getSession().setMyEntityType(Core.TYPE_TETRAPOD);
-      cluster.getSession().setTheirEntityType(Core.TYPE_TETRAPOD);
+      // is there a better way to set this message dispatch handlers?
       addMessageHandler(TetrapodContract.CONTRACT_ID, registry);
    }
 
@@ -125,17 +138,11 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
     * are the first one. We call this once this criteria has been reached
     */
    private void onReadyToServe() {
-      publicServer = new Server(DEFAULT_PUBLIC_PORT, new ServerSessionFactory(publicServer));
-      serviceServer = new Server(DEFAULT_SERVICE_PORT, new ServerSessionFactory(serviceServer));
-      clusterServer = new Server(DEFAULT_CLUSTER_PORT, new ServerSessionFactory(clusterServer));
       try {
-         clusterServer.start();
-         serviceServer.start();
-         publicServer.start();
-         super.startNetwork("localhost:" + DEFAULT_CLUSTER_PORT, token); // FIXME
+         serviceServer.start().sync();
+         publicServer.start().sync();
       } catch (Exception e) {
-         // FIXME: fail service
-         logger.error(e.getMessage(), e);
+         fail(e);
       }
 
       scheduleHealthCheck();
@@ -254,7 +261,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    }
 
    private void healthCheck() {
-      // registry.logStats();
+      registry.logStats();
    }
 
    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -267,10 +274,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          info = registry.getEntity(t.entityId);
          if (info != null) {
             if (info.reclaimToken != t.nonce) {
-               info = null;
-            } else {
-               info.parentId = getEntityId();
-               // FIXME: reclaim
+               info = null; // return error instead?
             }
          }
       }
@@ -281,18 +285,22 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          info.host = ctx.session.getChannel().remoteAddress().getHostString();
          info.name = r.name;
          info.reclaimToken = random.nextLong();
-         info.parentId = getEntityId();
-         registry.register(info);
       }
 
+      info.parentId = getEntityId();
       info.type = ctx.session.getTheirEntityType();
       if (info.type == Core.TYPE_ANONYMOUS) {
          info.type = Core.TYPE_CLIENT;
       }
 
+      // register/reclaim
+      registry.register(info);
+
+      // update & store session
       ctx.session.setTheirEntityId(info.entityId);
       ctx.session.setTheirEntityType(info.type);
       sessions.put(info.entityId, ctx.session);
+
       return new RegisterResponse(info.entityId, info.parentId, Token.encode(info.entityId, info.reclaimToken));
    }
 
@@ -310,6 +318,13 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    @Override
    public Response requestRegistrySubscribe(RegistrySubscribeRequest r, RequestContext ctx) {
       sendMessage(new TopicSubscribedMessage(registryTopic.ownerId, registryTopic.topicId, ctx.header.fromId), 0, 0);
+      return Response.SUCCESS;
+   }
+
+   @Override
+   public Response requestServiceStatusUpdate(ServiceStatusUpdateRequest r, RequestContext ctx) {
+      // TODO: don't allow certain bits to be set from a request
+      registry.updateStatus(ctx.header.fromId, r.status);
       return Response.SUCCESS;
    }
 

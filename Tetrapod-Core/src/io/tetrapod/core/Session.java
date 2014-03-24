@@ -102,7 +102,7 @@ public class Session extends ChannelInboundHandlerAdapter {
 
    @Override
    public String toString() {
-      return String.format("Ses%d[0x%08X]", sessionNum, myId);
+      return String.format("Ses%d [0x%08X : 0x%08X]", sessionNum, myId, theirId);
    }
 
    private synchronized boolean needsHandshake() {
@@ -173,14 +173,14 @@ public class Session extends ChannelInboundHandlerAdapter {
       final ResponseHeader header = new ResponseHeader();
       header.read(reader);
 
-      logger.info("{}, READ RESPONSE: [{}]", this, header.requestId);
       final Async async = pendingRequests.remove(header.requestId);
       if (async != null) {
+         logger.debug(String.format("%s < RESPONSE [%d] %s", this, header.requestId,
+               getStructName(async.header.contractId, header.structId)));
          if (async.header.fromId == myId) {
             final Response res = (Response) helper.make(async.header.contractId, header.structId);
             if (res != null) {
                res.read(reader);
-               logger.debug("{}, Got Response: {}", this, res);
                getDispatcher().dispatch(new Runnable() {
                   public void run() {
                      async.setResponse(res);
@@ -197,6 +197,11 @@ public class Session extends ChannelInboundHandlerAdapter {
       }
    }
 
+   private String getStructName(int contractId, int structId) {
+      // TODO: We need a way to easily look up struct & error code names
+      return "Struct-" + structId;
+   }
+
    private void readRequest(final ByteBuf in) throws IOException {
       final ByteBufDataSource reader = new ByteBufDataSource(in);
       final RequestHeader header = new RequestHeader();
@@ -208,7 +213,7 @@ public class Session extends ChannelInboundHandlerAdapter {
          header.fromType = theirType;
       }
 
-      logger.debug("{}, READ REQUEST: [{}]", this, header.requestId);
+      logger.debug(String.format("%s < REQUEST [%d] %s", this, header.requestId, getStructName(header.contractId, header.structId)));
       if ((header.toId == UNADDRESSED && header.contractId == myContractId) || header.toId == myId) {
          final Request req = (Request) helper.make(header.contractId, header.structId);
          if (req != null) {
@@ -231,7 +236,9 @@ public class Session extends ChannelInboundHandlerAdapter {
          // fromId MUST be their id, unless it's a tetrapod session, which could be relaying
          header.fromId = theirId;
       }
-      logger.debug("{}, READ MESSAGE: [{}]", this, header.dump());
+
+      logger.debug(String.format("%s < MESSAGE [%d-%d] %s", this, header.fromId, header.topicId,
+            getStructName(header.contractId, header.structId)));
       if ((header.toId == UNADDRESSED && header.contractId == myContractId && header.topicId == UNADDRESSED) || header.toId == myId) {
          final Message msg = (Message) helper.make(header.contractId, header.structId);
          if (msg != null) {
@@ -246,7 +253,6 @@ public class Session extends ChannelInboundHandlerAdapter {
    }
 
    private void dispatchRequest(final RequestHeader header, final Request req) {
-      logger.debug("Got Request: {}", req);
       final ServiceAPI svc = helper.getServiceHandler(header.contractId);
       if (svc != null) {
          getDispatcher().dispatch(new Runnable() {
@@ -281,7 +287,6 @@ public class Session extends ChannelInboundHandlerAdapter {
       final MessageContext ctx = new MessageContext(header, this);
       getDispatcher().dispatchSequential(new Runnable() {
          public void run() {
-            logger.debug("{} I GOT A MESSAGE: {}", this, msg.dump());
             final SubscriptionAPI svc = helper.getMessageHandler(header.contractId);
             if (svc != null) {
                msg.dispatch(svc, ctx);
@@ -303,6 +308,8 @@ public class Session extends ChannelInboundHandlerAdapter {
       final Async async = new Async(req, header, this);
       pendingRequests.put(header.requestId, async);
 
+      logger.debug(String.format("%s > REQUEST [%d] %d %s", this, toId, header.requestId, req.getClass().getSimpleName()));
+
       final ByteBuf buffer = makeFrame(header, req, ENVELOPE_REQUEST);
       if (buffer != null) {
          write(buffer);
@@ -313,7 +320,7 @@ public class Session extends ChannelInboundHandlerAdapter {
    }
 
    private void sendResponse(Response res, int requestId) {
-      logger.debug("{} sending response [{}]", this, requestId);
+      logger.debug(String.format("%s > RESPONSE [%d] %s", this, requestId, res.getClass().getSimpleName()));
       final ByteBuf buffer = makeFrame(new ResponseHeader(requestId, res.getStructId()), res, ENVELOPE_RESPONSE);
       if (buffer != null) {
          write(buffer);
@@ -321,7 +328,7 @@ public class Session extends ChannelInboundHandlerAdapter {
    }
 
    public void sendMessage(Message msg, int toEntityId, int topicId) {
-      logger.debug("{} sending message [{}]", this, msg.getStructId());
+      logger.debug(String.format("%s > MESSAGE [%d:%d] %s", this, toEntityId, topicId, msg.getClass().getSimpleName()));
       final ByteBuf buffer = makeFrame(new MessageHeader(getMyEntityId(), topicId, toEntityId, msg.getContractId(), msg.getStructId()),
             msg, ENVELOPE_MESSAGE);
       if (buffer != null) {

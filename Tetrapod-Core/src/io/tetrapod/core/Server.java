@@ -31,7 +31,7 @@ public class Server implements Session.Listener {
       this.port = port;
    }
 
-   public ChannelFuture start() throws Exception {
+   public ChannelFuture start() {
       ServerBootstrap b = new ServerBootstrap();
       b.group(bossGroup, workerGroup).channel(NioServerSocketChannel.class).childHandler(new ChannelInitializer<SocketChannel>() {
          @Override

@@ -7,7 +7,7 @@ import java.util.*;
 /**
  * All the meta data associated with a tetrapod entity
  */
-public class EntityInfo extends Entity {
+public class EntityInfo extends Entity implements Comparable<EntityInfo> {
 
    protected int                 topicCounter;
 
@@ -91,6 +91,11 @@ public class EntityInfo extends Entity {
 
    public synchronized int getNumSubscriptions() {
       return subscriptions == null ? 0 : subscriptions.size();
+   }
+
+   @Override
+   public int compareTo(EntityInfo o) {
+      return entityId - o.entityId;
    }
 
 }

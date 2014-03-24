@@ -51,6 +51,11 @@ public class IdentityService extends DefaultService implements IdentityContract.
          public void messageEntityRegistered(EntityRegisteredMessage m, MessageContext ctx) {
             logger.info(m.dump());
          }
+
+         @Override
+         public void messageEntityUpdated(EntityUpdatedMessage m, MessageContext ctx) {
+            logger.info(m.dump());
+         }
       });
    }
 

@@ -10,31 +10,47 @@ import java.util.*;
 import java.util.concurrent.*;
 
 @SuppressWarnings("unused")
-public class ServiceAddedMessage extends Message {
+public class ServiceStatsMessage extends Message {
    
-   public static final int STRUCT_ID = 15116807;
+   public static final int STRUCT_ID = 469976;
     
-   public ServiceAddedMessage() {
+   public ServiceStatsMessage() {
       defaults();
    }
 
-   public ServiceAddedMessage(Entity entity) {
-      this.entity = entity;
+   public ServiceStatsMessage(int entityId, int rps, int mps, long latency, long counter) {
+      this.entityId = entityId;
+      this.rps = rps;
+      this.mps = mps;
+      this.latency = latency;
+      this.counter = counter;
    }   
    
-   public Entity entity;
+   public int entityId;
+   public int rps;
+   public int mps;
+   public long latency;
+   public long counter;
 
    public final Structure.Security getSecurity() {
       return Security.INTERNAL;
    }
 
    public final void defaults() {
-      entity = null;
+      entityId = 0;
+      rps = 0;
+      mps = 0;
+      latency = 0;
+      counter = 0;
    }
    
    @Override
    public final void write(DataSource data) throws IOException {
-      if (this.entity != null) data.write(1, this.entity);
+      data.write(1, this.entityId);
+      data.write(2, this.rps);
+      data.write(3, this.mps);
+      data.write(4, this.latency);
+      data.write(5, this.counter);
       data.writeEndTag();
    }
    
@@ -44,7 +60,11 @@ public class ServiceAddedMessage extends Message {
       while (true) {
          int tag = data.readTag();
          switch (tag) {
-            case 1: this.entity = data.read_struct(tag, Entity.class); break;
+            case 1: this.entityId = data.read_int(tag); break;
+            case 2: this.rps = data.read_int(tag); break;
+            case 3: this.mps = data.read_int(tag); break;
+            case 4: this.latency = data.read_long(tag); break;
+            case 5: this.counter = data.read_long(tag); break;
             case Codec.END_TAG:
                return;
             default:
@@ -56,24 +76,24 @@ public class ServiceAddedMessage extends Message {
    
    @Override
    public final int getStructId() {
-      return ServiceAddedMessage.STRUCT_ID;
+      return ServiceStatsMessage.STRUCT_ID;
    }
    
    @Override
    public final void dispatch(SubscriptionAPI api, MessageContext ctx) {
       if (api instanceof Handler)
-         ((Handler)api).messageServiceAdded(this, ctx);
+         ((Handler)api).messageServiceStats(this, ctx);
       else
          api.genericMessage(this, ctx);
    }
    
    public static interface Handler extends SubscriptionAPI {
-      void messageServiceAdded(ServiceAddedMessage m, MessageContext ctx);
+      void messageServiceStats(ServiceStatsMessage m, MessageContext ctx);
    }
    
    public static Callable<Structure> getInstanceFactory() {
       return new Callable<Structure>() {
-         public Structure call() { return new ServiceAddedMessage(); }
+         public Structure call() { return new ServiceStatsMessage(); }
       };
    }
    

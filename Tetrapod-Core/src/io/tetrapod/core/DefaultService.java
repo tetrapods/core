@@ -23,6 +23,7 @@ abstract public class DefaultService implements Service, BaseServiceContract.API
    protected int                               entityId;
    protected int                               parentId;
    protected String                            token;
+   protected int                               status;
 
    private final Map<Integer, MessageHandlers> messageHandlers = new ConcurrentHashMap<>();
 
@@ -90,13 +91,12 @@ abstract public class DefaultService implements Service, BaseServiceContract.API
                      logger.info(String.format("%s My entityId is 0x%08X", cluster.getSession(), r.entityId));
                      cluster.getSession().setMyEntityId(r.entityId);
                      cluster.getSession().setTheirEntityId(r.parentId);
-                     cluster.getSession().setMyEntityType(Core.TYPE_SERVICE);
+                     cluster.getSession().setMyEntityType(getEntityType());
                      cluster.getSession().setTheirEntityType(Core.TYPE_TETRAPOD);
                      onRegistered();
                   }
                }
             });
-
    }
 
    public void onDisconnectedFromCluster() {
@@ -131,6 +131,12 @@ abstract public class DefaultService implements Service, BaseServiceContract.API
 
    protected int getParentId() {
       return parentId;
+   }
+
+   protected void fail(Throwable error) {
+      logger.error(error.getMessage(), error);
+      status |= Core.STATUS_FAILED;
+      sendRequest(new ServiceStatusUpdateRequest(status), Core.UNADDRESSED);
    }
 
    protected void fail(String reason, int errorCode) {

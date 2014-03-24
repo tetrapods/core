@@ -69,7 +69,10 @@ public class Registry implements TetrapodContract.Registry.API {
       if (entity.parentId == parentId) {
          broadcaster.broadcastRegistryMessage(new EntityRegisteredMessage(entity, null));
       }
+   }
 
+   public EntityInfo getEntity(int entityId) {
+      return entities.get(entityId);
    }
 
    public synchronized void unregister(int entityId) {
@@ -106,8 +109,16 @@ public class Registry implements TetrapodContract.Registry.API {
       }
    }
 
-   public EntityInfo getEntity(int entityId) {
-      return entities.get(entityId);
+   public void updateStatus(int entityId, int status) {
+      final EntityInfo e = getEntity(entityId);
+      if (e != null) {
+         e.status = status;
+         if (e.parentId == parentId) {
+            broadcaster.broadcastRegistryMessage(new EntityUpdatedMessage(entityId, status));
+         }
+      } else {
+         logger.error("Could not find entity {} to unregister", entityId);
+      }
    }
 
    public Topic publish(int entityId) {
@@ -192,6 +203,13 @@ public class Registry implements TetrapodContract.Registry.API {
    }
 
    @Override
+   public void messageEntityUpdated(EntityUpdatedMessage m, MessageContext ctx) {
+      if (ctx.header.topicId != 0 && ctx.header.fromId != parentId) {
+         updateStatus(m.entityId, m.status);
+      }
+   }
+
+   @Override
    public void messageTopicPublished(TopicPublishedMessage m, MessageContext ctx) {
       logger.info(m.dump());
    }
@@ -239,12 +257,13 @@ public class Registry implements TetrapodContract.Registry.API {
       } else {
          logger.info("Could not find publisher entity {}", m.ownerId);
       }
-
    }
 
    //////////////////////////////////////////////////////////////////////////////////////////
 
    public void logStats() {
+      List<EntityInfo> list = new ArrayList<>(entities.values());
+      Collections.sort(list);
       logger.info("===================== TETRAPOD CLUSTER REGISTRY =======================");
       for (EntityInfo e : entities.values()) {
          logger.info(String.format("0x%08X %-15s status=%08X topics=%d subscriptions=%d", e.entityId, e.name, e.status, e.getNumTopics(),

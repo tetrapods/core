@@ -26,6 +26,7 @@ public class Core extends Structure {
    public static final int STATUS_GONE = 4; 
    public static final int STATUS_BUSY = 8; 
    public static final int STATUS_OVERLOADED = 16; 
+   public static final int STATUS_FAILED = 32; 
    public static final byte ENVELOPE_HANDSHAKE = 1; 
    public static final byte ENVELOPE_REQUEST = 2; 
    public static final byte ENVELOPE_RESPONSE = 3; 

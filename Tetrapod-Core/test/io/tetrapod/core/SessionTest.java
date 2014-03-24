@@ -40,7 +40,7 @@ public class SessionTest {
 
       Util.sleep(2000);
 
-      svc2.sendMessage(new ServiceAddedMessage(999, "Test!"), svc1.getEntityId(), Core.UNADDRESSED);
+      //svc2.sendMessage(new ServiceAddedMessage(999, "Test!"), svc1.getEntityId(), Core.UNADDRESSED);
 
       Util.sleep(2000);
 

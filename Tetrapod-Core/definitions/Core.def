@@ -18,6 +18,7 @@ struct Core
    const int   STATUS_GONE       = 4
    const int   STATUS_BUSY       = 8
    const int   STATUS_OVERLOADED = 16
+   const int   STATUS_FAILED     = 32
 
    # assigning values to errors should only be done for core errors
    error UNKNOWN              = 1 // catch all error
@@ -42,8 +43,8 @@ public struct Handshake
    2: int wireOptions 
 
 public struct RequestHeader
-   1: int 	requestId 
-   2: int 	fromId   
+   1: int 	requestId
+   2: int 	fromId
    3: int 	toId
    4: byte 	fromType
    5: byte 	timeout
@@ -86,7 +87,7 @@ internal struct FlatTopic
 
 ################################# REQUESTS #################################
 
-public request Register 
+public request Register
    1: int build   
    2: string token
    3: int contractId
@@ -104,18 +105,23 @@ internal response Publish
     
 internal request RegistrySubscribe
 
-################################# MESSAGES #################################
+internal request ServiceStatusUpdate
+   1: int status
 
-internal message ServiceInfo.ServiceAdded
-    1: int contractId
-    2: string name
+################################# MESSAGES #################################
     
+##### Registry Topic Messages ##### 
+
 internal message Registry.EntityRegistered
 	1: Entity entity
 	2: FlatTopic[] topics;
 	 
 internal message Registry.EntityUnregistered
 	1: int entityId;
+	
+internal message Registry.EntityUpdated
+	1: int entityId;
+	2: int status;	
 	
 internal message Registry.TopicPublished
    1: int ownerId
@@ -135,4 +141,22 @@ internal message Registry.TopicUnsubscribed
    2: int topicId
    3: int entityId
 
+##### Services Topic Messages #####
+
+internal message Services.ServiceAdded
+	1: Entity entity 
+	 
+internal message Services.ServiceRemoved
+	1: int entityId;
+	
+internal message Services.ServiceUpdated
+	1: int entityId;
+	2: int status;
+
+internal message Services.ServiceStats
+	1: int entityId;
+	2: int rps;
+	3: int mps;
+	4: long latency;	
+	5: long counter;
  

@@ -10,31 +10,31 @@ import java.util.*;
 import java.util.concurrent.*;
 
 @SuppressWarnings("unused")
-public class ServiceAddedMessage extends Message {
+public class ServiceRemovedMessage extends Message {
    
-   public static final int STRUCT_ID = 15116807;
+   public static final int STRUCT_ID = 1629937;
     
-   public ServiceAddedMessage() {
+   public ServiceRemovedMessage() {
       defaults();
    }
 
-   public ServiceAddedMessage(Entity entity) {
-      this.entity = entity;
+   public ServiceRemovedMessage(int entityId) {
+      this.entityId = entityId;
    }   
    
-   public Entity entity;
+   public int entityId;
 
    public final Structure.Security getSecurity() {
       return Security.INTERNAL;
    }
 
    public final void defaults() {
-      entity = null;
+      entityId = 0;
    }
    
    @Override
    public final void write(DataSource data) throws IOException {
-      if (this.entity != null) data.write(1, this.entity);
+      data.write(1, this.entityId);
       data.writeEndTag();
    }
    
@@ -44,7 +44,7 @@ public class ServiceAddedMessage extends Message {
       while (true) {
          int tag = data.readTag();
          switch (tag) {
-            case 1: this.entity = data.read_struct(tag, Entity.class); break;
+            case 1: this.entityId = data.read_int(tag); break;
             case Codec.END_TAG:
                return;
             default:
@@ -56,24 +56,24 @@ public class ServiceAddedMessage extends Message {
    
    @Override
    public final int getStructId() {
-      return ServiceAddedMessage.STRUCT_ID;
+      return ServiceRemovedMessage.STRUCT_ID;
    }
    
    @Override
    public final void dispatch(SubscriptionAPI api, MessageContext ctx) {
       if (api instanceof Handler)
-         ((Handler)api).messageServiceAdded(this, ctx);
+         ((Handler)api).messageServiceRemoved(this, ctx);
       else
          api.genericMessage(this, ctx);
    }
    
    public static interface Handler extends SubscriptionAPI {
-      void messageServiceAdded(ServiceAddedMessage m, MessageContext ctx);
+      void messageServiceRemoved(ServiceRemovedMessage m, MessageContext ctx);
    }
    
    public static Callable<Structure> getInstanceFactory() {
       return new Callable<Structure>() {
-         public Structure call() { return new ServiceAddedMessage(); }
+         public Structure call() { return new ServiceRemovedMessage(); }
       };
    }
    
