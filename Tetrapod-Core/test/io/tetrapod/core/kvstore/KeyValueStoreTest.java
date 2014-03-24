@@ -1,6 +1,6 @@
 package io.tetrapod.core.kvstore;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
 import java.nio.file.*;
@@ -11,7 +11,9 @@ public class KeyValueStoreTest {
    
    @Test
    public void basicTest() throws IOException {
-      Files.delete(FileSystems.getDefault().getPath("misc.1"));
+      try {
+         Files.delete(FileSystems.getDefault().getPath("misc.1"));
+      } catch (NoSuchFileException e) {}
       KeyValueStore store = new KeyValueStore("misc", ".");
       store.put("test", "apple");
       store.put("test", "oranges");
