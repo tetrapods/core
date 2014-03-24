@@ -36,8 +36,11 @@ public class JSONDataSource implements DataSource {
       if (keysIterator == null) {
          keysIterator = json.keys();
       }
-      if (keysIterator.hasNext())
-         return Integer.parseInt(keysIterator.next().toString());
+      while (keysIterator.hasNext()) {
+         String k = keysIterator.next().toString();
+         if (Character.isDigit(k.charAt(0)))
+            return Integer.parseInt(k);
+      }
       return Codec.END_TAG;
    }
 

@@ -101,7 +101,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
        */
       @Override
       public Session makeSession(SocketChannel ch) {
-         final Session ses = new Session(ch, TetrapodService.this);
+         final Session ses = new WireSession(ch, TetrapodService.this);
          ses.setMyEntityId(getEntityId());
          ses.setMyEntityType(Core.TYPE_TETRAPOD);
 
@@ -167,10 +167,10 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    }
 
    @Override
-   public Session getRelaySession(int entityId) {
+   public WireSession getRelaySession(int entityId) {
       final EntityInfo entity = registry.getEntity(entityId);
       if (entity != null) {
-         return findSession(entity);
+         return (WireSession)findSession(entity);
       } else {
          logger.warn("Could not find an entity for {}", entityId);
       }
@@ -189,7 +189,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
                   final EntityInfo e = registry.getEntity(s.entityId);
                   if (e != null) {
                      if (e.parentId == getEntityId() || e.isTetrapod()) {
-                        final Session session = findSession(e);
+                        WireSession session = (WireSession)findSession(e);
                         if (session != null) {
                            session.forwardMessage(header, buf);
                         }
@@ -282,7 +282,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          info = new EntityInfo();
          info.version = ctx.header.version;
          info.build = r.build;
-         info.host = ctx.session.getChannel().remoteAddress().getHostString();
+         info.host = ctx.session.getPeerHostname();
          info.name = r.name;
          info.reclaimToken = random.nextLong();
       }
