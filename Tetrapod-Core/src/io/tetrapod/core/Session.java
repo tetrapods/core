@@ -232,7 +232,7 @@ public class Session extends ChannelInboundHandlerAdapter {
          header.fromId = theirId;
       }
       logger.debug("{}, READ MESSAGE: [{}]", this, header.dump());
-      if ((header.toId == UNADDRESSED && header.contractId == myContractId) || header.toId == myId) {
+      if ((header.toId == UNADDRESSED && header.contractId == myContractId && header.topicId == UNADDRESSED) || header.toId == myId) {
          final Message msg = (Message) helper.make(header.contractId, header.structId);
          if (msg != null) {
             msg.read(reader);
