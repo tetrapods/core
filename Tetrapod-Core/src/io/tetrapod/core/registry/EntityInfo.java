@@ -64,6 +64,19 @@ public class EntityInfo extends Entity {
       }
    }
 
+   public synchronized void subscribe(Topic topic) {
+      if (subscriptions == null) {
+         subscriptions = new HashMap<>();
+      }
+      subscriptions.put(topic.key(), topic);
+   }
+
+   public synchronized void unsubscribe(Topic topic) {
+      if (subscriptions != null) {
+         subscriptions.remove(topic.key());
+      }
+   }
+
    public synchronized Collection<Topic> getTopics() {
       return topics == null ? new ArrayList<Topic>() : topics.values();
    }

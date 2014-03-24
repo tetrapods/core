@@ -17,7 +17,6 @@ public class StructureFactory {
    public synchronized void add(int contractId, int structId, Callable<Structure> factory) {
       long key = makeKey(contractId, structId);
       knownStructs.put(key, factory);
-      logger.debug("Adding {} {}", contractId, structId);
    }
 
    // OPTIMIZE: could make this class immutable using a builder pattern and avoid 

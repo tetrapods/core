@@ -6,7 +6,7 @@ public class RegistryTest {
 
    @Test
    public void testTopics() {
-      Topic topic = new Topic(1, 1000);
+      Topic topic = new Topic(1000, 1);
       topic.subscribe(100);
       topic.subscribe(100);
       topic.subscribe(200);

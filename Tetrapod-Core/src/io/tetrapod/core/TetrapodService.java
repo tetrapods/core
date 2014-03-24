@@ -38,7 +38,6 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    public TetrapodService() {
       registry = new Registry(this);
       setMainContract(new TetrapodContract());
-      addPeerContracts(new TetrapodContract.Registry());
    }
 
    @Override
@@ -66,6 +65,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       cluster.getSession().setTheirEntityId(entityId);
       cluster.getSession().setMyEntityType(Core.TYPE_TETRAPOD);
       cluster.getSession().setTheirEntityType(Core.TYPE_TETRAPOD);
+      addMessageHandler(TetrapodContract.CONTRACT_ID, registry);
    }
 
    public byte getEntityType() {
@@ -191,8 +191,8 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
    @Override
    public void broadcastRegistryMessage(Message msg) {
-      sendMessage(msg, 0, registryTopic.topicId);
       logger.info("BROADCASTING {} {}", registryTopic, msg.dump());
+      sendMessage(msg, 0, registryTopic.topicId);
    }
 
    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -255,6 +255,9 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          if (info != null) {
             if (info.reclaimToken != t.nonce) {
                info = null;
+            } else {
+               info.parentId = getEntityId();
+               // FIXME: reclaim
             }
          }
       }
@@ -265,10 +268,10 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          info.host = ctx.session.getChannel().remoteAddress().getHostString();
          info.name = r.name;
          info.reclaimToken = random.nextLong();
-         registry.register(info);
+         info.parentId = getEntityId();
+         registry.register(info); 
       }
 
-      info.parentId = getEntityId();
       info.type = ctx.session.getTheirEntityType();
       if (info.type == Core.TYPE_ANONYMOUS) {
          info.type = Core.TYPE_CLIENT;

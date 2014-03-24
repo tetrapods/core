@@ -81,7 +81,7 @@ public class Registry implements TetrapodContract.Registry.API {
          }
          // Unsubscribe from all subscriptions
          for (Topic topic : e.getSubscriptions()) {
-            unsubscribe(e, topic);
+            unsubscribe(e, topic, true);
          }
 
          entities.remove(e.entityId);
@@ -137,7 +137,7 @@ public class Registry implements TetrapodContract.Registry.API {
          for (Subscriber sub : topic.getSubscribers()) {
             final EntityInfo e = getEntity(sub.entityId);
             if (e != null) {
-               unsubscribe(e, topic);
+               unsubscribe(e, topic, true);
             }
          }
          return true;
@@ -153,16 +153,22 @@ public class Registry implements TetrapodContract.Registry.API {
          // just subscribe their parent as proxy
          topic.subscribe(entity.parentId);
       }
+      entity.subscribe(topic);
    }
 
-   public boolean unsubscribe(EntityInfo entity, Topic topic) {
+   public void unsubscribe(EntityInfo entity, Topic topic, boolean all) {
       if (entity.parentId == parentId) {
          // unsubscribe them directly
-         return topic.unsubscribe(entity.entityId, true);
+         if (topic.unsubscribe(entity.entityId, all)) {
+            entity.unsubscribe(topic);
+         }
       } else {
-         // unsubscribe the parent subscription which will decrement their counter
-         return topic.unsubscribe(entity.parentId, false);
-         // FIXME: there's a minor bug here if they subscribed more than once
+         // unsubscribe the parent subscription 
+
+         if (topic.unsubscribe(entity.parentId, false)) {
+            // FIXME: there's a minor bug here if they subscribed more than once
+            entity.unsubscribe(topic);
+         }
       }
    }
 
@@ -184,22 +190,52 @@ public class Registry implements TetrapodContract.Registry.API {
 
    @Override
    public void messageTopicPublished(TopicPublishedMessage m) {
-
-   }
-
-   @Override
-   public void messageTopicSubscribed(TopicSubscribedMessage m) {
-
+      logger.info(m.dump());
    }
 
    @Override
    public void messageTopicUnpublished(TopicUnpublishedMessage m) {
+      logger.info(m.dump());
+   }
 
+   @Override
+   public void messageTopicSubscribed(TopicSubscribedMessage m) {
+      final EntityInfo owner = getEntity(m.ownerId);
+      if (owner != null) {
+         final Topic topic = owner.getTopic(m.topicId);
+         if (topic != null) {
+            final EntityInfo entity = getEntity(m.entityId);
+            if (entity != null) {
+               subscribe(entity, topic);
+            } else {
+               logger.info("Could not find subscriber entity {}", m.entityId);
+            }
+         } else {
+            logger.info("Could not find topic {} for entity {}", m.topicId, m.ownerId);
+         }
+      } else {
+         logger.info("Could not find publisher entity {}", m.ownerId);
+      }
    }
 
    @Override
    public void messageTopicUnsubscribed(TopicUnsubscribedMessage m) {
-
+      final EntityInfo owner = getEntity(m.ownerId);
+      if (owner != null) {
+         final Topic topic = owner.getTopic(m.topicId);
+         if (topic != null) {
+            final EntityInfo entity = getEntity(m.entityId);
+            if (entity != null) {
+               unsubscribe(entity, topic, false);
+            } else {
+               logger.info("Could not find subscriber entity {}", m.entityId);
+            }
+         } else {
+            logger.info("Could not find topic {} for entity {}", m.topicId, m.ownerId);
+         }
+      } else {
+         logger.info("Could not find publisher entity {}", m.ownerId);
+      }
    }
 
    //////////////////////////////////////////////////////////////////////////////////////////

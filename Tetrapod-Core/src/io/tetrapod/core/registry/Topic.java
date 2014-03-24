@@ -15,7 +15,7 @@ public class Topic {
 
    private final Map<Integer, Subscriber> subscribers = new HashMap<>();
 
-   public Topic(int topicId, int ownerId) {
+   public Topic(int ownerId, int topicId) {
       this.topicId = topicId;
       this.ownerId = ownerId;
    }
@@ -54,7 +54,7 @@ public class Topic {
 
    @Override
    public String toString() {
-      return String.format("Topic-%d-%d [%s]", ownerId, topicId);
+      return String.format("Topic-%d-%d", ownerId, topicId);
    }
 
    /**
