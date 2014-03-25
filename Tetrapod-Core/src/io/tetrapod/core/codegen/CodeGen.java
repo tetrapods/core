@@ -12,7 +12,7 @@ import java.util.*;
 public class CodeGen {
 
    public static void main(String[] args) {
-      // if (true) { testTokenize();return; }
+      //if (true) { testTokenize();return; }
       // just hardcode for now for testing
       args = new String[] { "definitions", "java" };
       if (args.length < 1) {
@@ -89,6 +89,8 @@ public class CodeGen {
 
    private void parse(String line) throws ParseException {
       tokenizedLine.parts.clear();
+      tokenizedLine.tags.clear();
+      
       tokenizedLine.comment = null;
       tokenize(line, tokenizedLine);
       combineTokens(tokenizedLine);
@@ -183,15 +185,20 @@ public class CodeGen {
          if (parts.get(i).equals("@")) {
             parts.remove(i);
             String tag = parts.remove(i);
-            parts.remove(i);
-            while (true) {
-               String val = parts.remove(i);
-               if (val.equals(")")) {
-                  i--;
-                  break;
+            if (i >= parts.size() || !parts.get(i).equals("(")) {
+               i--;
+               tokenizedLine.addTag(tag, "");
+            } else {
+               parts.remove(i);
+               while (true) {
+                  String val = parts.remove(i);
+                  if (val.equals(")")) {
+                     i--;
+                     break;
+                  }
+                  if (!val.equals(","))
+                     tokenizedLine.addTag(tag, val);
                }
-               if (!val.equals(","))
-                  tokenizedLine.addTag(tag, val);
             }
          }
       }
@@ -309,7 +316,7 @@ public class CodeGen {
    @SuppressWarnings("unused")
    private static void testTokenize() {
       TokenizedLine out = new TokenizedLine();
-      tokenize("1: 1th-is1[] <i.s> @id(33334,5) @x(2,3,\"44,55\",66,) // _a \"# te\\\\\\\"st\"", out);
+      tokenize("1: 1th-is1[] <i.s> @web @id(33334,5) @x(2,3,\"44,55\",66,) // _a \"# te\\\\\\\"st\"", out);
       combineTokens(out);
       System.out.println(out.parts);
       System.out.println(out.tags);
