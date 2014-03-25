@@ -59,7 +59,7 @@ abstract public class DefaultService implements Service, BaseServiceContract.API
     */
    @Override
    public Session makeSession(SocketChannel ch) {
-      final Session ses = new Session(ch, DefaultService.this);
+      final Session ses = new WireSession(ch, DefaultService.this);
       ses.setMyEntityType(getEntityType());
       ses.addSessionListener(new Session.Listener() {
          @Override

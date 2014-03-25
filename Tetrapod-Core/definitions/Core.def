@@ -30,12 +30,13 @@ struct Core
    error INVALID_RIGHTS       = 7 // Caller does not have sufficient rights to call this Request
      
 
-   const byte  ENVELOPE_HANDSHAKE  = 1
-   const byte  ENVELOPE_REQUEST    = 2
-   const byte  ENVELOPE_RESPONSE   = 3
-   const byte  ENVELOPE_MESSAGE    = 4
-   const byte  ENVELOPE_PING       = 5
-   const byte  ENVELOPE_PONG       = 6
+   const byte  ENVELOPE_HANDSHAKE      = 1
+   const byte  ENVELOPE_REQUEST        = 2
+   const byte  ENVELOPE_RESPONSE       = 3
+   const byte  ENVELOPE_MESSAGE        = 4
+   const byte  ENVELOPE_PING           = 5
+   const byte  ENVELOPE_PONG           = 6
+   const byte  ENVELOPE_JSON_REQUEST   = 7
    
 ################################# CORE WIRE #################################
    
@@ -63,6 +64,9 @@ public struct MessageHeader
    3: int toId
    4: int contractId
    5: int structId
+   
+public struct WrappedJSON
+   1: string   json 
 
 ################################# STRUCTURES #################################
 
