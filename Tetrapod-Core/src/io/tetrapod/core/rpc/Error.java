@@ -41,4 +41,9 @@ public class Error extends Response {
    public int getContractId() {
       return TetrapodContract.CONTRACT_ID;
    }
+   
+   @Override
+   public String[] tagWebNames() {
+      return new String[] { "", "errorCode" };
+   }
 }

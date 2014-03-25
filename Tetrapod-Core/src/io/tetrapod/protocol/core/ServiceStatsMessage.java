@@ -100,4 +100,17 @@ public class ServiceStatsMessage extends Message {
    public final int getContractId() {
       return TetrapodContract.CONTRACT_ID;
    }
+   
+   public final String[] tagWebNames() {
+      // Note do not use this tags in long term serializations (to disk or databases) as 
+      // implementors are free to rename them however they wish.  A null means the field
+      // is not to participate in web serialization (remaining at default)
+      String[] result = new String[5+1];
+      result[1] = "entityId";
+      result[2] = "rps";
+      result[3] = "mps";
+      result[4] = "latency";
+      result[5] = "counter";
+      return result;
+   }
 }

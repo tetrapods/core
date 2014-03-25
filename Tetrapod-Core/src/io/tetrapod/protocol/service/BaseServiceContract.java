@@ -5,6 +5,7 @@ package  io.tetrapod.protocol.service;
 import io.*;
 import java.util.*;
 import io.tetrapod.core.*;
+import io.tetrapod.protocol.core.WebRoute;
 
 /**
  * The base contract every service must support
@@ -44,6 +45,12 @@ public class BaseServiceContract extends Contract {
    
    public int getContractId() {
       return BaseServiceContract.CONTRACT_ID;
+   }
+   
+   public WebRoute[] getWebRoutes() {
+      return new WebRoute[] {
+         
+      };
    }
 
 }

@@ -1,5 +1,7 @@
 package io.tetrapod.core;
 
+import io.tetrapod.protocol.core.WebRoute;
+
 
 abstract public class Contract {
 
@@ -16,6 +18,10 @@ abstract public class Contract {
    }
    
    public void addMessages(StructureFactory factory, int dynamicId) {
+   }
+   
+   public WebRoute[] getWebRoutes() {
+      return new WebRoute[] {};
    }
    
 }

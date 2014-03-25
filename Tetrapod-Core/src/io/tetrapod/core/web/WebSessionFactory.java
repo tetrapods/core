@@ -5,22 +5,23 @@ import io.tetrapod.core.*;
 
 public class WebSessionFactory implements SessionFactory {
 
-   public WebSessionFactory(Session.Helper helper, String contentRoot, boolean webSockets) {
+   public WebSessionFactory(Session.Helper helper, Session.RelayHandler relay, String contentRoot, boolean webSockets) {
       this.helper = helper;
       this.contentRoot = contentRoot;
       this.webSockets = webSockets;
+      this.relay = relay;
    }
    
    boolean webSockets = false;
    String contentRoot;
    Session.Helper helper;
+   Session.RelayHandler relay;
 
    @Override
    public Session makeSession(SocketChannel ch) {
-      if (webSockets)
-         return new WebSocketSession(ch, helper, contentRoot);
-      else
-         return new WebHttpSession(ch, helper, contentRoot);
+      Session s = webSockets ? new WebSocketSession(ch, helper, contentRoot) : new WebHttpSession(ch, helper, contentRoot);
+      s.setRelayHandler(relay);;
+      return s;
    }
 
 }

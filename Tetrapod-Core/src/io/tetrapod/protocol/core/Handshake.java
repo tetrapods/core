@@ -67,10 +67,20 @@ public class Handshake extends Structure {
    public final int getContractId() {
       return TetrapodContract.CONTRACT_ID;
    }
+
    public static Callable<Structure> getInstanceFactory() {
       return new Callable<Structure>() {
          public Structure call() { return new Handshake(); }
       };
    }
    
+   public final String[] tagWebNames() {
+      // Note do not use this tags in long term serializations (to disk or databases) as 
+      // implementors are free to rename them however they wish.  A null means the field
+      // is not to participate in web serialization (remaining at default)
+      String[] result = new String[2+1];
+      result[1] = "wireVersion";
+      result[2] = "wireOptions";
+      return result;
+   }
 }

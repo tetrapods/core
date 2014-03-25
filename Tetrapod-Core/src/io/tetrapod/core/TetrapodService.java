@@ -170,7 +170,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    }
 
    @Override
-   public WireSession getRelaySession(int entityId) {
+   public WireSession getRelaySession(int entityId, int contractId) {
       final EntityInfo entity = registry.getEntity(entityId);
       if (entity != null) {
          return (WireSession) findSession(entity);
@@ -221,6 +221,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    @Override
    public void broadcastRegistryMessage(Message msg) {
       logger.info("BROADCASTING {} {}", registryTopic, msg.dump());
+      if (registryTopic != null)
       sendMessage(msg, 0, registryTopic.topicId);
    }
 

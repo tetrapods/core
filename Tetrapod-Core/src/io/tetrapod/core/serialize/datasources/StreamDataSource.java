@@ -76,8 +76,11 @@ abstract public class StreamDataSource implements DataSource {
 
    @Override
    public <T extends Structure> T read_struct(int tag, Class<T> structClass) throws IOException {
-      @SuppressWarnings("unused")
-      int len = readVarInt();
+      readVarInt(); // byte length
+      return readStructWithNoLength(structClass);
+   }
+   
+   private <T extends Structure> T readStructWithNoLength(Class<T> structClass) throws IOException {
       try {
          T inst = structClass.newInstance();
          inst.read(this);
@@ -98,6 +101,7 @@ abstract public class StreamDataSource implements DataSource {
    }
    
    public List<Integer> read_int_list(int tag) throws IOException {
+      readVarInt(); // byte length
       int len = readVarInt();
       List<Integer> list = new ArrayList<>();
       for (int i = 0; i < len; i++) {
@@ -139,6 +143,7 @@ abstract public class StreamDataSource implements DataSource {
    }
    
    public List<Long> read_long_list(int tag) throws IOException {
+      readVarInt(); // byte length
       int len = readVarInt();
       List<Long> list = new ArrayList<>();
       for (int i = 0; i < len; i++) {
@@ -241,7 +246,7 @@ abstract public class StreamDataSource implements DataSource {
    }
    
    public List<Double> read_double_list(int tag) throws IOException {
-      int len = readVarInt();
+      int len = readVarInt() / 8;
       List<Double> list = new ArrayList<>();
       for (int i = 0; i < len; i++) {
          list.add(read_double(0));
@@ -259,7 +264,7 @@ abstract public class StreamDataSource implements DataSource {
    
    public void write_double(int tag, List<Double> list) throws IOException {
       writeTag(tag, TYPE_LENGTH_DELIM);
-      writeVarInt(list.size());
+      writeVarInt(list.size() * 8);
       for (int i = 0; i < list.size(); i++) {
          writeDoubleNoTag(list.get(i));
       }
@@ -276,6 +281,7 @@ abstract public class StreamDataSource implements DataSource {
    }
    
    public List<String> read_string_list(int tag) throws IOException {
+      readVarInt(); // byte length
       int len = readVarInt();
       List<String> list = new ArrayList<>();
       for (int i = 0; i < len; i++) {
@@ -287,7 +293,7 @@ abstract public class StreamDataSource implements DataSource {
    public void write(int tag, String[] array) throws IOException {
       writeTag(tag, TYPE_LENGTH_DELIM);
       TempBufferDataSource temp = getTempBuffer();
-      temp.writeVarInt(array.length * 8);
+      temp.writeVarInt(array.length);
       for (int i = 0; i < array.length; i++) {
          temp.writeStringNoTag(array[i]);
       }
@@ -312,16 +318,17 @@ abstract public class StreamDataSource implements DataSource {
       @SuppressWarnings("unchecked")
       T[] array = (T[])Array.newInstance(structClass, len);
       for (int i = 0; i < len; i++) {
-         array[i] = read_struct(0, structClass);
+         array[i] = readStructWithNoLength(structClass);
       }
       return array;
    }
    
    public  <T extends Structure> List<T> read_struct_list(int tag, Class<T> structClass) throws IOException {
+      readVarInt(); // byte length
       int len = readVarInt();
       List<T> list = new ArrayList<>();
       for (int i = 0; i < len; i++) {
-         list.add( read_struct(0, structClass));
+         list.add(readStructWithNoLength(structClass));
       }
       return list;
    }
@@ -397,7 +404,7 @@ abstract public class StreamDataSource implements DataSource {
    public <T extends Structure> void write(int tag, T[] array) throws IOException {
       writeTag(tag, TYPE_LENGTH_DELIM);
       TempBufferDataSource temp = getTempBuffer();
-      temp.writeVarInt(array.length * 8);
+      temp.writeVarInt(array.length);
       for (int i = 0; i < array.length; i++) {
          array[i].write(temp);
       }
@@ -408,7 +415,7 @@ abstract public class StreamDataSource implements DataSource {
    public <T extends Structure> void write_struct(int tag, List<T> list) throws IOException {
       writeTag(tag, TYPE_LENGTH_DELIM);
       TempBufferDataSource temp = getTempBuffer();
-      temp.writeVarInt(list.size() * 8);
+      temp.writeVarInt(list.size());
       for (int i = 0; i < list.size(); i++) {
          list.get(i).write(temp);
       }
@@ -523,7 +530,7 @@ abstract public class StreamDataSource implements DataSource {
    
    protected TempBufferDataSource getTempBuffer() {
       if (tempBuffer == null) 
-         tempBuffer = new TempBufferDataSource();
+         tempBuffer = TempBufferDataSource.forWriting();
       return tempBuffer;
    }
 

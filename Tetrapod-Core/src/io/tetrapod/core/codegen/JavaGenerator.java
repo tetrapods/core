@@ -67,9 +67,18 @@ class JavaGenerator implements LanguageGenerator {
       vals.setSeperator("requestAdds", "\n");
       vals.setSeperator("responseAdds", "\n");
       vals.setSeperator("messageAdds", "\n");
+      vals.setSeperator("webRoutes", "\n");
       for (Class c : context.classesByType("request")) {
          vals.add("handlers", c.classname() + ".Handler");
          vals.add("requestAdds", template("contract.adds.call").expand(new TemplateValues("class", c.classname())));
+         String path = c.annotations.getFirst("web");
+         if (path != null) {
+            if (path.isEmpty()) 
+               path = Character.toLowerCase(c.name.charAt(0)) + c.name.substring(1);
+            path = context.serviceAnnotations.getFirst("web") + path;
+            vals.add("webRoutes", template("contract.webroutes.call").expand(
+                  new TemplateValues("path", path, "requestClass", c.classname(), "contractClass", vals.get("class"))));
+         }
       }
       for (Class c : context.classesByType("response")) {
          vals.add("responseAdds", template("contract.adds.call").expand(new TemplateValues("class", c.classname())));
@@ -77,8 +86,10 @@ class JavaGenerator implements LanguageGenerator {
       for (Class c : context.classesByType("message")) {
          vals.add("messageAdds", template("contract.adds.call").expand(new TemplateValues("class", c.classname())));
       }
+
       vals.setIfEmpty("handlers", "");
       vals.setIfEmpty("requestAdds", "");
+      vals.setIfEmpty("webRoutes", "");
       vals.setIfEmpty("responseAdds", "");
       vals.setIfEmpty("messageAdds", "");
       vals.setIfEmpty("subscriptions", "");
@@ -112,6 +123,8 @@ class JavaGenerator implements LanguageGenerator {
       vals.add("package", packageName);
       vals.add("security", c.security.toUpperCase());
       vals.add("classcomment", generateComment(c.comment));
+      vals.add("maxtag", "" + c.maxTag());
+      vals.setSeperator("webNames", "\n");
       if (c.structId == null) {
          // auto-genned hashes are never less than 10
          c.structId = "" + ((FNVHash.hash32(c.classname()) & 0xffffff) + 10);
@@ -122,12 +135,21 @@ class JavaGenerator implements LanguageGenerator {
       addConstantValues(c.fields, vals);
       addErrors(c.errors, false, serviceName, vals);
       int instanceFields = 0;
-      for (Field f : c.fields)
+      for (Field f : c.fields) {
          if (!f.isConstant()) instanceFields++;
+         String name = f.annotations.getFirst("web");
+         if (name == null)
+            name = f.name;
+         if (f.annotations.getFirst("noweb") != null)
+            name = "null";
+         if (!f.isConstant())
+            vals.add("webNames", template("struct.webnames").expand(new TemplateValues("tag", f.tag, "name", name)));
+      }
       if (instanceFields > 0)
          vals.add("full-constructor", Templater.get(getClass(), "javatemplates/full.constructor.template").expand(vals));
       else
          vals.add("full-constructor", "");
+      vals.setIfEmpty("webNames", "");
       t.expandAndTrim(vals, getFilename(c.classname()));
    }
 

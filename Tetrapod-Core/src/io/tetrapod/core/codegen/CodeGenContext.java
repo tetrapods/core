@@ -15,6 +15,7 @@ class CodeGenContext {
       String      comment;
       List<Field> fields = new ArrayList<>();
       Set<Err>    errors = new TreeSet<>();
+      Annotations annotations;
 
       public String classname() {
          return name + (type.equals("struct") ? "" : CodeGen.toTitleCase(type));
@@ -22,6 +23,16 @@ class CodeGenContext {
 
       public int compareTo(Class o) {
          return name.compareTo(o.name);
+      }
+      
+      public int maxTag() {
+         int m = 0;
+         for (Field f : fields) {
+            int t = Integer.parseInt(f.tag);
+            if (t > m)
+               m = t;
+         }
+         return m;
       }
    }
 
@@ -32,6 +43,7 @@ class CodeGenContext {
       String defaultValue;
       String tag;
       String comment;
+      Annotations annotations;
 
       public boolean isConstant() {
          return tag.equals("0");
@@ -42,6 +54,7 @@ class CodeGenContext {
       String name;
       String comment;
       int value = 0;
+      Annotations annotations;
       
       @Override
       public int hashCode() {
@@ -64,6 +77,7 @@ class CodeGenContext {
    public String                   serviceName;
    public String                   serviceVersion;
    public String                   serviceComment;
+   public Annotations              serviceAnnotations;
    public String                   serviceId;
    public String                   defaultSecurity = "internal";
    public Set<Err>                 allErrors       = new TreeSet<>();
@@ -76,6 +90,7 @@ class CodeGenContext {
       ArrayList<String> parts = line.parts;
       Class c = new Class();
       c.comment = line.comment;
+      c.annotations = line.annotations;
       switch (parts.get(0)) {
          case "public":
          case "protected":
@@ -111,9 +126,7 @@ class CodeGenContext {
          default:
             throw new ParseException("unknown class: " + c.type);
       }
-      if (line.tags.containsKey("id")) {
-         c.structId = line.tags.get("id").get(0);
-      }
+      c.structId = c.annotations.getFirst("id");
       verifySecurity(c);
       classes.add(c);
       Set<Class> set = classesByType.get(c.type);
@@ -146,6 +159,7 @@ class CodeGenContext {
       }
       Field f = new Field();
       f.comment = line.comment;
+      f.annotations = line.annotations;
       f.tag = tag;
       f.type = type;
       f.name = name;
@@ -162,12 +176,9 @@ class CodeGenContext {
 
    public void parseService(TokenizedLine line) throws ParseException {
       serviceName = line.parts.get(1);
-      serviceVersion = line.tags.get("version").get(0);
-      if (line.tags.containsKey("id")) {
-         serviceId = line.tags.get("id").get(0);
-      } else {
-         serviceId = "dynamic";
-      }
+      serviceAnnotations = line.annotations;
+      serviceVersion = line.annotations.getFirst("version");
+      serviceId = line.annotations.getFirst("id");
       serviceComment = line.comment;
    }
 

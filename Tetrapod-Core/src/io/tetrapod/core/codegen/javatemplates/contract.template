@@ -5,6 +5,7 @@ package  {{package}};
 import io.*;
 import java.util.*;
 import io.tetrapod.core.*;
+import io.tetrapod.protocol.core.WebRoute;
 
 {{classcomment}}
 @SuppressWarnings("unused")
@@ -37,6 +38,12 @@ public class {{class}} extends Contract {
    
    public int getContractId() {
       return {{class}}.CONTRACT_ID;
+   }
+   
+   public WebRoute[] getWebRoutes() {
+      return new WebRoute[] {
+         {{webRoutes}}
+      };
    }
 
    {{subscriptions}}
