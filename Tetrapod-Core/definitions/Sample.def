@@ -6,7 +6,9 @@
 java package io.tetrapod.protocol.sample        # language specific
 java outdir src                                 # should point to root of source tree
 
-service Sample version 1 [999999]
+# tags are @tag(tagval,tagval,...).  
+# known tags: @version(num), @id(num), @web(string) 
+service Sample @version(1) @id(999999)
 default security protected          # possible values are public, protected, internal, admin. default is internal
 
 # global constants appear in the general service class
@@ -15,7 +17,7 @@ const int GLOBAL_CONST = 42
 # field tags cannot be less than one, although they need not be contiguous.  low tag numbers (< 64) 
 # are encoded in one fewer byte in the wire protocol
 // my test request
-internal request Test [998]
+internal request Test @id(998)
    1: int intval // an integer vlaue
    2: double doubleval
    3: boolean boolval
@@ -42,7 +44,7 @@ internal request Test [998]
    error AAA, BBB, CC          # multiple errors may be specified on one line
    
 
-response Test [117]            # a tailing [###] in any class sets that as the struct ids.  otherwise a stable hash of the class name is used
+response Test @id(117)            # an id tag in any class sets that as the struct ids.  otherwise a stable hash of the class name is used
    1: int intval = 1
    2: double doubleval = 3.4
    3: boolean boolval = true

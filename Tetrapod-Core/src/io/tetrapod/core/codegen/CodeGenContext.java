@@ -111,9 +111,8 @@ class CodeGenContext {
          default:
             throw new ParseException("unknown class: " + c.type);
       }
-      int n = parts.size();
-      if (n > 3 && parts.get(n - 3).equals("[") && parts.get(n - 1).equals("]")) {
-         c.structId = parts.get(n - 2);
+      if (line.tags.containsKey("id")) {
+         c.structId = line.tags.get("id").get(0);
       }
       verifySecurity(c);
       classes.add(c);
@@ -162,12 +161,10 @@ class CodeGenContext {
    }
 
    public void parseService(TokenizedLine line) throws ParseException {
-      if (line.parts.size() < 4)
-         throw new ParseException("expected at least four tokens for service");
       serviceName = line.parts.get(1);
-      serviceVersion = line.parts.get(3);
-      if (line.parts.size() > 4) {
-         serviceId = line.parts.get(5);
+      serviceVersion = line.tags.get("version").get(0);
+      if (line.tags.containsKey("id")) {
+         serviceId = line.tags.get("id").get(0);
       } else {
          serviceId = "dynamic";
       }
@@ -187,6 +184,8 @@ class CodeGenContext {
             e.value = Integer.parseInt(parts.get(i+1));
             break;
          }
+         if (err.equals(","))
+            continue;
          e = new Err();
          e.name = err;
          e.comment = line.comment;

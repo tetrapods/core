@@ -9,36 +9,40 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
 
-/**
- * a request from the web as an uninterpreted json
- */
-
 @SuppressWarnings("unused")
-public class WrappedJSON extends Structure {
+public class WebRoute extends Structure {
    
-   public static final int STRUCT_ID = 1917218;
+   public static final int STRUCT_ID = 4890284;
     
-   public WrappedJSON() {
+   public WebRoute() {
       defaults();
    }
 
-   public WrappedJSON(String json) {
-      this.json = json;
+   public WebRoute(String path, int structId, int contractId) {
+      this.path = path;
+      this.structId = structId;
+      this.contractId = contractId;
    }   
    
-   public String json;
+   public String path;
+   public int structId;
+   public int contractId;
 
    public final Structure.Security getSecurity() {
       return Security.INTERNAL;
    }
 
    public final void defaults() {
-      json = null;
+      path = null;
+      structId = 0;
+      contractId = 0;
    }
    
    @Override
    public final void write(DataSource data) throws IOException {
-      data.write(1, this.json);
+      data.write(1, this.path);
+      data.write(2, this.structId);
+      data.write(3, this.contractId);
       data.writeEndTag();
    }
    
@@ -48,7 +52,9 @@ public class WrappedJSON extends Structure {
       while (true) {
          int tag = data.readTag();
          switch (tag) {
-            case 1: this.json = data.read_string(tag); break;
+            case 1: this.path = data.read_string(tag); break;
+            case 2: this.structId = data.read_int(tag); break;
+            case 3: this.contractId = data.read_int(tag); break;
             case Codec.END_TAG:
                return;
             default:
@@ -60,7 +66,7 @@ public class WrappedJSON extends Structure {
    
    @Override
    public final int getStructId() {
-      return WrappedJSON.STRUCT_ID;
+      return WebRoute.STRUCT_ID;
    }
    
    public final int getContractId() {
@@ -68,7 +74,7 @@ public class WrappedJSON extends Structure {
    }
    public static Callable<Structure> getInstanceFactory() {
       return new Callable<Structure>() {
-         public Structure call() { return new WrappedJSON(); }
+         public Structure call() { return new WebRoute(); }
       };
    }
    

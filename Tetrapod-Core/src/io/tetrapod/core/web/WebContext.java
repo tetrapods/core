@@ -10,7 +10,7 @@ import io.netty.handler.codec.http.multipart.InterfaceHttpData.HttpDataType;
 import io.netty.util.CharsetUtil;
 import io.tetrapod.core.Session;
 import io.tetrapod.core.json.JSONObject;
-import io.tetrapod.protocol.core.RequestHeader;
+import io.tetrapod.protocol.core.*;
 
 import java.io.IOException;
 import java.util.*;
@@ -32,17 +32,18 @@ class WebContext {
    
    public WebContext(JSONObject json) throws IOException {
       this.requestParameters = json;
-      this.requestPath = json.optString("path", "/unknown");
+      this.requestPath = json.optString("uri", "/unknown");
    }
    
-   public RequestHeader makeRequestHeader(Session s) {
+   public RequestHeader makeRequestHeader(Session s, WebRoutes routes) {
       RequestHeader header = new RequestHeader();
-      header.requestId = requestParameters.optInt("requestId", -1);
-      if (header.requestId < 0)
+      WebRoute route = routes.findRoute(requestPath);
+      header.requestId = requestParameters.optInt("num", -1);
+      if (header.requestId < 0 || route == null)
          return null;
-      header.toId = requestParameters.optInt("toId", UNADDRESSED);
-      header.contractId = requestParameters.optInt("contractId", 0);
-      header.structId = requestParameters.optInt("structId", 0);
+      header.toId = requestParameters.optInt("to", UNADDRESSED);
+      header.contractId = route.contractId;
+      header.structId = route.structId;
       header.fromId = s.getTheirEntityId();
       header.fromType = s.getTheirEntityType();
       return header;

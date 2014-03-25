@@ -2,7 +2,7 @@ java package io.tetrapod.protocol.core
 java outdir src
 
 // The core tetrapod service
-service Tetrapod version 1 [1]
+service Tetrapod @version(1) @id(1)
 
 struct Core
    const int   UNADDRESSED    = 0 // request is not addressed to a specific entity 
@@ -65,9 +65,6 @@ public struct MessageHeader
    4: int contractId
    5: int structId
    
-public struct WrappedJSON
-   1: string   json 
-
 ################################# STRUCTURES #################################
 
 public struct Entity
@@ -89,6 +86,15 @@ internal struct Subscriber
 internal struct FlatTopic
 	1: int topicId
 	2: Subscriber[] subscriber; 
+
+// a request from the web as an uninterpreted json
+internal struct WrappedJSON
+   1: string   json 
+
+internal struct WebRoute
+   1: string path
+   2: int structId
+   3: int contractId
 
 ################################# REQUESTS #################################
 
@@ -115,6 +121,9 @@ internal request RegistrySubscribe
 
 internal request ServiceStatusUpdate
    1: int status
+   
+internal request AddWebRoutes
+   1: WebRoute[] routes
 
 ################################# MESSAGES #################################
     

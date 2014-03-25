@@ -19,13 +19,13 @@ import java.io.*;
 
 import org.slf4j.*;
 
-class RESTSession extends Session {
+class WebHttpSession extends Session {
 
-   private static final Logger logger = LoggerFactory.getLogger(RESTSession.class);
+   private static final Logger logger = LoggerFactory.getLogger(WebHttpSession.class);
    
    private boolean isKeepAlive;
 
-   public RESTSession(SocketChannel ch, Session.Helper helper, String contentRoot) {
+   public WebHttpSession(SocketChannel ch, Session.Helper helper, String contentRoot) {
       super(ch, helper);
       
       // Uncomment the following lines if you want HTTPS
@@ -50,7 +50,7 @@ class RESTSession extends Session {
          return;
       }
       WebContext context = new WebContext((HttpRequest)obj);
-      RequestHeader header = context.makeRequestHeader(this);
+      RequestHeader header = context.makeRequestHeader(this, relayHandler.getWebRoutes());
       if (header == null) {
          ctx.fireChannelRead(obj);
          return;
