@@ -2,7 +2,7 @@ java package io.tetrapod.protocol.service
 java outdir src
 
 // The base contract every service must support
-service BaseService version 1 [2]
+service BaseService @version(1) @id(2)
 
 internal request Pause
 

@@ -12,6 +12,7 @@ import java.util.*;
 public class CodeGen {
 
    public static void main(String[] args) {
+      // if (true) { testTokenize();return; }
       // just hardcode for now for testing
       args = new String[] { "definitions", "java" };
       if (args.length < 1) {
@@ -31,9 +32,18 @@ public class CodeGen {
    protected static class TokenizedLine {
       ArrayList<String> parts = new ArrayList<>();
       String comment;
+      Map<String,List<String>> tags = new HashMap<>();
       
       public boolean isEmpty() { return parts.isEmpty(); }
       public String key() { return parts.get(0); }
+      public void addTag(String tag, String val) {
+         List<String> x = tags.get(tag);
+         if (x == null) {
+            x = new ArrayList<>();
+            tags.put(tag, x);
+         }
+         x.add(val);
+      }
    }
 
    private LanguageGenerator              generator;
@@ -81,6 +91,7 @@ public class CodeGen {
       tokenizedLine.parts.clear();
       tokenizedLine.comment = null;
       tokenize(line, tokenizedLine);
+      combineTokens(tokenizedLine);
       if (tokenizedLine.comment != null) {
          commentInProgress.append(tokenizedLine.comment);
          commentInProgress.append(" ");
@@ -90,7 +101,6 @@ public class CodeGen {
       }
       tokenizedLine.comment = commentInProgress.toString();
       commentInProgress = new StringBuilder();
-      combineTokens();
       String key = tokenizedLine.key();
       switch (key) {
          case "java":
@@ -150,17 +160,13 @@ public class CodeGen {
       }
    }
 
-   private void combineTokens() {
+   private static void combineTokens(TokenizedLine tokenizedLine) {
       ArrayList<String> parts = tokenizedLine.parts;
-      if (parts.get(0).equals(":")) {
-         parts.remove(0);
-         parts.add(0, "tag");
-      }
-      if (parts.size() > 1 && parts.get(1).equals(":")) {
-         parts.remove(1);
-         parts.add(0, "field");
-      }
       for (int i=0; i < parts.size() - 1; i++) {
+         if (i==1 && parts.get(i).equals(":")) {
+            parts.remove(i);
+            parts.add(0, "field");
+         }
          if (parts.get(i).equals("<") && parts.get(i+2).equals(">")) {
             parts.set(i, "<" + parts.get(i+1) + ">");
             parts.remove(i+1);
@@ -173,6 +179,20 @@ public class CodeGen {
          if (parts.get(i).equals("{") && parts.get(i+1).equals("}")) {
             parts.set(i, "<empty>");
             parts.remove(i+1);
+         }
+         if (parts.get(i).equals("@")) {
+            parts.remove(i);
+            String tag = parts.remove(i);
+            parts.remove(i);
+            while (true) {
+               String val = parts.remove(i);
+               if (val.equals(")")) {
+                  i--;
+                  break;
+               }
+               if (!val.equals(","))
+                  tokenizedLine.addTag(tag, val);
+            }
          }
       }
    }
@@ -283,14 +303,16 @@ public class CodeGen {
    }
 
    private static boolean isDivider(char c) {
-      return "[]<>:={}".indexOf(c) >= 0;
+      return "[]<>:={}()@,".indexOf(c) >= 0;
    }
    
    @SuppressWarnings("unused")
    private static void testTokenize() {
       TokenizedLine out = new TokenizedLine();
-      tokenize(": 1th-is1[] <i.s> // _a \"# te\\\\\\\"st\"", out);
+      tokenize("1: 1th-is1[] <i.s> @id(33334,5) @x(2,3,\"44,55\",66,) // _a \"# te\\\\\\\"st\"", out);
+      combineTokens(out);
       System.out.println(out.parts);
+      System.out.println(out.tags);
       System.out.println(out.comment);
    }
    

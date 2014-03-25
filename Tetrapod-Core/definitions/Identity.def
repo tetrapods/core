@@ -1,23 +1,23 @@
 java package io.tetrapod.protocol.identity
 java outdir src
 
-service Identity version 1 [4]
+service Identity @version(1) @id(4) @web(/api/accounts/)
 
-public request Login
+public request Login @web(login)
    1: string email
    2: string password  
    error UNKNOWN_USERNAME, WRONG_PASSWORD
    
 public response Login
-   1: int accountId
-   2: string authToken
+   1: int accountId     @web(id) 
+   2: string authToken  @web(token)
 
-public request Create
-   1: string username
+public request Create   @web(make)
+   1: string username  
    2: string email
    3: string password
    
-public response Create
+public response Create  @web
    1: int accountId
    2: string authToken
    
@@ -29,7 +29,7 @@ protected response Info
    1: string username 
    2: int properties
    
-admin request UpdateProperties
+admin request UpdateProperties @web
    1: int accountId
    2: int properties // new properties values
    3: int mask       // which properties to update
