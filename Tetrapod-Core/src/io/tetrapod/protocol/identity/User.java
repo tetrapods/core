@@ -85,10 +85,29 @@ public class User extends Structure {
    public final int getContractId() {
       return IdentityContract.CONTRACT_ID;
    }
+
    public static Callable<Structure> getInstanceFactory() {
       return new Callable<Structure>() {
          public Structure call() { return new User(); }
       };
    }
    
+   public final String[] tagWebNames() {
+      // Note do not use this tags in long term serializations (to disk or databases) as 
+      // implementors are free to rename them however they wish.  A null means the field
+      // is not to participate in web serialization (remaining at default)
+      String[] result = new String[3+1];
+      result[1] = "username";
+      result[2] = "accountId";
+      result[3] = "properties";
+      result[0] = "PROPS_DEVELOPER";
+      result[0] = "PROPS_ADMIN_T1";
+      result[0] = "PROPS_ADMIN_T2";
+      result[0] = "PROPS_ADMIN_T3";
+      result[0] = "PROPS_ADMIN_T4";
+      result[0] = "PROPS_BANNED_T1";
+      result[0] = "PROPS_BANNED_T2";
+      result[0] = "PROPS_BANNED_T3";
+      return result;
+   }
 }

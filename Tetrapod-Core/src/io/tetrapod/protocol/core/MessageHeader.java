@@ -82,10 +82,23 @@ public class MessageHeader extends Structure {
    public final int getContractId() {
       return TetrapodContract.CONTRACT_ID;
    }
+
    public static Callable<Structure> getInstanceFactory() {
       return new Callable<Structure>() {
          public Structure call() { return new MessageHeader(); }
       };
    }
    
+   public final String[] tagWebNames() {
+      // Note do not use this tags in long term serializations (to disk or databases) as 
+      // implementors are free to rename them however they wish.  A null means the field
+      // is not to participate in web serialization (remaining at default)
+      String[] result = new String[5+1];
+      result[1] = "fromId";
+      result[2] = "topicId";
+      result[3] = "toId";
+      result[4] = "contractId";
+      result[5] = "structId";
+      return result;
+   }
 }

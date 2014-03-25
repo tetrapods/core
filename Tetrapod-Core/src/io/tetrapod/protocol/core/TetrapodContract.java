@@ -5,6 +5,7 @@ package  io.tetrapod.protocol.core;
 import io.*;
 import java.util.*;
 import io.tetrapod.core.*;
+import io.tetrapod.protocol.core.WebRoute;
 
 /**
  * The core tetrapod service
@@ -57,6 +58,12 @@ public class TetrapodContract extends Contract {
    
    public int getContractId() {
       return TetrapodContract.CONTRACT_ID;
+   }
+   
+   public WebRoute[] getWebRoutes() {
+      return new WebRoute[] {
+         
+      };
    }
 
    public static class Registry extends Contract {

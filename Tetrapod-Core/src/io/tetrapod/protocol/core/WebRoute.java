@@ -72,10 +72,21 @@ public class WebRoute extends Structure {
    public final int getContractId() {
       return TetrapodContract.CONTRACT_ID;
    }
+
    public static Callable<Structure> getInstanceFactory() {
       return new Callable<Structure>() {
          public Structure call() { return new WebRoute(); }
       };
    }
    
+   public final String[] tagWebNames() {
+      // Note do not use this tags in long term serializations (to disk or databases) as 
+      // implementors are free to rename them however they wish.  A null means the field
+      // is not to participate in web serialization (remaining at default)
+      String[] result = new String[3+1];
+      result[1] = "path";
+      result[2] = "structId";
+      result[3] = "contractId";
+      return result;
+   }
 }

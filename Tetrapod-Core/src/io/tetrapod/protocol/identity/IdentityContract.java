@@ -5,6 +5,7 @@ package  io.tetrapod.protocol.identity;
 import io.*;
 import java.util.*;
 import io.tetrapod.core.*;
+import io.tetrapod.protocol.core.WebRoute;
 
 @SuppressWarnings("unused")
 public class IdentityContract extends Contract {
@@ -42,6 +43,13 @@ public class IdentityContract extends Contract {
    
    public int getContractId() {
       return IdentityContract.CONTRACT_ID;
+   }
+   
+   public WebRoute[] getWebRoutes() {
+      return new WebRoute[] {
+         new WebRoute("/api/identity/login", LoginRequest.STRUCT_ID, IdentityContract.CONTRACT_ID),
+         new WebRoute("/api/identity/updateProperties", UpdatePropertiesRequest.STRUCT_ID, IdentityContract.CONTRACT_ID),
+      };
    }
 
    public static final int ERROR_UNKNOWN_USERNAME = 983354; 

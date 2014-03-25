@@ -114,10 +114,37 @@ public class Core extends Structure {
    public final int getContractId() {
       return TetrapodContract.CONTRACT_ID;
    }
+
    public static Callable<Structure> getInstanceFactory() {
       return new Callable<Structure>() {
          public Structure call() { return new Core(); }
       };
    }
    
+   public final String[] tagWebNames() {
+      // Note do not use this tags in long term serializations (to disk or databases) as 
+      // implementors are free to rename them however they wish.  A null means the field
+      // is not to participate in web serialization (remaining at default)
+      String[] result = new String[0+1];
+      result[0] = "UNADDRESSED";
+      result[0] = "TYPE_TETRAPOD";
+      result[0] = "TYPE_SERVICE";
+      result[0] = "TYPE_ADMIN";
+      result[0] = "TYPE_CLIENT";
+      result[0] = "TYPE_ANONYMOUS";
+      result[0] = "STATUS_INIT";
+      result[0] = "STATUS_PAUSED";
+      result[0] = "STATUS_GONE";
+      result[0] = "STATUS_BUSY";
+      result[0] = "STATUS_OVERLOADED";
+      result[0] = "STATUS_FAILED";
+      result[0] = "ENVELOPE_HANDSHAKE";
+      result[0] = "ENVELOPE_REQUEST";
+      result[0] = "ENVELOPE_RESPONSE";
+      result[0] = "ENVELOPE_MESSAGE";
+      result[0] = "ENVELOPE_PING";
+      result[0] = "ENVELOPE_PONG";
+      result[0] = "ENVELOPE_JSON_REQUEST";
+      return result;
+   }
 }
