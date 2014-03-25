@@ -17,6 +17,7 @@ public class TetrapodContract extends Contract {
    public static final int CONTRACT_ID = 1;
    
    public static interface API extends
+      AddWebRoutesRequest.Handler,
       PublishRequest.Handler,
       RegisterRequest.Handler,
       RegistrySubscribeRequest.Handler,
@@ -24,6 +25,7 @@ public class TetrapodContract extends Contract {
       {}
    
    public void addRequests(StructureFactory factory, int dynamicId) {
+      factory.add(dynamicId, AddWebRoutesRequest.STRUCT_ID, AddWebRoutesRequest.getInstanceFactory());
       factory.add(dynamicId, PublishRequest.STRUCT_ID, PublishRequest.getInstanceFactory());
       factory.add(dynamicId, RegisterRequest.STRUCT_ID, RegisterRequest.getInstanceFactory());
       factory.add(dynamicId, RegistrySubscribeRequest.STRUCT_ID, RegistrySubscribeRequest.getInstanceFactory());

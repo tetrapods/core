@@ -6,11 +6,12 @@ import io.netty.channel.*;
 import io.netty.channel.socket.SocketChannel;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.rpc.Error;
+import io.tetrapod.core.web.WebRoutes;
 import io.tetrapod.protocol.core.*;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.*;
 
@@ -47,6 +48,8 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
       public WireSession getRelaySession(int entityId);
 
       public void broadcast(MessageHeader header, ByteBuf buf);
+      
+      public WebRoutes getWebRoutes();
 
    }
 
@@ -233,5 +236,5 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
    public String getPeerHostname() {
       return "Unknown";
    }
-
+   
 }

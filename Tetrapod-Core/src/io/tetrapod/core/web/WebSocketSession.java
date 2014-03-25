@@ -38,7 +38,7 @@ class WebSocketSession extends Session {
       try {
          JSONObject jo = new JSONObject(request);
          WebContext webContext = new WebContext(jo);
-         RequestHeader header = webContext.makeRequestHeader(this);
+         RequestHeader header = webContext.makeRequestHeader(this, relayHandler.getWebRoutes());
 
          if ((header.toId == UNADDRESSED && header.contractId == myContractId) || header.toId == myId) {
             final Request req = (Request) helper.make(header.contractId, header.structId);

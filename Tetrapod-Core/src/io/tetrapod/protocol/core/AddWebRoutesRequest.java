@@ -9,36 +9,32 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
 
-/**
- * a request from the web as an uninterpreted json
- */
-
 @SuppressWarnings("unused")
-public class WrappedJSON extends Structure {
+public class AddWebRoutesRequest extends Request {
+
+   public static final int STRUCT_ID = 9719643;
    
-   public static final int STRUCT_ID = 1917218;
-    
-   public WrappedJSON() {
+   public AddWebRoutesRequest() {
       defaults();
    }
 
-   public WrappedJSON(String json) {
-      this.json = json;
+   public AddWebRoutesRequest(WebRoute[] routes) {
+      this.routes = routes;
    }   
-   
-   public String json;
+
+   public WebRoute[] routes;
 
    public final Structure.Security getSecurity() {
       return Security.INTERNAL;
    }
 
    public final void defaults() {
-      json = null;
+      routes = null;
    }
    
    @Override
    public final void write(DataSource data) throws IOException {
-      data.write(1, this.json);
+      if (this.routes != null) data.write(1, this.routes);
       data.writeEndTag();
    }
    
@@ -48,7 +44,7 @@ public class WrappedJSON extends Structure {
       while (true) {
          int tag = data.readTag();
          switch (tag) {
-            case 1: this.json = data.read_string(tag); break;
+            case 1: this.routes = data.read_struct_array(tag, WebRoute.class); break;
             case Codec.END_TAG:
                return;
             default:
@@ -60,16 +56,27 @@ public class WrappedJSON extends Structure {
    
    @Override
    public final int getStructId() {
-      return WrappedJSON.STRUCT_ID;
+      return AddWebRoutesRequest.STRUCT_ID;
+   }
+   
+   @Override
+   public final Response dispatch(ServiceAPI is, RequestContext ctx) {
+      if (is instanceof Handler)
+         return ((Handler)is).requestAddWebRoutes(this, ctx);
+      return is.genericRequest(this, ctx);
+   }
+   
+   public static interface Handler extends ServiceAPI {
+      Response requestAddWebRoutes(AddWebRoutesRequest r, RequestContext ctx);
+   }
+   
+   public static Callable<Structure> getInstanceFactory() {
+      return new Callable<Structure>() {
+         public Structure call() { return new AddWebRoutesRequest(); }
+      };
    }
    
    public final int getContractId() {
       return TetrapodContract.CONTRACT_ID;
    }
-   public static Callable<Structure> getInstanceFactory() {
-      return new Callable<Structure>() {
-         public Structure call() { return new WrappedJSON(); }
-      };
-   }
-   
 }

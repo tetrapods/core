@@ -20,7 +20,7 @@ public class WebSessionFactory implements SessionFactory {
       if (webSockets)
          return new WebSocketSession(ch, helper, contentRoot);
       else
-         return new RESTSession(ch, helper, contentRoot);
+         return new WebHttpSession(ch, helper, contentRoot);
    }
 
 }

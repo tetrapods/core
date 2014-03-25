@@ -7,6 +7,7 @@ import io.tetrapod.core.registry.*;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.rpc.Error;
 import io.tetrapod.core.utils.Util;
+import io.tetrapod.core.web.WebRoutes;
 import io.tetrapod.protocol.core.*;
 
 import java.security.SecureRandom;
@@ -16,8 +17,8 @@ import java.util.concurrent.*;
 import org.slf4j.*;
 
 /**
- * The tetrapod service is the core cluster service which handles message routing, cluster management, service discovery, and load balancing
- * of client connections
+ * The tetrapod service is the core cluster service which handles message routing, cluster
+ * management, service discovery, and load balancing of client connections
  */
 public class TetrapodService extends DefaultService implements TetrapodContract.API, RelayHandler, Registry.RegistryBroadcaster {
    public static final Logger          logger               = LoggerFactory.getLogger(TetrapodService.class);
@@ -36,6 +37,8 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    private Server                      clusterServer;
    private Server                      serviceServer;
    private Server                      publicServer;
+
+   private final WebRoutes             webRoutes            = new WebRoutes();
 
    public TetrapodService() {
       registry = new Registry(this);
@@ -133,8 +136,9 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    }
 
    /**
-    * As a Tetrapod service, we can't start serving as one until we've registered & fully sync'ed with the cluster, or self-registered if we
-    * are the first one. We call this once this criteria has been reached
+    * As a Tetrapod service, we can't start serving as one until we've registered & fully sync'ed
+    * with the cluster, or self-registered if we are the first one. We call this once this criteria
+    * has been reached
     */
    private void onReadyToServe() {
       try {
@@ -155,7 +159,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       clusterServer.stop();
    }
 
-   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+   // ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
    private Session findSession(final EntityInfo entity) {
       if (entity.parentId == getEntityId()) {
@@ -169,7 +173,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    public WireSession getRelaySession(int entityId) {
       final EntityInfo entity = registry.getEntity(entityId);
       if (entity != null) {
-         return (WireSession)findSession(entity);
+         return (WireSession) findSession(entity);
       } else {
          logger.warn("Could not find an entity for {}", entityId);
       }
@@ -183,12 +187,13 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       if (publisher != null) {
          final Topic topic = publisher.getTopic(header.topicId);
          if (topic != null) {
-            synchronized (topic) { // FIXME: Won't need this sync if all topics processed on same thread
+            synchronized (topic) { // FIXME: Won't need this sync if all topics processed on same
+                                   // thread
                for (Subscriber s : topic.getSubscribers()) {
                   final EntityInfo e = registry.getEntity(s.entityId);
                   if (e != null) {
                      if (e.parentId == getEntityId() || e.isTetrapod()) {
-                        WireSession session = (WireSession)findSession(e);
+                        WireSession session = (WireSession) findSession(e);
                         if (session != null) {
                            session.forwardMessage(header, buf);
                         }
@@ -205,8 +210,13 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          logger.error("Could not find publisher entity {}", header.fromId);
       }
    }
+   
+   @Override
+   public WebRoutes getWebRoutes() {
+      return webRoutes;
+   }
 
-   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+   // ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
    @Override
    public void broadcastRegistryMessage(Message msg) {
@@ -214,7 +224,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       sendMessage(msg, 0, registryTopic.topicId);
    }
 
-   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+   // ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
    private static class Token {
       int  entityId = 0;
@@ -242,7 +252,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       }
    }
 
-   //////////////////////////////////////////////////////////////////////////////////////////
+   // ////////////////////////////////////////////////////////////////////////////////////////
 
    private void scheduleHealthCheck() {
       dispatcher.dispatch(10, TimeUnit.SECONDS, new Runnable() {
@@ -263,7 +273,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       registry.logStats();
    }
 
-   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+   // ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
    @Override
    public Response requestRegister(RegisterRequest r, RequestContext ctx) {
@@ -326,5 +336,13 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       registry.updateStatus(ctx.header.fromId, r.status);
       return Response.SUCCESS;
    }
+
+   @Override
+   public Response requestAddWebRoutes(AddWebRoutesRequest req, RequestContext ctx) {
+      for (WebRoute r : req.routes)
+         webRoutes.setRoute(r.path, r.contractId, r.structId);
+      return Response.SUCCESS;
+   }
+   
 
 }
