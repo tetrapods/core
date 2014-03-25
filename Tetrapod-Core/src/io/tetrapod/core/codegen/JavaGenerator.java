@@ -142,7 +142,8 @@ class JavaGenerator implements LanguageGenerator {
             name = f.name;
          if (f.annotations.getFirst("noweb") != null)
             name = "null";
-         vals.add("webNames", template("struct.webnames").expand(new TemplateValues("tag", f.tag, "name", name)));
+         if (!f.isConstant())
+            vals.add("webNames", template("struct.webnames").expand(new TemplateValues("tag", f.tag, "name", name)));
       }
       if (instanceFields > 0)
          vals.add("full-constructor", Templater.get(getClass(), "javatemplates/full.constructor.template").expand(vals));
