@@ -7,7 +7,7 @@ TP.sidebar.items = [
        title: "Cluster",
        icon: "fa-sitemap",
        children: [
-          { url: "index.html", title: "Administer" },
+          { url: "cluster.html", title: "Administer" },
           { url: "index.html", title: "Deploy" },
           { url: "index.html", title: "Configuration" }
        ]
