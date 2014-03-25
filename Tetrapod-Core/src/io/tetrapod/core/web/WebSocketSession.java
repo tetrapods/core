@@ -43,7 +43,7 @@ class WebSocketSession extends Session {
          if ((header.toId == UNADDRESSED && header.contractId == myContractId) || header.toId == myId) {
             final Request req = (Request) helper.make(header.contractId, header.structId);
             if (req != null) {
-               req.read(new JSONDataSource(jo));
+               req.read(new WebJSONDataSource(jo, req.tagWebNames()));
                dispatchRequest(header, req);
             } else {
                logger.warn("Could not find request structure {}", header.structId);
@@ -66,7 +66,7 @@ class WebSocketSession extends Session {
 
    @Override
    protected void sendResponse(Response res, int requestId) {
-      JSONDataSource jds = new JSONDataSource();
+      JSONDataSource jds = new WebJSONDataSource(res.tagWebNames());
       try {
          res.write(jds);
       } catch (IOException e) {
@@ -88,7 +88,7 @@ class WebSocketSession extends Session {
    }
 
    private void relayRequest(final RequestHeader header, final JSONObject jo) {
-      final WireSession ses = relayHandler.getRelaySession(header.toId);
+      final WireSession ses = relayHandler.getRelaySession(header.toId, header.contractId);
       if (ses != null) {
          // OPTIMIZE: Find a way to relay without the byte[] allocation & copy
          String s = jo.toString();

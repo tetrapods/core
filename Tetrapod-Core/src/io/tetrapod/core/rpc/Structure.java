@@ -50,6 +50,10 @@ abstract public class Structure {
    public Security getSecurity() {
       return Security.INTERNAL;
    }
+   
+   public String[] tagWebNames() {
+      return new String[] {};
+   }
 
 
 }

@@ -12,7 +12,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.slf4j.*;
 
 abstract public class DefaultService implements Service, BaseServiceContract.API, SessionFactory {
-   public static final Logger                  logger          = LoggerFactory.getLogger(DefaultService.class);
+   private static final Logger                  logger          = LoggerFactory.getLogger(DefaultService.class);
 
    protected final Dispatcher                  dispatcher;
    protected final StructureFactory            structFactory;
@@ -93,6 +93,7 @@ abstract public class DefaultService implements Service, BaseServiceContract.API
                      cluster.getSession().setTheirEntityId(r.parentId);
                      cluster.getSession().setMyEntityType(getEntityType());
                      cluster.getSession().setTheirEntityType(Core.TYPE_TETRAPOD);
+                     registerWebRoutes();
                      onRegistered();
                   }
                }
@@ -250,5 +251,12 @@ abstract public class DefaultService implements Service, BaseServiceContract.API
    }
 
    // private methods
+   
+   private void registerWebRoutes() {
+      WebRoute[] routes = contract.getWebRoutes();
+      if (routes == null || routes.length == 0)
+         return;
+      sendRequest(new AddWebRoutesRequest(routes), Core.UNADDRESSED).handle(ResponseHandler.LOGGER);
+   }
 
 }

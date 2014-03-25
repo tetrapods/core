@@ -45,7 +45,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
 
    public static interface RelayHandler {
 
-      public WireSession getRelaySession(int entityId);
+      public WireSession getRelaySession(int toId, int contractid);
 
       public void broadcast(MessageHeader header, ByteBuf buf);
       

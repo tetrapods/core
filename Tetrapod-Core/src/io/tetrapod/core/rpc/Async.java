@@ -26,7 +26,7 @@ public class Async {
    public synchronized void handle(ResponseHandler handler) {
       this.handler = handler;
       if (response != null) {
-         handler.onResponse(response);
+         handler.fireResponse(response, header);
       }
    }
 
@@ -38,7 +38,7 @@ public class Async {
       response = res;
       if (handler != null) {
          try {
-            handler.onResponse(res);
+            handler.fireResponse(res, header);
          } catch (Throwable e) {
             logger.error(e.getMessage(), e);
          }

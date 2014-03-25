@@ -151,7 +151,7 @@ public class WireSession extends Session {
             if (isJSONWrapped) {
                WrappedJSON wrapped = new WrappedJSON();
                wrapped.read(reader);
-               reader = new JSONDataSource(new JSONObject(wrapped.json));
+               reader = new WebJSONDataSource(new JSONObject(wrapped.json), req.tagWebNames());
             }
             req.read(reader);
             dispatchRequest(header, req);
@@ -160,7 +160,7 @@ public class WireSession extends Session {
             sendResponse(new Error(ERROR_SERIALIZATION), header.requestId);
          }
       } else if (relayHandler != null) {
-         relayRequest(header, in);
+         relayRequest(header, in, isJSONWrapped);
       }
    }
    
@@ -328,8 +328,8 @@ public class WireSession extends Session {
 
    // /////////////////////////////////// RELAY /////////////////////////////////////
 
-   private void relayRequest(final RequestHeader header, final ByteBuf in) {
-      final WireSession ses = relayHandler.getRelaySession(header.toId);
+   private void relayRequest(final RequestHeader header, final ByteBuf in, boolean isJSONWrapped) {
+      final WireSession ses = relayHandler.getRelaySession(header.toId, header.contractId);
       if (ses != null) {
          // OPTIMIZE: Find a way to relay without the byte[] allocation & copy
          final ByteBuf buffer = channel.alloc().buffer(32 + in.readableBytes());
@@ -341,7 +341,7 @@ public class WireSession extends Session {
             ses.addPendingRequest(async);
             logger.debug("{} RELAYING REQUEST: [{}] was " + origRequestId, this, async.header.requestId);
             buffer.writeInt(0); // length placeholder
-            buffer.writeByte(ENVELOPE_REQUEST);
+            buffer.writeByte(isJSONWrapped ? ENVELOPE_JSON_REQUEST : ENVELOPE_REQUEST);
             async.header.write(data);
             buffer.writeBytes(in);
             buffer.setInt(0, buffer.writerIndex() - 4); // go back and write message length, now
@@ -383,7 +383,7 @@ public class WireSession extends Session {
          // TODO: Broadcast to all sessions we need to
          relayHandler.broadcast(header, payload);
       } else {
-         final WireSession ses = relayHandler.getRelaySession(header.toId);
+         final WireSession ses = relayHandler.getRelaySession(header.toId, header.contractId);
          if (ses != null) {
             ses.forwardMessage(header, payload);
          }

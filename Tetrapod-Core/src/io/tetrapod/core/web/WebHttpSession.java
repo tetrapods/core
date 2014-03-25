@@ -12,7 +12,7 @@ import io.netty.util.ReferenceCountUtil;
 import io.tetrapod.core.Session;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.rpc.Error;
-import io.tetrapod.core.serialize.datasources.JSONDataSource;
+import io.tetrapod.core.serialize.datasources.*;
 import io.tetrapod.protocol.core.RequestHeader;
 
 import java.io.*;
@@ -62,7 +62,7 @@ class WebHttpSession extends Session {
          if ((header.toId == UNADDRESSED && header.contractId == myContractId) || header.toId == myId) {
             final Request req = (Request) helper.make(header.contractId, header.structId);
             if (req != null) {
-               req.read(new JSONDataSource(context.getRequestParams()));
+               req.read(new WebJSONDataSource(context.getRequestParams(), req.tagWebNames()));
                dispatchRequest(header, req);
             } else {
                logger.warn("Could not find request structure {}", header.structId);
@@ -86,18 +86,18 @@ class WebHttpSession extends Session {
 
    @Override
    protected void sendResponse(Response res, int requestId) {
-      JSONDataSource jds = new JSONDataSource();
+      JSONDataSource jds = new WebJSONDataSource(res.tagWebNames());
       try {
          res.write(jds);
       } catch (IOException e) {
          logger.error(e.getMessage(), e);
          return;
       }
-      jds.getJSON().put("response", requestId);
+      jds.getJSON().put("num", requestId);
       jds.getJSON().put("structId", res.getStructId());
       jds.getJSON().put("contractId", res.getContractId());
 
-      ByteBuf buf = WebContext.makeByteBufResult(jds.getJSON());
+      ByteBuf buf = WebContext.makeByteBufResult(jds.getJSON().toString(3));
       FullHttpResponse httpResponse = new DefaultFullHttpResponse(HTTP_1_1, OK, buf);
       httpResponse.headers().set(CONTENT_TYPE, "text/json");
       httpResponse.headers().set(CONTENT_LENGTH, httpResponse.content().readableBytes());

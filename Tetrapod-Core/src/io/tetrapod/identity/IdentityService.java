@@ -1,11 +1,16 @@
 package io.tetrapod.identity;
 
+import org.slf4j.*;
+
 import io.tetrapod.core.*;
 import io.tetrapod.core.rpc.*;
+import io.tetrapod.core.rpc.Error;
 import io.tetrapod.protocol.core.*;
 import io.tetrapod.protocol.identity.*;
 
 public class IdentityService extends DefaultService implements IdentityContract.API {
+   private static final Logger logger = LoggerFactory.getLogger(IdentityService.class);
+
 
    public IdentityService() {
       setMainContract(new IdentityContract());
@@ -71,7 +76,7 @@ public class IdentityService extends DefaultService implements IdentityContract.
 
    @Override
    public Response requestLogin(LoginRequest r, RequestContext ctx) {
-      return null;
+      return new LoginResponse(23, "thisisanauthtoken");
    }
 
    @Override

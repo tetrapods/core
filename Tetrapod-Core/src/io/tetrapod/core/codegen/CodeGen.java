@@ -32,17 +32,15 @@ public class CodeGen {
    protected static class TokenizedLine {
       ArrayList<String> parts = new ArrayList<>();
       String comment;
-      Map<String,List<String>> tags = new HashMap<>();
+      Annotations annotations = new Annotations();
       
       public boolean isEmpty() { return parts.isEmpty(); }
       public String key() { return parts.get(0); }
-      public void addTag(String tag, String val) {
-         List<String> x = tags.get(tag);
-         if (x == null) {
-            x = new ArrayList<>();
-            tags.put(tag, x);
-         }
-         x.add(val);
+      
+      public void clear() {
+         parts.clear();
+         comment = null;
+         annotations = new Annotations();
       }
    }
 
@@ -88,10 +86,7 @@ public class CodeGen {
    }
 
    private void parse(String line) throws ParseException {
-      tokenizedLine.parts.clear();
-      tokenizedLine.tags.clear();
-      
-      tokenizedLine.comment = null;
+      tokenizedLine.clear();
       tokenize(line, tokenizedLine);
       combineTokens(tokenizedLine);
       if (tokenizedLine.comment != null) {
@@ -187,7 +182,7 @@ public class CodeGen {
             String tag = parts.remove(i);
             if (i >= parts.size() || !parts.get(i).equals("(")) {
                i--;
-               tokenizedLine.addTag(tag, "");
+               tokenizedLine.annotations.add(tag, "");
             } else {
                parts.remove(i);
                while (true) {
@@ -197,7 +192,7 @@ public class CodeGen {
                      break;
                   }
                   if (!val.equals(","))
-                     tokenizedLine.addTag(tag, val);
+                     tokenizedLine.annotations.add(tag, val);
                }
             }
          }
@@ -319,7 +314,7 @@ public class CodeGen {
       tokenize("1: 1th-is1[] <i.s> @web @id(33334,5) @x(2,3,\"44,55\",66,) // _a \"# te\\\\\\\"st\"", out);
       combineTokens(out);
       System.out.println(out.parts);
-      System.out.println(out.tags);
+      System.out.println(out.annotations);
       System.out.println(out.comment);
    }
    
