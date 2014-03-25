@@ -6,7 +6,7 @@ import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
- * Thread safe message dipatcher class.
+ * Thread safe message dispatcher class.
  */
 public class MessageHandlers implements SubscriptionAPI {
    

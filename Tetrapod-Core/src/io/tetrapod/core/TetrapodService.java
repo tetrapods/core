@@ -267,6 +267,9 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
    @Override
    public Response requestRegister(RegisterRequest r, RequestContext ctx) {
+      if (getEntityId() == 0) {
+         return new Error(Core.ERROR_SERVICE_UNAVAILABLE);
+      }
       EntityInfo info = null;
       final Token t = Token.decode(r.token);
       if (t != null) {
@@ -306,9 +309,18 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    @Override
    public Response requestPublish(PublishRequest r, RequestContext ctx) {
       if (ctx.header.fromType == Core.TYPE_TETRAPOD || ctx.header.fromType == Core.TYPE_SERVICE) {
-         final Topic t = registry.publish(ctx.header.fromId);
-         if (t != null) {
-            return new PublishResponse(t.topicId);
+         final EntityInfo entity = registry.getEntity(ctx.header.fromId);
+         if (entity != null) {
+            if (entity.parentId == getEntityId()) {
+               final Topic t = registry.publish(ctx.header.fromId);
+               if (t != null) {
+                  return new PublishResponse(t.topicId);
+               }
+            } else {
+               return new Error(PublishRequest.ERROR_NOT_PARENT);
+            }
+         } else {
+            return new Error(PublishRequest.ERROR_INVALID_ENTITY);
          }
       }
       return new Error(Core.ERROR_INVALID_RIGHTS);

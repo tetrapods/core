@@ -28,6 +28,7 @@ struct Core
    error PROTOCOL_MISMATCH    = 5 // Protocol versions are not compatible
    error UNKNOWN_REQUEST      = 6 // Service exists and received request, but doen't know how to handle it
    error INVALID_RIGHTS       = 7 // Caller does not have sufficient rights to call this Request
+     
 
    const byte  ENVELOPE_HANDSHAKE  = 1
    const byte  ENVELOPE_REQUEST    = 2
@@ -92,13 +93,16 @@ public request Register
    2: string token
    3: int contractId
    4: string name
-   
+      
 public response Register 
    1: int entityId
    2: int parentId
    3: string token
 
 internal request Publish 
+   error NOT_READY
+   error NOT_PARENT 
+   error INVALID_ENTITY   
    
 internal response Publish 
    1: int topicId
