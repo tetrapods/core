@@ -45,7 +45,7 @@ class WebHttpSession extends Session {
 
    @Override
    public void channelRead(ChannelHandlerContext ctx, Object obj) throws Exception {
-      if (!(obj instanceof HttpRequest)) {
+      if (!(obj instanceof HttpRequest) || relayHandler==null) {
          ctx.fireChannelRead(obj);
          return;
       }
