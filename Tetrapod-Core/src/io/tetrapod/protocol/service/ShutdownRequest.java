@@ -64,12 +64,6 @@ public class ShutdownRequest extends Request {
       Response requestShutdown(ShutdownRequest r, RequestContext ctx);
    }
    
-   public static Callable<Structure> getInstanceFactory() {
-      return new Callable<Structure>() {
-         public Structure call() { return new ShutdownRequest(); }
-      };
-   }
-   
    public final int getContractId() {
       return BaseServiceContract.CONTRACT_ID;
    }
@@ -83,4 +77,7 @@ public class ShutdownRequest extends Request {
       return result;
    }
    
+   public final Structure make() {
+      return new ShutdownRequest();
+   }
 }

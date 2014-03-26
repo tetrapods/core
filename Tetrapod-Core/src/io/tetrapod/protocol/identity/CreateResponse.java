@@ -64,12 +64,6 @@ public class CreateResponse extends Response {
       return CreateResponse.STRUCT_ID;
    }
       
-   public static Callable<Structure> getInstanceFactory() {
-      return new Callable<Structure>() {
-         public Structure call() { return new CreateResponse(); }
-      };
-   }
-      
    public final int getContractId() {
       return IdentityContract.CONTRACT_ID;
    }
@@ -82,5 +76,9 @@ public class CreateResponse extends Response {
       result[1] = "accountId";
       result[2] = "authToken";
       return result;
+   }
+
+   public final Structure make() {
+      return new CreateResponse();
    }
 }

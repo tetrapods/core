@@ -60,12 +60,6 @@ public class {{class}} extends Response {
       return {{class}}.STRUCT_ID;
    }
       
-   public static Callable<Structure> getInstanceFactory() {
-      return new Callable<Structure>() {
-         public Structure call() { return new {{class}}(); }
-      };
-   }
-      
    public final int getContractId() {
       return {{service}}.CONTRACT_ID;
    }
@@ -77,6 +71,10 @@ public class {{class}} extends Response {
       String[] result = new String[{{maxtag}}+1];
       {{webNames}}
       return result;
+   }
+
+   public final Structure make() {
+      return new {{class}}();
    }
 }
 

@@ -11,13 +11,13 @@ abstract public class Contract {
 
    abstract public int getContractId();
 
-   public void addRequests(StructureFactory factory, int dynamicId) {
+   public void addRequests(StructureFactory factory) {
    }
 
-   public void addResponses(StructureFactory factory, int dynamicId) {
+   public void addResponses(StructureFactory factory) {
    }
    
-   public void addMessages(StructureFactory factory, int dynamicId) {
+   public void addMessages(StructureFactory factory) {
    }
    
    public WebRoute[] getWebRoutes() {

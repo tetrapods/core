@@ -64,12 +64,6 @@ public class RegistrySubscribeRequest extends Request {
       Response requestRegistrySubscribe(RegistrySubscribeRequest r, RequestContext ctx);
    }
    
-   public static Callable<Structure> getInstanceFactory() {
-      return new Callable<Structure>() {
-         public Structure call() { return new RegistrySubscribeRequest(); }
-      };
-   }
-   
    public final int getContractId() {
       return TetrapodContract.CONTRACT_ID;
    }
@@ -83,4 +77,7 @@ public class RegistrySubscribeRequest extends Request {
       return result;
    }
    
+   public final Structure make() {
+      return new RegistrySubscribeRequest();
+   }
 }

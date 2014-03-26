@@ -64,12 +64,6 @@ public class InfoResponse extends Response {
       return InfoResponse.STRUCT_ID;
    }
       
-   public static Callable<Structure> getInstanceFactory() {
-      return new Callable<Structure>() {
-         public Structure call() { return new InfoResponse(); }
-      };
-   }
-      
    public final int getContractId() {
       return IdentityContract.CONTRACT_ID;
    }
@@ -82,5 +76,9 @@ public class InfoResponse extends Response {
       result[1] = "username";
       result[2] = "properties";
       return result;
+   }
+
+   public final Structure make() {
+      return new InfoResponse();
    }
 }

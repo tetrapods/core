@@ -64,12 +64,6 @@ public class UnpauseRequest extends Request {
       Response requestUnpause(UnpauseRequest r, RequestContext ctx);
    }
    
-   public static Callable<Structure> getInstanceFactory() {
-      return new Callable<Structure>() {
-         public Structure call() { return new UnpauseRequest(); }
-      };
-   }
-   
    public final int getContractId() {
       return BaseServiceContract.CONTRACT_ID;
    }
@@ -83,4 +77,7 @@ public class UnpauseRequest extends Request {
       return result;
    }
    
+   public final Structure make() {
+      return new UnpauseRequest();
+   }
 }

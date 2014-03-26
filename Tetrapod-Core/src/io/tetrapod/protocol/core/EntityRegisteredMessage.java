@@ -48,8 +48,8 @@ public class EntityRegisteredMessage extends Message {
       while (true) {
          int tag = data.readTag();
          switch (tag) {
-            case 1: this.entity = data.read_struct(tag, Entity.class); break;
-            case 2: this.topics = data.read_struct_array(tag, FlatTopic.class); break;
+            case 1: this.entity = data.read_struct(tag, new Entity()); break;
+            case 2: this.topics = data.read_struct_array(tag, new FlatTopic()); break;
             case Codec.END_TAG:
                return;
             default:
@@ -76,12 +76,6 @@ public class EntityRegisteredMessage extends Message {
       void messageEntityRegistered(EntityRegisteredMessage m, MessageContext ctx);
    }
    
-   public static Callable<Structure> getInstanceFactory() {
-      return new Callable<Structure>() {
-         public Structure call() { return new EntityRegisteredMessage(); }
-      };
-   }
-   
    public final int getContractId() {
       return TetrapodContract.CONTRACT_ID;
    }
@@ -94,5 +88,9 @@ public class EntityRegisteredMessage extends Message {
       result[1] = "entity";
       result[2] = "topics";
       return result;
+   }
+   
+   public final Structure make() {
+      return new EntityRegisteredMessage();
    }
 }

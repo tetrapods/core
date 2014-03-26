@@ -73,12 +73,6 @@ public class {{class}} extends Request {
       Response request{{rawname}}({{class}} r, RequestContext ctx);
    }
    
-   public static Callable<Structure> getInstanceFactory() {
-      return new Callable<Structure>() {
-         public Structure call() { return new {{class}}(); }
-      };
-   }
-   
    public final int getContractId() {
       return {{service}}.CONTRACT_ID;
    }
@@ -92,5 +86,8 @@ public class {{class}} extends Request {
       return result;
    }
    
+   public final Structure make() {
+      return new {{class}}();
+   }
 }
 

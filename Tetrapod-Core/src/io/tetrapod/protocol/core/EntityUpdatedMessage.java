@@ -76,12 +76,6 @@ public class EntityUpdatedMessage extends Message {
       void messageEntityUpdated(EntityUpdatedMessage m, MessageContext ctx);
    }
    
-   public static Callable<Structure> getInstanceFactory() {
-      return new Callable<Structure>() {
-         public Structure call() { return new EntityUpdatedMessage(); }
-      };
-   }
-   
    public final int getContractId() {
       return TetrapodContract.CONTRACT_ID;
    }
@@ -94,5 +88,9 @@ public class EntityUpdatedMessage extends Message {
       result[1] = "entityId";
       result[2] = "status";
       return result;
+   }
+   
+   public final Structure make() {
+      return new EntityUpdatedMessage();
    }
 }

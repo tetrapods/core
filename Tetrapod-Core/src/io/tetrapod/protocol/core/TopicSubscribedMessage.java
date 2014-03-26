@@ -81,12 +81,6 @@ public class TopicSubscribedMessage extends Message {
       void messageTopicSubscribed(TopicSubscribedMessage m, MessageContext ctx);
    }
    
-   public static Callable<Structure> getInstanceFactory() {
-      return new Callable<Structure>() {
-         public Structure call() { return new TopicSubscribedMessage(); }
-      };
-   }
-   
    public final int getContractId() {
       return TetrapodContract.CONTRACT_ID;
    }
@@ -100,5 +94,9 @@ public class TopicSubscribedMessage extends Message {
       result[2] = "topicId";
       result[3] = "entityId";
       return result;
+   }
+   
+   public final Structure make() {
+      return new TopicSubscribedMessage();
    }
 }

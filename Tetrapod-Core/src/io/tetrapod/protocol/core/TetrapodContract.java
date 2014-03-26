@@ -25,31 +25,31 @@ public class TetrapodContract extends Contract {
       ServiceStatusUpdateRequest.Handler
       {}
    
-   public void addRequests(StructureFactory factory, int dynamicId) {
-      factory.add(dynamicId, AddWebRoutesRequest.STRUCT_ID, AddWebRoutesRequest.getInstanceFactory());
-      factory.add(dynamicId, PublishRequest.STRUCT_ID, PublishRequest.getInstanceFactory());
-      factory.add(dynamicId, RegisterRequest.STRUCT_ID, RegisterRequest.getInstanceFactory());
-      factory.add(dynamicId, RegistrySubscribeRequest.STRUCT_ID, RegistrySubscribeRequest.getInstanceFactory());
-      factory.add(dynamicId, ServiceStatusUpdateRequest.STRUCT_ID, ServiceStatusUpdateRequest.getInstanceFactory());
+   public void addRequests(StructureFactory factory) {
+      factory.add(new AddWebRoutesRequest());
+      factory.add(new PublishRequest());
+      factory.add(new RegisterRequest());
+      factory.add(new RegistrySubscribeRequest());
+      factory.add(new ServiceStatusUpdateRequest());
    }
    
-   public void addResponses(StructureFactory factory, int dynamicId) {
-      factory.add(dynamicId, PublishResponse.STRUCT_ID, PublishResponse.getInstanceFactory());
-      factory.add(dynamicId, RegisterResponse.STRUCT_ID, RegisterResponse.getInstanceFactory());
+   public void addResponses(StructureFactory factory) {
+      factory.add(new PublishResponse());
+      factory.add(new RegisterResponse());
    }
    
-   public void addMessages(StructureFactory factory, int dynamicId) {
-      factory.add(dynamicId, EntityRegisteredMessage.STRUCT_ID, EntityRegisteredMessage.getInstanceFactory());
-      factory.add(dynamicId, EntityUnregisteredMessage.STRUCT_ID, EntityUnregisteredMessage.getInstanceFactory());
-      factory.add(dynamicId, EntityUpdatedMessage.STRUCT_ID, EntityUpdatedMessage.getInstanceFactory());
-      factory.add(dynamicId, ServiceAddedMessage.STRUCT_ID, ServiceAddedMessage.getInstanceFactory());
-      factory.add(dynamicId, ServiceRemovedMessage.STRUCT_ID, ServiceRemovedMessage.getInstanceFactory());
-      factory.add(dynamicId, ServiceStatsMessage.STRUCT_ID, ServiceStatsMessage.getInstanceFactory());
-      factory.add(dynamicId, ServiceUpdatedMessage.STRUCT_ID, ServiceUpdatedMessage.getInstanceFactory());
-      factory.add(dynamicId, TopicPublishedMessage.STRUCT_ID, TopicPublishedMessage.getInstanceFactory());
-      factory.add(dynamicId, TopicSubscribedMessage.STRUCT_ID, TopicSubscribedMessage.getInstanceFactory());
-      factory.add(dynamicId, TopicUnpublishedMessage.STRUCT_ID, TopicUnpublishedMessage.getInstanceFactory());
-      factory.add(dynamicId, TopicUnsubscribedMessage.STRUCT_ID, TopicUnsubscribedMessage.getInstanceFactory());
+   public void addMessages(StructureFactory factory) {
+      factory.add(new EntityRegisteredMessage());
+      factory.add(new EntityUnregisteredMessage());
+      factory.add(new EntityUpdatedMessage());
+      factory.add(new ServiceAddedMessage());
+      factory.add(new ServiceRemovedMessage());
+      factory.add(new ServiceStatsMessage());
+      factory.add(new ServiceUpdatedMessage());
+      factory.add(new TopicPublishedMessage());
+      factory.add(new TopicSubscribedMessage());
+      factory.add(new TopicUnpublishedMessage());
+      factory.add(new TopicUnsubscribedMessage());
    }
    
    public String getName() {
@@ -78,13 +78,13 @@ public class TetrapodContract extends Contract {
          {}
          
       public void addMessages(StructureFactory factory, int dynamicId) {
-         factory.add(dynamicId, EntityRegisteredMessage.STRUCT_ID, EntityRegisteredMessage.getInstanceFactory());
-         factory.add(dynamicId, EntityUnregisteredMessage.STRUCT_ID, EntityUnregisteredMessage.getInstanceFactory());
-         factory.add(dynamicId, EntityUpdatedMessage.STRUCT_ID, EntityUpdatedMessage.getInstanceFactory());
-         factory.add(dynamicId, TopicPublishedMessage.STRUCT_ID, TopicPublishedMessage.getInstanceFactory());
-         factory.add(dynamicId, TopicSubscribedMessage.STRUCT_ID, TopicSubscribedMessage.getInstanceFactory());
-         factory.add(dynamicId, TopicUnpublishedMessage.STRUCT_ID, TopicUnpublishedMessage.getInstanceFactory());
-         factory.add(dynamicId, TopicUnsubscribedMessage.STRUCT_ID, TopicUnsubscribedMessage.getInstanceFactory());
+         factory.add(new EntityRegisteredMessage());
+         factory.add(new EntityUnregisteredMessage());
+         factory.add(new EntityUpdatedMessage());
+         factory.add(new TopicPublishedMessage());
+         factory.add(new TopicSubscribedMessage());
+         factory.add(new TopicUnpublishedMessage());
+         factory.add(new TopicUnsubscribedMessage());
       }
       
       public String getName() {
@@ -96,7 +96,8 @@ public class TetrapodContract extends Contract {
       } 
        
    }
-      public static class Services extends Contract {
+      
+   public static class Services extends Contract {
       public static interface API extends
          ServiceAddedMessage.Handler,
          ServiceRemovedMessage.Handler,
@@ -105,10 +106,10 @@ public class TetrapodContract extends Contract {
          {}
          
       public void addMessages(StructureFactory factory, int dynamicId) {
-         factory.add(dynamicId, ServiceAddedMessage.STRUCT_ID, ServiceAddedMessage.getInstanceFactory());
-         factory.add(dynamicId, ServiceRemovedMessage.STRUCT_ID, ServiceRemovedMessage.getInstanceFactory());
-         factory.add(dynamicId, ServiceStatsMessage.STRUCT_ID, ServiceStatsMessage.getInstanceFactory());
-         factory.add(dynamicId, ServiceUpdatedMessage.STRUCT_ID, ServiceUpdatedMessage.getInstanceFactory());
+         factory.add(new ServiceAddedMessage());
+         factory.add(new ServiceRemovedMessage());
+         factory.add(new ServiceStatsMessage());
+         factory.add(new ServiceUpdatedMessage());
       }
       
       public String getName() {

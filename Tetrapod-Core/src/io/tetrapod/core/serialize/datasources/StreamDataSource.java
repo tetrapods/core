@@ -75,21 +75,12 @@ abstract public class StreamDataSource implements DataSource {
    }
 
    @Override
-   public <T extends Structure> T read_struct(int tag, Class<T> structClass) throws IOException {
+   public <T extends Structure> T read_struct(int tag, T struct) throws IOException {
       readVarInt(); // byte length
-      return readStructWithNoLength(structClass);
+      struct.read(this);
+      return struct;
    }
    
-   private <T extends Structure> T readStructWithNoLength(Class<T> structClass) throws IOException {
-      try {
-         T inst = structClass.newInstance();
-         inst.read(this);
-         return inst;
-      } catch (InstantiationException | IllegalAccessException e) {
-         throw new IOException("cannont instantiate class", e);
-      }
-   }
-
    public int[] read_int_array(int tag) throws IOException {
       readVarInt(); // byte length
       int len = readVarInt();
@@ -312,23 +303,28 @@ abstract public class StreamDataSource implements DataSource {
       writeRawBytes(temp.rawBuffer(), 0, temp.rawCount());
    }
 
-   public <T extends Structure> T[] read_struct_array(int tag, Class<T> structClass) throws IOException {
+   @SuppressWarnings("unchecked")
+   public <T extends Structure> T[] read_struct_array(int tag, T struct) throws IOException {
       readVarInt(); // byte length
       int len = readVarInt();
-      @SuppressWarnings("unchecked")
-      T[] array = (T[])Array.newInstance(structClass, len);
+      T[] array = (T[])Array.newInstance(struct.getClass(), len);
       for (int i = 0; i < len; i++) {
-         array[i] = readStructWithNoLength(structClass);
+         T inst = i == 0 ? struct : (T)struct.make();
+         inst.read(this);
+         array[i] = inst;
       }
       return array;
    }
    
-   public  <T extends Structure> List<T> read_struct_list(int tag, Class<T> structClass) throws IOException {
+   @SuppressWarnings("unchecked")
+   public  <T extends Structure> List<T> read_struct_list(int tag, T struct) throws IOException {
       readVarInt(); // byte length
       int len = readVarInt();
       List<T> list = new ArrayList<>();
       for (int i = 0; i < len; i++) {
-         list.add(readStructWithNoLength(structClass));
+         T inst = i == 0 ? struct : (T)struct.make();
+         inst.read(this);
+         list.add(inst);
       }
       return list;
    }

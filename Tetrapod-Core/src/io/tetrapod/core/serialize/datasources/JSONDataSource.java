@@ -129,15 +129,10 @@ public class JSONDataSource implements DataSource {
    }
 
    @Override
-   public <T extends Structure> T read_struct(int tag, Class<T> structClass) throws IOException {
-      try {
-         JSONObject jo = json.getJSONObject(key(tag));
-         T inst = structClass.newInstance();
-         inst.read(getTemporarySource(jo, inst));
-         return inst;
-      } catch (InstantiationException | IllegalAccessException e) {
-         throw new IOException("cannot instantiate class", e);
-      }
+   public <T extends Structure> T read_struct(int tag, T struct) throws IOException {
+      JSONObject jo = json.getJSONObject(key(tag));
+      struct.read(getTemporarySource(jo, struct));
+      return struct;
    }
 
    @Override
@@ -392,40 +387,31 @@ public class JSONDataSource implements DataSource {
    }
 
    @Override
-   public <T extends Structure> T[] read_struct_array(int tag, Class<T> structClass) throws IOException {
-      try {
-         JSONArray arr = json.getJSONArray(key(tag));
-         @SuppressWarnings("unchecked")
-         T[] res = (T[])Array.newInstance(structClass, arr.length());
-         for (int i = 0; i < res.length; i++) {
-            JSONObject jo = arr.getJSONObject(i);
-            T inst = structClass.newInstance();
-            inst.read(getTemporarySource(jo, inst));
-            res[i] = inst;
-         }
-         return res;
-      } catch (InstantiationException | IllegalAccessException e) {
-         // TODO LOG
+   @SuppressWarnings("unchecked")
+   public <T extends Structure> T[] read_struct_array(int tag, T struct) throws IOException {
+      JSONArray arr = json.getJSONArray(key(tag));
+      T[] res = (T[])Array.newInstance(struct.getClass(), arr.length());
+      for (int i = 0; i < res.length; i++) {
+         JSONObject jo = arr.getJSONObject(i);
+         T inst = i == 0 ? struct : (T)struct.make();
+         inst.read(getTemporarySource(jo, inst));
+         res[i] = inst;
       }
-      return null;
+      return res;
    }
 
    @Override
-   public <T extends Structure> List<T> read_struct_list(int tag, Class<T> structClass) throws IOException {
-      try {
-         JSONArray arr = json.getJSONArray(key(tag));
-         List<T> res = new ArrayList<>();
-         for (int i = 0; i < arr.length(); i++) {
-            JSONObject jo = arr.getJSONObject(i);
-            T inst = structClass.newInstance();
-            inst.read(getTemporarySource(jo, inst));
-            res.add(inst);
-         }
-         return res;
-      } catch (InstantiationException | IllegalAccessException e) {
-         // TODO LOG
+   public <T extends Structure> List<T> read_struct_list(int tag, T struct) throws IOException {
+      JSONArray arr = json.getJSONArray(key(tag));
+      List<T> res = new ArrayList<>();
+      for (int i = 0; i < arr.length(); i++) {
+         JSONObject jo = arr.getJSONObject(i);
+         @SuppressWarnings("unchecked")
+         T inst = i == 0 ? struct : (T)struct.make();
+         inst.read(getTemporarySource(jo, inst));
+         res.add(inst);
       }
-      return null;   
+      return res;
    }
 
    @Override

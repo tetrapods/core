@@ -44,7 +44,7 @@ public class ServiceAddedMessage extends Message {
       while (true) {
          int tag = data.readTag();
          switch (tag) {
-            case 1: this.entity = data.read_struct(tag, Entity.class); break;
+            case 1: this.entity = data.read_struct(tag, new Entity()); break;
             case Codec.END_TAG:
                return;
             default:
@@ -71,12 +71,6 @@ public class ServiceAddedMessage extends Message {
       void messageServiceAdded(ServiceAddedMessage m, MessageContext ctx);
    }
    
-   public static Callable<Structure> getInstanceFactory() {
-      return new Callable<Structure>() {
-         public Structure call() { return new ServiceAddedMessage(); }
-      };
-   }
-   
    public final int getContractId() {
       return TetrapodContract.CONTRACT_ID;
    }
@@ -88,5 +82,9 @@ public class ServiceAddedMessage extends Message {
       String[] result = new String[1+1];
       result[1] = "entity";
       return result;
+   }
+   
+   public final Structure make() {
+      return new ServiceAddedMessage();
    }
 }

@@ -85,12 +85,6 @@ public class RegisterRequest extends Request {
       Response requestRegister(RegisterRequest r, RequestContext ctx);
    }
    
-   public static Callable<Structure> getInstanceFactory() {
-      return new Callable<Structure>() {
-         public Structure call() { return new RegisterRequest(); }
-      };
-   }
-   
    public final int getContractId() {
       return TetrapodContract.CONTRACT_ID;
    }
@@ -107,4 +101,7 @@ public class RegisterRequest extends Request {
       return result;
    }
    
+   public final Structure make() {
+      return new RegisterRequest();
+   }
 }

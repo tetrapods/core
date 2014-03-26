@@ -72,12 +72,6 @@ public class {{class}} extends Message {
       void message{{rawname}}({{class}} m, MessageContext ctx);
    }
    
-   public static Callable<Structure> getInstanceFactory() {
-      return new Callable<Structure>() {
-         public Structure call() { return new {{class}}(); }
-      };
-   }
-   
    public final int getContractId() {
       return {{service}}.CONTRACT_ID;
    }
@@ -89,6 +83,10 @@ public class {{class}} extends Message {
       String[] result = new String[{{maxtag}}+1];
       {{webNames}}
       return result;
+   }
+   
+   public final Structure make() {
+      return new {{class}}();
    }
 }
 

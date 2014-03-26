@@ -59,12 +59,6 @@ public class PublishResponse extends Response {
       return PublishResponse.STRUCT_ID;
    }
       
-   public static Callable<Structure> getInstanceFactory() {
-      return new Callable<Structure>() {
-         public Structure call() { return new PublishResponse(); }
-      };
-   }
-      
    public final int getContractId() {
       return TetrapodContract.CONTRACT_ID;
    }
@@ -76,5 +70,9 @@ public class PublishResponse extends Response {
       String[] result = new String[1+1];
       result[1] = "topicId";
       return result;
+   }
+
+   public final Structure make() {
+      return new PublishResponse();
    }
 }

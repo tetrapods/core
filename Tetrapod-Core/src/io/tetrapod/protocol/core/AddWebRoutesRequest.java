@@ -44,7 +44,7 @@ public class AddWebRoutesRequest extends Request {
       while (true) {
          int tag = data.readTag();
          switch (tag) {
-            case 1: this.routes = data.read_struct_array(tag, WebRoute.class); break;
+            case 1: this.routes = data.read_struct_array(tag, new WebRoute()); break;
             case Codec.END_TAG:
                return;
             default:
@@ -70,12 +70,6 @@ public class AddWebRoutesRequest extends Request {
       Response requestAddWebRoutes(AddWebRoutesRequest r, RequestContext ctx);
    }
    
-   public static Callable<Structure> getInstanceFactory() {
-      return new Callable<Structure>() {
-         public Structure call() { return new AddWebRoutesRequest(); }
-      };
-   }
-   
    public final int getContractId() {
       return TetrapodContract.CONTRACT_ID;
    }
@@ -89,4 +83,7 @@ public class AddWebRoutesRequest extends Request {
       return result;
    }
    
+   public final Structure make() {
+      return new AddWebRoutesRequest();
+   }
 }

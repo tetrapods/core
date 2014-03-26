@@ -7,7 +7,6 @@ import io.tetrapod.core.serialize.datasources.FileDataSource;
 import java.io.*;
 import java.nio.file.*;
 import java.util.*;
-import java.util.concurrent.Callable;
 
 /**
  * Simple key value store.  Each store has a name which needs to be unique from
@@ -67,8 +66,8 @@ public class KeyValueStore {
       map.clear();
    }
    
-   public synchronized void register(int contractId, int structId, Callable<Structure> factory) {
-      entry.factory.add(contractId, structId, factory);
+   public synchronized void register(Structure s) {
+      entry.factory.add(s);
    }
 
    private void load() throws IOException {

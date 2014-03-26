@@ -76,12 +76,6 @@ public class TopicUnpublishedMessage extends Message {
       void messageTopicUnpublished(TopicUnpublishedMessage m, MessageContext ctx);
    }
    
-   public static Callable<Structure> getInstanceFactory() {
-      return new Callable<Structure>() {
-         public Structure call() { return new TopicUnpublishedMessage(); }
-      };
-   }
-   
    public final int getContractId() {
       return TetrapodContract.CONTRACT_ID;
    }
@@ -94,5 +88,9 @@ public class TopicUnpublishedMessage extends Message {
       result[1] = "ownerId";
       result[2] = "topicId";
       return result;
+   }
+   
+   public final Structure make() {
+      return new TopicUnpublishedMessage();
    }
 }

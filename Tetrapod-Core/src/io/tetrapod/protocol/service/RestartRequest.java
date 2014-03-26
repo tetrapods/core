@@ -75,12 +75,6 @@ public class RestartRequest extends Request {
       Response requestRestart(RestartRequest r, RequestContext ctx);
    }
    
-   public static Callable<Structure> getInstanceFactory() {
-      return new Callable<Structure>() {
-         public Structure call() { return new RestartRequest(); }
-      };
-   }
-   
    public final int getContractId() {
       return BaseServiceContract.CONTRACT_ID;
    }
@@ -95,4 +89,7 @@ public class RestartRequest extends Request {
       return result;
    }
    
+   public final Structure make() {
+      return new RestartRequest();
+   }
 }

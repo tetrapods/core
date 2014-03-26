@@ -20,20 +20,20 @@ public class IdentityContract extends Contract {
       UpdatePropertiesRequest.Handler
       {}
    
-   public void addRequests(StructureFactory factory, int dynamicId) {
-      factory.add(dynamicId, CreateRequest.STRUCT_ID, CreateRequest.getInstanceFactory());
-      factory.add(dynamicId, InfoRequest.STRUCT_ID, InfoRequest.getInstanceFactory());
-      factory.add(dynamicId, LoginRequest.STRUCT_ID, LoginRequest.getInstanceFactory());
-      factory.add(dynamicId, UpdatePropertiesRequest.STRUCT_ID, UpdatePropertiesRequest.getInstanceFactory());
+   public void addRequests(StructureFactory factory) {
+      factory.add(new CreateRequest());
+      factory.add(new InfoRequest());
+      factory.add(new LoginRequest());
+      factory.add(new UpdatePropertiesRequest());
    }
    
-   public void addResponses(StructureFactory factory, int dynamicId) {
-      factory.add(dynamicId, CreateResponse.STRUCT_ID, CreateResponse.getInstanceFactory());
-      factory.add(dynamicId, InfoResponse.STRUCT_ID, InfoResponse.getInstanceFactory());
-      factory.add(dynamicId, LoginResponse.STRUCT_ID, LoginResponse.getInstanceFactory());
+   public void addResponses(StructureFactory factory) {
+      factory.add(new CreateResponse());
+      factory.add(new InfoResponse());
+      factory.add(new LoginResponse());
    }
    
-   public void addMessages(StructureFactory factory, int dynamicId) {
+   public void addMessages(StructureFactory factory) {
       
    }
    

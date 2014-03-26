@@ -22,6 +22,14 @@ abstract public class Structure {
    abstract public int getStructId();
    
    abstract public int getContractId();
+   
+   public Structure make() {
+      try {
+         return getClass().newInstance();
+      } catch (InstantiationException | IllegalAccessException e) {
+         return null;
+      }
+   }
 
    @Override
    public String toString() {

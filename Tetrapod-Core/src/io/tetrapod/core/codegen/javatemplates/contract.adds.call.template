@@ -1,1 +1,1 @@
-factory.add(dynamicId, {{class}}.STRUCT_ID, {{class}}.getInstanceFactory());
+factory.add(new {{class}}());
