@@ -96,7 +96,8 @@ public class TetrapodContract extends Contract {
       } 
        
    }
-      public static class Services extends Contract {
+      
+   public static class Services extends Contract {
       public static interface API extends
          ServiceAddedMessage.Handler,
          ServiceRemovedMessage.Handler,

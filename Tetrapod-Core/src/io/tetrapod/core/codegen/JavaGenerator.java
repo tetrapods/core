@@ -16,8 +16,6 @@ class JavaGenerator implements LanguageGenerator {
    private String outputDir;
    
    public void parseOption(TokenizedLine line) throws ParseException {
-//      java package io.tetrapod.identity.protocol
-//      java outdir src
       if (!line.parts.get(0).equals("java"))
          return;
       String opt = line.parts.get(1);
@@ -45,95 +43,81 @@ class JavaGenerator implements LanguageGenerator {
    }
    
    private void generateContract(CodeGenContext context) throws IOException,ParseException {
-      Templater t = template("contract");
-      TemplateValues vals = new TemplateValues();
-      vals.add("class", context.serviceName + "Contract");
-      vals.add("package", packageName);
-      vals.add("version", context.serviceVersion);
-      vals.add("name", context.serviceName);
+      Template t = template("contract");
+      String theClass = context.serviceName + "Contract";
+      t.add("class", theClass);
+      t.add("package", packageName);
+      t.add("version", context.serviceVersion);
+      t.add("name", context.serviceName);
       if (context.serviceId.equals("dynamic")) {
-         vals.add("contractId", "Contract.UNASSIGNED");
-         vals.add("contractIdVolatile", "volatile");
-         vals.add("contractIdSet", vals.get("class") + ".CONTRACT_ID = id;");
+         t.add("contractId", "Contract.UNASSIGNED");
+         t.add("contractIdVolatile", "volatile");
+         t.add("contractIdSet", theClass + ".CONTRACT_ID = id;");
          throw new ParseException("dynamic contract id's not supported yet");
       } else {
-         vals.add("contractId", context.serviceId);
-         vals.add("contractIdVolatile", "final");
-         vals.add("contractIdSet", "");
+         t.add("contractId", context.serviceId);
+         t.add("contractIdVolatile", "final");
+         t.add("contractIdSet", "");
       }
       for (String sub : context.subscriptions)
-         vals.add("subscriptions", genSubscriptions(context, sub, vals.get("class")));      
-      vals.setSeperator("handlers", ",\n");
-      vals.setSeperator("requestAdds", "\n");
-      vals.setSeperator("responseAdds", "\n");
-      vals.setSeperator("messageAdds", "\n");
-      vals.setSeperator("webRoutes", "\n");
+         t.add("subscriptions", genSubscriptions(context, sub, theClass));      
       for (Class c : context.classesByType("request")) {
-         vals.add("handlers", c.classname() + ".Handler");
-         vals.add("requestAdds", template("contract.adds.call").expand(new TemplateValues("class", c.classname())));
+         t.add("handlers", c.classname() + ".Handler", ",\n");
+         t.add("requestAdds", template("contract.adds.call").add("class", c.classname()));
          String path = c.annotations.getFirst("web");
          if (path != null) {
             if (path.isEmpty()) 
                path = Character.toLowerCase(c.name.charAt(0)) + c.name.substring(1);
             path = context.serviceAnnotations.getFirst("web") + path;
-            vals.add("webRoutes", template("contract.webroutes.call").expand(
-                  new TemplateValues("path", path, "requestClass", c.classname(), "contractClass", vals.get("class"))));
+            Template sub = template("contract.webroutes.call")
+                  .add("path", path).add("requestClass", c.classname())
+                  .add("contractClass", theClass);
+            t.add("webRoutes", sub.expand()); 
          }
       }
       for (Class c : context.classesByType("response")) {
-         vals.add("responseAdds", template("contract.adds.call").expand(new TemplateValues("class", c.classname())));
+         t.add("responseAdds", template("contract.adds.call").add("class", c.classname()));
       }
       for (Class c : context.classesByType("message")) {
-         vals.add("messageAdds", template("contract.adds.call").expand(new TemplateValues("class", c.classname())));
+         t.add("messageAdds", template("contract.adds.call").add("class", c.classname()));
       }
 
-      vals.setIfEmpty("handlers", "");
-      vals.setIfEmpty("requestAdds", "");
-      vals.setIfEmpty("webRoutes", "");
-      vals.setIfEmpty("responseAdds", "");
-      vals.setIfEmpty("messageAdds", "");
-      vals.setIfEmpty("subscriptions", "");
-      vals.add("classcomment", generateComment(context.serviceComment));
-      addErrors(context.allErrors, true, context.serviceName, vals);
-      addConstantValues(context.globalConstants, vals);
-      t.expandAndTrim(vals, getFilename(vals.get("class")));
+      t.add("classcomment", generateComment(context.serviceComment));
+      addErrors(context.allErrors, true, context.serviceName, t);
+      addConstantValues(context.globalConstants, t);
+      t.expandAndTrim(getFilename(theClass));
    }
 
    private String genSubscriptions(CodeGenContext context, String subscription, String enclosingClass) throws IOException {
-      Templater t = template("contract.subscription");
-      TemplateValues vals = new TemplateValues();
-      vals.setSeperator("handlers", ",\n");
-      vals.setSeperator("adds", "\n");
-      vals.add("name", subscription);
-      vals.add("enclosingClass", enclosingClass);
+      Template t = template("contract.subscription");
+      t.add("name", subscription);
+      t.add("enclosingClass", enclosingClass);
       for (Class c : context.classesByType("message")) {
          if (subscription.equals(c.subscription)) {
-            vals.add("handlers", c.classname() + ".Handler");
-            vals.add("adds", template("contract.adds.call").expand(new TemplateValues("class", c.classname())));
+            t.add("handlers", c.classname() + ".Handler", ",\n");
+            t.add("adds", template("contract.adds.call").add("class", c.classname()));
          }
       }
-      return t.expand(vals);
+      return t.expand();
    }
 
    private void generateClass(Class c, String serviceName) throws IOException,ParseException {
-      Templater t = Templater.get(getClass(), "javatemplates/" + c.type.toLowerCase() + ".template");
-      TemplateValues vals = new TemplateValues();
-      vals.add("rawname", c.name);
-      vals.add("class", c.classname());
-      vals.add("package", packageName);
-      vals.add("security", c.security.toUpperCase());
-      vals.add("classcomment", generateComment(c.comment));
-      vals.add("maxtag", "" + c.maxTag());
-      vals.setSeperator("webNames", "\n");
+      Template t = template(c.type.toLowerCase());
+      t.add("rawname", c.name);
+      t.add("class", c.classname());
+      t.add("package", packageName);
+      t.add("security", c.security.toUpperCase());
+      t.add("classcomment", generateComment(c.comment));
+      t.add("maxtag", "" + c.maxTag());
       if (c.structId == null) {
          // auto-genned hashes are never less than 10
          c.structId = "" + ((FNVHash.hash32(c.classname()) & 0xffffff) + 10);
       }
-      vals.add("structid", c.structId);
-      vals.add("service", serviceName);
-      addFieldValues(c.fields, vals);
-      addConstantValues(c.fields, vals);
-      addErrors(c.errors, false, serviceName, vals);
+      t.add("structid", c.structId);
+      t.add("service", serviceName);
+      addFieldValues(c.fields, t);
+      addConstantValues(c.fields, t);
+      addErrors(c.errors, false, serviceName, t);
       int instanceFields = 0;
       for (Field f : c.fields) {
          if (!f.isConstant()) instanceFields++;
@@ -143,109 +127,71 @@ class JavaGenerator implements LanguageGenerator {
          if (f.annotations.getFirst("noweb") != null)
             name = "null";
          if (!f.isConstant())
-            vals.add("webNames", template("struct.webnames").expand(new TemplateValues("tag", f.tag, "name", name)));
+            t.add("webNames", template("struct.webnames").add("tag", f.tag).add("name", name));
       }
-      if (instanceFields > 0)
-         vals.add("full-constructor", Templater.get(getClass(), "javatemplates/full.constructor.template").expand(vals));
-      else
-         vals.add("full-constructor", "");
-      vals.setIfEmpty("webNames", "");
-      t.expandAndTrim(vals, getFilename(c.classname()));
+      if (instanceFields > 0) {
+         t.add("full-constructor", template("full.constructor").add(t));
+      }
+      t.expandAndTrim(getFilename(c.classname()));
    }
 
-   private void addErrors(Collection<Err> errors, boolean globalScope, String serviceName, TemplateValues vals) throws IOException,ParseException {
-      Templater t = template("field.errors");
-      vals.setSeperator("errors", "\n");
+   private void addErrors(Collection<Err> errors, boolean globalScope, String serviceName, Template global) throws IOException,ParseException {
       for (Err err : errors) {
-         TemplateValues v = new TemplateValues();
-         v.add("name", err.name);
+         Template t = template("field.errors");
+         t.add("name", err.name);
          // error hashes are never less than 100
          int hash = err.value;
          if (hash == 0)
             hash = (FNVHash.hash32(err.name) & 0xffffff) + 100;
-         v.add("hash", "" + hash);
-         v.add("service", serviceName);
-         String[] lines = t.expand(v).split("\r\n|\n|\r");
+         t.add("hash", "" + hash);
+         t.add("service", serviceName);
+         String[] lines = t.expand().split("\r\n|\n|\r");
          String line = globalScope ? lines[0] : lines[1];
-         vals.add("errors", generateComment(err.comment) + line);
+         global.add("errors", generateComment(err.comment) + line);
       }
-      vals.setIfEmpty("errors", "");
    }
 
-   private void addFieldValues(List<Field> fields, TemplateValues globalVals) throws ParseException, IOException {
-      StringBuilder declarations = new StringBuilder();
-      StringBuilder defaults = new StringBuilder();
-      StringBuilder writes = new StringBuilder();
-      StringBuilder reads = new StringBuilder();
-      StringBuilder inlineDeclarations = new StringBuilder();
-      StringBuilder inlineInitializers = new StringBuilder();
-      boolean isFirst = true;
+   private void addFieldValues(List<Field> fields, Template global) throws ParseException, IOException {
       for (Field f : fields) {
          if (f.isConstant())
             continue;
-         TemplateValues vals = getTemplateValues(f);
-         String[] lines = template(vals.get("template")).expand(vals).split("\r\n|\n|\r");
-         String newline = "\n";
-         String comma = ", ";
-         if (isFirst) {
-            isFirst = false;
-            newline = "";
-            comma = "";
-         }
-         declarations.append(newline);
-         if (f.comment != null && !f.comment.trim().isEmpty()) {
-            declarations.append(generateComment(f.comment.trim()));
-         }
-         declarations.append(lines[0]);
-         defaults.append(newline);
-         defaults.append(lines[1]);
-         reads.append(newline);
-         reads.append(lines[2]);
-         writes.append(newline);
-         writes.append(lines[3]);
-         inlineDeclarations.append(comma);
-         inlineDeclarations.append(lines[4]);
-         inlineInitializers.append(newline);
-         inlineInitializers.append(lines[5]);
-      }
-      globalVals.add("field-declarations", declarations.toString());
-      globalVals.add("field-defaults", defaults.toString());
-      globalVals.add("field-writes", writes.toString());
-      globalVals.add("field-reads", reads.toString());
-      globalVals.add("inline-declarations", inlineDeclarations.toString());
-      globalVals.add("inline-initializers", inlineInitializers.toString());
-   }
-
-   private void addConstantValues(List<Field> fields, TemplateValues globalVals) throws ParseException, IOException {
-      globalVals.setSeperator("constants", "\n");
-      for (Field f : fields) {
-         if (!f.isConstant())
-            continue;
-         TemplateValues vals = getTemplateValues(f);
-         String[] lines = template(vals.get("template")).expand(vals).split("\r\n|\n|\r");
+         Template sub = getFieldTemplate(f);
+         String[] lines = sub.expand().split("\r\n|\n|\r");
          String comment = "";
          if (f.comment != null && !f.comment.trim().isEmpty()) {
             comment = generateComment(f.comment.trim());
          }
-         globalVals.add("constants", comment + lines[0]);
+         global.add("field-declarations", comment + lines[0]);
+         global.add("field-defaults", lines[1]);
+         global.add("field-reads", lines[2]);
+         global.add("field-writes", lines[3]);
+         global.add("inline-declarations", lines[4], ", ");
+         global.add("inline-initializers", lines[5]);
       }
-      globalVals.setIfEmpty("constants", "");
    }
 
-   private TemplateValues getTemplateValues(Field f) {
-      TemplateValues vals = new TemplateValues();
+   private void addConstantValues(List<Field> fields, Template global) throws ParseException, IOException {
+      for (Field f : fields) {
+         if (!f.isConstant())
+            continue;
+         Template sub = getFieldTemplate(f);
+         String[] lines = sub.expand().split("\r\n|\n|\r");
+         String comment = "";
+         if (f.comment != null && !f.comment.trim().isEmpty()) {
+            comment = generateComment(f.comment.trim());
+         }
+         global.add("constants", comment + lines[0]);
+      }
+   }
+
+   private Template getFieldTemplate(Field f) throws IOException {
       JavaTypes.Info info = JavaTypes.get(f.type);
-      vals.add("name", f.name);
-      vals.add("javatype", info.base);
-      vals.add("type", f.type);
-      vals.add("boxed", info.boxed);
       String defaultVal = info.defaultValue;
       if (f.defaultValue != null) {
          if (f.type.equals("string"))
             f.defaultValue = escape(f.defaultValue);
          defaultVal = info.defaultValueDelim + f.defaultValue + info.defaultValueDelim;
       }
-      vals.add("tag", f.tag);
       String primTemplate = "field.primitives";
       String structTemplate = "field.structs";
       if (f.collectionType != null) {
@@ -274,9 +220,14 @@ class JavaGenerator implements LanguageGenerator {
       if (f.isConstant()) {
          primTemplate = structTemplate = "field.constants";
       }
-      vals.add("template", (info.isPrimitive ? primTemplate : structTemplate));
-      vals.add("default", defaultVal);
-      return vals;
+      Template t = template(info.isPrimitive ? primTemplate : structTemplate);
+      t.add("tag", f.tag);
+      t.add("default", defaultVal);
+      t.add("name", f.name);
+      t.add("javatype", info.base);
+      t.add("type", f.type);
+      t.add("boxed", info.boxed);
+      return t;
    }
 
    private File getFilename(String classname) {
@@ -305,7 +256,7 @@ class JavaGenerator implements LanguageGenerator {
       return s;
    }
    
-   private Templater template(String name) throws IOException {
-      return Templater.get(getClass(), "javatemplates/" + name + ".template");
+   private Template template(String name) throws IOException {
+      return Template.get(getClass(), "javatemplates/" + name + ".template");
    }
 }
