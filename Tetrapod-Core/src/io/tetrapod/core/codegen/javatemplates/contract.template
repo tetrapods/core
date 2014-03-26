@@ -20,15 +20,15 @@ public class {{class}} extends Contract {
       {{handlers}}
       {}
    
-   public void addRequests(StructureFactory factory, int dynamicId) {
+   public void addRequests(StructureFactory factory) {
       {{requestAdds}}
    }
    
-   public void addResponses(StructureFactory factory, int dynamicId) {
+   public void addResponses(StructureFactory factory) {
       {{responseAdds}}
    }
    
-   public void addMessages(StructureFactory factory, int dynamicId) {
+   public void addMessages(StructureFactory factory) {
       {{messageAdds}}
    }
    

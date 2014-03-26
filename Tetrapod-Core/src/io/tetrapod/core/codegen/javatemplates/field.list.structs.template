@@ -1,6 +1,6 @@
 public List<{{boxed}}> {{name}};
 {{name}} = {{default}};
-case {{tag}}: this.{{name}} = data.read_struct_list(tag, {{javatype}}.class); break;
+case {{tag}}: this.{{name}} = data.read_struct_list(tag, new {{javatype}}()); break;
 if (this.{{name}} != null) data.write_struct({{tag}}, this.{{name}});
 List<{{boxed}}> {{name}}
 this.{{name}} = {{name}};

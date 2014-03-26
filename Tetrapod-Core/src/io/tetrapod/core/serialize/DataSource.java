@@ -25,7 +25,7 @@ public interface DataSource {
 
    public boolean read_boolean(int tag) throws IOException;
 
-   public <T extends Structure> T read_struct(int tag, Class<T> structClass) throws IOException;
+   public <T extends Structure> T read_struct(int tag, T struct) throws IOException;
 
    public int[] read_int_array(int tag) throws IOException;
 
@@ -75,9 +75,9 @@ public interface DataSource {
 
    public void write_string(int tag, List<String> list) throws IOException;
 
-   public <T extends Structure> T[] read_struct_array(int tag, Class<T> structClass) throws IOException;
+   public <T extends Structure> T[] read_struct_array(int tag, T struct) throws IOException;
 
-   public <T extends Structure> List<T> read_struct_list(int tag, Class<T> structClass) throws IOException;
+   public <T extends Structure> List<T> read_struct_list(int tag, T struct) throws IOException;
 
    public void write(int tag, int intval) throws IOException;
 

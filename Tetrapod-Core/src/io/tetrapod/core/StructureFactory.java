@@ -4,7 +4,6 @@ import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.rpc.Error;
 
 import java.util.*;
-import java.util.concurrent.Callable;
 
 import org.slf4j.*;
 
@@ -12,11 +11,11 @@ public class StructureFactory {
 
    protected static final Logger                logger       = LoggerFactory.getLogger(StructureFactory.class);
 
-   private final Map<Long, Callable<Structure>> knownStructs = new HashMap<>();
+   private final Map<Long, Structure> knownStructs = new HashMap<>();
 
-   public synchronized void add(int contractId, int structId, Callable<Structure> factory) {
-      long key = makeKey(contractId, structId);
-      knownStructs.put(key, factory);
+   public synchronized void add(Structure s) {
+      long key = makeKey(s.getContractId(), s.getStructId());
+      knownStructs.put(key, s);
    }
 
    // OPTIMIZE: could make this class immutable using a builder pattern and avoid 
@@ -29,13 +28,9 @@ public class StructureFactory {
          return new Error();
       }
       long key = makeKey(serviceId, structId);
-      Callable<Structure> c = knownStructs.get(key);
+      Structure c = knownStructs.get(key);
       if (c != null) {
-         try {
-            return c.call();
-         } catch (Exception e) {
-            logger.error(e.getMessage(), e);
-         }
+         return c.make();
       }
       return null;
    }

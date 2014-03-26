@@ -113,16 +113,16 @@ abstract public class DefaultService implements Service, BaseServiceContract.API
 
    protected void addContracts(Contract... contracts) {
       for (Contract c : contracts) {
-         c.addRequests(structFactory, c.getContractId());
-         c.addResponses(structFactory, c.getContractId());
-         c.addMessages(structFactory, c.getContractId());
+         c.addRequests(structFactory);
+         c.addResponses(structFactory);
+         c.addMessages(structFactory);
       }
    }
 
    protected void addPeerContracts(Contract... contracts) {
       for (Contract c : contracts) {
-         c.addResponses(structFactory, c.getContractId());
-         c.addMessages(structFactory, c.getContractId());
+         c.addResponses(structFactory);
+         c.addMessages(structFactory);
       }
    }
 
