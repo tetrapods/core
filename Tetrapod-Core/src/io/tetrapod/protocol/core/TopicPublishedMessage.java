@@ -76,12 +76,6 @@ public class TopicPublishedMessage extends Message {
       void messageTopicPublished(TopicPublishedMessage m, MessageContext ctx);
    }
    
-   public static Callable<Structure> getInstanceFactory() {
-      return new Callable<Structure>() {
-         public Structure call() { return new TopicPublishedMessage(); }
-      };
-   }
-   
    public final int getContractId() {
       return TetrapodContract.CONTRACT_ID;
    }
@@ -94,5 +88,9 @@ public class TopicPublishedMessage extends Message {
       result[1] = "ownerId";
       result[2] = "topicId";
       return result;
+   }
+   
+   public final Structure make() {
+      return new TopicPublishedMessage();
    }
 }

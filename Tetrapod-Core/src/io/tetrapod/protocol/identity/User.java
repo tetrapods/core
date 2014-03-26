@@ -86,12 +86,6 @@ public class User extends Structure {
       return IdentityContract.CONTRACT_ID;
    }
 
-   public static Callable<Structure> getInstanceFactory() {
-      return new Callable<Structure>() {
-         public Structure call() { return new User(); }
-      };
-   }
-   
    public final String[] tagWebNames() {
       // Note do not use this tags in long term serializations (to disk or databases) as 
       // implementors are free to rename them however they wish.  A null means the field
@@ -101,5 +95,9 @@ public class User extends Structure {
       result[2] = "accountId";
       result[3] = "properties";
       return result;
+   }
+
+   public final Structure make() {
+      return new User();
    }
 }

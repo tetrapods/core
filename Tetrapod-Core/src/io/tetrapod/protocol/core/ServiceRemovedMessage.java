@@ -71,12 +71,6 @@ public class ServiceRemovedMessage extends Message {
       void messageServiceRemoved(ServiceRemovedMessage m, MessageContext ctx);
    }
    
-   public static Callable<Structure> getInstanceFactory() {
-      return new Callable<Structure>() {
-         public Structure call() { return new ServiceRemovedMessage(); }
-      };
-   }
-   
    public final int getContractId() {
       return TetrapodContract.CONTRACT_ID;
    }
@@ -88,5 +82,9 @@ public class ServiceRemovedMessage extends Message {
       String[] result = new String[1+1];
       result[1] = "entityId";
       return result;
+   }
+   
+   public final Structure make() {
+      return new ServiceRemovedMessage();
    }
 }

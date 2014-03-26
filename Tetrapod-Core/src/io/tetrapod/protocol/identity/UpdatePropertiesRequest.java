@@ -93,12 +93,6 @@ public class UpdatePropertiesRequest extends Request {
       Response requestUpdateProperties(UpdatePropertiesRequest r, RequestContext ctx);
    }
    
-   public static Callable<Structure> getInstanceFactory() {
-      return new Callable<Structure>() {
-         public Structure call() { return new UpdatePropertiesRequest(); }
-      };
-   }
-   
    public final int getContractId() {
       return IdentityContract.CONTRACT_ID;
    }
@@ -115,4 +109,7 @@ public class UpdatePropertiesRequest extends Request {
       return result;
    }
    
+   public final Structure make() {
+      return new UpdatePropertiesRequest();
+   }
 }

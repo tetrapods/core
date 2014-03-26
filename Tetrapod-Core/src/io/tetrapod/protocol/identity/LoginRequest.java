@@ -78,12 +78,6 @@ public class LoginRequest extends Request {
       Response requestLogin(LoginRequest r, RequestContext ctx);
    }
    
-   public static Callable<Structure> getInstanceFactory() {
-      return new Callable<Structure>() {
-         public Structure call() { return new LoginRequest(); }
-      };
-   }
-   
    public final int getContractId() {
       return IdentityContract.CONTRACT_ID;
    }
@@ -98,4 +92,7 @@ public class LoginRequest extends Request {
       return result;
    }
    
+   public final Structure make() {
+      return new LoginRequest();
+   }
 }

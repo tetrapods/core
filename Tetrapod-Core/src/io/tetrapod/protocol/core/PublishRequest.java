@@ -68,12 +68,6 @@ public class PublishRequest extends Request {
       Response requestPublish(PublishRequest r, RequestContext ctx);
    }
    
-   public static Callable<Structure> getInstanceFactory() {
-      return new Callable<Structure>() {
-         public Structure call() { return new PublishRequest(); }
-      };
-   }
-   
    public final int getContractId() {
       return TetrapodContract.CONTRACT_ID;
    }
@@ -87,4 +81,7 @@ public class PublishRequest extends Request {
       return result;
    }
    
+   public final Structure make() {
+      return new PublishRequest();
+   }
 }

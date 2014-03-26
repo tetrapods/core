@@ -80,12 +80,6 @@ public class CreateRequest extends Request {
       Response requestCreate(CreateRequest r, RequestContext ctx);
    }
    
-   public static Callable<Structure> getInstanceFactory() {
-      return new Callable<Structure>() {
-         public Structure call() { return new CreateRequest(); }
-      };
-   }
-   
    public final int getContractId() {
       return IdentityContract.CONTRACT_ID;
    }
@@ -101,4 +95,7 @@ public class CreateRequest extends Request {
       return result;
    }
    
+   public final Structure make() {
+      return new CreateRequest();
+   }
 }

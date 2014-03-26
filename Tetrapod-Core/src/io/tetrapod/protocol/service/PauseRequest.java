@@ -64,12 +64,6 @@ public class PauseRequest extends Request {
       Response requestPause(PauseRequest r, RequestContext ctx);
    }
    
-   public static Callable<Structure> getInstanceFactory() {
-      return new Callable<Structure>() {
-         public Structure call() { return new PauseRequest(); }
-      };
-   }
-   
    public final int getContractId() {
       return BaseServiceContract.CONTRACT_ID;
    }
@@ -83,4 +77,7 @@ public class PauseRequest extends Request {
       return result;
    }
    
+   public final Structure make() {
+      return new PauseRequest();
+   }
 }

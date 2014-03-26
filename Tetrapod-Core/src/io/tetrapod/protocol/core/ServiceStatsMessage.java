@@ -91,12 +91,6 @@ public class ServiceStatsMessage extends Message {
       void messageServiceStats(ServiceStatsMessage m, MessageContext ctx);
    }
    
-   public static Callable<Structure> getInstanceFactory() {
-      return new Callable<Structure>() {
-         public Structure call() { return new ServiceStatsMessage(); }
-      };
-   }
-   
    public final int getContractId() {
       return TetrapodContract.CONTRACT_ID;
    }
@@ -112,5 +106,9 @@ public class ServiceStatsMessage extends Message {
       result[4] = "latency";
       result[5] = "counter";
       return result;
+   }
+   
+   public final Structure make() {
+      return new ServiceStatsMessage();
    }
 }

@@ -53,7 +53,7 @@ public class FlatTopic extends Structure {
          int tag = data.readTag();
          switch (tag) {
             case 1: this.topicId = data.read_int(tag); break;
-            case 2: this.subscriber = data.read_struct_array(tag, Subscriber.class); break;
+            case 2: this.subscriber = data.read_struct_array(tag, new Subscriber()); break;
             case Codec.END_TAG:
                return;
             default:
@@ -72,12 +72,6 @@ public class FlatTopic extends Structure {
       return TetrapodContract.CONTRACT_ID;
    }
 
-   public static Callable<Structure> getInstanceFactory() {
-      return new Callable<Structure>() {
-         public Structure call() { return new FlatTopic(); }
-      };
-   }
-   
    public final String[] tagWebNames() {
       // Note do not use this tags in long term serializations (to disk or databases) as 
       // implementors are free to rename them however they wish.  A null means the field
@@ -86,5 +80,9 @@ public class FlatTopic extends Structure {
       result[1] = "topicId";
       result[2] = "subscriber";
       return result;
+   }
+
+   public final Structure make() {
+      return new FlatTopic();
    }
 }

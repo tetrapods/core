@@ -70,12 +70,6 @@ public class ServiceStatusUpdateRequest extends Request {
       Response requestServiceStatusUpdate(ServiceStatusUpdateRequest r, RequestContext ctx);
    }
    
-   public static Callable<Structure> getInstanceFactory() {
-      return new Callable<Structure>() {
-         public Structure call() { return new ServiceStatusUpdateRequest(); }
-      };
-   }
-   
    public final int getContractId() {
       return TetrapodContract.CONTRACT_ID;
    }
@@ -89,4 +83,7 @@ public class ServiceStatusUpdateRequest extends Request {
       return result;
    }
    
+   public final Structure make() {
+      return new ServiceStatusUpdateRequest();
+   }
 }

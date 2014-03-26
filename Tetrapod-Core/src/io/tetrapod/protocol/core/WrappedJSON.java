@@ -67,12 +67,6 @@ public class WrappedJSON extends Structure {
       return TetrapodContract.CONTRACT_ID;
    }
 
-   public static Callable<Structure> getInstanceFactory() {
-      return new Callable<Structure>() {
-         public Structure call() { return new WrappedJSON(); }
-      };
-   }
-   
    public final String[] tagWebNames() {
       // Note do not use this tags in long term serializations (to disk or databases) as 
       // implementors are free to rename them however they wish.  A null means the field
@@ -80,5 +74,9 @@ public class WrappedJSON extends Structure {
       String[] result = new String[1+1];
       result[1] = "json";
       return result;
+   }
+
+   public final Structure make() {
+      return new WrappedJSON();
    }
 }

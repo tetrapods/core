@@ -71,12 +71,6 @@ public class EntityUnregisteredMessage extends Message {
       void messageEntityUnregistered(EntityUnregisteredMessage m, MessageContext ctx);
    }
    
-   public static Callable<Structure> getInstanceFactory() {
-      return new Callable<Structure>() {
-         public Structure call() { return new EntityUnregisteredMessage(); }
-      };
-   }
-   
    public final int getContractId() {
       return TetrapodContract.CONTRACT_ID;
    }
@@ -88,5 +82,9 @@ public class EntityUnregisteredMessage extends Message {
       String[] result = new String[1+1];
       result[1] = "entityId";
       return result;
+   }
+   
+   public final Structure make() {
+      return new EntityUnregisteredMessage();
    }
 }

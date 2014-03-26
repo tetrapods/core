@@ -24,18 +24,18 @@ public class BaseServiceContract extends Contract {
       UnpauseRequest.Handler
       {}
    
-   public void addRequests(StructureFactory factory, int dynamicId) {
-      factory.add(dynamicId, PauseRequest.STRUCT_ID, PauseRequest.getInstanceFactory());
-      factory.add(dynamicId, RestartRequest.STRUCT_ID, RestartRequest.getInstanceFactory());
-      factory.add(dynamicId, ShutdownRequest.STRUCT_ID, ShutdownRequest.getInstanceFactory());
-      factory.add(dynamicId, UnpauseRequest.STRUCT_ID, UnpauseRequest.getInstanceFactory());
+   public void addRequests(StructureFactory factory) {
+      factory.add(new PauseRequest());
+      factory.add(new RestartRequest());
+      factory.add(new ShutdownRequest());
+      factory.add(new UnpauseRequest());
    }
    
-   public void addResponses(StructureFactory factory, int dynamicId) {
+   public void addResponses(StructureFactory factory) {
       
    }
    
-   public void addMessages(StructureFactory factory, int dynamicId) {
+   public void addMessages(StructureFactory factory) {
       
    }
    

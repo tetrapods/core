@@ -69,12 +69,6 @@ public class RegisterResponse extends Response {
       return RegisterResponse.STRUCT_ID;
    }
       
-   public static Callable<Structure> getInstanceFactory() {
-      return new Callable<Structure>() {
-         public Structure call() { return new RegisterResponse(); }
-      };
-   }
-      
    public final int getContractId() {
       return TetrapodContract.CONTRACT_ID;
    }
@@ -88,5 +82,9 @@ public class RegisterResponse extends Response {
       result[2] = "parentId";
       result[3] = "token";
       return result;
+   }
+
+   public final Structure make() {
+      return new RegisterResponse();
    }
 }
