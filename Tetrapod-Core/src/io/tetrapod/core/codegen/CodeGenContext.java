@@ -1,6 +1,7 @@
 package io.tetrapod.core.codegen;
 
 import io.tetrapod.core.codegen.CodeGen.TokenizedLine;
+import io.tetrapod.core.utils.FNVHash;
 
 import java.util.*;
 
@@ -34,6 +35,14 @@ class CodeGenContext {
          }
          return m;
       }
+
+      public String getStructId() {
+         if (structId == null) {
+            // auto-genned hashes are never less than 10
+            structId = "" + ((FNVHash.hash32(classname()) & 0xffffff) + 10);
+         }
+         return structId;
+      }
    }
 
    public static class Field {
@@ -47,6 +56,13 @@ class CodeGenContext {
 
       public boolean isConstant() {
          return tag.equals("0");
+      }
+
+      public String getWebName() {
+         if (annotations.getFirst("noweb") != null)
+            return null;
+         String name = annotations.getFirst("web");
+         return (name == null) ? this.name : name;
       }
    }
    
@@ -70,15 +86,21 @@ class CodeGenContext {
       public int compareTo(Err o) {
          return name.compareTo(o.name);
       }
+
+      public int getValue() {
+         if (value == 0) {
+            value = (FNVHash.hash32(name) & 0xffffff) + 100;
+            // genned hashes are never less than 100
+         }
+         return value;
+      }
    }
 
    public ArrayList<Class>         classes         = new ArrayList<>();
    public ArrayList<Field>         globalConstants = new ArrayList<>();
    public String                   serviceName;
-   public String                   serviceVersion;
    public String                   serviceComment;
-   public Annotations              serviceAnnotations;
-   public String                   serviceId;
+   public Annotations              serviceAnnotations = new Annotations();
    public String                   defaultSecurity = "internal";
    public Set<Err>                 allErrors       = new TreeSet<>();
    public Set<String>              subscriptions   = new TreeSet<>();
@@ -176,9 +198,7 @@ class CodeGenContext {
 
    public void parseService(TokenizedLine line) throws ParseException {
       serviceName = line.parts.get(1);
-      serviceAnnotations = line.annotations;
-      serviceVersion = line.annotations.getFirst("version");
-      serviceId = line.annotations.getFirst("id");
+      serviceAnnotations.addAll(line.annotations);
       serviceComment = line.comment;
    }
 

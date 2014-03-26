@@ -14,16 +14,12 @@ public class CodeGen {
    public static void main(String[] args) {
       //if (true) { testTokenize();return; }
       // just hardcode for now for testing
-      args = new String[] { "definitions", "java" };
+      args = new String[] { "./definitions", "java", "javascript" };
       if (args.length < 1) {
          System.err.println("usage: arguments are filename lang1 lang2 ...");
          System.err.println("       if filename is a folder it will recursively run on all the files");
       }
       CodeGen cg = new CodeGen();
-      if (args.length == 1) {
-         cg.run(args[0], "all");
-         return;
-      }
       for (int i = 1; i < args.length; i++) {
          cg.run(args[0], args[i]);
       }
@@ -50,35 +46,48 @@ public class CodeGen {
    private CodeGenContext                 context;
    private TokenizedLine                  tokenizedLine = new TokenizedLine();
    private StringBuilder                  commentInProgress;
+   
+   private List<CodeGenContext>           contexts = new ArrayList<>();
 
    public void run(String filename, String language) {
-      ArrayList<File> files = new ArrayList<>();
-      files.add(new File(filename));
-      int ix = 0;
-      
-      while (ix < files.size()) {
-         File file = files.get(ix);
-         if (file.isDirectory()) {
-            files.addAll(Arrays.asList(file.listFiles()));
-         } else {
-            runFile(file, language);
+      try {
+         ArrayList<File> files = new ArrayList<>();
+         files.add(new File(filename));
+         int ix = 0;
+         init(language);
+         
+         while (ix < files.size()) {
+            File file = files.get(ix);
+            if (file.isDirectory()) {
+               files.addAll(Arrays.asList(file.listFiles()));
+            } else {
+               runFile(file, language);
+            }
+            ix++;
          }
-         ix++;
+         flushAll();
+      } catch (IOException | ParseException e) {
+         e.printStackTrace();
       }
    }
    
    private void runFile(File f, String language) {
       System.out.println("Generating " + f.getName() + " for " + language);
       try (BufferedReader br = new BufferedReader(new FileReader(f))) {
-         init(language);
+         context = new CodeGenContext();
+         currentLine = null;
+         currentLineNumber = 0;
+         commentInProgress = new StringBuilder();
+         tokenizedLine.clear();
          while (true) {
             currentLineNumber++;
             currentLine = br.readLine();
             if (currentLine == null)
                break;
+            tokenizedLine.clear();
             parse(currentLine);
          }
-         flushAll();
+         contexts.add(context);
       } catch (IOException | ParseException | IndexOutOfBoundsException e) {
          System.err.printf("Error in line #%d, [%s]\n\n", currentLineNumber, currentLine);
          e.printStackTrace();
@@ -86,7 +95,6 @@ public class CodeGen {
    }
 
    private void parse(String line) throws ParseException {
-      tokenizedLine.clear();
       tokenize(line, tokenizedLine);
       combineTokens(tokenizedLine);
       if (tokenizedLine.comment != null) {
@@ -104,7 +112,7 @@ public class CodeGen {
          case "javascript":
          case "objc":
          case "c++":
-            generator.parseOption(tokenizedLine);
+            generator.parseOption(tokenizedLine, this.context);
             return;
 
          case "service":
@@ -200,17 +208,17 @@ public class CodeGen {
    }
 
    private void flushAll() throws IOException, ParseException {
-      generator.generate(context);
+      generator.generate(contexts);
+      contexts.clear();
    }
 
    private void init(String language) throws ParseException {
-      context = new CodeGenContext();
-      currentLine = null;
-      currentLineNumber = 0;
-      commentInProgress = new StringBuilder();
       switch (language) {
          case "java":
             generator = new JavaGenerator();
+            break;
+         case "javascript":
+            generator = new JavascriptGenerator();
             break;
          default:
             throw new ParseException("unknowm language: " + language);

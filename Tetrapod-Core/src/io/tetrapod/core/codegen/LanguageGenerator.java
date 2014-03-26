@@ -3,11 +3,12 @@ package io.tetrapod.core.codegen;
 import io.tetrapod.core.codegen.CodeGen.TokenizedLine;
 
 import java.io.IOException;
+import java.util.List;
 
 interface LanguageGenerator {
 
-   void parseOption(TokenizedLine line) throws ParseException;
+   void parseOption(TokenizedLine line, CodeGenContext currentContext) throws ParseException;
 
-   void generate(CodeGenContext context) throws IOException, ParseException;
+   void generate(List<CodeGenContext> contexts) throws IOException, ParseException;
 
 }

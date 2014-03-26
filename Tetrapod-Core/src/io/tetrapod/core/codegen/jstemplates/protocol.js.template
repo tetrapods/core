@@ -1,0 +1,9 @@
+// tetrapod protocol file, requires tetrapod main file to have been loaded first
+
+TP.protocol = TP.protocol || { request: {}, response: {}, struct: {} };
+
+{{constants}}
+
+{{errors}}
+
+{{register}}
