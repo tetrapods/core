@@ -4,35 +4,43 @@ import io.tetrapod.core.codegen.CodeGen.TokenizedLine;
 import io.tetrapod.core.codegen.CodeGenContext.Class;
 import io.tetrapod.core.codegen.CodeGenContext.Err;
 import io.tetrapod.core.codegen.CodeGenContext.Field;
-import io.tetrapod.core.templates.*;
-import io.tetrapod.core.utils.FNVHash;
+import io.tetrapod.core.templates.Template;
 
 import java.io.*;
 import java.util.*;
 
 class JavaGenerator implements LanguageGenerator {
 
-   private String packageName;
    private String outputDir;
+   private String packageName;
    
-   public void parseOption(TokenizedLine line) throws ParseException {
+   @Override
+   public void parseOption(TokenizedLine line, CodeGenContext context) throws ParseException {
       if (!line.parts.get(0).equals("java"))
          return;
       String opt = line.parts.get(1);
       String val = line.parts.get(2);
       switch (opt) {
          case "package":
-            packageName = val;
+            context.serviceAnnotations.add("java.package", val);
             break;
          case "outdir":
-            outputDir = val;
+            context.serviceAnnotations.add("java.outdir", val);
             break;
          default:
             throw new ParseException("unknown java option");
       }
    }
 
-   public void generate(CodeGenContext context) throws IOException,ParseException {
+   @Override
+   public void generate(List<CodeGenContext> contexts) throws IOException,ParseException {
+      for (CodeGenContext c : contexts)
+         generate(c);
+   }
+   
+   private void generate(CodeGenContext context) throws IOException,ParseException {
+      outputDir = context.serviceAnnotations.getFirst("java.outdir");
+      packageName = context.serviceAnnotations.getFirst("java.package");
       for (File f : getFilename("c").getParentFile().listFiles()) {
          f.delete();
       }
@@ -45,17 +53,18 @@ class JavaGenerator implements LanguageGenerator {
    private void generateContract(CodeGenContext context) throws IOException,ParseException {
       Template t = template("contract");
       String theClass = context.serviceName + "Contract";
+      String serviceId = context.serviceAnnotations.getFirst("id");
       t.add("class", theClass);
-      t.add("package", packageName);
-      t.add("version", context.serviceVersion);
+      t.add("package", context.serviceAnnotations.getFirst("java.package"));
+      t.add("version", context.serviceAnnotations.getFirst("version"));
       t.add("name", context.serviceName);
-      if (context.serviceId.equals("dynamic")) {
+      if (serviceId.equals("dynamic")) {
          t.add("contractId", "Contract.UNASSIGNED");
          t.add("contractIdVolatile", "volatile");
          t.add("contractIdSet", theClass + ".CONTRACT_ID = id;");
          throw new ParseException("dynamic contract id's not supported yet");
       } else {
-         t.add("contractId", context.serviceId);
+         t.add("contractId", serviceId);
          t.add("contractIdVolatile", "final");
          t.add("contractIdSet", "");
       }
@@ -109,11 +118,7 @@ class JavaGenerator implements LanguageGenerator {
       t.add("security", c.security.toUpperCase());
       t.add("classcomment", generateComment(c.comment));
       t.add("maxtag", "" + c.maxTag());
-      if (c.structId == null) {
-         // auto-genned hashes are never less than 10
-         c.structId = "" + ((FNVHash.hash32(c.classname()) & 0xffffff) + 10);
-      }
-      t.add("structid", c.structId);
+      t.add("structid", c.getStructId());
       t.add("service", serviceName);
       addFieldValues(c.fields, t);
       addConstantValues(c.fields, t);
@@ -121,12 +126,8 @@ class JavaGenerator implements LanguageGenerator {
       int instanceFields = 0;
       for (Field f : c.fields) {
          if (!f.isConstant()) instanceFields++;
-         String name = f.annotations.getFirst("web");
-         if (name == null)
-            name = f.name;
-         if (f.annotations.getFirst("noweb") != null)
-            name = "null";
-         if (!f.isConstant())
+         String name = f.getWebName();
+         if (!f.isConstant() && name != null)
             t.add("webNames", template("struct.webnames").add("tag", f.tag).add("name", name));
       }
       if (instanceFields > 0) {
@@ -139,10 +140,7 @@ class JavaGenerator implements LanguageGenerator {
       for (Err err : errors) {
          Template t = template("field.errors");
          t.add("name", err.name);
-         // error hashes are never less than 100
-         int hash = err.value;
-         if (hash == 0)
-            hash = (FNVHash.hash32(err.name) & 0xffffff) + 100;
+         int hash = err.getValue();
          t.add("hash", "" + hash);
          t.add("service", serviceName);
          String[] lines = t.expand().split("\r\n|\n|\r");

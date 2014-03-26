@@ -5,6 +5,7 @@
 
 java package io.tetrapod.protocol.sample        # language specific
 java outdir src                                 # should point to root of source tree
+javascript outdir "webContent/sample"
 
 # tags are @tag(tagval,tagval,...).  
 # known tags: @version(num), @id(num), @web(string) 

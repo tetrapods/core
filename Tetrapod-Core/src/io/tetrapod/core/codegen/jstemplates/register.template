@@ -1,0 +1,1 @@
+TP.register("{{type}}", "{{contractClass}}", "{{class}}", {{contractId}}, {{structId}});

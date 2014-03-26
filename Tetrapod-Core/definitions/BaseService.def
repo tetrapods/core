@@ -1,5 +1,6 @@
 java package io.tetrapod.protocol.service
 java outdir src
+javascript outdir "webContent/tetrapod"
 
 // The base contract every service must support
 service BaseService @version(1) @id(2)

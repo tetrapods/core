@@ -24,4 +24,16 @@ class Annotations {
       list.add(value);
    }
 
+   public void addAll(Annotations other) {
+      for (String key : other.map.keySet()) {
+         List<String> list = other.get(key);
+         List<String> myList = get(key);
+         if (myList == null) {
+            map.put(key, list);
+         } else {
+            myList.addAll(list);
+         }
+      }
+   }
+
 }
