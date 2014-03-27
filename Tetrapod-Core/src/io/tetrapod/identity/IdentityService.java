@@ -28,37 +28,37 @@ public class IdentityService extends DefaultService implements IdentityContract.
 
          @Override
          public void messageTopicUnpublished(TopicUnpublishedMessage m, MessageContext ctx) {
-            logger.info(m.dump());
+            logger.info("Dispatched message: {}", m.dump());
          }
 
          @Override
          public void messageTopicSubscribed(TopicSubscribedMessage m, MessageContext ctx) {
-            logger.info(m.dump());
+            logger.info("Dispatched message: {}", m.dump());
          }
 
          @Override
          public void messageTopicPublished(TopicPublishedMessage m, MessageContext ctx) {
-            logger.info(m.dump());
+            logger.info("Dispatched message: {}", m.dump());
          }
 
          @Override
          public void messageEntityUnregistered(EntityUnregisteredMessage m, MessageContext ctx) {
-            logger.info(m.dump());
+            logger.info("Dispatched message: {}", m.dump());
          }
 
          @Override
          public void genericMessage(Message message, MessageContext ctx) {
-            logger.info("genericMessage({})", message.dump());
+            logger.info("GENERIC Dispatched message: {}", message.dump());
          }
 
          @Override
          public void messageEntityRegistered(EntityRegisteredMessage m, MessageContext ctx) {
-            logger.info(m.dump());
+            logger.info("Dispatched message: {}", m.dump());
          }
 
          @Override
          public void messageEntityUpdated(EntityUpdatedMessage m, MessageContext ctx) {
-            logger.info(m.dump());
+            logger.info("Dispatched message: {}", m.dump());
          }
       });
    }

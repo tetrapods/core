@@ -165,6 +165,10 @@ abstract public class DefaultService implements Service, BaseServiceContract.API
    public void sendMessage(Message msg, int toEntityId, int topicId) {
       cluster.getSession().sendMessage(msg, toEntityId, topicId);
    }
+   
+   public void sendBroadcastMessage(Message msg, int toEntityId, int topicId) {
+      cluster.getSession().sendBroadcastMessage(msg, toEntityId, topicId);
+   }
 
    // Generic handlers for all request/subscriptions
 

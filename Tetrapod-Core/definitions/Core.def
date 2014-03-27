@@ -37,6 +37,7 @@ struct Core
    const byte  ENVELOPE_MESSAGE        = 4
    const byte  ENVELOPE_PING           = 5
    const byte  ENVELOPE_PONG           = 6
+   const byte  ENVELOPE_BROADCAST      = 7
    
 ################################# CORE WIRE #################################
    
