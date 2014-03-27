@@ -299,7 +299,7 @@ public class Registry implements TetrapodContract.Registry.API {
       List<EntityInfo> list = new ArrayList<>(entities.values());
       Collections.sort(list);
       logger.info("===================== TETRAPOD CLUSTER REGISTRY =======================");
-      for (EntityInfo e : entities.values()) {
+      for (EntityInfo e : list) {
          logger.info(String.format("0x%08X %-15s status=%08X topics=%d subscriptions=%d", e.entityId, e.name, e.status, e.getNumTopics(),
                e.getNumSubscriptions()));
       }

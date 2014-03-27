@@ -218,15 +218,16 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       if (publisher != null) {
          final Topic topic = publisher.getTopic(header.topicId);
          if (topic != null) {
-            synchronized (topic) { // FIXME: Won't need this sync if all topics processed on same
-                                   // thread
-               for (Subscriber s : topic.getSubscribers()) {
+            synchronized (topic) { // FIXME: Won't need this sync if all topics processed on same thread
+               for (final Subscriber s : topic.getSubscribers()) {
                   final EntityInfo e = registry.getEntity(s.entityId);
                   if (e != null) {
                      if (e.parentId == getEntityId() || e.isTetrapod()) {
-                        Session session = findSession(e);
+                        final Session session = findSession(e);
                         if (session != null) {
+                           int ri = buf.readerIndex();
                            session.sendRelayedMessage(header, buf);
+                           buf.readerIndex(ri);
                         }
                      }
                   } else {

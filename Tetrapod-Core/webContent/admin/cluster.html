@@ -61,9 +61,8 @@
 					data-target=".sidebar-collapse">
 					<span class="fa fa-bars"></span>
 				</button>
-				<a class="navbar-brand" href="index.html">
-								<img src="tetrapod.png">
-				tetrapods.io
+				<a class="navbar-brand" href="index.html"> <img
+					src="tetrapod.png"> tetrapods.io
 				</a>
 			</div>
 			<!-- /.navbar-header -->
@@ -197,6 +196,10 @@
 		TP.sidebar.applyBindings("Cluster", "Administer");
 	</script>
 
+	<!--  Tetrapod Scripts -->
+
+	<script src="../tetrapod/tetrapod.js"></script>
+	<script src="../tetrapod/protocol.js"></script>
 
 
 	<!--  =============================================================================== -->
@@ -204,6 +207,8 @@
 	<script>
 		var model = new ClusterModel();
 		ko.applyBindings(model, $("#cluster-table")[0]);
+
+		TP.connect("localhost").onOpen(model.onOpen);
 
 		// Cluster Model -- list of Services
 		function ClusterModel() {
@@ -220,6 +225,22 @@
 					s.chart();
 				});
 			}, 1000);
+
+			self.onOpen = function() {
+				TP.send("Register", {
+					build : 0,
+					contractId : 0,
+					name : "Web-Admin"
+				}).handle(self.onRegistered);
+			}
+
+			self.onRegistered = function(result, errorCode) {
+				TP.logResponse(result, errorCode);
+				if (result) {
+					TP.send("RegistrySubscribe", {}).handle(TP.logResponse)
+				}
+			}
+
 		}
 
 		var chartOptions = {
