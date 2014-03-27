@@ -5,6 +5,8 @@ package io.tetrapod.protocol.core;
 import io.*;
 import io.tetrapod.core.serialize.*;
 import io.tetrapod.core.rpc.*;
+import io.tetrapod.protocol.core.TypeDescriptor;
+import io.tetrapod.protocol.core.StructDescription;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
@@ -13,6 +15,7 @@ import java.util.concurrent.*;
 public class TopicUnpublishedMessage extends Message {
    
    public static final int STRUCT_ID = 6594504;
+   public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;
     
    public TopicUnpublishedMessage() {
       defaults();
@@ -59,7 +62,10 @@ public class TopicUnpublishedMessage extends Message {
       }
    }
    
-   @Override
+   public final int getContractId() {
+      return TopicUnpublishedMessage.CONTRACT_ID;
+   }
+
    public final int getStructId() {
       return TopicUnpublishedMessage.STRUCT_ID;
    }
@@ -76,10 +82,6 @@ public class TopicUnpublishedMessage extends Message {
       void messageTopicUnpublished(TopicUnpublishedMessage m, MessageContext ctx);
    }
    
-   public final int getContractId() {
-      return TetrapodContract.CONTRACT_ID;
-   }
-   
    public final String[] tagWebNames() {
       // Note do not use this tags in long term serializations (to disk or databases) as 
       // implementors are free to rename them however they wish.  A null means the field
@@ -92,5 +94,15 @@ public class TopicUnpublishedMessage extends Message {
    
    public final Structure make() {
       return new TopicUnpublishedMessage();
+   }
+   
+   public final StructDescription makeDescription() {
+      StructDescription desc = new StructDescription();
+      desc.tagWebNames = tagWebNames();
+      desc.types = new TypeDescriptor[desc.tagWebNames.length];
+      desc.types[0] = new TypeDescriptor(TypeDescriptor.T_STRUCT, getContractId(), getStructId());
+      desc.types[1] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
+      desc.types[2] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
+      return desc;
    }
 }

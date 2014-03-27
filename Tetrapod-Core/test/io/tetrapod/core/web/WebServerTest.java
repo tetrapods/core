@@ -1,7 +1,6 @@
 package io.tetrapod.core.web;
 
 import io.netty.channel.ChannelFuture;
-import io.netty.handler.codec.http.HttpClientCodec;
 import io.tetrapod.core.*;
 import io.tetrapod.core.utils.Util;
 import io.tetrapod.identity.IdentityService;

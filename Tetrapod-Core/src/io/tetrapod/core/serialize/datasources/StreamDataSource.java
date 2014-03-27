@@ -71,7 +71,7 @@ abstract public class StreamDataSource implements DataSource {
 
    @Override
    public boolean read_boolean(int tag) throws IOException {
-      return readRawByte() == 0;
+      return readRawByte() == 1;
    }
 
    @Override
@@ -527,6 +527,7 @@ abstract public class StreamDataSource implements DataSource {
    protected TempBufferDataSource getTempBuffer() {
       if (tempBuffer == null) 
          tempBuffer = TempBufferDataSource.forWriting();
+      tempBuffer.reset();
       return tempBuffer;
    }
 

@@ -1,6 +1,6 @@
 // tetrapod protocol file, requires tetrapod main file to have been loaded first
 
-TP.protocol = TP.protocol || { request: {}, response: {}, struct: {}, message: {} };
+TP.protocol = TP.protocol || { request: {}, response: {}, struct: {} };
 
 TP.register("request", "BaseService", "Pause", 2, 14690004);
 TP.register("request", "BaseService", "Unpause", 2, 10620319);
@@ -14,8 +14,9 @@ TP.register("struct", "Tetrapod", "MessageHeader", 1, 11760427);
 TP.register("struct", "Tetrapod", "Entity", 1, 10171140);
 TP.register("struct", "Tetrapod", "Subscriber", 1, 16013581);
 TP.register("struct", "Tetrapod", "FlatTopic", 1, 3803415);
-TP.register("struct", "Tetrapod", "WrappedJSON", 1, 1917218);
 TP.register("struct", "Tetrapod", "WebRoute", 1, 4890284);
+TP.register("struct", "Tetrapod", "TypeDescriptor", 1, 6493266);
+TP.register("struct", "Tetrapod", "StructDescription", 1, 9642196);
 TP.register("request", "Tetrapod", "Register", 1, 10895179);
 TP.register("response", "Tetrapod", "Register", 1, 13376201);
 TP.register("request", "Tetrapod", "Publish", 1, 3171651);

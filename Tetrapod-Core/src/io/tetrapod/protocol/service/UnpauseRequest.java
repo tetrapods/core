@@ -5,6 +5,8 @@ package io.tetrapod.protocol.service;
 import io.*;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.serialize.*;
+import io.tetrapod.protocol.core.TypeDescriptor;
+import io.tetrapod.protocol.core.StructDescription;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
@@ -13,6 +15,7 @@ import java.util.concurrent.*;
 public class UnpauseRequest extends Request {
 
    public static final int STRUCT_ID = 10620319;
+   public static final int CONTRACT_ID = BaseServiceContract.CONTRACT_ID;
    
    public UnpauseRequest() {
       defaults();
@@ -48,7 +51,10 @@ public class UnpauseRequest extends Request {
       }
    }
    
-   @Override
+   public final int getContractId() {
+      return UnpauseRequest.CONTRACT_ID;
+   }
+
    public final int getStructId() {
       return UnpauseRequest.STRUCT_ID;
    }
@@ -64,10 +70,6 @@ public class UnpauseRequest extends Request {
       Response requestUnpause(UnpauseRequest r, RequestContext ctx);
    }
    
-   public final int getContractId() {
-      return BaseServiceContract.CONTRACT_ID;
-   }
-   
    public final String[] tagWebNames() {
       // Note do not use this tags in long term serializations (to disk or databases) as 
       // implementors are free to rename them however they wish.  A null means the field
@@ -79,5 +81,14 @@ public class UnpauseRequest extends Request {
    
    public final Structure make() {
       return new UnpauseRequest();
+   }
+   
+   public final StructDescription makeDescription() {
+      StructDescription desc = new StructDescription();
+      desc.tagWebNames = tagWebNames();
+      desc.types = new TypeDescriptor[desc.tagWebNames.length];
+      desc.types[0] = new TypeDescriptor(TypeDescriptor.T_STRUCT, getContractId(), getStructId());
+      
+      return desc;
    }
 }

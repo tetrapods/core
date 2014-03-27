@@ -5,6 +5,8 @@ package io.tetrapod.protocol.core;
 import io.*;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.serialize.*;
+import io.tetrapod.protocol.core.TypeDescriptor;
+import io.tetrapod.protocol.core.StructDescription;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
@@ -13,6 +15,7 @@ import java.util.concurrent.*;
 public class MessageHeader extends Structure {
    
    public static final int STRUCT_ID = 11760427;
+   public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;
     
    public MessageHeader() {
       defaults();
@@ -74,13 +77,12 @@ public class MessageHeader extends Structure {
       }
    }
    
-   @Override
+   public final int getContractId() {
+      return MessageHeader.CONTRACT_ID;
+   }
+
    public final int getStructId() {
       return MessageHeader.STRUCT_ID;
-   }
-   
-   public final int getContractId() {
-      return TetrapodContract.CONTRACT_ID;
    }
 
    public final String[] tagWebNames() {
@@ -98,5 +100,18 @@ public class MessageHeader extends Structure {
 
    public final Structure make() {
       return new MessageHeader();
+   }
+
+   public final StructDescription makeDescription() {
+      StructDescription desc = new StructDescription();
+      desc.tagWebNames = tagWebNames();
+      desc.types = new TypeDescriptor[desc.tagWebNames.length];
+      desc.types[0] = new TypeDescriptor(TypeDescriptor.T_STRUCT, getContractId(), getStructId());
+      desc.types[1] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
+      desc.types[2] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
+      desc.types[3] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
+      desc.types[4] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
+      desc.types[5] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
+      return desc;
    }
 }

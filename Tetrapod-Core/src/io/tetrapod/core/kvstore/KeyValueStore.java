@@ -1,6 +1,7 @@
 package io.tetrapod.core.kvstore;
 
 
+import io.tetrapod.core.StructureFactory;
 import io.tetrapod.core.rpc.Structure;
 import io.tetrapod.core.serialize.datasources.FileDataSource;
 
@@ -67,7 +68,7 @@ public class KeyValueStore {
    }
    
    public synchronized void register(Structure s) {
-      entry.factory.add(s);
+      StructureFactory.add(s);
    }
 
    private void load() throws IOException {

@@ -4,7 +4,6 @@ import static org.junit.Assert.assertTrue;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.utils.Util;
 import io.tetrapod.identity.IdentityService;
-import io.tetrapod.protocol.core.*;
 import io.tetrapod.protocol.service.PauseRequest;
 
 import org.junit.Test;

@@ -5,6 +5,7 @@ package  io.tetrapod.protocol.identity;
 import io.*;
 import java.util.*;
 import io.tetrapod.core.*;
+import io.tetrapod.core.rpc.Structure;
 import io.tetrapod.protocol.core.WebRoute;
 
 @SuppressWarnings("unused")
@@ -20,21 +21,33 @@ public class IdentityContract extends Contract {
       UpdatePropertiesRequest.Handler
       {}
    
-   public void addRequests(StructureFactory factory) {
-      factory.add(new CreateRequest());
-      factory.add(new InfoRequest());
-      factory.add(new LoginRequest());
-      factory.add(new UpdatePropertiesRequest());
+   public Structure[] getRequests() {
+      return new Structure[] {
+         new LoginRequest(),
+         new CreateRequest(),
+         new InfoRequest(),
+         new UpdatePropertiesRequest(),
+      };
    }
    
-   public void addResponses(StructureFactory factory) {
-      factory.add(new CreateResponse());
-      factory.add(new InfoResponse());
-      factory.add(new LoginResponse());
+   public Structure[] getResponses() {
+      return new Structure[] {
+         new LoginResponse(),
+         new CreateResponse(),
+         new InfoResponse(),
+      };
    }
    
-   public void addMessages(StructureFactory factory) {
-      
+   public Structure[] getMessages() {
+      return new Structure[] {
+         
+      };
+   }
+   
+   public Structure[] getStructs() {
+      return new Structure[] {
+         new User(),
+      };
    }
    
    public String getName() {

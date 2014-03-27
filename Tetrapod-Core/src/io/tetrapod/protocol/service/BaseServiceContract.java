@@ -5,6 +5,7 @@ package  io.tetrapod.protocol.service;
 import io.*;
 import java.util.*;
 import io.tetrapod.core.*;
+import io.tetrapod.core.rpc.Structure;
 import io.tetrapod.protocol.core.WebRoute;
 
 /**
@@ -24,19 +25,31 @@ public class BaseServiceContract extends Contract {
       UnpauseRequest.Handler
       {}
    
-   public void addRequests(StructureFactory factory) {
-      factory.add(new PauseRequest());
-      factory.add(new RestartRequest());
-      factory.add(new ShutdownRequest());
-      factory.add(new UnpauseRequest());
+   public Structure[] getRequests() {
+      return new Structure[] {
+         new PauseRequest(),
+         new UnpauseRequest(),
+         new ShutdownRequest(),
+         new RestartRequest(),
+      };
    }
    
-   public void addResponses(StructureFactory factory) {
-      
+   public Structure[] getResponses() {
+      return new Structure[] {
+         
+      };
    }
    
-   public void addMessages(StructureFactory factory) {
-      
+   public Structure[] getMessages() {
+      return new Structure[] {
+         
+      };
+   }
+   
+   public Structure[] getStructs() {
+      return new Structure[] {
+         
+      };
    }
    
    public String getName() {

@@ -5,6 +5,8 @@ package io.tetrapod.protocol.identity;
 import io.*;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.serialize.*;
+import io.tetrapod.protocol.core.TypeDescriptor;
+import io.tetrapod.protocol.core.StructDescription;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
@@ -13,6 +15,7 @@ import java.util.concurrent.*;
 public class UpdatePropertiesRequest extends Request {
 
    public static final int STRUCT_ID = 1362696;
+   public static final int CONTRACT_ID = IdentityContract.CONTRACT_ID;
    
    public UpdatePropertiesRequest() {
       defaults();
@@ -77,7 +80,10 @@ public class UpdatePropertiesRequest extends Request {
       }
    }
    
-   @Override
+   public final int getContractId() {
+      return UpdatePropertiesRequest.CONTRACT_ID;
+   }
+
    public final int getStructId() {
       return UpdatePropertiesRequest.STRUCT_ID;
    }
@@ -91,10 +97,6 @@ public class UpdatePropertiesRequest extends Request {
    
    public static interface Handler extends ServiceAPI {
       Response requestUpdateProperties(UpdatePropertiesRequest r, RequestContext ctx);
-   }
-   
-   public final int getContractId() {
-      return IdentityContract.CONTRACT_ID;
    }
    
    public final String[] tagWebNames() {
@@ -111,5 +113,17 @@ public class UpdatePropertiesRequest extends Request {
    
    public final Structure make() {
       return new UpdatePropertiesRequest();
+   }
+   
+   public final StructDescription makeDescription() {
+      StructDescription desc = new StructDescription();
+      desc.tagWebNames = tagWebNames();
+      desc.types = new TypeDescriptor[desc.tagWebNames.length];
+      desc.types[0] = new TypeDescriptor(TypeDescriptor.T_STRUCT, getContractId(), getStructId());
+      desc.types[1] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
+      desc.types[2] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
+      desc.types[3] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
+      desc.types[4] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
+      return desc;
    }
 }

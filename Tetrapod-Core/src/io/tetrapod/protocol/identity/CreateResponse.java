@@ -5,6 +5,8 @@ package io.tetrapod.protocol.identity;
 import io.*;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.serialize.*;
+import io.tetrapod.protocol.core.TypeDescriptor;
+import io.tetrapod.protocol.core.StructDescription;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
@@ -13,6 +15,7 @@ import java.util.concurrent.*;
 public class CreateResponse extends Response {
    
    public static final int STRUCT_ID = 5348608;
+   public static final int CONTRACT_ID = IdentityContract.CONTRACT_ID;
     
    public CreateResponse() {
       defaults();
@@ -59,13 +62,12 @@ public class CreateResponse extends Response {
       }
    }
   
-   @Override 
+   public final int getContractId() {
+      return CreateResponse.CONTRACT_ID;
+   }
+
    public final int getStructId() {
       return CreateResponse.STRUCT_ID;
-   }
-      
-   public final int getContractId() {
-      return IdentityContract.CONTRACT_ID;
    }
 
    public final String[] tagWebNames() {
@@ -81,4 +83,14 @@ public class CreateResponse extends Response {
    public final Structure make() {
       return new CreateResponse();
    }
-}
+
+   public final StructDescription makeDescription() {
+      StructDescription desc = new StructDescription();
+      desc.tagWebNames = tagWebNames();
+      desc.types = new TypeDescriptor[desc.tagWebNames.length];
+      desc.types[0] = new TypeDescriptor(TypeDescriptor.T_STRUCT, getContractId(), getStructId());
+      desc.types[1] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
+      desc.types[2] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
+      return desc;
+   }
+ }

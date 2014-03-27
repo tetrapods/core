@@ -1,1 +1,1 @@
-factory.add(new {{class}}());
+new {{class}}(),

@@ -46,4 +46,5 @@ public class Error extends Response {
    public String[] tagWebNames() {
       return new String[] { "", "errorCode" };
    }
+   
 }
