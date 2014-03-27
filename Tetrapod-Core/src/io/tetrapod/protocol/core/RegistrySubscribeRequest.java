@@ -5,6 +5,8 @@ package io.tetrapod.protocol.core;
 import io.*;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.serialize.*;
+import io.tetrapod.protocol.core.TypeDescriptor;
+import io.tetrapod.protocol.core.StructDescription;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
@@ -13,6 +15,7 @@ import java.util.concurrent.*;
 public class RegistrySubscribeRequest extends Request {
 
    public static final int STRUCT_ID = 2572089;
+   public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;
    
    public RegistrySubscribeRequest() {
       defaults();
@@ -48,7 +51,10 @@ public class RegistrySubscribeRequest extends Request {
       }
    }
    
-   @Override
+   public final int getContractId() {
+      return RegistrySubscribeRequest.CONTRACT_ID;
+   }
+
    public final int getStructId() {
       return RegistrySubscribeRequest.STRUCT_ID;
    }
@@ -64,10 +70,6 @@ public class RegistrySubscribeRequest extends Request {
       Response requestRegistrySubscribe(RegistrySubscribeRequest r, RequestContext ctx);
    }
    
-   public final int getContractId() {
-      return TetrapodContract.CONTRACT_ID;
-   }
-   
    public final String[] tagWebNames() {
       // Note do not use this tags in long term serializations (to disk or databases) as 
       // implementors are free to rename them however they wish.  A null means the field
@@ -79,5 +81,14 @@ public class RegistrySubscribeRequest extends Request {
    
    public final Structure make() {
       return new RegistrySubscribeRequest();
+   }
+   
+   public final StructDescription makeDescription() {
+      StructDescription desc = new StructDescription();
+      desc.tagWebNames = tagWebNames();
+      desc.types = new TypeDescriptor[desc.tagWebNames.length];
+      desc.types[0] = new TypeDescriptor(TypeDescriptor.T_STRUCT, getContractId(), getStructId());
+      
+      return desc;
    }
 }

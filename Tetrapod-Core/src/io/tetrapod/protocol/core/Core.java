@@ -5,6 +5,8 @@ package io.tetrapod.protocol.core;
 import io.*;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.serialize.*;
+import io.tetrapod.protocol.core.TypeDescriptor;
+import io.tetrapod.protocol.core.StructDescription;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
@@ -33,7 +35,6 @@ public class Core extends Structure {
    public static final byte ENVELOPE_MESSAGE = 4; 
    public static final byte ENVELOPE_PING = 5; 
    public static final byte ENVELOPE_PONG = 6; 
-   public static final byte ENVELOPE_JSON_REQUEST = 7; 
    
    /**
     * Caller does not have sufficient rights to call this Request
@@ -71,6 +72,7 @@ public class Core extends Structure {
    @ERR public static final int ERROR_UNKNOWN_REQUEST = TetrapodContract.ERROR_UNKNOWN_REQUEST; 
    
    public static final int STRUCT_ID = 9088168;
+   public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;
     
    public Core() {
       defaults();
@@ -106,13 +108,12 @@ public class Core extends Structure {
       }
    }
    
-   @Override
+   public final int getContractId() {
+      return Core.CONTRACT_ID;
+   }
+
    public final int getStructId() {
       return Core.STRUCT_ID;
-   }
-   
-   public final int getContractId() {
-      return TetrapodContract.CONTRACT_ID;
    }
 
    public final String[] tagWebNames() {
@@ -126,5 +127,14 @@ public class Core extends Structure {
 
    public final Structure make() {
       return new Core();
+   }
+
+   public final StructDescription makeDescription() {
+      StructDescription desc = new StructDescription();
+      desc.tagWebNames = tagWebNames();
+      desc.types = new TypeDescriptor[desc.tagWebNames.length];
+      desc.types[0] = new TypeDescriptor(TypeDescriptor.T_STRUCT, getContractId(), getStructId());
+      
+      return desc;
    }
 }

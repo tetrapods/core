@@ -5,6 +5,8 @@ package io.tetrapod.protocol.core;
 import io.*;
 import io.tetrapod.core.serialize.*;
 import io.tetrapod.core.rpc.*;
+import io.tetrapod.protocol.core.TypeDescriptor;
+import io.tetrapod.protocol.core.StructDescription;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
@@ -13,6 +15,7 @@ import java.util.concurrent.*;
 public class EntityRegisteredMessage extends Message {
    
    public static final int STRUCT_ID = 1454035;
+   public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;
     
    public EntityRegisteredMessage() {
       defaults();
@@ -59,7 +62,10 @@ public class EntityRegisteredMessage extends Message {
       }
    }
    
-   @Override
+   public final int getContractId() {
+      return EntityRegisteredMessage.CONTRACT_ID;
+   }
+
    public final int getStructId() {
       return EntityRegisteredMessage.STRUCT_ID;
    }
@@ -76,10 +82,6 @@ public class EntityRegisteredMessage extends Message {
       void messageEntityRegistered(EntityRegisteredMessage m, MessageContext ctx);
    }
    
-   public final int getContractId() {
-      return TetrapodContract.CONTRACT_ID;
-   }
-   
    public final String[] tagWebNames() {
       // Note do not use this tags in long term serializations (to disk or databases) as 
       // implementors are free to rename them however they wish.  A null means the field
@@ -92,5 +94,15 @@ public class EntityRegisteredMessage extends Message {
    
    public final Structure make() {
       return new EntityRegisteredMessage();
+   }
+   
+   public final StructDescription makeDescription() {
+      StructDescription desc = new StructDescription();
+      desc.tagWebNames = tagWebNames();
+      desc.types = new TypeDescriptor[desc.tagWebNames.length];
+      desc.types[0] = new TypeDescriptor(TypeDescriptor.T_STRUCT, getContractId(), getStructId());
+      desc.types[1] = new TypeDescriptor(TypeDescriptor.T_STRUCT, Entity.CONTRACT_ID, Entity.STRUCT_ID);
+      desc.types[2] = new TypeDescriptor(TypeDescriptor.T_STRUCT_LIST, FlatTopic.CONTRACT_ID, FlatTopic.STRUCT_ID);
+      return desc;
    }
 }

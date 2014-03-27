@@ -5,6 +5,8 @@ package io.tetrapod.protocol.identity;
 import io.*;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.serialize.*;
+import io.tetrapod.protocol.core.TypeDescriptor;
+import io.tetrapod.protocol.core.StructDescription;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
@@ -13,6 +15,7 @@ import java.util.concurrent.*;
 public class LoginRequest extends Request {
 
    public static final int STRUCT_ID = 8202985;
+   public static final int CONTRACT_ID = IdentityContract.CONTRACT_ID;
    
    @ERR public static final int ERROR_UNKNOWN_USERNAME = IdentityContract.ERROR_UNKNOWN_USERNAME; 
    @ERR public static final int ERROR_WRONG_PASSWORD = IdentityContract.ERROR_WRONG_PASSWORD; 
@@ -62,7 +65,10 @@ public class LoginRequest extends Request {
       }
    }
    
-   @Override
+   public final int getContractId() {
+      return LoginRequest.CONTRACT_ID;
+   }
+
    public final int getStructId() {
       return LoginRequest.STRUCT_ID;
    }
@@ -78,10 +84,6 @@ public class LoginRequest extends Request {
       Response requestLogin(LoginRequest r, RequestContext ctx);
    }
    
-   public final int getContractId() {
-      return IdentityContract.CONTRACT_ID;
-   }
-   
    public final String[] tagWebNames() {
       // Note do not use this tags in long term serializations (to disk or databases) as 
       // implementors are free to rename them however they wish.  A null means the field
@@ -94,5 +96,15 @@ public class LoginRequest extends Request {
    
    public final Structure make() {
       return new LoginRequest();
+   }
+   
+   public final StructDescription makeDescription() {
+      StructDescription desc = new StructDescription();
+      desc.tagWebNames = tagWebNames();
+      desc.types = new TypeDescriptor[desc.tagWebNames.length];
+      desc.types[0] = new TypeDescriptor(TypeDescriptor.T_STRUCT, getContractId(), getStructId());
+      desc.types[1] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
+      desc.types[2] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
+      return desc;
    }
 }

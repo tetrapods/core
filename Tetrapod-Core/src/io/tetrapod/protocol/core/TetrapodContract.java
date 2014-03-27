@@ -5,6 +5,7 @@ package  io.tetrapod.protocol.core;
 import io.*;
 import java.util.*;
 import io.tetrapod.core.*;
+import io.tetrapod.core.rpc.Structure;
 import io.tetrapod.protocol.core.WebRoute;
 
 /**
@@ -25,31 +26,53 @@ public class TetrapodContract extends Contract {
       ServiceStatusUpdateRequest.Handler
       {}
    
-   public void addRequests(StructureFactory factory) {
-      factory.add(new AddWebRoutesRequest());
-      factory.add(new PublishRequest());
-      factory.add(new RegisterRequest());
-      factory.add(new RegistrySubscribeRequest());
-      factory.add(new ServiceStatusUpdateRequest());
+   public Structure[] getRequests() {
+      return new Structure[] {
+         new RegisterRequest(),
+         new PublishRequest(),
+         new RegistrySubscribeRequest(),
+         new ServiceStatusUpdateRequest(),
+         new AddWebRoutesRequest(),
+      };
    }
    
-   public void addResponses(StructureFactory factory) {
-      factory.add(new PublishResponse());
-      factory.add(new RegisterResponse());
+   public Structure[] getResponses() {
+      return new Structure[] {
+         new RegisterResponse(),
+         new PublishResponse(),
+      };
    }
    
-   public void addMessages(StructureFactory factory) {
-      factory.add(new EntityRegisteredMessage());
-      factory.add(new EntityUnregisteredMessage());
-      factory.add(new EntityUpdatedMessage());
-      factory.add(new ServiceAddedMessage());
-      factory.add(new ServiceRemovedMessage());
-      factory.add(new ServiceStatsMessage());
-      factory.add(new ServiceUpdatedMessage());
-      factory.add(new TopicPublishedMessage());
-      factory.add(new TopicSubscribedMessage());
-      factory.add(new TopicUnpublishedMessage());
-      factory.add(new TopicUnsubscribedMessage());
+   public Structure[] getMessages() {
+      return new Structure[] {
+         new EntityRegisteredMessage(),
+         new EntityUnregisteredMessage(),
+         new EntityUpdatedMessage(),
+         new TopicPublishedMessage(),
+         new TopicUnpublishedMessage(),
+         new TopicSubscribedMessage(),
+         new TopicUnsubscribedMessage(),
+         new ServiceAddedMessage(),
+         new ServiceRemovedMessage(),
+         new ServiceUpdatedMessage(),
+         new ServiceStatsMessage(),
+      };
+   }
+   
+   public Structure[] getStructs() {
+      return new Structure[] {
+         new Core(),
+         new Handshake(),
+         new RequestHeader(),
+         new ResponseHeader(),
+         new MessageHeader(),
+         new Entity(),
+         new Subscriber(),
+         new FlatTopic(),
+         new WebRoute(),
+         new TypeDescriptor(),
+         new StructDescription(),
+      };
    }
    
    public String getName() {
@@ -77,14 +100,16 @@ public class TetrapodContract extends Contract {
          TopicUnsubscribedMessage.Handler
          {}
          
-      public void addMessages(StructureFactory factory, int dynamicId) {
-         factory.add(new EntityRegisteredMessage());
-         factory.add(new EntityUnregisteredMessage());
-         factory.add(new EntityUpdatedMessage());
-         factory.add(new TopicPublishedMessage());
-         factory.add(new TopicSubscribedMessage());
-         factory.add(new TopicUnpublishedMessage());
-         factory.add(new TopicUnsubscribedMessage());
+      public Structure[] getMessages() {
+         return new Structure[] {
+            new EntityRegisteredMessage(),
+            new EntityUnregisteredMessage(),
+            new EntityUpdatedMessage(),
+            new TopicPublishedMessage(),
+            new TopicSubscribedMessage(),
+            new TopicUnpublishedMessage(),
+            new TopicUnsubscribedMessage(),
+         };
       }
       
       public String getName() {
@@ -105,11 +130,13 @@ public class TetrapodContract extends Contract {
          ServiceUpdatedMessage.Handler
          {}
          
-      public void addMessages(StructureFactory factory, int dynamicId) {
-         factory.add(new ServiceAddedMessage());
-         factory.add(new ServiceRemovedMessage());
-         factory.add(new ServiceStatsMessage());
-         factory.add(new ServiceUpdatedMessage());
+      public Structure[] getMessages() {
+         return new Structure[] {
+            new ServiceAddedMessage(),
+            new ServiceRemovedMessage(),
+            new ServiceStatsMessage(),
+            new ServiceUpdatedMessage(),
+         };
       }
       
       public String getName() {
