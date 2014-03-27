@@ -245,6 +245,7 @@ abstract public class DefaultService implements Service, BaseServiceContract.API
    protected void registerServiceInformation() {
       AddServiceInformationRequest asi = new AddServiceInformationRequest(); 
       asi.routes = contract.getWebRoutes();
+      asi.structs = new ArrayList<>();
       for (Structure s : contract.getRequests()) {
          asi.structs.add(s.makeDescription());
       }
