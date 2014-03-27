@@ -32,20 +32,27 @@ class WebContext {
    
    public WebContext(JSONObject json) throws IOException {
       this.requestParameters = json;
-      this.requestPath = json.optString("uri", "/unknown");
+      this.requestPath = json.optString("_uri", "/unknown");
    }
    
    public RequestHeader makeRequestHeader(Session s, WebRoutes routes) {
       RequestHeader header = new RequestHeader();
-      WebRoute route = routes.findRoute(requestPath);
-      header.requestId = requestParameters.optInt("num", -1);
-      if (header.requestId < 0 || route == null)
-         return null;
-      header.toId = requestParameters.optInt("to", UNADDRESSED);
-      header.contractId = route.contractId;
-      header.structId = route.structId;
+      header.requestId = requestParameters.optInt("_requestId", -1);
+      header.toId = requestParameters.optInt("_toId", UNADDRESSED);
       header.fromId = s.getTheirEntityId();
       header.fromType = s.getTheirEntityType();
+      WebRoute route = routes.findRoute(requestPath);
+      if (route != null) {
+         header.contractId = route.contractId;
+         header.structId = route.structId;
+      } else {
+         // TODO: should we allow this? this lets the javascript interface 
+         //       call any request instead of just ones mapped as web routes
+         header.contractId = requestParameters.optInt("_contractId", -1);
+         header.structId = requestParameters.optInt("_structId", -1);
+      }
+      if (header.requestId < 0 || header.contractId < 0 || header.structId < 0)
+         return null;
       return header;
    }
 

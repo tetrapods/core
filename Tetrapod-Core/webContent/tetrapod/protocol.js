@@ -1,6 +1,6 @@
 // tetrapod protocol file, requires tetrapod main file to have been loaded first
 
-TP.protocol = TP.protocol || { request: {}, response: {}, struct: {} };
+TP.protocol = TP.protocol || { request: {}, response: {}, struct: {}, message: {} };
 
 TP.register("request", "BaseService", "Pause", 2, 14690004);
 TP.register("request", "BaseService", "Unpause", 2, 10620319);

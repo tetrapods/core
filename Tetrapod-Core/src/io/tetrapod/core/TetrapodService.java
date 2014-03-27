@@ -8,7 +8,7 @@ import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.rpc.Error;
 import io.tetrapod.core.serialize.StructureAdapter;
 import io.tetrapod.core.utils.Util;
-import io.tetrapod.core.web.WebRoutes;
+import io.tetrapod.core.web.*;
 import io.tetrapod.protocol.core.*;
 
 import java.security.SecureRandom;
@@ -22,14 +22,16 @@ import org.slf4j.*;
  * management, service discovery, and load balancing of client connections
  */
 public class TetrapodService extends DefaultService implements TetrapodContract.API, RelayHandler, Registry.RegistryBroadcaster {
-   public static final Logger          logger               = LoggerFactory.getLogger(TetrapodService.class);
+   public static final Logger          logger                  = LoggerFactory.getLogger(TetrapodService.class);
 
-   public static final int             DEFAULT_PUBLIC_PORT  = 9900;
-   public static final int             DEFAULT_SERVICE_PORT = 9901;
-   public static final int             DEFAULT_CLUSTER_PORT = 9902;
+   public static final int             DEFAULT_PUBLIC_PORT     = 9900;
+   public static final int             DEFAULT_SERVICE_PORT    = 9901;
+   public static final int             DEFAULT_CLUSTER_PORT    = 9902;
+   public static final int             DEFAULT_WEBSOCKETS_PORT = 9903;
+   public static final int             DEFAULT_HTTP_PORT       = 9904;
 
-   private final SecureRandom          random               = new SecureRandom();
-   private final Map<Integer, Session> sessions             = new ConcurrentHashMap<>();
+   private final SecureRandom          random                  = new SecureRandom();
+   private final Map<Integer, Session> sessions                = new ConcurrentHashMap<>();
 
    public final Registry               registry;
 
@@ -38,8 +40,10 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    private Server                      clusterServer;
    private Server                      serviceServer;
    private Server                      publicServer;
+   private Server                      webSocketsServer;
+   private Server                      httpServer;
 
-   private final WebRoutes             webRoutes            = new WebRoutes();
+   private final WebRoutes             webRoutes               = new WebRoutes();
 
    public TetrapodService() {
       registry = new Registry(this);
@@ -52,6 +56,8 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       publicServer = new Server(DEFAULT_PUBLIC_PORT, new TypedSessionFactory(Core.TYPE_ANONYMOUS));
       serviceServer = new Server(DEFAULT_SERVICE_PORT, new TypedSessionFactory(Core.TYPE_SERVICE));
       clusterServer = new Server(DEFAULT_CLUSTER_PORT, new TypedSessionFactory(Core.TYPE_TETRAPOD));
+      webSocketsServer = new Server(DEFAULT_WEBSOCKETS_PORT, new WebSessionFactory("/sockets", true));
+      httpServer = new Server(DEFAULT_HTTP_PORT, new WebSessionFactory("./webContent", false));
 
       if (hostAndPort == null) {
          // We're the first, so bootstrapping here
@@ -124,6 +130,27 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       }
    }
 
+   private class WebSessionFactory implements SessionFactory {
+      public WebSessionFactory(String contentRoot, boolean webSockets) {
+         this.contentRoot = contentRoot;
+         this.webSockets = webSockets;
+      }
+
+      boolean webSockets = false;
+      String  contentRoot;
+
+      @Override
+      public Session makeSession(SocketChannel ch) {
+         TetrapodService pod = TetrapodService.this;
+         Session ses = webSockets ? new WebSocketSession(ch, pod, contentRoot) : new WebHttpSession(ch, pod, contentRoot);
+         ses.setRelayHandler(pod);
+         ses.setMyEntityId(getEntityId());
+         ses.setMyEntityType(Core.TYPE_TETRAPOD);
+         ses.setTheirEntityType(Core.TYPE_CLIENT);
+         return ses;
+      }
+   }
+
    @Override
    public void onRegistered() {
       registryTopic = registry.publish(entityId);
@@ -138,6 +165,8 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       try {
          serviceServer.start().sync();
          publicServer.start().sync();
+         webSocketsServer.start().sync();
+         httpServer.start().sync();
       } catch (Exception e) {
          fail(e);
       }
@@ -151,6 +180,8 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       publicServer.stop();
       serviceServer.stop();
       clusterServer.stop();
+      webSocketsServer.stop();
+      httpServer.stop();
    }
 
    // ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -205,7 +236,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          logger.error("Could not find publisher entity {}", header.fromId);
       }
    }
-   
+
    @Override
    public WebRoutes getWebRoutes() {
       return webRoutes;
@@ -217,7 +248,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    public void broadcastRegistryMessage(Message msg) {
       logger.info("BROADCASTING {} {}", registryTopic, msg.dump());
       if (registryTopic != null)
-      sendMessage(msg, 0, registryTopic.topicId);
+         sendMessage(msg, 0, registryTopic.topicId);
    }
 
    // ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -352,12 +383,12 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          webRoutes.setRoute(r.path, r.contractId, r.structId);
       for (StructDescription sd : req.structs)
          StructureFactory.add(new StructureAdapter(sd));
-      return Response.SUCCESS;   
+      return Response.SUCCESS;
    }
-   
+
    @Override
    protected void registerServiceInformation() {
       // do nothing, our protocol is known by all tetrapods
    }
-   
+
 }

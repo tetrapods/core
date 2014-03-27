@@ -32,7 +32,7 @@ abstract class WebSession extends Session {
             return;
          }
          request.read(new WebJSONDataSource(context.getRequestParams(), request.tagWebNames()));
-         if (header.toId == UNADDRESSED && header.contractId == myContractId) {
+         if ((header.toId == UNADDRESSED && header.contractId == myContractId) || header.toId == myId) {
             dispatchRequest(header, request);
          } else {
             relayRequest(header, request);
@@ -66,7 +66,7 @@ abstract class WebSession extends Session {
    protected Object makeFrame(Structure header, Structure payload, byte envelope) {
       try {
          JSONObject jo = extractHeader(header);
-         JSONDataSource jd = new JSONDataSource(jo);
+         JSONDataSource jd = new WebJSONDataSource(jo, payload.tagWebNames());
          payload.write(jd);
          return makeFrame(jo);
       } catch (IOException e) {
@@ -79,10 +79,10 @@ abstract class WebSession extends Session {
    protected Object makeFrame(Structure header, ByteBuf payloadBuf, byte envelope) {
       try {
          JSONObject jo = extractHeader(header);
-         Structure payload = StructureFactory.make(jo.optInt("contractId"), jo.optInt("structId"));
+         Structure payload = StructureFactory.make(jo.optInt("_contractId"), jo.optInt("_structId"));
          ByteBufDataSource bd = new ByteBufDataSource(payloadBuf);
          payload.read(bd);
-         JSONDataSource jd = new JSONDataSource(jo);
+         JSONDataSource jd = new WebJSONDataSource(jo, payload.tagWebNames());
          payload.write(jd);
          return makeFrame(jo);
       } catch (IOException e) {
@@ -96,23 +96,23 @@ abstract class WebSession extends Session {
       switch (header.getStructId()) {
          case RequestHeader.STRUCT_ID:
             RequestHeader reqH = (RequestHeader)header;
-            jo.put("contractId", reqH.contractId);
-            jo.put("structId", reqH.structId);
-            jo.put("requestId", reqH.requestId);
+            jo.put("_contractId", reqH.contractId);
+            jo.put("_structId", reqH.structId);
+            jo.put("_requestId", reqH.requestId);
             break;
             
          case ResponseHeader.STRUCT_ID:
             ResponseHeader respH = (ResponseHeader)header;
-            jo.put("contractId", respH.contractId);
-            jo.put("structId", respH.structId);
-            jo.put("requestId", respH.requestId);
+            jo.put("_contractId", respH.contractId);
+            jo.put("_structId", respH.structId);
+            jo.put("_requestId", respH.requestId);
             break;
             
          case MessageHeader.STRUCT_ID:
             MessageHeader messH = (MessageHeader)header;
-            jo.put("contractId", messH.contractId);
-            jo.put("structId", messH.structId);
-            jo.put("topicId", messH.topicId);
+            jo.put("_contractId", messH.contractId);
+            jo.put("_structId", messH.structId);
+            jo.put("_topicId", messH.topicId);
             break;
       }
       return jo;

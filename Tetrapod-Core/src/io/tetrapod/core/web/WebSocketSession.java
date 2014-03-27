@@ -13,7 +13,7 @@ import java.io.IOException;
 
 import org.slf4j.*;
 
-class WebSocketSession extends WebSession {
+public class WebSocketSession extends WebSession {
 
    private static final Logger logger = LoggerFactory.getLogger(WebSocketSession.class);
 
