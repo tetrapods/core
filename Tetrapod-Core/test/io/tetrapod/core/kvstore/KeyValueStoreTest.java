@@ -24,6 +24,7 @@ public class KeyValueStoreTest {
       store = new KeyValueStore("misc", ".");
       int foo = (Integer)store.get("foo");
       assertEquals(17, foo);
+      store.close();
    }
 
 }

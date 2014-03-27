@@ -49,7 +49,8 @@ public class KeyValueStore {
    }
    
    public synchronized void close() throws IOException {
-      out.close();
+      if (out != null)
+         out.close();
    }
    
    public synchronized void put(String key, Object value) throws IOException {
@@ -95,8 +96,6 @@ public class KeyValueStore {
          load(i);
       
       fileNumber = (fileNumber % 2 == 1) ? fileNumber + 2 : fileNumber + 1;
-      Path path = FileSystems.getDefault().getPath(datadir, name + "." + fileNumber);
-      out = FileDataSource.forAppending(path);
    }
    
    private void load(int i) throws IOException {
@@ -123,26 +122,30 @@ public class KeyValueStore {
    }
    
    private void persistPut(String key, Object value) throws IOException {
-      synchronized (entry) {
-         entry.save(key, value);
-         entry.write(out);
-         out.flush();
-      }
+      openOut();
+      entry.save(key, value);
+      entry.write(out);
+      out.flush();
    }
 
    private void persistRemove(String key) throws IOException {
-      synchronized (entry) {
-         entry.remove(key);
-         entry.write(out);
-         out.flush();
-      }
+      openOut();
+      entry.remove(key);
+      entry.write(out);
+      out.flush();
    }
    
    private void persistClear() throws IOException {
-      synchronized (entry) {
-         entry.clear();
-         entry.write(out);
-         out.flush();
+      openOut();
+      entry.clear();
+      entry.write(out);
+      out.flush();
+   }
+   
+   private void openOut() throws IOException {
+      if (out == null) {
+         Path path = FileSystems.getDefault().getPath(datadir, name + "." + fileNumber);
+         out = FileDataSource.forAppending(path);
       }
    }
    
