@@ -73,27 +73,28 @@ abstract public class DefaultService implements Service, BaseServiceContract.API
    }
 
    public void onConnectedToCluster() {
-      sendRequest(new RegisterRequest(222/* FIXME */, token, getContractId(), getShortName()), Core.UNADDRESSED).handle(new ResponseHandler() {
-         @Override
-         public void onResponse(Response res) {
-            if (res.isError()) {
-               fail("Unable to register", res.errorCode());
-            } else {
-               RegisterResponse r = (RegisterResponse) res;
-               entityId = r.entityId;
-               parentId = r.parentId;
-               token = r.token;
+      sendRequest(new RegisterRequest(222/* FIXME */, token, getContractId(), getShortName()), Core.UNADDRESSED).handle(
+            new ResponseHandler() {
+               @Override
+               public void onResponse(Response res) {
+                  if (res.isError()) {
+                     fail("Unable to register", res.errorCode());
+                  } else {
+                     RegisterResponse r = (RegisterResponse) res;
+                     entityId = r.entityId;
+                     parentId = r.parentId;
+                     token = r.token;
 
-               logger.info(String.format("%s My entityId is 0x%08X", cluster.getSession(), r.entityId));
-               cluster.getSession().setMyEntityId(r.entityId);
-               cluster.getSession().setTheirEntityId(r.parentId);
-               cluster.getSession().setMyEntityType(getEntityType());
-               cluster.getSession().setTheirEntityType(Core.TYPE_TETRAPOD);
-               registerServiceInformation();
-               onRegistered();
-            }
-         }
-      });
+                     logger.info(String.format("%s My entityId is 0x%08X", cluster.getSession(), r.entityId));
+                     cluster.getSession().setMyEntityId(r.entityId);
+                     cluster.getSession().setTheirEntityId(r.parentId);
+                     cluster.getSession().setMyEntityType(getEntityType());
+                     cluster.getSession().setTheirEntityType(Core.TYPE_TETRAPOD);
+                     registerServiceInformation();
+                     onRegistered();
+                  }
+               }
+            });
    }
 
    public void onDisconnectedFromCluster() {
@@ -165,9 +166,9 @@ abstract public class DefaultService implements Service, BaseServiceContract.API
    public void sendMessage(Message msg, int toEntityId, int topicId) {
       cluster.getSession().sendMessage(msg, toEntityId, topicId);
    }
-   
-   public void sendBroadcastMessage(Message msg, int toEntityId, int topicId) {
-      cluster.getSession().sendBroadcastMessage(msg, toEntityId, topicId);
+
+   public void sendBroadcastMessage(Message msg, int topicId) {
+      cluster.getSession().sendBroadcastMessage(msg, topicId);
    }
 
    // Generic handlers for all request/subscriptions

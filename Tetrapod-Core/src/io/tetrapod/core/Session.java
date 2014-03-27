@@ -46,7 +46,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
       public Session getRelaySession(int toId, int contractid);
 
       public void broadcast(MessageHeader header, ByteBuf buf);
-      
+
       public WebRoutes getWebRoutes();
 
    }
@@ -62,7 +62,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
    protected final AtomicInteger        requestCounter  = new AtomicInteger();
    protected final Session.Helper       helper;
    protected final SocketChannel        channel;
-   
+
    protected RelayHandler               relayHandler;
 
    protected int                        myId            = 0;
@@ -178,9 +178,10 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
       }
    }
 
-   public void sendBroadcastMessage(Message msg, int toEntityId, int topicId) {
-      logger.debug(String.format("%s > MESSAGE [%d:%d] %s", this, toEntityId, topicId, msg.getClass().getSimpleName()));
-      final Object buffer = makeFrame(new MessageHeader(getMyEntityId(), topicId, toEntityId, msg.getContractId(), msg.getStructId()), msg, ENVELOPE_BROADCAST);
+   public void sendBroadcastMessage(Message msg, int topicId) {
+      logger.debug(String.format("%s > MESSAGE [%d] %s", this, topicId, msg.getClass().getSimpleName()));
+      final Object buffer = makeFrame(
+            new MessageHeader(getMyEntityId(), topicId, Core.UNADDRESSED, msg.getContractId(), msg.getStructId()), msg, ENVELOPE_BROADCAST);
       if (buffer != null) {
          writeFrame(buffer);
       }
@@ -188,7 +189,8 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
 
    public void sendMessage(Message msg, int toEntityId, int topicId) {
       logger.debug(String.format("%s > MESSAGE [%d:%d] %s", this, toEntityId, topicId, msg.getClass().getSimpleName()));
-      final Object buffer = makeFrame(new MessageHeader(getMyEntityId(), topicId, toEntityId, msg.getContractId(), msg.getStructId()), msg, ENVELOPE_MESSAGE);
+      final Object buffer = makeFrame(new MessageHeader(getMyEntityId(), topicId, toEntityId, msg.getContractId(), msg.getStructId()), msg,
+            ENVELOPE_MESSAGE);
       if (buffer != null) {
          writeFrame(buffer);
       }
@@ -205,7 +207,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
       byte envelope = broadcast ? ENVELOPE_BROADCAST : ENVELOPE_MESSAGE;
       writeFrame(makeFrame(header, payload, envelope));
    }
-   
+
    public void sendRelayedRequest(RequestHeader header, ByteBuf payload, Session originator) {
       final Async async = new Async(null, header, originator);
       int origRequestId = async.header.requestId;
@@ -219,7 +221,6 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
       logger.debug("{} RELAYING RESPONSE: [{}]", this, header.requestId);
       writeFrame(makeFrame(header, payload, ENVELOPE_RESPONSE));
    }
-
 
    @Override
    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
@@ -302,9 +303,9 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
    public synchronized void setRelayHandler(RelayHandler relayHandler) {
       this.relayHandler = relayHandler;
    }
-   
+
    public String getPeerHostname() {
       return "Unknown";
    }
-   
+
 }

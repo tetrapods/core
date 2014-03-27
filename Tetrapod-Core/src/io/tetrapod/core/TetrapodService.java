@@ -254,7 +254,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    public void broadcastRegistryMessage(Message msg) {
       logger.info("BROADCASTING {} {}", registryTopic, msg.dump());
       if (registryTopic != null)
-         sendBroadcastMessage(msg, 0, registryTopic.topicId);
+         sendBroadcastMessage(msg, registryTopic.topicId);
    }
 
    // ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
