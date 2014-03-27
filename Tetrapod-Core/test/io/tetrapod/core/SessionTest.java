@@ -38,7 +38,7 @@ public class SessionTest {
          }
       });
 
-      svc1.addMessageHandler(TetrapodContract.CONTRACT_ID, new TetrapodContract.Services.API() {
+      svc1.addSubscriptionHandler(new TetrapodContract.Services(), new TetrapodContract.Services.API() {
 
          @Override
          public void messageServiceAdded(ServiceAddedMessage m, MessageContext ctx) {

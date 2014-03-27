@@ -90,7 +90,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       super.onConnectedToCluster();
       logger.info("Connected to Self");
       // is there a better way to set this message dispatch handlers?
-      addMessageHandler(TetrapodContract.CONTRACT_ID, registry);
+      addSubscriptionHandler(new TetrapodContract.Services(), registry);
    }
 
    public byte getEntityType() {

@@ -20,7 +20,7 @@ public class IdentityService extends DefaultService implements IdentityContract.
       sendRequest(new RegistrySubscribeRequest(), Core.UNADDRESSED);
 
       // FIXME: This is no longer working -- handlers not getting triggered 
-      addMessageHandler(TetrapodContract.CONTRACT_ID, new TetrapodContract.Registry.API() {
+      addSubscriptionHandler(new TetrapodContract.Registry(), new TetrapodContract.Registry.API() {
          @Override
          public void messageTopicUnsubscribed(TopicUnsubscribedMessage m, MessageContext ctx) {
             logger.info("Dispatched message: {}", m.dump());

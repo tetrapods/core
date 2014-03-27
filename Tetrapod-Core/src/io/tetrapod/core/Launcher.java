@@ -25,7 +25,7 @@ public class Launcher {
 
    private static void usage() {
       System.err.println("\nusage: java <vmopts> " + Launcher.class.getCanonicalName()
-            + " serviceClassName [-join hostname[:port]] [-token authToken]\n");
+            + " serviceClassName [-host hostname[:port]] [-token authToken]\n");
       System.exit(0);
    }
 

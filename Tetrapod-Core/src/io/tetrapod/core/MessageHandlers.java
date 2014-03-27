@@ -2,28 +2,44 @@ package io.tetrapod.core;
 
 import io.tetrapod.core.rpc.*;
 
-import java.util.Queue;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.*;
+import java.util.concurrent.*;
 
 /**
  * Thread safe message dispatcher class.
  */
-public class MessageHandlers implements SubscriptionAPI {
+public class MessageHandlers {
    
-   private Queue<SubscriptionAPI> listeners = new ConcurrentLinkedQueue<>();
+   private final Map<Long, List<SubscriptionAPI>> map = new ConcurrentHashMap<>();
+   private final List<SubscriptionAPI> empty = new ArrayList<>();
 
-   @Override
-   public void genericMessage(Message message, MessageContext ctx) {
-      for (SubscriptionAPI api : listeners)
-         message.dispatch(api, ctx);
+   public List<SubscriptionAPI> get(int contractId, int structId) {
+      List<SubscriptionAPI> list = map.get(makeKey(contractId, structId));
+      return list == null ? empty : list;
    }
    
-   public void add(SubscriptionAPI listener) {
-      listeners.add(listener);
+   public void add(Contract subscription, SubscriptionAPI handler) {
+      for (Structure s : subscription.getMessages()) {
+         add(s, handler);
+      }
    }
    
-   public void remove(SubscriptionAPI listener) {
-      listeners.remove(listener);
+   public void add(Structure s, SubscriptionAPI handler) {
+      List<SubscriptionAPI> list = ensure(makeKey(s.getContractId(), s.getStructId()));
+      list.add(handler);
+   }
+   
+   private List<SubscriptionAPI> ensure(long key) {
+      List<SubscriptionAPI> list = map.get(key);
+      if (list == null) {
+         list = new CopyOnWriteArrayList<>(); // good for concurrent reads >> writes
+         map.put(key, list);
+      }
+      return list;
+   }
+
+   private long makeKey(int contractId, int structId) {
+      return ((long) contractId << 32) | (long) structId;
    }
 
 }

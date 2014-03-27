@@ -36,7 +36,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
 
       public ServiceAPI getServiceHandler(int contractId);
 
-      public SubscriptionAPI getMessageHandler(int contractId);
+      public List<SubscriptionAPI> getMessageHandlers(int contractId, int structUd);
 
       public int getContractId();
    }
@@ -139,9 +139,8 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
       final MessageContext ctx = new MessageContext(header, this);
       getDispatcher().dispatchSequential(new Runnable() {
          public void run() {
-            final SubscriptionAPI svc = helper.getMessageHandler(header.contractId);
-            if (svc != null) {
-               msg.dispatch(svc, ctx);
+            for (SubscriptionAPI handler : helper.getMessageHandlers(header.contractId, header.structId)) {
+               msg.dispatch(handler, ctx);
             }
          }
       });
