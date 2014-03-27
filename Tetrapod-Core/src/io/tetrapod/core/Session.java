@@ -43,7 +43,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
 
    public static interface RelayHandler {
 
-      public WireSession getRelaySession(int toId, int contractid);
+      public Session getRelaySession(int toId, int contractid);
 
       public void broadcast(MessageHeader header, ByteBuf buf);
       
@@ -78,6 +78,10 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
       this.helper = helper;
       this.myContractId = helper.getContractId();
    }
+
+   abstract protected Object makeFrame(Structure header, Structure payload, byte envelope);
+
+   abstract protected Object makeFrame(Structure header, ByteBuf payload, byte envelope);
 
    public Dispatcher getDispatcher() {
       return helper.getDispatcher();
@@ -143,11 +147,71 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
       });
    }
 
-   abstract public Async sendRequest(Request req, int toId, byte timeoutSeconds);
+   public Async sendRequest(Request req, int toId, byte timeoutSeconds) {
+      final RequestHeader header = new RequestHeader();
+      header.requestId = requestCounter.incrementAndGet();
+      header.toId = toId;
+      header.fromId = myId;
+      header.timeout = timeoutSeconds;
+      header.contractId = req.getContractId();
+      header.structId = req.getStructId();
+      header.fromType = myType;
 
-   abstract protected void sendResponse(Response res, int requestId);
+      final Async async = new Async(req, header, this);
+      pendingRequests.put(header.requestId, async);
 
-   abstract public void sendMessage(Message msg, int toEntityId, int topicId);
+      logger.debug(String.format("%s > REQUEST [%d] %d %s", this, toId, header.requestId, req.getClass().getSimpleName()));
+
+      final Object buffer = makeFrame(header, req, ENVELOPE_REQUEST);
+      if (buffer != null) {
+         writeFrame(buffer);
+      } else {
+         async.setResponse(ERROR_SERIALIZATION);
+      }
+      return async;
+   }
+
+   public void sendResponse(Response res, int requestId) {
+      logger.debug(String.format("%s > RESPONSE [%d] %s", this, requestId, res.getClass().getSimpleName()));
+      final Object buffer = makeFrame(new ResponseHeader(requestId, res.getContractId(), res.getStructId()), res, ENVELOPE_RESPONSE);
+      if (buffer != null) {
+         writeFrame(buffer);
+      }
+   }
+
+   public void sendMessage(Message msg, int toEntityId, int topicId) {
+      logger.debug(String.format("%s > MESSAGE [%d:%d] %s", this, toEntityId, topicId, msg.getClass().getSimpleName()));
+      final Object buffer = makeFrame(new MessageHeader(getMyEntityId(), topicId, toEntityId, msg.getContractId(), msg.getStructId()), msg, ENVELOPE_MESSAGE);
+      if (buffer != null) {
+         writeFrame(buffer);
+      }
+   }
+
+   public ChannelFuture writeFrame(Object frame) {
+      if (frame != null)
+         return channel.writeAndFlush(frame);
+      return null;
+   }
+
+   public void sendRelayedMessage(MessageHeader header, ByteBuf payload) {
+      logger.debug("{}, RELAYING MESSAGE: [{}]", this, header.structId);
+      writeFrame(makeFrame(header, payload, ENVELOPE_MESSAGE));
+   }
+   
+   public void sendRelayedRequest(RequestHeader header, ByteBuf payload, Session originator) {
+      final Async async = new Async(null, header, originator);
+      int origRequestId = async.header.requestId;
+      this.addPendingRequest(async);
+      logger.debug("{} RELAYING REQUEST: [{}] was " + origRequestId, this, async.header.requestId);
+      writeFrame(makeFrame(header, payload, ENVELOPE_REQUEST));
+      header.requestId = origRequestId;
+   }
+
+   public void sendRelayedResponse(ResponseHeader header, ByteBuf payload) {
+      logger.debug("{} RELAYING RESPONSE: [{}]", this, header.requestId);
+      writeFrame(makeFrame(header, payload, ENVELOPE_RESPONSE));
+   }
+
 
    @Override
    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {

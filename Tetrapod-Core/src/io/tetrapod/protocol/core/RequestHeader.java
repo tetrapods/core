@@ -21,15 +21,15 @@ public class RequestHeader extends Structure {
       defaults();
    }
 
-   public RequestHeader(int requestId, int fromId, int toId, byte fromType, byte timeout, int version, int structId, int contractId) {
+   public RequestHeader(int requestId, int fromId, int toId, byte fromType, byte timeout, int version, int contractId, int structId) {
       this.requestId = requestId;
       this.fromId = fromId;
       this.toId = toId;
       this.fromType = fromType;
       this.timeout = timeout;
       this.version = version;
-      this.structId = structId;
       this.contractId = contractId;
+      this.structId = structId;
    }   
    
    public int requestId;
@@ -38,8 +38,8 @@ public class RequestHeader extends Structure {
    public byte fromType;
    public byte timeout;
    public int version;
-   public int structId;
    public int contractId;
+   public int structId;
 
    public final Structure.Security getSecurity() {
       return Security.PUBLIC;
@@ -52,8 +52,8 @@ public class RequestHeader extends Structure {
       fromType = 0;
       timeout = 0;
       version = 0;
-      structId = 0;
       contractId = 0;
+      structId = 0;
    }
    
    @Override
@@ -64,8 +64,8 @@ public class RequestHeader extends Structure {
       data.write(4, this.fromType);
       data.write(5, this.timeout);
       data.write(6, this.version);
-      data.write(7, this.structId);
-      data.write(8, this.contractId);
+      data.write(7, this.contractId);
+      data.write(8, this.structId);
       data.writeEndTag();
    }
    
@@ -81,8 +81,8 @@ public class RequestHeader extends Structure {
             case 4: this.fromType = data.read_byte(tag); break;
             case 5: this.timeout = data.read_byte(tag); break;
             case 6: this.version = data.read_int(tag); break;
-            case 7: this.structId = data.read_int(tag); break;
-            case 8: this.contractId = data.read_int(tag); break;
+            case 7: this.contractId = data.read_int(tag); break;
+            case 8: this.structId = data.read_int(tag); break;
             case Codec.END_TAG:
                return;
             default:
@@ -111,8 +111,8 @@ public class RequestHeader extends Structure {
       result[4] = "fromType";
       result[5] = "timeout";
       result[6] = "version";
-      result[7] = "structId";
-      result[8] = "contractId";
+      result[7] = "contractId";
+      result[8] = "structId";
       return result;
    }
 

@@ -178,59 +178,19 @@ public class WireSession extends Session {
       }
    }
 
-   public Async sendRequest(Request req, int toId, byte timeoutSeconds) {
-      final RequestHeader header = new RequestHeader();
-      header.requestId = requestCounter.incrementAndGet();
-      header.toId = toId;
-      header.fromId = myId;
-      header.timeout = timeoutSeconds;
-      header.contractId = req.getContractId();
-      header.structId = req.getStructId();
-      header.fromType = myType;
-
-      final Async async = new Async(req, header, this);
-      pendingRequests.put(header.requestId, async);
-
-      logger.debug(String.format("%s > REQUEST [%d] %d %s", this, toId, header.requestId, req.getClass().getSimpleName()));
-
-      final ByteBuf buffer = makeFrame(header, req, ENVELOPE_REQUEST);
-      if (buffer != null) {
-         write(buffer);
-      } else {
-         async.setResponse(ERROR_SERIALIZATION);
-      }
-      return async;
-   }
-
-   protected void sendResponse(Response res, int requestId) {
-      logger.debug(String.format("%s > RESPONSE [%d] %s", this, requestId, res.getClass().getSimpleName()));
-      final ByteBuf buffer = makeFrame(new ResponseHeader(requestId, res.getStructId()), res, ENVELOPE_RESPONSE);
-      if (buffer != null) {
-         write(buffer);
-      }
-   }
-
-   public void sendMessage(Message msg, int toEntityId, int topicId) {
-      logger.debug(String.format("%s > MESSAGE [%d:%d] %s", this, toEntityId, topicId, msg.getClass().getSimpleName()));
-      final ByteBuf buffer = makeFrame(new MessageHeader(getMyEntityId(), topicId, toEntityId, msg.getContractId(), msg.getStructId()), msg, ENVELOPE_MESSAGE);
-      if (buffer != null) {
-         write(buffer);
-      }
-   }
-
-   private ByteBuf makeFrame(Structure header, Structure payload, byte envelope) {
+   @Override
+   protected ByteBuf makeFrame(Structure header, Structure payload, byte envelope) {
       return makeFrame(header, payload, envelope, channel.alloc().buffer(128));
    }
 
-   public static ByteBuf makeFrame(Structure header, Structure payload, byte envelope, ByteBuf buffer) {
+   private ByteBuf makeFrame(Structure header, Structure payload, byte envelope, ByteBuf buffer) {
       final ByteBufDataSource data = new ByteBufDataSource(buffer);
       buffer.writeInt(0);
       buffer.writeByte(envelope);
       try {
          header.write(data);
          payload.write(data);
-         // go back and write message length, now that we know it
-         buffer.setInt(0, buffer.writerIndex() - 4);
+         buffer.setInt(0, buffer.writerIndex() - 4); // go back and write message length, now that we know it
          return buffer;
       } catch (IOException e) {
          ReferenceCountUtil.release(buffer);
@@ -239,10 +199,6 @@ public class WireSession extends Session {
       }
    }
 
-   public ChannelFuture write(ByteBuf buffer) {
-      lastSentTo.set(System.currentTimeMillis());
-      return channel.writeAndFlush(buffer);
-   }
 
    @Override
    public void channelActive(final ChannelHandlerContext ctx) throws Exception {
@@ -316,77 +272,59 @@ public class WireSession extends Session {
       }
       return false;
    }
+   
+   @Override
+   public ChannelFuture writeFrame(Object frame) {
+      lastSentTo.set(System.currentTimeMillis());
+      return super.writeFrame(frame);
+   }
 
    // /////////////////////////////////// RELAY /////////////////////////////////////
 
-   private void relayRequest(final RequestHeader header, final ByteBuf in) {
-      final WireSession ses = relayHandler.getRelaySession(header.toId, header.contractId);
-      if (ses != null) {
-         // OPTIMIZE: Find a way to relay without the byte[] allocation & copy
-         final ByteBuf buffer = channel.alloc().buffer(32 + in.readableBytes());
-         final ByteBufDataSource data = new ByteBufDataSource(buffer);
+   @Override
+   protected Object makeFrame(Structure header, ByteBuf payload, byte envelope) {
+      // OPTIMIZE: Find a way to relay without the extra allocation & copy
+      ByteBuf buffer = channel.alloc().buffer(32 + payload.readableBytes());
+      ByteBufDataSource data = new ByteBufDataSource(buffer);
+      try {
+         buffer.writeInt(0);
+         buffer.writeByte(envelope);
+         header.write(data);
+         buffer.writeBytes(payload);
+         buffer.setInt(0, buffer.writerIndex() - 4); // Write message length, now that we know it
+         return buffer;
+      } catch (IOException e) {
+         ReferenceCountUtil.release(buffer);
+         logger.error(e.getMessage(), e);
+         return null;
+      }
+   }
 
-         final Async async = new Async(null, header, this);
-         int origRequestId = async.header.requestId;
-         try {
-            ses.addPendingRequest(async);
-            logger.debug("{} RELAYING REQUEST: [{}] was " + origRequestId, this, async.header.requestId);
-            buffer.writeInt(0); // length placeholder
-            buffer.writeByte(ENVELOPE_REQUEST);
-            async.header.write(data);
-            buffer.writeBytes(in);
-            buffer.setInt(0, buffer.writerIndex() - 4); // go back and write message length, now
-                                                        // that we know it
-            ses.write(buffer);
-         } catch (IOException e) {
-            ReferenceCountUtil.release(buffer);
-            logger.error(e.getMessage(), e);
-         } finally {
-            header.requestId = origRequestId;
-         }
+   private void relayRequest(final RequestHeader header, final ByteBuf in) {
+      final Session ses = relayHandler.getRelaySession(header.toId, header.contractId);
+      if (ses != null) {
+         ses.sendRelayedRequest(header, in, this);
       } else {
          logger.warn("Could not find a relay session for {}", header.toId);
       }
    }
-
+   
    private void relayResponse(ResponseHeader header, Async async, ByteBuf in) {
-      logger.debug("{} RELAYING RESPONSE: [{}]", this, header.requestId);
-      // OPTIMIZE: Find a way to relay without the extra allocation & copy
-      final ByteBuf buffer = channel.alloc().buffer(32 + in.readableBytes());
-      final ByteBufDataSource data = new ByteBufDataSource(buffer);
-      try {
-         buffer.writeInt(0);
-         buffer.writeByte(ENVELOPE_RESPONSE);
-         header.requestId = async.header.requestId;
-         header.write(data);
-         buffer.writeBytes(in);
-         buffer.setInt(0, buffer.writerIndex() - 4); // Write message length, now that we know it
-         ((WireSession) async.session).write(buffer);
-      } catch (IOException e) {
-         ReferenceCountUtil.release(buffer);
-         logger.error(e.getMessage(), e);
-      }
+      header.requestId = async.header.requestId;
+      async.session.sendRelayedResponse(header, in);
    }
 
    private void relayMessage(final MessageHeader header, final ByteBuf payload) {
-      logger.debug("{}, RELAY MESSAGE: [{}]", this, header.structId);
       if (header.toId == UNADDRESSED) {
-         // TODO: Broadcast to all sessions we need to
          relayHandler.broadcast(header, payload);
       } else {
-         final WireSession ses = relayHandler.getRelaySession(header.toId, header.contractId);
+         final Session ses = relayHandler.getRelaySession(header.toId, header.contractId);
          if (ses != null) {
-            ses.forwardMessage(header, payload);
+            ses.sendRelayedMessage(header, payload);
          }
       }
    }
-
-   protected void forwardMessage(MessageHeader header, ByteBuf payload) {
-      payload.resetReaderIndex();
-      payload.retain();
-      write(payload);
-   }
-
+   
    public static String dumpBuffer(ByteBuf buf) {
       StringBuilder sb = new StringBuilder();
       for (int i = 0; i < buf.writerIndex(); i++) {

@@ -51,12 +51,13 @@ public struct RequestHeader
    4: byte 	fromType
    5: byte 	timeout
    6: int 	version
-   7: int 	structId
-   8: int   contractId
+   7: int   contractId
+   8: int 	structId
    
 public struct ResponseHeader
    1: int requestId 
-   2: int structId
+   2: int contractId
+   3: int structId
    
 public struct MessageHeader
    1: int fromId

@@ -3,26 +3,19 @@ package io.tetrapod.core.web;
 import static io.netty.handler.codec.http.HttpHeaders.Names.*;
 import static io.netty.handler.codec.http.HttpResponseStatus.OK;
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
-import static io.tetrapod.protocol.core.Core.*;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.http.*;
 import io.netty.util.ReferenceCountUtil;
-import io.tetrapod.core.*;
-import io.tetrapod.core.rpc.*;
-import io.tetrapod.core.rpc.Error;
-import io.tetrapod.core.serialize.datasources.*;
+import io.tetrapod.core.Session;
+import io.tetrapod.core.json.JSONObject;
 import io.tetrapod.protocol.core.RequestHeader;
 
-import java.io.*;
+import java.io.File;
 
-import org.slf4j.*;
+class WebHttpSession extends WebSession {
 
-class WebHttpSession extends Session {
-
-   private static final Logger logger = LoggerFactory.getLogger(WebHttpSession.class);
-   
    private boolean isKeepAlive;
 
    public WebHttpSession(SocketChannel ch, Session.Helper helper, String contentRoot) {
@@ -45,7 +38,7 @@ class WebHttpSession extends Session {
 
    @Override
    public void channelRead(ChannelHandlerContext ctx, Object obj) throws Exception {
-      if (!(obj instanceof HttpRequest) || relayHandler==null) {
+      if (!(obj instanceof HttpRequest)) {
          ctx.fireChannelRead(obj);
          return;
       }
@@ -57,47 +50,12 @@ class WebHttpSession extends Session {
       }
       isKeepAlive =  HttpHeaders.isKeepAlive((HttpRequest)obj);
       ReferenceCountUtil.release(obj);
-      
-      try {
-         if ((header.toId == UNADDRESSED && header.contractId == myContractId) || header.toId == myId) {
-            final Request req = (Request) StructureFactory.make(header.contractId, header.structId);
-            if (req != null) {
-               req.read(new WebJSONDataSource(context.getRequestParams(), req.tagWebNames()));
-               dispatchRequest(header, req);
-            } else {
-               logger.warn("Could not find request structure {}", header.structId);
-               sendResponse(new Error(ERROR_SERIALIZATION), header.requestId);
-            }
-         } else if (relayHandler != null) {
-            // TODO implement
-            // relayRequest(header, jo);
-         }
-
-      } catch (IOException e) {
-      }
+      readRequest(header, context);
    }
    
-
    @Override
-   public Async sendRequest(Request req, int toId, byte timeoutSeconds) {
-      logger.error("can't send requests to clients {}", req.dump());
-      return null;
-   }
-
-   @Override
-   protected void sendResponse(Response res, int requestId) {
-      JSONDataSource jds = new WebJSONDataSource(res.tagWebNames());
-      try {
-         res.write(jds);
-      } catch (IOException e) {
-         logger.error(e.getMessage(), e);
-         return;
-      }
-      jds.getJSON().put("num", requestId);
-      jds.getJSON().put("structId", res.getStructId());
-      jds.getJSON().put("contractId", res.getContractId());
-
-      ByteBuf buf = WebContext.makeByteBufResult(jds.getJSON().toString(3));
+   protected Object makeFrame(JSONObject jo) {
+      ByteBuf buf = WebContext.makeByteBufResult(jo.toString(3));
       FullHttpResponse httpResponse = new DefaultFullHttpResponse(HTTP_1_1, OK, buf);
       httpResponse.headers().set(CONTENT_TYPE, "text/json");
       httpResponse.headers().set(CONTENT_LENGTH, httpResponse.content().readableBytes());
@@ -106,14 +64,7 @@ class WebHttpSession extends Session {
       } else {
          httpResponse.headers().set(CONNECTION, HttpHeaders.Values.CLOSE);
       }
-      channel.writeAndFlush(httpResponse);
+      return httpResponse;
    }
-
-   @Override
-   public void sendMessage(Message msg, int toEntityId, int topicId) {
-      // TODO
-   }
-
-   
 
 }

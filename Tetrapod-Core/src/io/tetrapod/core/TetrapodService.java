@@ -171,10 +171,10 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    }
 
    @Override
-   public WireSession getRelaySession(int entityId, int contractId) {
+   public Session getRelaySession(int entityId, int contractId) {
       final EntityInfo entity = registry.getEntity(entityId);
       if (entity != null) {
-         return (WireSession) findSession(entity);
+         return findSession(entity);
       } else {
          logger.warn("Could not find an entity for {}", entityId);
       }
@@ -194,9 +194,9 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
                   final EntityInfo e = registry.getEntity(s.entityId);
                   if (e != null) {
                      if (e.parentId == getEntityId() || e.isTetrapod()) {
-                        WireSession session = (WireSession) findSession(e);
+                        Session session = findSession(e);
                         if (session != null) {
-                           session.forwardMessage(header, buf);
+                           session.sendRelayedMessage(header, buf);
                         }
                      }
                   } else {

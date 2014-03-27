@@ -1,17 +1,15 @@
 package io.tetrapod.core.serailize;
 
+import static org.junit.Assert.assertTrue;
 import io.tetrapod.core.rpc.Structure;
 import io.tetrapod.core.serialize.StructureAdapter;
 import io.tetrapod.core.serialize.datasources.TempBufferDataSource;
 import io.tetrapod.protocol.core.*;
 import io.tetrapod.protocol.identity.IdentityContract;
-import io.tetrapod.protocol.sample.*;
 
 import java.util.Arrays;
 
 import org.junit.Test;
-
-import static org.junit.Assert.assertTrue;
 
 public class SerializationTest {
 
@@ -34,14 +32,14 @@ public class SerializationTest {
       assertTrue(rinseViaAdapter(awr));
    }
 
-   @Test
-   public void testSample() throws Exception {
-      new TetrapodContract().registerStructs();
-      new SampleContract().registerStructs();
-      TestResponse tr = new TestResponse();
-      assertTrue(rinseTempBuff(tr));
-      assertTrue(rinseViaAdapter(tr));
-   }
+//   @Test
+//   public void testSample() throws Exception {
+//      new TetrapodContract().registerStructs();
+//      new SampleContract().registerStructs();
+//      TestResponse tr = new TestResponse();
+//      assertTrue(rinseTempBuff(tr));
+//      assertTrue(rinseViaAdapter(tr));
+//   }
 
    public boolean rinseTempBuff(Structure s1) throws Exception {
       TempBufferDataSource temp = TempBufferDataSource.forWriting();
