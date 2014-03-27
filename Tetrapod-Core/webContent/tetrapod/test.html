@@ -2,6 +2,14 @@
 <script src="tetrapod.js"></script>
 <script src="protocol.js"></script>
 <script>
-    TP.send("Login", { username: "scott", password: "fortin" });
+   TP.connect("localhost").onOpen(function() {
+      TP.send("Login", { email: "scott", password: "fortin" }).handle(function(result, errorCode) {
+         if (result) {
+            window.alert("received response back: account=" + result.accountId + " token=" + result.authToken);
+         } else {
+            window.alert("received error " + errorCode);
+         }
+      });
+   });
 </script>
 </html>

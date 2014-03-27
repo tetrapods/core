@@ -14,7 +14,7 @@ import io.tetrapod.protocol.core.RequestHeader;
 
 import java.io.File;
 
-class WebHttpSession extends WebSession {
+public class WebHttpSession extends WebSession {
 
    private boolean isKeepAlive;
 

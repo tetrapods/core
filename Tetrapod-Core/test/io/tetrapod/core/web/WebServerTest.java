@@ -11,31 +11,14 @@ public class WebServerTest {
    
    @Test
    public void serveFiles() throws Exception {
-      final int totalTestTime = 5000;
-      
       final TetrapodService pod = new TetrapodService();
       pod.startNetwork(null, "e:1");
 
       IdentityService ident = new IdentityService();
       ident.startNetwork("localhost", null);
 
-      // start web server separately for now, should probably be an option in TetrapodService
-      final Server s = new Server(6777, new WebSessionFactory(pod, pod, "./webContent", false));
-      new Thread(new Runnable() {
-         @Override
-         public void run() {
-            Util.sleep(totalTestTime);
-            pod.stop();
-            s.stop();
-         }
-      }).start();
-      
-      s.start().sync().channel().closeFuture().sync();
-      Util.sleep(1000);
-
-      // try http://localhost:6777/api?requestId=1&toId=0&contractId=1&structId=10895179&1=221
-      // does a register request with tag #1 (build) = 221
+      Util.sleep(5000);
+      pod.stop();
    }
-   
 
 }
