@@ -194,6 +194,9 @@ class CodeGenContext {
       } else {
          classes.get(classes.size() - 1).fields.add(f);
       }
+      if (f.defaultValue != null && (f.collectionType != null || Character.isUpperCase(f.type.charAt(0))))
+         throw new ParseException("non-primitives cannot be assigned default values, field=" + f.name);
+
    }
 
    public void parseService(TokenizedLine line) throws ParseException {

@@ -193,27 +193,17 @@ class JavaGenerator implements LanguageGenerator {
       String descArray = "";
       if (f.collectionType != null) {
          defaultVal = "null";
-         boolean isEmpty = f.defaultValue != null && f.defaultValue.equals("<empty>");
          switch (f.collectionType) {
             case "<array>":
                primTemplate = "field.array.primitives";
                structTemplate = "field.array.structs";
                descArray = "_LIST";
-               if (isEmpty)
-                  defaultVal = "new " + info.base + "[0]";
                break;
             case "<list>":
                primTemplate = "field.list.primitives";
                structTemplate = "field.list.structs";
                descArray = "_LIST";
-               if (isEmpty)
-                  defaultVal = "new ArrayList<>()";
                break;
-         }
-      } else {
-         boolean isEmpty = f.defaultValue != null && f.defaultValue.equals("<empty>");
-         if (isEmpty) {
-            defaultVal = "new " + info.base + "()";
          }
       }
       if (f.isConstant()) {

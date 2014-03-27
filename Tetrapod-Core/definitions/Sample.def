@@ -52,11 +52,11 @@ response Test @id(117)            # an id tag in any class sets that as the stru
    4: long longval = 500
    5: byte byteval = 127
    6: string stringval = "happy\" da\\ys # //"    # \ escapes work in strings
-   7: int[] intarray = {}                         # for collections, only the empty initializer is allowed (or nothing, which means null)
-   8: int<list> intlist = {}
-   9: TestInfo info = {}                          # for general objects, again {} is allowed which means the no-args constucter
-   10: TestInfo<list> infolist = {}
-   11: TestInfo[] infoarray = {}
+   7: int[] intarray                        
+   8: int<list> intlist
+   9: TestInfo info                     
+   10: TestInfo<list> infolist
+   11: TestInfo[] infoarray
 
 public request AnotherTest
    1: int accountId

@@ -39,7 +39,7 @@ public class AddServiceInformationRequest extends Request {
 
    public final void defaults() {
       routes = null;
-      structs = new ArrayList<>();
+      structs = null;
    }
    
    @Override

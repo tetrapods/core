@@ -146,7 +146,7 @@ internal request ServiceStatusUpdate
 # perhaps this should be merged into a new RegisterService   
 internal request AddServiceInformation
    1: WebRoute[] routes
-   2: StructDescription<list> structs = {} // structs that could possibly be used in end user comms
+   2: StructDescription<list> structs // structs that could possibly be used in end user comms
 
 ################################# MESSAGES #################################
     
