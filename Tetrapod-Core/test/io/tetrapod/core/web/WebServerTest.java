@@ -12,7 +12,7 @@ public class WebServerTest {
    
    @Test
    public void serveFiles() throws Exception {
-      final int totalTestTime = 50000;
+      final int totalTestTime = 5000;
       
       TetrapodService pod = new TetrapodService();
       pod.startNetwork(null, "e:1");

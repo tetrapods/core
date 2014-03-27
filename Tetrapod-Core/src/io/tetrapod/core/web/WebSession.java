@@ -32,7 +32,7 @@ abstract class WebSession extends Session {
             return;
          }
          request.read(new WebJSONDataSource(context.getRequestParams(), request.tagWebNames()));
-         if ((header.toId == UNADDRESSED && header.contractId == myContractId) || header.toId == myId) {
+         if (header.toId == UNADDRESSED && header.contractId == myContractId) {
             dispatchRequest(header, request);
          } else {
             relayRequest(header, request);
@@ -50,7 +50,8 @@ abstract class WebSession extends Session {
          ByteBuf in = convertToByteBuf(request);
          ses.sendRelayedRequest(header, in, this);
       } else {
-         logger.warn("Could not find a relay session for {}", header.toId);
+         logger.warn("Could not find a relay session for {} {}", header.toId, header.contractId);
+         sendResponse(new Error(ERROR_UNKNOWN), header.requestId);
       }
    }
 

@@ -21,7 +21,7 @@ public class Entity extends Structure {
       defaults();
    }
 
-   public Entity(int entityId, int parentId, long reclaimToken, String host, int status, byte type, String name, int build, int version) {
+   public Entity(int entityId, int parentId, long reclaimToken, String host, int status, byte type, String name, int build, int version, int contractId) {
       this.entityId = entityId;
       this.parentId = parentId;
       this.reclaimToken = reclaimToken;
@@ -31,6 +31,7 @@ public class Entity extends Structure {
       this.name = name;
       this.build = build;
       this.version = version;
+      this.contractId = contractId;
    }   
    
    public int entityId;
@@ -42,6 +43,7 @@ public class Entity extends Structure {
    public String name;
    public int build;
    public int version;
+   public int contractId;
 
    public final Structure.Security getSecurity() {
       return Security.PUBLIC;
@@ -57,6 +59,7 @@ public class Entity extends Structure {
       name = null;
       build = 0;
       version = 0;
+      contractId = 0;
    }
    
    @Override
@@ -70,6 +73,7 @@ public class Entity extends Structure {
       data.write(7, this.name);
       data.write(8, this.build);
       data.write(9, this.version);
+      data.write(10, this.contractId);
       data.writeEndTag();
    }
    
@@ -88,6 +92,7 @@ public class Entity extends Structure {
             case 7: this.name = data.read_string(tag); break;
             case 8: this.build = data.read_int(tag); break;
             case 9: this.version = data.read_int(tag); break;
+            case 10: this.contractId = data.read_int(tag); break;
             case Codec.END_TAG:
                return;
             default:
@@ -109,7 +114,7 @@ public class Entity extends Structure {
       // Note do not use this tags in long term serializations (to disk or databases) as 
       // implementors are free to rename them however they wish.  A null means the field
       // is not to participate in web serialization (remaining at default)
-      String[] result = new String[9+1];
+      String[] result = new String[10+1];
       result[1] = "entityId";
       result[2] = "parentId";
       result[3] = "reclaimToken";
@@ -119,6 +124,7 @@ public class Entity extends Structure {
       result[7] = "name";
       result[8] = "build";
       result[9] = "version";
+      result[10] = "contractId";
       return result;
    }
 
@@ -140,6 +146,7 @@ public class Entity extends Structure {
       desc.types[7] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
       desc.types[8] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
       desc.types[9] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
+      desc.types[10] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
       return desc;
    }
 }

@@ -77,7 +77,8 @@ public struct Entity
    6: byte type
    7: string name
    8: int build  
-   9: int version  
+   9: int version
+  10: int contractId  
 
 internal struct Subscriber
    1: int entityId  
@@ -145,7 +146,7 @@ internal request ServiceStatusUpdate
 # perhaps this should be merged into a new RegisterService   
 internal request AddServiceInformation
    1: WebRoute[] routes
-   2: StructDescription<list> structs // structs that could possibly be used in end user comms
+   2: StructDescription<list> structs = {} // structs that could possibly be used in end user comms
 
 ################################# MESSAGES #################################
     

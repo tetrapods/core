@@ -70,7 +70,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
    private void selfRegister(int tetrapodId) throws Exception {
       this.entityId = registry.setParentId(tetrapodId);
-      final EntityInfo e = new EntityInfo(entityId, 0, random.nextLong(), Util.getHostName(), 0, Core.TYPE_TETRAPOD, getShortName(), 0, 0);
+      final EntityInfo e = new EntityInfo(entityId, 0, random.nextLong(), Util.getHostName(), 0, Core.TYPE_TETRAPOD, getShortName(), 0, 0, getContractId());
       registry.register(e);
       logger.info(String.format("SELF-REGISTERING: 0x%08X %s", entityId, e));
       clusterServer.start().sync();
@@ -165,11 +165,12 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
    @Override
    public Session getRelaySession(int entityId, int contractId) {
-      final EntityInfo entity = registry.getEntity(entityId);
+      EntityInfo entity = registry.getEntity(entityId);
+      if (entity == null) {
+         entity = registry.getRandomService(contractId);
+      }
       if (entity != null) {
          return findSession(entity);
-      } else {
-         logger.warn("Could not find an entity for {}", entityId);
       }
       return null;
    }
@@ -292,6 +293,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          info.host = ctx.session.getPeerHostname();
          info.name = r.name;
          info.reclaimToken = random.nextLong();
+         info.contractId = r.contractId;
       }
 
       info.parentId = getEntityId();

@@ -28,11 +28,11 @@ public class EntityInfo extends Entity implements Comparable<EntityInfo> {
    public EntityInfo() {}
 
    public EntityInfo(Entity e) {
-      this(e.entityId, e.parentId, e.reclaimToken, e.host, e.status, e.type, e.name, e.build, e.version);
+      this(e.entityId, e.parentId, e.reclaimToken, e.host, e.status, e.type, e.name, e.build, e.version, e.contractId);
    }
 
-   public EntityInfo(int entityId, int parentId, long reclaimToken, String host, int status, byte type, String name, int build, int version) {
-      super(entityId, parentId, reclaimToken, host, status, type, name, build, version);
+   public EntityInfo(int entityId, int parentId, long reclaimToken, String host, int status, byte type, String name, int build, int version, int contractId) {
+      super(entityId, parentId, reclaimToken, host, status, type, name, build, version, contractId);
    }
 
    public boolean isTetrapod() {

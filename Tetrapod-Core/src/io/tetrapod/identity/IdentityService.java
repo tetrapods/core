@@ -75,7 +75,7 @@ public class IdentityService extends DefaultService implements IdentityContract.
 
    @Override
    public Response requestLogin(LoginRequest r, RequestContext ctx) {
-      return new LoginResponse(23, "thisisanauthtoken");
+      return new LoginResponse(23, "auth." + r.email + "." + r.password);
    }
 
    @Override

@@ -4,7 +4,7 @@ import io.tetrapod.core.rpc.*;
 import io.tetrapod.protocol.core.*;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.*;
 
 import org.slf4j.*;
 
@@ -39,7 +39,6 @@ public class Registry implements TetrapodContract.Registry.API {
    /**
     * Maps contractId => List of EntityInfos that provide that service
     */
-   @SuppressWarnings("unused")
    private final Map<Integer, List<EntityInfo>> services        = new ConcurrentHashMap<>();
 
    public static interface RegistryBroadcaster {
@@ -65,6 +64,7 @@ public class Registry implements TetrapodContract.Registry.API {
       entities.put(entity.entityId, entity);
       if (entity.isService()) {
          // register their service in our services list
+         ensureServicesList(entity.contractId).add(entity);
       }
       if (entity.parentId == parentId && entity.entityId != parentId && broadcaster != null) {
          broadcaster.broadcastRegistryMessage(new EntityRegisteredMessage(entity, null));
@@ -73,6 +73,34 @@ public class Registry implements TetrapodContract.Registry.API {
 
    public EntityInfo getEntity(int entityId) {
       return entities.get(entityId);
+   }
+   
+   public EntityInfo getFirstService(int contractId) {
+      // Using a CopyOnWrite list this method doesn't need to lock
+      List<EntityInfo> list = services.get(contractId);
+      if (list != null) {
+         ListIterator<EntityInfo> li = list.listIterator();
+         if (li.hasNext())
+            return li.next();
+      }
+      return null;
+   }
+
+   public EntityInfo getRandomService(int contractId) {
+      // Using a CopyOnWrite list this method doesn't need to lock
+      List<EntityInfo> list = services.get(contractId);
+      if (list != null) {
+         int size = list.size();
+         while (size > 0) {
+            try {
+               return list.get(new Random().nextInt(size));
+            } catch (IndexOutOfBoundsException e) {
+               // size computation might've been out of date when the get occured, just try again
+               size = list.size();
+            }
+         }
+      }
+      return null;
    }
 
    public synchronized void unregister(int entityId) {
@@ -91,6 +119,12 @@ public class Registry implements TetrapodContract.Registry.API {
 
          if (e.parentId == parentId) {
             broadcaster.broadcastRegistryMessage(new EntityUnregisteredMessage(entityId));
+         }
+         
+         if (e.isService()) {
+            List<EntityInfo> list = services.get(e.contractId);
+            if (list != null)
+               list.remove(e);
          }
       } else {
          logger.error("Could not find entity {} to unregister", entityId);
@@ -271,6 +305,15 @@ public class Registry implements TetrapodContract.Registry.API {
       }
       logger.info("=======================================================================\n");
 
+   }
+   
+   private List<EntityInfo> ensureServicesList(int contractId) {
+      List<EntityInfo> list = services.get(contractId);
+      if (list == null) {
+         list = new CopyOnWriteArrayList<>();
+         services.put(contractId, list);
+      }
+      return list;
    }
 
 }
