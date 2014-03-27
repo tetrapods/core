@@ -49,9 +49,9 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    @Override
    public void startNetwork(String hostAndPort, String token) throws Exception {
 
-      publicServer = new Server(DEFAULT_PUBLIC_PORT, new ServerSessionFactory(publicServer));
-      serviceServer = new Server(DEFAULT_SERVICE_PORT, new ServerSessionFactory(serviceServer));
-      clusterServer = new Server(DEFAULT_CLUSTER_PORT, new ServerSessionFactory(clusterServer));
+      publicServer = new Server(DEFAULT_PUBLIC_PORT, new TypedSessionFactory(Core.TYPE_ANONYMOUS));
+      serviceServer = new Server(DEFAULT_SERVICE_PORT, new TypedSessionFactory(Core.TYPE_SERVICE));
+      clusterServer = new Server(DEFAULT_CLUSTER_PORT, new TypedSessionFactory(Core.TYPE_TETRAPOD));
 
       if (hostAndPort == null) {
          // We're the first, so bootstrapping here
@@ -90,11 +90,11 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       return Core.TYPE_TETRAPOD;
    }
 
-   private class ServerSessionFactory implements SessionFactory {
-      private final Server server;
+   private class TypedSessionFactory implements SessionFactory {
+      private final byte type;
 
-      private ServerSessionFactory(Server server) {
-         this.server = server;
+      private TypedSessionFactory(byte type) {
+         this.type = type;
       }
 
       /**
@@ -105,14 +105,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          final Session ses = new WireSession(ch, TetrapodService.this);
          ses.setMyEntityId(getEntityId());
          ses.setMyEntityType(Core.TYPE_TETRAPOD);
-
-         ses.setTheirEntityType(Core.TYPE_ANONYMOUS);
-         if (server == clusterServer) {
-            ses.setTheirEntityType(Core.TYPE_TETRAPOD);
-         } else if (server == serviceServer) {
-            ses.setTheirEntityType(Core.TYPE_SERVICE);
-         }
-
+         ses.setTheirEntityType(type);
          ses.setRelayHandler(TetrapodService.this);
          ses.addSessionListener(new Session.Listener() {
             @Override
