@@ -25,7 +25,7 @@ abstract class WebSession extends Session {
    
    protected void readRequest(RequestHeader header, WebContext context) {
       try {
-         Request request = (Request)StructureFactory.make(header.contractId, header.structId);
+         Structure request = StructureFactory.make(header.contractId, header.structId);
          if (request == null) {
             logger.error("Could not find request structure contractId={} structId{}", header.contractId, header.structId);
             sendResponse(new Error(ERROR_SERIALIZATION), header.requestId);
@@ -33,18 +33,22 @@ abstract class WebSession extends Session {
          }
          request.read(new WebJSONDataSource(context.getRequestParams(), request.tagWebNames()));
          if ((header.toId == UNADDRESSED && header.contractId == myContractId) || header.toId == myId) {
-            dispatchRequest(header, request);
+            if (request instanceof Request) {
+               dispatchRequest(header, (Request)request);
+            } else {
+               logger.error("Asked to process a request I can't deserialize {}", header.dump());
+               sendResponse(new Error(ERROR_SERIALIZATION), header.requestId);
+            }
          } else {
             relayRequest(header, request);
          }
-
       } catch (IOException e) {
          logger.error("Error processing request {}", header.dump());
          sendResponse(new Error(ERROR_UNKNOWN), header.requestId);
       }
    }
    
-   private void relayRequest(RequestHeader header, Request request) throws IOException {
+   private void relayRequest(RequestHeader header, Structure request) throws IOException {
       final Session ses = relayHandler.getRelaySession(header.toId, header.contractId);
       if (ses != null) {
          ByteBuf in = convertToByteBuf(request);
