@@ -19,7 +19,7 @@ public class TetrapodContract extends Contract {
    public static final int CONTRACT_ID = 1;
    
    public static interface API extends
-      AddWebRoutesRequest.Handler,
+      AddServiceInformationRequest.Handler,
       PublishRequest.Handler,
       RegisterRequest.Handler,
       RegistrySubscribeRequest.Handler,
@@ -32,7 +32,7 @@ public class TetrapodContract extends Contract {
          new PublishRequest(),
          new RegistrySubscribeRequest(),
          new ServiceStatusUpdateRequest(),
-         new AddWebRoutesRequest(),
+         new AddServiceInformationRequest(),
       };
    }
    

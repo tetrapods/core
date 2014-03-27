@@ -91,7 +91,7 @@ abstract public class DefaultService implements Service, BaseServiceContract.API
                      cluster.getSession().setTheirEntityId(r.parentId);
                      cluster.getSession().setMyEntityType(getEntityType());
                      cluster.getSession().setTheirEntityType(Core.TYPE_TETRAPOD);
-                     registerWebRoutes();
+                     registerServiceInformation();
                      onRegistered();
                   }
                }
@@ -242,11 +242,22 @@ abstract public class DefaultService implements Service, BaseServiceContract.API
 
    // private methods
    
-   private void registerWebRoutes() {
-      WebRoute[] routes = contract.getWebRoutes();
-      if (routes == null || routes.length == 0)
-         return;
-      sendRequest(new AddWebRoutesRequest(routes), Core.UNADDRESSED).handle(ResponseHandler.LOGGER);
+   protected void registerServiceInformation() {
+      AddServiceInformationRequest asi = new AddServiceInformationRequest(); 
+      asi.routes = contract.getWebRoutes();
+      for (Structure s : contract.getRequests()) {
+         asi.structs.add(s.makeDescription());
+      }
+      for (Structure s : contract.getResponses()) {
+         asi.structs.add(s.makeDescription());
+      }
+      for (Structure s : contract.getMessages()) {
+         asi.structs.add(s.makeDescription());
+      }
+      for (Structure s : contract.getStructs()) {
+         asi.structs.add(s.makeDescription());
+      }
+      sendRequest(asi, Core.UNADDRESSED).handle(ResponseHandler.LOGGER);
    }
 
 }

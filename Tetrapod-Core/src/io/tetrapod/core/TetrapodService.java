@@ -6,6 +6,7 @@ import io.tetrapod.core.Session.RelayHandler;
 import io.tetrapod.core.registry.*;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.rpc.Error;
+import io.tetrapod.core.serialize.StructureAdapter;
 import io.tetrapod.core.utils.Util;
 import io.tetrapod.core.web.WebRoutes;
 import io.tetrapod.protocol.core.*;
@@ -351,11 +352,17 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    }
 
    @Override
-   public Response requestAddWebRoutes(AddWebRoutesRequest req, RequestContext ctx) {
+   public Response requestAddServiceInformation(AddServiceInformationRequest req, RequestContext ctx) {
       for (WebRoute r : req.routes)
          webRoutes.setRoute(r.path, r.contractId, r.structId);
-      return Response.SUCCESS;
+      for (StructDescription sd : req.structs)
+         StructureFactory.add(new StructureAdapter(sd));
+      return Response.SUCCESS;   
    }
    
-
+   @Override
+   protected void registerServiceInformation() {
+      // do nothing, our protocol is known by all tetrapods
+   }
+   
 }

@@ -23,7 +23,7 @@ TP.register("request", "Tetrapod", "Publish", 1, 3171651);
 TP.register("response", "Tetrapod", "Publish", 1, 2698673);
 TP.register("request", "Tetrapod", "RegistrySubscribe", 1, 2572089);
 TP.register("request", "Tetrapod", "ServiceStatusUpdate", 1, 4487218);
-TP.register("request", "Tetrapod", "AddWebRoutes", 1, 9719643);
+TP.register("request", "Tetrapod", "AddServiceInformation", 1, 14381454);
 TP.register("message", "Tetrapod", "EntityRegistered", 1, 1454035);
 TP.register("message", "Tetrapod", "EntityUnregistered", 1, 14101566);
 TP.register("message", "Tetrapod", "EntityUpdated", 1, 3775838);

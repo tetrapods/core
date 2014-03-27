@@ -140,9 +140,11 @@ internal request RegistrySubscribe
 
 internal request ServiceStatusUpdate
    1: int status
-   
-internal request AddWebRoutes
+
+# perhaps this should be merged into a new RegisterService   
+internal request AddServiceInformation
    1: WebRoute[] routes
+   2: StructDescription<list> structs // structs that could possibly be used in end user comms
 
 ################################# MESSAGES #################################
     
