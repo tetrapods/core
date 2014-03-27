@@ -1,6 +1,5 @@
 package io.tetrapod.core.web;
 
-import io.netty.channel.ChannelFuture;
 import io.tetrapod.core.*;
 import io.tetrapod.core.utils.Util;
 import io.tetrapod.identity.IdentityService;
@@ -14,7 +13,7 @@ public class WebServerTest {
    public void serveFiles() throws Exception {
       final int totalTestTime = 5000;
       
-      TetrapodService pod = new TetrapodService();
+      final TetrapodService pod = new TetrapodService();
       pod.startNetwork(null, "e:1");
 
       IdentityService ident = new IdentityService();
@@ -26,12 +25,14 @@ public class WebServerTest {
          @Override
          public void run() {
             Util.sleep(totalTestTime);
+            pod.stop();
             s.stop();
          }
       }).start();
-      ChannelFuture close = s.start().sync().channel().closeFuture();
       
-      close.sync();
+      s.start().sync().channel().closeFuture().sync();
+      Util.sleep(1000);
+
       // try http://localhost:6777/api?requestId=1&toId=0&contractId=1&structId=10895179&1=221
       // does a register request with tag #1 (build) = 221
    }

@@ -44,5 +44,6 @@ public class SessionTest {
       Util.sleep(2000);
 
       service.stop();
+      Util.sleep(1000);
    }
 }
