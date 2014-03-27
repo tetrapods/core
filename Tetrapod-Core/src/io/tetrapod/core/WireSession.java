@@ -6,11 +6,10 @@ import io.netty.channel.*;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import io.netty.util.ReferenceCountUtil;
-import io.tetrapod.core.json.JSONObject;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.rpc.Error;
 import io.tetrapod.core.serialize.DataSource;
-import io.tetrapod.core.serialize.datasources.*;
+import io.tetrapod.core.serialize.datasources.ByteBufDataSource;
 import io.tetrapod.protocol.core.*;
 
 import java.io.IOException;
@@ -67,10 +66,7 @@ public class WireSession extends Session {
       logger.trace("Read message {} with {} bytes", envelope, len);
       switch (envelope) {
          case ENVELOPE_REQUEST:
-            readRequest(in, false);
-            break;
-         case ENVELOPE_JSON_REQUEST:
-            readRequest(in, true);
+            readRequest(in);
             break;
          case ENVELOPE_RESPONSE:
             readResponse(in);
@@ -114,7 +110,7 @@ public class WireSession extends Session {
       if (async != null) {
          logger.debug(String.format("%s < RESPONSE [%d] %s", this, header.requestId, getStructName(async.header.contractId, header.structId)));
          if (async.header.fromId == myId) {
-            final Response res = (Response) helper.make(async.header.contractId, header.structId);
+            final Response res = (Response) StructureFactory.make(async.header.contractId, header.structId);
             if (res != null) {
                res.read(reader);
                getDispatcher().dispatch(new Runnable() {
@@ -133,7 +129,7 @@ public class WireSession extends Session {
       }
    }
 
-   private void readRequest(final ByteBuf in, boolean isJSONWrapped) throws IOException {
+   private void readRequest(final ByteBuf in) throws IOException {
       DataSource reader = new ByteBufDataSource(in);
       final RequestHeader header = new RequestHeader();
       header.read(reader);
@@ -146,13 +142,8 @@ public class WireSession extends Session {
 
       logger.debug(String.format("%s < REQUEST [%d] %s", this, header.requestId, getStructName(header.contractId, header.structId)));
       if ((header.toId == UNADDRESSED && header.contractId == myContractId) || header.toId == myId) {
-         final Request req = (Request) helper.make(header.contractId, header.structId);
+         final Request req = (Request) StructureFactory.make(header.contractId, header.structId);
          if (req != null) {
-            if (isJSONWrapped) {
-               WrappedJSON wrapped = new WrappedJSON();
-               wrapped.read(reader);
-               reader = new WebJSONDataSource(new JSONObject(wrapped.json), req.tagWebNames());
-            }
             req.read(reader);
             dispatchRequest(header, req);
          } else {
@@ -160,7 +151,7 @@ public class WireSession extends Session {
             sendResponse(new Error(ERROR_SERIALIZATION), header.requestId);
          }
       } else if (relayHandler != null) {
-         relayRequest(header, in, isJSONWrapped);
+         relayRequest(header, in);
       }
    }
    
@@ -175,7 +166,7 @@ public class WireSession extends Session {
 
       logger.debug(String.format("%s < MESSAGE [%d-%d] %s", this, header.fromId, header.topicId, getStructName(header.contractId, header.structId)));
       if ((header.toId == UNADDRESSED && header.contractId == myContractId && header.topicId == UNADDRESSED) || header.toId == myId) {
-         final Message msg = (Message) helper.make(header.contractId, header.structId);
+         final Message msg = (Message) StructureFactory.make(header.contractId, header.structId);
          if (msg != null) {
             msg.read(reader);
             dispatchMessage(header, msg);
@@ -328,7 +319,7 @@ public class WireSession extends Session {
 
    // /////////////////////////////////// RELAY /////////////////////////////////////
 
-   private void relayRequest(final RequestHeader header, final ByteBuf in, boolean isJSONWrapped) {
+   private void relayRequest(final RequestHeader header, final ByteBuf in) {
       final WireSession ses = relayHandler.getRelaySession(header.toId, header.contractId);
       if (ses != null) {
          // OPTIMIZE: Find a way to relay without the byte[] allocation & copy
@@ -341,7 +332,7 @@ public class WireSession extends Session {
             ses.addPendingRequest(async);
             logger.debug("{} RELAYING REQUEST: [{}] was " + origRequestId, this, async.header.requestId);
             buffer.writeInt(0); // length placeholder
-            buffer.writeByte(isJSONWrapped ? ENVELOPE_JSON_REQUEST : ENVELOPE_REQUEST);
+            buffer.writeByte(ENVELOPE_REQUEST);
             async.header.write(data);
             buffer.writeBytes(in);
             buffer.setInt(0, buffer.writerIndex() - 4); // go back and write message length, now

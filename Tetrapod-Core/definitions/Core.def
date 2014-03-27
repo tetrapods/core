@@ -37,7 +37,6 @@ struct Core
    const byte  ENVELOPE_MESSAGE        = 4
    const byte  ENVELOPE_PING           = 5
    const byte  ENVELOPE_PONG           = 6
-   const byte  ENVELOPE_JSON_REQUEST   = 7
    
 ################################# CORE WIRE #################################
    
@@ -88,14 +87,33 @@ internal struct FlatTopic
 	1: int topicId
 	2: Subscriber[] subscriber; 
 
-// a request from the web as an uninterpreted json
-internal struct WrappedJSON
-   1: string   json 
-
 internal struct WebRoute
    1: string path
    2: int structId
    3: int contractId
+
+internal struct TypeDescriptor
+   1: byte type
+   2: int contractId
+   3: int structId
+   const byte T_BOOLEAN  = 1
+   const byte T_BYTE     = 2
+   const byte T_INT      = 3
+   const byte T_LONG     = 4
+   const byte T_DOUBLE   = 5
+   const byte T_STRING   = 6
+   const byte T_STRUCT   = 7
+   const byte T_BOOLEAN_LIST  = 8
+   const byte T_BYTE_LIST     = 9
+   const byte T_INT_LIST      = 10
+   const byte T_LONG_LIST     = 11
+   const byte T_DOUBLE_LIST   = 12
+   const byte T_STRING_LIST   = 13
+   const byte T_STRUCT_LIST   = 14
+   
+internal struct StructDescription
+   1: TypeDescriptor[] types
+   2: string[] tagWebNames
 
 ################################# REQUESTS #################################
 

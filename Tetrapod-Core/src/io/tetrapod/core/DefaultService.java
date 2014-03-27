@@ -15,7 +15,6 @@ abstract public class DefaultService implements Service, BaseServiceContract.API
    private static final Logger                  logger          = LoggerFactory.getLogger(DefaultService.class);
 
    protected final Dispatcher                  dispatcher;
-   protected final StructureFactory            structFactory;
    protected final Client                      cluster;
    // protected Server                 directConnections; // TODO: implement direct connections
    protected Contract                          contract;
@@ -29,7 +28,6 @@ abstract public class DefaultService implements Service, BaseServiceContract.API
 
    public DefaultService() {
       dispatcher = new Dispatcher();
-      structFactory = new StructureFactory();
       cluster = new Client(this);
       addContracts(new BaseServiceContract());
       addPeerContracts(new TetrapodContract());
@@ -113,16 +111,13 @@ abstract public class DefaultService implements Service, BaseServiceContract.API
 
    protected void addContracts(Contract... contracts) {
       for (Contract c : contracts) {
-         c.addRequests(structFactory);
-         c.addResponses(structFactory);
-         c.addMessages(structFactory);
+         c.registerStructs();
       }
    }
 
    protected void addPeerContracts(Contract... contracts) {
       for (Contract c : contracts) {
-         c.addResponses(structFactory);
-         c.addMessages(structFactory);
+         c.registerPeerStructs();
       }
    }
 
@@ -185,11 +180,6 @@ abstract public class DefaultService implements Service, BaseServiceContract.API
    }
 
    // Session.Help implementation
-
-   @Override
-   public Structure make(int contractId, int structId) {
-      return structFactory.make(contractId, structId);
-   }
 
    @Override
    public Dispatcher getDispatcher() {

@@ -1,12 +1,11 @@
 package io.tetrapod.identity;
 
-import org.slf4j.*;
-
-import io.tetrapod.core.*;
+import io.tetrapod.core.DefaultService;
 import io.tetrapod.core.rpc.*;
-import io.tetrapod.core.rpc.Error;
 import io.tetrapod.protocol.core.*;
 import io.tetrapod.protocol.identity.*;
+
+import org.slf4j.*;
 
 public class IdentityService extends DefaultService implements IdentityContract.API {
    private static final Logger logger = LoggerFactory.getLogger(IdentityService.class);

@@ -9,7 +9,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.http.*;
 import io.netty.util.ReferenceCountUtil;
-import io.tetrapod.core.Session;
+import io.tetrapod.core.*;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.rpc.Error;
 import io.tetrapod.core.serialize.datasources.*;
@@ -60,7 +60,7 @@ class WebHttpSession extends Session {
       
       try {
          if ((header.toId == UNADDRESSED && header.contractId == myContractId) || header.toId == myId) {
-            final Request req = (Request) helper.make(header.contractId, header.structId);
+            final Request req = (Request) StructureFactory.make(header.contractId, header.structId);
             if (req != null) {
                req.read(new WebJSONDataSource(context.getRequestParams(), req.tagWebNames()));
                dispatchRequest(header, req);

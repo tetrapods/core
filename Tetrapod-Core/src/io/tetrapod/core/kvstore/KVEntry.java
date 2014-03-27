@@ -21,7 +21,6 @@ class KVEntry extends Structure {
    String key;
    Object value;
    int command = COMMAND_SET;
-   StructureFactory factory;
    
    public void clear() {
       this.command = COMMAND_CLEAR;
@@ -90,7 +89,7 @@ class KVEntry extends Structure {
             case 2: key = data.read_string(tag); break;
             case 3: contractId = data.read_int(tag); break;
             case 4: structId = data.read_int(tag); break;
-            case 5: value = data.read_struct(tag, factory.make(contractId, structId)); break;
+            case 5: value = data.read_struct(tag, StructureFactory.make(contractId, structId)); break;
             case 6: value = Integer.valueOf(data.read_int(tag)); break;
             case 7: value = Long.valueOf(data.read_long(tag)); break;
             case 8: value = Boolean.valueOf(data.read_boolean(tag)); break;

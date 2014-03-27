@@ -72,7 +72,6 @@ class JavaGenerator implements LanguageGenerator {
          t.add("subscriptions", genSubscriptions(context, sub, theClass));      
       for (Class c : context.classesByType("request")) {
          t.add("handlers", c.classname() + ".Handler", ",\n");
-         t.add("requestAdds", template("contract.adds.call").add("class", c.classname()));
          String path = c.annotations.getFirst("web");
          if (path != null) {
             if (path.isEmpty()) 
@@ -84,11 +83,8 @@ class JavaGenerator implements LanguageGenerator {
             t.add("webRoutes", sub.expand()); 
          }
       }
-      for (Class c : context.classesByType("response")) {
-         t.add("responseAdds", template("contract.adds.call").add("class", c.classname()));
-      }
-      for (Class c : context.classesByType("message")) {
-         t.add("messageAdds", template("contract.adds.call").add("class", c.classname()));
+      for (Class c : context.classes) {
+         t.add(c.type + "Adds", template("contract.adds.call").add("class", c.classname()));
       }
 
       t.add("classcomment", generateComment(context.serviceComment));
@@ -120,19 +116,9 @@ class JavaGenerator implements LanguageGenerator {
       t.add("maxtag", "" + c.maxTag());
       t.add("structid", c.getStructId());
       t.add("service", serviceName);
-      addFieldValues(c.fields, t);
+      addFieldValues(c.fields, t);;
       addConstantValues(c.fields, t);
       addErrors(c.errors, false, serviceName, t);
-      int instanceFields = 0;
-      for (Field f : c.fields) {
-         if (!f.isConstant()) instanceFields++;
-         String name = f.getWebName();
-         if (!f.isConstant() && name != null)
-            t.add("webNames", template("struct.webnames").add("tag", f.tag).add("name", name));
-      }
-      if (instanceFields > 0) {
-         t.add("full-constructor", template("full.constructor").add(t));
-      }
       t.expandAndTrim(getFilename(c.classname()));
    }
 
@@ -150,21 +136,30 @@ class JavaGenerator implements LanguageGenerator {
    }
 
    private void addFieldValues(List<Field> fields, Template global) throws ParseException, IOException {
+      int instanceFields = 0;
       for (Field f : fields) {
          if (f.isConstant())
             continue;
+         instanceFields++;
          Template sub = getFieldTemplate(f);
          String[] lines = sub.expand().split("\r\n|\n|\r");
          String comment = "";
          if (f.comment != null && !f.comment.trim().isEmpty()) {
             comment = generateComment(f.comment.trim());
          }
+         String webName = f.getWebName();
+         if (webName != null)
+            global.add("webNames", template("struct.webnames").add("tag", f.tag).add("name", webName));
          global.add("field-declarations", comment + lines[0]);
          global.add("field-defaults", lines[1]);
          global.add("field-reads", lines[2]);
          global.add("field-writes", lines[3]);
          global.add("inline-declarations", lines[4], ", ");
          global.add("inline-initializers", lines[5]);
+         global.add("description-fields", template("struct.description").add(sub));
+      }
+      if (instanceFields > 0) {
+         global.add("full-constructor", template("full.constructor").add(global));
       }
    }
 
@@ -192,6 +187,10 @@ class JavaGenerator implements LanguageGenerator {
       }
       String primTemplate = "field.primitives";
       String structTemplate = "field.structs";
+      String descContractId = "0";
+      String descStructId = "0";
+      String descType = "";
+      String descArray = "";
       if (f.collectionType != null) {
          defaultVal = "null";
          boolean isEmpty = f.defaultValue != null && f.defaultValue.equals("<empty>");
@@ -199,12 +198,14 @@ class JavaGenerator implements LanguageGenerator {
             case "<array>":
                primTemplate = "field.array.primitives";
                structTemplate = "field.array.structs";
+               descArray = "_LIST";
                if (isEmpty)
                   defaultVal = "new " + info.base + "[0]";
                break;
             case "<list>":
                primTemplate = "field.list.primitives";
                structTemplate = "field.list.structs";
+               descArray = "_LIST";
                if (isEmpty)
                   defaultVal = "new ArrayList<>()";
                break;
@@ -218,6 +219,31 @@ class JavaGenerator implements LanguageGenerator {
       if (f.isConstant()) {
          primTemplate = structTemplate = "field.constants";
       }
+      switch (f.type) {
+         case "int":
+            descType = "TypeDescriptor.T_INT";
+            break;
+         case "long":
+            descType = "TypeDescriptor.T_LONG";
+            break;
+         case "boolean":
+            descType = "TypeDescriptor.T_BOOLEAN";
+            break;
+         case "double":
+            descType = "TypeDescriptor.T_DOUBLE";
+            break;
+         case "byte":
+            descType = "TypeDescriptor.T_BYTE";
+            break;
+         case "string":
+            descType = "TypeDescriptor.T_STRING";
+            break;
+         default:
+            descType += "TypeDescriptor.T_STRUCT";
+            descContractId = f.type + ".CONTRACT_ID";
+            descStructId = f.type + ".STRUCT_ID";
+            break;
+      }
       Template t = template(info.isPrimitive ? primTemplate : structTemplate);
       t.add("tag", f.tag);
       t.add("default", defaultVal);
@@ -225,6 +251,9 @@ class JavaGenerator implements LanguageGenerator {
       t.add("javatype", info.base);
       t.add("type", f.type);
       t.add("boxed", info.boxed);
+      t.add("descType", descType + descArray);
+      t.add("descContractId", descContractId);
+      t.add("descStructId", descStructId);
       return t;
    }
 

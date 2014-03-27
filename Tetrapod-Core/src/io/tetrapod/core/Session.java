@@ -32,8 +32,6 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
 
    public static interface Helper {
 
-      public Structure make(int contractId, int structId);
-
       public Dispatcher getDispatcher();
 
       public ServiceAPI getServiceHandler(int contractId);
@@ -95,7 +93,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
    }
 
    protected String getStructName(int contractId, int structId) {
-      Structure s = helper.make(contractId, structId);
+      Structure s = StructureFactory.make(contractId, structId);
       if (s == null) {
          return "Struct-" + structId;
       }

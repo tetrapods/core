@@ -5,6 +5,8 @@ package {{package}};
 import io.*;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.serialize.*;
+import io.tetrapod.protocol.core.TypeDescriptor;
+import io.tetrapod.protocol.core.StructDescription;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
@@ -18,6 +20,7 @@ public class {{class}} extends Structure {
    {{errors}}
    
    public static final int STRUCT_ID = {{structid}};
+   public static final int CONTRACT_ID = {{service}}.CONTRACT_ID;
     
    public {{class}}() {
       defaults();
@@ -57,13 +60,12 @@ public class {{class}} extends Structure {
       }
    }
    
-   @Override
+   public final int getContractId() {
+      return {{class}}.CONTRACT_ID;
+   }
+
    public final int getStructId() {
       return {{class}}.STRUCT_ID;
-   }
-   
-   public final int getContractId() {
-      return {{service}}.CONTRACT_ID;
    }
 
    public final String[] tagWebNames() {
@@ -77,5 +79,14 @@ public class {{class}} extends Structure {
 
    public final Structure make() {
       return new {{class}}();
+   }
+
+   public final StructDescription makeDescription() {
+      StructDescription desc = new StructDescription();
+      desc.tagWebNames = tagWebNames();
+      desc.types = new TypeDescriptor[desc.tagWebNames.length];
+      desc.types[0] = new TypeDescriptor(TypeDescriptor.T_STRUCT, getContractId(), getStructId());
+      {{description-fields}}
+      return desc;
    }
 }

@@ -1,6 +1,7 @@
 package io.tetrapod.core.rpc;
 
 import io.tetrapod.core.serialize.DataSource;
+import io.tetrapod.protocol.core.StructDescription;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -29,6 +30,10 @@ abstract public class Structure {
       } catch (InstantiationException | IllegalAccessException e) {
          return null;
       }
+   }
+   
+   public StructDescription makeDescription() {
+      return null;
    }
 
    @Override
