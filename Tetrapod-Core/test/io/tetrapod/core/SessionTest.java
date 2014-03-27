@@ -4,6 +4,7 @@ import static org.junit.Assert.assertTrue;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.utils.Util;
 import io.tetrapod.identity.IdentityService;
+import io.tetrapod.protocol.core.*;
 import io.tetrapod.protocol.service.PauseRequest;
 
 import org.junit.Test;
@@ -37,9 +38,32 @@ public class SessionTest {
          }
       });
 
+      svc1.addMessageHandler(TetrapodContract.CONTRACT_ID, new TetrapodContract.Services.API() {
+
+         @Override
+         public void messageServiceAdded(ServiceAddedMessage m, MessageContext ctx) {
+            logger.info("GOT MESSAGE!!!! {}", m.dump());
+         }
+
+         @Override
+         public void genericMessage(Message message, MessageContext ctx) {}
+
+         @Override
+         public void messageServiceRemoved(ServiceRemovedMessage m, MessageContext ctx) {}
+
+         @Override
+         public void messageServiceStats(ServiceStatsMessage m, MessageContext ctx) {}
+
+         @Override
+         public void messageServiceUpdated(ServiceUpdatedMessage m, MessageContext ctx) {}
+
+      });
+
       Util.sleep(2000);
 
-      //svc2.sendMessage(new ServiceAddedMessage(999, "Test!"), svc1.getEntityId(), Core.UNADDRESSED);
+      svc2.sendMessage(new ServiceAddedMessage(), svc1.getEntityId(), Core.UNADDRESSED);
+
+      service.broadcastRegistryMessage(new EntityUpdatedMessage(svc2.getEntityId(), 0));
 
       Util.sleep(2000);
 

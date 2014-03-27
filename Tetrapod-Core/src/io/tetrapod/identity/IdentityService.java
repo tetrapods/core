@@ -10,7 +10,6 @@ import org.slf4j.*;
 public class IdentityService extends DefaultService implements IdentityContract.API {
    private static final Logger logger = LoggerFactory.getLogger(IdentityService.class);
 
-
    public IdentityService() {
       setMainContract(new IdentityContract());
       addPeerContracts(/* non-core services we talk to: eg:*//* new WalletContract(), new StorageContract() */);
@@ -20,10 +19,11 @@ public class IdentityService extends DefaultService implements IdentityContract.
    public void onRegistered() {
       sendRequest(new RegistrySubscribeRequest(), Core.UNADDRESSED);
 
+      // FIXME: This is no longer working -- handlers not getting triggered 
       addMessageHandler(TetrapodContract.CONTRACT_ID, new TetrapodContract.Registry.API() {
          @Override
          public void messageTopicUnsubscribed(TopicUnsubscribedMessage m, MessageContext ctx) {
-            logger.info(m.dump());
+            logger.info("Dispatched message: {}", m.dump());
          }
 
          @Override

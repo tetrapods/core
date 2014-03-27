@@ -18,8 +18,8 @@ import java.util.concurrent.*;
 import org.slf4j.*;
 
 /**
- * The tetrapod service is the core cluster service which handles message routing, cluster
- * management, service discovery, and load balancing of client connections
+ * The tetrapod service is the core cluster service which handles message routing, cluster management, service discovery, and load balancing
+ * of client connections
  */
 public class TetrapodService extends DefaultService implements TetrapodContract.API, RelayHandler, Registry.RegistryBroadcaster {
    public static final Logger          logger                  = LoggerFactory.getLogger(TetrapodService.class);
@@ -76,7 +76,8 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
    private void selfRegister(int tetrapodId) throws Exception {
       this.entityId = registry.setParentId(tetrapodId);
-      final EntityInfo e = new EntityInfo(entityId, 0, random.nextLong(), Util.getHostName(), 0, Core.TYPE_TETRAPOD, getShortName(), 0, 0, getContractId());
+      final EntityInfo e = new EntityInfo(entityId, 0, random.nextLong(), Util.getHostName(), 0, Core.TYPE_TETRAPOD, getShortName(), 0, 0,
+            getContractId());
       registry.register(e);
       logger.info(String.format("SELF-REGISTERING: 0x%08X %s", entityId, e));
       clusterServer.start().sync();
@@ -157,9 +158,8 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    }
 
    /**
-    * As a Tetrapod service, we can't start serving as one until we've registered & fully sync'ed
-    * with the cluster, or self-registered if we are the first one. We call this once this criteria
-    * has been reached
+    * As a Tetrapod service, we can't start serving as one until we've registered & fully sync'ed with the cluster, or self-registered if we
+    * are the first one. We call this once this criteria has been reached
     */
    private void onReadyToServe() {
       try {
@@ -196,9 +196,14 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
    @Override
    public Session getRelaySession(int entityId, int contractId) {
-      EntityInfo entity = registry.getEntity(entityId);
-      if (entity == null) {
+      EntityInfo entity = null;
+      if (entityId == Core.UNADDRESSED) {
          entity = registry.getRandomService(contractId);
+      } else {
+         entity = registry.getEntity(entityId);
+         if (entity == null) {
+            logger.warn("Could not find an entity for {}", entityId);
+         }
       }
       if (entity != null) {
          return findSession(entity);
@@ -213,15 +218,16 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       if (publisher != null) {
          final Topic topic = publisher.getTopic(header.topicId);
          if (topic != null) {
-            synchronized (topic) { // FIXME: Won't need this sync if all topics processed on same
-                                   // thread
-               for (Subscriber s : topic.getSubscribers()) {
+            synchronized (topic) { // FIXME: Won't need this sync if all topics processed on same thread
+               for (final Subscriber s : topic.getSubscribers()) {
                   final EntityInfo e = registry.getEntity(s.entityId);
                   if (e != null) {
                      if (e.parentId == getEntityId() || e.isTetrapod()) {
-                        Session session = findSession(e);
+                        final Session session = findSession(e);
                         if (session != null) {
+                           int ri = buf.readerIndex();
                            session.sendRelayedMessage(header, buf);
+                           buf.readerIndex(ri);
                         }
                      }
                   } else {
