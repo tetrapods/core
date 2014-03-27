@@ -38,7 +38,7 @@ public class SessionTest {
          }
       });
 
-      svc1.addMessageHandler(TetrapodContract.CONTRACT_ID, new TetrapodContract.Services.API() {
+      svc1.addSubscriptionHandler(new TetrapodContract.Services(), new TetrapodContract.Services.API() {
 
          @Override
          public void messageServiceAdded(ServiceAddedMessage m, MessageContext ctx) {
@@ -61,7 +61,7 @@ public class SessionTest {
 
       Util.sleep(2000);
 
-      svc2.sendMessage(new ServiceAddedMessage(), svc1.getEntityId(), Core.UNADDRESSED);
+      svc2.sendBroadcastMessage(new ServiceAddedMessage(), svc1.getEntityId(), Core.UNADDRESSED);
 
       service.broadcastRegistryMessage(new EntityUpdatedMessage(svc2.getEntityId(), 0));
 

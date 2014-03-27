@@ -36,7 +36,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
 
       public ServiceAPI getServiceHandler(int contractId);
 
-      public SubscriptionAPI getMessageHandler(int contractId);
+      public List<SubscriptionAPI> getMessageHandlers(int contractId, int structUd);
 
       public int getContractId();
    }
@@ -139,9 +139,8 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
       final MessageContext ctx = new MessageContext(header, this);
       getDispatcher().dispatchSequential(new Runnable() {
          public void run() {
-            final SubscriptionAPI svc = helper.getMessageHandler(header.contractId);
-            if (svc != null) {
-               msg.dispatch(svc, ctx);
+            for (SubscriptionAPI handler : helper.getMessageHandlers(header.contractId, header.structId)) {
+               msg.dispatch(handler, ctx);
             }
          }
       });
@@ -179,6 +178,14 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
       }
    }
 
+   public void sendBroadcastMessage(Message msg, int toEntityId, int topicId) {
+      logger.debug(String.format("%s > MESSAGE [%d:%d] %s", this, toEntityId, topicId, msg.getClass().getSimpleName()));
+      final Object buffer = makeFrame(new MessageHeader(getMyEntityId(), topicId, toEntityId, msg.getContractId(), msg.getStructId()), msg, ENVELOPE_BROADCAST);
+      if (buffer != null) {
+         writeFrame(buffer);
+      }
+   }
+
    public void sendMessage(Message msg, int toEntityId, int topicId) {
       logger.debug(String.format("%s > MESSAGE [%d:%d] %s", this, toEntityId, topicId, msg.getClass().getSimpleName()));
       final Object buffer = makeFrame(new MessageHeader(getMyEntityId(), topicId, toEntityId, msg.getContractId(), msg.getStructId()), msg, ENVELOPE_MESSAGE);
@@ -193,9 +200,10 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
       return null;
    }
 
-   public void sendRelayedMessage(MessageHeader header, ByteBuf payload) {
+   public void sendRelayedMessage(MessageHeader header, ByteBuf payload, boolean broadcast) {
       logger.debug("{}, RELAYING MESSAGE: [{}]", this, header.structId);
-      writeFrame(makeFrame(header, payload, ENVELOPE_MESSAGE));
+      byte envelope = broadcast ? ENVELOPE_BROADCAST : ENVELOPE_MESSAGE;
+      writeFrame(makeFrame(header, payload, envelope));
    }
    
    public void sendRelayedRequest(RequestHeader header, ByteBuf payload, Session originator) {

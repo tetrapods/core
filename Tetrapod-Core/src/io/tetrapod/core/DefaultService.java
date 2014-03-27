@@ -7,24 +7,23 @@ import io.tetrapod.protocol.core.*;
 import io.tetrapod.protocol.service.*;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.*;
 
 abstract public class DefaultService implements Service, BaseServiceContract.API, SessionFactory {
-   private static final Logger                  logger          = LoggerFactory.getLogger(DefaultService.class);
+   private static final Logger   logger          = LoggerFactory.getLogger(DefaultService.class);
 
-   protected final Dispatcher                  dispatcher;
-   protected final Client                      cluster;
-   // protected Server                 directConnections; // TODO: implement direct connections
-   protected Contract                          contract;
+   protected final Dispatcher    dispatcher;
+   protected final Client        cluster;
+   // protected Server directConnections; // TODO: implement direct connections
+   protected Contract            contract;
 
-   protected int                               entityId;
-   protected int                               parentId;
-   protected String                            token;
-   protected int                               status;
+   protected int                 entityId;
+   protected int                 parentId;
+   protected String              token;
+   protected int                 status;
 
-   private final Map<Integer, MessageHandlers> messageHandlers = new ConcurrentHashMap<>();
+   private final MessageHandlers messageHandlers = new MessageHandlers();
 
    public DefaultService() {
       dispatcher = new Dispatcher();
@@ -74,28 +73,27 @@ abstract public class DefaultService implements Service, BaseServiceContract.API
    }
 
    public void onConnectedToCluster() {
-      sendRequest(new RegisterRequest(222/*FIXME*/, token, getContractId(), getShortName()), Core.UNADDRESSED).handle(
-            new ResponseHandler() {
-               @Override
-               public void onResponse(Response res) {
-                  if (res.isError()) {
-                     fail("Unable to register", res.errorCode());
-                  } else {
-                     RegisterResponse r = (RegisterResponse) res;
-                     entityId = r.entityId;
-                     parentId = r.parentId;
-                     token = r.token;
+      sendRequest(new RegisterRequest(222/* FIXME */, token, getContractId(), getShortName()), Core.UNADDRESSED).handle(new ResponseHandler() {
+         @Override
+         public void onResponse(Response res) {
+            if (res.isError()) {
+               fail("Unable to register", res.errorCode());
+            } else {
+               RegisterResponse r = (RegisterResponse) res;
+               entityId = r.entityId;
+               parentId = r.parentId;
+               token = r.token;
 
-                     logger.info(String.format("%s My entityId is 0x%08X", cluster.getSession(), r.entityId));
-                     cluster.getSession().setMyEntityId(r.entityId);
-                     cluster.getSession().setTheirEntityId(r.parentId);
-                     cluster.getSession().setMyEntityType(getEntityType());
-                     cluster.getSession().setTheirEntityType(Core.TYPE_TETRAPOD);
-                     registerServiceInformation();
-                     onRegistered();
-                  }
-               }
-            });
+               logger.info(String.format("%s My entityId is 0x%08X", cluster.getSession(), r.entityId));
+               cluster.getSession().setMyEntityId(r.entityId);
+               cluster.getSession().setTheirEntityId(r.parentId);
+               cluster.getSession().setMyEntityType(getEntityType());
+               cluster.getSession().setTheirEntityType(Core.TYPE_TETRAPOD);
+               registerServiceInformation();
+               onRegistered();
+            }
+         }
+      });
    }
 
    public void onDisconnectedFromCluster() {
@@ -167,6 +165,10 @@ abstract public class DefaultService implements Service, BaseServiceContract.API
    public void sendMessage(Message msg, int toEntityId, int topicId) {
       cluster.getSession().sendMessage(msg, toEntityId, topicId);
    }
+   
+   public void sendBroadcastMessage(Message msg, int toEntityId, int topicId) {
+      cluster.getSession().sendBroadcastMessage(msg, toEntityId, topicId);
+   }
 
    // Generic handlers for all request/subscriptions
 
@@ -193,8 +195,8 @@ abstract public class DefaultService implements Service, BaseServiceContract.API
    }
 
    @Override
-   public SubscriptionAPI getMessageHandler(int contractId) {
-      return messageHandlers.get(contractId);
+   public List<SubscriptionAPI> getMessageHandlers(int contractId, int structId) {
+      return messageHandlers.get(contractId, structId);
    }
 
    @Override
@@ -202,20 +204,12 @@ abstract public class DefaultService implements Service, BaseServiceContract.API
       return contract == null ? 0 : contract.getContractId();
    }
 
-   public void addMessageHandler(int contractId, SubscriptionAPI handler) {
-      MessageHandlers md = messageHandlers.get(contractId);
-      if (md == null) {
-         md = new MessageHandlers();
-         messageHandlers.put(contractId, md);
-      }
-      md.add(handler);
+   public void addSubscriptionHandler(Contract sub, SubscriptionAPI handler) {
+      messageHandlers.add(sub, handler);
    }
 
-   public void removeMessageHandler(int contractId, SubscriptionAPI handler) {
-      MessageHandlers md = messageHandlers.get(contractId);
-      if (md != null) {
-         md.remove(handler);
-      }
+   public void addMessageHandler(Message k, SubscriptionAPI handler) {
+      messageHandlers.add(k, handler);
    }
 
    // Base service implementation
@@ -241,9 +235,9 @@ abstract public class DefaultService implements Service, BaseServiceContract.API
    }
 
    // private methods
-   
+
    protected void registerServiceInformation() {
-      AddServiceInformationRequest asi = new AddServiceInformationRequest(); 
+      AddServiceInformationRequest asi = new AddServiceInformationRequest();
       asi.routes = contract.getWebRoutes();
       asi.structs = new ArrayList<>();
       for (Structure s : contract.getRequests()) {

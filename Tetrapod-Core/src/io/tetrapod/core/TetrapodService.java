@@ -89,8 +89,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    public void onConnectedToCluster() {
       super.onConnectedToCluster();
       logger.info("Connected to Self");
-      // is there a better way to set this message dispatch handlers?
-      addMessageHandler(TetrapodContract.CONTRACT_ID, registry);
+      addSubscriptionHandler(new TetrapodContract.Registry(), registry);
    }
 
    public byte getEntityType() {
@@ -226,7 +225,8 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
                         final Session session = findSession(e);
                         if (session != null) {
                            int ri = buf.readerIndex();
-                           session.sendRelayedMessage(header, buf);
+                           boolean keepBroadcasting = publisher.parentId == getEntityId() && e.isTetrapod();
+                           session.sendRelayedMessage(header, buf, keepBroadcasting);
                            buf.readerIndex(ri);
                         }
                      }
@@ -254,7 +254,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    public void broadcastRegistryMessage(Message msg) {
       logger.info("BROADCASTING {} {}", registryTopic, msg.dump());
       if (registryTopic != null)
-         sendMessage(msg, 0, registryTopic.topicId);
+         sendBroadcastMessage(msg, 0, registryTopic.topicId);
    }
 
    // ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -372,7 +372,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
    @Override
    public Response requestRegistrySubscribe(RegistrySubscribeRequest r, RequestContext ctx) {
-      sendMessage(new TopicSubscribedMessage(registryTopic.ownerId, registryTopic.topicId, ctx.header.fromId), 0, 0);
+      broadcastRegistryMessage(new TopicSubscribedMessage(registryTopic.ownerId, registryTopic.topicId, ctx.header.fromId));
       return Response.SUCCESS;
    }
 

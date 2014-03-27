@@ -35,6 +35,7 @@ public class Core extends Structure {
    public static final byte ENVELOPE_MESSAGE = 4; 
    public static final byte ENVELOPE_PING = 5; 
    public static final byte ENVELOPE_PONG = 6; 
+   public static final byte ENVELOPE_BROADCAST = 7; 
    
    /**
     * Caller does not have sufficient rights to call this Request

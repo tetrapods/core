@@ -72,7 +72,8 @@ public class WireSession extends Session {
             readResponse(in);
             break;
          case ENVELOPE_MESSAGE:
-            readMessage(in);
+         case ENVELOPE_BROADCAST:
+            readMessage(in, envelope == ENVELOPE_BROADCAST);
             break;
          case ENVELOPE_PING:
             sendPong();
@@ -155,7 +156,7 @@ public class WireSession extends Session {
       }
    }
    
-   private void readMessage(ByteBuf in) throws IOException {
+   private void readMessage(ByteBuf in, boolean isBroadcast) throws IOException {
       final ByteBufDataSource reader = new ByteBufDataSource(in);
       final MessageHeader header = new MessageHeader();
       header.read(reader);
@@ -165,7 +166,10 @@ public class WireSession extends Session {
       }
 
       logger.debug(String.format("%s < MESSAGE [%d-%d] %s", this, header.fromId, header.topicId, getStructName(header.contractId, header.structId)));
-      if ((header.toId == UNADDRESSED && header.contractId == myContractId && header.topicId == UNADDRESSED) || header.toId == myId) {
+      int rewindPos = in.readerIndex();
+      
+      if (header.toId == myId || helper.getMessageHandlers(header.contractId, header.structId).size() > 0) {
+         // dispatch direct messages and ones we're waiting on
          final Message msg = (Message) StructureFactory.make(header.contractId, header.structId);
          if (msg != null) {
             msg.read(reader);
@@ -173,8 +177,11 @@ public class WireSession extends Session {
          } else {
             logger.warn("Could not find message structure {}", header.structId);
          }
-      } else if (relayHandler != null) {
-         relayMessage(header, in);
+      }
+      
+      if (header.toId != myId && relayHandler != null) {
+         in.readerIndex(rewindPos);
+         relayMessage(header, in, isBroadcast);
       }
    }
 
@@ -314,13 +321,14 @@ public class WireSession extends Session {
       async.session.sendRelayedResponse(header, in);
    }
 
-   private void relayMessage(final MessageHeader header, final ByteBuf payload) {
+   private void relayMessage(final MessageHeader header, final ByteBuf payload, boolean isBroadcast) {
       if (header.toId == UNADDRESSED) {
-         relayHandler.broadcast(header, payload);
+         if (isBroadcast)
+            relayHandler.broadcast(header, payload);
       } else {
          final Session ses = relayHandler.getRelaySession(header.toId, header.contractId);
          if (ses != null) {
-            ses.sendRelayedMessage(header, payload);
+            ses.sendRelayedMessage(header, payload, false);
          }
       }
    }
