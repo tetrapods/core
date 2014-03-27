@@ -168,7 +168,7 @@ public class WireSession extends Session {
       logger.debug(String.format("%s < MESSAGE [%d-%d] %s", this, header.fromId, header.topicId, getStructName(header.contractId, header.structId)));
       int rewindPos = in.readerIndex();
       
-      if (header.toId == myId || helper.getMessageHandlers(header.contractId, header.structId).size() > 0) {
+      if (header.toId == myId || (header.toId == UNADDRESSED && helper.getMessageHandlers(header.contractId, header.structId).size() > 0)) {
          // dispatch direct messages and ones we're waiting on
          final Message msg = (Message) StructureFactory.make(header.contractId, header.structId);
          if (msg != null) {
