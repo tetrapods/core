@@ -5,7 +5,7 @@ import io.tetrapod.core.StructureFactory;
 import io.tetrapod.core.rpc.Structure;
 import io.tetrapod.protocol.core.*;
 
-import java.io.IOException;
+import java.io.*;
 import java.util.List;
 
 public class StructureAdapter extends Structure {
@@ -157,5 +157,21 @@ public class StructureAdapter extends Structure {
    private Structure exemplar(int ix) {
       TypeDescriptor t = description.types[ix];
       return StructureFactory.make(t.contractId, t.structId);
+   }
+   
+   @Override
+   public String dump() {
+      StringBuilder sw = new StringBuilder();
+      sw.append(getClass().getSimpleName());
+      sw.append("(" + getContractId() + "," + getStructId() + ") { ");
+      for (int i = 1; i < fields.length; i++) {
+         if (i > 1)
+            sw.append(", ");
+         sw.append(tagWebNames()[i]);
+         sw.append(':');
+         sw.append(""+dumpValue(fields[i]));
+      }
+      sw.append(" }");
+      return sw.toString();
    }
 }

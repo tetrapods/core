@@ -18,7 +18,8 @@ public class SerializationTest {
       WebRoute[] routes = new IdentityContract().getWebRoutes();
       for (WebRoute w : routes)
          assertTrue(rinseTempBuff(w));
-      AddServiceInformationRequest awr = new AddServiceInformationRequest(routes, null);
+      AddServiceInformationRequest awr = new AddServiceInformationRequest();
+      awr.routes = routes;
       assertTrue(rinseTempBuff(awr));
    }
 
@@ -28,7 +29,8 @@ public class SerializationTest {
       WebRoute[] routes = new IdentityContract().getWebRoutes();
       for (WebRoute w : routes)
          assertTrue(rinseViaAdapter(w));
-      AddServiceInformationRequest awr = new AddServiceInformationRequest(routes, null);
+      AddServiceInformationRequest awr = new AddServiceInformationRequest();
+      awr.routes = routes;
       assertTrue(rinseViaAdapter(awr));
    }
 

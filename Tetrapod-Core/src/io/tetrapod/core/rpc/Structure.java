@@ -4,7 +4,8 @@ import io.tetrapod.core.serialize.DataSource;
 import io.tetrapod.protocol.core.StructDescription;
 
 import java.io.IOException;
-import java.lang.reflect.Field;
+import java.lang.reflect.*;
+import java.util.*;
 
 abstract public class Structure {
    
@@ -43,29 +44,40 @@ abstract public class Structure {
    
    public String dump() {
       StringBuilder sb = new StringBuilder();
-      dump(this, this.getClass(), sb);
-      return this.getClass().getSimpleName() + "\n" + sb.toString();
-   }
-
-   private void dump(Object o, Class<?> clazz, StringBuilder sb) {
-      Field f[] = clazz.getDeclaredFields();
+      Field f[] = getClass().getDeclaredFields();
 
       for (int i = 0; i < f.length; i++) {
          try {
-            sb.append("  ");
-            sb.append(f[i].getName() + "=" + f[i].get(o) + "\n");
+            int mod = f[i].getModifiers();
+            if (Modifier.isPublic(mod) && !Modifier.isStatic(mod)) {
+               Object val = dumpValue(f[i].get(this));
+               sb.append(f[i].getName() + ":" + val + ", ");
+            }
          } catch (Exception e) {
             e.printStackTrace();
          }
       }
+      String s = sb.length() > 0 ? sb.substring(0, sb.length() - 2) : "";
+      return this.getClass().getSimpleName() + " { " + s + " } ";
    }
-   
+
    public Security getSecurity() {
       return Security.INTERNAL;
    }
    
    public String[] tagWebNames() {
       return new String[] {};
+   }
+   
+   @SuppressWarnings("rawtypes")
+   protected Object dumpValue(Object val) {
+      if (val != null && val instanceof List) {
+         val = "[len=" + ((List)val).size() + "]";
+      }
+      if (val != null && val.getClass().isArray()) {
+         val = "[len=" + Array.getLength(val) + "]";
+      }
+      return val;
    }
 
 
