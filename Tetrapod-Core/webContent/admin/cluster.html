@@ -205,12 +205,6 @@
 
 
 	<script>
-		// FIXME : THESE NEED TO BE IN CODEGEN
-		var EntityRegisteredMessage = {
-			CONTRACT_ID : 1,
-			STRUCT_ID : 1454035
-		}
-
 		var model = new ClusterModel();
 		ko.applyBindings(model, $("#cluster-table")[0]);
 
@@ -243,12 +237,9 @@
 				}
 			}
 
-			// some of this should get codegenned or something
-			TP.addMessageHandler(EntityRegisteredMessage,
-					function handleEntityRegistered(msg) {
-						self.services.push(new Service(msg.entity));
-					});
-
+			TP.addMessageHandler("EntityRegistered", function(msg) {
+			   self.services.push(new Service(msg.entity));
+			});
 		}
 
 		var chartOptions = {

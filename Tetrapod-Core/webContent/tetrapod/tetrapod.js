@@ -20,7 +20,16 @@ TP.register = function(type, contractName, structName, contractId, structId) {
 }
 
 TP.addMessageHandler = function(message, handler) {
-	TP.messageHandlers[message.CONTRACT_ID+"."+message.STRUCT_ID] = handler;
+   var val = TP.protocol.message[message];
+   if (!val) {
+      console.log("unknown message: " + message);
+      return;
+   }
+   if (val === 0) {
+      console.log("ambiguous message: " + message);
+      return;
+   }
+	TP.messageHandlers[val.contractId + "." + val.structId] = handler;
 }
 
 TP.send = function(request, args, toId) {

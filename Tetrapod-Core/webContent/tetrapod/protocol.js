@@ -2,12 +2,6 @@
 
 TP.protocol = TP.protocol || { request: {}, response: {}, struct: {}, message: {} };
 
-//we need these all defined, yo:
-var EntityRegisteredMessage = {
-	CONTRACT_ID:1,
-	STRUCT_ID:1454035
-}
-
 TP.register("request", "BaseService", "Pause", 2, 14690004);
 TP.register("request", "BaseService", "Unpause", 2, 10620319);
 TP.register("request", "BaseService", "Shutdown", 2, 8989182);
