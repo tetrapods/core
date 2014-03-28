@@ -196,15 +196,21 @@
 		TP.sidebar.applyBindings("Cluster", "Administer");
 	</script>
 
+	<!--  =============================================================================== -->
 	<!--  Tetrapod Scripts -->
 
 	<script src="../tetrapod/tetrapod.js"></script>
 	<script src="../tetrapod/protocol.js"></script>
 
 
-	<!--  =============================================================================== -->
 
 	<script>
+		// FIXME : THESE NEED TO BE IN CODEGEN
+		var EntityRegisteredMessage = {
+			CONTRACT_ID : 1,
+			STRUCT_ID : 1454035
+		}
+
 		var model = new ClusterModel();
 		ko.applyBindings(model, $("#cluster-table")[0]);
 
@@ -214,10 +220,6 @@
 		function ClusterModel() {
 			var self = this;
 			self.services = ko.observableArray([]);
-
-			self.services.push(new Service(1));
-			self.services.push(new Service(2));
-			self.services.push(new Service(3));
 
 			// HACK: timer to update charts
 			setInterval(function updateRandom() {
@@ -241,6 +243,12 @@
 				}
 			}
 
+			// some of this should get codegenned or something
+			TP.addMessageHandler(EntityRegisteredMessage,
+					function handleEntityRegistered(msg) {
+						self.services.push(new Service(msg.entity));
+					});
+
 		}
 
 		var chartOptions = {
@@ -261,13 +269,13 @@
 		};
 
 		// Service Model
-		function Service(entityId) {
+		function Service(entity) {
 			var self = this;
-			self.entityId = entityId;
+			self.entityId = entity.entityId;
 			self.row_style = ko.observable();
-			self.name = "Unknown Name";
-			self.host = ko.observable("Unknown Host");
-			self.status = ko.observable();
+			self.name = entity.name;
+			self.host = entity.host;
+			self.status = ko.observable(entity.status);
 
 			self.status = function() {
 				return "STATUS";
@@ -316,7 +324,7 @@
 			}
 
 			self.chart = function() {
-				var container = $("#service-chart-rps-" + entityId);
+				var container = $("#service-chart-rps-" + self.entityId);
 				if (!container)
 					return;
 				self.series[0].data = getRandomData();

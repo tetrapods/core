@@ -3,6 +3,7 @@ var TP = TP || {};
 TP.requestCounter = 0;
 
 TP.requestHandlers = [];
+TP.messageHandlers = [];
 
 TP.register = function(type, contractName, structName, contractId, structId) {
 	var map = TP.protocol[type];
@@ -16,6 +17,10 @@ TP.register = function(type, contractName, structName, contractId, structId) {
 	} else {
 		map[structName] = val;
 	}
+}
+
+TP.addMessageHandler = function(message, handler) {
+	TP.messageHandlers[message.CONTRACT_ID+"."+message.STRUCT_ID] = handler;
 }
 
 TP.send = function(request, args, toId) {
@@ -76,9 +81,16 @@ TP.connect = function(server, port) {
 			// TODO figure out how to communicate errors
 			errorCode = parseInt(event.data);
 		}
-		var func = TP.requestHandlers[result._requestId];
-		if (func) {
-			func(result, errorCode);
+		if (result._requestId != null) {
+			var func = TP.requestHandlers[result._requestId];
+			if (func) {
+				func(result, errorCode);
+			}
+		} else if (result._topicId != null) {
+			var func = TP.messageHandlers[result._contractId+"."+result._structId];
+			if (func) {
+				func(result);
+			}
 		}
 	};
 	socket.onclose = function(event) {

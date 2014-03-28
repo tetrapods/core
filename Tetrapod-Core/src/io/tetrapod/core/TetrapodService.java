@@ -252,9 +252,12 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
    @Override
    public void broadcastRegistryMessage(Message msg) {
-      logger.info("BROADCASTING {} {}", registryTopic, msg.dump());
-      if (registryTopic != null)
-         sendBroadcastMessage(msg, registryTopic.topicId);
+      logger.debug("BROADCASTING {} {}", registryTopic, msg.dump());
+      if (registryTopic != null) {
+         synchronized (registryTopic) {
+            sendBroadcastMessage(msg, registryTopic.topicId);
+         }
+      }
    }
 
    // ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -372,7 +375,16 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
    @Override
    public Response requestRegistrySubscribe(RegistrySubscribeRequest r, RequestContext ctx) {
-      broadcastRegistryMessage(new TopicSubscribedMessage(registryTopic.ownerId, registryTopic.topicId, ctx.header.fromId));
+      if (registryTopic == null) {
+         return new Error(Core.ERROR_UNKNOWN);
+      }
+      synchronized (registryTopic) {
+         broadcastRegistryMessage(new TopicSubscribedMessage(registryTopic.ownerId, registryTopic.topicId, ctx.header.fromId));
+         // send all current entities
+         for (EntityInfo e : registry.getEntities()) {
+            sendMessage(new EntityRegisteredMessage(e, null), ctx.header.fromId, registryTopic.topicId);
+         }
+      }
       return Response.SUCCESS;
    }
 

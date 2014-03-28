@@ -57,6 +57,10 @@ public class Registry implements TetrapodContract.Registry.API {
       return this.parentId;
    }
 
+   public Collection<EntityInfo> getEntities() {
+      return entities.values();
+   }
+
    public synchronized void register(EntityInfo entity) {
       if (entity.entityId <= 0) {
          entity.entityId = issueId();
@@ -74,7 +78,7 @@ public class Registry implements TetrapodContract.Registry.API {
    public EntityInfo getEntity(int entityId) {
       return entities.get(entityId);
    }
-   
+
    public EntityInfo getFirstService(int contractId) {
       // Using a CopyOnWrite list this method doesn't need to lock
       List<EntityInfo> list = services.get(contractId);
@@ -120,7 +124,7 @@ public class Registry implements TetrapodContract.Registry.API {
          if (e.parentId == parentId) {
             broadcaster.broadcastRegistryMessage(new EntityUnregisteredMessage(entityId));
          }
-         
+
          if (e.isService()) {
             List<EntityInfo> list = services.get(e.contractId);
             if (list != null)
@@ -306,7 +310,7 @@ public class Registry implements TetrapodContract.Registry.API {
       logger.info("=======================================================================\n");
 
    }
-   
+
    private List<EntityInfo> ensureServicesList(int contractId) {
       List<EntityInfo> list = services.get(contractId);
       if (list == null) {
