@@ -93,7 +93,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
 
    @Override
    public String toString() {
-      return String.format("Ses%d [0x%08X : 0x%08X]", sessionNum, myId, theirId);
+      return String.format("%s #%d [0x%08X : 0x%08X]", getClass().getSimpleName(), sessionNum, myId, theirId);
    }
 
    protected String getStructName(int contractId, int structId) {
@@ -226,6 +226,13 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
       logger.error(cause.getMessage(), cause);
       ctx.close();
+   }
+
+   public synchronized boolean isConnected() {
+      if (channel != null) {
+         return channel.isActive();
+      }
+      return false;
    }
 
    public void close() {

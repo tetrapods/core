@@ -61,6 +61,16 @@ public class Registry implements TetrapodContract.Registry.API {
       return entities.values();
    }
 
+   public List<EntityInfo> getChildren() {
+      final List<EntityInfo> children = new ArrayList<>();
+      for (EntityInfo e : entities.values()) {
+         if (e.parentId == parentId && e.entityId != parentId) {
+            children.add(e);
+         }
+      }
+      return children;
+   }
+
    public synchronized void register(EntityInfo entity) {
       if (entity.entityId <= 0) {
          entity.entityId = issueId();
@@ -150,7 +160,7 @@ public class Registry implements TetrapodContract.Registry.API {
    public void updateStatus(int entityId, int status) {
       final EntityInfo e = getEntity(entityId);
       if (e != null) {
-         e.status = status;
+         e.setStatus(status);
          if (e.parentId == parentId) {
             broadcaster.broadcastRegistryMessage(new EntityUpdatedMessage(entityId, status));
          }

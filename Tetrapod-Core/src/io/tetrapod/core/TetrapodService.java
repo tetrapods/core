@@ -291,7 +291,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    // ////////////////////////////////////////////////////////////////////////////////////////
 
    private void scheduleHealthCheck() {
-      dispatcher.dispatch(10, TimeUnit.SECONDS, new Runnable() {
+      dispatcher.dispatch(1, TimeUnit.SECONDS, new Runnable() {
          public void run() {
             if (dispatcher.isRunning()) {
                try {
@@ -306,7 +306,21 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    }
 
    private void healthCheck() {
-      registry.logStats();
+      // registry.logStats();
+      for (Session ses : sessions.values()) {
+         //logger.debug("Checking session {} ", ses);
+         // FIXME: We need a generic way to determine for all sessions if they are still 'alive'
+         if (ses instanceof WireSession) {
+            WireSession wses = (WireSession) ses;
+            wses.checkHealth();
+         }
+      }
+      for (EntityInfo e : registry.getChildren()) {
+         if (e.isGone() && System.currentTimeMillis() - e.getGoneSince() > 60 * 1000) {
+            logger.info("Reaping: {}", e);
+            registry.unregister(e.entityId);
+         }
+      }
    }
 
    // ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

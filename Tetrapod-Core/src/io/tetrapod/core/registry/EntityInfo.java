@@ -25,13 +25,16 @@ public class EntityInfo extends Entity implements Comparable<EntityInfo> {
     */
    protected Map<Long, Topic>    subscriptions;
 
+   protected Long                goneSince;
+
    public EntityInfo() {}
 
    public EntityInfo(Entity e) {
       this(e.entityId, e.parentId, e.reclaimToken, e.host, e.status, e.type, e.name, e.build, e.version, e.contractId);
    }
 
-   public EntityInfo(int entityId, int parentId, long reclaimToken, String host, int status, byte type, String name, int build, int version, int contractId) {
+   public EntityInfo(int entityId, int parentId, long reclaimToken, String host, int status, byte type, String name, int build,
+         int version, int contractId) {
       super(entityId, parentId, reclaimToken, host, status, type, name, build, version, contractId);
    }
 
@@ -41,6 +44,14 @@ public class EntityInfo extends Entity implements Comparable<EntityInfo> {
 
    public boolean isService() {
       return type == Core.TYPE_SERVICE;
+   }
+
+   public boolean isPaused() {
+      return (status & Core.STATUS_PAUSED) != 0;
+   }
+
+   public boolean isGone() {
+      return (status & Core.STATUS_GONE) != 0;
    }
 
    public synchronized Topic getTopic(int topicId) {
@@ -98,4 +109,23 @@ public class EntityInfo extends Entity implements Comparable<EntityInfo> {
       return entityId - o.entityId;
    }
 
+   public synchronized void setStatus(int status) {
+      this.status = status;
+      if (isGone()) {
+         if (goneSince == null) {
+            goneSince = System.currentTimeMillis();
+         }
+      } else {
+         goneSince = null;
+      }
+   }
+
+   public long getGoneSince() {
+      return goneSince;
+   }
+
+   @Override
+   public String toString() {
+      return String.format("Entity-0x%08X (%s)", entityId, name);
+   }
 }

@@ -109,7 +109,8 @@ public class WireSession extends Session {
 
       final Async async = pendingRequests.remove(header.requestId);
       if (async != null) {
-         logger.debug(String.format("%s < RESPONSE [%d] %s", this, header.requestId, getStructName(async.header.contractId, header.structId)));
+         logger.debug(String.format("%s < RESPONSE [%d] %s", this, header.requestId,
+               getStructName(async.header.contractId, header.structId)));
          if (async.header.fromId == myId) {
             final Response res = (Response) StructureFactory.make(async.header.contractId, header.structId);
             if (res != null) {
@@ -155,7 +156,7 @@ public class WireSession extends Session {
          relayRequest(header, in);
       }
    }
-   
+
    private void readMessage(ByteBuf in, boolean isBroadcast) throws IOException {
       final ByteBufDataSource reader = new ByteBufDataSource(in);
       final MessageHeader header = new MessageHeader();
@@ -165,9 +166,10 @@ public class WireSession extends Session {
          header.fromId = theirId;
       }
 
-      logger.debug(String.format("%s < MESSAGE [%d-%d] %s", this, header.fromId, header.topicId, getStructName(header.contractId, header.structId)));
+      logger.debug(String.format("%s < MESSAGE [%d-%d] %s", this, header.fromId, header.topicId,
+            getStructName(header.contractId, header.structId)));
       int rewindPos = in.readerIndex();
-      
+
       if (header.toId == myId || (header.toId == UNADDRESSED && helper.getMessageHandlers(header.contractId, header.structId).size() > 0)) {
          // dispatch direct messages and ones we're waiting on
          final Message msg = (Message) StructureFactory.make(header.contractId, header.structId);
@@ -178,7 +180,7 @@ public class WireSession extends Session {
             logger.warn("Could not find message structure {}", header.structId);
          }
       }
-      
+
       if (header.toId != myId && relayHandler != null) {
          in.readerIndex(rewindPos);
          relayMessage(header, in, isBroadcast);
@@ -205,7 +207,6 @@ public class WireSession extends Session {
          return null;
       }
    }
-
 
    @Override
    public void channelActive(final ChannelHandlerContext ctx) throws Exception {
@@ -255,12 +256,17 @@ public class WireSession extends Session {
          final long now = System.currentTimeMillis();
          if (now - lastHeardFrom.get() > 5000 || now - lastSentTo.get() > 5000) {
             sendPing();
-         } else if (now - lastHeardFrom.get() > 10000) {
+         }
+         if (now - lastHeardFrom.get() > 10000) {
             logger.warn("{} Timeout", this);
             close();
          }
       }
       // TODO: Timeout pending requests past their due
+   }
+
+   public long getLastHeardFrom() {
+      return lastHeardFrom.get();
    }
 
    private void scheduleHealthCheck() {
@@ -273,13 +279,6 @@ public class WireSession extends Session {
       }
    }
 
-   public synchronized boolean isConnected() {
-      if (channel != null) {
-         return channel.isActive();
-      }
-      return false;
-   }
-   
    @Override
    public ChannelFuture writeFrame(Object frame) {
       lastSentTo.set(System.currentTimeMillis());
@@ -315,7 +314,7 @@ public class WireSession extends Session {
          logger.warn("Could not find a relay session for {}", header.toId);
       }
    }
-   
+
    private void relayResponse(ResponseHeader header, Async async, ByteBuf in) {
       header.requestId = async.header.requestId;
       async.session.sendRelayedResponse(header, in);
@@ -332,7 +331,7 @@ public class WireSession extends Session {
          }
       }
    }
-   
+
    public static String dumpBuffer(ByteBuf buf) {
       StringBuilder sb = new StringBuilder();
       for (int i = 0; i < buf.writerIndex(); i++) {
@@ -341,7 +340,7 @@ public class WireSession extends Session {
       }
       return sb.toString();
    }
-   
+
    @Override
    public String getPeerHostname() {
       return channel.remoteAddress().getHostString();
