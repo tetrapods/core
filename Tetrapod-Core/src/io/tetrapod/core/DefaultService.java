@@ -15,7 +15,6 @@ abstract public class DefaultService implements Service, BaseServiceContract.API
 
    protected final Dispatcher    dispatcher;
    protected final Client        cluster;
-   // protected Server directConnections; // TODO: implement direct connections
    protected Contract            contract;
 
    protected int                 entityId;
@@ -217,11 +216,13 @@ abstract public class DefaultService implements Service, BaseServiceContract.API
 
    @Override
    public Response requestPause(PauseRequest r, RequestContext ctx) {
+      updateStatus(status | Core.STATUS_PAUSED);
       return Response.SUCCESS;
    }
 
    @Override
    public Response requestUnpause(UnpauseRequest r, RequestContext ctx) {
+      updateStatus(status & ~Core.STATUS_PAUSED);
       return Response.SUCCESS;
    }
 

@@ -81,7 +81,7 @@ TP.connect = function(server, port) {
 			array[i]();
 	};
 	socket.onmessage = function(event) {
-		console.log("[socket] received: " + event.data);
+		//console.log("[socket] received: " + event.data);
 		var result = null;
 		var errorCode = 0;
 		if (event.data.indexOf("{") == 0) {
@@ -96,6 +96,7 @@ TP.connect = function(server, port) {
 				func(result, errorCode);
 			}
 		} else if (result._topicId != null) {
+			console.log("MESSAGE: " + JSON.stringify(result))
 			var func = TP.messageHandlers[result._contractId+"."+result._structId];
 			if (func) {
 				func(result);
@@ -110,7 +111,7 @@ TP.connect = function(server, port) {
 	}
 	socket.privsend = socket.send;
 	socket.send = function(data) {
-		console.log("[socket] send: " + data)
+		//console.log("[socket] send: " + data)
 		socket.privsend(data);
 	}
 	TP.socket = socket;
