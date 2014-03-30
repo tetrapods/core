@@ -10,8 +10,8 @@ import io.tetrapod.core.web.WebRoutes;
 import io.tetrapod.protocol.core.*;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.*;
 
 import org.slf4j.*;
 
@@ -62,6 +62,8 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
    protected final AtomicInteger        requestCounter  = new AtomicInteger();
    protected final Session.Helper       helper;
    protected final SocketChannel        channel;
+   protected final AtomicLong           lastHeardFrom   = new AtomicLong();
+   protected final AtomicLong           lastSentTo      = new AtomicLong();
 
    protected RelayHandler               relayHandler;
 
@@ -79,9 +81,36 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
       this.myContractId = helper.getContractId();
    }
 
+   /**
+    * Check to see if this session is still alive and close it, if not
+    */
+   // TODO: needs configurable timeouts
+   public void checkHealth() {
+      if (isConnected()) {
+         final long now = System.currentTimeMillis();
+         if (now - lastHeardFrom.get() > 5000 || now - lastSentTo.get() > 5000) {
+            sendPing();
+         }
+         if (now - lastHeardFrom.get() > 10000) {
+            logger.warn("{} Timeout", this);
+            close();
+         }
+      }
+      // TODO: Timeout pending requests past their due
+      for (Async a : pendingRequests.values()) {
+         if (a.isTimedout()) {
+            a.setResponse(Core.ERROR_TIMEOUT);
+         }
+      }
+   }
+
    abstract protected Object makeFrame(Structure header, Structure payload, byte envelope);
 
    abstract protected Object makeFrame(Structure header, ByteBuf payload, byte envelope);
+
+   protected void sendPing() {}
+
+   protected void sendPong() {}
 
    public Dispatcher getDispatcher() {
       return helper.getDispatcher();
@@ -89,6 +118,21 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
 
    public int getSessionNum() {
       return sessionNum;
+   }
+
+   public long getLastHeardFrom() {
+      return lastHeardFrom.get();
+   }
+
+   protected void scheduleHealthCheck() {
+      if (isConnected()) {
+         getDispatcher().dispatch(1, TimeUnit.SECONDS, new Runnable() {
+            public void run() {
+               checkHealth();
+               scheduleHealthCheck();
+            }
+         });
+      }
    }
 
    @Override
@@ -159,7 +203,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
       final Async async = new Async(req, header, this);
       pendingRequests.put(header.requestId, async);
 
-      logger.debug(String.format("%s > REQUEST [%d] %d %s", this, toId, header.requestId, req.getClass().getSimpleName()));
+      logger.trace(String.format("%s > REQUEST [%d] toId=%d %s", this, header.requestId, toId, req.getClass().getSimpleName()));
 
       final Object buffer = makeFrame(header, req, ENVELOPE_REQUEST);
       if (buffer != null) {
@@ -171,7 +215,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
    }
 
    public void sendResponse(Response res, int requestId) {
-      logger.debug(String.format("%s > RESPONSE [%d] %s", this, requestId, res.getClass().getSimpleName()));
+      logger.trace(String.format("%s > RESPONSE [%d] %s", this, requestId, res.getClass().getSimpleName()));
       final Object buffer = makeFrame(new ResponseHeader(requestId, res.getContractId(), res.getStructId()), res, ENVELOPE_RESPONSE);
       if (buffer != null) {
          writeFrame(buffer);
@@ -179,7 +223,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
    }
 
    public void sendBroadcastMessage(Message msg, int topicId) {
-      logger.debug(String.format("%s > MESSAGE [%d] %s", this, topicId, msg.getClass().getSimpleName()));
+      logger.trace(String.format("%s > MESSAGE [%d] %s", this, topicId, msg.getClass().getSimpleName()));
       final Object buffer = makeFrame(
             new MessageHeader(getMyEntityId(), topicId, Core.UNADDRESSED, msg.getContractId(), msg.getStructId()), msg, ENVELOPE_BROADCAST);
       if (buffer != null) {
@@ -188,7 +232,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
    }
 
    public void sendMessage(Message msg, int toEntityId, int topicId) {
-      logger.debug(String.format("%s > MESSAGE [%d:%d] %s", this, toEntityId, topicId, msg.getClass().getSimpleName()));
+      logger.trace(String.format("%s > MESSAGE [%d:%d] %s", this, toEntityId, topicId, msg.getClass().getSimpleName()));
       final Object buffer = makeFrame(new MessageHeader(getMyEntityId(), topicId, toEntityId, msg.getContractId(), msg.getStructId()), msg,
             ENVELOPE_MESSAGE);
       if (buffer != null) {
@@ -197,13 +241,15 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
    }
 
    public ChannelFuture writeFrame(Object frame) {
-      if (frame != null)
+      if (frame != null) {
+         lastSentTo.set(System.currentTimeMillis());
          return channel.writeAndFlush(frame);
+      }
       return null;
    }
 
    public void sendRelayedMessage(MessageHeader header, ByteBuf payload, boolean broadcast) {
-      logger.debug("{}, RELAYING MESSAGE: [{}]", this, header.structId);
+      logger.trace("{}, RELAYING MESSAGE: [{}]", this, header.structId);
       byte envelope = broadcast ? ENVELOPE_BROADCAST : ENVELOPE_MESSAGE;
       writeFrame(makeFrame(header, payload, envelope));
    }
@@ -212,13 +258,13 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
       final Async async = new Async(null, header, originator);
       int origRequestId = async.header.requestId;
       this.addPendingRequest(async);
-      logger.debug("{} RELAYING REQUEST: [{}] was " + origRequestId, this, async.header.requestId);
+      logger.trace("{} RELAYING REQUEST: [{}] was " + origRequestId, this, async.header.requestId);
       writeFrame(makeFrame(header, payload, ENVELOPE_REQUEST));
       header.requestId = origRequestId;
    }
 
    public void sendRelayedResponse(ResponseHeader header, ByteBuf payload) {
-      logger.debug("{} RELAYING RESPONSE: [{}]", this, header.requestId);
+      logger.trace("{} RELAYING RESPONSE: [{}]", this, header.requestId);
       writeFrame(makeFrame(header, payload, ENVELOPE_RESPONSE));
    }
 
@@ -303,6 +349,13 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
       async.header.requestId = requestCounter.incrementAndGet();
       pendingRequests.put(async.header.requestId, async);
       return async.header.requestId;
+   }
+
+   public void cancelAllPendingRequests() {
+      for (Async a : pendingRequests.values()) {
+         a.setResponse(Core.ERROR_CONNECTION_CLOSED);
+      }
+      pendingRequests.clear();
    }
 
    // /////////////////////////////////// RELAY /////////////////////////////////////

@@ -20,21 +20,22 @@ abstract class WebSession extends Session {
    public WebSession(SocketChannel channel, Session.Helper helper) {
       super(channel, helper);
    }
-   
+
    abstract protected Object makeFrame(JSONObject jo);
-   
+
    protected void readRequest(RequestHeader header, WebContext context) {
+      lastHeardFrom.set(System.currentTimeMillis());
       try {
          Structure request = StructureFactory.make(header.contractId, header.structId);
          if (request == null) {
-            logger.error("Could not find request structure contractId={} structId{}", header.contractId, header.structId);
+            logger.error("Could not find request structure contractId={} structId-{}", header.contractId, header.structId);
             sendResponse(new Error(ERROR_SERIALIZATION), header.requestId);
             return;
          }
          request.read(new WebJSONDataSource(context.getRequestParams(), request.tagWebNames()));
          if ((header.toId == UNADDRESSED && header.contractId == myContractId) || header.toId == myId) {
             if (request instanceof Request) {
-               dispatchRequest(header, (Request)request);
+               dispatchRequest(header, (Request) request);
             } else {
                logger.error("Asked to process a request I can't deserialize {}", header.dump());
                sendResponse(new Error(ERROR_SERIALIZATION), header.requestId);
@@ -47,7 +48,7 @@ abstract class WebSession extends Session {
          sendResponse(new Error(ERROR_UNKNOWN), header.requestId);
       }
    }
-   
+
    private void relayRequest(RequestHeader header, Structure request) throws IOException {
       final Session ses = relayHandler.getRelaySession(header.toId, header.contractId);
       if (ses != null) {
@@ -94,26 +95,26 @@ abstract class WebSession extends Session {
          return null;
       }
    }
-   
+
    private JSONObject extractHeader(Structure header) {
       JSONObject jo = new JSONObject();
       switch (header.getStructId()) {
          case RequestHeader.STRUCT_ID:
-            RequestHeader reqH = (RequestHeader)header;
+            RequestHeader reqH = (RequestHeader) header;
             jo.put("_contractId", reqH.contractId);
             jo.put("_structId", reqH.structId);
             jo.put("_requestId", reqH.requestId);
             break;
-            
+
          case ResponseHeader.STRUCT_ID:
-            ResponseHeader respH = (ResponseHeader)header;
+            ResponseHeader respH = (ResponseHeader) header;
             jo.put("_contractId", respH.contractId);
             jo.put("_structId", respH.structId);
             jo.put("_requestId", respH.requestId);
             break;
-            
+
          case MessageHeader.STRUCT_ID:
-            MessageHeader messH = (MessageHeader)header;
+            MessageHeader messH = (MessageHeader) header;
             jo.put("_contractId", messH.contractId);
             jo.put("_structId", messH.structId);
             jo.put("_topicId", messH.topicId);

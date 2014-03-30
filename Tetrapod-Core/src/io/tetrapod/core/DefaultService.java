@@ -25,6 +25,7 @@ abstract public class DefaultService implements Service, BaseServiceContract.API
    private final MessageHandlers messageHandlers = new MessageHandlers();
 
    public DefaultService() {
+      status |= Core.STATUS_INIT;
       dispatcher = new Dispatcher();
       cluster = new Client(this);
       addContracts(new BaseServiceContract());
@@ -50,6 +51,30 @@ abstract public class DefaultService implements Service, BaseServiceContract.API
 
    abstract public void onRegistered();
 
+   abstract public void onShutdown(boolean restarting);
+
+   private void shutdown(boolean restarting) {
+      updateStatus(status | Core.STATUS_PAUSED);
+      onShutdown(restarting);
+      if (restarting) {
+         cluster.close();
+         dispatcher.shutdown();
+         try {
+            Launcher.relaunch(token);
+         } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+         }
+      } else {
+         sendRequest(new UnregisterRequest(getEntityId()), Core.UNADDRESSED).handle(new ResponseHandler() {
+            @Override
+            public void onResponse(Response res) {
+               cluster.close();
+               dispatcher.shutdown();
+            }
+         });
+      }
+   }
+
    /**
     * Session factory for our session to our parent TetrapodService
     */
@@ -72,7 +97,7 @@ abstract public class DefaultService implements Service, BaseServiceContract.API
    }
 
    public void onConnectedToCluster() {
-      sendRequest(new RegisterRequest(222/* FIXME */, token, getContractId(), getShortName()), Core.UNADDRESSED).handle(
+      sendRequest(new RegisterRequest(222/* FIXME */, token, getContractId(), getShortName(), status), Core.UNADDRESSED).handle(
             new ResponseHandler() {
                @Override
                public void onResponse(Response res) {
@@ -135,12 +160,11 @@ abstract public class DefaultService implements Service, BaseServiceContract.API
    protected void fail(Throwable error) {
       logger.error(error.getMessage(), error);
       updateStatus(status | Core.STATUS_FAILED);
-      sendRequest(new ServiceStatusUpdateRequest(status), Core.UNADDRESSED);
    }
 
    protected void fail(String reason, int errorCode) {
-      // move into failure state
-      // TODO implement
+      logger.error("FAIL: {} {}", reason, errorCode);
+      updateStatus(status | Core.STATUS_FAILED);
    }
 
    protected String getShortName() {
@@ -228,12 +252,27 @@ abstract public class DefaultService implements Service, BaseServiceContract.API
 
    @Override
    public Response requestRestart(RestartRequest r, RequestContext ctx) {
+      dispatcher.dispatch(new Runnable() {
+         public void run() {
+            shutdown(true);
+         }
+      });
       return Response.SUCCESS;
    }
 
    @Override
    public Response requestShutdown(ShutdownRequest r, RequestContext ctx) {
+      dispatcher.dispatch(new Runnable() {
+         public void run() {
+            shutdown(false);
+         }
+      });
       return Response.SUCCESS;
+   }
+
+   @Override
+   public Response requestServiceIcon(ServiceIconRequest r, RequestContext ctx) {
+      return new ServiceIconResponse("media/gear.gif");
    }
 
    // private methods

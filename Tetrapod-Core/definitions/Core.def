@@ -27,9 +27,10 @@ struct Core
    error TIMEOUT              = 3 // Request timed out without returning a response
    error SERIALIZATION        = 4 // Unable to deserialize the request
    error PROTOCOL_MISMATCH    = 5 // Protocol versions are not compatible
-   error UNKNOWN_REQUEST      = 6 // Service exists and received request, but doen't know how to handle it
-   error INVALID_RIGHTS       = 7 // Caller does not have sufficient rights to call this Request
-     
+   error UNKNOWN_REQUEST      = 6 // Service exists and received request, but doesn't know how to handle it
+   error CONNECTION_CLOSED    = 7 // Request's session was disconnected
+   error INVALID_RIGHTS       = 8 // Caller does not have sufficient rights to call this Request     
+   error INVALID_ENTITY       = 9 // An addressed entityId was invalid     
 
    const byte  ENVELOPE_HANDSHAKE      = 1
    const byte  ENVELOPE_REQUEST        = 2
@@ -125,11 +126,15 @@ public request Register
    2: string token
    3: int contractId
    4: string name
+   5: int status
       
 public response Register 
    1: int entityId
    2: int parentId
    3: string token
+   
+public request Unregister
+   1: int entityId
 
 internal request Publish 
    error NOT_READY
@@ -140,6 +145,9 @@ internal response Publish
    1: int topicId
     
 internal request RegistrySubscribe
+internal request RegistryUnsubscribe
+internal request ServicesSubscribe
+internal request ServicesUnsubscribe
 
 internal request ServiceStatusUpdate
    1: int status

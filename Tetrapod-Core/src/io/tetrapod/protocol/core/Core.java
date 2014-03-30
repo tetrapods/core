@@ -38,6 +38,16 @@ public class Core extends Structure {
    public static final byte ENVELOPE_PONG = 7; 
    
    /**
+    * Request's session was disconnected
+    */
+   @ERR public static final int ERROR_CONNECTION_CLOSED = TetrapodContract.ERROR_CONNECTION_CLOSED; 
+   
+   /**
+    * An addressed entityId was invalid
+    */
+   @ERR public static final int ERROR_INVALID_ENTITY = TetrapodContract.ERROR_INVALID_ENTITY; 
+   
+   /**
     * Caller does not have sufficient rights to call this Request
     */
    @ERR public static final int ERROR_INVALID_RIGHTS = TetrapodContract.ERROR_INVALID_RIGHTS; 
@@ -68,7 +78,7 @@ public class Core extends Structure {
    @ERR public static final int ERROR_UNKNOWN = TetrapodContract.ERROR_UNKNOWN; 
    
    /**
-    * Service exists and received request, but doen't know how to handle it
+    * Service exists and received request, but doesn't know how to handle it
     */
    @ERR public static final int ERROR_UNKNOWN_REQUEST = TetrapodContract.ERROR_UNKNOWN_REQUEST; 
    

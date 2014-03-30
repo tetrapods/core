@@ -41,10 +41,20 @@ public class WebSocketSession extends WebSession {
          ctx.channel().writeAndFlush(new TextWebSocketFrame("Illegal request: " + request));
       }
    }
-   
+
    @Override
    protected Object makeFrame(JSONObject jo) {
       return new TextWebSocketFrame(jo.toString(3));
    }
 
+   @Override
+   public void channelActive(final ChannelHandlerContext ctx) throws Exception {
+      fireSessionStartEvent();
+   }
+
+   @Override
+   public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+      fireSessionStopEvent();
+      cancelAllPendingRequests();
+   }
 }

@@ -7,16 +7,15 @@ import org.slf4j.*;
 abstract public class ResponseHandler {
    private static final Logger         logger = LoggerFactory.getLogger(ResponseHandler.class);
 
-   public static final ResponseHandler LOGGER = 
-      new ResponseHandler() {
-         @Override
-         public void onResponse(Response res) {
-            if (res.isError()) {
-               RequestHeader h = getRequestHeader();
-               logger.error("[{}] failed with error = {}" + h.requestId, res.errorCode());
-            }
-         }
-      };
+   public static final ResponseHandler LOGGER = new ResponseHandler() {
+                                                 @Override
+                                                 public void onResponse(Response res) {
+                                                    if (res.isError()) {
+                                                       RequestHeader h = getRequestHeader();
+                                                       logger.error("[{}] failed with error = {}", h.requestId, res.errorCode());
+                                                    }
+                                                 }
+                                              };
 
    private RequestHeader               header;
 

@@ -6,10 +6,9 @@ import io.tetrapod.protocol.core.RequestHeader;
 import org.slf4j.*;
 
 public class Async {
-   public static final Logger logger = LoggerFactory.getLogger(Async.class);
+   public static final Logger logger   = LoggerFactory.getLogger(Async.class);
 
-   // TODO: Timeouts
-
+   public final long          sendTime = System.currentTimeMillis();
    public final RequestHeader header;
    public final Request       request;
    public final Session       session;
@@ -43,6 +42,10 @@ public class Async {
             logger.error(e.getMessage(), e);
          }
       }
+   }
+
+   public boolean isTimedout() {
+      return System.currentTimeMillis() - sendTime > header.timeout * 1000;
    }
 
 }

@@ -67,4 +67,9 @@ public class WebHttpSession extends WebSession {
       return httpResponse;
    }
 
+   @Override
+   public void checkHealth() {
+      // TODO?      
+   }
+
 }

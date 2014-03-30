@@ -1,5 +1,6 @@
 package io.tetrapod.core.registry;
 
+import io.tetrapod.core.Session;
 import io.tetrapod.protocol.core.*;
 
 import java.util.*;
@@ -25,6 +26,8 @@ public class EntityInfo extends Entity implements Comparable<EntityInfo> {
     */
    protected Map<Long, Topic>    subscriptions;
 
+   protected Session             session;
+
    protected Long                goneSince;
 
    public EntityInfo() {}
@@ -42,8 +45,11 @@ public class EntityInfo extends Entity implements Comparable<EntityInfo> {
       return type == Core.TYPE_TETRAPOD;
    }
 
+   /**
+    * Returns true if this is a service, including tetrapod services
+    */
    public boolean isService() {
-      return type == Core.TYPE_SERVICE;
+      return type == Core.TYPE_SERVICE || type == Core.TYPE_TETRAPOD;
    }
 
    public boolean isPaused() {
@@ -128,4 +134,13 @@ public class EntityInfo extends Entity implements Comparable<EntityInfo> {
    public String toString() {
       return String.format("Entity-0x%08X (%s)", entityId, name);
    }
+
+   public void setSession(Session ses) {
+      this.session = ses;
+   }
+
+   public Session getSession() {
+      return session;
+   }
+
 }

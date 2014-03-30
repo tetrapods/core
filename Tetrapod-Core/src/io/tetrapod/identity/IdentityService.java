@@ -4,6 +4,7 @@ import io.tetrapod.core.DefaultService;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.protocol.core.*;
 import io.tetrapod.protocol.identity.*;
+import io.tetrapod.protocol.service.*;
 
 import org.slf4j.*;
 
@@ -17,9 +18,8 @@ public class IdentityService extends DefaultService implements IdentityContract.
 
    @Override
    public void onRegistered() {
+      // HACK: subscription test -- remove later:
       sendRequest(new RegistrySubscribeRequest(), Core.UNADDRESSED);
-
-      // FIXME: This is no longer working -- handlers not getting triggered 
       addSubscriptionHandler(new TetrapodContract.Registry(), new TetrapodContract.Registry.API() {
          @Override
          public void messageTopicUnsubscribed(TopicUnsubscribedMessage m, MessageContext ctx) {
@@ -61,7 +61,12 @@ public class IdentityService extends DefaultService implements IdentityContract.
             logger.info("Dispatched message: {}", m.dump());
          }
       });
+
+      updateStatus(status & ~Core.STATUS_INIT);
    }
+
+   @Override
+   public void onShutdown(boolean restarting) {}
 
    @Override
    public Response requestCreate(CreateRequest r, RequestContext ctx) {
@@ -83,4 +88,8 @@ public class IdentityService extends DefaultService implements IdentityContract.
       return null;
    }
 
+   @Override
+   public Response requestServiceIcon(ServiceIconRequest r, RequestContext ctx) {
+      return new ServiceIconResponse("media/identity.png");
+   }
 }
