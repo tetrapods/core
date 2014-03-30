@@ -6,6 +6,7 @@ import io.tetrapod.core.rpc.Error;
 import io.tetrapod.protocol.core.*;
 import io.tetrapod.protocol.service.*;
 
+import java.lang.management.ManagementFactory;
 import java.util.*;
 
 import org.slf4j.*;
@@ -59,12 +60,15 @@ abstract public class DefaultService implements Service, BaseServiceContract.API
       if (restarting) {
          cluster.close();
          dispatcher.shutdown();
-         // TODO: exec new service
+         try {
+            Launcher.relaunch(token);
+         } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+         }
       } else {
          sendRequest(new UnregisterRequest(getEntityId()), Core.UNADDRESSED).handle(new ResponseHandler() {
             @Override
             public void onResponse(Response res) {
-               ResponseHandler.LOGGER.onResponse(res);
                cluster.close();
                dispatcher.shutdown();
             }
