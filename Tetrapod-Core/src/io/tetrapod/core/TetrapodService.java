@@ -143,6 +143,8 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          ses.setMyEntityId(getEntityId());
          ses.setMyEntityType(Core.TYPE_TETRAPOD);
          ses.setTheirEntityType(Core.TYPE_CLIENT);
+         // FIXME: for web admins we need to set this to Core.TYPE_ADMIN
+         // But not sure how we distinguish this yet
          ses.addSessionListener(new Session.Listener() {
             @Override
             public void onSessionStop(Session ses) {
