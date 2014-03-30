@@ -4,6 +4,7 @@ import io.tetrapod.core.DefaultService;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.protocol.core.*;
 import io.tetrapod.protocol.identity.*;
+import io.tetrapod.protocol.service.*;
 
 import org.slf4j.*;
 
@@ -84,4 +85,8 @@ public class IdentityService extends DefaultService implements IdentityContract.
       return null;
    }
 
+   @Override
+   public Response requestServiceIcon(ServiceIconRequest r, RequestContext ctx) {
+      return new ServiceIconResponse("media/identity.png");
+   }
 }

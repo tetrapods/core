@@ -69,6 +69,10 @@
 	margin-right: 8px;
 }
 
+.service-name {
+	font-weight: bold;
+}
+
 .service-chart {
 	width: 128px;
 	height: 32px;
@@ -187,7 +191,7 @@
 
 								<td><span data-bind="text: entityId"></span></td>
 								<td><img data-bind="attr:{src: iconURL}"
-									class="service-icon" width="20px" height="20px"> <span
+									class="service-icon" width="20px" height="20px"> <span class="service-name" 
 									data-bind="text: name"></span></td>
 								<td><span data-bind="text: host"></span></td>
 								<td class="centered"><span data-bind="text: statusName()"></span></td>
