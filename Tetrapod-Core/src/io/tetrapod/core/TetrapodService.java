@@ -120,9 +120,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
             }
 
             @Override
-            public void onSessionStart(Session ses) {
-               // TODO: stuff
-            }
+            public void onSessionStart(Session ses) {}
          });
          return ses;
       }
@@ -164,8 +162,8 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          registry.updateStatus(ses.getTheirEntityId(), status | Core.STATUS_GONE);
          final EntityInfo e = registry.getEntity(ses.getTheirEntityId());
          if (e != null) {
-            // TODO: set all children to gone as well
             e.setSession(null);
+            // TODO: set all children to gone as well
          }
       }
    }
@@ -200,6 +198,11 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       clusterServer.stop();
       webSocketsServer.stop();
       httpServer.stop();
+   }
+
+   @Override
+   public void onShutdown(boolean restarting) {
+      stop();
    }
 
    // ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -380,6 +383,19 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       info.setSession(ctx.session);
 
       return new RegisterResponse(info.entityId, info.parentId, Token.encode(info.entityId, info.reclaimToken));
+   }
+
+   @Override
+   public Response requestUnregister(UnregisterRequest r, RequestContext ctx) {
+      if (r.entityId != ctx.header.fromId && ctx.header.fromType != Core.TYPE_ADMIN) {
+         return new Error(Core.ERROR_INVALID_RIGHTS);
+      }
+      final EntityInfo info = registry.getEntity(r.entityId);
+      if (info == null) {
+         return new Error(Core.ERROR_INVALID_ENTITY);
+      }
+      registry.unregister(info.entityId);
+      return Response.SUCCESS;
    }
 
    @Override

@@ -203,7 +203,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
       final Async async = new Async(req, header, this);
       pendingRequests.put(header.requestId, async);
 
-      logger.debug(String.format("%s > REQUEST [%d] %d %s", this, toId, header.requestId, req.getClass().getSimpleName()));
+      logger.trace(String.format("%s > REQUEST [%d] toId=%d %s", this, header.requestId, toId, req.getClass().getSimpleName()));
 
       final Object buffer = makeFrame(header, req, ENVELOPE_REQUEST);
       if (buffer != null) {
@@ -215,7 +215,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
    }
 
    public void sendResponse(Response res, int requestId) {
-      logger.debug(String.format("%s > RESPONSE [%d] %s", this, requestId, res.getClass().getSimpleName()));
+      logger.trace(String.format("%s > RESPONSE [%d] %s", this, requestId, res.getClass().getSimpleName()));
       final Object buffer = makeFrame(new ResponseHeader(requestId, res.getContractId(), res.getStructId()), res, ENVELOPE_RESPONSE);
       if (buffer != null) {
          writeFrame(buffer);
@@ -223,7 +223,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
    }
 
    public void sendBroadcastMessage(Message msg, int topicId) {
-      logger.debug(String.format("%s > MESSAGE [%d] %s", this, topicId, msg.getClass().getSimpleName()));
+      logger.trace(String.format("%s > MESSAGE [%d] %s", this, topicId, msg.getClass().getSimpleName()));
       final Object buffer = makeFrame(
             new MessageHeader(getMyEntityId(), topicId, Core.UNADDRESSED, msg.getContractId(), msg.getStructId()), msg, ENVELOPE_BROADCAST);
       if (buffer != null) {
@@ -232,7 +232,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
    }
 
    public void sendMessage(Message msg, int toEntityId, int topicId) {
-      logger.debug(String.format("%s > MESSAGE [%d:%d] %s", this, toEntityId, topicId, msg.getClass().getSimpleName()));
+      logger.trace(String.format("%s > MESSAGE [%d:%d] %s", this, toEntityId, topicId, msg.getClass().getSimpleName()));
       final Object buffer = makeFrame(new MessageHeader(getMyEntityId(), topicId, toEntityId, msg.getContractId(), msg.getStructId()), msg,
             ENVELOPE_MESSAGE);
       if (buffer != null) {
@@ -249,7 +249,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
    }
 
    public void sendRelayedMessage(MessageHeader header, ByteBuf payload, boolean broadcast) {
-      logger.debug("{}, RELAYING MESSAGE: [{}]", this, header.structId);
+      logger.trace("{}, RELAYING MESSAGE: [{}]", this, header.structId);
       byte envelope = broadcast ? ENVELOPE_BROADCAST : ENVELOPE_MESSAGE;
       writeFrame(makeFrame(header, payload, envelope));
    }
@@ -258,13 +258,13 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
       final Async async = new Async(null, header, originator);
       int origRequestId = async.header.requestId;
       this.addPendingRequest(async);
-      logger.debug("{} RELAYING REQUEST: [{}] was " + origRequestId, this, async.header.requestId);
+      logger.trace("{} RELAYING REQUEST: [{}] was " + origRequestId, this, async.header.requestId);
       writeFrame(makeFrame(header, payload, ENVELOPE_REQUEST));
       header.requestId = origRequestId;
    }
 
    public void sendRelayedResponse(ResponseHeader header, ByteBuf payload) {
-      logger.debug("{} RELAYING RESPONSE: [{}]", this, header.requestId);
+      logger.trace("{} RELAYING RESPONSE: [{}]", this, header.requestId);
       writeFrame(makeFrame(header, payload, ENVELOPE_RESPONSE));
    }
 

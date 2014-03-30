@@ -66,6 +66,9 @@ public class IdentityService extends DefaultService implements IdentityContract.
    }
 
    @Override
+   public void onShutdown(boolean restarting) {}
+
+   @Override
    public Response requestCreate(CreateRequest r, RequestContext ctx) {
       return null;
    }

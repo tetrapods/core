@@ -43,6 +43,11 @@ public class Core extends Structure {
    @ERR public static final int ERROR_CONNECTION_CLOSED = TetrapodContract.ERROR_CONNECTION_CLOSED; 
    
    /**
+    * An addressed entityId was invalid
+    */
+   @ERR public static final int ERROR_INVALID_ENTITY = TetrapodContract.ERROR_INVALID_ENTITY; 
+   
+   /**
     * Caller does not have sufficient rights to call this Request
     */
    @ERR public static final int ERROR_INVALID_RIGHTS = TetrapodContract.ERROR_INVALID_RIGHTS; 

@@ -21,6 +21,7 @@ TP.register("struct", "Tetrapod", "TypeDescriptor", 1, 6493266);
 TP.register("struct", "Tetrapod", "StructDescription", 1, 9642196);
 TP.register("request", "Tetrapod", "Register", 1, 10895179);
 TP.register("response", "Tetrapod", "Register", 1, 13376201);
+TP.register("request", "Tetrapod", "Unregister", 1, 3896262);
 TP.register("request", "Tetrapod", "Publish", 1, 3171651);
 TP.register("response", "Tetrapod", "Publish", 1, 2698673);
 TP.register("request", "Tetrapod", "RegistrySubscribe", 1, 2572089);

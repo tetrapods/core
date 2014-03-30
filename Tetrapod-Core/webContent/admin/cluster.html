@@ -191,8 +191,8 @@
 
 								<td><span data-bind="text: entityId"></span></td>
 								<td><img data-bind="attr:{src: iconURL}"
-									class="service-icon" width="20px" height="20px"> <span class="service-name" 
-									data-bind="text: name"></span></td>
+									class="service-icon" width="20px" height="20px"> <span
+									class="service-name" data-bind="text: name"></span></td>
 								<td><span data-bind="text: host"></span></td>
 								<td class="centered"><span data-bind="text: statusName()"></span></td>
 								<td>
@@ -221,18 +221,23 @@
 	<!-- Core Scripts - Include with every page -->
 
 	<script
-		src="http://ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>
+		src="//ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>
 	<script
-		src="http://netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
+		src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
 	<script
-		src="http://cdnjs.cloudflare.com/ajax/libs/knockout/3.1.0/knockout-min.js"></script>
+		src="//cdnjs.cloudflare.com/ajax/libs/knockout/3.1.0/knockout-min.js"></script>
+	<script
+		src="//cdnjs.cloudflare.com/ajax/libs/bootbox.js/4.2.0/bootbox.min.js"></script>
+		
+		
+		
 	<script src="js/plugins/metisMenu/jquery.metisMenu.js"></script>
 
 	<!-- Page-Level Plugin Scripts - Blank -->
 	<script src="js/plugins/flot/jquery.flot.js"></script>
 	<script src="js/plugins/flot/jquery.flot.tooltip.min.js"></script>
 	<script src="js/plugins/flot/jquery.flot.resize.js"></script>
-	<script src="js/plugins/flot/jquery.flot.pie.js"></script>
+	<script src="js/plugins/flot/jquery.flot.pie.js"></script> 
 
 	<!-- SB Admin Scripts - Include with every page -->
 	<script src="js/sb-admin.js"></script>
@@ -344,14 +349,13 @@
 			self.name = entity.name;
 			self.host = entity.host;
 			self.status = ko.observable(entity.status);
-			
+
 			self.iconURL = ko.observable("media/gear.gif");
-			TP.send("ServiceIcon", {}, self.entityId).handle(
-					function(result) {
-						if (!result.isError()) {
-							self.iconURL(result.iconURL);
-						}
-					});
+			TP.send("ServiceIcon", {}, self.entityId).handle(function(result) {
+				if (!result.isError()) {
+					self.iconURL(result.iconURL);
+				}
+			});
 
 			self.isPaused = function() {
 				return (self.status() & 2/*FIXME: CODEGEN constants*/) != 0;
@@ -393,10 +397,18 @@
 				TP.send("Unpause", {}, self.entityId).handle(TP.logResponse);
 			}
 			self.restart = function() {
-				TP.send("Restart", {}, self.entityId).handle(TP.logResponse);
+				bootbox.confirm("Are you sure you want to restart service: "+ self.name +"?", function(result) { 
+					if (result) {
+						TP.send("Restart", {}, self.entityId).handle(TP.logResponse);
+					}
+				});
 			}
 			self.shutdown = function() {
-				TP.send("Shutdown", {}, self.entityId).handle(TP.logResponse);
+				bootbox.confirm("Are you sure you want to shutdown service: "+ self.name +"?", function(result) { 
+					if (result) {
+						TP.send("Shutdown", {}, self.entityId).handle(TP.logResponse);
+					}
+				}); 
 			}
 
 			self.deleteService = function() {

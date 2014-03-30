@@ -51,6 +51,27 @@ abstract public class DefaultService implements Service, BaseServiceContract.API
 
    abstract public void onRegistered();
 
+   abstract public void onShutdown(boolean restarting);
+
+   private void shutdown(boolean restarting) {
+      updateStatus(status | Core.STATUS_PAUSED);
+      onShutdown(restarting);
+      if (restarting) {
+         cluster.close();
+         dispatcher.shutdown();
+         // TODO: exec new service
+      } else {
+         sendRequest(new UnregisterRequest(getEntityId()), Core.UNADDRESSED).handle(new ResponseHandler() {
+            @Override
+            public void onResponse(Response res) {
+               ResponseHandler.LOGGER.onResponse(res);
+               cluster.close();
+               dispatcher.shutdown();
+            }
+         });
+      }
+   }
+
    /**
     * Session factory for our session to our parent TetrapodService
     */
@@ -228,12 +249,22 @@ abstract public class DefaultService implements Service, BaseServiceContract.API
 
    @Override
    public Response requestRestart(RestartRequest r, RequestContext ctx) {
-      return Response.SUCCESS; // FIXME
+      dispatcher.dispatch(new Runnable() {
+         public void run() {
+            shutdown(true);
+         }
+      });
+      return Response.SUCCESS;
    }
 
    @Override
    public Response requestShutdown(ShutdownRequest r, RequestContext ctx) {
-      return Response.SUCCESS; // FIXME
+      dispatcher.dispatch(new Runnable() {
+         public void run() {
+            shutdown(false);
+         }
+      });
+      return Response.SUCCESS;
    }
 
    @Override

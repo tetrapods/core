@@ -23,12 +23,14 @@ public class TetrapodContract extends Contract {
       PublishRequest.Handler,
       RegisterRequest.Handler,
       RegistrySubscribeRequest.Handler,
-      ServiceStatusUpdateRequest.Handler
+      ServiceStatusUpdateRequest.Handler,
+      UnregisterRequest.Handler
       {}
    
    public Structure[] getRequests() {
       return new Structure[] {
          new RegisterRequest(),
+         new UnregisterRequest(),
          new PublishRequest(),
          new RegistrySubscribeRequest(),
          new ServiceStatusUpdateRequest(),
@@ -152,13 +154,17 @@ public class TetrapodContract extends Contract {
    /**
     * Request's session was disconnected
     */
-   public static final int ERROR_CONNECTION_CLOSED = 8; 
-   public static final int ERROR_INVALID_ENTITY = 5084230; 
+   public static final int ERROR_CONNECTION_CLOSED = 7; 
+   
+   /**
+    * An addressed entityId was invalid
+    */
+   public static final int ERROR_INVALID_ENTITY = 9; 
    
    /**
     * Caller does not have sufficient rights to call this Request
     */
-   public static final int ERROR_INVALID_RIGHTS = 7; 
+   public static final int ERROR_INVALID_RIGHTS = 8; 
    public static final int ERROR_NOT_PARENT = 2219555; 
    public static final int ERROR_NOT_READY = 12438466; 
    
