@@ -238,7 +238,7 @@ abstract public class DefaultService implements Service, BaseServiceContract.API
 
    @Override
    public Response requestServiceIcon(ServiceIconRequest r, RequestContext ctx) {
-      return new ServiceIconResponse("https://github.com/tetrapods/core/tree/master/Tetrapod-Core/webContent/admin/media/gear.gif");
+      return new ServiceIconResponse("media/gear.gif");
    }
 
    // private methods
