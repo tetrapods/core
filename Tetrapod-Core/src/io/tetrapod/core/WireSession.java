@@ -13,7 +13,6 @@ import io.tetrapod.core.serialize.datasources.ByteBufDataSource;
 import io.tetrapod.protocol.core.*;
 
 import java.io.IOException;
-import java.util.concurrent.TimeUnit;
 
 import org.slf4j.*;
 
@@ -214,7 +213,7 @@ public class WireSession extends Session {
    @Override
    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
       fireSessionStopEvent();
-      // TODO: cancel all pending requests
+      cancelAllPendingRequests();
    }
 
    private void writeHandshake() {
@@ -227,61 +226,23 @@ public class WireSession extends Session {
       buffer.writeByte(ENVELOPE_HANDSHAKE);
       buffer.writeInt(WIRE_VERSION);
       buffer.writeInt(WIRE_OPTIONS);
-      channel.writeAndFlush(buffer);
-      lastSentTo.set(System.currentTimeMillis());
+      writeFrame(buffer);
    }
 
-   private void sendPing() {
+   @Override
+   protected void sendPing() {
       final ByteBuf buffer = channel.alloc().buffer(5);
       buffer.writeInt(1);
       buffer.writeByte(ENVELOPE_PING);
-      channel.writeAndFlush(buffer);
-      lastSentTo.set(System.currentTimeMillis());
+      writeFrame(buffer);
    }
 
-   private void sendPong() {
+   @Override
+   protected void sendPong() {
       final ByteBuf buffer = channel.alloc().buffer(5);
       buffer.writeInt(1);
       buffer.writeByte(ENVELOPE_PONG);
-      channel.writeAndFlush(buffer);
-      lastSentTo.set(System.currentTimeMillis());
-   }
-
-   // TODO: needs configurable timeouts
-   @Override
-   public void checkHealth() {
-      if (isConnected()) {
-         final long now = System.currentTimeMillis();
-         if (now - lastHeardFrom.get() > 5000 || now - lastSentTo.get() > 5000) {
-            sendPing();
-         }
-         if (now - lastHeardFrom.get() > 10000) {
-            logger.warn("{} Timeout", this);
-            close();
-         }
-      }
-      // TODO: Timeout pending requests past their due
-   }
-
-   public long getLastHeardFrom() {
-      return lastHeardFrom.get();
-   }
-
-   private void scheduleHealthCheck() {
-      if (isConnected()) {
-         getDispatcher().dispatch(1, TimeUnit.SECONDS, new Runnable() {
-            public void run() {
-               checkHealth();
-               scheduleHealthCheck();
-            }
-         });
-      }
-   }
-
-   @Override
-   public ChannelFuture writeFrame(Object frame) {
-      lastSentTo.set(System.currentTimeMillis());
-      return super.writeFrame(frame);
+      writeFrame(buffer);
    }
 
    // /////////////////////////////////// RELAY /////////////////////////////////////

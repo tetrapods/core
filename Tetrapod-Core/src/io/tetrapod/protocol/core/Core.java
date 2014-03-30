@@ -38,6 +38,11 @@ public class Core extends Structure {
    public static final byte ENVELOPE_PONG = 7; 
    
    /**
+    * Request's session was disconnected
+    */
+   @ERR public static final int ERROR_CONNECTION_CLOSED = TetrapodContract.ERROR_CONNECTION_CLOSED; 
+   
+   /**
     * Caller does not have sufficient rights to call this Request
     */
    @ERR public static final int ERROR_INVALID_RIGHTS = TetrapodContract.ERROR_INVALID_RIGHTS; 

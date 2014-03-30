@@ -136,12 +136,11 @@ abstract public class DefaultService implements Service, BaseServiceContract.API
    protected void fail(Throwable error) {
       logger.error(error.getMessage(), error);
       updateStatus(status | Core.STATUS_FAILED);
-      sendRequest(new ServiceStatusUpdateRequest(status), Core.UNADDRESSED);
    }
 
    protected void fail(String reason, int errorCode) {
-      // move into failure state
-      // TODO implement
+      logger.error("FAIL: {} {}", reason, errorCode);
+      updateStatus(status | Core.STATUS_FAILED);
    }
 
    protected String getShortName() {

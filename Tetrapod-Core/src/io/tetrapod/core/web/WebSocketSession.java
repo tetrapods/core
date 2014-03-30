@@ -48,11 +48,6 @@ public class WebSocketSession extends WebSession {
    }
 
    @Override
-   public void checkHealth() {
-      // TODO: timeout socket if non-responsive
-   }
-
-   @Override
    public void channelActive(final ChannelHandlerContext ctx) throws Exception {
       fireSessionStartEvent();
    }
@@ -60,5 +55,6 @@ public class WebSocketSession extends WebSession {
    @Override
    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
       fireSessionStopEvent();
+      cancelAllPendingRequests();
    }
 }

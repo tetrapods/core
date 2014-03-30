@@ -42,9 +42,14 @@
 
 .gone {
 	background: red;
+	color: white;
 }
 
- 
+.failed {
+	background: orange;
+	color: yellow;
+}
+
 .init {
 	background: #eee;
 	color: #999;
@@ -340,10 +345,16 @@
 			self.isInit = function() {
 				return (self.status() & 1/*FIXME: CODEGEN constants*/) != 0;
 			}
+			
+			self.isFailed = function() {
+				return (self.status() & 32/*FIXME: CODEGEN constants*/) != 0;
+			}
 
 			self.statusName = ko.computed(function() {
 				if (self.isGone())
 					return "GONE";
+				if (self.isFailed())
+					return "FAILED";
 				if (self.isPaused())
 					return "PAUSED";
 				if (self.isInit())

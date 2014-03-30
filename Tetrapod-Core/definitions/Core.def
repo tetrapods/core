@@ -28,8 +28,8 @@ struct Core
    error SERIALIZATION        = 4 // Unable to deserialize the request
    error PROTOCOL_MISMATCH    = 5 // Protocol versions are not compatible
    error UNKNOWN_REQUEST      = 6 // Service exists and received request, but doen't know how to handle it
-   error INVALID_RIGHTS       = 7 // Caller does not have sufficient rights to call this Request
-     
+   error INVALID_RIGHTS       = 7 // Caller does not have sufficient rights to call this Request     
+   error CONNECTION_CLOSED    = 8 // Request's session was disconnected
 
    const byte  ENVELOPE_HANDSHAKE      = 1
    const byte  ENVELOPE_REQUEST        = 2

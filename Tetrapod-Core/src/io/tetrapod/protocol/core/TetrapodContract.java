@@ -149,6 +149,10 @@ public class TetrapodContract extends Contract {
        
    }
       
+   /**
+    * Request's session was disconnected
+    */
+   public static final int ERROR_CONNECTION_CLOSED = 8; 
    public static final int ERROR_INVALID_ENTITY = 5084230; 
    
    /**

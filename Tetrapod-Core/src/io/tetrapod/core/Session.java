@@ -10,7 +10,7 @@ import io.tetrapod.core.web.WebRoutes;
 import io.tetrapod.protocol.core.*;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 
 import org.slf4j.*;
@@ -84,11 +84,33 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
    /**
     * Check to see if this session is still alive and close it, if not
     */
-   abstract public void checkHealth();
+   // TODO: needs configurable timeouts
+   public void checkHealth() {
+      if (isConnected()) {
+         final long now = System.currentTimeMillis();
+         if (now - lastHeardFrom.get() > 5000 || now - lastSentTo.get() > 5000) {
+            sendPing();
+         }
+         if (now - lastHeardFrom.get() > 10000) {
+            logger.warn("{} Timeout", this);
+            close();
+         }
+      }
+      // TODO: Timeout pending requests past their due
+      for (Async a : pendingRequests.values()) {
+         if (a.isTimedout()) {
+            a.setResponse(Core.ERROR_TIMEOUT);
+         }
+      }
+   }
 
    abstract protected Object makeFrame(Structure header, Structure payload, byte envelope);
 
    abstract protected Object makeFrame(Structure header, ByteBuf payload, byte envelope);
+
+   protected void sendPing() {}
+
+   protected void sendPong() {}
 
    public Dispatcher getDispatcher() {
       return helper.getDispatcher();
@@ -96,6 +118,21 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
 
    public int getSessionNum() {
       return sessionNum;
+   }
+
+   public long getLastHeardFrom() {
+      return lastHeardFrom.get();
+   }
+
+   protected void scheduleHealthCheck() {
+      if (isConnected()) {
+         getDispatcher().dispatch(1, TimeUnit.SECONDS, new Runnable() {
+            public void run() {
+               checkHealth();
+               scheduleHealthCheck();
+            }
+         });
+      }
    }
 
    @Override
@@ -204,8 +241,10 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
    }
 
    public ChannelFuture writeFrame(Object frame) {
-      if (frame != null)
+      if (frame != null) {
+         lastSentTo.set(System.currentTimeMillis());
          return channel.writeAndFlush(frame);
+      }
       return null;
    }
 
@@ -310,6 +349,13 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
       async.header.requestId = requestCounter.incrementAndGet();
       pendingRequests.put(async.header.requestId, async);
       return async.header.requestId;
+   }
+
+   public void cancelAllPendingRequests() {
+      for (Async a : pendingRequests.values()) {
+         a.setResponse(Core.ERROR_CONNECTION_CLOSED);
+      }
+      pendingRequests.clear();
    }
 
    // /////////////////////////////////// RELAY /////////////////////////////////////
