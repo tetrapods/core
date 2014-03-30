@@ -78,7 +78,7 @@ public class Core extends Structure {
    @ERR public static final int ERROR_UNKNOWN = TetrapodContract.ERROR_UNKNOWN; 
    
    /**
-    * Service exists and received request, but doen't know how to handle it
+    * Service exists and received request, but doesn't know how to handle it
     */
    @ERR public static final int ERROR_UNKNOWN_REQUEST = TetrapodContract.ERROR_UNKNOWN_REQUEST; 
    

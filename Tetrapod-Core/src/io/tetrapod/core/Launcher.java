@@ -25,7 +25,7 @@ public class Launcher {
       }
    }
 
-   // launch 30m io.tetrapods.identity.IdentityService -join 192.160.0.66:33456 -token sdkjfrinbnriurtdjvdknmnnlkjrii
+   // launch 30m io.tetrapods.identity.IdentityService -host 192.160.0.66:33456 -token sdkjfrinbnriurtdjvdknmnnlkjrii
 
    private static void usage() {
       System.err.println("\nusage: java <vmopts> " + Launcher.class.getCanonicalName()
@@ -35,7 +35,7 @@ public class Launcher {
 
    private static Map<String, String> defaultOpts() {
       Map<String, String> map = new HashMap<>();
-      map.put("join", null);
+      map.put("host", null);
       map.put("token", null);
       return map;
    }

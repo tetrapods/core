@@ -45,8 +45,11 @@ public class EntityInfo extends Entity implements Comparable<EntityInfo> {
       return type == Core.TYPE_TETRAPOD;
    }
 
+   /**
+    * Returns true if this is a service, including tetrapod services
+    */
    public boolean isService() {
-      return type == Core.TYPE_SERVICE;
+      return type == Core.TYPE_SERVICE || type == Core.TYPE_TETRAPOD;
    }
 
    public boolean isPaused() {

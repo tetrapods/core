@@ -145,6 +145,9 @@ internal response Publish
    1: int topicId
     
 internal request RegistrySubscribe
+internal request RegistryUnsubscribe
+internal request ServicesSubscribe
+internal request ServicesUnsubscribe
 
 internal request ServiceStatusUpdate
    1: int status

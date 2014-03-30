@@ -43,6 +43,8 @@ public class Registry implements TetrapodContract.Registry.API {
 
    public static interface RegistryBroadcaster {
       public void broadcastRegistryMessage(Message msg);
+
+      public void broadcastServicesMessage(Message msg);
    }
 
    private final RegistryBroadcaster broadcaster;
@@ -71,6 +73,16 @@ public class Registry implements TetrapodContract.Registry.API {
       return children;
    }
 
+   public List<EntityInfo> getServices() {
+      final List<EntityInfo> list = new ArrayList<>();
+      for (EntityInfo e : entities.values()) {
+         if (e.isService()) {
+            list.add(e);
+         }
+      }
+      return list;
+   }
+
    public synchronized void register(EntityInfo entity) {
       if (entity.entityId <= 0) {
          entity.entityId = issueId();
@@ -82,6 +94,9 @@ public class Registry implements TetrapodContract.Registry.API {
       }
       if (entity.parentId == parentId && entity.entityId != parentId && broadcaster != null) {
          broadcaster.broadcastRegistryMessage(new EntityRegisteredMessage(entity, null));
+      }
+      if (entity.isService()) {
+         broadcaster.broadcastServicesMessage(new ServiceAddedMessage(entity));
       }
    }
 
@@ -134,6 +149,9 @@ public class Registry implements TetrapodContract.Registry.API {
          if (e.parentId == parentId) {
             broadcaster.broadcastRegistryMessage(new EntityUnregisteredMessage(entityId));
          }
+         if (e.isService()) {
+            broadcaster.broadcastServicesMessage(new ServiceRemovedMessage(entityId));
+         }
 
          if (e.isService()) {
             List<EntityInfo> list = services.get(e.contractId);
@@ -164,8 +182,11 @@ public class Registry implements TetrapodContract.Registry.API {
          if (e.parentId == parentId) {
             broadcaster.broadcastRegistryMessage(new EntityUpdatedMessage(entityId, status));
          }
+         if (e.isService()) {
+            broadcaster.broadcastServicesMessage(new ServiceUpdatedMessage(entityId, status));
+         }
       } else {
-         logger.error("Could not find entity {} to unregister", entityId);
+         logger.error("Could not find entity {} to update", entityId);
       }
    }
 

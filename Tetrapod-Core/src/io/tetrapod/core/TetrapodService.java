@@ -35,6 +35,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    public final Registry      registry;
 
    private Topic              registryTopic;
+   private Topic              servicesTopic;
 
    private Server             clusterServer;
    private Server             serviceServer;
@@ -173,6 +174,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    @Override
    public void onRegistered() {
       registryTopic = registry.publish(entityId);
+      servicesTopic = registry.publish(entityId);
    }
 
    /**
@@ -278,10 +280,19 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
    @Override
    public void broadcastRegistryMessage(Message msg) {
-      logger.debug("BROADCASTING {} {}", registryTopic, msg.dump());
-      if (registryTopic != null) {
-         synchronized (registryTopic) {
-            sendBroadcastMessage(msg, registryTopic.topicId);
+      broadcast(msg, registryTopic);
+   }
+
+   @Override
+   public void broadcastServicesMessage(Message msg) {
+      broadcast(msg, servicesTopic);
+   }
+
+   public void broadcast(Message msg, Topic topic) {
+      logger.trace("BROADCASTING {} {}", topic, msg.dump());
+      if (topic != null) {
+         synchronized (topic) {
+            sendBroadcastMessage(msg, topic.topicId);
          }
       }
    }
@@ -428,7 +439,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       synchronized (registryTopic) {
          broadcastRegistryMessage(new TopicSubscribedMessage(registryTopic.ownerId, registryTopic.topicId, ctx.header.fromId));
          // send all current entities
-         for (EntityInfo e : registry.getEntities()) {
+         for (EntityInfo e : registry.getChildren()) {
             sendMessage(new EntityRegisteredMessage(e, null), ctx.header.fromId, registryTopic.topicId);
          }
       }
@@ -436,9 +447,40 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    }
 
    @Override
+   public Response requestRegistryUnsubscribe(RegistryUnsubscribeRequest r, RequestContext ctx) {
+      // TODO: validate 
+      broadcastRegistryMessage(new TopicUnsubscribedMessage(registryTopic.ownerId, registryTopic.topicId, ctx.header.fromId));
+      return Response.SUCCESS;
+   }
+
+   @Override
+   public Response requestServicesSubscribe(ServicesSubscribeRequest r, RequestContext ctx) {
+      if (servicesTopic == null) {
+         return new Error(Core.ERROR_UNKNOWN);
+      }
+      synchronized (servicesTopic) {
+         broadcastRegistryMessage(new TopicSubscribedMessage(servicesTopic.ownerId, servicesTopic.topicId, ctx.header.fromId));
+         // send all current entities
+         for (EntityInfo e : registry.getServices()) {
+            sendMessage(new ServiceAddedMessage(e), ctx.header.fromId, servicesTopic.topicId);
+         }
+      }
+      return Response.SUCCESS;
+   }
+
+   @Override
+   public Response requestServicesUnsubscribe(ServicesUnsubscribeRequest r, RequestContext ctx) {
+      // TODO: validate 
+      broadcastRegistryMessage(new TopicUnsubscribedMessage(servicesTopic.ownerId, servicesTopic.topicId, ctx.header.fromId));
+      return Response.SUCCESS;
+   }
+
+   @Override
    public Response requestServiceStatusUpdate(ServiceStatusUpdateRequest r, RequestContext ctx) {
       // TODO: don't allow certain bits to be set from a request
-      registry.updateStatus(ctx.header.fromId, r.status);
+      if (ctx.header.fromId != 0) {
+         registry.updateStatus(ctx.header.fromId, r.status);
+      }
       return Response.SUCCESS;
    }
 

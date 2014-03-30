@@ -23,7 +23,10 @@ public class TetrapodContract extends Contract {
       PublishRequest.Handler,
       RegisterRequest.Handler,
       RegistrySubscribeRequest.Handler,
+      RegistryUnsubscribeRequest.Handler,
       ServiceStatusUpdateRequest.Handler,
+      ServicesSubscribeRequest.Handler,
+      ServicesUnsubscribeRequest.Handler,
       UnregisterRequest.Handler
       {}
    
@@ -33,6 +36,9 @@ public class TetrapodContract extends Contract {
          new UnregisterRequest(),
          new PublishRequest(),
          new RegistrySubscribeRequest(),
+         new RegistryUnsubscribeRequest(),
+         new ServicesSubscribeRequest(),
+         new ServicesUnsubscribeRequest(),
          new ServiceStatusUpdateRequest(),
          new AddServiceInformationRequest(),
       };
@@ -194,7 +200,7 @@ public class TetrapodContract extends Contract {
    public static final int ERROR_UNKNOWN = 1; 
    
    /**
-    * Service exists and received request, but doen't know how to handle it
+    * Service exists and received request, but doesn't know how to handle it
     */
    public static final int ERROR_UNKNOWN_REQUEST = 6; 
 }

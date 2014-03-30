@@ -288,7 +288,7 @@
 				if (!result.isError()) {
 					self.token = result.token;
 					setCookie("tetrapod-token", self.token);
-					TP.send("RegistrySubscribe", {}).handle(TP.logResponse)
+					TP.send("ServicesSubscribe", {}).handle(TP.logResponse)
 				}
 			}
 
@@ -301,7 +301,7 @@
 				return null;
 			}
 
-			TP.addMessageHandler("EntityRegistered", function(msg) {
+			TP.addMessageHandler("ServiceAdded", function(msg) {
 				var s = self.findService(msg.entity.entityId);
 				if (s) {
 					self.services.remove(s);
@@ -309,14 +309,14 @@
 				self.services.push(new Service(msg.entity));
 			});
 
-			TP.addMessageHandler("EntityUpdated", function(msg) {
+			TP.addMessageHandler("ServiceUpdated", function(msg) {
 				var s = self.findService(msg.entityId);
 				if (s) {
 					s.status(msg.status);
 				}
 			});
 
-			TP.addMessageHandler("EntityUnregistered", function(msg) {
+			TP.addMessageHandler("ServiceRemoved", function(msg) {
 				var s = self.findService(msg.entityId);
 				if (s) {
 					self.services.remove(s);
