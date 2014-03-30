@@ -5,9 +5,12 @@ import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.handler.ssl.SslHandler;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+
+import javax.net.ssl.*;
 
 import org.slf4j.*;
 
@@ -25,10 +28,18 @@ public class Server implements Session.Listener {
 
    private int                   port;
    private final SessionFactory  sessionFactory;
+   private SslHandler            ssl;
 
    public Server(int port, SessionFactory sessionFactory) {
       this.sessionFactory = sessionFactory;
       this.port = port;
+   }
+
+   public void enableTLS(SSLContext ctx, boolean clientAuth) {
+      SSLEngine engine = ctx.createSSLEngine();
+      engine.setUseClientMode(false);
+      engine.setWantClientAuth(clientAuth);
+      ssl = new SslHandler(engine);
    }
 
    public ChannelFuture start() {
@@ -53,8 +64,9 @@ public class Server implements Session.Listener {
 
    private void startSession(SocketChannel ch) {
       logger.info("Connection from {}", ch);
-      // TODO: add ssl to pipeline if configured
-      // ch.pipeline().addLast(sslEngine);
+      if (ssl != null) {
+         ch.pipeline().addLast(ssl);
+      }
       Session session = sessionFactory.makeSession(ch);
       session.addSessionListener(this);
    }

@@ -1,9 +1,12 @@
 package io.tetrapod.core;
 
+import javax.net.ssl.*;
+
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.handler.ssl.SslHandler;
 
 import org.slf4j.*;
 
@@ -15,9 +18,16 @@ public class Client implements Session.Listener {
 
    private final SessionFactory factory;
    private Session              session;
+   private SslHandler           ssl;
 
    public Client(SessionFactory factory) {
       this.factory = factory;
+   }
+
+   public void enableTLS(SSLContext ctx) {
+      SSLEngine engine = ctx.createSSLEngine();
+      engine.setUseClientMode(true);
+      ssl = new SslHandler(engine);
    }
 
    public ChannelFuture connect(final String host, final int port, final Dispatcher dispatcher) throws Exception {
@@ -36,7 +46,9 @@ public class Client implements Session.Listener {
    }
 
    private synchronized void startSession(SocketChannel ch) {
-      // TODO: ch.pipeline().addLast(sslEngine);
+      if (ssl != null) {
+         ch.pipeline().addLast(ssl);
+      }
       session = factory.makeSession(ch);
       session.addSessionListener(this);
    }
