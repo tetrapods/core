@@ -6,6 +6,8 @@ TP.register("request", "BaseService", "Pause", 2, 14690004);
 TP.register("request", "BaseService", "Unpause", 2, 10620319);
 TP.register("request", "BaseService", "Shutdown", 2, 8989182);
 TP.register("request", "BaseService", "Restart", 2, 4802943);
+TP.register("request", "BaseService", "ServiceIcon", 2, 4420572);
+TP.register("response", "BaseService", "ServiceIcon", 2, 13828744);
 TP.register("struct", "Tetrapod", "Core", 1, 9088168);
 TP.register("struct", "Tetrapod", "Handshake", 1, 7261648);
 TP.register("struct", "Tetrapod", "RequestHeader", 1, 7165109);

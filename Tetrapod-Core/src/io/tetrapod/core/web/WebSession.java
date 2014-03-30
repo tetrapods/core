@@ -28,7 +28,7 @@ abstract class WebSession extends Session {
       try {
          Structure request = StructureFactory.make(header.contractId, header.structId);
          if (request == null) {
-            logger.error("Could not find request structure contractId={} structId{}", header.contractId, header.structId);
+            logger.error("Could not find request structure contractId={} structId-{}", header.contractId, header.structId);
             sendResponse(new Error(ERROR_SERIALIZATION), header.requestId);
             return;
          }

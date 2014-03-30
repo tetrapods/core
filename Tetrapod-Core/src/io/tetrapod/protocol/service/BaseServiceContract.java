@@ -21,6 +21,7 @@ public class BaseServiceContract extends Contract {
    public static interface API extends
       PauseRequest.Handler,
       RestartRequest.Handler,
+      ServiceIconRequest.Handler,
       ShutdownRequest.Handler,
       UnpauseRequest.Handler
       {}
@@ -31,12 +32,13 @@ public class BaseServiceContract extends Contract {
          new UnpauseRequest(),
          new ShutdownRequest(),
          new RestartRequest(),
+         new ServiceIconRequest(),
       };
    }
    
    public Structure[] getResponses() {
       return new Structure[] {
-         
+         new ServiceIconResponse(),
       };
    }
    

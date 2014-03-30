@@ -228,12 +228,17 @@ abstract public class DefaultService implements Service, BaseServiceContract.API
 
    @Override
    public Response requestRestart(RestartRequest r, RequestContext ctx) {
-      return Response.SUCCESS;
+      return Response.SUCCESS; // FIXME
    }
 
    @Override
    public Response requestShutdown(ShutdownRequest r, RequestContext ctx) {
-      return Response.SUCCESS;
+      return Response.SUCCESS; // FIXME
+   }
+
+   @Override
+   public Response requestServiceIcon(ServiceIconRequest r, RequestContext ctx) {
+      return new ServiceIconResponse("https://github.com/tetrapods/core/tree/master/Tetrapod-Core/webContent/admin/media/gear.gif");
    }
 
    // private methods

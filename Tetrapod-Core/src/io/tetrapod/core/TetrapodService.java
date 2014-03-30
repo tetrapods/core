@@ -10,6 +10,7 @@ import io.tetrapod.core.serialize.StructureAdapter;
 import io.tetrapod.core.utils.Util;
 import io.tetrapod.core.web.*;
 import io.tetrapod.protocol.core.*;
+import io.tetrapod.protocol.service.*;
 
 import java.security.SecureRandom;
 import java.util.concurrent.TimeUnit;
@@ -361,7 +362,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          info.reclaimToken = random.nextLong();
          info.contractId = r.contractId;
       }
-      
+
       info.status = r.status &= ~Core.STATUS_GONE;
       info.parentId = getEntityId();
       info.type = ctx.session.getTheirEntityType();
@@ -430,6 +431,11 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       for (StructDescription sd : req.structs)
          StructureFactory.add(new StructureAdapter(sd));
       return Response.SUCCESS;
+   }
+
+   @Override
+   public Response requestServiceIcon(ServiceIconRequest r, RequestContext ctx) {
+      return new ServiceIconResponse("https://github.com/tetrapods/core/tree/master/Tetrapod-Core/webContent/admin/media/tetrapod.png");
    }
 
    @Override

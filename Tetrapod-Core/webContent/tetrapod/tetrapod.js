@@ -82,18 +82,18 @@ TP.connect = function(server, port) {
 	};
 	socket.onmessage = function(event) {
 		//console.log("[socket] received: " + event.data);
-		var result = null;
-		var errorCode = 0;
+		var result = null; 
 		if (event.data.indexOf("{") == 0) {
 			result = JSON.parse(event.data);
 		} else {
 			// TODO figure out how to communicate errors
-			errorCode = parseInt(event.data);
+			result = parseInt(event.data);
 		}
 		if (result._requestId != null) {
 			var func = TP.requestHandlers[result._requestId];
 			if (func) {
-				func(result, errorCode);
+				result.isError = function() { return result._contractId == 1 && result._structId == 1; };				
+				func(result);
 			}
 		} else if (result._topicId != null) {
 			console.log("MESSAGE: " + JSON.stringify(result))
@@ -122,10 +122,10 @@ TP.connect = function(server, port) {
 	}
 }
 
-TP.logResponse = function(result, errorCode) {
-	if (result) {
-		console.log("RESULT: " + JSON.stringify(result))
+TP.logResponse = function(result) {
+	if (result.isError()) {
+		console.log("RESULT: ERROR " + result.errorCode)
 	} else {
-		console.log("RESULT: ERROR" + errorCode)
+		console.log("RESULT: " + JSON.stringify(result))
 	}
 }

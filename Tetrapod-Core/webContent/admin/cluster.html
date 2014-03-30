@@ -64,6 +64,11 @@
 	left: auto;
 }
 
+.service-icon {
+	margin-left: 2px;
+	margin-right: 8px;
+}
+
 .service-chart {
 	width: 128px;
 	height: 32px;
@@ -181,7 +186,9 @@
 								</td>
 
 								<td><span data-bind="text: entityId"></span></td>
-								<td><span data-bind="text: name"></span></td>
+								<td><img data-bind="attr:{src: iconURL}"
+									class="service-icon" width="20px" height="20px"> <span
+									data-bind="text: name"></span></td>
 								<td><span data-bind="text: host"></span></td>
 								<td class="centered"><span data-bind="text: statusName()"></span></td>
 								<td>
@@ -267,9 +274,9 @@
 				}).handle(self.onRegistered);
 			}
 
-			self.onRegistered = function(result, errorCode) {
-				TP.logResponse(result, errorCode);
-				if (result) {
+			self.onRegistered = function(result) {
+				TP.logResponse(result);
+				if (!result.isError()) {
 					self.token = result.token;
 					setCookie("tetrapod-token", self.token);
 					TP.send("RegistrySubscribe", {}).handle(TP.logResponse)
@@ -333,6 +340,14 @@
 			self.name = entity.name;
 			self.host = entity.host;
 			self.status = ko.observable(entity.status);
+			
+			self.iconURL = ko.observable("media/gear.gif");
+			TP.send("ServiceIcon", {}, self.entityId).handle(
+					function(result) {
+						if (!result.isError()) {
+							self.iconURL(result.iconURL);
+						}
+					});
 
 			self.isPaused = function() {
 				return (self.status() & 2/*FIXME: CODEGEN constants*/) != 0;
@@ -341,11 +356,11 @@
 			self.isGone = function() {
 				return (self.status() & 4/*FIXME: CODEGEN constants*/) != 0;
 			}
-			
+
 			self.isInit = function() {
 				return (self.status() & 1/*FIXME: CODEGEN constants*/) != 0;
 			}
-			
+
 			self.isFailed = function() {
 				return (self.status() & 32/*FIXME: CODEGEN constants*/) != 0;
 			}
