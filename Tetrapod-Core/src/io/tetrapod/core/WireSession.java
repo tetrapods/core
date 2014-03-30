@@ -14,7 +14,6 @@ import io.tetrapod.protocol.core.*;
 
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
 
 import org.slf4j.*;
 
@@ -28,8 +27,6 @@ public class WireSession extends Session {
    private static final int    WIRE_VERSION   = 1;
    private static final int    WIRE_OPTIONS   = 0x00000000;
 
-   private final AtomicLong    lastHeardFrom  = new AtomicLong();
-   private final AtomicLong    lastSentTo     = new AtomicLong();
    private boolean             needsHandshake = true;
 
    public WireSession(SocketChannel channel, WireSession.Helper helper) {
@@ -109,7 +106,7 @@ public class WireSession extends Session {
 
       final Async async = pendingRequests.remove(header.requestId);
       if (async != null) {
-         logger.debug(String.format("%s < RESPONSE [%d] %s", this, header.requestId,
+         logger.trace(String.format("%s < RESPONSE [%d] %s", this, header.requestId,
                getStructName(async.header.contractId, header.structId)));
          if (async.header.fromId == myId) {
             final Response res = (Response) StructureFactory.make(async.header.contractId, header.structId);
@@ -142,7 +139,7 @@ public class WireSession extends Session {
          header.fromType = theirType;
       }
 
-      logger.debug(String.format("%s < REQUEST [%d] %s", this, header.requestId, getStructName(header.contractId, header.structId)));
+      logger.trace(String.format("%s < REQUEST [%d] %s", this, header.requestId, getStructName(header.contractId, header.structId)));
       if ((header.toId == UNADDRESSED && header.contractId == myContractId) || header.toId == myId) {
          final Request req = (Request) StructureFactory.make(header.contractId, header.structId);
          if (req != null) {
@@ -166,7 +163,7 @@ public class WireSession extends Session {
          header.fromId = theirId;
       }
 
-      logger.debug(String.format("%s < MESSAGE [%d-%d] %s", this, header.fromId, header.topicId,
+      logger.trace(String.format("%s < MESSAGE [%d-%d] %s", this, header.fromId, header.topicId,
             getStructName(header.contractId, header.structId)));
       int rewindPos = in.readerIndex();
 
@@ -251,6 +248,7 @@ public class WireSession extends Session {
    }
 
    // TODO: needs configurable timeouts
+   @Override
    public void checkHealth() {
       if (isConnected()) {
          final long now = System.currentTimeMillis();
@@ -274,6 +272,7 @@ public class WireSession extends Session {
          getDispatcher().dispatch(1, TimeUnit.SECONDS, new Runnable() {
             public void run() {
                checkHealth();
+               scheduleHealthCheck();
             }
          });
       }

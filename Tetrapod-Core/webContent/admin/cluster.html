@@ -44,6 +44,12 @@
 	background: red;
 }
 
+ 
+.init {
+	background: #eee;
+	color: #999;
+}
+
 .paused {
 	background: yellow;
 }
@@ -330,12 +336,18 @@
 			self.isGone = function() {
 				return (self.status() & 4/*FIXME: CODEGEN constants*/) != 0;
 			}
+			
+			self.isInit = function() {
+				return (self.status() & 1/*FIXME: CODEGEN constants*/) != 0;
+			}
 
 			self.statusName = ko.computed(function() {
 				if (self.isGone())
 					return "GONE";
 				if (self.isPaused())
 					return "PAUSED";
+				if (self.isInit())
+					return "INIT";
 				return "RUNNING";
 			});
 

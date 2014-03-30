@@ -25,6 +25,7 @@ abstract public class DefaultService implements Service, BaseServiceContract.API
    private final MessageHandlers messageHandlers = new MessageHandlers();
 
    public DefaultService() {
+      status |= Core.STATUS_INIT;
       dispatcher = new Dispatcher();
       cluster = new Client(this);
       addContracts(new BaseServiceContract());
@@ -72,7 +73,7 @@ abstract public class DefaultService implements Service, BaseServiceContract.API
    }
 
    public void onConnectedToCluster() {
-      sendRequest(new RegisterRequest(222/* FIXME */, token, getContractId(), getShortName()), Core.UNADDRESSED).handle(
+      sendRequest(new RegisterRequest(222/* FIXME */, token, getContractId(), getShortName(), status), Core.UNADDRESSED).handle(
             new ResponseHandler() {
                @Override
                public void onResponse(Response res) {

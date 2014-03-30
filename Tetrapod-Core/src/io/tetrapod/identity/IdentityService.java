@@ -17,9 +17,8 @@ public class IdentityService extends DefaultService implements IdentityContract.
 
    @Override
    public void onRegistered() {
+      // HACK: subscription test -- remove later:
       sendRequest(new RegistrySubscribeRequest(), Core.UNADDRESSED);
-
-      // FIXME: This is no longer working -- handlers not getting triggered 
       addSubscriptionHandler(new TetrapodContract.Registry(), new TetrapodContract.Registry.API() {
          @Override
          public void messageTopicUnsubscribed(TopicUnsubscribedMessage m, MessageContext ctx) {
@@ -61,6 +60,8 @@ public class IdentityService extends DefaultService implements IdentityContract.
             logger.info("Dispatched message: {}", m.dump());
          }
       });
+
+      updateStatus(status & ~Core.STATUS_INIT);
    }
 
    @Override

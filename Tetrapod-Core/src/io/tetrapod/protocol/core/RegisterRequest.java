@@ -21,17 +21,19 @@ public class RegisterRequest extends Request {
       defaults();
    }
 
-   public RegisterRequest(int build, String token, int contractId, String name) {
+   public RegisterRequest(int build, String token, int contractId, String name, int status) {
       this.build = build;
       this.token = token;
       this.contractId = contractId;
       this.name = name;
+      this.status = status;
    }   
 
    public int build;
    public String token;
    public int contractId;
    public String name;
+   public int status;
 
    public final Structure.Security getSecurity() {
       return Security.PUBLIC;
@@ -42,6 +44,7 @@ public class RegisterRequest extends Request {
       token = null;
       contractId = 0;
       name = null;
+      status = 0;
    }
    
    @Override
@@ -50,6 +53,7 @@ public class RegisterRequest extends Request {
       data.write(2, this.token);
       data.write(3, this.contractId);
       data.write(4, this.name);
+      data.write(5, this.status);
       data.writeEndTag();
    }
    
@@ -63,6 +67,7 @@ public class RegisterRequest extends Request {
             case 2: this.token = data.read_string(tag); break;
             case 3: this.contractId = data.read_int(tag); break;
             case 4: this.name = data.read_string(tag); break;
+            case 5: this.status = data.read_int(tag); break;
             case Codec.END_TAG:
                return;
             default:
@@ -95,11 +100,12 @@ public class RegisterRequest extends Request {
       // Note do not use this tags in long term serializations (to disk or databases) as 
       // implementors are free to rename them however they wish.  A null means the field
       // is not to participate in web serialization (remaining at default)
-      String[] result = new String[4+1];
+      String[] result = new String[5+1];
       result[1] = "build";
       result[2] = "token";
       result[3] = "contractId";
       result[4] = "name";
+      result[5] = "status";
       return result;
    }
    
@@ -116,6 +122,7 @@ public class RegisterRequest extends Request {
       desc.types[2] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
       desc.types[3] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
       desc.types[4] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
+      desc.types[5] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
       return desc;
    }
 }

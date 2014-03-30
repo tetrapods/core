@@ -11,7 +11,7 @@ import io.tetrapod.protocol.core.*;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.*;
 
 import org.slf4j.*;
 
@@ -62,6 +62,8 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
    protected final AtomicInteger        requestCounter  = new AtomicInteger();
    protected final Session.Helper       helper;
    protected final SocketChannel        channel;
+   protected final AtomicLong           lastHeardFrom   = new AtomicLong();
+   protected final AtomicLong           lastSentTo      = new AtomicLong();
 
    protected RelayHandler               relayHandler;
 
@@ -78,6 +80,11 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
       this.helper = helper;
       this.myContractId = helper.getContractId();
    }
+
+   /**
+    * Check to see if this session is still alive and close it, if not
+    */
+   abstract public void checkHealth();
 
    abstract protected Object makeFrame(Structure header, Structure payload, byte envelope);
 
