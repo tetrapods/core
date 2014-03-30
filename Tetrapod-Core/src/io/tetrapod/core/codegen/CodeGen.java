@@ -12,9 +12,10 @@ import java.util.*;
 public class CodeGen {
 
    public static void main(String[] args) {
-      //if (true) { testTokenize();return; }
-      // just hardcode for now for testing
-      args = new String[] { "./definitions", "java", "javascript" };
+      if (args.length < 1) {
+         // defaults
+         args = new String[] { "./definitions", "java", "javascript" };
+      }
       if (args.length < 1) {
          System.err.println("usage: arguments are filename lang1 lang2 ...");
          System.err.println("       if filename is a folder it will recursively run on all the files");
@@ -46,6 +47,7 @@ public class CodeGen {
    private CodeGenContext                 context;
    private TokenizedLine                  tokenizedLine = new TokenizedLine();
    private StringBuilder                  commentInProgress;
+   private File                           currentFile;
    
    private List<CodeGenContext>           contexts = new ArrayList<>();
 
@@ -74,6 +76,7 @@ public class CodeGen {
    private void runFile(File f, String language) {
       System.out.println("Generating " + f.getName() + " for " + language);
       try (BufferedReader br = new BufferedReader(new FileReader(f))) {
+         currentFile = f;
          context = new CodeGenContext();
          currentLine = null;
          currentLineNumber = 0;
@@ -89,7 +92,7 @@ public class CodeGen {
          }
          contexts.add(context);
       } catch (IOException | ParseException | IndexOutOfBoundsException e) {
-         System.err.printf("Error in line #%d, [%s]\n\n", currentLineNumber, currentLine);
+         System.err.printf("Error in file %s line #%d, [%s]\n\n", currentFile.getName(), currentLineNumber, currentLine);
          e.printStackTrace();
       }
    }
@@ -112,7 +115,7 @@ public class CodeGen {
          case "javascript":
          case "objc":
          case "c++":
-            generator.parseOption(tokenizedLine, this.context);
+            generator.parseOption(currentFile, tokenizedLine, this.context);
             return;
 
          case "service":

@@ -15,7 +15,7 @@ class JavaGenerator implements LanguageGenerator {
    private String packageName;
    
    @Override
-   public void parseOption(TokenizedLine line, CodeGenContext context) throws ParseException {
+   public void parseOption(File currentFile, TokenizedLine line, CodeGenContext context) throws ParseException {
       if (!line.parts.get(0).equals("java"))
          return;
       String opt = line.parts.get(1);
@@ -25,7 +25,7 @@ class JavaGenerator implements LanguageGenerator {
             context.serviceAnnotations.add("java.package", val);
             break;
          case "outdir":
-            context.serviceAnnotations.add("java.outdir", val);
+            context.serviceAnnotations.add("java.outdir", new File(currentFile.getParent(), val).getPath());
             break;
          default:
             throw new ParseException("unknown java option");

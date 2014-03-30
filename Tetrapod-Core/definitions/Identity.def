@@ -1,6 +1,6 @@
 java package io.tetrapod.protocol.identity
-java outdir src
-javascript outdir "webContent/tetrapod"
+java outdir "../src"
+javascript outdir "../webContent/tetrapod"
 
 service Identity @version(1) @id(4) @web("/api/identity/")
 

@@ -10,14 +10,14 @@ import java.util.*;
 public class JavascriptGenerator implements LanguageGenerator {
 
    @Override
-   public void parseOption(TokenizedLine line, CodeGenContext context) throws ParseException {
+   public void parseOption(File f, TokenizedLine line, CodeGenContext context) throws ParseException {
       if (!line.parts.get(0).equals("javascript"))
          return;
       String opt = line.parts.get(1);
       String val = line.parts.get(2);
       switch (opt) {
          case "outdir":
-            context.serviceAnnotations.add("javascript.outdir", val);
+            context.serviceAnnotations.add("javascript.outdir", new File(f.getParent(), val).getPath());
             break;
          default:
             throw new ParseException("unknown javascript option");
