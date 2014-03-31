@@ -1,0 +1,28 @@
+java package io.tetrapod.protocol.clienttesting
+java outdir src
+javascript outdir "webcontent/remotetest/"
+
+service RemoteTest @version(1) @id(5)
+
+public message DatatypeTest @id(2020)
+    1: int smallInt = 42
+    2: int largeInt = 32767
+    3: long smallLong = 42
+    4: long largeLong = 9223372036854775807L
+    5: byte smallByte = 3
+    6: byte largeByte = 127
+    7: boolean boolTrue = true
+    8: boolean boolFalse = false
+    9: string asciiString = "happy\" esc\\apes # //"
+    10: string basicUnicode = "tɛtɹəpad 🐊🐲🐉"
+    11: string unicodeNormalization
+    12: string unicodeOutsideBMP
+    13: double smallDouble = 2.1
+    
+public request MeaningOfLifeTheUniversAndEverything
+    1: int guess
+    error MISSING_GUESS
+    
+public response MeaningOfLifeTheUniversAndEverything
+    1: int answer = 42
+
