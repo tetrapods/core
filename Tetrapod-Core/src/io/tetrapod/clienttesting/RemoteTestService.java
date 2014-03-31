@@ -29,6 +29,12 @@ public class RemoteTestService extends DefaultService implements RemoteTestContr
       scheduleRepeatedBroadcast();
 
    }
+   
+   @Override
+   public void onShutdown(boolean restarting) {
+      // TODO Auto-generated method stub
+      
+   }
 
    private void scheduleRepeatedBroadcast() {
       dispatcher.dispatch(2, TimeUnit.SECONDS, new Runnable() {
@@ -58,5 +64,6 @@ public class RemoteTestService extends DefaultService implements RemoteTestContr
          return new Error(RemoteTestContract.ERROR_MISSING_GUESS);
       }
    }
+
 
 }
