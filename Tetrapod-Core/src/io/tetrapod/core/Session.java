@@ -168,8 +168,11 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
    }
 
    private void dispatchRequest(final ServiceAPI svc, final RequestHeader header, final Request req) {
-      final RequestContext ctx = new RequestContext(header, this);
-      final Response res = req.dispatch(svc, ctx);
+      RequestContext ctx = new RequestContext(header, this);
+      Response res = req.securityCheck(ctx);
+      if (res == null) {
+         res = req.dispatch(svc, ctx);
+      }
       // TODO: Pending responses
       if (res != null) {
          sendResponse(res, header.requestId);

@@ -65,6 +65,7 @@ public request AnotherTest
 
 request ThirdTest
    1: int accountId
+   2: string token @authToken
    
 # message name is SubscriptionName.ClassName, the SubscriptionName is optional
 message MySub.StatusUpdate

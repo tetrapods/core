@@ -156,6 +156,9 @@ class CodeGenContext {
          set = new TreeSet<Class>();
          classesByType.put(c.type, set);
       }
+      for (Class other : set) 
+         if (other.name.equals(c.name))
+            throw new ParseException("duplicate class name: " + c.name);
       set.add(c);
    }
 

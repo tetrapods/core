@@ -30,7 +30,8 @@ struct Core
    error UNKNOWN_REQUEST      = 6 // Service exists and received request, but doesn't know how to handle it
    error CONNECTION_CLOSED    = 7 // Request's session was disconnected
    error INVALID_RIGHTS       = 8 // Caller does not have sufficient rights to call this Request     
-   error INVALID_ENTITY       = 9 // An addressed entityId was invalid     
+   error INVALID_ENTITY       = 9 // An addressed entityId was invalid
+   error RIGHTS_EXPIRED       = 10 // rights token has expired, need to login again     
 
    const byte  ENVELOPE_HANDSHAKE      = 1
    const byte  ENVELOPE_REQUEST        = 2

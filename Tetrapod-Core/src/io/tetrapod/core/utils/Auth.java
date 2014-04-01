@@ -6,7 +6,6 @@ import io.tetrapod.core.serialize.datasources.ByteBufDataSource;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
-import java.security.*;
 import java.util.Arrays;
 
 import javax.crypto.Mac;
@@ -18,20 +17,21 @@ public class Auth {
    private static final long NOT_THAT_LONG_AGO = 1395443029600L;
    private static Mac        MAC               = null;
 
-   public static void setSecret(byte[] secret) throws NoSuchAlgorithmException {
-      // append NTLA so updating it will invalidate old tokens
-      byte[] ntla = Long.toHexString(NOT_THAT_LONG_AGO).getBytes();
-      byte[] key = Arrays.copyOf(secret, secret.length + ntla.length);
-      System.arraycopy(ntla, 0, key, secret.length, ntla.length);
-      SecretKeySpec signingKey = new SecretKeySpec(key, "HmacSHA1");
-      Mac macCoder = Mac.getInstance("HmacSHA1");
+   public static boolean setSecret(byte[] secret) {
       try {
+         // append NTLA so updating it will invalidate old tokens
+         byte[] ntla = Long.toHexString(NOT_THAT_LONG_AGO).getBytes();
+         byte[] key = Arrays.copyOf(secret, secret.length + ntla.length);
+         System.arraycopy(ntla, 0, key, secret.length, ntla.length);
+         SecretKeySpec signingKey = new SecretKeySpec(key, "HmacSHA1");
+         Mac macCoder = Mac.getInstance("HmacSHA1");
          macCoder.init(signingKey);
          synchronized (Auth.class) {
             MAC = macCoder;
          }
-      } catch (InvalidKeyException e) {
-         throw new NoSuchAlgorithmException(e);
+         return true;
+      } catch (Exception e) {
+         return false;
       }
    }
 

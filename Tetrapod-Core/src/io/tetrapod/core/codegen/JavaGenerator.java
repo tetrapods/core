@@ -116,7 +116,8 @@ class JavaGenerator implements LanguageGenerator {
       t.add("maxtag", "" + c.maxTag());
       t.add("structid", c.getStructId());
       t.add("service", serviceName);
-      addFieldValues(c.fields, t);;
+      t.add("securityCheck", generateSecurityCheck(c));
+      addFieldValues(c.fields, t);
       addConstantValues(c.fields, t);
       addErrors(c.errors, false, serviceName, t);
       t.expandAndTrim(getFilename(c.classname()));
@@ -265,6 +266,34 @@ class JavaGenerator implements LanguageGenerator {
       StringBuilder sb = new StringBuilder();
       sb.append("\n/**\n * " + comment + "\n */\n");
       return sb.toString();
+   }
+   
+   private String generateSecurityCheck(Class c) throws IOException, ParseException {
+      if (!c.type.equals("request"))
+         return "";
+      switch (c.security) {
+         case "protected":
+         case "admin":
+            String authId = "accountId";
+            String authToken = "authToken";
+            int m = 0;
+            for (Field f : c.fields) {
+               if (f.annotations.has("authId")) {
+                  authId = f.name;
+               }
+               if (f.annotations.has("authToken")) {
+                  authToken = f.name;
+               }
+               if (f.name.equals(authId) || f.name.equals(authToken)) {
+                  m++;
+               }
+            }
+            if (m != 2)
+               throw new ParseException(c.name + " is " + c.security + " and must have @authId and @authToken fields (or default accountId and authToken)");
+            return template("request.security").add("authId", authId).add("authToken", authToken).expand();
+         default:
+            return "";
+      }
    }
    
    private String escape(String s) {

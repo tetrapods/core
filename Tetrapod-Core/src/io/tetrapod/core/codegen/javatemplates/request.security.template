@@ -1,0 +1,3 @@
+public final Response securityCheck(RequestContext ctx) {
+   return super.securityCheck({{authId}}, {{authToken}}, ctx);
+}
