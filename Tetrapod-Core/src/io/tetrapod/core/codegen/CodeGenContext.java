@@ -64,6 +64,14 @@ class CodeGenContext {
          String name = annotations.getFirst("web");
          return (name == null) ? this.name : name;
       }
+
+      public String getEscapedDefaultValue() {
+         if (defaultValue == null)
+            return null;
+         if (type.equals("string"))
+            return JavaGenerator.escapeString(defaultValue);
+         return defaultValue;
+      }
    }
    
    public static class Err implements Comparable<Err> {

@@ -2,6 +2,7 @@ package io.tetrapod.core.codegen;
 
 import io.tetrapod.core.codegen.CodeGen.TokenizedLine;
 import io.tetrapod.core.codegen.CodeGenContext.Class;
+import io.tetrapod.core.codegen.CodeGenContext.Field;
 
 import java.io.*;
 import java.util.*;
@@ -48,6 +49,26 @@ public class JavascriptGenerator implements LanguageGenerator {
                sub.add("contractId", contractId);
                sub.add("structId", c.getStructId());
                t.add("register", sub);
+               for (Field f : c.fields) {
+                  if (f.isConstant()) {
+                     sub = template("register.const");
+                     sub.add("contractClass", contractName);
+                     sub.add("class", c.name);
+                     sub.add("constName", f.name);
+                     sub.add("constValue", f.getEscapedDefaultValue());
+                     t.add("constants", sub);
+                  }
+               }
+            }
+            for (Field f : context.globalConstants) {
+               if (f.isConstant()) {
+                  Template sub = template("register.const");
+                  sub.add("contractClass", contractName);
+                  sub.add("class", "null");
+                  sub.add("constName", f.name);
+                  sub.add("constValue", f.getEscapedDefaultValue());
+                  t.add("constants", sub);
+               }
             }
          }
          File f = new File(outdir, "protocol.js");

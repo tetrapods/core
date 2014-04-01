@@ -344,6 +344,7 @@
 
 		// Service Model
 		function Service(entity) {
+         var Core = TP.protocol.consts["Tetrapod.Core"];
 			var self = this;
 			self.entityId = entity.entityId;
 			self.name = entity.name;
@@ -358,19 +359,19 @@
 			});
 
 			self.isPaused = function() {
-				return (self.status() & 2/*FIXME: CODEGEN constants*/) != 0;
+				return (self.status() & Core.STATUS_PAUSED) != 0;
 			}
 
 			self.isGone = function() {
-				return (self.status() & 4/*FIXME: CODEGEN constants*/) != 0;
+				return (self.status() & Core.STATUS_GONE) != 0;
 			}
 
 			self.isInit = function() {
-				return (self.status() & 1/*FIXME: CODEGEN constants*/) != 0;
+				return (self.status() & Core.STATUS_INIT) != 0;
 			}
 
 			self.isFailed = function() {
-				return (self.status() & 32/*FIXME: CODEGEN constants*/) != 0;
+				return (self.status() & Core.STATUS_FAILED) != 0;
 			}
 
 			self.statusName = ko.computed(function() {

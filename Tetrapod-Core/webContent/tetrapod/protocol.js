@@ -1,6 +1,53 @@
 // tetrapod protocol file, requires tetrapod main file to have been loaded first
 
-TP.protocol = TP.protocol || { request: {}, response: {}, struct: {}, message: {} };
+TP.protocol = TP.protocol || { request: {}, response: {}, struct: {}, message: {}, consts: {} };
+
+TP.registerConst("Tetrapod", "Core", "UNADDRESSED", 0);
+TP.registerConst("Tetrapod", "Core", "TYPE_TETRAPOD", 1);
+TP.registerConst("Tetrapod", "Core", "TYPE_SERVICE", 2);
+TP.registerConst("Tetrapod", "Core", "TYPE_ADMIN", 3);
+TP.registerConst("Tetrapod", "Core", "TYPE_CLIENT", 4);
+TP.registerConst("Tetrapod", "Core", "TYPE_ANONYMOUS", 5);
+TP.registerConst("Tetrapod", "Core", "STATUS_INIT", 1);
+TP.registerConst("Tetrapod", "Core", "STATUS_PAUSED", 2);
+TP.registerConst("Tetrapod", "Core", "STATUS_GONE", 4);
+TP.registerConst("Tetrapod", "Core", "STATUS_BUSY", 8);
+TP.registerConst("Tetrapod", "Core", "STATUS_OVERLOADED", 16);
+TP.registerConst("Tetrapod", "Core", "STATUS_FAILED", 32);
+TP.registerConst("Tetrapod", "Core", "ENVELOPE_HANDSHAKE", 1);
+TP.registerConst("Tetrapod", "Core", "ENVELOPE_REQUEST", 2);
+TP.registerConst("Tetrapod", "Core", "ENVELOPE_RESPONSE", 3);
+TP.registerConst("Tetrapod", "Core", "ENVELOPE_MESSAGE", 4);
+TP.registerConst("Tetrapod", "Core", "ENVELOPE_BROADCAST", 5);
+TP.registerConst("Tetrapod", "Core", "ENVELOPE_PING", 6);
+TP.registerConst("Tetrapod", "Core", "ENVELOPE_PONG", 7);
+TP.registerConst("Tetrapod", "TypeDescriptor", "T_BOOLEAN", 1);
+TP.registerConst("Tetrapod", "TypeDescriptor", "T_BYTE", 2);
+TP.registerConst("Tetrapod", "TypeDescriptor", "T_INT", 3);
+TP.registerConst("Tetrapod", "TypeDescriptor", "T_LONG", 4);
+TP.registerConst("Tetrapod", "TypeDescriptor", "T_DOUBLE", 5);
+TP.registerConst("Tetrapod", "TypeDescriptor", "T_STRING", 6);
+TP.registerConst("Tetrapod", "TypeDescriptor", "T_STRUCT", 7);
+TP.registerConst("Tetrapod", "TypeDescriptor", "T_BOOLEAN_LIST", 8);
+TP.registerConst("Tetrapod", "TypeDescriptor", "T_BYTE_LIST", 9);
+TP.registerConst("Tetrapod", "TypeDescriptor", "T_INT_LIST", 10);
+TP.registerConst("Tetrapod", "TypeDescriptor", "T_LONG_LIST", 11);
+TP.registerConst("Tetrapod", "TypeDescriptor", "T_DOUBLE_LIST", 12);
+TP.registerConst("Tetrapod", "TypeDescriptor", "T_STRING_LIST", 13);
+TP.registerConst("Tetrapod", "TypeDescriptor", "T_STRUCT_LIST", 14);
+TP.registerConst("Identity", "Identity", "IDENTITY_EMAIL", 1);
+TP.registerConst("Identity", "Identity", "IDENTITY_DEVICE", 2);
+TP.registerConst("Identity", "Identity", "IDENTITY_FACEBOOK", 3);
+TP.registerConst("Identity", "Identity", "IDENTITY_TWITTER", 4);
+TP.registerConst("Identity", "Identity", "IDENTITY_OAUTH", 5);
+TP.registerConst("Identity", "User", "PROPS_DEVELOPER", 1);
+TP.registerConst("Identity", "User", "PROPS_ADMIN_T1", 2);
+TP.registerConst("Identity", "User", "PROPS_ADMIN_T2", 4);
+TP.registerConst("Identity", "User", "PROPS_ADMIN_T3", 8);
+TP.registerConst("Identity", "User", "PROPS_ADMIN_T4", 16);
+TP.registerConst("Identity", "User", "PROPS_BANNED_T1", 32);
+TP.registerConst("Identity", "User", "PROPS_BANNED_T2", 64);
+TP.registerConst("Identity", "User", "PROPS_BANNED_T3", 128);
 
 TP.register("request", "BaseService", "Pause", 2, 14690004);
 TP.register("request", "BaseService", "Unpause", 2, 10620319);

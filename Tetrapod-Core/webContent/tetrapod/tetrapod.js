@@ -19,6 +19,13 @@ TP.register = function(type, contractName, structName, contractId, structId) {
 	}
 }
 
+TP.registerConst = function(contractName, structName, constName, constValue) {
+   var map = TP.protocol["consts"];
+   var o = map[contractName + "." + structName] || {};
+   map[contractName + "." + structName] = o;
+   o[constName] = constValue;
+}
+
 TP.addMessageHandler = function(message, handler) {
    var val = TP.protocol.message[message];
    if (!val) {
