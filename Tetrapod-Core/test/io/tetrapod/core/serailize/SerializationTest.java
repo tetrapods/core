@@ -5,7 +5,6 @@ import io.tetrapod.core.rpc.Structure;
 import io.tetrapod.core.serialize.StructureAdapter;
 import io.tetrapod.core.serialize.datasources.TempBufferDataSource;
 import io.tetrapod.protocol.core.*;
-import io.tetrapod.protocol.identity.IdentityContract;
 
 import java.util.Arrays;
 
@@ -15,7 +14,7 @@ public class SerializationTest {
 
    @Test
    public void testBasicRinse() throws Exception {
-      WebRoute[] routes = new IdentityContract().getWebRoutes();
+      WebRoute[] routes = new TetrapodContract().getWebRoutes();
       for (WebRoute w : routes)
          assertTrue(rinseTempBuff(w));
       AddServiceInformationRequest awr = new AddServiceInformationRequest();
@@ -26,7 +25,7 @@ public class SerializationTest {
    @Test
    public void testDynamicRinse() throws Exception {
       new TetrapodContract().registerStructs();
-      WebRoute[] routes = new IdentityContract().getWebRoutes();
+      WebRoute[] routes = new TetrapodContract().getWebRoutes();
       for (WebRoute w : routes)
          assertTrue(rinseViaAdapter(w));
       AddServiceInformationRequest awr = new AddServiceInformationRequest();

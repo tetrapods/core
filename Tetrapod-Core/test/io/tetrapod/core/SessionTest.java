@@ -3,7 +3,6 @@ package io.tetrapod.core;
 import static org.junit.Assert.assertTrue;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.utils.Util;
-import io.tetrapod.identity.IdentityService;
 import io.tetrapod.protocol.core.*;
 import io.tetrapod.protocol.service.PauseRequest;
 
@@ -21,12 +20,12 @@ public class SessionTest {
       service.startNetwork(null, "e:1");
 
       Util.sleep(1000);
-      IdentityService svc1 = new IdentityService();
+      TestService svc1 = new TestService();
       svc1.startNetwork("localhost", null);
       Util.sleep(1000);
       assertTrue(svc1.getEntityId() > 0);
 
-      IdentityService svc2 = new IdentityService();
+      TestService svc2 = new TestService();
       svc2.startNetwork("localhost", null);
       Util.sleep(1000);
       assertTrue(svc2.getEntityId() > 0);

@@ -65,7 +65,7 @@ public class DatatypeTestMessage extends Message {
       boolTrue = true;
       boolFalse = false;
       asciiString = "happy\" esc\\apes # //";
-      basicUnicode = "tɛtɹəpad 🐊🐲🐉";
+      basicUnicode = "t??t????pad ????????????";
       unicodeNormalization = null;
       unicodeOutsideBMP = null;
       smallDouble = 2.1;
