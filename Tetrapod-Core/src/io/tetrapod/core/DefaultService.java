@@ -192,6 +192,14 @@ public class DefaultService implements Service, BaseServiceContract.API, Session
       return s.substring(0, s.length() - "Contract".length());
    }
 
+   public Response sendPendingRequest(Request req, PendingResponseHandler handler) {
+      return cluster.getSession().sendPendingRequest(req, Core.UNADDRESSED, (byte) 30, handler);
+   }
+
+   public Response sendPendingRequest(Request req, int toEntityId, PendingResponseHandler handler) {
+      return cluster.getSession().sendPendingRequest(req, toEntityId, (byte) 30, handler);
+   }
+   
    public Async sendRequest(Request req) {
       return cluster.getSession().sendRequest(req, Core.UNADDRESSED, (byte) 30);
    }
