@@ -193,6 +193,28 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
       });
    }
 
+   public Response sendPendingRequest(Request req, int toId, byte timeoutSeconds, final PendingResponseHandler pendingHandler) {
+      final Async async = sendRequest(req, toId, timeoutSeconds);
+      async.handle(new ResponseHandler() {
+         @Override
+         public void onResponse(Response res) {
+            Response pendingRes = null;
+            try {
+               pendingRes = pendingHandler.onResponse(res);
+            } catch (Throwable e) {
+               logger.error(e.getMessage(), e);
+            } finally {
+               // finally return the pending response we were waiting on
+               if (pendingRes == null) {
+                  pendingRes = new Error(Core.ERROR_UNKNOWN);
+               }
+               sendResponse(pendingRes, async.header.requestId);
+            }
+         }
+      });
+      return Response.PENDING;
+   }
+
    public Async sendRequest(Request req, int toId, byte timeoutSeconds) {
       final RequestHeader header = new RequestHeader();
       header.requestId = requestCounter.incrementAndGet();
@@ -218,10 +240,12 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
    }
 
    public void sendResponse(Response res, int requestId) {
-      logger.trace(String.format("%s > RESPONSE [%d] %s", this, requestId, res.getClass().getSimpleName()));
-      final Object buffer = makeFrame(new ResponseHeader(requestId, res.getContractId(), res.getStructId()), res, ENVELOPE_RESPONSE);
-      if (buffer != null) {
-         writeFrame(buffer);
+      if (res != Response.PENDING) {
+         logger.trace(String.format("%s > RESPONSE [%d] %s", this, requestId, res.getClass().getSimpleName()));
+         final Object buffer = makeFrame(new ResponseHeader(requestId, res.getContractId(), res.getStructId()), res, ENVELOPE_RESPONSE);
+         if (buffer != null) {
+            writeFrame(buffer);
+         }
       }
    }
 
