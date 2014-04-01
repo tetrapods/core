@@ -1,0 +1,1 @@
+TP.registerConst("{{contractClass}}", "{{class}}", "{{constName}}", {{constValue}});

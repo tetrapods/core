@@ -179,12 +179,8 @@ class JavaGenerator implements LanguageGenerator {
 
    private Template getFieldTemplate(Field f) throws IOException {
       JavaTypes.Info info = JavaTypes.get(f.type);
-      String defaultVal = info.defaultValue;
-      if (f.defaultValue != null) {
-         if (f.type.equals("string"))
-            f.defaultValue = escape(f.defaultValue);
-         defaultVal = info.defaultValueDelim + f.defaultValue + info.defaultValueDelim;
-      }
+      String defaultVal =  f.getEscapedDefaultValue();
+      if (defaultVal == null) defaultVal = info.defaultValue;
       String primTemplate = "field.primitives";
       String structTemplate = "field.structs";
       String descContractId = "0";
@@ -295,10 +291,10 @@ class JavaGenerator implements LanguageGenerator {
       }
    }
    
-   private String escape(String s) {
+   public static String escapeString(String s) {
       s = s.replace("\\", "\\\\");
       s = s.replace("\"", "\\\"");
-      return s;
+      return "\"" + s + "\"";
    }
    
    private Template template(String name) throws IOException {

@@ -9,7 +9,6 @@ class JavaTypes {
       String boxed;
       boolean isPrimitive;
       String defaultValue;
-      String defaultValueDelim = "";
       
       public Info(String base, String boxed, boolean isPrimitive, String defaultValue) {
          this.base = base;
@@ -28,7 +27,6 @@ class JavaTypes {
       map.put("byte", new Info("byte", "Byte", true, "0"));
       map.put("boolean", new Info("boolean", "Boolean", true, "false"));
       map.put("string", new Info("String", "String", true, "null"));
-      map.get("string").defaultValueDelim = "\"";
    }
    
    public static Info get(String type) {
