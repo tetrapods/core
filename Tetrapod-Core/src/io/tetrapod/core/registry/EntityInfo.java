@@ -143,4 +143,13 @@ public class EntityInfo extends Entity implements Comparable<EntityInfo> {
       return session;
    }
 
+   /**
+    * Returns true if this service is considered available. Checks all status bits that might cause unavailability
+    * 
+    * @return
+    */
+   public boolean isAvailable() {
+      return (status & (Core.STATUS_INIT | Core.STATUS_PAUSED | Core.STATUS_GONE | Core.STATUS_BUSY | Core.STATUS_OVERLOADED | Core.STATUS_FAILED)) == 0;
+   }
+
 }

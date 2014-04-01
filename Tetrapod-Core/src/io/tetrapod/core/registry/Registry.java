@@ -104,28 +104,30 @@ public class Registry implements TetrapodContract.Registry.API {
       return entities.get(entityId);
    }
 
-   public EntityInfo getFirstService(int contractId) {
+   public EntityInfo getFirstAvailableService(int contractId) {
       // Using a CopyOnWrite list this method doesn't need to lock
-      List<EntityInfo> list = services.get(contractId);
+      final List<EntityInfo> list = services.get(contractId);
       if (list != null) {
-         ListIterator<EntityInfo> li = list.listIterator();
-         if (li.hasNext())
-            return li.next();
+         final ListIterator<EntityInfo> li = list.listIterator();
+         while (li.hasNext()) {
+            final EntityInfo info = li.next();
+            if (info.isAvailable()) {
+               return info;
+            }
+         }
       }
       return null;
    }
 
-   public EntityInfo getRandomService(int contractId) {
+   public EntityInfo getRandomAvailableService(int contractId) {
       // Using a CopyOnWrite list this method doesn't need to lock
-      List<EntityInfo> list = services.get(contractId);
+      final List<EntityInfo> list = services.get(contractId);
       if (list != null) {
-         int size = list.size();
-         while (size > 0) {
-            try {
-               return list.get(new Random().nextInt(size));
-            } catch (IndexOutOfBoundsException e) {
-               // size computation might've been out of date when the get occured, just try again
-               size = list.size();
+         final List<EntityInfo> shuffled = new ArrayList<>(list);
+         Collections.shuffle(shuffled);
+         for (EntityInfo info : shuffled) {
+            if (info != null && info.isAvailable()) {
+               return info;
             }
          }
       }

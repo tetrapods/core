@@ -225,7 +225,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    public Session getRelaySession(int entityId, int contractId) {
       EntityInfo entity = null;
       if (entityId == Core.UNADDRESSED) {
-         entity = registry.getRandomService(contractId);
+         entity = registry.getRandomAvailableService(contractId);
       } else {
          entity = registry.getEntity(entityId);
          if (entity == null) {
