@@ -50,16 +50,14 @@ public class DefaultService implements Service, BaseServiceContract.API, Session
    }
 
    /**
-    * Called after registration is complete and this service has a valid
-    * entityId and is free to make requests into the cluster.  Default
+    * Called after registration is complete and this service has a valid entityId and is free to make requests into the cluster. Default
     * implementation is to do nothing.
     */
    public void onRegistered() {}
 
    /**
-    * Called before shutting down.  Default implementation is to do nothing.
-    * Subclasses are expecting to close any resources they opened (for example
-    * database connections or file handles).
+    * Called before shutting down. Default implementation is to do nothing. Subclasses are expecting to close any resources they opened (for
+    * example database connections or file handles).
     * 
     * @param restarting true if we are shutting down in order to restart
     */
@@ -132,7 +130,7 @@ public class DefaultService implements Service, BaseServiceContract.API, Session
                }
             });
    }
-   
+
    public void onDisconnectedFromCluster() {
       // TODO reconnection loop to handle unexpected disconnections
    }
@@ -294,22 +292,24 @@ public class DefaultService implements Service, BaseServiceContract.API, Session
    // private methods
 
    protected void registerServiceInformation() {
-      AddServiceInformationRequest asi = new AddServiceInformationRequest();
-      asi.routes = contract.getWebRoutes();
-      asi.structs = new ArrayList<>();
-      for (Structure s : contract.getRequests()) {
-         asi.structs.add(s.makeDescription());
+      if (contract != null) {
+         AddServiceInformationRequest asi = new AddServiceInformationRequest();
+         asi.routes = contract.getWebRoutes();
+         asi.structs = new ArrayList<>();
+         for (Structure s : contract.getRequests()) {
+            asi.structs.add(s.makeDescription());
+         }
+         for (Structure s : contract.getResponses()) {
+            asi.structs.add(s.makeDescription());
+         }
+         for (Structure s : contract.getMessages()) {
+            asi.structs.add(s.makeDescription());
+         }
+         for (Structure s : contract.getStructs()) {
+            asi.structs.add(s.makeDescription());
+         }
+         sendRequest(asi, Core.UNADDRESSED).handle(ResponseHandler.LOGGER);
       }
-      for (Structure s : contract.getResponses()) {
-         asi.structs.add(s.makeDescription());
-      }
-      for (Structure s : contract.getMessages()) {
-         asi.structs.add(s.makeDescription());
-      }
-      for (Structure s : contract.getStructs()) {
-         asi.structs.add(s.makeDescription());
-      }
-      sendRequest(asi, Core.UNADDRESSED).handle(ResponseHandler.LOGGER);
    }
 
 }
