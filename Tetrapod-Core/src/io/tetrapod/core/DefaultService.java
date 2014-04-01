@@ -194,6 +194,10 @@ public class DefaultService implements Service, BaseServiceContract.API, Session
       return s.substring(0, s.length() - "Contract".length());
    }
 
+   public Async sendRequest(Request req) {
+      return cluster.getSession().sendRequest(req, Core.UNADDRESSED, (byte) 30);
+   }
+
    public Async sendRequest(Request req, int toEntityId) {
       return cluster.getSession().sendRequest(req, toEntityId, (byte) 30);
    }
