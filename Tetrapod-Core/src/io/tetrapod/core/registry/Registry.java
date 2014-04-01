@@ -282,16 +282,45 @@ public class Registry implements TetrapodContract.Registry.API {
 
    @Override
    public void messageTopicPublished(TopicPublishedMessage m, MessageContext ctx) {
-      logger.info(m.dump());
+      if (m.ownerId != ctx.header.fromId) {
+         logger.warn("FIXME: attempt to do something on someone elses topic");
+         assert false;
+      }
+      final EntityInfo owner = getEntity(m.ownerId);
+      if (owner != null) {
+         final Topic topic = owner.publish();
+         if (topic.topicId != m.topicId) {
+            logger.error("TopicIDs don't match!");
+            assert (false);
+         }
+      } else {
+         logger.info("Could not find publisher entity {}", m.ownerId);
+      }
    }
 
    @Override
    public void messageTopicUnpublished(TopicUnpublishedMessage m, MessageContext ctx) {
-      logger.info(m.dump());
+      if (m.ownerId != ctx.header.fromId) {
+         logger.warn("FIXME: attempt to do something on someone elses topic");
+         assert false;
+      }
+      final EntityInfo owner = getEntity(m.ownerId);
+      if (owner != null) {
+         final Topic topic = owner.unpublish(m.topicId);
+         if (topic == null) {
+            logger.info("Could not find topic {} for entity {}", m.topicId, m.ownerId);
+         }
+      } else {
+         logger.info("Could not find publisher entity {}", m.ownerId);
+      }
    }
 
    @Override
    public void messageTopicSubscribed(TopicSubscribedMessage m, MessageContext ctx) {
+      if (m.ownerId != ctx.header.fromId) {
+         logger.warn("FIXME: attempt to do something on someone elses topic");
+         assert false;
+      }
       final EntityInfo owner = getEntity(m.ownerId);
       if (owner != null) {
          final Topic topic = owner.getTopic(m.topicId);
@@ -312,6 +341,11 @@ public class Registry implements TetrapodContract.Registry.API {
 
    @Override
    public void messageTopicUnsubscribed(TopicUnsubscribedMessage m, MessageContext ctx) {
+      if (m.ownerId != ctx.header.fromId) {
+         logger.warn("FIXME: attempt to do something on someone elses topic");
+         assert false;
+      }
+
       final EntityInfo owner = getEntity(m.ownerId);
       if (owner != null) {
          final Topic topic = owner.getTopic(m.topicId);
