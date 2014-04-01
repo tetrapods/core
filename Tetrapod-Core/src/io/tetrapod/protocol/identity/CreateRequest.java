@@ -17,19 +17,20 @@ public class CreateRequest extends Request {
    public static final int STRUCT_ID = 6552804;
    public static final int CONTRACT_ID = IdentityContract.CONTRACT_ID;
    
+   @ERR public static final int ERROR_IDENTITY_TAKEN = IdentityContract.ERROR_IDENTITY_TAKEN; 
+   @ERR public static final int ERROR_INVALID_INPUT = IdentityContract.ERROR_INVALID_INPUT; 
+      
    public CreateRequest() {
       defaults();
    }
 
-   public CreateRequest(String username, String email, String password) {
+   public CreateRequest(String username, Identity identity) {
       this.username = username;
-      this.email = email;
-      this.password = password;
+      this.identity = identity;
    }   
 
    public String username;
-   public String email;
-   public String password;
+   public Identity identity;
 
    public final Structure.Security getSecurity() {
       return Security.PUBLIC;
@@ -37,15 +38,13 @@ public class CreateRequest extends Request {
 
    public final void defaults() {
       username = null;
-      email = null;
-      password = null;
+      identity = null;
    }
    
    @Override
    public final void write(DataSource data) throws IOException {
       data.write(1, this.username);
-      data.write(2, this.email);
-      data.write(3, this.password);
+      if (this.identity != null) data.write(2, this.identity);
       data.writeEndTag();
    }
    
@@ -56,8 +55,7 @@ public class CreateRequest extends Request {
          int tag = data.readTag();
          switch (tag) {
             case 1: this.username = data.read_string(tag); break;
-            case 2: this.email = data.read_string(tag); break;
-            case 3: this.password = data.read_string(tag); break;
+            case 2: this.identity = data.read_struct(tag, new Identity()); break;
             case Codec.END_TAG:
                return;
             default:
@@ -90,10 +88,9 @@ public class CreateRequest extends Request {
       // Note do not use this tags in long term serializations (to disk or databases) as 
       // implementors are free to rename them however they wish.  A null means the field
       // is not to participate in web serialization (remaining at default)
-      String[] result = new String[3+1];
+      String[] result = new String[2+1];
       result[1] = "username";
-      result[2] = "email";
-      result[3] = "password";
+      result[2] = "identity";
       return result;
    }
    
@@ -107,8 +104,8 @@ public class CreateRequest extends Request {
       desc.types = new TypeDescriptor[desc.tagWebNames.length];
       desc.types[0] = new TypeDescriptor(TypeDescriptor.T_STRUCT, getContractId(), getStructId());
       desc.types[1] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
-      desc.types[2] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
-      desc.types[3] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
+      desc.types[2] = new TypeDescriptor(TypeDescriptor.T_STRUCT, Identity.CONTRACT_ID, Identity.STRUCT_ID);
       return desc;
    }
+
 }

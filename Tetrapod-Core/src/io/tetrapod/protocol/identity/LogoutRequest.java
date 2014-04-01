@@ -1,4 +1,4 @@
-package io.tetrapod.protocol.core;
+package io.tetrapod.protocol.identity;
 
 // This is a code generated file.  All edits will be lost the next time code gen is run.
 
@@ -12,32 +12,36 @@ import java.util.*;
 import java.util.concurrent.*;
 
 @SuppressWarnings("unused")
-public class UnregisterRequest extends Request {
+public class LogoutRequest extends Request {
 
-   public static final int STRUCT_ID = 3896262;
-   public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;
+   public static final int STRUCT_ID = 3999326;
+   public static final int CONTRACT_ID = IdentityContract.CONTRACT_ID;
    
-   public UnregisterRequest() {
+   public LogoutRequest() {
       defaults();
    }
 
-   public UnregisterRequest(int entityId) {
-      this.entityId = entityId;
+   public LogoutRequest(int accountId, String authToken) {
+      this.accountId = accountId;
+      this.authToken = authToken;
    }   
 
-   public int entityId;
+   public int accountId;
+   public String authToken;
 
    public final Structure.Security getSecurity() {
-      return Security.PUBLIC;
+      return Security.PROTECTED;
    }
 
    public final void defaults() {
-      entityId = 0;
+      accountId = 0;
+      authToken = null;
    }
    
    @Override
    public final void write(DataSource data) throws IOException {
-      data.write(1, this.entityId);
+      data.write(1, this.accountId);
+      data.write(2, this.authToken);
       data.writeEndTag();
    }
    
@@ -47,7 +51,8 @@ public class UnregisterRequest extends Request {
       while (true) {
          int tag = data.readTag();
          switch (tag) {
-            case 1: this.entityId = data.read_int(tag); break;
+            case 1: this.accountId = data.read_int(tag); break;
+            case 2: this.authToken = data.read_string(tag); break;
             case Codec.END_TAG:
                return;
             default:
@@ -58,35 +63,36 @@ public class UnregisterRequest extends Request {
    }
    
    public final int getContractId() {
-      return UnregisterRequest.CONTRACT_ID;
+      return LogoutRequest.CONTRACT_ID;
    }
 
    public final int getStructId() {
-      return UnregisterRequest.STRUCT_ID;
+      return LogoutRequest.STRUCT_ID;
    }
    
    @Override
    public final Response dispatch(ServiceAPI is, RequestContext ctx) {
       if (is instanceof Handler)
-         return ((Handler)is).requestUnregister(this, ctx);
+         return ((Handler)is).requestLogout(this, ctx);
       return is.genericRequest(this, ctx);
    }
    
    public static interface Handler extends ServiceAPI {
-      Response requestUnregister(UnregisterRequest r, RequestContext ctx);
+      Response requestLogout(LogoutRequest r, RequestContext ctx);
    }
    
    public final String[] tagWebNames() {
       // Note do not use this tags in long term serializations (to disk or databases) as 
       // implementors are free to rename them however they wish.  A null means the field
       // is not to participate in web serialization (remaining at default)
-      String[] result = new String[1+1];
-      result[1] = "entityId";
+      String[] result = new String[2+1];
+      result[1] = "accountId";
+      result[2] = "authToken";
       return result;
    }
    
    public final Structure make() {
-      return new UnregisterRequest();
+      return new LogoutRequest();
    }
    
    public final StructDescription makeDescription() {
@@ -95,7 +101,12 @@ public class UnregisterRequest extends Request {
       desc.types = new TypeDescriptor[desc.tagWebNames.length];
       desc.types[0] = new TypeDescriptor(TypeDescriptor.T_STRUCT, getContractId(), getStructId());
       desc.types[1] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
+      desc.types[2] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
       return desc;
    }
 
+   public final Response securityCheck(RequestContext ctx) {
+      return super.securityCheck(accountId, authToken, ctx);
+   }
+      
 }

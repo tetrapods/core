@@ -18,33 +18,29 @@ public class LoginRequest extends Request {
    public static final int CONTRACT_ID = IdentityContract.CONTRACT_ID;
    
    @ERR public static final int ERROR_UNKNOWN_USERNAME = IdentityContract.ERROR_UNKNOWN_USERNAME; 
-   @ERR public static final int ERROR_WRONG_PASSWORD = IdentityContract.ERROR_WRONG_PASSWORD; 
+   @ERR public static final int ERROR_VERIFICATION_FAILURE = IdentityContract.ERROR_VERIFICATION_FAILURE; 
       
    public LoginRequest() {
       defaults();
    }
 
-   public LoginRequest(String email, String password) {
-      this.email = email;
-      this.password = password;
+   public LoginRequest(Identity ident) {
+      this.ident = ident;
    }   
 
-   public String email;
-   public String password;
+   public Identity ident;
 
    public final Structure.Security getSecurity() {
       return Security.PUBLIC;
    }
 
    public final void defaults() {
-      email = null;
-      password = null;
+      ident = null;
    }
    
    @Override
    public final void write(DataSource data) throws IOException {
-      data.write(1, this.email);
-      data.write(2, this.password);
+      if (this.ident != null) data.write(1, this.ident);
       data.writeEndTag();
    }
    
@@ -54,8 +50,7 @@ public class LoginRequest extends Request {
       while (true) {
          int tag = data.readTag();
          switch (tag) {
-            case 1: this.email = data.read_string(tag); break;
-            case 2: this.password = data.read_string(tag); break;
+            case 1: this.ident = data.read_struct(tag, new Identity()); break;
             case Codec.END_TAG:
                return;
             default:
@@ -88,9 +83,8 @@ public class LoginRequest extends Request {
       // Note do not use this tags in long term serializations (to disk or databases) as 
       // implementors are free to rename them however they wish.  A null means the field
       // is not to participate in web serialization (remaining at default)
-      String[] result = new String[2+1];
-      result[1] = "email";
-      result[2] = "password";
+      String[] result = new String[1+1];
+      result[1] = "ident";
       return result;
    }
    
@@ -103,8 +97,8 @@ public class LoginRequest extends Request {
       desc.tagWebNames = tagWebNames();
       desc.types = new TypeDescriptor[desc.tagWebNames.length];
       desc.types[0] = new TypeDescriptor(TypeDescriptor.T_STRUCT, getContractId(), getStructId());
-      desc.types[1] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
-      desc.types[2] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
+      desc.types[1] = new TypeDescriptor(TypeDescriptor.T_STRUCT, Identity.CONTRACT_ID, Identity.STRUCT_ID);
       return desc;
    }
+
 }

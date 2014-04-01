@@ -180,6 +180,11 @@ public class TetrapodContract extends Contract {
    public static final int ERROR_PROTOCOL_MISMATCH = 5; 
    
    /**
+    * rights token has expired, need to login again
+    */
+   public static final int ERROR_RIGHTS_EXPIRED = 10; 
+   
+   /**
     * Unable to deserialize the request
     */
    public static final int ERROR_SERIALIZATION = 4; 

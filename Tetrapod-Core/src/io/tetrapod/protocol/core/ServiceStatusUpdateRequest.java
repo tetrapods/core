@@ -97,4 +97,5 @@ public class ServiceStatusUpdateRequest extends Request {
       desc.types[1] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
       return desc;
    }
+
 }

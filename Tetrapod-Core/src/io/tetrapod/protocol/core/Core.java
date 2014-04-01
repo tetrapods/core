@@ -58,6 +58,11 @@ public class Core extends Structure {
    @ERR public static final int ERROR_PROTOCOL_MISMATCH = TetrapodContract.ERROR_PROTOCOL_MISMATCH; 
    
    /**
+    * rights token has expired, need to login again
+    */
+   @ERR public static final int ERROR_RIGHTS_EXPIRED = TetrapodContract.ERROR_RIGHTS_EXPIRED; 
+   
+   /**
     * Unable to deserialize the request
     */
    @ERR public static final int ERROR_SERIALIZATION = TetrapodContract.ERROR_SERIALIZATION; 

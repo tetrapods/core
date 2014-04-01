@@ -30,35 +30,47 @@ public class User extends Structure {
       defaults();
    }
 
-   public User(String username, int accountId, int properties) {
+   public User(String username, String email, int accountId, int properties, int numLogins, long[] loginTimes, Identity[] identities) {
       this.username = username;
+      this.email = email;
       this.accountId = accountId;
       this.properties = properties;
+      this.numLogins = numLogins;
+      this.loginTimes = loginTimes;
+      this.identities = identities;
    }   
    
    public String username;
+   public String email;
    public int accountId;
-   
-   /**
-    * bitmap
-    */
    public int properties;
+   public int numLogins;
+   public long[] loginTimes;
+   public Identity[] identities;
 
    public final Structure.Security getSecurity() {
-      return Security.INTERNAL;
+      return Security.PRIVATE;
    }
 
    public final void defaults() {
       username = null;
+      email = null;
       accountId = 0;
       properties = 0;
+      numLogins = 0;
+      loginTimes = null;
+      identities = null;
    }
    
    @Override
    public final void write(DataSource data) throws IOException {
       data.write(1, this.username);
-      data.write(2, this.accountId);
-      data.write(3, this.properties);
+      data.write(2, this.email);
+      data.write(3, this.accountId);
+      data.write(4, this.properties);
+      data.write(5, this.numLogins);
+      if (this.loginTimes != null) data.write(6, this.loginTimes);
+      if (this.identities != null) data.write(7, this.identities);
       data.writeEndTag();
    }
    
@@ -69,8 +81,12 @@ public class User extends Structure {
          int tag = data.readTag();
          switch (tag) {
             case 1: this.username = data.read_string(tag); break;
-            case 2: this.accountId = data.read_int(tag); break;
-            case 3: this.properties = data.read_int(tag); break;
+            case 2: this.email = data.read_string(tag); break;
+            case 3: this.accountId = data.read_int(tag); break;
+            case 4: this.properties = data.read_int(tag); break;
+            case 5: this.numLogins = data.read_int(tag); break;
+            case 6: this.loginTimes = data.read_long_array(tag); break;
+            case 7: this.identities = data.read_struct_array(tag, new Identity()); break;
             case Codec.END_TAG:
                return;
             default:
@@ -92,10 +108,14 @@ public class User extends Structure {
       // Note do not use this tags in long term serializations (to disk or databases) as 
       // implementors are free to rename them however they wish.  A null means the field
       // is not to participate in web serialization (remaining at default)
-      String[] result = new String[3+1];
+      String[] result = new String[7+1];
       result[1] = "username";
-      result[2] = "accountId";
-      result[3] = "properties";
+      result[2] = "email";
+      result[3] = "accountId";
+      result[4] = "properties";
+      result[5] = "numLogins";
+      result[6] = "loginTimes";
+      result[7] = "identities";
       return result;
    }
 
@@ -109,8 +129,12 @@ public class User extends Structure {
       desc.types = new TypeDescriptor[desc.tagWebNames.length];
       desc.types[0] = new TypeDescriptor(TypeDescriptor.T_STRUCT, getContractId(), getStructId());
       desc.types[1] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
-      desc.types[2] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
+      desc.types[2] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
       desc.types[3] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
+      desc.types[4] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
+      desc.types[5] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
+      desc.types[6] = new TypeDescriptor(TypeDescriptor.T_LONG_LIST, 0, 0);
+      desc.types[7] = new TypeDescriptor(TypeDescriptor.T_STRUCT_LIST, Identity.CONTRACT_ID, Identity.STRUCT_ID);
       return desc;
    }
 }

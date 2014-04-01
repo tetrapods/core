@@ -104,4 +104,9 @@ public class InfoRequest extends Request {
       desc.types[2] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
       return desc;
    }
+
+   public final Response securityCheck(RequestContext ctx) {
+      return super.securityCheck(accountId, authToken, ctx);
+   }
+      
 }

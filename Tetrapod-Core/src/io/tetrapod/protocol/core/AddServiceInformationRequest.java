@@ -108,4 +108,5 @@ public class AddServiceInformationRequest extends Request {
       desc.types[2] = new TypeDescriptor(TypeDescriptor.T_STRUCT_LIST, StructDescription.CONTRACT_ID, StructDescription.STRUCT_ID);
       return desc;
    }
+
 }
