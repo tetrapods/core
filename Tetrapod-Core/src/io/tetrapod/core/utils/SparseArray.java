@@ -1,4 +1,4 @@
-package io.tetrapod.core.kvstore;
+package io.tetrapod.core.utils;
 
 /*
  * Copyright (C) 2006 The Android Open Source Project

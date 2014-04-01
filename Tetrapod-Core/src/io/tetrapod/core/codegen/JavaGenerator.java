@@ -4,7 +4,6 @@ import io.tetrapod.core.codegen.CodeGen.TokenizedLine;
 import io.tetrapod.core.codegen.CodeGenContext.Class;
 import io.tetrapod.core.codegen.CodeGenContext.Err;
 import io.tetrapod.core.codegen.CodeGenContext.Field;
-import io.tetrapod.core.templates.Template;
 
 import java.io.*;
 import java.util.*;

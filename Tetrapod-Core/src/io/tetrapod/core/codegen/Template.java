@@ -1,4 +1,4 @@
-package io.tetrapod.core.templates;
+package io.tetrapod.core.codegen;
 
 import java.io.*;
 import java.util.*;
