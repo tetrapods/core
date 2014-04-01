@@ -204,6 +204,19 @@
 						</tbody>
 					</table>
 
+					<div>
+						<h3>Tetrapod Platform TODOs</h3>
+						<ul>
+							<li>Service stats &amp; charts</li>
+							<li>Service Log/metrics viewing, etc...</li>
+							<li>Service direct connections</li>
+							<li>Tetrapod cluster mode</li>
+							<li>Admin accounts</li>
+							<li>TLS</li>
+							<li>Performance testing, queue &amp; threadpool
+								optimizations</li>
+						</ul>
+					</div>
 
 
 					<!--  =============================================================================== -->
@@ -398,7 +411,8 @@
 			}
 			self.restart = function() {
 				bootbox.confirm("Are you sure you want to restart service: "
-						+ self.name + "?", function(result) {
+						+ self.name + "[" + self.entitId + "]?", function(
+						result) {
 					if (result) {
 						TP.send("Restart", {}, self.entityId).handle(
 								TP.logResponse);
@@ -407,7 +421,8 @@
 			}
 			self.shutdown = function() {
 				bootbox.confirm("Are you sure you want to shutdown service: "
-						+ self.name + "?", function(result) {
+						+ self.name + "[" + self.entitId + "]?", function(
+						result) {
 					if (result) {
 						TP.send("Shutdown", {}, self.entityId).handle(
 								TP.logResponse);
