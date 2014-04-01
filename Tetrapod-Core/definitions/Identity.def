@@ -2,25 +2,64 @@ java package io.tetrapod.protocol.identity
 java outdir "../src"
 javascript outdir "../webContent/tetrapod"
 
-service Identity @version(1) @id(4) @web("/api/identity/")
+service Identity @version(1) @id(4) 
 
-public request Login @web
-   1: string email
-   2: string password  
-   error UNKNOWN_USERNAME, WRONG_PASSWORD
+public request Login
+   1: Identity ident
+   error UNKNOWN_USERNAME, VERIFICATION_FAILURE
    
 public response Login
    1: int accountId      
    2: string authToken  
 
+protected request Logout 
+   1: int accountId
+   2: string authToken
+
+// Modifies the verification part of an identity.  Not every identity 
+// can do this.
+protected request ModifyIdentity   
+   1: int accountId
+   2: string authToken
+   3: Identity oldValue
+   4: Identity updatedValue
+   error UNMODIFIABLE_IDENTITY
+
 public request Create   
    1: string username  
-   2: string email
-   3: string password
+   2: Identity identity
+   error IDENTITY_TAKEN, INVALID_INPUT
    
 public response Create  
    1: int accountId
    2: string authToken
+
+// Link always attempts to add the identity to the current accountId   
+protected request Link
+   1: int accountId
+   2: string authToken
+   3: boolean overrideConflicts  // if false, a conflicting link will not succeed
+   4: Identity linkedIdentity    // identity to add
+   error VERIFICATION_ERROR
+
+// If there is a conflict the user has three choices the client has to walk them
+// through:<ul>  
+//   <li> forget about linking [eg cancel]
+//   <li> force the link to this account [eg resend Link with overrideConflicts = true]
+//   <li> make the other account the main account, by:<ul>
+//         <li> Logout
+//         <li> Login with identity used in Link (gettng you conflict id)
+//         <li> Link with identity used to originally login with overrideConflicts = true
+//    </ul></ul>
+//  OR just tell them to contact support with the two account ids.
+protected response Link
+   1: boolean conflicts          // true if there was a conflict, false means success            
+   2: int conflictId             // accountId of the conflicting account
+   3: string conflictName        
+   4: int conflictNumLogins      
+   5: long conflictLastLogin     
+   6: long thisLastLogin
+   7: int thisNumLogins
    
 protected request Info
    1: int accountId
@@ -30,16 +69,35 @@ protected response Info
    1: string username 
    2: int properties
    
-admin request UpdateProperties @web
+admin request UpdateProperties
    1: int accountId
    2: int properties // new properties values
    3: int mask       // which properties to update
    4: string authToken
    
-struct User
+internal request GetAuthSecret
+internal response GetAuthSecret
+   1: byte[] secret
+
+public struct Identity
+   1: int type
+   2: string publicPart    // eg: your email address
+   3: string verifyPart    // eg: your password (or passowrd hash if stored internally)
+   
+   const int IDENTITY_EMAIL      = 1
+   const int IDENTITY_DEVICE     = 2
+   const int IDENTITY_FACEBOOK   = 3
+   const int IDENTITY_TWITTER    = 4
+   const int IDENTITY_OAUTH      = 5
+
+private struct User
    1: string username
-   2: int accountId
-   3: int properties // bitmap
+   2: string email
+   3: int accountId
+   4: int properties 
+   5: int numLogins
+   6: long[] loginTimes
+   7: Identity[] identities
    
    const int PROPS_DEVELOPER  = 1
    const int PROPS_ADMIN_T1   = 2

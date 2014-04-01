@@ -3,3 +3,4 @@ Tetrapod-Core/src/io/tetrapod/protocol/sample/
 Tetrapod-Core/webContent/sb-admin-v2/
 *.md.html
 Tetrapod-Core/webContent/sample/
+Tetrapod-Core/test/io/tetrapod/protocol/sample
