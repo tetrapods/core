@@ -58,6 +58,16 @@ public class KeyValueStore {
       map.put(key, value);
    }
 
+   public synchronized Object putIf(String key, Object value, Object oldValue) throws IOException {
+      Object old = get(key);
+      if (old == oldValue) {
+         persistPut(key, value);
+         map.put(key, value);
+         return value;
+      }
+      return old;
+   }
+   
    public synchronized void remove(String key) throws IOException {
       persistRemove(key);
       map.remove(key);
@@ -80,22 +90,16 @@ public class KeyValueStore {
             return n.startsWith(name);
          }
       });
-      // find the biggest even number, then read it as a checkpoint and any odd numbers above it
-      int biggestEven = 0;
+      int smallest = Integer.MAX_VALUE;
       int biggest = 0;
       for (String f : files) {
          int n = Integer.parseInt(f.substring(name.length() + 1));
-         if (n % 2 == 0 && n > biggestEven)
-            biggestEven = n;
-         if (n > biggest)
-            biggest = n;
+         biggest = Math.max(biggest, n);
+         smallest = Math.min(smallest, n);
       }
-      if (biggestEven > 0)
-         load(biggestEven);
-      for (int i = biggestEven + 1; i <= biggest; i += 2) 
+      for (int i = smallest; i <= biggest; i++) 
          load(i);
-      
-      fileNumber = (fileNumber % 2 == 1) ? fileNumber + 2 : fileNumber + 1;
+      fileNumber++;
    }
    
    private void load(int i) throws IOException {
@@ -147,6 +151,13 @@ public class KeyValueStore {
          Path path = FileSystems.getDefault().getPath(datadir, name + "." + fileNumber);
          out = FileDataSource.forAppending(path);
       }
+   }
+
+   public synchronized int incrementInteger(String key) throws IOException {
+      Integer x = (Integer)get(key);
+      int next = x == null ? 1 : x.intValue() + 1;
+      put(key, next);
+      return next;
    }
    
 

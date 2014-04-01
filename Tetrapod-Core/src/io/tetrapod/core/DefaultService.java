@@ -10,7 +10,7 @@ import java.util.*;
 
 import org.slf4j.*;
 
-abstract public class DefaultService implements Service, BaseServiceContract.API, SessionFactory {
+public class DefaultService implements Service, BaseServiceContract.API, SessionFactory {
    private static final Logger   logger          = LoggerFactory.getLogger(DefaultService.class);
 
    protected final Dispatcher    dispatcher;
@@ -49,9 +49,21 @@ abstract public class DefaultService implements Service, BaseServiceContract.API
       }
    }
 
-   abstract public void onRegistered();
+   /**
+    * Called after registration is complete and this service has a valid
+    * entityId and is free to make requests into the cluster.  Default
+    * implementation is to do nothing.
+    */
+   public void onRegistered() {}
 
-   abstract public void onShutdown(boolean restarting);
+   /**
+    * Called before shutting down.  Default implementation is to do nothing.
+    * Subclasses are expecting to close any resources they opened (for example
+    * database connections or file handles).
+    * 
+    * @param restarting true if we are shutting down in order to restart
+    */
+   public void onShutdown(boolean restarting) {}
 
    private void shutdown(boolean restarting) {
       updateStatus(status | Core.STATUS_PAUSED);
@@ -120,7 +132,7 @@ abstract public class DefaultService implements Service, BaseServiceContract.API
                }
             });
    }
-
+   
    public void onDisconnectedFromCluster() {
       // TODO reconnection loop to handle unexpected disconnections
    }
