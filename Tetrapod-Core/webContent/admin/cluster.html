@@ -269,6 +269,8 @@
 
 
 	<script>
+		var Core = TP.protocol.consts["Tetrapod.Core"];
+
 		var model = new ClusterModel();
 		ko.applyBindings(model, $("#cluster-table")[0]);
 
@@ -357,7 +359,6 @@
 
 		// Service Model
 		function Service(entity) {
-         var Core = TP.protocol.consts["Tetrapod.Core"];
 			var self = this;
 			self.entityId = entity.entityId;
 			self.name = entity.name;
