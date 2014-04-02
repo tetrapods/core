@@ -1,6 +1,7 @@
 package io.tetrapod.core.web;
 
 import static io.tetrapod.protocol.core.Core.*;
+import static io.tetrapod.protocol.core.TetrapodContract.*;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.socket.SocketChannel;
 import io.tetrapod.core.*;

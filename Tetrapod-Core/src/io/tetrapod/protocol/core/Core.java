@@ -37,56 +37,6 @@ public class Core extends Structure {
    public static final byte ENVELOPE_PING = 6; 
    public static final byte ENVELOPE_PONG = 7; 
    
-   /**
-    * Request's session was disconnected
-    */
-   @ERR public static final int ERROR_CONNECTION_CLOSED = TetrapodContract.ERROR_CONNECTION_CLOSED; 
-   
-   /**
-    * An addressed entityId was invalid
-    */
-   @ERR public static final int ERROR_INVALID_ENTITY = TetrapodContract.ERROR_INVALID_ENTITY; 
-   
-   /**
-    * Caller does not have sufficient rights to call this Request
-    */
-   @ERR public static final int ERROR_INVALID_RIGHTS = TetrapodContract.ERROR_INVALID_RIGHTS; 
-   
-   /**
-    * Protocol versions are not compatible
-    */
-   @ERR public static final int ERROR_PROTOCOL_MISMATCH = TetrapodContract.ERROR_PROTOCOL_MISMATCH; 
-   
-   /**
-    * rights token has expired, need to login again
-    */
-   @ERR public static final int ERROR_RIGHTS_EXPIRED = TetrapodContract.ERROR_RIGHTS_EXPIRED; 
-   
-   /**
-    * Unable to deserialize the request
-    */
-   @ERR public static final int ERROR_SERIALIZATION = TetrapodContract.ERROR_SERIALIZATION; 
-   
-   /**
-    * No service exists to which to relay the request
-    */
-   @ERR public static final int ERROR_SERVICE_UNAVAILABLE = TetrapodContract.ERROR_SERVICE_UNAVAILABLE; 
-   
-   /**
-    * Request timed out without returning a response
-    */
-   @ERR public static final int ERROR_TIMEOUT = TetrapodContract.ERROR_TIMEOUT; 
-   
-   /**
-    * catch all error
-    */
-   @ERR public static final int ERROR_UNKNOWN = TetrapodContract.ERROR_UNKNOWN; 
-   
-   /**
-    * Service exists and received request, but doesn't know how to handle it
-    */
-   @ERR public static final int ERROR_UNKNOWN_REQUEST = TetrapodContract.ERROR_UNKNOWN_REQUEST; 
-   
    public static final int STRUCT_ID = 9088168;
    public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;
     

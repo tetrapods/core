@@ -17,8 +17,6 @@ public class MeaningOfLifeTheUniversAndEverythingRequest extends Request {
    public static final int STRUCT_ID = 13298005;
    public static final int CONTRACT_ID = RemoteTestContract.CONTRACT_ID;
    
-   @ERR public static final int ERROR_MISSING_GUESS = RemoteTestContract.ERROR_MISSING_GUESS; 
-      
    public MeaningOfLifeTheUniversAndEverythingRequest() {
       defaults();
    }

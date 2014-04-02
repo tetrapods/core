@@ -6,6 +6,8 @@ import io.tetrapod.core.utils.*;
 import io.tetrapod.protocol.core.*;
 import io.tetrapod.protocol.identity.*;
 
+import static io.tetrapod.protocol.core.TetrapodContract.*;
+
 public class RequestContext {
 
    public final RequestHeader header;
@@ -31,17 +33,17 @@ public class RequestContext {
       if (perms < 0) {
          switch (perms) {
             case -1: 
-               errorCode.set(Core.ERROR_INVALID_RIGHTS); 
+               errorCode.set(ERROR_INVALID_RIGHTS); 
                break;
             case -2: 
-               errorCode.set(Core.ERROR_RIGHTS_EXPIRED); 
+               errorCode.set(ERROR_RIGHTS_EXPIRED); 
                break;
             case -3: 
-               errorCode.set(Core.ERROR_UNKNOWN); 
+               errorCode.set(ERROR_UNKNOWN); 
                break;
             case -4:
                // auth not set up
-               errorCode.set(Core.ERROR_UNKNOWN); 
+               errorCode.set(ERROR_UNKNOWN); 
                break;
          }
          return Security.PUBLIC;

@@ -21,8 +21,6 @@ public class LinkRequest extends Request {
    public static final int STRUCT_ID = 15857496;
    public static final int CONTRACT_ID = IdentityContract.CONTRACT_ID;
    
-   @ERR public static final int ERROR_VERIFICATION_ERROR = IdentityContract.ERROR_VERIFICATION_ERROR; 
-      
    public LinkRequest() {
       defaults();
    }

@@ -17,10 +17,6 @@ public class PublishRequest extends Request {
    public static final int STRUCT_ID = 3171651;
    public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;
    
-   @ERR public static final int ERROR_INVALID_ENTITY = TetrapodContract.ERROR_INVALID_ENTITY; 
-   @ERR public static final int ERROR_NOT_PARENT = TetrapodContract.ERROR_NOT_PARENT; 
-   @ERR public static final int ERROR_NOT_READY = TetrapodContract.ERROR_NOT_READY; 
-      
    public PublishRequest() {
       defaults();
    }

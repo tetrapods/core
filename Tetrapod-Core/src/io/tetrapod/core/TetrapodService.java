@@ -1,9 +1,12 @@
 package io.tetrapod.core;
 
+import static io.tetrapod.protocol.core.TetrapodContract.*;
+
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.socket.SocketChannel;
 import io.tetrapod.core.Session.RelayHandler;
 import io.tetrapod.core.registry.*;
+import io.tetrapod.core.registry.Registry;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.rpc.Error;
 import io.tetrapod.core.serialize.StructureAdapter;
@@ -357,7 +360,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    @Override
    public Response requestRegister(RegisterRequest r, RequestContext ctx) {
       if (getEntityId() == 0) {
-         return new Error(Core.ERROR_SERVICE_UNAVAILABLE);
+         return new Error(ERROR_SERVICE_UNAVAILABLE);
       }
       EntityInfo info = null;
       final Token t = Token.decode(r.token);
@@ -401,11 +404,11 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    @Override
    public Response requestUnregister(UnregisterRequest r, RequestContext ctx) {
       if (r.entityId != ctx.header.fromId && ctx.header.fromType != Core.TYPE_ADMIN) {
-         return new Error(Core.ERROR_INVALID_RIGHTS);
+         return new Error(ERROR_INVALID_RIGHTS);
       }
       final EntityInfo info = registry.getEntity(r.entityId);
       if (info == null) {
-         return new Error(Core.ERROR_INVALID_ENTITY);
+         return new Error(ERROR_INVALID_ENTITY);
       }
       registry.unregister(info.entityId);
       return Response.SUCCESS;
@@ -422,19 +425,19 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
                   return new PublishResponse(t.topicId);
                }
             } else {
-               return new Error(PublishRequest.ERROR_NOT_PARENT);
+               return new Error(ERROR_NOT_PARENT);
             }
          } else {
-            return new Error(PublishRequest.ERROR_INVALID_ENTITY);
+            return new Error(ERROR_INVALID_ENTITY);
          }
       }
-      return new Error(Core.ERROR_INVALID_RIGHTS);
+      return new Error(ERROR_INVALID_RIGHTS);
    }
 
    @Override
    public Response requestRegistrySubscribe(RegistrySubscribeRequest r, RequestContext ctx) {
       if (registryTopic == null) {
-         return new Error(Core.ERROR_UNKNOWN);
+         return new Error(ERROR_UNKNOWN);
       }
       synchronized (registryTopic) {
          broadcastRegistryMessage(new TopicSubscribedMessage(registryTopic.ownerId, registryTopic.topicId, ctx.header.fromId));
@@ -456,7 +459,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    @Override
    public Response requestServicesSubscribe(ServicesSubscribeRequest r, RequestContext ctx) {
       if (servicesTopic == null) {
-         return new Error(Core.ERROR_UNKNOWN);
+         return new Error(ERROR_UNKNOWN);
       }
       synchronized (servicesTopic) {
          broadcastRegistryMessage(new TopicSubscribedMessage(servicesTopic.ownerId, servicesTopic.topicId, ctx.header.fromId));

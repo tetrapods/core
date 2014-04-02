@@ -20,8 +20,6 @@ public class {{class}} extends Request {
    public static final int STRUCT_ID = {{structid}};
    public static final int CONTRACT_ID = {{service}}.CONTRACT_ID;
    
-   {{errors}}
-      
    public {{class}}() {
       defaults();
    }

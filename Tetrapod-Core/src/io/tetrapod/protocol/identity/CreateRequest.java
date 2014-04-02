@@ -17,9 +17,6 @@ public class CreateRequest extends Request {
    public static final int STRUCT_ID = 6552804;
    public static final int CONTRACT_ID = IdentityContract.CONTRACT_ID;
    
-   @ERR public static final int ERROR_IDENTITY_TAKEN = IdentityContract.ERROR_IDENTITY_TAKEN; 
-   @ERR public static final int ERROR_INVALID_INPUT = IdentityContract.ERROR_INVALID_INPUT; 
-      
    public CreateRequest() {
       defaults();
    }

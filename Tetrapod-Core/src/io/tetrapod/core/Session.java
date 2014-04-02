@@ -1,6 +1,7 @@
 package io.tetrapod.core;
 
 import static io.tetrapod.protocol.core.Core.*;
+import static io.tetrapod.protocol.core.TetrapodContract.*;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.*;
 import io.netty.channel.socket.SocketChannel;
@@ -100,7 +101,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
       // TODO: Timeout pending requests past their due
       for (Async a : pendingRequests.values()) {
          if (a.isTimedout()) {
-            a.setResponse(Core.ERROR_TIMEOUT);
+            a.setResponse(ERROR_TIMEOUT);
          }
       }
    }
@@ -207,7 +208,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
             } finally {
                // finally return the pending response we were waiting on
                if (pendingRes == null) {
-                  pendingRes = new Error(Core.ERROR_UNKNOWN);
+                  pendingRes = new Error(ERROR_UNKNOWN);
                }
                sendResponse(pendingRes, pendingHandler.originalRequestId);
             }
@@ -381,7 +382,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
 
    public void cancelAllPendingRequests() {
       for (Async a : pendingRequests.values()) {
-         a.setResponse(Core.ERROR_CONNECTION_CLOSED);
+         a.setResponse(ERROR_CONNECTION_CLOSED);
       }
       pendingRequests.clear();
    }

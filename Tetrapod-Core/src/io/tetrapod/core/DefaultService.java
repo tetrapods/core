@@ -220,7 +220,7 @@ public class DefaultService implements Service, BaseServiceContract.API, Session
 
    public Response genericRequest(Request r, RequestContext ctx) {
       logger.error("unhandled request " + r.dump());
-      return new Error(Core.ERROR_UNKNOWN_REQUEST);
+      return new Error(TetrapodContract.ERROR_UNKNOWN_REQUEST);
    }
 
    public void genericMessage(Message message) {

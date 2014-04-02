@@ -21,8 +21,6 @@ public class ModifyIdentityRequest extends Request {
    public static final int STRUCT_ID = 7124244;
    public static final int CONTRACT_ID = IdentityContract.CONTRACT_ID;
    
-   @ERR public static final int ERROR_UNMODIFIABLE_IDENTITY = IdentityContract.ERROR_UNMODIFIABLE_IDENTITY; 
-      
    public ModifyIdentityRequest() {
       defaults();
    }

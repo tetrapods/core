@@ -17,9 +17,6 @@ public class LoginRequest extends Request {
    public static final int STRUCT_ID = 8202985;
    public static final int CONTRACT_ID = IdentityContract.CONTRACT_ID;
    
-   @ERR public static final int ERROR_UNKNOWN_USERNAME = IdentityContract.ERROR_UNKNOWN_USERNAME; 
-   @ERR public static final int ERROR_VERIFICATION_FAILURE = IdentityContract.ERROR_VERIFICATION_FAILURE; 
-      
    public LoginRequest() {
       defaults();
    }

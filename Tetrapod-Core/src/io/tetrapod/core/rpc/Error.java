@@ -12,7 +12,7 @@ public class Error extends Response {
    public int              code;
 
    public Error() {
-      this(Core.ERROR_UNKNOWN);
+      this(TetrapodContract.ERROR_UNKNOWN);
    }
 
    public Error(int code) {
