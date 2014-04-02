@@ -37,7 +37,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
 
       public ServiceAPI getServiceHandler(int contractId);
 
-      public List<SubscriptionAPI> getMessageHandlers(int contractId, int structUd);
+      public List<SubscriptionAPI> getMessageHandlers(int contractId, int structId);
 
       public int getContractId();
    }
@@ -52,8 +52,8 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
 
    }
 
-   private static final Logger          logger          = LoggerFactory.getLogger(Session.class);
-   public static final Logger           commsLog        = LoggerFactory.getLogger("comms");
+   protected static final Logger        logger          = LoggerFactory.getLogger(Session.class);
+   protected static final Logger        commsLog        = LoggerFactory.getLogger("comms");
 
    protected static final AtomicInteger sessionCounter  = new AtomicInteger();
 
@@ -76,7 +76,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
    protected byte                       theirType       = Core.TYPE_ANONYMOUS;
 
    protected int                        myContractId;
-   
+
    public Session(SocketChannel channel, Session.Helper helper) {
       this.channel = channel;
       this.helper = helper;
@@ -175,7 +175,6 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
       if (res == null) {
          res = req.dispatch(svc, ctx);
       }
-      // TODO: Pending responses
       if (res != null) {
          sendResponse(res, header.requestId);
       } else {
@@ -396,8 +395,8 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
    public String getPeerHostname() {
       return "Unknown";
    }
-   
-   public boolean commsLog(String format, Object ... args) {
+
+   public boolean commsLog(String format, Object... args) {
       if (commsLog.isInfoEnabled()) {
          for (int i = 0; i < args.length; i++) {
             if (args[i] == this) {
@@ -409,5 +408,5 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
       }
       return true;
    }
-   
+
 }

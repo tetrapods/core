@@ -49,4 +49,8 @@ public class Util {
       }
    }
 
+   public static int random(int range) {
+      return (int) (Math.random() * range);
+   }
+
 }
