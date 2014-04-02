@@ -218,10 +218,8 @@ class CodeGenContext {
 
    public void parseErrors(TokenizedLine line) throws ParseException {
       ArrayList<String> parts = line.parts;
-      if (inGlobalScope)
-         throw new ParseException("errors must be defined inside a class");
 
-      Class myClass = classes.get(classes.size() - 1);
+      Class myClass = inGlobalScope ? null : classes.get(classes.size() - 1);
       Err e = null;
       for (int i = 1; i < parts.size(); i++) {
          String err = parts.get(i);
@@ -234,7 +232,8 @@ class CodeGenContext {
          e = new Err();
          e.name = err;
          e.comment = line.comment;
-         myClass.errors.add(e);
+         if (myClass != null)
+            myClass.errors.add(e);
          allErrors.add(e);
       }
    }
