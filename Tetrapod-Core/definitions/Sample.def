@@ -58,6 +58,10 @@ response Test @id(117)            # an id tag in any class sets that as the stru
    10: TestInfo<list> infolist
    11: TestInfo[] infoarray
 
+public struct MissingOne
+   2: TestInfo[] tis
+   3: int otherField
+   
 public request AnotherTest
    1: int accountId
    2: string userName

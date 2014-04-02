@@ -127,7 +127,7 @@ public class JSONDataSource implements DataSource {
    public void writeEndTag() throws IOException {
       // no op
    }
-
+   
    @Override
    public <T extends Structure> T read_struct(int tag, T struct) throws IOException {
       JSONObject jo = json.getJSONObject(key(tag));
@@ -393,23 +393,31 @@ public class JSONDataSource implements DataSource {
       T[] res = (T[])Array.newInstance(struct.getClass(), arr.length());
       for (int i = 0; i < res.length; i++) {
          JSONObject jo = arr.getJSONObject(i);
-         T inst = i == 0 ? struct : (T)struct.make();
-         inst.read(getTemporarySource(jo, inst));
-         res[i] = inst;
+         if (jo.has("__null__")) {
+            res[i] = null;
+         } else {
+            T inst = i == 0 ? struct : (T)struct.make();
+            inst.read(getTemporarySource(jo, inst));
+            res[i] = inst;
+         }
       }
       return res;
    }
 
    @Override
+   @SuppressWarnings("unchecked")
    public <T extends Structure> List<T> read_struct_list(int tag, T struct) throws IOException {
       JSONArray arr = json.getJSONArray(key(tag));
       List<T> res = new ArrayList<>();
       for (int i = 0; i < arr.length(); i++) {
          JSONObject jo = arr.getJSONObject(i);
-         @SuppressWarnings("unchecked")
-         T inst = i == 0 ? struct : (T)struct.make();
-         inst.read(getTemporarySource(jo, inst));
-         res.add(inst);
+         if (jo.has("__null__")) {
+            res.add(null);
+         } else {
+            T inst = i == 0 ? struct : (T)struct.make();
+            inst.read(getTemporarySource(jo, inst));
+            res.add(inst);
+         }
       }
       return res;
    }
@@ -419,10 +427,15 @@ public class JSONDataSource implements DataSource {
       String k = key(tag);
       if (k != null) {
          JSONArray arr = new JSONArray();
+         JSONObject myNull = new JSONObject("{\"__null__\": true}");
          for (T x : array) {
-            JSONDataSource jd = getTemporarySource(x);
-            x.write(jd);
-            arr.put(jd.getJSON());
+            if (x == null) {
+               arr.put(myNull);
+            } else {
+               JSONDataSource jd = getTemporarySource(x);
+               x.write(jd);
+               arr.put(jd.getJSON());
+            }
          }
          json.put(k, arr);
       }
@@ -433,10 +446,15 @@ public class JSONDataSource implements DataSource {
       String k = key(tag);
       if (k != null) {
          JSONArray arr = new JSONArray();
+         JSONObject myNull = new JSONObject("{\"__null__\": true}");
          for (T x : list) {
-            JSONDataSource jd = getTemporarySource(x);
-            x.write(jd);
-            arr.put(jd.getJSON());
+            if (x == null) {
+               arr.put(myNull);
+            } else {
+               JSONDataSource jd = getTemporarySource(x);
+               x.write(jd);
+               arr.put(jd.getJSON());
+            }
          }
          json.put(k, arr);
       }

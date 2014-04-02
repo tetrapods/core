@@ -1,10 +1,12 @@
 package io.tetrapod.core.serailize;
 
 import static org.junit.Assert.assertTrue;
+import io.tetrapod.core.json.JSONObject;
 import io.tetrapod.core.rpc.Structure;
 import io.tetrapod.core.serialize.StructureAdapter;
-import io.tetrapod.core.serialize.datasources.TempBufferDataSource;
+import io.tetrapod.core.serialize.datasources.*;
 import io.tetrapod.protocol.core.*;
+import io.tetrapod.protocol.sample.*;
 
 import java.util.Arrays;
 
@@ -32,15 +34,29 @@ public class SerializationTest {
       awr.routes = routes;
       assertTrue(rinseViaAdapter(awr));
    }
+   
+   @Test
+   public void testNullInStructList() throws Exception {
+      new SampleContract().registerStructs();
+      MissingOne t = new MissingOne(new TestInfo[] {
+            new TestInfo(1),
+            new TestInfo(2),
+            null,
+            new TestInfo(3),
+      }, 666);
+      rinseTempBuff(t);
+      rinseViaAdapter(t);
+      rinseJSONBuff(t);
+   }
 
-//   @Test
-//   public void testSample() throws Exception {
-//      new TetrapodContract().registerStructs();
-//      new SampleContract().registerStructs();
-//      TestResponse tr = new TestResponse();
-//      assertTrue(rinseTempBuff(tr));
-//      assertTrue(rinseViaAdapter(tr));
-//   }
+   @Test
+   public void testSample() throws Exception {
+      new TetrapodContract().registerStructs();
+      new SampleContract().registerStructs();
+      TestResponse tr = new TestResponse();
+      assertTrue(rinseTempBuff(tr));
+      assertTrue(rinseViaAdapter(tr));
+   }
 
    public boolean rinseTempBuff(Structure s1) throws Exception {
       TempBufferDataSource temp = TempBufferDataSource.forWriting();
@@ -55,6 +71,26 @@ public class SerializationTest {
       s2.write(temp2);
       byte[] data2 = Arrays.copyOfRange(temp2.rawBuffer(), 0, temp2.rawCount());
       return printDiffs(data1, data2, s1, s2);
+   }
+   
+   public boolean rinseJSONBuff(Structure s1) throws Exception {
+      JSONDataSource temp = new JSONDataSource();
+      s1.write(temp);
+      System.out.println(new JSONObject(temp.getJSON().toString(3)));
+      JSONDataSource tempR = new JSONDataSource(new JSONObject(temp.getJSON().toString(3)));
+      Structure s2 = s1.make();
+      s2.read(tempR);
+      
+      JSONDataSource temp2 = new JSONDataSource();
+      s2.write(temp2);
+      
+      String str1 = temp.getJSON().toString(3);
+      String str2 = temp2.getJSON().toString(3);
+      if (str1.equals(str2))
+            return true;
+      System.err.println(str1);
+      System.err.println(str2);
+      return false;
    }
    
    public boolean rinseViaAdapter(Structure s1) throws Exception {

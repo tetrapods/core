@@ -21,13 +21,14 @@ abstract public class StreamDataSource implements DataSource {
    private static final int        TYPE_FIXED_8BIT   = 3;
    private static final int        TYPE_FIXED_32BIT  = 4;
    private static final int        TYPE_FIXED_64BIT  = 5;
+   private static final int        TYPE_NULL         = 6;
 
    private static final int        CONTINUE          = 0b1000_0000;
    private static final int        MASK              = 0b0111_1111;
 
    private int                     lastTagType       = 0;
    private TempBufferDataSource    tempBuffer        = null;
-
+   
    @Override
    public int readTag() throws IOException {
       int tagAndType = readVarInt();
@@ -311,7 +312,7 @@ abstract public class StreamDataSource implements DataSource {
       for (int i = 0; i < len; i++) {
          T inst = i == 0 ? struct : (T)struct.make();
          inst.read(this);
-         array[i] = inst;
+         array[i] = lastWasNull() ? null : inst;
       }
       return array;
    }
@@ -324,7 +325,7 @@ abstract public class StreamDataSource implements DataSource {
       for (int i = 0; i < len; i++) {
          T inst = i == 0 ? struct : (T)struct.make();
          inst.read(this);
-         list.add(inst);
+         list.add(lastWasNull() ? null : inst);
       }
       return list;
    }
@@ -402,7 +403,10 @@ abstract public class StreamDataSource implements DataSource {
       TempBufferDataSource temp = getTempBuffer();
       temp.writeVarInt(array.length);
       for (int i = 0; i < array.length; i++) {
-         array[i].write(temp);
+         if (array[i] == null)
+            temp.writeNullTag();
+         else
+            array[i].write(temp);
       }
       writeVarInt(temp.rawCount());
       writeRawBytes(temp.rawBuffer(), 0, temp.rawCount());
@@ -413,7 +417,10 @@ abstract public class StreamDataSource implements DataSource {
       TempBufferDataSource temp = getTempBuffer();
       temp.writeVarInt(list.size());
       for (int i = 0; i < list.size(); i++) {
-         list.get(i).write(temp);
+         if (list.get(i) == null)
+            temp.writeNullTag();
+         else
+            list.get(i).write(temp);
       }
       writeVarInt(temp.rawCount());
       writeRawBytes(temp.rawBuffer(), 0, temp.rawCount());
@@ -455,6 +462,10 @@ abstract public class StreamDataSource implements DataSource {
    @Override
    public void writeEndTag() throws IOException {
       writeTag(Codec.END_TAG, TYPE_FIXED_8BIT);
+   }
+
+   protected void writeNullTag() throws IOException {
+      writeTag(Codec.END_TAG, TYPE_NULL);
    }
 
    private void writeTag(int tag, int type) throws IOException {
@@ -529,6 +540,10 @@ abstract public class StreamDataSource implements DataSource {
          tempBuffer = TempBufferDataSource.forWriting();
       tempBuffer.reset();
       return tempBuffer;
+   }
+   
+   private boolean lastWasNull() {
+      return lastTagType == TYPE_NULL;
    }
 
 }
