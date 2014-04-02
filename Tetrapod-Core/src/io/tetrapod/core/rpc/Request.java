@@ -1,7 +1,5 @@
 package io.tetrapod.core.rpc;
 
-import io.tetrapod.core.utils.Value;
-import io.tetrapod.protocol.core.Core;
 
 abstract public class Request extends Structure {
 

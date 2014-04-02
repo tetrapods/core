@@ -63,6 +63,10 @@ public class Client implements Session.Listener {
       return session;
    }
 
+   public synchronized boolean isConnected() {
+      return session == null ? false : session.isConnected();
+   }
+
    @Override
    public void onSessionStart(Session ses) {
       logger.trace("Connection Started", ses);
