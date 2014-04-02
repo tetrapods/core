@@ -208,7 +208,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
                if (pendingRes == null) {
                   pendingRes = new Error(Core.ERROR_UNKNOWN);
                }
-               sendResponse(pendingRes, async.header.requestId);
+               sendResponse(pendingRes, pendingHandler.originalRequestId);
             }
          }
       });

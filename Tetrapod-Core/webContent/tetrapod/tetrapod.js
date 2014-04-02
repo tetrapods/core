@@ -131,8 +131,10 @@ TP.connect = function(server, port) {
 
 TP.logResponse = function(result) {
 	if (result.isError()) {
-		console.log("RESULT: ERROR " + result.errorCode)
+		console.log("RESULT: ERROR " + result.errorCode);
+	} else if (result._contractId == 1 && result._structId == 2) {
+      console.log("RESULT: SUCCESS");
 	} else {
-		console.log("RESULT: " + JSON.stringify(result))
+		console.log("RESULT: " + JSON.stringify(result));
 	}
 }
