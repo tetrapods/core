@@ -1,18 +1,38 @@
 <configuration debug="false" scan="false" scanPeriod="30 seconds">
 
-	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
-		<encoder>
-			<pattern>%-5level %d{HH:mm:ss.SSS} [%thread{24}] %logger{24} - %msg%n
-			</pattern>
-		</encoder>
-	</appender>
+   <timestamp key="bySecond" datePattern="yyMMddHHmmss" />
 
-	<root level="DEBUG">
-		<appender-ref ref="STDOUT" />
-	</root>
+   <appender name="COMMS" class="ch.qos.logback.classic.sift.SiftingAppender">
+      <!-- wrapping in a sifting appender means empty files are not created -->
+      <discriminator>
+         <key>xx</key>
+         <defaultValue>1</defaultValue>
+      </discriminator>
+      <sift>
+         <appender name="COMMS${xx}" class="ch.qos.logback.core.FileAppender">
+            <file>logs/${APPNAME}.${bySecond}.log</file>
+            <encoder>
+               <pattern>%d{HH:mm:ss.SSS} %msg%n</pattern>
+            </encoder>
+         </appender>
+      </sift>
+   </appender>
 
-	<logger name="io.netty" level="INFO" />
-	<logger name="io.tetrapod.core.Session" level="DEBUG" />
+   <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+      <encoder>
+         <pattern>%-5level %d{HH:mm:ss.SSS} [%thread{24}] %logger{24} - %msg%n</pattern>
+      </encoder>
+   </appender>
 
+   <root level="DEBUG">
+      <appender-ref ref="STDOUT" />
+   </root>
+
+   <logger name="io.netty" level="INFO" />
+   <logger name="io.tetrapod.core.Session" level="DEBUG" />
+
+   <logger name="comms" additivity="false" level="OFF">
+      <appender-ref ref="COMMS" />
+   </logger>
 
 </configuration>

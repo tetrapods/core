@@ -17,6 +17,7 @@ public class Launcher {
             usage();
          String serviceClass = args[0];
          opts = getOpts(args, 1, defaultOpts());
+         System.setProperty("APPNAME", serviceClass.substring(serviceClass.lastIndexOf('.')+1));
          Service service = (Service) Class.forName(serviceClass).newInstance();
          service.startNetwork(opts.get("host"), opts.get("token"));
       } catch (Throwable t) {

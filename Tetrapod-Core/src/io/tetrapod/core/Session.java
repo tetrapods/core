@@ -52,6 +52,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
    }
 
    private static final Logger          logger          = LoggerFactory.getLogger(Session.class);
+   public static final Logger           commsLog        = LoggerFactory.getLogger("comms");
 
    protected static final AtomicInteger sessionCounter  = new AtomicInteger();
 
@@ -74,7 +75,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
    protected byte                       theirType       = Core.TYPE_ANONYMOUS;
 
    protected int                        myContractId;
-
+   
    public Session(SocketChannel channel, Session.Helper helper) {
       this.channel = channel;
       this.helper = helper;
@@ -228,7 +229,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
       final Async async = new Async(req, header, this);
       pendingRequests.put(header.requestId, async);
 
-      logger.trace(String.format("%s > REQUEST [%d] toId=%d %s", this, header.requestId, toId, req.getClass().getSimpleName()));
+      commsLog("%s  [%d] => %s (to %d)", this, header.requestId, req.dump(), toId);
 
       final Object buffer = makeFrame(header, req, ENVELOPE_REQUEST);
       if (buffer != null) {
@@ -241,7 +242,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
 
    public void sendResponse(Response res, int requestId) {
       if (res != Response.PENDING) {
-         logger.trace(String.format("%s > RESPONSE [%d] %s", this, requestId, res.getClass().getSimpleName()));
+         commsLog("%s  [%d] => %s", this, requestId, res.dump());
          final Object buffer = makeFrame(new ResponseHeader(requestId, res.getContractId(), res.getStructId()), res, ENVELOPE_RESPONSE);
          if (buffer != null) {
             writeFrame(buffer);
@@ -250,7 +251,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
    }
 
    public void sendBroadcastMessage(Message msg, int topicId) {
-      logger.trace(String.format("%s > MESSAGE [%d] %s", this, topicId, msg.getClass().getSimpleName()));
+      commsLog("%s  [B] => T%d.%s", this, topicId, msg.dump());
       final Object buffer = makeFrame(
             new MessageHeader(getMyEntityId(), topicId, Core.UNADDRESSED, msg.getContractId(), msg.getStructId()), msg, ENVELOPE_BROADCAST);
       if (buffer != null) {
@@ -259,7 +260,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
    }
 
    public void sendMessage(Message msg, int toEntityId, int topicId) {
-      logger.trace(String.format("%s > MESSAGE [%d:%d] %s", this, toEntityId, topicId, msg.getClass().getSimpleName()));
+      commsLog("%s  [M] => T%d.%s (to %d)", this, topicId, msg.dump(), toEntityId);
       final Object buffer = makeFrame(new MessageHeader(getMyEntityId(), topicId, toEntityId, msg.getContractId(), msg.getStructId()), msg,
             ENVELOPE_MESSAGE);
       if (buffer != null) {
@@ -276,7 +277,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
    }
 
    public void sendRelayedMessage(MessageHeader header, ByteBuf payload, boolean broadcast) {
-      logger.trace("{}, RELAYING MESSAGE: [{}]", this, header.structId);
+      commsLog("%s  [M] ~> T%d.Message:%d (to %d)", this, header.topicId, header.structId, header.toId);
       byte envelope = broadcast ? ENVELOPE_BROADCAST : ENVELOPE_MESSAGE;
       writeFrame(makeFrame(header, payload, envelope));
    }
@@ -285,13 +286,13 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
       final Async async = new Async(null, header, originator);
       int origRequestId = async.header.requestId;
       this.addPendingRequest(async);
-      logger.trace("{} RELAYING REQUEST: [{}] was " + origRequestId, this, async.header.requestId);
+      commsLog("%s  [%d/%d] ~> Request:%d", this, async.header.requestId, origRequestId, header.structId);
       writeFrame(makeFrame(header, payload, ENVELOPE_REQUEST));
       header.requestId = origRequestId;
    }
 
    public void sendRelayedResponse(ResponseHeader header, ByteBuf payload) {
-      logger.trace("{} RELAYING RESPONSE: [{}]", this, header.requestId);
+      commsLog("%s  [%d] ~> Response:%d", this, header.requestId, header.structId);
       writeFrame(makeFrame(header, payload, ENVELOPE_RESPONSE));
    }
 
@@ -394,5 +395,18 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
    public String getPeerHostname() {
       return "Unknown";
    }
-
+   
+   public boolean commsLog(String format, Object ... args) {
+      if (commsLog.isInfoEnabled()) {
+         for (int i = 0; i < args.length; i++) {
+            if (args[i] == this) {
+               int h = Thread.currentThread().getName().hashCode() & 0xFFFFFF;
+               args[i] = String.format("{%06x} %s:%d", h, getClass().getSimpleName().substring(0, 4), sessionNum);
+            }
+         }
+         commsLog.info(String.format(format, args));
+      }
+      return true;
+   }
+   
 }

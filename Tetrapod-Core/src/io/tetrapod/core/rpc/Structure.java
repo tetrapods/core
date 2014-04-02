@@ -57,8 +57,8 @@ abstract public class Structure {
             e.printStackTrace();
          }
       }
-      String s = sb.length() > 0 ? sb.substring(0, sb.length() - 2) : "";
-      return this.getClass().getSimpleName() + " { " + s + " } ";
+      String s = sb.length() > 0 ? (" { " + sb.substring(0, sb.length() - 2) + " } ") : "";
+      return this.getClass().getSimpleName() + s;
    }
 
    public Security getSecurity() {
