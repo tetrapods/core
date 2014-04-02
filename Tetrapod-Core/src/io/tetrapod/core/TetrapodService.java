@@ -1,7 +1,6 @@
 package io.tetrapod.core;
 
 import static io.tetrapod.protocol.core.TetrapodContract.*;
-
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.socket.SocketChannel;
 import io.tetrapod.core.Session.RelayHandler;
@@ -10,12 +9,13 @@ import io.tetrapod.core.registry.Registry;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.rpc.Error;
 import io.tetrapod.core.serialize.StructureAdapter;
-import io.tetrapod.core.utils.Util;
+import io.tetrapod.core.utils.*;
 import io.tetrapod.core.web.*;
 import io.tetrapod.protocol.core.*;
 import io.tetrapod.protocol.service.*;
 
 import java.security.SecureRandom;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import org.slf4j.*;
@@ -48,19 +48,33 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
    private final WebRoutes    webRoutes               = new WebRoutes();
 
+   private final Properties   properties              = new Properties();
+
    public TetrapodService() {
       registry = new Registry(this);
       setMainContract(new TetrapodContract());
+
+      // HACK Properties hack for now
+      for (Map.Entry<Object, Object> e : System.getProperties().entrySet()) {
+         if (e.getKey().toString().startsWith("tetrapod.")) {
+            properties.put(e.getKey().toString(), e.getValue().toString());
+         }
+      }
+
    }
 
    @Override
    public void startNetwork(String hostAndPort, String token) throws Exception {
 
-      publicServer = new Server(DEFAULT_PUBLIC_PORT, new TypedSessionFactory(Core.TYPE_ANONYMOUS));
-      serviceServer = new Server(DEFAULT_SERVICE_PORT, new TypedSessionFactory(Core.TYPE_SERVICE));
-      clusterServer = new Server(DEFAULT_CLUSTER_PORT, new TypedSessionFactory(Core.TYPE_TETRAPOD));
-      webSocketsServer = new Server(DEFAULT_WEBSOCKETS_PORT, new WebSessionFactory("/sockets", true));
-      httpServer = new Server(DEFAULT_HTTP_PORT, new WebSessionFactory("./webContent", false));
+      publicServer = new Server(properties.optInt("tetrapod.public.port", DEFAULT_PUBLIC_PORT),
+            new TypedSessionFactory(Core.TYPE_ANONYMOUS));
+      serviceServer = new Server(properties.optInt("tetrapod.service.port", DEFAULT_SERVICE_PORT), new TypedSessionFactory(
+            Core.TYPE_SERVICE));
+      clusterServer = new Server(properties.optInt("tetrapod.cluster.port", DEFAULT_CLUSTER_PORT), new TypedSessionFactory(
+            Core.TYPE_TETRAPOD));
+      webSocketsServer = new Server(properties.optInt("tetrapod.websocket.port", DEFAULT_WEBSOCKETS_PORT), new WebSessionFactory(
+            "/sockets", true));
+      httpServer = new Server(properties.optInt("tetrapod.http.port", DEFAULT_HTTP_PORT), new WebSessionFactory("./webContent", false));
 
       if (hostAndPort == null) {
          // We're the first, so bootstrapping here

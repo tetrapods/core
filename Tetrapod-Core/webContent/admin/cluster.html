@@ -189,7 +189,7 @@
 									</div>
 								</td>
 
-								<td><span data-bind="text: entityId"></span></td>
+								<td><span data-bind="text: entityString"></span></td>
 								<td><img data-bind="attr:{src: iconURL}"
 									class="service-icon" width="20px" height="20px"> <span
 									class="service-name" data-bind="text: name"></span></td>
@@ -323,6 +323,7 @@
 					self.services.remove(s);
 				}
 				self.services.push(new Service(msg.entity));
+				self.services.sort(compareServices);
 			});
 
 			TP.addMessageHandler("ServiceUpdated", function(msg) {
@@ -338,7 +339,10 @@
 					self.services.remove(s);
 				}
 			});
+		}
 
+		function compareServices(a, b) {
+			return (a.entityId - b.entityId);
 		}
 
 		var chartOptions = {
@@ -371,6 +375,11 @@
 				if (!result.isError()) {
 					self.iconURL(result.iconURL);
 				}
+			});
+
+			self.entityString = ko.computed(function() {
+				return self.entityId + " (0x" + self.entityId.toString(16)
+						+ ")";
 			});
 
 			self.isPaused = function() {

@@ -43,4 +43,8 @@ public class Properties {
       return defaultVal;
    }
 
+   public void put(String key, String value) {
+      props.put(key, value);
+   }
+
 }
