@@ -20,22 +20,22 @@ TP.register = function(type, contractName, structName, contractId, structId) {
 }
 
 TP.registerConst = function(contractName, structName, constName, constValue) {
-   var map = TP.protocol["consts"];
-   var o = map[contractName + "." + structName] || {};
-   map[contractName + "." + structName] = o;
-   o[constName] = constValue;
+	var map = TP.protocol["consts"];
+	var o = map[contractName + "." + structName] || {};
+	map[contractName + "." + structName] = o;
+	o[constName] = constValue;
 }
 
 TP.addMessageHandler = function(message, handler) {
-   var val = TP.protocol.message[message];
-   if (!val) {
-      console.log("unknown message: " + message);
-      return;
-   }
-   if (val === 0) {
-      console.log("ambiguous message: " + message);
-      return;
-   }
+	var val = TP.protocol.message[message];
+	if (!val) {
+		console.log("unknown message: " + message);
+		return;
+	}
+	if (val === 0) {
+		console.log("ambiguous message: " + message);
+		return;
+	}
 	TP.messageHandlers[val.contractId + "." + val.structId] = handler;
 }
 
@@ -80,6 +80,7 @@ TP.connect = function(server, port) {
 	}
 	var socket = new WebSocket("ws://" + server + ":" + port + "/sockets");
 	socket.openListeners = [];
+	socket.closeListeners = [];
 	socket.onopen = function(event) {
 		console.log("[socket] open")
 		var i;
@@ -88,8 +89,8 @@ TP.connect = function(server, port) {
 			array[i]();
 	};
 	socket.onmessage = function(event) {
-		//console.log("[socket] received: " + event.data);
-		var result = null; 
+		// console.log("[socket] received: " + event.data);
+		var result = null;
 		if (event.data.indexOf("{") == 0) {
 			result = JSON.parse(event.data);
 		} else {
@@ -99,12 +100,15 @@ TP.connect = function(server, port) {
 		if (result._requestId != null) {
 			var func = TP.requestHandlers[result._requestId];
 			if (func) {
-				result.isError = function() { return result._contractId == 1 && result._structId == 1; };				
+				result.isError = function() {
+					return result._contractId == 1 && result._structId == 1;
+				};
 				func(result);
 			}
 		} else if (result._topicId != null) {
 			console.log("MESSAGE: " + JSON.stringify(result))
-			var func = TP.messageHandlers[result._contractId+"."+result._structId];
+			var func = TP.messageHandlers[result._contractId + "."
+					+ result._structId];
 			if (func) {
 				func(result);
 			}
@@ -112,19 +116,24 @@ TP.connect = function(server, port) {
 	};
 	socket.onclose = function(event) {
 		console.log("[socket] closed")
+		var i;
+		var array = socket.closeListeners;
+		for (i = 0; i < array.length; i++)
+			array[i]();
 	}
 	socket.onerror = function(event) {
 		console.log("[socket] error")
 	}
 	socket.privsend = socket.send;
 	socket.send = function(data) {
-		//console.log("[socket] send: " + data)
+		// console.log("[socket] send: " + data)
 		socket.privsend(data);
 	}
 	TP.socket = socket;
 	return {
-		onOpen : function(func) {
-			socket.openListeners.push(func);
+		listen : function(onOpen, onClose) {
+			socket.openListeners.push(onOpen);
+			socket.closeListeners.push(onClose);
 		}
 	}
 }
@@ -133,7 +142,7 @@ TP.logResponse = function(result) {
 	if (result.isError()) {
 		console.log("RESULT: ERROR " + result.errorCode);
 	} else if (result._contractId == 1 && result._structId == 2) {
-      console.log("RESULT: SUCCESS");
+		console.log("RESULT: SUCCESS");
 	} else {
 		console.log("RESULT: " + JSON.stringify(result));
 	}

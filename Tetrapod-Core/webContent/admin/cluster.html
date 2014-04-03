@@ -40,6 +40,11 @@
 	text-align: center;
 }
 
+.running {
+	background: green;
+	color: white;
+}
+
 .gone {
 	background: red;
 	color: white;
@@ -76,6 +81,10 @@
 .service-chart {
 	width: 128px;
 	height: 32px;
+}
+
+.alert {
+	margin-top: 20px;
 }
 </style>
 <!--  =============================================================================== -->
@@ -145,13 +154,18 @@
 				<div class="col-lg-12">
 					<!--  =============================================================================== -->
 
+					<div id="disconnected-alertbox" class="alert alert-danger"
+						hidden="true">
+						<strong>DISCONNECTED!</strong> Attempting to Reconnect...
+					</div>
+
 					<table class="table table-bordered table-condensed "
 						id="cluster-table">
 						<thead>
 							<tr>
 								<th><i class="fa fa-gear fa-fw"></i></th>
-								<th>Entity</th>
 								<th>Name</th>
+								<th>Entity</th>
 								<th>Host</th>
 								<th>Status</th>
 								<th>Stats</th>
@@ -165,14 +179,19 @@
 											<i class="fa fa-gear fa-fw"></i> <i class="fa fa-caret-down"></i>
 										</a>
 										<ul class="dropdown-menu dropdown-service">
+											<li class="disabled"><a href="#"
+												data-bind="text: name +' '+entityString()"></a></li>
+
+											<li class="divider"></li>
+
 											<li><a href="#"
 												data-bind="click: pause, visible: canPause()"><i
 													class="fa fa-pause fa-fw"></i>Pause</a></li>
 											<li><a href="#"
 												data-bind="click: unpause, visible: canUnpause()"><i
-													class="fa fa-play fa-fw"></i>Unpause</a></li>
+													class="fa fa-play fa-fw"></i>Resume</a></li>
 
-											<li class="divider"></li>
+											<li class="divider" data-bind=" visible: !isGone()"></li>
 
 											<li><a href="#"
 												data-bind="click: restart, visible: !isGone()"><i
@@ -189,12 +208,13 @@
 									</div>
 								</td>
 
-								<td><span data-bind="text: entityString"></span></td>
 								<td><img data-bind="attr:{src: iconURL}"
 									class="service-icon" width="20px" height="20px"> <span
 									class="service-name" data-bind="text: name"></span></td>
-								<td><span data-bind="text: host"></span></td>
-								<td class="centered"><span data-bind="text: statusName()"></span></td>
+								<td class="centered"><span data-bind="text: entityString"></span></td>
+								<td class="centered"><span data-bind="text: host"></span></td>
+								<td data-bind="attr: {'class':status_style}"><span
+									data-bind="text: statusName()"></span></td>
 								<td>
 									<div class="service-chart"
 										data-bind="attr: {id: 'service-chart-rps-' + entityId}"></div>
@@ -207,6 +227,7 @@
 					<div>
 						<h3>Tetrapod Platform TODOs</h3>
 						<ul>
+							<li>Reconnect loops</li>
 							<li>Service stats &amp; charts</li>
 							<li>Service Log/metrics viewing, etc...</li>
 							<li>Service direct connections</li>
@@ -275,7 +296,16 @@
 		var model = new ClusterModel();
 		ko.applyBindings(model, $("#cluster-table")[0]);
 
-		TP.connect("localhost").onOpen(model.onOpen);
+		function connect() {
+			TP.connect("localhost", 9903).listen(model.onOpen, function() {
+				$('#disconnected-alertbox').show();
+				setTimeout(function updateRandom() {
+					connect();
+				}, 1000);
+			});
+		}
+
+		connect();
 
 		// Cluster Model -- list of Services
 		function ClusterModel() {
@@ -291,6 +321,7 @@
 			}, 1000);
 
 			self.onOpen = function() {
+				$('#disconnected-alertbox').hide();
 				TP.send("Register", {
 					build : 0,
 					contractId : 0,
@@ -411,7 +442,15 @@
 			});
 
 			self.row_style = ko.computed(function() {
-				return self.statusName().toLowerCase();
+				if (self.isPaused())
+					return "paused";
+				if (self.isInit())
+					return "init";
+				return "";
+			});
+
+			self.status_style = ko.computed(function() {
+				return self.statusName().toLowerCase() + " centered";
 			});
 
 			self.pause = function() {
