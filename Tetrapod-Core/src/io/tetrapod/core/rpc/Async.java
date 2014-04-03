@@ -42,10 +42,20 @@ public class Async {
             logger.error(e.getMessage(), e);
          }
       }
+      notifyAll();
    }
 
    public boolean isTimedout() {
       return System.currentTimeMillis() - sendTime > header.timeout * 1000;
+   }
+
+   public synchronized Response waitForResponse() {
+      while (response == null) {
+         try {
+            wait();
+         } catch (InterruptedException e) {}
+      }
+      return response;
    }
 
 }
