@@ -62,12 +62,14 @@ protected response Link
    7: int thisNumLogins
    
 protected request Info
-   1: int accountId
+   1: int myAccountId  @authId
    2: string authToken
+   3: int infoAccountId
    
 protected response Info
-   1: string username 
-   2: int properties
+   1: int accountId
+   2: string username 
+   3: int properties
    
 admin request UpdateProperties
    1: int accountId

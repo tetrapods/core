@@ -21,27 +21,31 @@ public class InfoRequest extends Request {
       defaults();
    }
 
-   public InfoRequest(int accountId, String authToken) {
-      this.accountId = accountId;
+   public InfoRequest(int myAccountId, String authToken, int infoAccountId) {
+      this.myAccountId = myAccountId;
       this.authToken = authToken;
+      this.infoAccountId = infoAccountId;
    }   
 
-   public int accountId;
+   public int myAccountId;
    public String authToken;
+   public int infoAccountId;
 
    public final Structure.Security getSecurity() {
       return Security.PROTECTED;
    }
 
    public final void defaults() {
-      accountId = 0;
+      myAccountId = 0;
       authToken = null;
+      infoAccountId = 0;
    }
    
    @Override
    public final void write(DataSource data) throws IOException {
-      data.write(1, this.accountId);
+      data.write(1, this.myAccountId);
       data.write(2, this.authToken);
+      data.write(3, this.infoAccountId);
       data.writeEndTag();
    }
    
@@ -51,8 +55,9 @@ public class InfoRequest extends Request {
       while (true) {
          int tag = data.readTag();
          switch (tag) {
-            case 1: this.accountId = data.read_int(tag); break;
+            case 1: this.myAccountId = data.read_int(tag); break;
             case 2: this.authToken = data.read_string(tag); break;
+            case 3: this.infoAccountId = data.read_int(tag); break;
             case Codec.END_TAG:
                return;
             default:
@@ -85,9 +90,10 @@ public class InfoRequest extends Request {
       // Note do not use this tags in long term serializations (to disk or databases) as 
       // implementors are free to rename them however they wish.  A null means the field
       // is not to participate in web serialization (remaining at default)
-      String[] result = new String[2+1];
-      result[1] = "accountId";
+      String[] result = new String[3+1];
+      result[1] = "myAccountId";
       result[2] = "authToken";
+      result[3] = "infoAccountId";
       return result;
    }
    
@@ -102,11 +108,12 @@ public class InfoRequest extends Request {
       desc.types[0] = new TypeDescriptor(TypeDescriptor.T_STRUCT, getContractId(), getStructId());
       desc.types[1] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
       desc.types[2] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
+      desc.types[3] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
       return desc;
    }
 
    public final Response securityCheck(RequestContext ctx) {
-      return super.securityCheck(accountId, authToken, ctx);
+      return super.securityCheck(myAccountId, authToken, ctx);
    }
       
 }
