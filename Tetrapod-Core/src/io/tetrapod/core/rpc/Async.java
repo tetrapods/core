@@ -58,4 +58,8 @@ public class Async {
       return response;
    }
 
+   public void log() {
+      handle(ResponseHandler.LOGGER);
+   }
+
 }

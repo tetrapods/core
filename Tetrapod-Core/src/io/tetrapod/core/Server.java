@@ -50,6 +50,8 @@ public class Server implements Session.Listener {
             startSession(ch);
          }
       }).option(ChannelOption.SO_BACKLOG, 128).childOption(ChannelOption.SO_KEEPALIVE, true);
+
+      logger.info("Starting Server Listening on Port {}", port);
       return b.bind(port);
    }
 
@@ -79,6 +81,10 @@ public class Server implements Session.Listener {
    @Override
    public void onSessionStop(Session ses) {
       sessions.remove(ses.getSessionNum());
+   }
+
+   public int getPort() {
+      return port;
    }
 
 }
