@@ -20,6 +20,7 @@ public class TetrapodContract extends Contract {
    
    public static interface API extends
       AddServiceInformationRequest.Handler,
+      JoinClusterRequest.Handler,
       PublishRequest.Handler,
       RegisterRequest.Handler,
       RegistrySubscribeRequest.Handler,
@@ -33,6 +34,7 @@ public class TetrapodContract extends Contract {
    public Structure[] getRequests() {
       return new Structure[] {
          new RegisterRequest(),
+         new JoinClusterRequest(),
          new UnregisterRequest(),
          new PublishRequest(),
          new RegistrySubscribeRequest(),
@@ -47,12 +49,14 @@ public class TetrapodContract extends Contract {
    public Structure[] getResponses() {
       return new Structure[] {
          new RegisterResponse(),
+         new JoinClusterResponse(),
          new PublishResponse(),
       };
    }
    
    public Structure[] getMessages() {
       return new Structure[] {
+         new ClusterMemberMessage(),
          new EntityRegisteredMessage(),
          new EntityUnregisteredMessage(),
          new EntityUpdatedMessage(),
@@ -74,9 +78,9 @@ public class TetrapodContract extends Contract {
          new RequestHeader(),
          new ResponseHeader(),
          new MessageHeader(),
+         new ServerAddress(),
          new Entity(),
          new Subscriber(),
-         new FlatTopic(),
          new WebRoute(),
          new TypeDescriptor(),
          new StructDescription(),

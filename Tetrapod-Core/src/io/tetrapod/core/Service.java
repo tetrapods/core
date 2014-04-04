@@ -1,9 +1,10 @@
 package io.tetrapod.core;
 
-import io.tetrapod.core.rpc.*;
+import io.tetrapod.core.rpc.ServiceAPI;
+import io.tetrapod.protocol.core.ServerAddress;
 
 public interface Service extends Session.Helper, ServiceAPI {
 
-   void startNetwork(String hostAndPort, String token) throws Exception;
+   void startNetwork(ServerAddress server, String token) throws Exception;
 
 }

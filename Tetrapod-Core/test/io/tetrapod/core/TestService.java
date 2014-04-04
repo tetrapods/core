@@ -62,7 +62,7 @@ public class TestService extends DefaultService implements BaseServiceContract.A
          }
       });
 
-      updateStatus(status & ~Core.STATUS_INIT);
+      updateStatus(status & ~Core.STATUS_STARTING);
    }
 
    @Override

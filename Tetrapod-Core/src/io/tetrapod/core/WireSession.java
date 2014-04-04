@@ -127,7 +127,7 @@ public class WireSession extends Session {
       } else {
          logger.warn("{} Could not find pending request for {}", this, header.dump());
       }
-      
+
       if (!logged)
          logged = commsLog("%s  [%d] <- Response.%d", this, header.requestId, header.structId);
    }
@@ -158,7 +158,7 @@ public class WireSession extends Session {
          logged = commsLog("%s  [%d] <- Request.%d", this, header.requestId, header.structId);
          relayRequest(header, in);
       }
-      
+
       if (!logged)
          logged = commsLog("%s  [%d] <- Request.%d", this, header.requestId, header.structId);
    }
@@ -167,7 +167,7 @@ public class WireSession extends Session {
       final ByteBufDataSource reader = new ByteBufDataSource(in);
       final MessageHeader header = new MessageHeader();
       boolean logged = false;
-      
+
       header.read(reader);
       if (theirType != TYPE_TETRAPOD) {
          // fromId MUST be their id, unless it's a tetrapod session, which could be relaying
@@ -175,7 +175,9 @@ public class WireSession extends Session {
       }
 
       int rewindPos = in.readerIndex();
-
+      if (header.structId == 1454035) {
+         logger.info("");
+      }
       if (header.toId == myId || (header.toId == UNADDRESSED && helper.getMessageHandlers(header.contractId, header.structId).size() > 0)) {
          // dispatch direct messages and ones we're waiting on
          final Message msg = (Message) StructureFactory.make(header.contractId, header.structId);
@@ -194,7 +196,7 @@ public class WireSession extends Session {
             logged = commsLog("%s  [M] <- T%d.Message:%d", this, header.topicId, header.structId);
          relayMessage(header, in, isBroadcast);
       }
-      
+
       if (!logged)
          logged = commsLog("%s  [M] <- T%d.Message:%d", this, header.topicId, header.structId);
    }

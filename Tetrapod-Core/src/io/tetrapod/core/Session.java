@@ -52,28 +52,30 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
 
    }
 
-   protected static final Logger        logger          = LoggerFactory.getLogger(Session.class);
-   protected static final Logger        commsLog        = LoggerFactory.getLogger("comms");
+   protected static final Logger        logger                  = LoggerFactory.getLogger(Session.class);
+   protected static final Logger        commsLog                = LoggerFactory.getLogger("comms");
 
-   protected static final AtomicInteger sessionCounter  = new AtomicInteger();
+   public static final byte             DEFAULT_REQUEST_TIMEOUT = 30;
 
-   protected final int                  sessionNum      = sessionCounter.incrementAndGet();
+   protected static final AtomicInteger sessionCounter          = new AtomicInteger();
 
-   protected final List<Listener>       listeners       = new LinkedList<Listener>();
-   protected final Map<Integer, Async>  pendingRequests = new ConcurrentHashMap<>();
-   protected final AtomicInteger        requestCounter  = new AtomicInteger();
+   protected final int                  sessionNum              = sessionCounter.incrementAndGet();
+
+   protected final List<Listener>       listeners               = new LinkedList<Listener>();
+   protected final Map<Integer, Async>  pendingRequests         = new ConcurrentHashMap<>();
+   protected final AtomicInteger        requestCounter          = new AtomicInteger();
    protected final Session.Helper       helper;
    protected final SocketChannel        channel;
-   protected final AtomicLong           lastHeardFrom   = new AtomicLong();
-   protected final AtomicLong           lastSentTo      = new AtomicLong();
+   protected final AtomicLong           lastHeardFrom           = new AtomicLong();
+   protected final AtomicLong           lastSentTo              = new AtomicLong();
 
    protected RelayHandler               relayHandler;
 
-   protected int                        myId            = 0;
-   protected byte                       myType          = Core.TYPE_ANONYMOUS;
+   protected int                        myId                    = 0;
+   protected byte                       myType                  = Core.TYPE_ANONYMOUS;
 
-   protected int                        theirId         = 0;
-   protected byte                       theirType       = Core.TYPE_ANONYMOUS;
+   protected int                        theirId                 = 0;
+   protected byte                       theirType               = Core.TYPE_ANONYMOUS;
 
    protected int                        myContractId;
 
@@ -216,6 +218,10 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
       return Response.PENDING;
    }
 
+   public Async sendRequest(Request req, int toId) {
+      return sendRequest(req, toId, DEFAULT_REQUEST_TIMEOUT);
+   }
+
    public Async sendRequest(Request req, int toId, byte timeoutSeconds) {
       final RequestHeader header = new RequestHeader();
       header.requestId = requestCounter.incrementAndGet();
@@ -269,7 +275,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
    }
 
    public ChannelFuture writeFrame(Object frame) {
-      if (frame != null) {
+      if (frame != null && channel.isActive()) {
          lastSentTo.set(System.currentTimeMillis());
          return channel.writeAndFlush(frame);
       }

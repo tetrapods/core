@@ -1,12 +1,12 @@
 package io.tetrapod.core;
 
-import javax.net.ssl.*;
-
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.ssl.SslHandler;
+
+import javax.net.ssl.*;
 
 import org.slf4j.*;
 
@@ -31,6 +31,11 @@ public class Client implements Session.Listener {
    }
 
    public ChannelFuture connect(final String host, final int port, final Dispatcher dispatcher) throws Exception {
+      return connect(host, port, dispatcher, null);
+   }
+
+   public ChannelFuture connect(final String host, final int port, final Dispatcher dispatcher, final Session.Listener listener)
+         throws Exception {
       Bootstrap b = new Bootstrap();
       b.group(dispatcher.getWorkerGroup());
       b.channel(NioSocketChannel.class);
@@ -40,6 +45,9 @@ public class Client implements Session.Listener {
          public void initChannel(SocketChannel ch) throws Exception {
             logger.info("Connection to {}:{}", host, port);
             startSession(ch);
+            if (listener != null) {
+               session.addSessionListener(listener);
+            }
          }
       });
       return b.connect(host, port).sync();

@@ -1,7 +1,9 @@
 package io.tetrapod.core;
 
+import io.tetrapod.protocol.core.ServerAddress;
+
 import java.io.IOException;
-import java.lang.management.*;
+import java.lang.management.ManagementFactory;
 import java.util.*;
 import java.util.Map.Entry;
 
@@ -17,26 +19,35 @@ public class Launcher {
             usage();
          String serviceClass = args[0];
          opts = getOpts(args, 1, defaultOpts());
-         System.setProperty("APPNAME", serviceClass.substring(serviceClass.lastIndexOf('.')+1));
+         System.setProperty("APPNAME", serviceClass.substring(serviceClass.lastIndexOf('.') + 1));
+
+         ServerAddress addr = null;
+         if (opts.get("host") != null) {
+            int port = TetrapodService.DEFAULT_SERVICE_PORT;
+            if (opts.get("port") != null) {
+               port = Integer.parseInt(opts.get("port"));
+            }
+            addr = new ServerAddress(opts.get("host"), port);
+         }
+
          Service service = (Service) Class.forName(serviceClass).newInstance();
-         service.startNetwork(opts.get("host"), opts.get("token"));
+         service.startNetwork(addr, opts.get("token"));
       } catch (Throwable t) {
          t.printStackTrace();
          usage();
       }
    }
 
-   // launch 30m io.tetrapods.identity.IdentityService -host 192.160.0.66:33456 -token sdkjfrinbnriurtdjvdknmnnlkjrii
-
    private static void usage() {
-      System.err.println("\nusage: java <vmopts> " + Launcher.class.getCanonicalName()
-            + " serviceClassName [-host hostname[:port]] [-token authToken]\n");
+      System.err.println("\nusage:\n\t java <vmopts> " + Launcher.class.getCanonicalName()
+            + " serviceClassName [-host hostname] [-port port] [-token authToken]\n");
       System.exit(0);
    }
 
    private static Map<String, String> defaultOpts() {
       Map<String, String> map = new HashMap<>();
       map.put("host", null);
+      map.put("port", null);
       map.put("token", null);
       return map;
    }

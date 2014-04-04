@@ -55,7 +55,12 @@
 	color: yellow;
 }
 
-.init {
+.stopping {
+	background: #fdd;
+	color: #a88;
+}
+
+.starting {
 	background: #eee;
 	color: #999;
 }
@@ -322,6 +327,7 @@
 
 			self.onOpen = function() {
 				$('#disconnected-alertbox').hide();
+				self.services.removeAll();
 				TP.send("Register", {
 					build : 0,
 					contractId : 0,
@@ -421,31 +427,39 @@
 				return (self.status() & Core.STATUS_GONE) != 0;
 			}
 
-			self.isInit = function() {
-				return (self.status() & Core.STATUS_INIT) != 0;
+			self.isStarting = function() {
+				return (self.status() & Core.STATUS_STARTING) != 0;
 			}
 
 			self.isFailed = function() {
 				return (self.status() & Core.STATUS_FAILED) != 0;
 			}
 
+			self.isStopping = function() {
+				return (self.status() & Core.STATUS_STOPPING) != 0;
+			}
+
 			self.statusName = ko.computed(function() {
 				if (self.isGone())
 					return "GONE";
+				if (self.isStopping())
+					return "STOPPING";
 				if (self.isFailed())
 					return "FAILED";
 				if (self.isPaused())
 					return "PAUSED";
-				if (self.isInit())
-					return "INIT";
+				if (self.isStarting())
+					return "STARTING";
 				return "RUNNING";
 			});
 
 			self.row_style = ko.computed(function() {
+				if (self.isStopping())
+					return "stopping";
 				if (self.isPaused())
 					return "paused";
-				if (self.isInit())
-					return "init";
+				if (self.isStarting())
+					return "starting";
 				return "";
 			});
 

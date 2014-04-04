@@ -17,9 +17,12 @@ public class Registry implements TetrapodContract.Registry.API {
 
    protected static final Logger                logger          = LoggerFactory.getLogger(Registry.class);
 
-   protected static final int                   PARENT_ID_SHIFT = 20;
-   protected static final int                   PARENT_ID_MASK  = 0x7FF << PARENT_ID_SHIFT;
-   protected static final int                   MAX_ID          = 0x000FFFFF;
+   public static final int                      MAX_PARENTS     = 0x000007FF;
+   public static final int                      MAX_ID          = 0x000FFFFF;
+
+   public static final int                      PARENT_ID_SHIFT = 20;
+   public static final int                      PARENT_ID_MASK  = MAX_PARENTS << PARENT_ID_SHIFT;
+   public static final int                      BOOTSTRAP_ID    = 1 << PARENT_ID_SHIFT;
 
    /**
     * Our entityId
@@ -53,10 +56,12 @@ public class Registry implements TetrapodContract.Registry.API {
       this.broadcaster = broadcaster;
    }
 
-   public synchronized int setParentId(int id) {
-      assert id < 0x07FF;
-      this.parentId = id << PARENT_ID_SHIFT;
-      return this.parentId;
+   public synchronized void setParentId(int id) {
+      this.parentId = id;
+   }
+
+   public synchronized int getParentId() {
+      return parentId;
    }
 
    public Collection<EntityInfo> getEntities() {
@@ -85,7 +90,11 @@ public class Registry implements TetrapodContract.Registry.API {
 
    public synchronized void register(EntityInfo entity) {
       if (entity.entityId <= 0) {
-         entity.entityId = issueId();
+         if (entity.isTetrapod()) {
+            entity.entityId = issueTetrapodId();
+         } else {
+            entity.entityId = issueId();
+         }
       }
       entities.put(entity.entityId, entity);
       if (entity.isService()) {
@@ -93,7 +102,7 @@ public class Registry implements TetrapodContract.Registry.API {
          ensureServicesList(entity.contractId).add(entity);
       }
       if (entity.parentId == parentId && entity.entityId != parentId && broadcaster != null) {
-         broadcaster.broadcastRegistryMessage(new EntityRegisteredMessage(entity, null));
+         broadcaster.broadcastRegistryMessage(new EntityRegisteredMessage(entity));
       }
       if (entity.isService()) {
          broadcaster.broadcastServicesMessage(new ServiceAddedMessage(entity));
@@ -171,6 +180,21 @@ public class Registry implements TetrapodContract.Registry.API {
    private synchronized int issueId() {
       while (true) {
          int id = parentId | (++counter % MAX_ID);
+         if (!entities.containsKey(id)) {
+            return id;
+         }
+      }
+   }
+
+   /**
+    * Issue the next available tetrapod id
+    * 
+    * FIXME: This is currently _very_ unsafe, but will do until we have the robust distributed counters or locks implemented
+    */
+   public synchronized int issueTetrapodId() {
+      int nextId = parentId >> PARENT_ID_SHIFT;
+      while (true) {
+         int id = (++nextId % MAX_PARENTS) << PARENT_ID_SHIFT;
          if (!entities.containsKey(id)) {
             return id;
          }
@@ -261,7 +285,10 @@ public class Registry implements TetrapodContract.Registry.API {
 
    @Override
    public void messageEntityRegistered(EntityRegisteredMessage m, MessageContext ctx) {
+      logger.info("{} {}", ctx.header.dump(), m.entity.dump());
+
       if (ctx.header.topicId != 0 && ctx.header.fromId != parentId) {
+         final EntityInfo e = new EntityInfo(m.entity);
          register(new EntityInfo(m.entity));
       }
    }
@@ -369,12 +396,12 @@ public class Registry implements TetrapodContract.Registry.API {
    public void logStats() {
       List<EntityInfo> list = new ArrayList<>(entities.values());
       Collections.sort(list);
-      logger.info("===================== TETRAPOD CLUSTER REGISTRY =======================");
+      logger.info("========================== TETRAPOD CLUSTER REGISTRY ============================");
       for (EntityInfo e : list) {
-         logger.info(String.format("0x%08X %-15s status=%08X topics=%d subscriptions=%d", e.entityId, e.name, e.status, e.getNumTopics(),
-               e.getNumSubscriptions()));
+         logger.info(String.format(" 0x%08X 0x%08X %-15s status=%08X topics=%d subscriptions=%d", e.parentId, e.entityId, e.name, e.status,
+               e.getNumTopics(), e.getNumSubscriptions()));
       }
-      logger.info("=======================================================================\n");
+      logger.info("=================================================================================\n");
 
    }
 

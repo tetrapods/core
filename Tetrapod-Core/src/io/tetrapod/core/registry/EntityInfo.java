@@ -149,7 +149,8 @@ public class EntityInfo extends Entity implements Comparable<EntityInfo> {
     * @return
     */
    public boolean isAvailable() {
-      return (status & (Core.STATUS_INIT | Core.STATUS_PAUSED | Core.STATUS_GONE | Core.STATUS_BUSY | Core.STATUS_OVERLOADED | Core.STATUS_FAILED)) == 0;
+      return (status & (Core.STATUS_STARTING | Core.STATUS_PAUSED | Core.STATUS_GONE | Core.STATUS_BUSY | Core.STATUS_OVERLOADED
+            | Core.STATUS_FAILED | Core.STATUS_STOPPING)) == 0;
    }
 
 }

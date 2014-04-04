@@ -14,9 +14,10 @@ public class DefaultService implements Service, BaseServiceContract.API, Session
    private static final Logger   logger          = LoggerFactory.getLogger(DefaultService.class);
 
    protected final Dispatcher    dispatcher;
-   protected final Client        cluster;
+   protected Client              clusterClient;
    protected Contract            contract;
 
+   protected boolean             terminating;
    protected int                 entityId;
    protected int                 parentId;
    protected String              token;
@@ -25,9 +26,9 @@ public class DefaultService implements Service, BaseServiceContract.API, Session
    private final MessageHandlers messageHandlers = new MessageHandlers();
 
    public DefaultService() {
-      status |= Core.STATUS_INIT;
+      status |= Core.STATUS_STARTING;
       dispatcher = new Dispatcher();
-      cluster = new Client(this);
+      clusterClient = new Client(this);
       addContracts(new BaseServiceContract());
       addPeerContracts(new TetrapodContract());
    }
@@ -39,14 +40,9 @@ public class DefaultService implements Service, BaseServiceContract.API, Session
    // Service protocol
 
    @Override
-   public void startNetwork(String hostAndPort, String token) throws Exception {
-      if (hostAndPort != null) {
-         this.token = token;
-         int ix = hostAndPort.indexOf(':');
-         String host = ix < 0 ? hostAndPort : hostAndPort.substring(0, ix);
-         int port = ix < 0 ? TetrapodService.DEFAULT_SERVICE_PORT : Integer.parseInt(hostAndPort.substring(ix + 1));
-         cluster.connect(host, port, dispatcher).sync();
-      }
+   public void startNetwork(ServerAddress server, String token) throws Exception {
+      this.token = token;
+      clusterClient.connect(server.host, server.port, dispatcher).sync();
    }
 
    /**
@@ -63,11 +59,12 @@ public class DefaultService implements Service, BaseServiceContract.API, Session
     */
    public void onShutdown(boolean restarting) {}
 
-   private void shutdown(boolean restarting) {
-      updateStatus(status | Core.STATUS_PAUSED);
+   public void shutdown(boolean restarting) {
+      terminating = true;
+      updateStatus(status | Core.STATUS_STOPPING);
       onShutdown(restarting);
       if (restarting) {
-         cluster.close();
+         clusterClient.close();
          dispatcher.shutdown();
          try {
             Launcher.relaunch(token);
@@ -78,7 +75,7 @@ public class DefaultService implements Service, BaseServiceContract.API, Session
          sendRequest(new UnregisterRequest(getEntityId()), Core.UNADDRESSED).handle(new ResponseHandler() {
             @Override
             public void onResponse(Response res) {
-               cluster.close();
+               clusterClient.close();
                dispatcher.shutdown();
             }
          });
@@ -92,6 +89,7 @@ public class DefaultService implements Service, BaseServiceContract.API, Session
    public Session makeSession(SocketChannel ch) {
       final Session ses = new WireSession(ch, DefaultService.this);
       ses.setMyEntityType(getEntityType());
+      ses.setTheirEntityType(Core.TYPE_TETRAPOD);
       ses.addSessionListener(new Session.Listener() {
          @Override
          public void onSessionStop(Session ses) {
@@ -119,11 +117,11 @@ public class DefaultService implements Service, BaseServiceContract.API, Session
                      parentId = r.parentId;
                      token = r.token;
 
-                     logger.info(String.format("%s My entityId is 0x%08X", cluster.getSession(), r.entityId));
-                     cluster.getSession().setMyEntityId(r.entityId);
-                     cluster.getSession().setTheirEntityId(r.parentId);
-                     cluster.getSession().setMyEntityType(getEntityType());
-                     cluster.getSession().setTheirEntityType(Core.TYPE_TETRAPOD);
+                     logger.info(String.format("%s My entityId is 0x%08X", clusterClient.getSession(), r.entityId));
+                     clusterClient.getSession().setMyEntityId(r.entityId);
+                     clusterClient.getSession().setTheirEntityId(r.parentId);
+                     clusterClient.getSession().setMyEntityType(getEntityType());
+                     clusterClient.getSession().setTheirEntityType(Core.TYPE_TETRAPOD);
                      registerServiceInformation();
                      onRegistered();
                   }
@@ -164,7 +162,9 @@ public class DefaultService implements Service, BaseServiceContract.API, Session
 
    protected void updateStatus(int status) {
       this.status = status;
-      sendRequest(new ServiceStatusUpdateRequest(status), Core.UNADDRESSED);
+      if (clusterClient.isConnected()) {
+         sendRequest(new ServiceStatusUpdateRequest(status), Core.UNADDRESSED);
+      }
    }
 
    protected void fail(Throwable error) {
@@ -193,27 +193,27 @@ public class DefaultService implements Service, BaseServiceContract.API, Session
    }
 
    public Response sendPendingRequest(Request req, PendingResponseHandler handler) {
-      return cluster.getSession().sendPendingRequest(req, Core.UNADDRESSED, (byte) 30, handler);
+      return clusterClient.getSession().sendPendingRequest(req, Core.UNADDRESSED, (byte) 30, handler);
    }
 
    public Response sendPendingRequest(Request req, int toEntityId, PendingResponseHandler handler) {
-      return cluster.getSession().sendPendingRequest(req, toEntityId, (byte) 30, handler);
+      return clusterClient.getSession().sendPendingRequest(req, toEntityId, (byte) 30, handler);
    }
-   
+
    public Async sendRequest(Request req) {
-      return cluster.getSession().sendRequest(req, Core.UNADDRESSED, (byte) 30);
+      return clusterClient.getSession().sendRequest(req, Core.UNADDRESSED, (byte) 30);
    }
 
    public Async sendRequest(Request req, int toEntityId) {
-      return cluster.getSession().sendRequest(req, toEntityId, (byte) 30);
+      return clusterClient.getSession().sendRequest(req, toEntityId, (byte) 30);
    }
 
    public void sendMessage(Message msg, int toEntityId, int topicId) {
-      cluster.getSession().sendMessage(msg, toEntityId, topicId);
+      clusterClient.getSession().sendMessage(msg, toEntityId, topicId);
    }
 
    public void sendBroadcastMessage(Message msg, int topicId) {
-      cluster.getSession().sendBroadcastMessage(msg, topicId);
+      clusterClient.getSession().sendBroadcastMessage(msg, topicId);
    }
 
    // Generic handlers for all request/subscriptions
