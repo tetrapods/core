@@ -21,11 +21,13 @@ public class InfoResponse extends Response {
       defaults();
    }
 
-   public InfoResponse(String username, int properties) {
+   public InfoResponse(int accountId, String username, int properties) {
+      this.accountId = accountId;
       this.username = username;
       this.properties = properties;
    }   
    
+   public int accountId;
    public String username;
    public int properties;
 
@@ -34,14 +36,16 @@ public class InfoResponse extends Response {
    }
 
    public final void defaults() {
+      accountId = 0;
       username = null;
       properties = 0;
    }
    
    @Override
    public final void write(DataSource data) throws IOException {
-      data.write(1, this.username);
-      data.write(2, this.properties);
+      data.write(1, this.accountId);
+      data.write(2, this.username);
+      data.write(3, this.properties);
       data.writeEndTag();
    }
    
@@ -51,8 +55,9 @@ public class InfoResponse extends Response {
       while (true) {
          int tag = data.readTag();
          switch (tag) {
-            case 1: this.username = data.read_string(tag); break;
-            case 2: this.properties = data.read_int(tag); break;
+            case 1: this.accountId = data.read_int(tag); break;
+            case 2: this.username = data.read_string(tag); break;
+            case 3: this.properties = data.read_int(tag); break;
             case Codec.END_TAG:
                return;
             default:
@@ -74,9 +79,10 @@ public class InfoResponse extends Response {
       // Note do not use this tags in long term serializations (to disk or databases) as 
       // implementors are free to rename them however they wish.  A null means the field
       // is not to participate in web serialization (remaining at default)
-      String[] result = new String[2+1];
-      result[1] = "username";
-      result[2] = "properties";
+      String[] result = new String[3+1];
+      result[1] = "accountId";
+      result[2] = "username";
+      result[3] = "properties";
       return result;
    }
 
@@ -89,8 +95,9 @@ public class InfoResponse extends Response {
       desc.tagWebNames = tagWebNames();
       desc.types = new TypeDescriptor[desc.tagWebNames.length];
       desc.types[0] = new TypeDescriptor(TypeDescriptor.T_STRUCT, getContractId(), getStructId());
-      desc.types[1] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
-      desc.types[2] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
+      desc.types[1] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
+      desc.types[2] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
+      desc.types[3] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
       return desc;
    }
  }

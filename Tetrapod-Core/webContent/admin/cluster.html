@@ -296,7 +296,8 @@
 
 
 	<script>
-		var Core = TP.protocol.consts["Tetrapod.Core"];
+		var Core = TP.consts["Tetrapod.Core"];
+      TP.commsLog = true;
 
 		var model = new ClusterModel();
 		ko.applyBindings(model, $("#cluster-table")[0]);
@@ -337,7 +338,6 @@
 			}
 
 			self.onRegistered = function(result) {
-				TP.logResponse(result);
 				if (!result.isError()) {
 					self.token = result.token;
 					setCookie("tetrapod-token", self.token);
@@ -468,19 +468,18 @@
 			});
 
 			self.pause = function() {
-				TP.send("Pause", {}, self.entityId).handle(TP.logResponse);
+				TP.send("Pause", {}, self.entityId);
 			}
 
 			self.unpause = function() {
-				TP.send("Unpause", {}, self.entityId).handle(TP.logResponse);
+				TP.send("Unpause", {}, self.entityId);
 			}
 			self.restart = function() {
 				bootbox.confirm("Are you sure you want to restart service: "
 						+ self.name + "[" + self.entitId + "]?", function(
 						result) {
 					if (result) {
-						TP.send("Restart", {}, self.entityId).handle(
-								TP.logResponse);
+						TP.send("Restart", {}, self.entityId);
 					}
 				});
 			}
@@ -489,8 +488,7 @@
 						+ self.name + "[" + self.entitId + "]?", function(
 						result) {
 					if (result) {
-						TP.send("Shutdown", {}, self.entityId).handle(
-								TP.logResponse);
+						TP.send("Shutdown", {}, self.entityId);
 					}
 				});
 			}
@@ -498,7 +496,7 @@
 			self.deleteService = function() {
 				TP.send("Unregister", {
 					entityId : self.entityId
-				}).handle(TP.logResponse);
+				});
 			}
 
 			self.canPause = function() {
