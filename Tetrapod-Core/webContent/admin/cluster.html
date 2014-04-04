@@ -291,6 +291,7 @@
 	<!--  =============================================================================== -->
 	<!--  Tetrapod Scripts -->
 
+   <script src="../protocol/tetrapod-host.js"></script>
 	<script src="../protocol/tetrapod-main.js"></script>
 	<script src="../protocol/tetrapod.js"></script>
 
@@ -304,7 +305,7 @@
 		ko.applyBindings(model, $("#cluster-table")[0]);
 
 		function connect() { 
-			TP.connect("localhost", 9903).listen(model.onOpen, function() {
+			TP.connect(TP_websocket_host, 9903).listen(model.onOpen, function() {
 				$('#disconnected-alertbox').show();
 				setTimeout(function updateRandom() {
 					connect();
