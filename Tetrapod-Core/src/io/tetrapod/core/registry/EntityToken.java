@@ -1,8 +1,8 @@
-package io.tetrapod.core;
+package io.tetrapod.core.registry;
 
 public class EntityToken {
-   int  entityId = 0;
-   long nonce    = 0;
+   public int  entityId = 0;
+   public long nonce    = 0;
 
    public static EntityToken decode(String token) {
       if (token == null)

@@ -162,7 +162,7 @@ public class DefaultService implements Service, BaseServiceContract.API, Session
       return parentId;
    }
 
-   public boolean isShuttingDown() {
+   public synchronized boolean isShuttingDown() {
       return (status & Core.STATUS_STOPPING) != 0;
    }
 
@@ -234,11 +234,11 @@ public class DefaultService implements Service, BaseServiceContract.API, Session
    }
 
    public void subscribe(int topicId, int entityId) {
-      sendMessage(new TopicSubscribedMessage(getEntityId(), topicId, entityId), UNADDRESSED, topicId);
+      sendMessage(new TopicSubscribedMessage(getEntityId(), topicId, entityId), UNADDRESSED, UNADDRESSED);
    }
 
    public void unsubscribe(int topicId, int entityId) {
-      sendMessage(new TopicUnsubscribedMessage(getEntityId(), topicId, entityId), UNADDRESSED, topicId);
+      sendMessage(new TopicUnsubscribedMessage(getEntityId(), topicId, entityId), UNADDRESSED, UNADDRESSED);
    }
 
    // Generic handlers for all request/subscriptions
