@@ -239,7 +239,11 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
 
       final Object buffer = makeFrame(header, req, ENVELOPE_REQUEST);
       if (buffer != null) {
-         writeFrame(buffer);
+         if (channel.isActive()) {
+            writeFrame(buffer);
+         } else {
+            async.setResponse(ERROR_CONNECTION_CLOSED);
+         }
       } else {
          async.setResponse(ERROR_SERIALIZATION);
       }

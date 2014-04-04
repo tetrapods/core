@@ -18,7 +18,7 @@ public class DefaultService implements Service, BaseServiceContract.API, Session
    protected Client              clusterClient;
    protected Contract            contract;
 
-   protected boolean             terminating;
+   protected boolean             terminated;
    protected int                 entityId;
    protected int                 parentId;
    protected String              token;
@@ -61,12 +61,12 @@ public class DefaultService implements Service, BaseServiceContract.API, Session
    public void onShutdown(boolean restarting) {}
 
    public void shutdown(boolean restarting) {
-      terminating = true;
       updateStatus(status | Core.STATUS_STOPPING);
       onShutdown(restarting);
       if (restarting) {
          clusterClient.close();
          dispatcher.shutdown();
+         setTerminated(true);
          try {
             Launcher.relaunch(token);
          } catch (Exception e) {
@@ -78,6 +78,7 @@ public class DefaultService implements Service, BaseServiceContract.API, Session
             public void onResponse(Response res) {
                clusterClient.close();
                dispatcher.shutdown();
+               setTerminated(true);
             }
          });
       }
@@ -161,8 +162,23 @@ public class DefaultService implements Service, BaseServiceContract.API, Session
       return parentId;
    }
 
+   public boolean isShuttingDown() {
+      return (status & Core.STATUS_STOPPING) != 0;
+   }
+
+   public synchronized boolean isTerminated() {
+      return terminated;
+   }
+
+   private synchronized void setTerminated(boolean val) {
+      logger.info("TERMINATED");
+      terminated = val;
+   }
+
    protected void updateStatus(int status) {
-      this.status = status;
+      synchronized (this) {
+         this.status = status;
+      }
       if (clusterClient.isConnected()) {
          sendRequest(new ServiceStatusUpdateRequest(status), Core.UNADDRESSED);
       }

@@ -67,6 +67,8 @@ public class SessionTest {
       Util.sleep(2000);
 
       service.shutdown(false);
-      Util.sleep(1000);
+      while (!service.isTerminated()) {
+         Util.sleep(100);
+      }
    }
 }
