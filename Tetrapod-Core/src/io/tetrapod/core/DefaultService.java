@@ -1,5 +1,6 @@
 package io.tetrapod.core;
 
+import static io.tetrapod.protocol.core.Core.UNADDRESSED;
 import io.netty.channel.socket.SocketChannel;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.rpc.Error;
@@ -214,6 +215,14 @@ public class DefaultService implements Service, BaseServiceContract.API, Session
 
    public void sendBroadcastMessage(Message msg, int topicId) {
       clusterClient.getSession().sendBroadcastMessage(msg, topicId);
+   }
+
+   public void subscribe(int topicId, int entityId) {
+      sendMessage(new TopicSubscribedMessage(getEntityId(), topicId, entityId), UNADDRESSED, topicId);
+   }
+
+   public void unsubscribe(int topicId, int entityId) {
+      sendMessage(new TopicUnsubscribedMessage(getEntityId(), topicId, entityId), UNADDRESSED, topicId);
    }
 
    // Generic handlers for all request/subscriptions

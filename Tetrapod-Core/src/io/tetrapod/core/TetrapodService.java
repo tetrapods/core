@@ -38,7 +38,6 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
    protected final io.tetrapod.core.registry.Registry registry;
 
-   private Topic                                      clusterTopic;
    private Topic                                      registryTopic;
    private Topic                                      servicesTopic;
 
