@@ -13,8 +13,8 @@ public class Async {
    public final Request       request;
    public final Session       session;
 
-   public Response            response;
-   public ResponseHandler     handler;
+   private Response           response;
+   private ResponseHandler    handler;
 
    public Async(Request request, RequestHeader header, Session session) {
       this.request = request;

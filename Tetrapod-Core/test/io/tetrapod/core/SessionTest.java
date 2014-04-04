@@ -16,17 +16,17 @@ public class SessionTest {
    @Test
    public void testClientServer() throws Exception {
 
-      TetrapodService service = new TetrapodService();
-      service.startNetwork(null, "e:1");
+      TetrapodService pod = new TetrapodService();
+      pod.startNetwork(null, null);
 
       Util.sleep(1000);
       TestService svc1 = new TestService();
-      svc1.startNetwork("localhost", null);
+      svc1.startNetwork(new ServerAddress("localhost", TetrapodService.DEFAULT_SERVICE_PORT), null);
       Util.sleep(1000);
       assertTrue(svc1.getEntityId() > 0);
 
       TestService svc2 = new TestService();
-      svc2.startNetwork("localhost", null);
+      svc2.startNetwork(new ServerAddress("localhost", TetrapodService.DEFAULT_SERVICE_PORT), null);
       Util.sleep(1000);
       assertTrue(svc2.getEntityId() > 0);
 
@@ -62,11 +62,15 @@ public class SessionTest {
 
       svc2.sendMessage(new ServiceAddedMessage(), svc1.getEntityId(), Core.UNADDRESSED);
 
-      service.broadcastRegistryMessage(new EntityUpdatedMessage(svc2.getEntityId(), 0));
+      pod.broadcastRegistryMessage(new EntityUpdatedMessage(svc2.getEntityId(), 0));
 
       Util.sleep(2000);
 
-      service.stop();
-      Util.sleep(1000);
+      svc1.shutdown(false);
+      svc2.shutdown(false);
+      pod.shutdown(false);
+      while (!pod.isTerminated()) {
+         Util.sleep(100);
+      }
    }
 }

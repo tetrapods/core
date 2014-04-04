@@ -56,12 +56,14 @@ public class Server implements Session.Listener {
    }
 
    public void stop() {
+      logger.debug("Stopping server on port {}...", port);
       try {
          bossGroup.shutdownGracefully().sync();
          workerGroup.shutdownGracefully().sync();
       } catch (Exception e) {
          logger.error(e.getMessage(), e);
       }
+      logger.debug("Stopped server on port {}", port);
    }
 
    private void startSession(SocketChannel ch) {

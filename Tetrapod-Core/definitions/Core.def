@@ -14,12 +14,13 @@ struct Core
    const byte  TYPE_CLIENT    = 4
    const byte  TYPE_ANONYMOUS = 5
     
-   const int   STATUS_INIT       = 1  # bitmask
-   const int   STATUS_PAUSED     = 2
-   const int   STATUS_GONE       = 4
-   const int   STATUS_BUSY       = 8
-   const int   STATUS_OVERLOADED = 16
-   const int   STATUS_FAILED     = 32
+   const int   STATUS_STARTING     = 1  # bitmask
+   const int   STATUS_PAUSED       = 2
+   const int   STATUS_GONE         = 4
+   const int   STATUS_BUSY         = 8
+   const int   STATUS_OVERLOADED   = 16
+   const int   STATUS_FAILED       = 32
+   const int   STATUS_STOPPING     = 64
 
    # assigning values to errors should only be done for core errors
    error UNKNOWN              = 1 // catch all error
@@ -71,6 +72,10 @@ public struct MessageHeader
    
 ################################# STRUCTURES #################################
 
+public struct ServerAddress 
+   1: string host
+   2: int port
+
 public struct Entity
    1: int entityId  
    2: int parentId  
@@ -86,11 +91,6 @@ public struct Entity
 internal struct Subscriber
    1: int entityId  
    2: int counter  
-
-// a flattened Topic object for serialization
-internal struct FlatTopic
-	1: int topicId
-	2: Subscriber[] subscriber; 
 
 internal struct WebRoute
    1: string path
@@ -134,14 +134,21 @@ public response Register
    2: int parentId
    3: string token
    
+public request JoinCluster
+   1: int entityId
+   2: ServerAddress address
+   
+public response JoinCluster
+   1: int entityId
+   
 public request Unregister
    1: int entityId
 
 internal request Publish 
    error NOT_READY
    error NOT_PARENT 
-   error INVALID_ENTITY   
-   
+   error INVALID_ENTITY
+
 internal response Publish 
    1: int topicId
     
@@ -159,19 +166,23 @@ internal request AddServiceInformation
    2: StructDescription<list> structs // structs that could possibly be used in end user comms
 
 ################################# MESSAGES #################################
+
+// notification of an existing tetrapod cluster member    
+internal message ClusterMember
+   1: int entityId
+   2: ServerAddress[] cluster
     
 ##### Registry Topic Messages ##### 
 
 internal message Registry.EntityRegistered
-	1: Entity entity
-	2: FlatTopic[] topics;
+	1: Entity entity 
 	 
 internal message Registry.EntityUnregistered
 	1: int entityId;
 	
 internal message Registry.EntityUpdated
 	1: int entityId;
-	2: int status;	
+	2: int status;	 
 	
 internal message Registry.TopicPublished
    1: int ownerId
