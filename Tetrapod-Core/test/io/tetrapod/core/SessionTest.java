@@ -16,8 +16,8 @@ public class SessionTest {
    @Test
    public void testClientServer() throws Exception {
 
-      TetrapodService service = new TetrapodService();
-      service.startNetwork(null, null);
+      TetrapodService pod = new TetrapodService();
+      pod.startNetwork(null, null);
 
       Util.sleep(1000);
       TestService svc1 = new TestService();
@@ -62,12 +62,14 @@ public class SessionTest {
 
       svc2.sendMessage(new ServiceAddedMessage(), svc1.getEntityId(), Core.UNADDRESSED);
 
-      service.broadcastRegistryMessage(new EntityUpdatedMessage(svc2.getEntityId(), 0));
+      pod.broadcastRegistryMessage(new EntityUpdatedMessage(svc2.getEntityId(), 0));
 
       Util.sleep(2000);
 
-      service.shutdown(false);
-      while (!service.isTerminated()) {
+      svc1.shutdown(false);
+      svc2.shutdown(false);
+      pod.shutdown(false);
+      while (!pod.isTerminated()) {
          Util.sleep(100);
       }
    }
