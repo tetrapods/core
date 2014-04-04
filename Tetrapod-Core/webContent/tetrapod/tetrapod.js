@@ -126,6 +126,8 @@ function Tetrapod() {
       socket.onerror = onSocketError;
       return {
          listen : function(onOpen, onClose) {
+        	openHandlers = [];
+        	closeHandlers = [];
             openHandlers.push(onOpen);
             closeHandlers.push(onClose);
          }

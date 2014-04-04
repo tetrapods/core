@@ -34,6 +34,7 @@
 	font-size: 90%;
 	padding: 0px 6px;
 	vertical-align: middle;
+	white-space: nowrap;
 }
 
 .centered {
@@ -297,12 +298,12 @@
 
 	<script>
 		var Core = TP.consts["Tetrapod.Core"];
-      TP.commsLog = true;
+		TP.commsLog = true;
 
 		var model = new ClusterModel();
 		ko.applyBindings(model, $("#cluster-table")[0]);
 
-		function connect() {
+		function connect() { 
 			TP.connect("localhost", 9903).listen(model.onOpen, function() {
 				$('#disconnected-alertbox').show();
 				setTimeout(function updateRandom() {
