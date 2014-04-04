@@ -1,3 +1,3 @@
 #!/bin/sh
 mkdir -p logs
-nohup java -cp "jars/*" io.tetrapod.core.Launcher $* < /dev/null > logs/console.log 2>&1 &
+nohup java -cp "jars/*" io.tetrapod.core.Launcher $* < /dev/null > logs/console.$1.log 2>&1 &

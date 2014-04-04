@@ -1,19 +1,28 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>io.tetrapod.platform</groupId>
-  <artifactId>root</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
+   <groupId>io.tetrapod.platform</groupId>
+   <artifactId>root</artifactId>
+   <version>0.0.1-SNAPSHOT</version>
 
-  <packaging>pom</packaging>
-  
-  <modules>
+   <packaging>pom</packaging>
+
+   <modules>
       <module>../Tetrapod-Core</module>
-  </modules>
+   </modules>
 
-  <build>
+   <build>
       <sourceDirectory>src</sourceDirectory>
       <testSourceDirectory>test</testSourceDirectory>
+      <resources>
+         <resource>
+            <directory>src</directory>
+            <includes>
+               <include>**/*.xml</include>
+            </includes>
+         </resource>
+      </resources>
       <plugins>
          <plugin>
             <artifactId>maven-compiler-plugin</artifactId>
@@ -27,34 +36,34 @@
       <pluginManagement>
          <plugins>
             <plugin>
-              <artifactId>maven-assembly-plugin</artifactId>
-              <version>2.4</version>
-              <executions>
-                <execution>
-                  <id>make-bundles</id>
-                  <phase>package</phase>
-                  <goals>
-                    <goal>single</goal>
-                  </goals>
-                  <configuration>
-                    <descriptors>
-                      <descriptor>assembly.xml</descriptor>
-                    </descriptors>
-                  </configuration>
-                </execution>
-              </executions>
+               <artifactId>maven-assembly-plugin</artifactId>
+               <version>2.4</version>
+               <executions>
+                  <execution>
+                     <id>make-bundles</id>
+                     <phase>package</phase>
+                     <goals>
+                        <goal>single</goal>
+                     </goals>
+                     <configuration>
+                        <descriptors>
+                           <descriptor>assembly.xml</descriptor>
+                        </descriptors>
+                     </configuration>
+                  </execution>
+               </executions>
             </plugin>
-        </plugins>
-     </pluginManagement>
-     <extensions>
-        <extension>
+         </plugins>
+      </pluginManagement>
+      <extensions>
+         <extension>
             <groupId>org.apache.maven.wagon</groupId>
             <artifactId>wagon-ssh-external</artifactId>
             <version>2.6</version>
-        </extension>
-     </extensions>
+         </extension>
+      </extensions>
    </build>
-   
+
    <dependencies>
       <dependency>
          <groupId>junit</groupId>
@@ -63,7 +72,7 @@
          <scope>test</scope>
       </dependency>
    </dependencies>
-   
+
    <distributionManagement>
       <repository>
          <id>tetrapod.io</id>
@@ -71,5 +80,5 @@
          <url>scpexe://pod@pod.tetrapod.io/var/www/maven2</url>
       </repository>
    </distributionManagement>
-   
+
 </project>
