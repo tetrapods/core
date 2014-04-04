@@ -1,16 +1,35 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<artifactId>tetrapod-core</artifactId>
+   
+   <artifactId>tetrapod-core</artifactId>
+   
    <parent>
       <groupId>io.tetrapod.platform</groupId>
-      <artifactId>tetrapod-parent-pom</artifactId>
+      <artifactId>root</artifactId>
       <version>0.0.1-SNAPSHOT</version>
+      <relativePath>../build/pom.xml</relativePath>
    </parent>
-   <repositories>
-      <repository>
-         <id>tetrapod-repository</id>
-         <name>tetrapod-repository</name>
-         <url>http://pod.tetrapod.io/maven2</url>
-      </repository>
-   </repositories>
+   
+   <dependencies>
+      <dependency>
+         <groupId>ch.qos.logback</groupId>
+         <artifactId>logback-classic</artifactId>
+         <version>1.1.1</version>
+      </dependency>
+      
+      <dependency>
+         <groupId>io.netty</groupId>
+         <artifactId>netty-all</artifactId>
+         <version>4.0.17.Final</version>
+      </dependency>
+   </dependencies>
+
+   <build>
+      <plugins>
+         <plugin>
+            <artifactId>maven-assembly-plugin</artifactId>
+         </plugin>
+      </plugins>
+   </build>
+   
 </project>

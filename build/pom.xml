@@ -1,10 +1,17 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
+
   <groupId>io.tetrapod.platform</groupId>
-  <artifactId>tetrapod-parent-pom</artifactId>
+  <artifactId>root</artifactId>
   <version>0.0.1-SNAPSHOT</version>
+
   <packaging>pom</packaging>
-   <build>
+  
+  <modules>
+      <module>../Tetrapod-Core</module>
+  </modules>
+
+  <build>
       <sourceDirectory>src</sourceDirectory>
       <testSourceDirectory>test</testSourceDirectory>
       <plugins>
@@ -17,25 +24,38 @@
             </configuration>
          </plugin>
       </plugins>
-      <extensions>
-         <extension>
+      <pluginManagement>
+         <plugins>
+            <plugin>
+              <artifactId>maven-assembly-plugin</artifactId>
+              <version>2.4</version>
+              <executions>
+                <execution>
+                  <id>make-bundles</id>
+                  <phase>package</phase>
+                  <goals>
+                    <goal>single</goal>
+                  </goals>
+                  <configuration>
+                    <descriptors>
+                      <descriptor>assembly.xml</descriptor>
+                    </descriptors>
+                  </configuration>
+                </execution>
+              </executions>
+            </plugin>
+        </plugins>
+     </pluginManagement>
+     <extensions>
+        <extension>
             <groupId>org.apache.maven.wagon</groupId>
             <artifactId>wagon-ssh-external</artifactId>
             <version>2.6</version>
-         </extension>
-      </extensions>  
+        </extension>
+     </extensions>
    </build>
+   
    <dependencies>
-      <dependency>
-         <groupId>ch.qos.logback</groupId>
-         <artifactId>logback-classic</artifactId>
-         <version>1.1.1</version>
-      </dependency>
-      <dependency>
-         <groupId>io.netty</groupId>
-         <artifactId>netty-all</artifactId>
-         <version>4.0.17.Final</version>
-      </dependency>
       <dependency>
          <groupId>junit</groupId>
          <artifactId>junit</artifactId>
@@ -43,6 +63,7 @@
          <scope>test</scope>
       </dependency>
    </dependencies>
+   
    <distributionManagement>
       <repository>
          <id>tetrapod.io</id>
@@ -50,4 +71,5 @@
          <url>scpexe://pod@pod.tetrapod.io/var/www/maven2</url>
       </repository>
    </distributionManagement>
+   
 </project>
