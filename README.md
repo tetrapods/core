@@ -1,8 +1,10 @@
-tetrapod/core library
+tetrapod core library
 ---------------------
 
 In brief it is a platform for writing service-oriented distributed systems.
 See the [wiki for documentation][1]
+
+Released under the Apache 2.0 license.  See NOTICE.txt and LICENSE.txt.
 
 [1]: https://github.com/tetrapods/core/wiki
 
