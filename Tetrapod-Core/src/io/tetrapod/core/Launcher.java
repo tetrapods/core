@@ -30,7 +30,7 @@ public class Launcher {
             addr = new ServerAddress(opts.get("host"), port);
          }
 
-         Service service = (Service) Class.forName(serviceClass).newInstance();
+         Service service = (Service) getClass(serviceClass).newInstance();
          service.startNetwork(addr, opts.get("token"));
       } catch (Throwable t) {
          t.printStackTrace();
@@ -38,9 +38,45 @@ public class Launcher {
       }
    }
 
+   private static Class<?> getClass(String serviceClass) {
+      // actual class
+      try {
+         return Class.forName(serviceClass);
+      } catch (ClassNotFoundException e) {}
+      
+      // io.tetrapod.core.X
+      try {
+         return Class.forName("io.tetrapod.core." + serviceClass);
+      } catch (ClassNotFoundException e) {}
+      
+      int ix = serviceClass.indexOf("Service");
+      if (ix > 0) {
+         // pop off Service if it's there
+         serviceClass = serviceClass.substring(0, ix);
+      }
+      
+      // io.tetrapod.core.XService
+      try {
+         return Class.forName("io.tetrapod.core." + serviceClass + "Service");
+      } catch (ClassNotFoundException e) {}
+      
+      // io.tetrapod.lowercase(X).X
+      try {
+         return Class.forName("io.tetrapod." + serviceClass.toLowerCase() + "." + serviceClass);
+      } catch (ClassNotFoundException e) {}
+
+      // io.tetrapod.lowercase(X).XService
+      try {
+         return Class.forName("io.tetrapod." + serviceClass.toLowerCase() + "." + serviceClass + "Service");
+      } catch (ClassNotFoundException e) {}
+
+      return null;
+   }
+
    private static void usage() {
       System.err.println("\nusage:\n\t java <vmopts> " + Launcher.class.getCanonicalName()
-            + " serviceClassName [-host hostname] [-port port] [-token authToken]\n");
+            + " serviceClass [-host hostname] [-port port] [-token authToken]\n");
+      System.err.println("\nserviceClass can omit its prefix if it's io.tetrapod.{core|serviceClass.upTo(\"Service\").toLower}.serviceClass[Service]\n");
       System.exit(0);
    }
 

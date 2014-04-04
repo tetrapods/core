@@ -16,8 +16,8 @@ public class JavascriptGenerator implements LanguageGenerator {
       String opt = line.parts.get(1);
       String val = line.parts.get(2);
       switch (opt) {
-         case "outdir":
-            context.serviceAnnotations.add("javascript.outdir", new File(f.getParent(), val).getPath());
+         case "out":
+            context.serviceAnnotations.add("javascript.out", new File(f.getParent(), val).getPath());
             break;
          default:
             throw new ParseException("unknown javascript option");
@@ -26,17 +26,17 @@ public class JavascriptGenerator implements LanguageGenerator {
 
    @Override
    public void generate(List<CodeGenContext> contexts) throws IOException, ParseException {
-      Set<String> outDirs = new HashSet<>();
+      Set<String> outFiles = new HashSet<>();
       for (CodeGenContext context : contexts) {
-         String o = context.serviceAnnotations.getFirst("javascript.outdir");
+         String o = context.serviceAnnotations.getFirst("javascript.out");
          if (o != null)
-            outDirs.add(o);
+            outFiles.add(o);
       }
-      for (String outdir : outDirs) {
+      for (String outFile : outFiles) {
          Template t = template("protocol.js");
          for (CodeGenContext context : contexts) {
-            String out = context.serviceAnnotations.getFirst("javascript.outdir");
-            if (out == null || !out.equals(outdir))
+            String out = context.serviceAnnotations.getFirst("javascript.out");
+            if (out == null || !out.equals(outFile))
                continue;
             
             String contractName = context.serviceName;
@@ -71,7 +71,7 @@ public class JavascriptGenerator implements LanguageGenerator {
                }
             }
          }
-         File f = new File(outdir, "protocol.js");
+         File f = new File(outFile);
          f.getParentFile().mkdirs();
          t.expandAndTrim(f);
       }

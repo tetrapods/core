@@ -1,6 +1,5 @@
 java package io.tetrapod.protocol.clienttesting
 java outdir "../test"
-javascript outdir "../webContent/remotetest/"
 
 service RemoteTest @version(1) @id(5)
 
