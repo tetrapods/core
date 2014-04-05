@@ -10,6 +10,7 @@ import io.tetrapod.core.rpc.Error;
 import io.tetrapod.core.web.WebRoutes;
 import io.tetrapod.protocol.core.*;
 
+import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
@@ -46,7 +47,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
 
       public Session getRelaySession(int toId, int contractid);
 
-      public void broadcast(MessageHeader header, ByteBuf buf);
+      public void relayMessage(MessageHeader header, ByteBuf buf, boolean isBroadcast) throws IOException;
 
       public WebRoutes getWebRoutes();
 
@@ -295,10 +296,12 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
    public void sendRelayedRequest(RequestHeader header, ByteBuf payload, Session originator) {
       final Async async = new Async(null, header, originator);
       int origRequestId = async.header.requestId;
-      this.addPendingRequest(async);
-      commsLog("%s  [%d/%d] ~> Request:%d", this, async.header.requestId, origRequestId, header.structId);
-      writeFrame(makeFrame(header, payload, ENVELOPE_REQUEST));
-      header.requestId = origRequestId;
+      int newRequestId = addPendingRequest(async);
+      commsLog("%s  [%d/%d] ~> Request:%d", this, newRequestId, origRequestId, header.structId);
+      // making a new header lets us not worry about synchronizing the change the requestId
+      RequestHeader newHeader = new RequestHeader(newRequestId, header.fromId, header.toId, header.fromType, header.timeout,
+            header.version, header.contractId, header.structId);
+      writeFrame(makeFrame(newHeader, payload, ENVELOPE_REQUEST));
    }
 
    public void sendRelayedResponse(ResponseHeader header, ByteBuf payload) {
@@ -384,9 +387,9 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
    }
 
    public int addPendingRequest(Async async) {
-      async.header.requestId = requestCounter.incrementAndGet();
-      pendingRequests.put(async.header.requestId, async);
-      return async.header.requestId;
+      int requestId = requestCounter.incrementAndGet();
+      pendingRequests.put(requestId, async);
+      return requestId;
    }
 
    public void cancelAllPendingRequests() {

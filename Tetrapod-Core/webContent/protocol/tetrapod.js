@@ -89,6 +89,7 @@ TP.register("message", "Tetrapod", "TopicPublished", 1, 6873263);
 TP.register("message", "Tetrapod", "TopicUnpublished", 1, 6594504);
 TP.register("message", "Tetrapod", "TopicSubscribed", 1, 1498241);
 TP.register("message", "Tetrapod", "TopicUnsubscribed", 1, 6934832);
+TP.register("message", "Tetrapod", "EntityListComplete", 1, 15616758);
 TP.register("message", "Tetrapod", "ServiceAdded", 1, 15116807);
 TP.register("message", "Tetrapod", "ServiceRemoved", 1, 1629937);
 TP.register("message", "Tetrapod", "ServiceUpdated", 1, 1658756);
