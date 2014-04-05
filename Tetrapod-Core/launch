@@ -1,0 +1,6 @@
+#!/bin/sh
+file=webContent/protocol/tetrapod-host.js
+rm -f $file
+echo 'var TP_websocket_host = "pod.tetrapod.io"' > $file  
+mkdir -p logs
+nohup java -cp "jars/*" io.tetrapod.core.Launcher $* < /dev/null > logs/console.$1.log 2>&1 &

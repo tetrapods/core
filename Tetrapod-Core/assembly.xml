@@ -17,4 +17,12 @@
          <outputDirectory>webContent</outputDirectory>
       </fileSet>
    </fileSets>
+   
+   <files>
+      <file>
+         <source>launch</source>
+         <outputDirectory>/</outputDirectory>
+         <fileMode>0755</fileMode>
+      </file>
+   </files>
 </assembly>
