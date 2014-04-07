@@ -20,8 +20,8 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.*;
 
 /**
- * The tetrapod service is the core cluster service which handles message routing, cluster management, service discovery, and load balancing
- * of client connections
+ * The tetrapod service is the core cluster service which handles message routing, cluster
+ * management, service discovery, and load balancing of client connections
  */
 public class TetrapodService extends DefaultService implements TetrapodContract.API, RelayHandler,
       io.tetrapod.core.registry.Registry.RegistryBroadcaster {
@@ -53,6 +53,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    private final Properties                           properties              = new Properties();
 
    private long                                       lastStatsLog;
+   private String                                     webContentRoot;
 
    public TetrapodService() {
       // HACK Properties hack for now
@@ -67,7 +68,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    }
 
    @Override
-   public void startNetwork(ServerAddress address, String token) throws Exception {
+   public void startNetwork(ServerAddress address, String token, Map<String, String> otherOpts) throws Exception {
       logger.info(" ***** Start Network ***** ");
       cluster.startListening();
       if (address == null && token == null) {
@@ -78,6 +79,9 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          this.token = token;
          cluster.joinCluster(address);
       }
+      webContentRoot = "./webContent";
+      if (otherOpts.containsKey("webroot"))
+         webContentRoot = otherOpts.get("webroot");
    }
 
    /**
@@ -197,8 +201,9 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    }
 
    /**
-    * As a Tetrapod service, we can't start serving as one until we've registered & fully sync'ed with the cluster, or self-registered if we
-    * are the first one. We call this once this criteria has been reached
+    * As a Tetrapod service, we can't start serving as one until we've registered & fully sync'ed
+    * with the cluster, or self-registered if we are the first one. We call this once this criteria
+    * has been reached
     */
    protected void onReadyToServe() {
       logger.info(" ***** READY TO SERVE ***** ");
@@ -212,7 +217,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
                Core.TYPE_SERVICE));
          webSocketsServer = new Server(properties.optInt("tetrapod.websocket.port", DEFAULT_WEBSOCKETS_PORT), new WebSessionFactory(
                "/sockets", true));
-         httpServer = new Server(properties.optInt("tetrapod.http.port", DEFAULT_HTTP_PORT), new WebSessionFactory("./webContent", false));
+         httpServer = new Server(properties.optInt("tetrapod.http.port", DEFAULT_HTTP_PORT), new WebSessionFactory(webContentRoot, false));
 
          serviceServer.start().sync();
          publicServer.start().sync();
