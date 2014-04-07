@@ -201,6 +201,8 @@ internal message Registry.TopicUnsubscribed
    1: int ownerId
    2: int topicId
    3: int entityId
+   
+internal message Registry.EntityListComplete
 
 ##### Services Topic Messages #####
 

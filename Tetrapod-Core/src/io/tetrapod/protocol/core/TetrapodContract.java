@@ -64,6 +64,7 @@ public class TetrapodContract extends Contract {
          new TopicUnpublishedMessage(),
          new TopicSubscribedMessage(),
          new TopicUnsubscribedMessage(),
+         new EntityListCompleteMessage(),
          new ServiceAddedMessage(),
          new ServiceRemovedMessage(),
          new ServiceUpdatedMessage(),
@@ -103,6 +104,7 @@ public class TetrapodContract extends Contract {
 
    public static class Registry extends Contract {
       public static interface API extends
+         EntityListCompleteMessage.Handler,
          EntityRegisteredMessage.Handler,
          EntityUnregisteredMessage.Handler,
          EntityUpdatedMessage.Handler,
@@ -114,6 +116,7 @@ public class TetrapodContract extends Contract {
          
       public Structure[] getMessages() {
          return new Structure[] {
+            new EntityListCompleteMessage(),
             new EntityRegisteredMessage(),
             new EntityUnregisteredMessage(),
             new EntityUpdatedMessage(),

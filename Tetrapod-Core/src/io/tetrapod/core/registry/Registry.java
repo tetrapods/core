@@ -96,6 +96,7 @@ public class Registry implements TetrapodContract.Registry.API {
             entity.entityId = issueId();
          }
       }
+
       entities.put(entity.entityId, entity);
       if (entity.isService()) {
          // register their service in our services list
@@ -143,35 +144,33 @@ public class Registry implements TetrapodContract.Registry.API {
       return null;
    }
 
-   public synchronized void unregister(int entityId) {
-      final EntityInfo e = getEntity(entityId);
-      if (e != null) {
-         // Unpublish all their topics
-         for (Topic topic : e.getTopics()) {
-            unpublish(e, topic.topicId);
-         }
-         // Unsubscribe from all subscriptions
-         for (Topic topic : e.getSubscriptions()) {
-            unsubscribe(e, topic, true);
-         }
+   public synchronized void unregister(final EntityInfo e) {
 
-         entities.remove(e.entityId);
-
-         if (e.parentId == parentId) {
-            broadcaster.broadcastRegistryMessage(new EntityUnregisteredMessage(entityId));
-         }
-         if (e.isService()) {
-            broadcaster.broadcastServicesMessage(new ServiceRemovedMessage(entityId));
-         }
-
-         if (e.isService()) {
-            List<EntityInfo> list = services.get(e.contractId);
-            if (list != null)
-               list.remove(e);
-         }
-      } else {
-         logger.error("Could not find entity {} to unregister", entityId);
+      // Unpublish all their topics
+      for (Topic topic : e.getTopics()) {
+         unpublish(e, topic.topicId);
       }
+      // Unsubscribe from all subscriptions
+      for (Topic topic : e.getSubscriptions()) {
+         EntityInfo owner = getEntity(topic.ownerId);
+         unsubscribe(owner, topic.topicId, e.entityId, true);
+      }
+
+      entities.remove(e.entityId);
+
+      if (e.parentId == parentId) {
+         broadcaster.broadcastRegistryMessage(new EntityUnregisteredMessage(e.entityId));
+      }
+      if (e.isService()) {
+         broadcaster.broadcastServicesMessage(new ServiceRemovedMessage(e.entityId));
+      }
+
+      if (e.isService()) {
+         List<EntityInfo> list = services.get(e.contractId);
+         if (list != null)
+            list.remove(e);
+      }
+
    }
 
    /**
@@ -201,80 +200,97 @@ public class Registry implements TetrapodContract.Registry.API {
       }
    }
 
-   public void updateStatus(int entityId, int status) {
-      final EntityInfo e = getEntity(entityId);
-      if (e != null) {
-         e.setStatus(status);
-         if (e.parentId == parentId) {
-            broadcaster.broadcastRegistryMessage(new EntityUpdatedMessage(entityId, status));
-         }
-         if (e.isService()) {
-            broadcaster.broadcastServicesMessage(new ServiceUpdatedMessage(entityId, status));
-         }
-      } else {
-         logger.error("Could not find entity {} to update", entityId);
+   public void updateStatus(final EntityInfo e, int status) {
+      e.setStatus(status);
+      if (e.parentId == parentId) {
+         broadcaster.broadcastRegistryMessage(new EntityUpdatedMessage(e.entityId, status));
+      }
+      if (e.isService()) {
+         broadcaster.broadcastServicesMessage(new ServiceUpdatedMessage(e.entityId, status));
       }
    }
 
    public Topic publish(int entityId) {
-      final EntityInfo entity = getEntity(entityId);
-      if (entity != null) {
-         return entity.publish();
+      final EntityInfo e = getEntity(entityId);
+      if (e != null) {
+         Topic topic = e.publish();
+         if (e.parentId == parentId) {
+            broadcaster.broadcastRegistryMessage(new TopicPublishedMessage(e.entityId, topic.topicId));
+         }
+         return topic;
       } else {
-         logger.error("Could not find entity {}", entity);
+         logger.error("Could not find entity {}", e);
       }
       return null;
    }
 
-   public boolean unpublish(int entityId, int topicId) {
-      final EntityInfo entity = getEntity(entityId);
-      if (entity != null) {
-         return unpublish(entity, topicId);
-      } else {
-         logger.error("Could not find entity {}", entity);
-      }
-      return false;
-   }
-
-   public boolean unpublish(EntityInfo entity, int topicId) {
-      final Topic topic = entity.unpublish(topicId);
+   public boolean unpublish(EntityInfo e, int topicId) {
+      final Topic topic = e.unpublish(topicId);
       if (topic != null) {
          // clean up all the subscriptions to this topic
          for (Subscriber sub : topic.getSubscribers()) {
-            final EntityInfo e = getEntity(sub.entityId);
-            if (e != null) {
-               unsubscribe(e, topic, true);
-            }
+            unsubscribe(e, topicId, sub.entityId, true);
+         }
+         if (e.parentId == parentId) {
+            broadcaster.broadcastRegistryMessage(new TopicUnpublishedMessage(e.entityId, topicId));
          }
          return true;
       }
       return false;
    }
 
-   public void subscribe(EntityInfo entity, Topic topic) {
-      if (entity.parentId == parentId) {
-         // it's our child, so directly subscribe them
-         topic.subscribe(entity.entityId);
+   public void subscribe(final EntityInfo publisher, final int topicId, final int entityId) {
+      final Topic topic = publisher.getTopic(topicId);
+      if (topic != null) {
+         final EntityInfo e = getEntity(entityId);
+         if (e != null) {
+            if (e.parentId == parentId) {
+               // it's our child, so directly subscribe them
+               topic.subscribe(e.entityId);
+            } else {
+               // just subscribe their parent as proxy
+               topic.subscribe(e.parentId);
+            }
+            e.subscribe(topic);
+
+            if (publisher.parentId == parentId) {
+               broadcaster.broadcastRegistryMessage(new TopicSubscribedMessage(topic.ownerId, topic.topicId, e.entityId));
+            }
+         } else {
+            logger.info("Could not find subscriber {} for topic {}", entityId, topicId);
+         }
       } else {
-         // just subscribe their parent as proxy
-         topic.subscribe(entity.parentId);
+         logger.info("Could not find topic {} for {}", topicId, publisher);
       }
-      entity.subscribe(topic);
    }
 
-   public void unsubscribe(EntityInfo entity, Topic topic, boolean all) {
-      if (entity.parentId == parentId) {
-         // unsubscribe them directly
-         if (topic.unsubscribe(entity.entityId, all)) {
-            entity.unsubscribe(topic);
+   public void unsubscribe(final EntityInfo publisher, final int topicId, final int entityId, final boolean all) {
+      final Topic topic = publisher.getTopic(topicId);
+      if (topic != null) {
+         final EntityInfo entity = getEntity(entityId);
+         if (entity != null) {
+            if (entity.parentId == parentId) {
+               // unsubscribe them directly
+               if (topic.unsubscribe(entity.entityId, all)) {
+                  entity.unsubscribe(topic);
+               }
+            } else {
+               // unsubscribe the parent subscription  
+               if (topic.unsubscribe(entity.parentId, false)) {
+                  // FIXME: there's a minor bug here if they subscribed more than once
+                  entity.unsubscribe(topic);
+               }
+            }
+
+            if (publisher.parentId == parentId) {
+               broadcaster.broadcastRegistryMessage(new TopicUnsubscribedMessage(publisher.entityId, topicId, entityId));
+            }
+
+         } else {
+            logger.info("Could not find subscriber {} for topic {}", entityId, topicId);
          }
       } else {
-         // unsubscribe the parent subscription 
-
-         if (topic.unsubscribe(entity.parentId, false)) {
-            // FIXME: there's a minor bug here if they subscribed more than once
-            entity.unsubscribe(topic);
-         }
+         logger.info("Could not find topic {} for {}", topicId, publisher);
       }
    }
 
@@ -285,110 +301,137 @@ public class Registry implements TetrapodContract.Registry.API {
 
    @Override
    public void messageEntityRegistered(EntityRegisteredMessage m, MessageContext ctx) {
-      logger.info("{} {}", ctx.header.dump(), m.entity.dump());
-
-      if (ctx.header.topicId != 0 && ctx.header.fromId != parentId) {
-         final EntityInfo e = new EntityInfo(m.entity);
-         register(new EntityInfo(m.entity));
+      // TODO: validate sender    
+      if (ctx.header.fromId != parentId) {
+         EntityInfo info = entities.get(m.entity.entityId);
+         if (info != null) {
+            info.parentId = m.entity.parentId;
+            info.reclaimToken = m.entity.reclaimToken;
+            info.host = m.entity.host;
+            info.status = m.entity.status;
+            info.build = m.entity.build;
+            info.name = m.entity.name;
+            info.version = m.entity.version;
+            info.contractId = m.entity.contractId;
+         } else {
+            info = new EntityInfo(m.entity);
+         }
+         register(info);
       }
    }
 
    @Override
    public void messageEntityUnregistered(EntityUnregisteredMessage m, MessageContext ctx) {
-      if (ctx.header.topicId != 0 && ctx.header.fromId != parentId) {
-         unregister(m.entityId);
-      }
-   }
-
-   @Override
-   public void messageEntityUpdated(EntityUpdatedMessage m, MessageContext ctx) {
-      if (ctx.header.topicId != 0 && ctx.header.fromId != parentId) {
-         updateStatus(m.entityId, m.status);
-      }
-   }
-
-   @Override
-   public void messageTopicPublished(TopicPublishedMessage m, MessageContext ctx) {
-      if (m.ownerId != ctx.header.fromId) {
-         logger.warn("FIXME: attempt to do something on someone elses topic");
-         assert false;
-      }
-      final EntityInfo owner = getEntity(m.ownerId);
-      if (owner != null) {
-         final Topic topic = owner.publish();
-         if (topic.topicId != m.topicId) {
-            logger.error("TopicIDs don't match!");
-            assert (false);
-         }
-      } else {
-         logger.info("Could not find publisher entity {}", m.ownerId);
-      }
-   }
-
-   @Override
-   public void messageTopicUnpublished(TopicUnpublishedMessage m, MessageContext ctx) {
-      if (m.ownerId != ctx.header.fromId) {
-         logger.warn("FIXME: attempt to do something on someone elses topic");
-         assert false;
-      }
-      final EntityInfo owner = getEntity(m.ownerId);
-      if (owner != null) {
-         final Topic topic = owner.unpublish(m.topicId);
-         if (topic == null) {
-            logger.info("Could not find topic {} for entity {}", m.topicId, m.ownerId);
-         }
-      } else {
-         logger.info("Could not find publisher entity {}", m.ownerId);
-      }
-   }
-
-   @Override
-   public void messageTopicSubscribed(TopicSubscribedMessage m, MessageContext ctx) {
-      if (m.ownerId != ctx.header.fromId) {
-         logger.warn("FIXME: attempt to do something on someone elses topic");
-         assert false;
-      }
-      final EntityInfo owner = getEntity(m.ownerId);
-      if (owner != null) {
-         final Topic topic = owner.getTopic(m.topicId);
-         if (topic != null) {
-            final EntityInfo entity = getEntity(m.entityId);
-            if (entity != null) {
-               subscribe(entity, topic);
-            } else {
-               logger.info("Could not find subscriber entity {}", m.entityId);
-            }
+      // TODO: validate sender           
+      if (ctx.header.fromId != parentId) {
+         final EntityInfo e = getEntity(m.entityId);
+         if (e != null) {
+            e.queue(new Runnable() {
+               public void run() {
+                  unregister(e);
+               }
+            });
          } else {
-            logger.info("Could not find topic {} for entity {}", m.topicId, m.ownerId);
+            logger.error("Could not find entity {} to unregister", m.entityId);
          }
-      } else {
-         logger.info("Could not find publisher entity {}", m.ownerId);
       }
    }
 
    @Override
-   public void messageTopicUnsubscribed(TopicUnsubscribedMessage m, MessageContext ctx) {
-      if (m.ownerId != ctx.header.fromId) {
-         logger.warn("FIXME: attempt to do something on someone elses topic");
-         assert false;
-      }
-
-      final EntityInfo owner = getEntity(m.ownerId);
-      if (owner != null) {
-         final Topic topic = owner.getTopic(m.topicId);
-         if (topic != null) {
-            final EntityInfo entity = getEntity(m.entityId);
-            if (entity != null) {
-               unsubscribe(entity, topic, false);
-            } else {
-               logger.info("Could not find subscriber entity {}", m.entityId);
-            }
+   public void messageEntityUpdated(final EntityUpdatedMessage m, MessageContext ctx) {
+      // TODO: validate sender           
+      if (ctx.header.fromId != parentId) {
+         final EntityInfo e = getEntity(m.entityId);
+         if (e != null) {
+            e.queue(new Runnable() {
+               public void run() {
+                  updateStatus(e, m.status);
+               }
+            });
          } else {
-            logger.info("Could not find topic {} for entity {}", m.topicId, m.ownerId);
+            logger.error("Could not find entity {} to update", m.entityId);
          }
-      } else {
-         logger.info("Could not find publisher entity {}", m.ownerId);
       }
+   }
+
+   @Override
+   public void messageTopicPublished(final TopicPublishedMessage m, MessageContext ctx) {
+      // TODO: validate sender
+      if (ctx.header.fromId != parentId) {
+         final EntityInfo owner = getEntity(m.ownerId);
+         if (owner != null) {
+            owner.queue(new Runnable() {
+               public void run() {
+                  final Topic topic = owner.publish();
+                  if (topic.topicId != m.topicId) {
+                     logger.error("TopicIDs don't match! {} != {}", topic, m.topicId);
+                     assert (false);
+                  }
+               }
+            }); // TODO: kick()
+         } else {
+            logger.info("Could not find publisher entity {}", m.ownerId);
+         }
+      }
+   }
+
+   @Override
+   public void messageTopicUnpublished(final TopicUnpublishedMessage m, MessageContext ctx) {
+      // TODO: validate sender
+      if (ctx.header.fromId != parentId) {
+         final EntityInfo owner = getEntity(m.ownerId);
+         if (owner != null) {
+            owner.queue(new Runnable() {
+               public void run() {
+                  final Topic topic = owner.unpublish(m.topicId);
+                  if (topic == null) {
+                     logger.info("Could not find topic {} for entity {}", m.topicId, m.ownerId);
+                  }
+               }
+            }); // TODO: kick()
+         } else {
+            logger.info("Could not find publisher entity {}", m.ownerId);
+         }
+      }
+   }
+
+   @Override
+   public void messageTopicSubscribed(final TopicSubscribedMessage m, MessageContext ctx) {
+      // TODO: validate sender 
+      if (ctx.header.fromId != parentId) {
+         final EntityInfo owner = getEntity(m.ownerId);
+         if (owner != null) {
+            owner.queue(new Runnable() {
+               public void run() {
+                  subscribe(owner, m.topicId, m.entityId);
+               }
+            }); // TODO: kick() 
+         } else {
+            logger.info("Could not find publisher entity {}", m.ownerId);
+         }
+      }
+   }
+
+   @Override
+   public void messageTopicUnsubscribed(final TopicUnsubscribedMessage m, MessageContext ctx) {
+      if (ctx.header.fromId != parentId) {
+         // TODO: validate sender           
+         final EntityInfo owner = getEntity(m.ownerId);
+         if (owner != null) {
+            owner.queue(new Runnable() {
+               public void run() {
+                  unsubscribe(owner, m.topicId, m.entityId, false);
+               }
+            }); // TODO: kick()
+         } else {
+            logger.info("Could not find publisher entity {}", m.ownerId);
+         }
+      }
+   }
+
+   @Override
+   public void messageEntityListComplete(EntityListCompleteMessage m, MessageContext ctx) {
+      logger.info("====================== SYNCED {} ======================", ctx.header.fromId);
    }
 
    //////////////////////////////////////////////////////////////////////////////////////////

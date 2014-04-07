@@ -1,5 +1,6 @@
 package io.tetrapod.core;
 
+import static io.tetrapod.protocol.core.Core.UNADDRESSED;
 import static io.tetrapod.protocol.core.TetrapodContract.*;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.socket.SocketChannel;
@@ -8,11 +9,13 @@ import io.tetrapod.core.registry.*;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.rpc.Error;
 import io.tetrapod.core.serialize.StructureAdapter;
+import io.tetrapod.core.serialize.datasources.ByteBufDataSource;
 import io.tetrapod.core.utils.*;
 import io.tetrapod.core.web.*;
 import io.tetrapod.protocol.core.*;
 import io.tetrapod.protocol.service.*;
 
+import java.io.IOException;
 import java.security.SecureRandom;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -43,6 +46,8 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
    private final TetrapodCluster                      cluster;
 
+   private final TetrapodWorker                       worker;
+
    private Server                                     serviceServer;
    private Server                                     publicServer;
    private Server                                     webSocketsServer;
@@ -62,8 +67,9 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
             properties.put(e.getKey().toString(), e.getValue().toString());
          }
       }
-      cluster = new TetrapodCluster(this, properties);
       registry = new io.tetrapod.core.registry.Registry(this);
+      worker = new TetrapodWorker(this);
+      cluster = new TetrapodCluster(this, properties);
       setMainContract(new TetrapodContract());
    }
 
@@ -184,9 +190,9 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
    protected void onChildEntityDisconnected(Session ses) {
       if (ses.getTheirEntityId() != 0) {
-         registry.updateStatus(ses.getTheirEntityId(), status | Core.STATUS_GONE);
          final EntityInfo e = registry.getEntity(ses.getTheirEntityId());
          if (e != null) {
+            registry.updateStatus(e, e.status | Core.STATUS_GONE);
             e.setSession(null);
             // TODO: set all children to gone as well
          }
@@ -234,11 +240,11 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    @Override
    public void onShutdown(boolean restarting) {
       logger.info("Shutting Down Tetrapod");
+      cluster.shutdown();
       publicServer.stop();
       serviceServer.stop();
       webSocketsServer.stop();
       httpServer.stop();
-      cluster.shutdown();
    }
 
    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -271,35 +277,72 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    }
 
    @Override
-   public void broadcast(MessageHeader header, ByteBuf buf) {
-      // OPTIMIZE: Place on queue for each publisher
-      final EntityInfo publisher = registry.getEntity(header.fromId);
-      if (publisher != null) {
-         final Topic topic = publisher.getTopic(header.topicId);
-         if (topic != null) {
-            synchronized (topic) { // FIXME: Won't need this sync if all topics processed on same thread
-               for (final Subscriber s : topic.getSubscribers()) {
-                  final EntityInfo e = registry.getEntity(s.entityId);
-                  if (e != null) {
-                     if (!e.isGone() && e.parentId == getEntityId() || e.isTetrapod()) {
-                        final Session session = findSession(e);
-                        if (session != null) {
-                           int ri = buf.readerIndex();
-                           boolean keepBroadcasting = publisher.parentId == getEntityId() && e.isTetrapod();
-                           session.sendRelayedMessage(header, buf, keepBroadcasting);
-                           buf.readerIndex(ri);
-                        }
+   public void relayMessage(final MessageHeader header, final ByteBuf buf, final boolean isBroadcast) throws IOException {
+      final EntityInfo sender = registry.getEntity(header.fromId);
+      if (sender != null) {
+         buf.retain();
+         sender.queue(new Runnable() {
+            public void run() {
+               try {
+                  if (header.toId == UNADDRESSED) {
+                     if (isBroadcast) {
+                        broadcast(sender, header, buf);
                      }
                   } else {
-                     logger.error("Could not find subscriber {} for topic {}", s, topic);
+                     final Session ses = getRelaySession(header.toId, header.contractId);
+                     if (ses != null) {
+                        ses.sendRelayedMessage(header, buf, false);
+                     }
                   }
+               } catch (Throwable e) {
+                  logger.error(e.getMessage(), e);
+               } finally {
+                  // FIXME: This is fragile -- if we delete an entity with queued work, we need to make sure we 
+                  // release all the buffers in the queued work items.
+                  buf.release();
                }
             }
-         } else {
-            logger.error("Could not find topic {} for entity {}", header.topicId, publisher);
+         });
+         worker.kick();
+      } else {
+         logger.error("Could not find sender entity {}", header.fromId);
+      }
+   }
+
+   public void broadcast(EntityInfo publisher, MessageHeader header, ByteBuf buf) throws IOException {
+      final Topic topic = publisher.getTopic(header.topicId);
+      if (topic != null) {
+         final int ri = buf.readerIndex();
+         for (final Subscriber s : topic.getSubscribers()) {
+            final EntityInfo e = registry.getEntity(s.entityId);
+            if (e != null) {
+               if (e.entityId == getEntityId()) {
+                  // dispatch to self
+                  ByteBufDataSource reader = new ByteBufDataSource(buf);
+                  final Message msg = (Message) StructureFactory.make(header.contractId, header.structId);
+                  if (msg != null) {
+                     msg.read(reader);
+                     clusterClient.getSession().dispatchMessage(header, msg);
+                  }
+                  buf.readerIndex(ri);
+               } else {
+                  if (!e.isGone() && (e.parentId == getEntityId() || e.isTetrapod())) {
+                     final Session session = findSession(e);
+                     if (session != null) {
+                        boolean keepBroadcasting = publisher.parentId == getEntityId() && e.isTetrapod();
+                        session.sendRelayedMessage(header, buf, keepBroadcasting);
+                        buf.readerIndex(ri);
+                     } else {
+                        logger.error("Could not session for {} ", e);
+                     }
+                  }
+               }
+            } else {
+               logger.error("Could not find subscriber {} for topic {}", s, topic);
+            }
          }
       } else {
-         logger.error("Could not find publisher entity {}", header.fromId);
+         logger.error("Could not find topic {} for entity {}", header.topicId, publisher);
       }
    }
 
@@ -357,7 +400,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       for (EntityInfo e : registry.getChildren()) {
          if (e.isGone() && System.currentTimeMillis() - e.getGoneSince() > 60 * 1000) {
             logger.info("Reaping: {}", e);
-            registry.unregister(e.entityId);
+            registry.unregister(e);
          }
       }
    }
@@ -425,7 +468,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       if (info == null) {
          return new Error(ERROR_INVALID_ENTITY);
       }
-      registry.unregister(info.entityId);
+      registry.unregister(info);
       return Response.SUCCESS;
    }
 
@@ -449,9 +492,8 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       return new Error(ERROR_INVALID_RIGHTS);
    }
 
-   private void sendTopicInfo(EntityInfo e, Session session, int toEntityId) {
+   private void sendSubscribers(final EntityInfo e, final Session session, final int toEntityId) {
       for (Topic t : e.getTopics()) {
-         session.sendMessage(new TopicPublishedMessage(e.entityId, t.topicId), toEntityId, registryTopic.topicId);
          for (Subscriber s : t.getSubscribers()) {
             session.sendMessage(new TopicSubscribedMessage(t.ownerId, t.topicId, s.entityId), toEntityId, registryTopic.topicId);
          }
@@ -461,22 +503,31 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    /**
     * Lock registryTopic and send our current registry state to the subscriber
     */
-   protected void registrySubscribe(Session session, int toEntityId) {
+   protected void registrySubscribe(final Session session, final int toEntityId) {
       if (registryTopic != null) {
          synchronized (registryTopic) {
-            broadcastRegistryMessage(new TopicSubscribedMessage(registryTopic.ownerId, registryTopic.topicId, toEntityId));
+            registry.subscribe(registry.getEntity(getEntityId()), registryTopic.topicId, toEntityId);
+
             // Sends all current entities -- ourselves, and our children
-            EntityInfo p = registry.getEntity(getEntityId());
-            session.sendMessage(new EntityRegisteredMessage(p), toEntityId, registryTopic.topicId);
+            final EntityInfo me = registry.getEntity(getEntityId());
+            session.sendMessage(new EntityRegisteredMessage(me), toEntityId, registryTopic.topicId);
+            for (Topic t : me.getTopics()) {
+               session.sendMessage(new TopicPublishedMessage(me.entityId, t.topicId), toEntityId, registryTopic.topicId);
+            }
+
             for (EntityInfo e : registry.getChildren()) {
                session.sendMessage(new EntityRegisteredMessage(e), toEntityId, registryTopic.topicId);
+               for (Topic t : e.getTopics()) {
+                  session.sendMessage(new TopicPublishedMessage(e.entityId, t.topicId), toEntityId, registryTopic.topicId);
+               }
             }
             // send topic info
             // OPTIMIZE: could be optimized greatly with custom messages, but this is very simple
-            sendTopicInfo(p, session, toEntityId);
+            sendSubscribers(me, session, toEntityId);
             for (EntityInfo e : registry.getChildren()) {
-               sendTopicInfo(e, session, toEntityId);
+               sendSubscribers(e, session, toEntityId);
             }
+            session.sendMessage(new EntityListCompleteMessage(), toEntityId, registryTopic.topicId);
          }
       }
    }
@@ -492,8 +543,9 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
    @Override
    public Response requestRegistryUnsubscribe(RegistryUnsubscribeRequest r, RequestContext ctx) {
-      // TODO: validate 
-      broadcastRegistryMessage(new TopicUnsubscribedMessage(registryTopic.ownerId, registryTopic.topicId, ctx.header.fromId));
+      // TODO: validate  
+      registry.unsubscribe(registry.getEntity(getEntityId()), registryTopic.topicId, ctx.header.fromId, false);
+      //broadcastRegistryMessage(new TopicUnsubscribedMessage(registryTopic.ownerId, registryTopic.topicId, ctx.header.fromId));
       return Response.SUCCESS;
    }
 
@@ -503,7 +555,8 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          return new Error(ERROR_UNKNOWN);
       }
       synchronized (servicesTopic) {
-         broadcastRegistryMessage(new TopicSubscribedMessage(servicesTopic.ownerId, servicesTopic.topicId, ctx.header.fromId));
+         registry.subscribe(registry.getEntity(getEntityId()), servicesTopic.topicId, ctx.header.fromId);
+         //subscribe(servicesTopic.topicId, ctx.header.fromId);
          // send all current entities
          for (EntityInfo e : registry.getServices()) {
             ctx.session.sendMessage(new ServiceAddedMessage(e), ctx.header.fromId, servicesTopic.topicId);
@@ -515,7 +568,8 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    @Override
    public Response requestServicesUnsubscribe(ServicesUnsubscribeRequest r, RequestContext ctx) {
       // TODO: validate 
-      broadcastRegistryMessage(new TopicUnsubscribedMessage(servicesTopic.ownerId, servicesTopic.topicId, ctx.header.fromId));
+      registry.unsubscribe(registry.getEntity(getEntityId()), servicesTopic.topicId, ctx.header.fromId, false);
+      //broadcastRegistryMessage(new TopicUnsubscribedMessage(servicesTopic.ownerId, servicesTopic.topicId, ctx.header.fromId));
       return Response.SUCCESS;
    }
 
@@ -523,7 +577,12 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    public Response requestServiceStatusUpdate(ServiceStatusUpdateRequest r, RequestContext ctx) {
       // TODO: don't allow certain bits to be set from a request
       if (ctx.header.fromId != 0) {
-         registry.updateStatus(ctx.header.fromId, r.status);
+         final EntityInfo e = registry.getEntity(ctx.header.fromId);
+         if (e != null) {
+            registry.updateStatus(e, r.status);
+         } else {
+            return new Error(ERROR_INVALID_ENTITY);
+         }
       }
       return Response.SUCCESS;
    }
@@ -552,12 +611,22 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       if (ctx.session.getTheirEntityType() != Core.TYPE_TETRAPOD) {
          return new Error(ERROR_INVALID_RIGHTS);
       }
-      if (ctx.session.getTheirEntityId() != 0) {
+      if (ctx.session.getTheirEntityId() == 0) {
          return new Error(ERROR_INVALID_ENTITY);
       }
+      EntityInfo e = null;
+      while (e == null) {
+         e = registry.getEntity(r.entityId);
+         Util.sleep(100); // HACK
+      }
+      e.setSession(ctx.session);
+      logger.info("JOINING TETRAPOD {} {}", ctx.session, e);
 
-      ctx.session.sendRequest(new RegistrySubscribeRequest(), Core.UNADDRESSED);
       registrySubscribe(ctx.session, ctx.session.getTheirEntityId());
+
+      if (cluster.addMember(r.entityId, r.address, ctx.session)) {
+         ctx.session.sendRequest(new JoinClusterRequest(getEntityId(), cluster.getServerAddress()), Core.UNADDRESSED);
+      }
 
       return new JoinClusterResponse(getEntityId());
    }

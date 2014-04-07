@@ -1,14 +1,19 @@
 package io.tetrapod.core.registry;
 
-import io.tetrapod.core.Session;
+import io.tetrapod.core.*;
 import io.tetrapod.protocol.core.*;
 
 import java.util.*;
+import java.util.concurrent.locks.*;
+
+import org.slf4j.*;
 
 /**
  * All the meta data associated with a tetrapod entity
  */
 public class EntityInfo extends Entity implements Comparable<EntityInfo> {
+
+   public static final Logger    logger = LoggerFactory.getLogger(EntityInfo.class);
 
    protected int                 topicCounter;
 
@@ -29,6 +34,9 @@ public class EntityInfo extends Entity implements Comparable<EntityInfo> {
    protected Session             session;
 
    protected Long                goneSince;
+
+   protected Lock                consumerLock;
+   protected Queue<Runnable>     queue;
 
    public EntityInfo() {}
 
@@ -70,6 +78,7 @@ public class EntityInfo extends Entity implements Comparable<EntityInfo> {
          topics = new HashMap<>();
       }
       topics.put(topic.topicId, topic);
+      //logger.debug("======= PUBLISHED {} : {}", this, topic);
       return topic;
    }
 
@@ -86,6 +95,7 @@ public class EntityInfo extends Entity implements Comparable<EntityInfo> {
          subscriptions = new HashMap<>();
       }
       subscriptions.put(topic.key(), topic);
+      //logger.debug("======= SUBSCRIBED {} to {}", this, topic);
    }
 
    public synchronized void unsubscribe(Topic topic) {
@@ -151,6 +161,43 @@ public class EntityInfo extends Entity implements Comparable<EntityInfo> {
    public boolean isAvailable() {
       return (status & (Core.STATUS_STARTING | Core.STATUS_PAUSED | Core.STATUS_GONE | Core.STATUS_BUSY | Core.STATUS_OVERLOADED
             | Core.STATUS_FAILED | Core.STATUS_STOPPING)) == 0;
+   }
+
+   public synchronized void queue(final Runnable task) {
+      if (queue == null) {
+         queue = new LinkedList<Runnable>();
+         consumerLock = new ReentrantLock();
+      }
+      queue.add(task);
+   }
+
+   public synchronized int getQueueLength() {
+      return queue == null ? 0 : queue.size();
+   }
+
+   public void process() {
+      synchronized (this) {
+         if (queue == null) {
+            return;
+         }
+      }
+      if (consumerLock.tryLock()) {
+         try {
+            Runnable task = null;
+            do {
+               task = queue.poll();
+               if (task != null) {
+                  try {
+                     task.run();
+                  } catch (Throwable e) {
+                     logger.error(e.getMessage(), e);
+                  }
+               }
+            } while (task != null);
+         } finally {
+            consumerLock.unlock();
+         }
+      }
    }
 
 }

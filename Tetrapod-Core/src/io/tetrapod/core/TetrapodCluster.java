@@ -27,7 +27,7 @@ public class TetrapodCluster implements SessionFactory, Session.Listener {
    public static class Tetrapod {
       public int           entityId;
       public ServerAddress address;
-      public Client        client;
+      public Session       session;
    }
 
    private final Server                 server;
@@ -51,12 +51,37 @@ public class TetrapodCluster implements SessionFactory, Session.Listener {
    /**
     * Join an existing cluster
     */
-   public void joinCluster(ServerAddress address) throws Exception {
-      Tetrapod member = new Tetrapod();
-      member.address = address;
-      member.client = new Client(this);
-      member.client.connect(address.host, address.port, service.getDispatcher());
-      
+   public void joinCluster(final ServerAddress address) throws Exception {
+      Client client = new Client(this);
+      client.connect(address.host, address.port, service.getDispatcher(), new Session.Listener() {
+
+         @Override
+         public void onSessionStop(Session ses) {}
+
+         @Override
+         public void onSessionStart(final Session ses) {
+            ses.sendRequest(
+                  new RegisterRequest(222/* FIXME */, service.token, service.getContractId(), service.getShortName(), service.status),
+                  Core.UNADDRESSED).handle(new ResponseHandler() {
+               @Override
+               public void onResponse(Response res) {
+                  if (res.isError()) {
+                     service.fail("Unable to register {}", res.errorCode());
+                  } else {
+                     RegisterResponse r = (RegisterResponse) res;
+                     ses.setMyEntityId(r.entityId);
+                     ses.setTheirEntityId(r.parentId);
+                     ses.setMyEntityType(Core.TYPE_TETRAPOD);
+                     ses.setTheirEntityType(Core.TYPE_TETRAPOD);
+                     service.registerSelf(r.entityId, service.random.nextLong());
+                     addMember(r.parentId, address, ses);
+
+                     ses.sendRequest(new JoinClusterRequest(r.entityId, getServerAddress()), Core.UNADDRESSED);
+                  }
+               }
+            });
+         }
+      });
    }
 
    public void startListening() throws IOException {
@@ -83,26 +108,7 @@ public class TetrapodCluster implements SessionFactory, Session.Listener {
 
    @Override
    public void onSessionStart(final Session ses) {
-      if (service.getEntityId() == 0) {
-         ses.sendRequest(
-               new RegisterRequest(222/* FIXME */, service.token, service.getContractId(), service.getShortName(), service.status),
-               Core.UNADDRESSED).handle(new ResponseHandler() {
-            @Override
-            public void onResponse(Response res) {
-               if (res.isError()) {
-                  service.fail("Unable to register {}", res.errorCode());
-               } else {
-                  RegisterResponse r = (RegisterResponse) res;
-                  ses.setMyEntityId(r.entityId);
-                  ses.setTheirEntityId(r.parentId);
-                  ses.setMyEntityType(Core.TYPE_TETRAPOD);
-                  ses.setTheirEntityType(Core.TYPE_TETRAPOD);
-                  service.registerSelf(r.entityId, service.random.nextLong());
-                  ses.sendRequest(new JoinClusterRequest(), Core.UNADDRESSED);
-               }
-            }
-         });
-      }
+
    }
 
    @Override
@@ -122,6 +128,33 @@ public class TetrapodCluster implements SessionFactory, Session.Listener {
     */
    public int getLocalPort() {
       return server.getPort();
+   }
+
+   public boolean addMember(int entityId, ServerAddress address, Session ses) {
+      Tetrapod pod = cluster.get(entityId);
+      if (pod != null) {
+         if (pod.session != null && pod.session.isConnected()) {
+            return false;
+         }
+         synchronized (pod) {
+            pod.session = ses;
+         }
+      } else {
+         pod = new Tetrapod();
+         pod.entityId = entityId;
+         pod.address = address;
+         pod.session = ses;
+         cluster.put(entityId, pod);
+      }
+      return true;
+   }
+
+   public Session getSession(int entityId) {
+      final Tetrapod pod = cluster.get(entityId);
+      if (pod != null) {
+         return pod.session;
+      }
+      return null;
    }
 
 }

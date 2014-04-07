@@ -166,7 +166,6 @@ public class WireSession extends Session {
    private void readMessage(ByteBuf in, boolean isBroadcast) throws IOException {
       final ByteBufDataSource reader = new ByteBufDataSource(in);
       final MessageHeader header = new MessageHeader();
-      boolean logged = false;
 
       header.read(reader);
       if (theirType != TYPE_TETRAPOD) {
@@ -174,31 +173,28 @@ public class WireSession extends Session {
          header.fromId = theirId;
       }
 
-      int rewindPos = in.readerIndex();
-      if (header.structId == 1454035) {
-         logger.info("");
+      commsLog("%s  [M] <- T%d.Message:%d %s", this, header.topicId, header.structId, getNameFor(header));
+      if (relayHandler == null || header.toId == myId || (header.toId == UNADDRESSED && header.topicId == UNADDRESSED)) {
+         dispatchMessage(header, reader);
+      } else {
+         relayHandler.relayMessage(header, in, isBroadcast);
       }
-      if (header.toId == myId || (header.toId == UNADDRESSED && helper.getMessageHandlers(header.contractId, header.structId).size() > 0)) {
-         // dispatch direct messages and ones we're waiting on
-         final Message msg = (Message) StructureFactory.make(header.contractId, header.structId);
-         if (msg != null) {
-            msg.read(reader);
-            logged = commsLog("%s  [M] <- T%d.%s", this, header.topicId, msg.dump());
-            dispatchMessage(header, msg);
-         } else {
-            logger.warn("Could not find message structure {}", header.structId);
-         }
-      }
+   }
 
-      if (header.toId != myId && relayHandler != null) {
-         in.readerIndex(rewindPos);
-         if (!logged)
-            logged = commsLog("%s  [M] <- T%d.Message:%d", this, header.topicId, header.structId);
-         relayMessage(header, in, isBroadcast);
-      }
+   private String getNameFor(MessageHeader header) {
+      final Structure msg = StructureFactory.make(header.contractId, header.structId);
+      return msg == null ? "" : msg.getClass().getSimpleName();
 
-      if (!logged)
-         logged = commsLog("%s  [M] <- T%d.Message:%d", this, header.topicId, header.structId);
+   }
+
+   protected void dispatchMessage(final MessageHeader header, final ByteBufDataSource reader) throws IOException {
+      final Message msg = (Message) StructureFactory.make(header.contractId, header.structId);
+      if (msg != null) {
+         msg.read(reader);
+         dispatchMessage(header, msg);
+      } else {
+         logger.warn("Could not find message structure {}", header.structId);
+      }
    }
 
    @Override
@@ -296,18 +292,6 @@ public class WireSession extends Session {
    private void relayResponse(ResponseHeader header, Async async, ByteBuf in) {
       header.requestId = async.header.requestId;
       async.session.sendRelayedResponse(header, in);
-   }
-
-   private void relayMessage(final MessageHeader header, final ByteBuf payload, boolean isBroadcast) {
-      if (header.toId == UNADDRESSED) {
-         if (isBroadcast)
-            relayHandler.broadcast(header, payload);
-      } else {
-         final Session ses = relayHandler.getRelaySession(header.toId, header.contractId);
-         if (ses != null) {
-            ses.sendRelayedMessage(header, payload, false);
-         }
-      }
    }
 
    public static String dumpBuffer(ByteBuf buf) {
