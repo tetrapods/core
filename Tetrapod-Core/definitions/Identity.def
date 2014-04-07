@@ -44,11 +44,11 @@ protected request Link
 
 // If there is a conflict the user has three choices the client has to walk them
 // through:<ul>  
-//   <li> forget about linking [eg cancel]
-//   <li> force the link to this account [eg resend Link with overrideConflicts = true]
+//   <li> forget about linking [eg. cancel]
+//   <li> force the link to this account [eg. re-send Link with overrideConflicts = true]
 //   <li> make the other account the main account, by:<ul>
 //         <li> Logout
-//         <li> Login with identity used in Link (gettng you conflict id)
+//         <li> Login with identity used in Link (getting your conflict id)
 //         <li> Link with identity used to originally login with overrideConflicts = true
 //    </ul></ul>
 //  OR just tell them to contact support with the two account ids.
@@ -77,6 +77,13 @@ admin request UpdateProperties
    3: int mask       // which properties to update
    4: string authToken
    
+internal request GetOrCreateId
+   1: string email
+   2: string username
+
+internal response GetOrCreateId
+   1: int accountId
+
 internal request GetAuthSecret
 internal response GetAuthSecret
    1: byte[] secret
@@ -84,7 +91,7 @@ internal response GetAuthSecret
 public struct Identity
    1: int type
    2: string publicPart    // eg: your email address
-   3: string verifyPart    // eg: your password (or passowrd hash if stored internally)
+   3: string verifyPart    // eg: your password (or password hash if stored internally)
    
    const int IDENTITY_EMAIL      = 1
    const int IDENTITY_DEVICE     = 2

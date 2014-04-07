@@ -105,6 +105,8 @@ TP.register("response", "Identity", "Link", 4, 14285084);
 TP.register("request", "Identity", "Info", 4, 14709500);
 TP.register("response", "Identity", "Info", 4, 3624488);
 TP.register("request", "Identity", "UpdateProperties", 4, 1362696);
+TP.register("request", "Identity", "GetOrCreateId", 4, 4704002);
+TP.register("response", "Identity", "GetOrCreateId", 4, 275166);
 TP.register("request", "Identity", "GetAuthSecret", 4, 7311132);
 TP.register("response", "Identity", "GetAuthSecret", 4, 378568);
 TP.register("struct", "Identity", "Identity", 4, 12701893);
