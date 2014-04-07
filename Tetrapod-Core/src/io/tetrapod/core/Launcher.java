@@ -31,7 +31,7 @@ public class Launcher {
          }
 
          Service service = (Service) getClass(serviceClass).newInstance();
-         service.startNetwork(addr, opts.get("token"));
+         service.startNetwork(addr, opts.get("token"), opts);
       } catch (Throwable t) {
          t.printStackTrace();
          usage();
