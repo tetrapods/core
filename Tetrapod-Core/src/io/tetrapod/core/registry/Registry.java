@@ -184,7 +184,6 @@ public class Registry implements TetrapodContract.Registry.API {
       } finally {
          lock.readLock().unlock();
       }
-      setDirty(true);
    }
 
    public void unregister(final EntityInfo e) {
@@ -217,7 +216,6 @@ public class Registry implements TetrapodContract.Registry.API {
       } finally {
          lock.readLock().unlock();
       }
-      setDirty(true);
    }
 
    public void updateStatus(final EntityInfo e, int status) {
@@ -233,7 +231,6 @@ public class Registry implements TetrapodContract.Registry.API {
       } finally {
          lock.readLock().unlock();
       }
-      setDirty(true);
    }
 
    public Topic publish(int entityId) {
@@ -245,7 +242,6 @@ public class Registry implements TetrapodContract.Registry.API {
             if (e.parentId == parentId) {
                broadcaster.broadcastRegistryMessage(new TopicPublishedMessage(e.entityId, topic.topicId));
             }
-            setDirty(true);
             return topic;
          } else {
             logger.error("Could not find entity {}", e);
@@ -268,7 +264,6 @@ public class Registry implements TetrapodContract.Registry.API {
             if (e.parentId == parentId) {
                broadcaster.broadcastRegistryMessage(new TopicUnpublishedMessage(e.entityId, topicId));
             }
-            setDirty(true);
             return true;
          }
       } finally {
@@ -299,7 +294,6 @@ public class Registry implements TetrapodContract.Registry.API {
       } finally {
          lock.readLock().unlock();
       }
-      setDirty(true);
    }
 
    public void unsubscribe(final EntityInfo publisher, final int topicId, final int entityId, final boolean all) {
@@ -327,7 +321,6 @@ public class Registry implements TetrapodContract.Registry.API {
       } finally {
          lock.readLock().unlock();
       }
-      setDirty(true);
    }
 
    //////////////////////////////////////////////////////////////////////////////////////////
@@ -359,7 +352,6 @@ public class Registry implements TetrapodContract.Registry.API {
             lock.readLock().unlock();
          }
       }
-      setDirty(true);
    }
 
    @Override
@@ -377,7 +369,6 @@ public class Registry implements TetrapodContract.Registry.API {
             logger.error("Could not find entity {} to unregister", m.entityId);
          }
       }
-      setDirty(true);
    }
 
    @Override
@@ -395,7 +386,6 @@ public class Registry implements TetrapodContract.Registry.API {
             logger.error("Could not find entity {} to update", m.entityId);
          }
       }
-      setDirty(true);
    }
 
    @Override
@@ -417,7 +407,6 @@ public class Registry implements TetrapodContract.Registry.API {
             logger.info("Could not find publisher entity {}", m.ownerId);
          }
       }
-      setDirty(true);
    }
 
    @Override
@@ -438,7 +427,6 @@ public class Registry implements TetrapodContract.Registry.API {
             logger.info("Could not find publisher entity {}", m.ownerId);
          }
       }
-      setDirty(true);
    }
 
    @Override
@@ -456,7 +444,6 @@ public class Registry implements TetrapodContract.Registry.API {
             logger.info("Could not find publisher entity {}", m.ownerId);
          }
       }
-      setDirty(true);
    }
 
    @Override
@@ -474,7 +461,6 @@ public class Registry implements TetrapodContract.Registry.API {
             logger.info("Could not find publisher entity {}", m.ownerId);
          }
       }
-      setDirty(true);
    }
 
    @Override
@@ -522,16 +508,6 @@ public class Registry implements TetrapodContract.Registry.API {
 
    //////////////////////////////////////////////////////////////////////////////////////////
 
-   private boolean dirty;
-
-   public synchronized void setDirty(boolean val) {
-      dirty = val;
-   }
-
-   public synchronized boolean isDirty() {
-      return dirty;
-   }
-
    public synchronized void logStats() {
       List<EntityInfo> list = new ArrayList<>(entities.values());
       Collections.sort(list);
@@ -541,7 +517,6 @@ public class Registry implements TetrapodContract.Registry.API {
                e.getNumTopics(), e.getNumSubscriptions()));
       }
       logger.info("=================================================================================\n");
-      setDirty(false);
    }
 
    private List<EntityInfo> ensureServicesList(int contractId) {

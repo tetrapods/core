@@ -282,7 +282,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          }
          final EntityInfo parent = registry.getEntity(entity.parentId);
          assert (parent != null);
-         return parent.getSession();
+         return cluster.getSession(parent.entityId);
       }
    }
 
@@ -443,7 +443,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    }
 
    private void healthCheck() {
-      if (System.currentTimeMillis() - lastStatsLog > (registry.isDirty() ? 1 : 60) * 1000) {
+      if (System.currentTimeMillis() - lastStatsLog > 5 * 60 * 1000) {
          registry.logStats();
          lastStatsLog = System.currentTimeMillis();
       }
