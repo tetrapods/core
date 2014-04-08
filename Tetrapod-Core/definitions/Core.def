@@ -34,7 +34,7 @@ struct Core
    error INVALID_ENTITY       = 9 // An addressed entityId was invalid
    error RIGHTS_EXPIRED       = 10 // rights token has expired, need to login again     
 
-   const byte  ENVELOPE_HANDSHAKE      = 1
+   const byte  ENVELOPE_HANDSHAKE      = 1 
    const byte  ENVELOPE_REQUEST        = 2
    const byte  ENVELOPE_RESPONSE       = 3
    const byte  ENVELOPE_MESSAGE        = 4
@@ -43,11 +43,7 @@ struct Core
    const byte  ENVELOPE_PONG           = 7
    
 ################################# CORE WIRE #################################
-   
-public struct Handshake 
-   1: int wireVersion  
-   2: int wireOptions 
-
+ 
 public struct RequestHeader
    1: int 	requestId
    2: int 	fromId
@@ -134,11 +130,13 @@ public response Register
    2: int parentId
    3: string token
    
-public request JoinCluster
+public request ClusterJoin
    1: int entityId
-   2: ServerAddress address
+   2: string host
+   3: int servicePort
+   4: int clusterPort
    
-public response JoinCluster
+public response ClusterJoin
    1: int entityId
    
 public request Unregister
@@ -165,12 +163,21 @@ internal request AddServiceInformation
    1: WebRoute[] routes
    2: StructDescription<list> structs // structs that could possibly be used in end user comms
 
+
+internal request LogRegistryStats 
+
 ################################# MESSAGES #################################
 
+// a special message to avoid race conditions on the Register response
+public message Entity 
+   1: int entityId
+   
 // notification of an existing tetrapod cluster member    
 internal message ClusterMember
    1: int entityId
-   2: ServerAddress[] cluster
+   2: string host
+   3: int servicePort
+   4: int clusterPort
     
 ##### Registry Topic Messages ##### 
 
@@ -216,10 +223,4 @@ internal message Services.ServiceUpdated
 	1: int entityId;
 	2: int status;
 
-internal message Services.ServiceStats
-	1: int entityId;
-	2: int rps;
-	3: int mps;
-	4: long latency;	
-	5: long counter;
  

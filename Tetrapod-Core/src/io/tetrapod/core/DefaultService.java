@@ -4,6 +4,7 @@ import static io.tetrapod.protocol.core.Core.UNADDRESSED;
 import io.netty.channel.socket.SocketChannel;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.rpc.Error;
+import io.tetrapod.core.utils.Util;
 import io.tetrapod.protocol.core.*;
 import io.tetrapod.protocol.service.*;
 
@@ -11,8 +12,8 @@ import java.util.*;
 
 import org.slf4j.*;
 
-public class DefaultService implements Service, BaseServiceContract.API, SessionFactory {
-   private static final Logger   logger          = LoggerFactory.getLogger(DefaultService.class);
+public class DefaultService implements Service, BaseServiceContract.API, SessionFactory, EntityMessage.Handler {
+   private static final Logger   logger           = LoggerFactory.getLogger(DefaultService.class);
 
    protected final Dispatcher    dispatcher;
    protected Client              clusterClient;
@@ -24,7 +25,10 @@ public class DefaultService implements Service, BaseServiceContract.API, Session
    protected String              token;
    protected int                 status;
 
-   private final MessageHandlers messageHandlers = new MessageHandlers();
+   protected final Set<Integer>  statsSubscribers = new HashSet<>();
+   protected Integer             statsTopicId;
+
+   private final MessageHandlers messageHandlers  = new MessageHandlers();
 
    public DefaultService() {
       status |= Core.STATUS_STARTING;
@@ -32,10 +36,24 @@ public class DefaultService implements Service, BaseServiceContract.API, Session
       clusterClient = new Client(this);
       addContracts(new BaseServiceContract());
       addPeerContracts(new TetrapodContract());
+      addMessageHandler(new EntityMessage(), this);
    }
 
    public byte getEntityType() {
       return Core.TYPE_SERVICE;
+   }
+
+   @Override
+   public void messageEntity(EntityMessage m, MessageContext ctx) {
+      if (ctx.session.getTheirEntityType() == Core.TYPE_TETRAPOD) {
+         this.entityId = m.entityId;
+         ctx.session.setMyEntityId(m.entityId);
+      }
+   }
+
+   @Override
+   public void genericMessage(Message message, MessageContext ctx) {
+      assert false;
    }
 
    // Service protocol
@@ -50,7 +68,20 @@ public class DefaultService implements Service, BaseServiceContract.API, Session
     * Called after registration is complete and this service has a valid entityId and is free to make requests into the cluster. Default
     * implementation is to do nothing.
     */
-   public void onRegistered() {}
+   public void onRegistered() {
+      // publish the service stats, and subscribe any pending subscribers
+      sendRequest(new PublishRequest()).handle(new ResponseHandler() {
+         @Override
+         public void onResponse(Response res) {
+            synchronized (statsSubscribers) {
+               statsTopicId = ((PublishResponse) res).topicId;
+               for (int entityId : statsSubscribers) {
+                  subscribe(statsTopicId, entityId);
+               }
+            }
+         }
+      });
+   }
 
    /**
     * Called before shutting down. Default implementation is to do nothing. Subclasses are expecting to close any resources they opened (for
@@ -194,6 +225,27 @@ public class DefaultService implements Service, BaseServiceContract.API, Session
       updateStatus(status | Core.STATUS_FAILED);
    }
 
+   /**
+    * Get a URL for this service's icon to display in the admin apps. Subclasses should override this to customize
+    */
+   public String getServiceIcon() {
+      return "media/gear.gif";
+   }
+
+   /**
+    * Get any custom metadata for the service. Subclasses should override this to customize
+    */
+   public String getServiceMetadata() {
+      return null;
+   }
+
+   /**
+    * Get any custom admin commands for the service to show in command menu of admin app. Subclasses should override this to customize
+    */
+   public ServiceCommand[] getServiceCommands() {
+      return null;
+   }
+
    protected String getShortName() {
       if (contract == null) {
          return null;
@@ -207,6 +259,10 @@ public class DefaultService implements Service, BaseServiceContract.API, Session
       }
       String s = contract.getClass().getCanonicalName();
       return s.substring(0, s.length() - "Contract".length());
+   }
+
+   public String getHostName() {
+      return Util.getHostName();
    }
 
    public Response sendPendingRequest(Request req, PendingResponseHandler handler) {
@@ -283,6 +339,29 @@ public class DefaultService implements Service, BaseServiceContract.API, Session
       messageHandlers.add(k, handler);
    }
 
+   // private methods
+
+   protected void registerServiceInformation() {
+      if (contract != null) {
+         AddServiceInformationRequest asi = new AddServiceInformationRequest();
+         asi.routes = contract.getWebRoutes();
+         asi.structs = new ArrayList<>();
+         for (Structure s : contract.getRequests()) {
+            asi.structs.add(s.makeDescription());
+         }
+         for (Structure s : contract.getResponses()) {
+            asi.structs.add(s.makeDescription());
+         }
+         for (Structure s : contract.getMessages()) {
+            asi.structs.add(s.makeDescription());
+         }
+         for (Structure s : contract.getStructs()) {
+            asi.structs.add(s.makeDescription());
+         }
+         sendRequest(asi, Core.UNADDRESSED).handle(ResponseHandler.LOGGER);
+      }
+   }
+
    // Base service implementation
 
    @Override
@@ -318,31 +397,32 @@ public class DefaultService implements Service, BaseServiceContract.API, Session
    }
 
    @Override
-   public Response requestServiceIcon(ServiceIconRequest r, RequestContext ctx) {
-      return new ServiceIconResponse("media/gear.gif");
+   public Response requestServiceDetails(ServiceDetailsRequest r, RequestContext ctx) {
+      return new ServiceDetailsResponse(getServiceIcon(), getServiceMetadata(), getServiceCommands());
    }
 
-   // private methods
-
-   protected void registerServiceInformation() {
-      if (contract != null) {
-         AddServiceInformationRequest asi = new AddServiceInformationRequest();
-         asi.routes = contract.getWebRoutes();
-         asi.structs = new ArrayList<>();
-         for (Structure s : contract.getRequests()) {
-            asi.structs.add(s.makeDescription());
+   @Override
+   public Response requestServiceStatsSubscribe(ServiceStatsSubscribeRequest r, RequestContext ctx) {
+      synchronized (statsSubscribers) {
+         if (statsTopicId == null) {
+            statsSubscribers.add(ctx.header.fromId);
+         } else {
+            subscribe(statsTopicId, ctx.header.fromId);
          }
-         for (Structure s : contract.getResponses()) {
-            asi.structs.add(s.makeDescription());
-         }
-         for (Structure s : contract.getMessages()) {
-            asi.structs.add(s.makeDescription());
-         }
-         for (Structure s : contract.getStructs()) {
-            asi.structs.add(s.makeDescription());
-         }
-         sendRequest(asi, Core.UNADDRESSED).handle(ResponseHandler.LOGGER);
       }
+      return Response.SUCCESS;
+   }
+
+   @Override
+   public Response requestServiceStatsUnsubscribe(ServiceStatsUnsubscribeRequest r, RequestContext ctx) {
+      synchronized (statsSubscribers) {
+         if (statsTopicId == null) {
+            statsSubscribers.remove(ctx.header.fromId);
+         } else {
+            unsubscribe(statsTopicId, ctx.header.fromId);
+         }
+      }
+      return Response.SUCCESS;
    }
 
 }

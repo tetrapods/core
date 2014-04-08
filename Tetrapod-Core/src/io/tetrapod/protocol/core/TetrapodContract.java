@@ -20,7 +20,8 @@ public class TetrapodContract extends Contract {
    
    public static interface API extends
       AddServiceInformationRequest.Handler,
-      JoinClusterRequest.Handler,
+      ClusterJoinRequest.Handler,
+      LogRegistryStatsRequest.Handler,
       PublishRequest.Handler,
       RegisterRequest.Handler,
       RegistrySubscribeRequest.Handler,
@@ -34,7 +35,7 @@ public class TetrapodContract extends Contract {
    public Structure[] getRequests() {
       return new Structure[] {
          new RegisterRequest(),
-         new JoinClusterRequest(),
+         new ClusterJoinRequest(),
          new UnregisterRequest(),
          new PublishRequest(),
          new RegistrySubscribeRequest(),
@@ -43,19 +44,21 @@ public class TetrapodContract extends Contract {
          new ServicesUnsubscribeRequest(),
          new ServiceStatusUpdateRequest(),
          new AddServiceInformationRequest(),
+         new LogRegistryStatsRequest(),
       };
    }
    
    public Structure[] getResponses() {
       return new Structure[] {
          new RegisterResponse(),
-         new JoinClusterResponse(),
+         new ClusterJoinResponse(),
          new PublishResponse(),
       };
    }
    
    public Structure[] getMessages() {
       return new Structure[] {
+         new EntityMessage(),
          new ClusterMemberMessage(),
          new EntityRegisteredMessage(),
          new EntityUnregisteredMessage(),
@@ -68,14 +71,12 @@ public class TetrapodContract extends Contract {
          new ServiceAddedMessage(),
          new ServiceRemovedMessage(),
          new ServiceUpdatedMessage(),
-         new ServiceStatsMessage(),
       };
    }
    
    public Structure[] getStructs() {
       return new Structure[] {
          new Core(),
-         new Handshake(),
          new RequestHeader(),
          new ResponseHeader(),
          new MessageHeader(),
@@ -141,7 +142,6 @@ public class TetrapodContract extends Contract {
       public static interface API extends
          ServiceAddedMessage.Handler,
          ServiceRemovedMessage.Handler,
-         ServiceStatsMessage.Handler,
          ServiceUpdatedMessage.Handler
          {}
          
@@ -149,7 +149,6 @@ public class TetrapodContract extends Contract {
          return new Structure[] {
             new ServiceAddedMessage(),
             new ServiceRemovedMessage(),
-            new ServiceStatsMessage(),
             new ServiceUpdatedMessage(),
          };
       }

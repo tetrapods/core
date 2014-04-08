@@ -26,6 +26,7 @@ function Tetrapod() {
    self.addMessageHandler = addMessageHandler;
    self.send = send;
    self.connect = connect;
+   self.nameOf = nameOf;
    self.consts = protocol.consts;
 
    function register(type, contractName, structName, contractId, structId) {
@@ -111,7 +112,7 @@ function Tetrapod() {
       }
    }
 
-   function connect(server, port) {
+   function connect(server, port) { 		
       port = typeof port !== 'undefined' ? port : 9903;
       if (!window.WebSocket) {
          window.WebSocket = window.MozWebSocket;

@@ -27,7 +27,7 @@ public class Dispatcher {
    }
 
    public Dispatcher(int maxThreads) {
-      threadPool = new ThreadPoolExecutor(0, maxThreads, 1L, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(), new ThreadFactory() {
+      threadPool = new ThreadPoolExecutor(0, maxThreads, 5L, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(), new ThreadFactory() {
          private final AtomicInteger counter = new AtomicInteger();
 
          @Override
@@ -36,7 +36,7 @@ public class Dispatcher {
          }
       });
 
-      sequential = new ThreadPoolExecutor(0, 1, 1L, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(), new ThreadFactory() {
+      sequential = new ThreadPoolExecutor(0, 1, 5L, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(), new ThreadFactory() {
          private final AtomicInteger counter = new AtomicInteger();
 
          @Override

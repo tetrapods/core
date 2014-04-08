@@ -21,7 +21,9 @@ public class BaseServiceContract extends Contract {
    public static interface API extends
       PauseRequest.Handler,
       RestartRequest.Handler,
-      ServiceIconRequest.Handler,
+      ServiceDetailsRequest.Handler,
+      ServiceStatsSubscribeRequest.Handler,
+      ServiceStatsUnsubscribeRequest.Handler,
       ShutdownRequest.Handler,
       UnpauseRequest.Handler
       {}
@@ -32,25 +34,27 @@ public class BaseServiceContract extends Contract {
          new UnpauseRequest(),
          new ShutdownRequest(),
          new RestartRequest(),
-         new ServiceIconRequest(),
+         new ServiceDetailsRequest(),
+         new ServiceStatsSubscribeRequest(),
+         new ServiceStatsUnsubscribeRequest(),
       };
    }
    
    public Structure[] getResponses() {
       return new Structure[] {
-         new ServiceIconResponse(),
+         new ServiceDetailsResponse(),
       };
    }
    
    public Structure[] getMessages() {
       return new Structure[] {
-         
+         new ServiceStatsMessage(),
       };
    }
    
    public Structure[] getStructs() {
       return new Structure[] {
-         
+         new ServiceCommand(),
       };
    }
    
@@ -68,4 +72,25 @@ public class BaseServiceContract extends Contract {
       };
    }
 
+   public static class ServiceStats extends Contract {
+      public static interface API extends
+         ServiceStatsMessage.Handler
+         {}
+         
+      public Structure[] getMessages() {
+         return new Structure[] {
+            new ServiceStatsMessage(),
+         };
+      }
+      
+      public String getName() {
+         return BaseServiceContract.NAME;
+      }
+      
+      public int getContractId() {
+         return BaseServiceContract.CONTRACT_ID;
+      } 
+       
+   }
+      
 }

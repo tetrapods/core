@@ -55,9 +55,6 @@ public class SessionTest {
          public void messageServiceRemoved(ServiceRemovedMessage m, MessageContext ctx) {}
 
          @Override
-         public void messageServiceStats(ServiceStatsMessage m, MessageContext ctx) {}
-
-         @Override
          public void messageServiceUpdated(ServiceUpdatedMessage m, MessageContext ctx) {}
 
       });
