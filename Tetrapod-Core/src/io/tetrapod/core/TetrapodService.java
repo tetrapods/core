@@ -13,7 +13,7 @@ import io.tetrapod.core.serialize.datasources.ByteBufDataSource;
 import io.tetrapod.core.utils.*;
 import io.tetrapod.core.web.*;
 import io.tetrapod.protocol.core.*;
-import io.tetrapod.protocol.service.*;
+import io.tetrapod.protocol.service.ServiceCommand;
 
 import java.io.IOException;
 import java.security.SecureRandom;
@@ -118,6 +118,17 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       } catch (Exception ex) {
          fail(ex);
       }
+   }
+
+   @Override
+   public String getServiceIcon() {
+      return "media/tetrapod.png";
+   }
+
+   @Override
+   public ServiceCommand[] getServiceCommands() {
+      return new ServiceCommand[] { new ServiceCommand("Log Registry Stats", null, LogRegistryStatsRequest.CONTRACT_ID,
+            LogRegistryStatsRequest.STRUCT_ID) };
    }
 
    public byte getEntityType() {
@@ -622,11 +633,6 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    }
 
    @Override
-   public Response requestServiceIcon(ServiceIconRequest r, RequestContext ctx) {
-      return new ServiceIconResponse("media/tetrapod.png");
-   }
-
-   @Override
    protected void registerServiceInformation() {
       // do nothing, our protocol is known by all tetrapods
    }
@@ -649,6 +655,12 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       registrySubscribe(ctx.session, ctx.session.getTheirEntityId(), true);
 
       return new ClusterJoinResponse(getEntityId());
+   }
+
+   @Override
+   public Response requestLogRegistryStats(LogRegistryStatsRequest r, RequestContext ctx) {
+      registry.logStats();
+      return Response.SUCCESS;
    }
 
 }

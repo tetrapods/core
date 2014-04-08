@@ -21,6 +21,7 @@ public class TetrapodContract extends Contract {
    public static interface API extends
       AddServiceInformationRequest.Handler,
       ClusterJoinRequest.Handler,
+      LogRegistryStatsRequest.Handler,
       PublishRequest.Handler,
       RegisterRequest.Handler,
       RegistrySubscribeRequest.Handler,
@@ -43,6 +44,7 @@ public class TetrapodContract extends Contract {
          new ServicesUnsubscribeRequest(),
          new ServiceStatusUpdateRequest(),
          new AddServiceInformationRequest(),
+         new LogRegistryStatsRequest(),
       };
    }
    
@@ -69,7 +71,6 @@ public class TetrapodContract extends Contract {
          new ServiceAddedMessage(),
          new ServiceRemovedMessage(),
          new ServiceUpdatedMessage(),
-         new ServiceStatsMessage(),
       };
    }
    
@@ -141,7 +142,6 @@ public class TetrapodContract extends Contract {
       public static interface API extends
          ServiceAddedMessage.Handler,
          ServiceRemovedMessage.Handler,
-         ServiceStatsMessage.Handler,
          ServiceUpdatedMessage.Handler
          {}
          
@@ -149,7 +149,6 @@ public class TetrapodContract extends Contract {
          return new Structure[] {
             new ServiceAddedMessage(),
             new ServiceRemovedMessage(),
-            new ServiceStatsMessage(),
             new ServiceUpdatedMessage(),
          };
       }
