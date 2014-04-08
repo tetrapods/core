@@ -11,6 +11,10 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
 
+/**
+ * TODO: this will be moved to new publication
+ */
+
 @SuppressWarnings("unused")
 public class ServiceStatsMessage extends Message {
    

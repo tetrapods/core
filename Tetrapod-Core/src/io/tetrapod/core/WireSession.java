@@ -107,7 +107,7 @@ public class WireSession extends Session {
 
       final Async async = pendingRequests.remove(header.requestId);
       if (async != null) {
-         if (async.header.fromId == myId) {
+         if (async.header.fromId == myId || async.header.fromId == Core.UNADDRESSED) {
             final Response res = (Response) StructureFactory.make(async.header.contractId, header.structId);
             if (res != null) {
                res.read(reader);
@@ -179,12 +179,6 @@ public class WireSession extends Session {
       } else {
          relayHandler.relayMessage(header, in, isBroadcast);
       }
-   }
-
-   private String getNameFor(MessageHeader header) {
-      final Structure msg = StructureFactory.make(header.contractId, header.structId);
-      return msg == null ? "" : msg.getClass().getSimpleName();
-
    }
 
    protected void dispatchMessage(final MessageHeader header, final ByteBufDataSource reader) throws IOException {

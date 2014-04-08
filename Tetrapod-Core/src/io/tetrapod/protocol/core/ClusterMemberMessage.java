@@ -25,13 +25,17 @@ public class ClusterMemberMessage extends Message {
       defaults();
    }
 
-   public ClusterMemberMessage(int entityId, ServerAddress[] cluster) {
+   public ClusterMemberMessage(int entityId, String host, int servicePort, int clusterPort) {
       this.entityId = entityId;
-      this.cluster = cluster;
+      this.host = host;
+      this.servicePort = servicePort;
+      this.clusterPort = clusterPort;
    }   
    
    public int entityId;
-   public ServerAddress[] cluster;
+   public String host;
+   public int servicePort;
+   public int clusterPort;
 
    public final Structure.Security getSecurity() {
       return Security.INTERNAL;
@@ -39,13 +43,17 @@ public class ClusterMemberMessage extends Message {
 
    public final void defaults() {
       entityId = 0;
-      cluster = null;
+      host = null;
+      servicePort = 0;
+      clusterPort = 0;
    }
    
    @Override
    public final void write(DataSource data) throws IOException {
       data.write(1, this.entityId);
-      if (this.cluster != null) data.write(2, this.cluster);
+      data.write(2, this.host);
+      data.write(3, this.servicePort);
+      data.write(4, this.clusterPort);
       data.writeEndTag();
    }
    
@@ -56,7 +64,9 @@ public class ClusterMemberMessage extends Message {
          int tag = data.readTag();
          switch (tag) {
             case 1: this.entityId = data.read_int(tag); break;
-            case 2: this.cluster = data.read_struct_array(tag, new ServerAddress()); break;
+            case 2: this.host = data.read_string(tag); break;
+            case 3: this.servicePort = data.read_int(tag); break;
+            case 4: this.clusterPort = data.read_int(tag); break;
             case Codec.END_TAG:
                return;
             default:
@@ -90,9 +100,11 @@ public class ClusterMemberMessage extends Message {
       // Note do not use this tags in long term serializations (to disk or databases) as 
       // implementors are free to rename them however they wish.  A null means the field
       // is not to participate in web serialization (remaining at default)
-      String[] result = new String[2+1];
+      String[] result = new String[4+1];
       result[1] = "entityId";
-      result[2] = "cluster";
+      result[2] = "host";
+      result[3] = "servicePort";
+      result[4] = "clusterPort";
       return result;
    }
    
@@ -106,7 +118,9 @@ public class ClusterMemberMessage extends Message {
       desc.types = new TypeDescriptor[desc.tagWebNames.length];
       desc.types[0] = new TypeDescriptor(TypeDescriptor.T_STRUCT, getContractId(), getStructId());
       desc.types[1] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
-      desc.types[2] = new TypeDescriptor(TypeDescriptor.T_STRUCT_LIST, ServerAddress.CONTRACT_ID, ServerAddress.STRUCT_ID);
+      desc.types[2] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
+      desc.types[3] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
+      desc.types[4] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
       return desc;
    }
 }

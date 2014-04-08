@@ -4,6 +4,7 @@ import static io.tetrapod.protocol.core.Core.UNADDRESSED;
 import io.netty.channel.socket.SocketChannel;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.rpc.Error;
+import io.tetrapod.core.utils.Util;
 import io.tetrapod.protocol.core.*;
 import io.tetrapod.protocol.service.*;
 
@@ -11,7 +12,7 @@ import java.util.*;
 
 import org.slf4j.*;
 
-public class DefaultService implements Service, BaseServiceContract.API, SessionFactory {
+public class DefaultService implements Service, BaseServiceContract.API, SessionFactory, EntityMessage.Handler {
    private static final Logger   logger          = LoggerFactory.getLogger(DefaultService.class);
 
    protected final Dispatcher    dispatcher;
@@ -32,10 +33,24 @@ public class DefaultService implements Service, BaseServiceContract.API, Session
       clusterClient = new Client(this);
       addContracts(new BaseServiceContract());
       addPeerContracts(new TetrapodContract());
+      addMessageHandler(new EntityMessage(), this);
    }
 
    public byte getEntityType() {
       return Core.TYPE_SERVICE;
+   }
+
+   @Override
+   public void messageEntity(EntityMessage m, MessageContext ctx) {
+      if (ctx.session.getTheirEntityType() == Core.TYPE_TETRAPOD) {
+         this.entityId = m.entityId;
+         ctx.session.setMyEntityId(m.entityId);
+      }
+   }
+
+   @Override
+   public void genericMessage(Message message, MessageContext ctx) {
+      assert false;
    }
 
    // Service protocol
@@ -207,6 +222,10 @@ public class DefaultService implements Service, BaseServiceContract.API, Session
       }
       String s = contract.getClass().getCanonicalName();
       return s.substring(0, s.length() - "Contract".length());
+   }
+
+   public String getHostName() {
+      return Util.getHostName();
    }
 
    public Response sendPendingRequest(Request req, PendingResponseHandler handler) {
