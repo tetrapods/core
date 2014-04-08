@@ -2,6 +2,7 @@ package io.tetrapod.core;
 
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
+import io.tetrapod.core.utils.Accumulator;
 
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -12,13 +13,16 @@ import org.slf4j.*;
  * Manages service-wide thread-pools and dispatch of requests and sequenced behaviors
  */
 public class Dispatcher {
-   public static final Logger             logger   = LoggerFactory.getLogger(Dispatcher.class);
+   public static final Logger             logger                 = LoggerFactory.getLogger(Dispatcher.class);
 
    private final ThreadPoolExecutor       threadPool;
    private final ExecutorService          sequential;
    private final ScheduledExecutorService scheduled;
 
-   private final BlockingQueue<Runnable>  overflow = new LinkedBlockingQueue<>();
+   public final Accumulator               requestsHandledCounter = new Accumulator();
+   public final Accumulator               messagesSentCounter    = new Accumulator();
+
+   private final BlockingQueue<Runnable>  overflow               = new LinkedBlockingQueue<>();
 
    private EventLoopGroup                 workerGroup;
 

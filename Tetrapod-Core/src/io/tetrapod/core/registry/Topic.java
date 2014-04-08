@@ -38,13 +38,13 @@ public class Topic {
                // if they are a tetrapod and this topic is owned by us, we can deliver directly
                children.put(e.entityId, sub);
             }
-         } else { 
+         } else {
             if (e.parentId != parentId) {
-               // if we aren't their parent, add them to a proxy subscription 
-               Subscriber psub = parents.get(parentId);
+               // if we aren't their parent, add them to a proxy subscription for their parent
+               Subscriber psub = parents.get(e.parentId);
                if (psub == null) {
-                  psub = new Subscriber(parentId, 0);
-                  parents.put(parentId, psub);
+                  psub = new Subscriber(e.parentId, 0);
+                  parents.put(e.parentId, psub);
                }
                psub.counter++;
             } else {

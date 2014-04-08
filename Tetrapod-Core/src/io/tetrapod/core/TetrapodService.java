@@ -412,6 +412,16 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       }
    }
 
+   @Override
+   public void subscribe(int topicId, int entityId) {
+      registry.subscribe(registry.getEntity(getEntityId()), topicId, entityId);
+   }
+
+   @Override
+   public void unsubscribe(int topicId, int entityId) {
+      registry.unsubscribe(registry.getEntity(getEntityId()), topicId, entityId, false);
+   }
+
    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -450,7 +460,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    private void subscribeToCluster(Session ses, int toEntityId) {
       assert (clusterTopic != null);
       synchronized (cluster) {
-         registry.subscribe(registry.getEntity(getEntityId()), clusterTopic.topicId, toEntityId);
+         subscribe(clusterTopic.topicId, toEntityId);
          cluster.sendClusterDetails(ses, toEntityId, clusterTopic.topicId);
       }
    }
@@ -564,7 +574,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
             // synchronizing registries using topics. Cluster members are implicitly auto-subscribed without
             // an entry in the topic.
             if (!clusterMode) {
-               registry.subscribe(registry.getEntity(getEntityId()), registryTopic.topicId, toEntityId);
+               subscribe(registryTopic.topicId, toEntityId);
             }
             registry.sendRegistryState(session, toEntityId, registryTopic.topicId);
          }
@@ -583,7 +593,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    @Override
    public Response requestRegistryUnsubscribe(RegistryUnsubscribeRequest r, RequestContext ctx) {
       // TODO: validate  
-      registry.unsubscribe(registry.getEntity(getEntityId()), registryTopic.topicId, ctx.header.fromId, false);
+      unsubscribe(registryTopic.topicId, ctx.header.fromId);
       return Response.SUCCESS;
    }
 
@@ -593,7 +603,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          return new Error(ERROR_UNKNOWN);
       }
       synchronized (servicesTopic) {
-         registry.subscribe(registry.getEntity(getEntityId()), servicesTopic.topicId, ctx.header.fromId);
+         subscribe(servicesTopic.topicId, ctx.header.fromId);
          // send all current entities
          for (EntityInfo e : registry.getServices()) {
             ctx.session.sendMessage(new ServiceAddedMessage(e), ctx.header.fromId, servicesTopic.topicId);
@@ -605,7 +615,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    @Override
    public Response requestServicesUnsubscribe(ServicesUnsubscribeRequest r, RequestContext ctx) {
       // TODO: validate 
-      registry.unsubscribe(registry.getEntity(getEntityId()), servicesTopic.topicId, ctx.header.fromId, false);
+      unsubscribe(servicesTopic.topicId, ctx.header.fromId);
       return Response.SUCCESS;
    }
 

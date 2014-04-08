@@ -31,7 +31,7 @@
 	<logger name="io.netty" level="INFO" />
 	<logger name="io.tetrapod.core.Session" level="DEBUG" />
 
-	<logger name="comms" additivity="false" level="INFO">
+	<logger name="comms" additivity="false" level="OFF">
 		<appender-ref ref="COMMS" />
 	</logger>
 

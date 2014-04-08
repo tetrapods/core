@@ -165,6 +165,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
                   logger.error(e.getMessage(), e);
                   sendResponse(new Error(ERROR_UNKNOWN), header.requestId);
                }
+               getDispatcher().requestsHandledCounter.increment();
             }
          });
       } else {
@@ -270,6 +271,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
                ENVELOPE_BROADCAST);
          if (buffer != null) {
             writeFrame(buffer);
+            getDispatcher().messagesSentCounter.increment();
          }
       }
    }
@@ -281,6 +283,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
                msg, ENVELOPE_MESSAGE);
          if (buffer != null) {
             writeFrame(buffer);
+            getDispatcher().messagesSentCounter.increment();
          }
       }
    }
@@ -416,6 +419,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
    }
 
    public boolean commsLog(String format, Object... args) {
+      //logger.debug(String.format(format, args));
       if (commsLog.isInfoEnabled()) {
          for (int i = 0; i < args.length; i++) {
             if (args[i] == this) {
@@ -435,4 +439,5 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
    public String getNameFor(MessageHeader header) {
       return StructureFactory.getName(header.contractId, header.structId);
    }
+
 }

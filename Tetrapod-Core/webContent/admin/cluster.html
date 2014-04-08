@@ -175,6 +175,8 @@
 								<th>Host</th>
 								<th>Status</th>
 								<th>Stats</th>
+								<th>RPS</th>
+								<th>MPS</th>
 							</tr>
 						</thead>
 						<tbody data-bind="foreach: services">
@@ -231,6 +233,8 @@
 										data-bind="attr: {id: 'service-chart-rps-' + entityId}"></div>
 
 								</td>
+								<td class="centered"><span data-bind="text: rps"></span></td>
+								<td class="centered"><span data-bind="text: mps"></span></td>
 							</tr>
 						</tbody>
 					</table>
@@ -383,6 +387,13 @@
 					self.services.remove(s);
 				}
 			});
+
+			TP.addMessageHandler("ServiceStats", function(msg) { 
+				var s = self.findService(msg.entityId);
+				if (s) {
+					s.statsUpdate(msg);
+				}
+			});
 		}
 
 		function compareServices(a, b) {
@@ -414,6 +425,8 @@
 			self.host = entity.host;
 			self.status = ko.observable(entity.status);
 			self.commands = ko.observableArray();
+			self.mps = ko.observable();
+			self.rps = ko.observable();
 
 			self.iconURL = ko.observable("media/gear.gif");
 
@@ -435,8 +448,8 @@
 									}
 								}
 							});
-
-			self.execute = function(command) { 
+			
+			self.execute = function(command) {
 				TP.send(TP.nameOf(command.contractId, command.structId), {},
 						self.entityId).handle(TP.logResponse)
 			}
@@ -534,6 +547,11 @@
 				return !self.isGone() && self.isPaused();
 			}
 
+			self.statsUpdate = function(msg) { 
+				self.rps(msg.rps);
+				self.mps(msg.mps);
+			} 
+			
 			// HACK: chart demo
 			self.data = [];
 			self.series = [ {
