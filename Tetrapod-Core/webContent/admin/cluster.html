@@ -188,6 +188,11 @@
 											<li class="disabled"><a href="#"
 												data-bind="text: name +' '+entityString()"></a></li>
 
+											<!-- ko foreach: commands -->
+											<li><a href="#"
+												data-bind="click: function() { $parent.execute($data) }, text: name"></a></li>
+											<!-- /ko -->
+
 											<li class="divider"></li>
 
 											<li><a href="#"
@@ -237,7 +242,6 @@
 							<li>Service stats &amp; charts</li>
 							<li>Service Log/metrics viewing, etc...</li>
 							<li>Service direct connections</li>
-							<li>Tetrapod cluster mode</li>
 							<li>Tetrapod distributed locks, counters, KVStore</li>
 							<li>Admin accounts</li>
 							<li>TLS</li>
@@ -291,7 +295,7 @@
 	<!--  =============================================================================== -->
 	<!--  Tetrapod Scripts -->
 
-   <script src="../protocol/tetrapod-host.js"></script>
+	<script src="../protocol/tetrapod-host.js"></script>
 	<script src="../protocol/tetrapod-main.js"></script>
 	<script src="../protocol/tetrapod.js"></script>
 
@@ -304,13 +308,14 @@
 		var model = new ClusterModel();
 		ko.applyBindings(model, $("#cluster-table")[0]);
 
-		function connect() { 
-			TP.connect(TP_websocket_host, 9903).listen(model.onOpen, function() {
-				$('#disconnected-alertbox').show();
-				setTimeout(function updateRandom() {
-					connect();
-				}, 1000);
-			});
+		function connect() {
+			TP.connect(TP_websocket_host, 9903).listen(model.onOpen,
+					function() {
+						$('#disconnected-alertbox').show();
+						setTimeout(function updateRandom() {
+							connect();
+						}, 1000);
+					});
 		}
 
 		connect();
@@ -408,13 +413,33 @@
 			self.name = entity.name;
 			self.host = entity.host;
 			self.status = ko.observable(entity.status);
+			self.commands = ko.observableArray();
 
 			self.iconURL = ko.observable("media/gear.gif");
-			TP.send("ServiceIcon", {}, self.entityId).handle(function(result) {
-				if (!result.isError()) {
-					self.iconURL(result.iconURL);
-				}
-			});
+
+			TP.send("ServiceStatsSubscribe", {}, self.entityId).handle(
+					TP.logResponse)
+
+			TP
+					.send("ServiceDetails", {}, self.entityId)
+					.handle(
+							function(result) {
+								if (!result.isError()) {
+									self.iconURL(result.iconURL);
+									self.metadata = result.metadata;
+									if (result.commands) {
+										for (var i = 0; i < result.commands.length; i++) {
+											self.commands
+													.push(result.commands[i]);
+										}
+									}
+								}
+							});
+
+			self.execute = function(command) { 
+				TP.send(TP.nameOf(command.contractId, command.structId), {},
+						self.entityId).handle(TP.logResponse)
+			}
 
 			self.entityString = ko.computed(function() {
 				return self.entityId + " (0x" + self.entityId.toString(16)

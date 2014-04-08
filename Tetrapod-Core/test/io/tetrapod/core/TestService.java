@@ -1,10 +1,8 @@
 package io.tetrapod.core;
 
-import io.tetrapod.core.DefaultService;
-import io.tetrapod.core.rpc.*;
-import io.tetrapod.protocol.core.*;
-import io.tetrapod.protocol.identity.*;
-import io.tetrapod.protocol.service.*;
+import io.tetrapod.protocol.core.Core;
+import io.tetrapod.protocol.identity.IdentityContract;
+import io.tetrapod.protocol.service.BaseServiceContract;
 
 import org.slf4j.*;
 
@@ -26,7 +24,7 @@ public class TestService extends DefaultService implements BaseServiceContract.A
    public void onShutdown(boolean restarting) {}
 
    @Override
-   public Response requestServiceIcon(ServiceIconRequest r, RequestContext ctx) {
-      return new ServiceIconResponse("media/identity.png");
+   public String getServiceIcon() {
+      return "media/identity.png";
    }
 }

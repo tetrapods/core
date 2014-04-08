@@ -1,4 +1,4 @@
-package io.tetrapod.protocol.core;
+package io.tetrapod.protocol.service;
 
 // This is a code generated file.  All edits will be lost the next time code gen is run.
 
@@ -11,15 +11,11 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
 
-/**
- * TODO: this will be moved to new publication
- */
-
 @SuppressWarnings("unused")
 public class ServiceStatsMessage extends Message {
    
    public static final int STRUCT_ID = 469976;
-   public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;
+   public static final int CONTRACT_ID = BaseServiceContract.CONTRACT_ID;
     
    public ServiceStatsMessage() {
       defaults();

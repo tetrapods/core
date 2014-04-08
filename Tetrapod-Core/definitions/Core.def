@@ -163,6 +163,9 @@ internal request AddServiceInformation
    1: WebRoute[] routes
    2: StructDescription<list> structs // structs that could possibly be used in end user comms
 
+
+internal request LogRegistryStats 
+
 ################################# MESSAGES #################################
 
 // a special message to avoid race conditions on the Register response
@@ -220,11 +223,4 @@ internal message Services.ServiceUpdated
 	1: int entityId;
 	2: int status;
 
-// TODO: this will be moved to new publication
-internal message Services.ServiceStats
-	1: int entityId;
-	2: int rps;
-	3: int mps;
-	4: long latency;	
-	5: long counter;
  
