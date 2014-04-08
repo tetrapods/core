@@ -122,7 +122,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
    @Override
    public String getServiceIcon() {
-      return ""media/lizard.png";
+      return "media/lizard.png";
    }
 
    @Override
