@@ -56,7 +56,7 @@ public class DefaultService implements Service, BaseServiceContract.API, Session
    // Service protocol
 
    @Override
-   public void startNetwork(ServerAddress server, String token) throws Exception {
+   public void startNetwork(ServerAddress server, String token, Map<String, String> otherOpts) throws Exception {
       this.token = token;
       clusterClient.connect(server.host, server.port, dispatcher).sync();
    }

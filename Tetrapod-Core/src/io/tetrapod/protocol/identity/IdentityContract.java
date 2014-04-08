@@ -17,6 +17,7 @@ public class IdentityContract extends Contract {
    public static interface API extends
       CreateRequest.Handler,
       GetAuthSecretRequest.Handler,
+      GetOrCreateIdRequest.Handler,
       InfoRequest.Handler,
       LinkRequest.Handler,
       LoginRequest.Handler,
@@ -34,6 +35,7 @@ public class IdentityContract extends Contract {
          new LinkRequest(),
          new InfoRequest(),
          new UpdatePropertiesRequest(),
+         new GetOrCreateIdRequest(),
          new GetAuthSecretRequest(),
       };
    }
@@ -44,6 +46,7 @@ public class IdentityContract extends Contract {
          new CreateResponse(),
          new LinkResponse(),
          new InfoResponse(),
+         new GetOrCreateIdResponse(),
          new GetAuthSecretResponse(),
       };
    }

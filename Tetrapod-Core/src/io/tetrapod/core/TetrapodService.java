@@ -59,6 +59,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    private final Properties                           properties              = new Properties();
 
    private long                                       lastStatsLog;
+   private String                                     webContentRoot;
 
    public TetrapodService() {
       // HACK Properties hack for now
@@ -77,7 +78,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    }
 
    @Override
-   public void startNetwork(ServerAddress address, String token) throws Exception {
+   public void startNetwork(ServerAddress address, String token, Map<String, String> otherOpts) throws Exception {
       logger.info(" ***** Start Network ***** ");
       cluster.startListening();
       if (address == null && token == null) {
@@ -88,6 +89,9 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          this.token = token;
          cluster.joinCluster(address);
       }
+      webContentRoot = "./webContent";
+      if (otherOpts.containsKey("webroot"))
+         webContentRoot = otherOpts.get("webroot");
    }
 
    /**
@@ -232,7 +236,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          publicServer = new Server(getPublicPort(), new TypedSessionFactory(Core.TYPE_ANONYMOUS));
          serviceServer = new Server(getServicePort(), new TypedSessionFactory(Core.TYPE_SERVICE));
          webSocketsServer = new Server(getWebSocketPort(), new WebSessionFactory("/sockets", true));
-         httpServer = new Server(getHTTPPort(), new WebSessionFactory("./webContent", false));
+         httpServer = new Server(getHTTPPort(), new WebSessionFactory(webContentRoot, false));
 
          serviceServer.start().sync();
          publicServer.start().sync();

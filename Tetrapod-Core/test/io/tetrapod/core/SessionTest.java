@@ -1,6 +1,9 @@
 package io.tetrapod.core;
 
 import static org.junit.Assert.assertTrue;
+
+import java.util.*;
+
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.utils.Util;
 import io.tetrapod.protocol.core.*;
@@ -16,17 +19,18 @@ public class SessionTest {
    @Test
    public void testClientServer() throws Exception {
 
+      Map<String, String> opts = new HashMap<>();
       TetrapodService pod = new TetrapodService();
-      pod.startNetwork(null, null);
+      pod.startNetwork(null, null, opts);
 
       Util.sleep(1000);
       TestService svc1 = new TestService();
-      svc1.startNetwork(new ServerAddress("localhost", TetrapodService.DEFAULT_SERVICE_PORT), null);
+      svc1.startNetwork(new ServerAddress("localhost", TetrapodService.DEFAULT_SERVICE_PORT), null, opts);
       Util.sleep(1000);
       assertTrue(svc1.getEntityId() > 0);
 
       TestService svc2 = new TestService();
-      svc2.startNetwork(new ServerAddress("localhost", TetrapodService.DEFAULT_SERVICE_PORT), null);
+      svc2.startNetwork(new ServerAddress("localhost", TetrapodService.DEFAULT_SERVICE_PORT), null, opts);
       Util.sleep(1000);
       assertTrue(svc2.getEntityId() > 0);
 

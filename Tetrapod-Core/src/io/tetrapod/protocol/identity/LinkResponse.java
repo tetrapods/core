@@ -12,7 +12,7 @@ import java.util.*;
 import java.util.concurrent.*;
 
 /**
- * If there is a conflict the user has three choices the client has to walk them through:<ul> <li> forget about linking [eg cancel] <li> force the link to this account [eg resend Link with overrideConflicts = true] <li> make the other account the main account, by:<ul> <li> Logout <li> Login with identity used in Link (gettng you conflict id) <li> Link with identity used to originally login with overrideConflicts = true </ul></ul> OR just tell them to contact support with the two account ids.
+ * If there is a conflict the user has three choices the client has to walk them through:<ul> <li> forget about linking [eg. cancel] <li> force the link to this account [eg. re-send Link with overrideConflicts = true] <li> make the other account the main account, by:<ul> <li> Logout <li> Login with identity used in Link (getting your conflict id) <li> Link with identity used to originally login with overrideConflicts = true </ul></ul> OR just tell them to contact support with the two account ids.
  */
 
 @SuppressWarnings("unused")
