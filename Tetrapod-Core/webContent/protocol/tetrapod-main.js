@@ -155,8 +155,10 @@ function Tetrapod() {
    }
 
    function dropUnderscored(key, value) {
-      if (key !== undefined && key.indexOf("_") == 0)
-         return undefined;
+      if (typeof key == 'string' || key instanceof String) {
+         if (key.indexOf("_") == 0)
+            return undefined;
+      }
       return value;
    }
 
