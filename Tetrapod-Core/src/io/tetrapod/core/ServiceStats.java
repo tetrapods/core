@@ -1,7 +1,7 @@
 package io.tetrapod.core;
 
 import io.tetrapod.core.rpc.*;
-import io.tetrapod.core.utils.RateGauge;
+import io.tetrapod.core.utils.*;
 import io.tetrapod.protocol.core.*;
 import io.tetrapod.protocol.service.ServiceStatsMessage;
 
@@ -115,7 +115,6 @@ public class ServiceStats {
             dirty = true;
          }
          if (dirty) {
-            logger.info("Updating stats... {}", message.dump());
             service.sendBroadcastMessage(message, statsTopicId);
          }
       }

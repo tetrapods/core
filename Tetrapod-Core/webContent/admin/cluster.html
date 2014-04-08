@@ -76,17 +76,44 @@
 }
 
 .service-icon {
-	margin-left: 2px;
+	width: 24px;
+	height: 24px;
 	margin-right: 8px;
+	margin-left: 2px
 }
 
 .service-name {
 	font-weight: bold;
 }
 
-.service-chart {
+.service-chart-wrap {
+	position: relative;
 	width: 128px;
-	height: 32px;
+	padding: 0px;
+}
+
+.service-chart {
+	height: 36px;
+}
+
+.service-chart-val {
+	text-shadow: 1px 1px 1px rgba(150, 150, 150, .5);
+	text-align: center;
+	position: absolute;
+	position: absolute;
+	position: absolute;
+	left: 50%;
+	top: 8px;
+	left: 0;
+	width: 100%;
+	left: 50%;
+	top: 8px;
+	left: 0;
+	width: 100%;
+	left: 50%;
+	top: 8px;
+	left: 0;
+	width: 100%
 }
 
 .alert {
@@ -174,7 +201,6 @@
 								<th>Entity</th>
 								<th>Host</th>
 								<th>Status</th>
-								<th>Stats</th>
 								<th>RPS</th>
 								<th>MPS</th>
 							</tr>
@@ -222,19 +248,22 @@
 								</td>
 
 								<td><img data-bind="attr:{src: iconURL}"
-									class="service-icon" width="20px" height="20px"> <span
-									class="service-name" data-bind="text: name"></span></td>
+									class="service-icon"> <span class="service-name"
+									data-bind="text: name"></span></td>
 								<td class="centered"><span data-bind="text: entityString"></span></td>
 								<td class="centered"><span data-bind="text: host"></span></td>
 								<td data-bind="attr: {'class':status_style}"><span
 									data-bind="text: statusName()"></span></td>
-								<td>
+								<td class="service-chart-wrap">
 									<div class="service-chart"
-										data-bind="attr: {id: 'service-chart-rps-' + entityId}"></div>
-
+										data-bind="attr: {id: 'service-chart-rps-' + entityId}">
+									</div> <span class="service-chart-val" data-bind="text: rps"></span>
 								</td>
-								<td class="centered"><span data-bind="text: rps"></span></td>
-								<td class="centered"><span data-bind="text: mps"></span></td>
+								<td class="service-chart-wrap">
+									<div class="service-chart"
+										data-bind="attr: {id: 'service-chart-mps-' + entityId}">
+									</div> <span class="service-chart-val" data-bind="text: mps"></span>
+								</td>
 							</tr>
 						</tbody>
 					</table>
@@ -283,10 +312,8 @@
 	<script src="js/plugins/metisMenu/jquery.metisMenu.js"></script>
 
 	<!-- Page-Level Plugin Scripts - Blank -->
-	<script src="js/plugins/flot/jquery.flot.js"></script>
-	<script src="js/plugins/flot/jquery.flot.tooltip.min.js"></script>
-	<script src="js/plugins/flot/jquery.flot.resize.js"></script>
-	<script src="js/plugins/flot/jquery.flot.pie.js"></script>
+	<script
+		src="//cdnjs.cloudflare.com/ajax/libs/flot/0.8.2/jquery.flot.min.js"></script>
 
 	<!-- SB Admin Scripts - Include with every page -->
 	<script src="js/sb-admin.js"></script>
@@ -388,7 +415,7 @@
 				}
 			});
 
-			TP.addMessageHandler("ServiceStats", function(msg) { 
+			TP.addMessageHandler("ServiceStats", function(msg) {
 				var s = self.findService(msg.entityId);
 				if (s) {
 					s.statsUpdate(msg);
@@ -402,8 +429,16 @@
 
 		var chartOptions = {
 			grid : {
-				borderWidth : 1,
-				color : "rgba(212, 212, 255, 0.25)"
+				labelMargin : 0,
+				axisMargin : 0,
+				margin : {
+					top : 0,
+					right : 0,
+					bottom : 0,
+					left : 0
+				},
+				borderWidth : 0,
+				color : "rgba(212, 212, 212, 0.25)"
 			},
 			xaxis : {
 				show : false
@@ -448,7 +483,7 @@
 									}
 								}
 							});
-			
+
 			self.execute = function(command) {
 				TP.send(TP.nameOf(command.contractId, command.structId), {},
 						self.entityId).handle(TP.logResponse)
@@ -547,44 +582,55 @@
 				return !self.isGone() && self.isPaused();
 			}
 
-			self.statsUpdate = function(msg) { 
+			self.statsUpdate = function(msg) {
 				self.rps(msg.rps);
 				self.mps(msg.mps);
-			} 
-			
-			// HACK: chart demo
-			self.data = [];
-			self.series = [ {
-				data : self.data,
-				lines : {
-					fill : true
-				}
-			} ];
-
-			function getRandomData() {
-				var maximum = 100;
-				if (self.data.length) {
-					self.data = self.data.slice(1);
-				}
-				while (self.data.length < maximum) {
-					var previous = self.data.length ? self.data[self.data.length - 1]
-							: 50;
-					var y = previous + Math.random() * 10 - 5;
-					self.data.push(y < 0 ? 0 : y > 100 ? 100 : y);
-				}
-				var res = [];
-				for (var i = 0; i < self.data.length; ++i) {
-					res.push([ i, self.data[i] ])
-				}
-				return res;
 			}
 
-			self.chart = function() {
-				var container = $("#service-chart-rps-" + self.entityId);
+			self.plots = [];
+			self.getPlot = function(tag) {
+				if (self.plots[tag]) {
+					return self.plots[tag];
+				}
+				var container = $("#service-chart-" + tag + "-" + self.entityId);
 				if (!container)
 					return;
-				self.series[0].data = getRandomData();
-				self.plot = $.plot(container, self.series, chartOptions);
+				return $.plot(container, [], chartOptions);
+			}
+
+			self.updatePlot = function(tag, series, timeRange, value) {
+				series.data.push([ Date.now(), value ]);
+				while (series.data[0][0] < Date.now() - timeRange) {
+					serieseries.data.shift();
+				}
+				plot = self.getPlot(tag);
+				if (plot) {
+					plot.setData([ series ]);
+					plot.setupGrid();
+					plot.draw();
+				}
+			}
+
+			self.rpsSeries = {
+				data : [],
+				lines : {
+					lineWidth : 1,
+					fill : true
+				},
+				shadowSize : 1
+			};
+			self.mpsSeries = {
+				data : [],
+				lines : {
+					lineWidth : 1,
+					fill : true
+				},
+				shadowSize : 1
+			};
+			// updates all charts for this service
+			self.chart = function() {
+				self.updatePlot("rps", self.rpsSeries, 60000, self.rps());
+				self.updatePlot("mps", self.mpsSeries, 60000, self.mps());
 			}
 
 		}
