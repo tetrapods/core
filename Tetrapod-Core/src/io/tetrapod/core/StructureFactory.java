@@ -10,7 +10,7 @@ import org.slf4j.*;
 
 public class StructureFactory {
 
-   protected static final Logger                logger       = LoggerFactory.getLogger(StructureFactory.class);
+   protected static final Logger             logger       = LoggerFactory.getLogger(StructureFactory.class);
 
    private static final Map<Long, Structure> knownStructs = new ConcurrentHashMap<>();
 
@@ -20,14 +20,14 @@ public class StructureFactory {
          knownStructs.put(key, s);
    }
 
-   public static synchronized Structure make(int serviceId, int structId) {
+   public static synchronized Structure make(int contractId, int structId) {
       if (structId == Success.STRUCT_ID) {
          return Response.SUCCESS;
       }
       if (structId == Error.STRUCT_ID) {
          return new Error();
       }
-      long key = makeKey(serviceId, structId);
+      long key = makeKey(contractId, structId);
       Structure c = knownStructs.get(key);
       if (c != null) {
          return c.make();
@@ -35,8 +35,17 @@ public class StructureFactory {
       return null;
    }
 
-   private static long makeKey(int serviceId, int structId) {
-      return ((long) serviceId << 32) | (long) structId;
+   private static long makeKey(int contractId, int structId) {
+      return ((long) contractId << 32) | (long) structId;
+   }
+
+   public static synchronized String getName(int contractId, int structId) {
+      long key = makeKey(contractId, structId);
+      Structure c = knownStructs.get(key);
+      if (c != null) {
+         return c.getClass().getSimpleName();
+      }
+      return String.format("<%d,%d>", contractId, structId);
    }
 
 }

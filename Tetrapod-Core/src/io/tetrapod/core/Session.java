@@ -104,6 +104,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
       // TODO: Timeout pending requests past their due
       for (Async a : pendingRequests.values()) {
          if (a.isTimedout()) {
+            pendingRequests.remove(a.header.requestId);
             a.setResponse(ERROR_TIMEOUT);
          }
       }
@@ -142,7 +143,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
 
    @Override
    public String toString() {
-      return String.format("%s #%d [0x%08X : 0x%08X]", getClass().getSimpleName(), sessionNum, myId, theirId);
+      return String.format("%s #%d [0x%08X]", getClass().getSimpleName(), sessionNum, theirId);
    }
 
    protected String getStructName(int contractId, int structId) {
@@ -262,20 +263,25 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
    }
 
    public void sendBroadcastMessage(Message msg, int topicId) {
-      commsLog("%s  [B] => T%d.%s", this, topicId, msg.dump());
-      final Object buffer = makeFrame(
-            new MessageHeader(getMyEntityId(), topicId, Core.UNADDRESSED, msg.getContractId(), msg.getStructId()), msg, ENVELOPE_BROADCAST);
-      if (buffer != null) {
-         writeFrame(buffer);
+      if (getMyEntityId() != 0) {
+         commsLog("%s  [B] => T%d.%s", this, topicId, msg.dump());
+         final Object buffer = makeFrame(
+               new MessageHeader(getMyEntityId(), topicId, Core.UNADDRESSED, msg.getContractId(), msg.getStructId()), msg,
+               ENVELOPE_BROADCAST);
+         if (buffer != null) {
+            writeFrame(buffer);
+         }
       }
    }
 
    public void sendMessage(Message msg, int toEntityId, int topicId) {
-      commsLog("%s  [M] => T%d.%s (to %d)", this, topicId, msg.dump(), toEntityId);
-      final Object buffer = makeFrame(new MessageHeader(getMyEntityId(), topicId, toEntityId, msg.getContractId(), msg.getStructId()), msg,
-            ENVELOPE_MESSAGE);
-      if (buffer != null) {
-         writeFrame(buffer);
+      if (getMyEntityId() != 0) {
+         commsLog("%s  [M] => T%d.%s (to %d)", this, topicId, msg.dump(), toEntityId);
+         final Object buffer = makeFrame(new MessageHeader(getMyEntityId(), topicId, toEntityId, msg.getContractId(), msg.getStructId()),
+               msg, ENVELOPE_MESSAGE);
+         if (buffer != null) {
+            writeFrame(buffer);
+         }
       }
    }
 
@@ -288,7 +294,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
    }
 
    public void sendRelayedMessage(MessageHeader header, ByteBuf payload, boolean broadcast) {
-      commsLog("%s  [M] ~> T%d.Message:%d (to %d)", this, header.topicId, header.structId, header.toId);
+      commsLog("%s  [M] ~> T%d.Message:%d %s (to %d)", this, header.topicId, header.structId, getNameFor(header), header.toId);
       byte envelope = broadcast ? ENVELOPE_BROADCAST : ENVELOPE_MESSAGE;
       writeFrame(makeFrame(header, payload, envelope));
    }
@@ -418,8 +424,15 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
             }
          }
          commsLog.info(String.format(format, args));
+      } else {
+         if (logger.isTraceEnabled()) {
+            logger.trace(String.format(format, args));
+         }
       }
       return true;
    }
 
+   public String getNameFor(MessageHeader header) {
+      return StructureFactory.getName(header.contractId, header.structId);
+   }
 }
