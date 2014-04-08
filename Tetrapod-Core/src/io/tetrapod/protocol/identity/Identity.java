@@ -2,14 +2,11 @@ package io.tetrapod.protocol.identity;
 
 // This is a code generated file.  All edits will be lost the next time code gen is run.
 
-import io.*;
-import io.tetrapod.core.rpc.*;
+import io.tetrapod.core.rpc.Structure;
 import io.tetrapod.core.serialize.*;
-import io.tetrapod.protocol.core.TypeDescriptor;
-import io.tetrapod.protocol.core.StructDescription;
+import io.tetrapod.protocol.core.*;
+
 import java.io.IOException;
-import java.util.*;
-import java.util.concurrent.*;
 
 @SuppressWarnings("unused")
 public class Identity extends Structure {

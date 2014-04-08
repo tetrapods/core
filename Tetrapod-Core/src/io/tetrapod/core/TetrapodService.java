@@ -623,7 +623,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
    @Override
    public Response requestServiceIcon(ServiceIconRequest r, RequestContext ctx) {
-      return new ServiceIconResponse("media/tetrapod.png");
+      return new ServiceIconResponse("media/lizard.png");
    }
 
    @Override
