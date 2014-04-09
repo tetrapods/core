@@ -53,4 +53,8 @@ public class Util {
       return (int) (Math.random() * range);
    }
 
+   public static String format(String fmt, Object... args) {
+      return String.format(fmt.replaceAll("\\{\\}", "%s"), args);
+   }
+
 }
