@@ -25,16 +25,11 @@
 }
 
 #cluster-table th {
-	background: #000;
-	color: #fff;
-	text-align: center;
+	background: #000; color: #fff; text-align: center;
 }
 
 #cluster-table td {
-	font-size: 90%;
-	padding: 0px 1px;
-	vertical-align: middle;
-	white-space: nowrap;
+	font-size: 90%; padding: 0px 1px; vertical-align: middle; white-space: nowrap;
 }
 
 .centered {
@@ -42,28 +37,23 @@
 }
 
 .running {
-	background: green;
-	color: white;
+	background: green; color: white;
 }
 
 .gone {
-	background: red;
-	color: white;
+	background: red; color: white;
 }
 
 .failed {
-	background: orange;
-	color: yellow;
+	background: orange; color: yellow;
 }
 
 .stopping {
-	background: #fdd;
-	color: #a88;
+	background: #fdd; color: #a88;
 }
 
 .starting {
-	background: #eee;
-	color: #999;
+	background: #eee; color: #999;
 }
 
 .paused {
@@ -71,15 +61,11 @@
 }
 
 .dropdown-service {
-	right: 0;
-	left: auto;
+	right: 0; left: auto;
 }
 
 .service-icon {
-	width: 24px;
-	height: 24px;
-	margin-right: 8px;
-	margin-left: 6px
+	width: 24px; height: 24px; margin-right: 8px; margin-left: 6px
 }
 
 .service-name {
@@ -87,26 +73,15 @@
 }
 
 .service-chart-wrap {
-	position: relative;
-	width: 128px;
-	padding: 0px;
-	padding-left: 0px;
-	padding-right: 0px;
+	position: relative; width: 128px; padding: 0px; padding-left: 0px; padding-right: 0px;
 }
 
 .service-chart {
-	height: 42px;
-	padding: 0px;
-	margin: -5px;
+	height: 42px; padding: 0px; margin: -5px;
 }
 
 .service-chart-val {
-	text-shadow: 1px 1px 1px rgba(150, 150, 150, .5);
-	text-align: center;
-	position: absolute;
-	top: 8px;
-	left: 0;
-	width: 100%
+	text-shadow: 1px 1px 1px rgba(150, 150, 150, .5); text-align: center; position: absolute; top: 8px; left: 0; width: 100%
 }
 
 .alert {
@@ -268,7 +243,8 @@
 							<li>Service stats &amp; charts</li>
 							<li>Service Log/metrics viewing, etc...</li>
 							<li>Service direct connections</li>
-							<li>Tetrapod distributed locks, counters, KVStore</li>
+							<li>Tetrapod distributed locks, counters, KVStore,
+								preferences</li>
 							<li>Admin accounts</li>
 							<li>TLS</li>
 							<li>Performance testing, queue &amp; threadpool
@@ -478,8 +454,9 @@
 							});
 
 			self.execute = function(command) {
-				TP.send(TP.nameOf(command.contractId, command.structId), {},
-						self.entityId).handle(TP.logResponse)
+				var name = TP.nameOf(command.contractId, command.structId);
+				console.log("Execute command: " + name);
+				TP.send(name, {}, self.entityId).handle(TP.logResponse)
 			}
 
 			self.entityString = ko.computed(function() {
@@ -580,6 +557,7 @@
 				self.mps(msg.mps);
 			}
 
+			//////////////////////////////////////// stats graphs ////////////////////////////////////////
 			self.plots = [];
 			self.getPlot = function(tag) {
 				if (self.plots[tag]) {
@@ -594,7 +572,7 @@
 			self.updatePlot = function(tag, series, timeRange, value) {
 				series.data.push([ Date.now(), value ]);
 				while (series.data[0][0] < Date.now() - timeRange) {
-					serieseries.data.shift();
+					series.data.shift();
 				}
 				plot = self.getPlot(tag);
 				if (plot) {
