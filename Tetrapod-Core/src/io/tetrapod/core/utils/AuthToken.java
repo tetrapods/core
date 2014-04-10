@@ -47,12 +47,22 @@ public class AuthToken {
    }
 
    /**
+    * Encodes a auth token with all passed in values also present int he auth token.
+    * 
+    * @param values the values which form the basis of the token 
+    * @return the base64 encoded token
+    */
+   public static String encode(int[] values) {
+      return encode(values, values.length);
+   }
+
+   /**
     * Encodes a auth token. The numInToken parameter is a bandwidth micro-optimization.  Say for
     * example we wanted to make an auth token with one value being the entityId.  We *could* encode
     * the true value for the entity id in the token, but since it is already present in the header
     * we could leave it out of the token and supply it at decode time.
     * 
-    * @param values the values which form the basis of the 
+    * @param values the values which form the basis of the token
     * @param numInToken the number of values which will need to be encoded inside the token
     * @return the base64 encoded token
     */
