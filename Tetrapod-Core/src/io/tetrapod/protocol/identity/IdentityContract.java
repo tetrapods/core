@@ -15,14 +15,15 @@ public class IdentityContract extends Contract {
    public static final int CONTRACT_ID = 4;
    
    public static interface API extends
+      AddUnverifiedUserRequest.Handler,
       CreateRequest.Handler,
       GetAuthSecretRequest.Handler,
-      GetOrCreateIdRequest.Handler,
       InfoRequest.Handler,
       LinkRequest.Handler,
       LoginRequest.Handler,
       LogoutRequest.Handler,
       ModifyIdentityRequest.Handler,
+      TokenLoginRequest.Handler,
       UpdatePropertiesRequest.Handler
       {}
    
@@ -30,12 +31,13 @@ public class IdentityContract extends Contract {
       return new Structure[] {
          new LoginRequest(),
          new LogoutRequest(),
+         new TokenLoginRequest(),
          new ModifyIdentityRequest(),
          new CreateRequest(),
          new LinkRequest(),
          new InfoRequest(),
          new UpdatePropertiesRequest(),
-         new GetOrCreateIdRequest(),
+         new AddUnverifiedUserRequest(),
          new GetAuthSecretRequest(),
       };
    }
@@ -43,10 +45,11 @@ public class IdentityContract extends Contract {
    public Structure[] getResponses() {
       return new Structure[] {
          new LoginResponse(),
+         new TokenLoginResponse(),
          new CreateResponse(),
          new LinkResponse(),
          new InfoResponse(),
-         new GetOrCreateIdResponse(),
+         new AddUnverifiedUserResponse(),
          new GetAuthSecretResponse(),
       };
    }

@@ -6,75 +6,76 @@ import static org.junit.Assert.*;
 public class AuthTest {
    
    @Test
-   public void success() throws Exception {
-      Auth.setSecret("thisisasecrettestsecrettest".getBytes());
-      String encoded = Auth.encode(1092, 894, Auth.timeNowInMinutes() - 5, 1);
-      int perms = Auth.decode(1092, 894, encoded);
-      assertEquals(1, perms);
-   }
-   
-   @Test
-   public void timeout() throws Exception {
-      Auth.setSecret("thisisasecrettestsecrettest".getBytes());
-      String encoded = Auth.encode(1092, 894, Auth.timeNowInMinutes() - Auth.EXPIRY_MINS - 1, 1);
-      int perms = Auth.decode(1092, 894, encoded);
-      assertEquals(-2, perms);
+   public void successNone() throws Exception {
+      AuthToken.setSecret("thisisasecrettestsecrettest".getBytes());
+      int[] vals = { 1000, 2000, -3000 }; 
+      String encoded = AuthToken.encode(vals, 0);
+      assertTrue(AuthToken.decode(vals, 0, encoded, new Value<Boolean>()));
    }
 
    @Test
-   public void invalidAccount() throws Exception {
-      Auth.setSecret("thisisasecrettestsecrettest".getBytes());
-      String encoded = Auth.encode(1092, 894, 892318, 1);
-      int perms = Auth.decode(1091, 894, encoded);
-      assertEquals(-1, perms);
+   public void successAll() throws Exception {
+      AuthToken.setSecret("thisisasecrettestsecrettest".getBytes());
+      int[] vals = { 1000, 2000, -3000 }; 
+      String encoded = AuthToken.encode(vals, 3);
+      vals = new int[] { 0, 0, 0 }; 
+      assertTrue(AuthToken.decode(vals, 3, encoded, new Value<Boolean>()));
    }
 
    @Test
-   public void invalidEntityId() throws Exception {
-      Auth.setSecret("thisisasecrettestsecrettest".getBytes());
-      String encoded = Auth.encode(1092, 894, 892318, 1);
-      int perms = Auth.decode(1092, 895, encoded);
-      assertEquals(-1, perms);
+   public void largeSuccess() throws Exception {
+      AuthToken.setSecret("thisisasecrettestsecrettest".getBytes());
+      int[] vals = new int[1000];
+      for (int i = 0; i < vals.length; i++) {
+         vals[i] = 30000 + i;
+      }
+      String encoded = AuthToken.encode(vals, 100);
+      for (int i = 0; i < 100; i++) {
+         vals[i] = 0;
+      }
+      assertTrue(AuthToken.decode(vals, 100, encoded, new Value<Boolean>()));
    }
-   
+
+   @Test
+   public void fails() throws Exception {
+      AuthToken.setSecret("thisisasecrettestsecrettest".getBytes());
+      int[] vals = { 1000, 2000, -3000 }; 
+      String encoded = AuthToken.encode(vals, 0);
+      vals[0]++;
+      assertFalse(AuthToken.decode(vals, 0, encoded, new Value<Boolean>()));
+   }
+
    @Test
    public void badToken() throws Exception {
-      Auth.setSecret("thisisasecrettestsecrettest".getBytes());
-      String encoded = Auth.encode(1092, 894, 892318, 1);
-      encoded = encoded + "1";
-      int perms = Auth.decode(1092, 895, encoded);
-      assertEquals(-1, perms);
+      AuthToken.setSecret("thisisasecrettestsecrettest".getBytes());
+      int[] vals = { 1000, 2000, -3000 }; 
+      String encoded = AuthToken.encode(vals, 0);
+      encoded += "1";
+      assertFalse(AuthToken.decode(vals, 0, encoded, new Value<Boolean>()));
    }
 
    @Test
    public void emptyToken() throws Exception {
-      Auth.setSecret("thisisasecrettestsecrettest".getBytes());
-      String encoded = Auth.encode(1092, 894, 892318, 1);
+      int[] vals = { 1000, 2000, -3000 }; 
+      String encoded = AuthToken.encode(vals, 0);
       encoded = "";
-      int perms = Auth.decode(1092, 895, encoded);
-      assertEquals(-3, perms);
+      assertFalse(AuthToken.decode(vals, 0, encoded, new Value<Boolean>()));
    }
    
    @Test
    public void tinyToken() throws Exception {
-      Auth.setSecret("thisisasecrettestsecrettest".getBytes());
-      String encoded = Auth.encode(1092, 894, 892318, 1);
+      int[] vals = { 1000, 2000, -3000 }; 
+      String encoded = AuthToken.encode(vals, 0);
       encoded = "a";
-      int perms = Auth.decode(1092, 895, encoded);
-      assertEquals(-3, perms);
+      assertFalse(AuthToken.decode(vals, 0, encoded, new Value<Boolean>()));
    }
    
    @Test
    public void notBase64Token() throws Exception {
-      Auth.setSecret("thisisasecrettestsecrettest".getBytes());
-      String encoded = Auth.encode(1092, 894, 892318, 1);
-      encoded = "!!@$%^&*()_)__--__++=={[}]::'<,>.?/";
-      int perms = Auth.decode(1092, 895, encoded);
-      assertEquals(-3, perms);
+      int[] vals = { 1000, 2000, -3000 }; 
+      String encoded = AuthToken.encode(vals, 0);
+      encoded = "Grr! Arg! LOL";
+      assertFalse(AuthToken.decode(vals, 0, encoded, new Value<Boolean>()));
    }
-
-
-
-
 
 }

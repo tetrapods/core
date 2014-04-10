@@ -15,6 +15,16 @@ public response Login
 protected request Logout 
    1: int accountId
    2: string authToken
+   
+public request TokenLogin
+   1: string authToken
+   2: int tokenType
+   3: int accountId // only required for AUTH_TOKEN_USER logins
+
+public response TokenLogin
+   1: int accountId
+   2: string authToken
+   3: boolean isNewUser
 
 // Modifies the verification part of an identity.  Not every identity 
 // can do this.
@@ -76,13 +86,18 @@ admin request UpdateProperties
    2: int properties // new properties values
    3: int mask       // which properties to update
    4: string authToken
-   
-internal request GetOrCreateId
-   1: string email
+
+// Adds a user with the given identity, or returns the user if it already
+// exists.  The verify portion of the identity is ignored. A newly created
+// user will start with PROPS_NO_PASSWORD set. 
+internal request AddUnverifiedUser
+   1: Identity identity
    2: string username
 
-internal response GetOrCreateId
+internal response AddUnverifiedUser
    1: int accountId
+   2: string username // if the user existed this is potentially different from the passed in username
+   3: boolean isNewUser
 
 internal request GetAuthSecret
 internal response GetAuthSecret
@@ -98,6 +113,11 @@ public struct Identity
    const int IDENTITY_FACEBOOK   = 3
    const int IDENTITY_TWITTER    = 4
    const int IDENTITY_OAUTH      = 5
+   
+   const int AUTH_TOKEN_USER     = 1 // timeout, props, accountId, entityId
+   const int AUTH_TOKEN_APP_1    = 2 // timeout, appValue, accountid
+   const int AUTH_TOKEN_APP_2    = 3 // timeout, appValue1, appValue2, accountid
+   const int AUTH_TOKEN_APP_3    = 4 // timeout, appValue1, appValue2, appValue3, accountid
 
 private struct User
    1: string username
@@ -116,3 +136,5 @@ private struct User
    const int PROPS_BANNED_T1  = 32
    const int PROPS_BANNED_T2  = 64
    const int PROPS_BANNED_T3  = 128
+   const int PROPS_NO_PASSWORD  = 256 // user has not set a password
+   

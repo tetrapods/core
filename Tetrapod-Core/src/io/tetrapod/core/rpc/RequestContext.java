@@ -29,30 +29,23 @@ public class RequestContext {
    public Security getSenderSecurity(int accountId, String authToken, Value<Integer> errorCode) {
       if (header.fromType == Core.TYPE_TETRAPOD || header.fromType == Core.TYPE_SERVICE)
          return Security.INTERNAL;
-      int perms = Auth.decode(accountId, header.fromId, authToken);
-      if (perms < 0) {
-         switch (perms) {
-            case -1: 
-               errorCode.set(ERROR_INVALID_RIGHTS); 
-               break;
-            case -2: 
-               errorCode.set(ERROR_RIGHTS_EXPIRED); 
-               break;
-            case -3: 
-               errorCode.set(ERROR_UNKNOWN); 
-               break;
-            case -4:
-               // auth not set up
-               errorCode.set(ERROR_UNKNOWN); 
-               break;
+      int[] vals = { 0, 0, accountId, header.fromId };
+      Value<Boolean> timedOut = new Value<>(false);
+      if (AuthToken.decode(vals, 2, authToken, timedOut) && !timedOut.get()) {
+         int perms = vals[0];
+         int anyAdmin = User.PROPS_ADMIN_T1 | User.PROPS_ADMIN_T2 | User.PROPS_ADMIN_T3 | User.PROPS_ADMIN_T4; 
+         if ((perms & anyAdmin) != 0) {
+            // to get more detailed admin callers will have to decode auth token themselves
+            return Security.ADMIN;
+         }
+         return Security.PROTECTED;
+      } else {
+         if (timedOut.get()) {
+            errorCode.set(ERROR_RIGHTS_EXPIRED);
+         } else {
+            errorCode.set(ERROR_UNKNOWN);
          }
          return Security.PUBLIC;
       }
-      int anyAdmin = User.PROPS_ADMIN_T1 | User.PROPS_ADMIN_T2 | User.PROPS_ADMIN_T3 | User.PROPS_ADMIN_T4; 
-      if ((perms & anyAdmin) != 0) {
-         // to get more detailed admin callers will have to decode auth token themselves
-         return Security.ADMIN;
-      }
-      return Security.PROTECTED;
    }
 }

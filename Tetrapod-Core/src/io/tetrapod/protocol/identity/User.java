@@ -23,6 +23,11 @@ public class User extends Structure {
    public static final int PROPS_BANNED_T2 = 64; 
    public static final int PROPS_BANNED_T3 = 128; 
    
+   /**
+    * user has not set a password
+    */
+   public static final int PROPS_NO_PASSWORD = 256; 
+   
    public static final int STRUCT_ID = 10894876;
    public static final int CONTRACT_ID = IdentityContract.CONTRACT_ID;
     
