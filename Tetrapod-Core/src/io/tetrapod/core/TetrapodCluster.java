@@ -47,8 +47,7 @@ public class TetrapodCluster implements SessionFactory {
     * Join an existing cluster
     */
    public void joinCluster(final ServerAddress address) throws Exception {
-
-      Client client = new Client(this);
+      final Client client = new Client(this);
       client.connect(address.host, address.port, service.getDispatcher(), new Session.Listener() {
 
          @Override
@@ -204,6 +203,7 @@ public class TetrapodCluster implements SessionFactory {
          this.session.sendRequest(
                new ClusterJoinRequest(service.getEntityId(), service.getHostName(), service.getServicePort(), getClusterPort()),
                Core.UNADDRESSED).log();
+         this.session.addSessionListener(this);
       }
 
       public synchronized Session getSession() {
@@ -244,6 +244,7 @@ public class TetrapodCluster implements SessionFactory {
 
       @Override
       public synchronized void onSessionStop(Session ses) {
+         service.onChildEntityDisconnected(ses);
          scheduleReconnect(1);
       }
 
