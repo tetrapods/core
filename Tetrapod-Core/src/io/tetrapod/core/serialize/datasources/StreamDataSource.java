@@ -516,7 +516,7 @@ abstract public class StreamDataSource implements DataSource {
       int shift = 0;
       while (true) {
          int v = readRawByte();
-         x = x | ((v & MASK) << shift);
+         x = x | (((long)(v & MASK)) << shift);
          if ((v & CONTINUE) == 0)
             return x;
          shift += 7;

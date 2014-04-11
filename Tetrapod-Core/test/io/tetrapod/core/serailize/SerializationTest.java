@@ -44,11 +44,22 @@ public class SerializationTest {
             null,
             new TestInfo(3),
       }, 666);
-      rinseTempBuff(t);
-      rinseViaAdapter(t);
-      rinseJSONBuff(t);
+      assertTrue(rinseTempBuff(t));
+      assertTrue(rinseViaAdapter(t));
+      assertTrue(rinseJSONBuff(t));
    }
 
+   @Test
+   public void testLong() throws Exception {
+      new SampleContract().registerStructs();
+      new TetrapodContract().registerStructs();
+      EntityRegisteredMessage m = new EntityRegisteredMessage(new Entity(11, 12,  0x20E1D00AEDF8DBEDL, "xxx", 13, (byte)14, "name", 15, 16, 17));
+      assertTrue("tempBuff", rinseTempBuff(m));
+      assertTrue("adapter", rinseViaAdapter(m));
+      assertTrue("json", rinseJSONBuff(m));
+   }
+   
+   
    @Test
    public void testSample() throws Exception {
       new TetrapodContract().registerStructs();
@@ -62,7 +73,6 @@ public class SerializationTest {
       TempBufferDataSource temp = TempBufferDataSource.forWriting();
       s1.write(temp);
       byte[] data1 = Arrays.copyOfRange(temp.rawBuffer(), 0, temp.rawCount());
-      
       temp = temp.toReading(); 
       Structure s2 = s1.make();
       s2.read(temp);
@@ -76,7 +86,6 @@ public class SerializationTest {
    public boolean rinseJSONBuff(Structure s1) throws Exception {
       JSONDataSource temp = new JSONDataSource();
       s1.write(temp);
-      System.out.println(new JSONObject(temp.getJSON().toString(3)));
       JSONDataSource tempR = new JSONDataSource(new JSONObject(temp.getJSON().toString(3)));
       Structure s2 = s1.make();
       s2.read(tempR);
