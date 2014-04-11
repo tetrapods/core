@@ -156,8 +156,16 @@ class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRequest> 
       if (VALID_URI.matcher(uri).matches() && !INVALID_URI.matcher(uri).matches()) {
          for (File rootDir : rootDirs) {
             File f = new File(rootDir, uri);
-            if (f.exists())
+            if (f.exists()) {
+               if (f.isDirectory()) {
+                  f = new File(f, "index.html");
+                  if (f.exists())
+                     return f;
+                  else
+                     continue;
+               }
                return f;
+            }
          }
       }
       return null;
