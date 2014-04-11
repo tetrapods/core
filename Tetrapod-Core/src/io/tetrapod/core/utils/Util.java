@@ -3,6 +3,7 @@ package io.tetrapod.core.utils;
 import java.io.*;
 import java.net.*;
 import java.security.KeyStore;
+import java.util.*;
 
 import javax.net.ssl.*;
 
@@ -59,6 +60,19 @@ public class Util {
 
    public static long nanosToMillis(long nanos) {
       return nanos / 1000000L;
+   }
+
+   public static <T> T random(final Collection<T> items) {
+      return random(new ArrayList<T>(items));
+   }
+
+   public static <T> T random(final List<T> items) {
+      return items.get(random(items.size()));
+   }
+
+   @SafeVarargs
+   public static <T> T randomChoice(final T... items) {
+      return items[random(items.length)];
    }
 
 }

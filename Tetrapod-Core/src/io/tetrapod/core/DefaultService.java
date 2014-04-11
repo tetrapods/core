@@ -161,7 +161,7 @@ public class DefaultService implements Service, BaseServiceContract.API, Session
    }
 
    public void onDisconnectedFromCluster() {
-      dispatcher.dispatch(new Runnable() {
+      dispatcher.dispatch(3, TimeUnit.SECONDS, new Runnable() {
          public void run() {
             connectToCluster();
          }
@@ -179,7 +179,7 @@ public class DefaultService implements Service, BaseServiceContract.API, Session
                   return;
                }
             } catch (Throwable e) {
-               logger.error(e.getMessage(), e);
+               logger.error(e.getMessage());
             }
             clusterMembers.addLast(server);
          }

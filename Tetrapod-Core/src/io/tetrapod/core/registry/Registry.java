@@ -186,18 +186,22 @@ public class Registry implements TetrapodContract.Registry.API {
       }
    }
 
+   private void clearAllTopicsAndSubscriptions(final EntityInfo e) {
+      // Unpublish all their topics
+      for (Topic topic : new ArrayList<Topic>(e.getTopics())) {
+         unpublish(e, topic.topicId);
+      }
+      // Unsubscribe from all subscriptions
+      for (Topic topic : new ArrayList<Topic>(e.getSubscriptions())) {
+         EntityInfo owner = getEntity(topic.ownerId);
+         unsubscribe(owner, topic.topicId, e.entityId, true);
+      }
+   }
+
    public void unregister(final EntityInfo e) {
       lock.readLock().lock();
       try {
-         // Unpublish all their topics
-         for (Topic topic : e.getTopics()) {
-            unpublish(e, topic.topicId);
-         }
-         // Unsubscribe from all subscriptions
-         for (Topic topic : e.getSubscriptions()) {
-            EntityInfo owner = getEntity(topic.ownerId);
-            unsubscribe(owner, topic.topicId, e.entityId, true);
-         }
+         clearAllTopicsAndSubscriptions(e);
 
          entities.remove(e.entityId);
 
@@ -344,6 +348,12 @@ public class Registry implements TetrapodContract.Registry.API {
                info.name = m.entity.name;
                info.version = m.entity.version;
                info.contractId = m.entity.contractId;
+               final EntityInfo e = info;
+               info.queue(new Runnable() {
+                  public void run() {
+                     clearAllTopicsAndSubscriptions(e);
+                  }
+               });
             } else {
                info = new EntityInfo(m.entity);
             }
@@ -396,11 +406,7 @@ public class Registry implements TetrapodContract.Registry.API {
          if (owner != null) {
             owner.queue(new Runnable() {
                public void run() {
-                  final Topic topic = owner.publish();
-                  if (topic.topicId != m.topicId) {
-                     logger.error("TopicIDs don't match! {} != {}", topic, m.topicId);
-                     assert (false);
-                  }
+                  owner.publish(m.topicId);
                }
             }); // TODO: kick()
          } else {
@@ -526,6 +532,23 @@ public class Registry implements TetrapodContract.Registry.API {
          services.put(contractId, list);
       }
       return list;
+   }
+
+   public void setGone(EntityInfo e) {
+      lock.readLock().lock();
+      try {
+         updateStatus(e, e.status | Core.STATUS_GONE);
+         e.setSession(null);
+         if (e.isTetrapod()) {
+            for (EntityInfo child : entities.values()) {
+               if (child.parentId == e.entityId) {
+                  updateStatus(child, child.status | Core.STATUS_GONE);
+               }
+            }
+         }
+      } finally {
+         lock.readLock().unlock();
+      }
    }
 
 }

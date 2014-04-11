@@ -73,7 +73,17 @@ public class EntityInfo extends Entity implements Comparable<EntityInfo> {
    }
 
    public synchronized Topic publish() {
-      final Topic topic = new Topic(entityId, ++topicCounter);
+      return publish(++topicCounter);
+   }
+
+   public synchronized Topic publish(int topicId) {
+      if (++topicCounter != topicId) {
+         //assert (false);
+         logger.error("TopicIds don't match! {} != {}", topicCounter, topicId);
+         topicCounter = topicId;
+      }
+
+      final Topic topic = new Topic(entityId, topicId);
       if (topics == null) {
          topics = new HashMap<>();
       }

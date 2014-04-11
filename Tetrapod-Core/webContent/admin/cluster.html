@@ -87,10 +87,8 @@
 }
 
 .dropdown-menu {
-  text-align: left;
+	text-align: left;
 }
-
-
 </style>
 <!--  =============================================================================== -->
 
@@ -225,8 +223,8 @@
 					<div>
 						<h3>Tetrapod Platform TODOs</h3>
 						<ul>
-                     <li>Admin accounts</li>
-                     <li>TLS</li>
+							<li>Admin accounts</li>
+							<li>TLS</li>
 							<li>Service Log/metrics viewing, etc...</li>
 							<li>Service direct connections</li>
 							<li>Tetrapod distributed locks, counters, KVStore, preferences</li>
@@ -546,6 +544,7 @@
 				var container = $("#service-chart-" + tag + "-" + self.entityId);
 				if (!container)
 					return;
+
 				return $.plot(container, [], chartOptions);
 			}
 
@@ -553,6 +552,11 @@
 				series.data.push([ Date.now(), value ]);
 				while (series.data[0][0] < Date.now() - timeRange) {
 					series.data.shift();
+				}
+				if (series.maxY != 0) {
+					chartOptions.yaxis.max = series.maxY;
+				} else {
+					chartOptions.yaxis.max = null;
 				}
 				plot = self.getPlot(tag);
 				if (plot) {
@@ -564,6 +568,7 @@
 
 			self.latencySeries = {
 				data : [],
+				maxY : 500,
 				lines : {
 					lineWidth : 1,
 					fill : true

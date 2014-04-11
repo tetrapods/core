@@ -181,7 +181,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
             @Override
             public void onSessionStop(Session ses) {
                logger.info("Session Stopped: {}", ses);
-               onChildEntityDisconnected(ses);
+               onEntityDisconnected(ses);
             }
 
             @Override
@@ -214,7 +214,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
             @Override
             public void onSessionStop(Session ses) {
                logger.info("Session Stopped: {}", ses);
-               onChildEntityDisconnected(ses);
+               onEntityDisconnected(ses);
             }
 
             @Override
@@ -224,13 +224,11 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       }
    }
 
-   protected void onChildEntityDisconnected(Session ses) {
+   protected void onEntityDisconnected(Session ses) {
       if (ses.getTheirEntityId() != 0) {
          final EntityInfo e = registry.getEntity(ses.getTheirEntityId());
          if (e != null) {
-            registry.updateStatus(e, e.status | Core.STATUS_GONE);
-            e.setSession(null);
-            // TODO: set all children to gone as well
+            registry.setGone(e);
          }
       }
    }
@@ -675,6 +673,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    @Override
    public Response requestLogRegistryStats(LogRegistryStatsRequest r, RequestContext ctx) {
       registry.logStats();
+      Util.random(cluster.getMembers()).getSession().close();
       return Response.SUCCESS;
    }
 

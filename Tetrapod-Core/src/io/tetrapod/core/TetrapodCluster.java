@@ -2,6 +2,7 @@ package io.tetrapod.core;
 
 import io.netty.channel.*;
 import io.netty.channel.socket.SocketChannel;
+import io.tetrapod.core.registry.EntityInfo;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.utils.*;
 import io.tetrapod.core.utils.Properties;
@@ -204,6 +205,10 @@ public class TetrapodCluster implements SessionFactory {
                new ClusterJoinRequest(service.getEntityId(), service.getHostName(), service.getServicePort(), getClusterPort()),
                Core.UNADDRESSED).log();
          this.session.addSessionListener(this);
+         EntityInfo e = service.registry.getEntity(entityId);
+         if (e != null) {
+            e.setSession(ses);
+         }
       }
 
       public synchronized Session getSession() {
@@ -227,7 +232,7 @@ public class TetrapodCluster implements SessionFactory {
                });
             }
          } catch (Throwable e) {
-            logger.error(e.getMessage(), e);
+            logger.error(e.getMessage());
             scheduleReconnect(++failures);
          }
       }
@@ -244,7 +249,7 @@ public class TetrapodCluster implements SessionFactory {
 
       @Override
       public synchronized void onSessionStop(Session ses) {
-         service.onChildEntityDisconnected(ses);
+         service.onEntityDisconnected(ses);
          scheduleReconnect(1);
       }
 
