@@ -16,8 +16,6 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 
-import javax.swing.text.DefaultEditorKit.CutAction;
-
 import org.slf4j.*;
 
 /**
@@ -297,10 +295,24 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
       }
    }
 
+   private volatile boolean autoFlush = true;
+
+   public void setAutoFlush(boolean val) {
+      autoFlush = val;
+   }
+
+   public void flush() {
+      channel.flush();
+   }
+
    public ChannelFuture writeFrame(Object frame) {
       if (frame != null && channel.isActive()) {
          lastSentTo.set(System.currentTimeMillis());
-         return channel.writeAndFlush(frame);
+         if (autoFlush) {
+            return channel.writeAndFlush(frame);
+         } else {
+            return channel.write(frame);
+         }
       }
       return null;
    }

@@ -175,12 +175,18 @@ public class EntityInfo extends Entity implements Comparable<EntityInfo> {
       return queue == null ? 0 : queue.size();
    }
 
-   public void process() {
+   /**
+    * Process the pending work queued for this entity.
+    * 
+    * @return true if any queued work was processed.
+    */
+   public boolean process() {
       synchronized (this) {
          if (queue == null) {
-            return;
+            return false;
          }
       }
+      boolean res = false;
       if (consumerLock.tryLock()) {
          try {
             Runnable task = null;
@@ -192,12 +198,14 @@ public class EntityInfo extends Entity implements Comparable<EntityInfo> {
                   } catch (Throwable e) {
                      logger.error(e.getMessage(), e);
                   }
+                  res = true;
                }
             } while (task != null);
          } finally {
             consumerLock.unlock();
          }
       }
+      return res;
    }
 
 }

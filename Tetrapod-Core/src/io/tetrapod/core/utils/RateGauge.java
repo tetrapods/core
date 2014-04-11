@@ -13,8 +13,8 @@ public class RateGauge extends Gauge {
    }
 
    public synchronized void sample(long value) {
-      times[cur] = System.nanoTime();
       super.sample(value);
+      times[cur] = System.nanoTime();
    }
 
    public synchronized long getAveragePer(long millis) {
@@ -22,9 +22,8 @@ public class RateGauge extends Gauge {
          return 0; // need at least two samples to get a rate
       }
       int first = len < samples.length ? 0 : (cur + 1) % samples.length;
-      int last = cur == 0 ? samples.length - 1 : cur - 1;
-      long delta = (samples[last] - samples[first]);
-      long elapsed = Util.nanosToMillis(times[last] - times[first]);
+      long delta = (samples[cur] - samples[first]);
+      long elapsed = Util.nanosToMillis(times[cur] - times[first]);
       return Math.round(delta / (elapsed / (double) millis));
    }
 
