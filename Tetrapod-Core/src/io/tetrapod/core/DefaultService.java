@@ -257,6 +257,14 @@ public class DefaultService implements Service, BaseServiceContract.API, Session
       return Util.getHostName();
    }
 
+   public long getAverageResponseTime() {
+      return Util.nanosToMillis(dispatcher.requestTimes.getAverage());
+   }
+
+   public long getCounter() {
+      return 0;
+   }
+
    public long getNumRequestsHandled() {
       return dispatcher.requestsHandledCounter.get();
    }

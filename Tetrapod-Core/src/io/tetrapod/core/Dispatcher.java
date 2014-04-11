@@ -2,7 +2,7 @@ package io.tetrapod.core;
 
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
-import io.tetrapod.core.utils.Accumulator;
+import io.tetrapod.core.utils.*;
 
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -19,6 +19,7 @@ public class Dispatcher {
    private final ExecutorService          sequential;
    private final ScheduledExecutorService scheduled;
 
+   public final Gauge                     requestTimes           = new Gauge(128);
    public final Accumulator               requestsHandledCounter = new Accumulator();
    public final Accumulator               messagesSentCounter    = new Accumulator();
 

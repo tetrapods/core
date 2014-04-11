@@ -8,10 +8,8 @@
 <title>Tetrapod Admin</title>
 
 <!-- Core CSS - Include with every page -->
-<link rel="stylesheet"
-	href="http://netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
-<link rel="stylesheet"
-	href="http://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css">
+<link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
+<link rel="stylesheet" href="http://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css">
 
 <!-- Page-Level Plugin CSS - Blank -->
 
@@ -73,7 +71,7 @@
 }
 
 .service-chart-wrap {
-	position: relative; width: 128px; padding: 0px; padding-left: 0px; padding-right: 0px;
+	position: relative; width: 96px; padding: 0px; padding-left: 0px; padding-right: 0px;
 }
 
 .service-chart {
@@ -96,29 +94,24 @@
 
 	<div id="wrapper">
 
-		<nav class="navbar navbar-default navbar-static-top" role="navigation"
-			style="margin-bottom: 0">
+		<nav class="navbar navbar-default navbar-static-top" role="navigation" style="margin-bottom: 0">
 			<div class="navbar-header">
-				<button type="button" class="navbar-toggle" data-toggle="collapse"
-					data-target=".sidebar-collapse">
+				<button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".sidebar-collapse">
 					<span class="fa fa-bars"></span>
 				</button>
-				<a class="navbar-brand" href="index.html"> <img
-					src="tetrapod.png"> tetrapod.io
+				<a class="navbar-brand" href="index.html"> <img src="tetrapod.png"> tetrapod.io
 				</a>
 			</div>
 			<!-- /.navbar-header -->
 
 			<ul class="nav navbar-top-links navbar-right">
-				<li class="dropdown"><a class="dropdown-toggle"
-					data-toggle="dropdown" href="#"> <i class="fa fa-user fa-fw"></i>
-						<i class="fa fa-caret-down"></i>
+				<li class="dropdown"><a class="dropdown-toggle" data-toggle="dropdown" href="#"> <i class="fa fa-user fa-fw"></i> <i
+						class="fa fa-caret-down"></i>
 				</a>
 					<ul class="dropdown-menu dropdown-user">
 						<li><a href="#"><i class="fa fa-gear fa-fw"></i> Settings</a></li>
 						<li class="divider"></li>
-						<li><a href="login.html"><i class="fa fa-sign-out fa-fw"></i>
-								Logout</a></li>
+						<li><a href="login.html"><i class="fa fa-sign-out fa-fw"></i> Logout</a></li>
 					</ul> <!-- /.dropdown-user --></li>
 				<!-- /.dropdown -->
 			</ul>
@@ -130,18 +123,13 @@
 		<nav class="navbar-default navbar-static-side" role="navigation">
 			<div class="sidebar-collapse">
 
-				<ul class="nav" id="side-menu"
-					data-bind="foreach: { data: items, as: 'item' }">
-					<li data-bind="css: { active: TP.sidebar.isActive(item) }"><a
-						data-bind="attr: {href: item.url ? item.url : '#'}"><i
-							data-bind="css: item.icon ? ('fa fa-fw ' + item.icon) : ''"></i>
-							<span data-bind="text: item.title"></span> <span
+				<ul class="nav" id="side-menu" data-bind="foreach: { data: items, as: 'item' }">
+					<li data-bind="css: { active: TP.sidebar.isActive(item) }"><a data-bind="attr: {href: item.url ? item.url : '#'}"><i
+							data-bind="css: item.icon ? ('fa fa-fw ' + item.icon) : ''"></i> <span data-bind="text: item.title"></span> <span
 							data-bind="css: { 'fa arrow': item.children != null }"></span> </a> <!-- ko if: item.children != null -->
-						<ul class="nav nav-second-level"
-							data-bind="foreach: { data: item.children, as: 'subitem' }">
+						<ul class="nav nav-second-level" data-bind="foreach: { data: item.children, as: 'subitem' }">
 							<li><a data-bind="attr: {href: subitem.url}"><i
-									data-bind="css: subitem.icon ? ('fa fa-fw ' + subitem.icon) : ''"></i>
-									<span data-bind="text: subitem.title"></span> </a></li>
+									data-bind="css: subitem.icon ? ('fa fa-fw ' + subitem.icon) : ''"></i> <span data-bind="text: subitem.title"></span> </a></li>
 						</ul> <!-- /ko --></li>
 				</ul>
 
@@ -155,13 +143,11 @@
 				<div class="col-lg-12">
 					<!--  =============================================================================== -->
 
-					<div id="disconnected-alertbox" class="alert alert-danger"
-						hidden="true">
+					<div id="disconnected-alertbox" class="alert alert-danger" hidden="true">
 						<strong>DISCONNECTED!</strong> Attempting to Reconnect...
 					</div>
 
-					<table class="table table-bordered table-condensed "
-						id="cluster-table">
+					<table class="table table-bordered table-condensed " id="cluster-table">
 						<thead>
 							<tr>
 								<th><i class="fa fa-gear fa-fw"></i></th>
@@ -169,68 +155,62 @@
 								<th>Entity</th>
 								<th>Host</th>
 								<th>Status</th>
+								<th>Latency</th>
 								<th>RPS</th>
 								<th>MPS</th>
+								<th>Counter</th>
 							</tr>
 						</thead>
 						<tbody data-bind="foreach: services">
 							<tr data-bind='attr: {"class": row_style}'>
 								<td width="48">
 									<div class="dropdown">
-										<a class="dropdown-toggle " data-toggle="dropdown" href="#">
-											<i class="fa fa-gear fa-fw"></i> <i class="fa fa-caret-down"></i>
+										<a class="dropdown-toggle " data-toggle="dropdown" href="#"> <i class="fa fa-gear fa-fw"></i> <i
+											class="fa fa-caret-down"></i>
 										</a>
 										<ul class="dropdown-menu dropdown-service">
-											<li class="disabled"><a href="#"
-												data-bind="text: name +' '+entityString()"></a></li>
+											<li class="disabled"><a href="#" data-bind="text: name +' '+entityString()"></a></li>
 
 											<!-- ko foreach: commands -->
-											<li><a href="#"
-												data-bind="click: function() { $parent.execute($data) }, text: name"></a></li>
+											<li><a href="#" data-bind="click: function() { $parent.execute($data) }, text: name"></a></li>
 											<!-- /ko -->
 
 											<li class="divider"></li>
 
-											<li><a href="#"
-												data-bind="click: pause, visible: canPause()"><i
-													class="fa fa-pause fa-fw"></i>Pause</a></li>
-											<li><a href="#"
-												data-bind="click: unpause, visible: canUnpause()"><i
-													class="fa fa-play fa-fw"></i>Resume</a></li>
+											<li><a href="#" data-bind="click: pause, visible: canPause()"><i class="fa fa-pause fa-fw"></i>Pause</a></li>
+											<li><a href="#" data-bind="click: unpause, visible: canUnpause()"><i class="fa fa-play fa-fw"></i>Resume</a></li>
 
 											<li class="divider" data-bind=" visible: !isGone()"></li>
 
-											<li><a href="#"
-												data-bind="click: restart, visible: !isGone()"><i
-													class="fa fa-refresh fa-fw"></i>Restart</a></li>
+											<li><a href="#" data-bind="click: restart, visible: !isGone()"><i class="fa fa-refresh fa-fw"></i>Restart</a></li>
 
-											<li><a href="#"
-												data-bind="click: shutdown, visible: !isGone()"><i
-													class="fa fa-power-off fa-fw"></i>Shutdown</a></li>
-											<li><a href="#"
-												data-bind="click: deleteService, visible: isGone()"><i
-													class="fa fa-trash-o fa-fw"></i>Delete</a></li>
+											<li><a href="#" data-bind="click: shutdown, visible: !isGone()"><i class="fa fa-power-off fa-fw"></i>Shutdown</a></li>
+											<li><a href="#" data-bind="click: deleteService, visible: isGone()"><i class="fa fa-trash-o fa-fw"></i>Delete</a></li>
 
 										</ul>
 									</div>
 								</td>
 
-								<td><img data-bind="attr:{src: iconURL}"
-									class="service-icon"> <span class="service-name"
+								<td><img data-bind="attr:{src: iconURL}" class="service-icon"> <span class="service-name"
 									data-bind="text: name"></span></td>
 								<td class="centered"><span data-bind="text: entityString"></span></td>
 								<td class="centered"><span data-bind="text: host"></span></td>
-								<td data-bind="attr: {'class':status_style}"><span
-									data-bind="text: statusName()"></span></td>
+								<td data-bind="attr: {'class':status_style}"><span data-bind="text: statusName()"></span></td>
 								<td class="service-chart-wrap">
-									<div class="service-chart"
-										data-bind="attr: {id: 'service-chart-rps-' + entityId}">
-									</div> <span class="service-chart-val" data-bind="text: rps"></span>
+									<div class="service-chart" data-bind="attr: {id: 'service-chart-latency-' + entityId}"></div> <span
+									class="service-chart-val" data-bind="text: latency"></span>
 								</td>
 								<td class="service-chart-wrap">
-									<div class="service-chart"
-										data-bind="attr: {id: 'service-chart-mps-' + entityId}">
-									</div> <span class="service-chart-val" data-bind="text: mps"></span>
+									<div class="service-chart" data-bind="attr: {id: 'service-chart-rps-' + entityId}"></div> <span
+									class="service-chart-val" data-bind="text: rps"></span>
+								</td>
+								<td class="service-chart-wrap">
+									<div class="service-chart" data-bind="attr: {id: 'service-chart-mps-' + entityId}"></div> <span
+									class="service-chart-val" data-bind="text: mps"></span>
+								</td>
+								<td class="service-chart-wrap">
+									<div class="service-chart" data-bind="attr: {id: 'service-chart-counter-' + entityId}"></div> <span
+									class="service-chart-val" data-bind="text: counter"></span>
 								</td>
 							</tr>
 						</tbody>
@@ -243,12 +223,10 @@
 							<li>Service stats &amp; charts</li>
 							<li>Service Log/metrics viewing, etc...</li>
 							<li>Service direct connections</li>
-							<li>Tetrapod distributed locks, counters, KVStore,
-								preferences</li>
+							<li>Tetrapod distributed locks, counters, KVStore, preferences</li>
 							<li>Admin accounts</li>
 							<li>TLS</li>
-							<li>Performance testing, queue &amp; threadpool
-								optimizations</li>
+							<li>Performance testing, queue &amp; threadpool optimizations</li>
 						</ul>
 					</div>
 
@@ -267,22 +245,17 @@
 
 	<!-- Core Scripts - Include with every page -->
 
-	<script
-		src="//ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>
-	<script
-		src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
-	<script
-		src="//cdnjs.cloudflare.com/ajax/libs/knockout/3.1.0/knockout-min.js"></script>
-	<script
-		src="//cdnjs.cloudflare.com/ajax/libs/bootbox.js/4.2.0/bootbox.min.js"></script>
+	<script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>
+	<script src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
+	<script src="//cdnjs.cloudflare.com/ajax/libs/knockout/3.1.0/knockout-min.js"></script>
+	<script src="//cdnjs.cloudflare.com/ajax/libs/bootbox.js/4.2.0/bootbox.min.js"></script>
 
 
 
 	<script src="js/plugins/metisMenu/jquery.metisMenu.js"></script>
 
 	<!-- Page-Level Plugin Scripts - Blank -->
-	<script
-		src="//cdnjs.cloudflare.com/ajax/libs/flot/0.8.2/jquery.flot.min.js"></script>
+	<script src="//cdnjs.cloudflare.com/ajax/libs/flot/0.8.2/jquery.flot.min.js"></script>
 
 	<!-- SB Admin Scripts - Include with every page -->
 	<script src="js/sb-admin.js"></script>
@@ -431,6 +404,8 @@
 			self.commands = ko.observableArray();
 			self.mps = ko.observable();
 			self.rps = ko.observable();
+			self.latency = ko.observable();
+			self.counter = ko.observable();
 
 			self.iconURL = ko.observable("media/gear.gif");
 
@@ -553,8 +528,10 @@
 			}
 
 			self.statsUpdate = function(msg) {
+				self.latency(msg.latency);
 				self.rps(msg.rps);
 				self.mps(msg.mps);
+				self.counter(msg.counter);
 			}
 
 			//////////////////////////////////////// stats graphs ////////////////////////////////////////
@@ -582,6 +559,14 @@
 				}
 			}
 
+			self.latencySeries = {
+				data : [],
+				lines : {
+					lineWidth : 1,
+					fill : true
+				},
+				shadowSize : 1
+			};
 			self.rpsSeries = {
 				data : [],
 				lines : {
@@ -598,10 +583,22 @@
 				},
 				shadowSize : 1
 			};
+			self.counterSeries = {
+				data : [],
+				lines : {
+					lineWidth : 1,
+					fill : true
+				},
+				shadowSize : 1
+			};
 			// updates all charts for this service
 			self.chart = function() {
+				self.updatePlot("latency", self.latencySeries, 60000, self
+						.latency());
 				self.updatePlot("rps", self.rpsSeries, 60000, self.rps());
 				self.updatePlot("mps", self.mpsSeries, 60000, self.mps());
+				self.updatePlot("counter", self.counterSeries, 60000, self
+						.counter());
 			}
 
 		}

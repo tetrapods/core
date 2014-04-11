@@ -7,7 +7,8 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public class Accumulator {
 
-   // TODO: Actually implement. For now, jsut wrapping an AtomicLong
+   // TODO:  Actually implement. For now, jsut wrapping an AtomicLong
+   // OPTIMIZE: use a collection of counters and threadlocal storage to reduce contention
 
    private AtomicLong value = new AtomicLong();
 

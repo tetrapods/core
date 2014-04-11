@@ -114,10 +114,20 @@ public class ServiceStats {
             message.mps = MPS;
             dirty = true;
          }
+
+         long latency = service.getAverageResponseTime();
+         if (message.latency != latency) {
+            message.latency = latency;
+            dirty = true;
+         }
+         long counter = service.getCounter();
+         if (message.counter != counter) {
+            message.counter = counter;
+            dirty = true;
+         }
          if (dirty) {
             service.sendBroadcastMessage(message, statsTopicId);
          }
       }
    }
-
 }

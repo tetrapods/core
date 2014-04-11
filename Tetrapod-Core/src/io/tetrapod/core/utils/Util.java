@@ -57,4 +57,8 @@ public class Util {
       return String.format(fmt.replaceAll("\\{\\}", "%s"), args);
    }
 
+   public static long nanosToMillis(long nanos) {
+      return nanos / 1000000L;
+   }
+
 }
