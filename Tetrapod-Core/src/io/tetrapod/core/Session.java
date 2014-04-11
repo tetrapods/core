@@ -7,6 +7,7 @@ import io.netty.channel.*;
 import io.netty.channel.socket.SocketChannel;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.rpc.Error;
+import io.tetrapod.core.utils.Util;
 import io.tetrapod.core.web.WebRoutes;
 import io.tetrapod.protocol.core.*;
 
@@ -14,6 +15,8 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
+
+import javax.swing.text.DefaultEditorKit.CutAction;
 
 import org.slf4j.*;
 
@@ -101,7 +104,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
             close();
          }
       }
-      // TODO: Timeout pending requests past their due
+      // Timeout pending requests past their due
       for (Async a : pendingRequests.values()) {
          if (a.isTimedout()) {
             pendingRequests.remove(a.header.requestId);
@@ -157,6 +160,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
    protected void dispatchRequest(final RequestHeader header, final Request req) {
       final ServiceAPI svc = helper.getServiceHandler(header.contractId);
       if (svc != null) {
+         final long start = System.nanoTime();
          getDispatcher().dispatch(new Runnable() {
             public void run() {
                try {
@@ -165,7 +169,12 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
                   logger.error(e.getMessage(), e);
                   sendResponse(new Error(ERROR_UNKNOWN), header.requestId);
                }
+               final long elapsed = System.nanoTime() - start;
                getDispatcher().requestsHandledCounter.increment();
+               getDispatcher().requestTimes.sample(elapsed);
+               if (Util.nanosToMillis(elapsed) > 1000) {
+                  logger.warn("Request took {} {} millis", req, Util.nanosToMillis(elapsed));
+               }
             }
          });
       } else {
@@ -419,7 +428,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
    }
 
    public boolean commsLog(String format, Object... args) {
-      //logger.debug(String.format(format, args));
+      logger.debug(String.format(format, args));
       if (commsLog.isInfoEnabled()) {
          for (int i = 0; i < args.length; i++) {
             if (args[i] == this) {

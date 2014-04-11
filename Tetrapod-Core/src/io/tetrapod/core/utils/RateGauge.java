@@ -3,37 +3,18 @@ package io.tetrapod.core.utils;
 /**
  * A rate gauge that measures the rate of change in a value over time.
  */
-public class RateGauge {
+public class RateGauge extends Gauge {
 
-   public static class Sample {
-      long value;
-      long time;
-   }
-
-   private final Sample[] samples;
-   private int            cur;
-   private int            len;
+   private final long[] times;
 
    public RateGauge(int numSamples) {
-      samples = new Sample[numSamples];
-      for (int i = 0; i < numSamples; i++) {
-         samples[i] = new Sample();
-      }
+      super(numSamples);
+      times = new long[numSamples];
    }
 
    public synchronized void sample(long value) {
-      samples[cur].value = value;
-      samples[cur].time = System.nanoTime();
-      cur = (cur + 1) % samples.length;
-      len = Math.min(len + 1, samples.length);
-   }
-
-   public synchronized long getAverage() {
-      long total = 0;
-      for (int i = 0; i < len; i++) {
-         total += samples[i].value;
-      }
-      return total / len;
+      times[cur] = System.nanoTime();
+      super.sample(value);
    }
 
    public synchronized long getAveragePer(long millis) {
@@ -42,8 +23,8 @@ public class RateGauge {
       }
       int first = len < samples.length ? 0 : (cur + 1) % samples.length;
       int last = cur == 0 ? samples.length - 1 : cur - 1;
-      long delta = (samples[last].value - samples[first].value);
-      long elapsed = (samples[last].time - samples[first].time) / 1000000L;
+      long delta = (samples[last] - samples[first]);
+      long elapsed = Util.nanosToMillis(times[last] - times[first]);
       return Math.round(delta / (elapsed / (double) millis));
    }
 

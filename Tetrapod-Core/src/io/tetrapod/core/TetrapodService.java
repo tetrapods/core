@@ -155,6 +155,12 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       return properties.optInt("tetrapod.http.port", DEFAULT_HTTP_PORT);
    }
 
+   @Override
+   public long getCounter() {
+      return serviceServer.getNumSessions() + publicServer.getNumSessions() + webSocketsServer.getNumSessions()
+            + httpServer.getNumSessions() + cluster.getNumSessions();
+   }
+
    private class TypedSessionFactory implements SessionFactory {
       private final byte type;
 

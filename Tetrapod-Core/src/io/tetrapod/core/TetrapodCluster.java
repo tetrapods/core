@@ -277,4 +277,8 @@ public class TetrapodCluster implements SessionFactory {
       }
    }
 
+   public int getNumSessions() {
+      return server.getNumSessions();
+   }
+
 }

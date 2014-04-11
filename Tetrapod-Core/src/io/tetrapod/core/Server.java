@@ -89,4 +89,7 @@ public class Server implements Session.Listener {
       return port;
    }
 
+   public int getNumSessions() {
+      return sessions.size();
+   }
 }
