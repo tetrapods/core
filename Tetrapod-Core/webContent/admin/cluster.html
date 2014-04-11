@@ -71,7 +71,7 @@
 }
 
 .service-chart-wrap {
-	position: relative; width: 96px; padding: 0px; padding-left: 0px; padding-right: 0px;
+	position: relative; width: 80px; padding: 0px; padding-left: 0px; padding-right: 0px;
 }
 
 .service-chart {
@@ -85,6 +85,12 @@
 .alert {
 	margin-top: 20px;
 }
+
+.dropdown-menu {
+  text-align: left;
+}
+
+
 </style>
 <!--  =============================================================================== -->
 
@@ -163,7 +169,7 @@
 						</thead>
 						<tbody data-bind="foreach: services">
 							<tr data-bind='attr: {"class": row_style}'>
-								<td width="48">
+								<td width="48" class="centered">
 									<div class="dropdown">
 										<a class="dropdown-toggle " data-toggle="dropdown" href="#"> <i class="fa fa-gear fa-fw"></i> <i
 											class="fa fa-caret-down"></i>
@@ -220,12 +226,11 @@
 						<h3>Tetrapod Platform TODOs</h3>
 						<ul>
 							<li>Reconnect loops</li>
-							<li>Service stats &amp; charts</li>
+                     <li>Admin accounts</li>
+                     <li>TLS</li>
 							<li>Service Log/metrics viewing, etc...</li>
 							<li>Service direct connections</li>
 							<li>Tetrapod distributed locks, counters, KVStore, preferences</li>
-							<li>Admin accounts</li>
-							<li>TLS</li>
 							<li>Performance testing, queue &amp; threadpool optimizations</li>
 						</ul>
 					</div>
