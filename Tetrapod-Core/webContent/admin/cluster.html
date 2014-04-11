@@ -429,9 +429,8 @@
 							});
 
 			self.execute = function(command) {
-				var name = TP.nameOf(command.contractId, command.structId);
-				console.log("Execute command: " + name);
-				TP.send(name, {}, self.entityId).handle(TP.logResponse)
+				TP.sendRequest(command.contractId, command.structId, {},
+						self.entityId).handle(TP.logResponse)
 			}
 
 			self.entityString = ko.computed(function() {
