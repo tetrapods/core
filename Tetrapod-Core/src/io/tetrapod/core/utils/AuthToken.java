@@ -106,7 +106,7 @@ public class AuthToken {
     */
    public static boolean decode(int[] values, int numInToken, String token, Value<Boolean> timedOut) {
       try {
-         ByteBuf tokenBuf = Base64.decode(Unpooled.wrappedBuffer(token.getBytes()));
+         ByteBuf tokenBuf = Base64.decode(Unpooled.wrappedBuffer(token.getBytes()), Base64Dialect.URL_SAFE);
          ByteBufDataSource bds = new ByteBufDataSource(tokenBuf);
          for (int i = 0; i < numInToken; i++) {
             values[i] = bds.readVarInt();
