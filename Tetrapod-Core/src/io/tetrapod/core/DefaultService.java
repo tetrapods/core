@@ -9,25 +9,29 @@ import io.tetrapod.protocol.core.*;
 import io.tetrapod.protocol.service.*;
 
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 import org.slf4j.*;
 
-public class DefaultService implements Service, BaseServiceContract.API, SessionFactory, EntityMessage.Handler {
-   private static final Logger   logger          = LoggerFactory.getLogger(DefaultService.class);
+public class DefaultService implements Service, BaseServiceContract.API, SessionFactory, EntityMessage.Handler,
+      ClusterMemberMessage.Handler {
+   private static final Logger             logger          = LoggerFactory.getLogger(DefaultService.class);
 
-   protected final Dispatcher    dispatcher;
-   protected Client              clusterClient;
-   protected Contract            contract;
+   protected final Dispatcher              dispatcher;
+   protected Client                        clusterClient;
+   protected Contract                      contract;
 
-   protected boolean             terminated;
-   protected int                 entityId;
-   protected int                 parentId;
-   protected String              token;
-   protected int                 status;
+   protected boolean                       terminated;
+   protected int                           entityId;
+   protected int                           parentId;
+   protected String                        token;
+   protected int                           status;
 
-   protected final ServiceStats  stats;
+   protected final ServiceStats            stats;
 
-   private final MessageHandlers messageHandlers = new MessageHandlers();
+   private final LinkedList<ServerAddress> clusterMembers  = new LinkedList<ServerAddress>();
+
+   private final MessageHandlers           messageHandlers = new MessageHandlers();
 
    public DefaultService() {
       status |= Core.STATUS_STARTING;
@@ -37,6 +41,7 @@ public class DefaultService implements Service, BaseServiceContract.API, Session
       addContracts(new BaseServiceContract());
       addPeerContracts(new TetrapodContract());
       addMessageHandler(new EntityMessage(), this);
+      addMessageHandler(new ClusterMemberMessage(), this);
    }
 
    public byte getEntityType() {
@@ -61,7 +66,8 @@ public class DefaultService implements Service, BaseServiceContract.API, Session
    @Override
    public void startNetwork(ServerAddress server, String token, Map<String, String> otherOpts) throws Exception {
       this.token = token;
-      clusterClient.connect(server.host, server.port, dispatcher).sync();
+      clusterMembers.addFirst(server);
+      connectToCluster();
    }
 
    /**
@@ -155,7 +161,36 @@ public class DefaultService implements Service, BaseServiceContract.API, Session
    }
 
    public void onDisconnectedFromCluster() {
-      // TODO reconnection loop to handle unexpected disconnections
+      dispatcher.dispatch(new Runnable() {
+         public void run() {
+            connectToCluster();
+         }
+      });
+   }
+
+   private void connectToCluster() {
+      if (!isShuttingDown() && !clusterClient.isConnected()) {
+         synchronized (clusterMembers) {
+            final ServerAddress server = clusterMembers.poll();
+            try {
+               clusterClient.connect(server.host, server.port, dispatcher).sync();
+               if (clusterClient.isConnected()) {
+                  clusterMembers.addFirst(server);
+                  return;
+               }
+            } catch (Throwable e) {
+               logger.error(e.getMessage(), e);
+            }
+            clusterMembers.addLast(server);
+         }
+
+         // schedule a retry
+         dispatcher.dispatch(1, TimeUnit.SECONDS, new Runnable() {
+            public void run() {
+               connectToCluster();
+            }
+         });
+      }
    }
 
    // subclass utils
@@ -345,6 +380,11 @@ public class DefaultService implements Service, BaseServiceContract.API, Session
 
    public void addMessageHandler(Message k, SubscriptionAPI handler) {
       messageHandlers.add(k, handler);
+   }
+
+   @Override
+   public void messageClusterMember(ClusterMemberMessage m, MessageContext ctx) {
+      clusterMembers.add(new ServerAddress(m.host, m.servicePort));
    }
 
    // private methods

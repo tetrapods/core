@@ -27,7 +27,7 @@ import org.slf4j.*;
  * of client connections
  */
 public class TetrapodService extends DefaultService implements TetrapodContract.API, RelayHandler,
-      io.tetrapod.core.registry.Registry.RegistryBroadcaster, ClusterMemberMessage.Handler {
+      io.tetrapod.core.registry.Registry.RegistryBroadcaster {
 
    public static final Logger                         logger                  = LoggerFactory.getLogger(TetrapodService.class);
 
@@ -74,7 +74,6 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       setMainContract(new TetrapodContract());
 
       addSubscriptionHandler(new TetrapodContract.Registry(), registry);
-      addMessageHandler(new ClusterMemberMessage(), this);
    }
 
    @Override
