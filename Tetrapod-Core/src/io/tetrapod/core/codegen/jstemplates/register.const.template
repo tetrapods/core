@@ -1,1 +1,1 @@
-TP.registerConst("{{contractClass}}", "{{class}}", "{{constName}}", {{constValue}});
+server.registerConst("{{contractClass}}", "{{class}}", "{{constName}}", {{constValue}});

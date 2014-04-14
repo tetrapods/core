@@ -1,1 +1,0 @@
-var TP_websocket_host = "localhost"

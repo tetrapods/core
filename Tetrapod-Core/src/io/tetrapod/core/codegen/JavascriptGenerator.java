@@ -34,11 +34,16 @@ public class JavascriptGenerator implements LanguageGenerator {
       }
       for (String outFile : outFiles) {
          Template t = template("protocol.js");
+         File file = new File(outFile);
+         String outName = file.getName();
+         int ix = outName.indexOf('.');
+         outName = outName.substring(0, 1).toUpperCase() + outName.substring(1, ix);
+         t.add("name", outName);
          for (CodeGenContext context : contexts) {
             String out = context.serviceAnnotations.getFirst("javascript.out");
             if (out == null || !out.equals(outFile))
                continue;
-            
+
             String contractName = context.serviceName;
             String contractId = context.serviceAnnotations.getFirst("id");
             for (Class c : context.classes) {
@@ -71,12 +76,11 @@ public class JavascriptGenerator implements LanguageGenerator {
                }
             }
          }
-         File f = new File(outFile);
-         f.getParentFile().mkdirs();
-         t.expandAndTrim(f);
+         file.getParentFile().mkdirs();
+         t.expandAndTrim(file);
       }
    }
-   
+
    private Template template(String name) throws IOException {
       return Template.get(getClass(), "jstemplates/" + name + ".template");
    }

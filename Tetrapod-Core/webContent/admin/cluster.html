@@ -270,13 +270,14 @@
 	<!--  =============================================================================== -->
 	<!--  Tetrapod Scripts -->
 
-	<script src="../protocol/tetrapod-host.js"></script>
-	<script src="../protocol/tetrapod-main.js"></script>
+	<script src="../protocol/server.js"></script>
+	<script src="../protocol/hostname.js"></script>
 	<script src="../protocol/tetrapod.js"></script>
 
 
 
 	<script>
+      var TP = new TP_Server(TP_Tetrapod);
 		var Core = TP.consts["Tetrapod.Core"];
 		TP.commsLog = true;
 
@@ -284,7 +285,7 @@
 		ko.applyBindings(model, $("#cluster-table")[0]);
 
 		function connect() {
-			TP.connect(TP_websocket_host, 9903).listen(model.onOpen,
+			TP.connect(new TP_Hostname().hostname, 9903).listen(model.onOpen,
 					function() {
 						$('#disconnected-alertbox').show();
 						setTimeout(function updateRandom() {
