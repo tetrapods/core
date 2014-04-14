@@ -2,12 +2,13 @@ package io.tetrapod.core;
 
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
-import io.tetrapod.core.utils.*;
 
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.*;
+
+import com.codahale.metrics.*;
 
 /**
  * Manages service-wide thread-pools and dispatch of requests and sequenced behaviors
@@ -19,9 +20,11 @@ public class Dispatcher {
    private final ExecutorService          sequential;
    private final ScheduledExecutorService scheduled;
 
-   public final Gauge                     requestTimes           = new Gauge(128);
-   public final Accumulator               requestsHandledCounter = new Accumulator();
-   public final Accumulator               messagesSentCounter    = new Accumulator();
+   public final MetricRegistry            metrics                = new MetricRegistry();
+   public final Counter                   workQueueSize          = metrics.counter(MetricRegistry.name(Dispatcher.class, "queue-size"));
+   public final Timer                     requestTimes           = metrics.timer(MetricRegistry.name(Dispatcher.class, "response-time"));
+   public final Meter                     requestsHandledCounter = metrics.meter(MetricRegistry.name(Dispatcher.class, "requests"));
+   public final Meter                     messagesSentCounter    = metrics.meter(MetricRegistry.name(Dispatcher.class, "messages"));
 
    private final BlockingQueue<Runnable>  overflow               = new LinkedBlockingQueue<>();
 

@@ -18,6 +18,8 @@ import java.util.concurrent.atomic.*;
 
 import org.slf4j.*;
 
+import com.codahale.metrics.Timer.Context;
+
 /**
  * Manages a session between two tetrapods
  */
@@ -159,6 +161,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
       final ServiceAPI svc = helper.getServiceHandler(header.contractId);
       if (svc != null) {
          final long start = System.nanoTime();
+         final Context context = getDispatcher().requestTimes.time();
          getDispatcher().dispatch(new Runnable() {
             public void run() {
                try {
@@ -167,9 +170,11 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
                   logger.error(e.getMessage(), e);
                   sendResponse(new Error(ERROR_UNKNOWN), header.requestId);
                }
+               context.stop(); //sample(elapsed);
+
                final long elapsed = System.nanoTime() - start;
-               getDispatcher().requestsHandledCounter.increment();
-               getDispatcher().requestTimes.sample(elapsed);
+               getDispatcher().requestsHandledCounter.mark();
+               //getDispatcher().requestTimes.sample(elapsed);
                if (Util.nanosToMillis(elapsed) > 1000) {
                   logger.warn("Request took {} {} millis", req, Util.nanosToMillis(elapsed));
                }
@@ -278,7 +283,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
                ENVELOPE_BROADCAST);
          if (buffer != null) {
             writeFrame(buffer);
-            getDispatcher().messagesSentCounter.increment();
+            getDispatcher().messagesSentCounter.mark();
          }
       }
    }
@@ -290,7 +295,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
                msg, ENVELOPE_MESSAGE);
          if (buffer != null) {
             writeFrame(buffer);
-            getDispatcher().messagesSentCounter.increment();
+            getDispatcher().messagesSentCounter.mark();
          }
       }
    }

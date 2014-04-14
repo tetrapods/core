@@ -293,19 +293,22 @@ public class DefaultService implements Service, BaseServiceContract.API, Session
    }
 
    public long getAverageResponseTime() {
-      return Util.nanosToMillis(dispatcher.requestTimes.getAverage());
+      return (long) dispatcher.requestTimes.getOneMinuteRate();
    }
 
+   /**
+    * Services can override this to provide a service specific counter for display in the admin app
+    */
    public long getCounter() {
       return 0;
    }
 
    public long getNumRequestsHandled() {
-      return dispatcher.requestsHandledCounter.get();
+      return dispatcher.requestsHandledCounter.getCount();
    }
 
    public long getNumMessagesSent() {
-      return dispatcher.messagesSentCounter.get();
+      return dispatcher.messagesSentCounter.getCount();
    }
 
    public Response sendPendingRequest(Request req, PendingResponseHandler handler) {

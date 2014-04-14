@@ -1,7 +1,6 @@
 package io.tetrapod.core;
 
 import io.tetrapod.core.rpc.*;
-import io.tetrapod.core.utils.*;
 import io.tetrapod.protocol.core.*;
 import io.tetrapod.protocol.service.ServiceStatsMessage;
 
@@ -21,9 +20,6 @@ public class ServiceStats {
    private final DefaultService      service;
 
    private Integer                   statsTopicId;
-
-   private RateGauge                 rps              = new RateGauge(5);
-   private RateGauge                 mps              = new RateGauge(5);
 
    private final ServiceStatsMessage message          = new ServiceStatsMessage();
 
@@ -99,17 +95,15 @@ public class ServiceStats {
     * Update our stats counters and broadcast any updates to subscribers
     */
    private synchronized void updateStats() {
-      rps.sample(service.getNumRequestsHandled());
-      mps.sample(service.getNumMessagesSent());
-
       if (statsTopicId != null && statsSubscribers.size() > 0) {
          boolean dirty = false;
-         int RPS = (int) rps.getAveragePerSecond();
+         int RPS = (int) service.getDispatcher().requestsHandledCounter.getOneMinuteRate();
          if (message.rps != RPS) {
             message.rps = RPS;
             dirty = true;
          }
-         int MPS = (int) mps.getAveragePerSecond();
+         int MPS = (int) service.getDispatcher().messagesSentCounter.getOneMinuteRate();
+
          if (message.mps != MPS) {
             message.mps = MPS;
             dirty = true;
