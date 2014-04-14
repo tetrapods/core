@@ -10,7 +10,7 @@ public class AuthTest {
       AuthToken.setSecret("thisisasecrettestsecrettest".getBytes());
       int[] vals = { 1000, 2000, -3000 }; 
       String encoded = AuthToken.encode(vals, 0);
-      assertTrue(AuthToken.decode(vals, 0, encoded, new Value<Boolean>()));
+      assertTrue(AuthToken.decode(vals, 0, encoded));
    }
 
    @Test
@@ -19,7 +19,7 @@ public class AuthTest {
       int[] vals = { 1000, 2000, -3000 }; 
       String encoded = AuthToken.encode(vals, 3);
       vals = new int[] { 0, 0, 0 }; 
-      assertTrue(AuthToken.decode(vals, 3, encoded, new Value<Boolean>()));
+      assertTrue(AuthToken.decode(vals, 3, encoded));
    }
 
    @Test
@@ -33,7 +33,7 @@ public class AuthTest {
       for (int i = 0; i < 100; i++) {
          vals[i] = 0;
       }
-      assertTrue(AuthToken.decode(vals, 100, encoded, new Value<Boolean>()));
+      assertTrue(AuthToken.decode(vals, 100, encoded));
    }
 
    @Test
@@ -42,7 +42,7 @@ public class AuthTest {
       int[] vals = { 1000, 2000, -3000 }; 
       String encoded = AuthToken.encode(vals, 0);
       vals[0]++;
-      assertFalse(AuthToken.decode(vals, 0, encoded, new Value<Boolean>()));
+      assertFalse(AuthToken.decode(vals, 0, encoded));
    }
 
    @Test
@@ -51,7 +51,7 @@ public class AuthTest {
       int[] vals = { 1000, 2000, -3000 }; 
       String encoded = AuthToken.encode(vals, 0);
       encoded += "1";
-      assertFalse(AuthToken.decode(vals, 0, encoded, new Value<Boolean>()));
+      assertFalse(AuthToken.decode(vals, 0, encoded));
    }
 
    @Test
@@ -59,7 +59,7 @@ public class AuthTest {
       int[] vals = { 1000, 2000, -3000 }; 
       String encoded = AuthToken.encode(vals, 0);
       encoded = "";
-      assertFalse(AuthToken.decode(vals, 0, encoded, new Value<Boolean>()));
+      assertFalse(AuthToken.decode(vals, 0, encoded));
    }
    
    @Test
@@ -67,7 +67,7 @@ public class AuthTest {
       int[] vals = { 1000, 2000, -3000 }; 
       String encoded = AuthToken.encode(vals, 0);
       encoded = "a";
-      assertFalse(AuthToken.decode(vals, 0, encoded, new Value<Boolean>()));
+      assertFalse(AuthToken.decode(vals, 0, encoded));
    }
    
    @Test
@@ -75,7 +75,7 @@ public class AuthTest {
       int[] vals = { 1000, 2000, -3000 }; 
       String encoded = AuthToken.encode(vals, 0);
       encoded = "Grr! Arg! LOL";
-      assertFalse(AuthToken.decode(vals, 0, encoded, new Value<Boolean>()));
+      assertFalse(AuthToken.decode(vals, 0, encoded));
    }
 
 }

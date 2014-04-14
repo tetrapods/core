@@ -104,15 +104,12 @@ public class AuthToken {
     * @return true if it decodes successfully, and as a side effect fills in values with any values
     *         which were encoded in token
     */
-   public static boolean decode(int[] values, int numInToken, String token, Value<Boolean> timedOut) {
+   public static boolean decode(int[] values, int numInToken, String token) {
       try {
          ByteBuf tokenBuf = Base64.decode(Unpooled.wrappedBuffer(token.getBytes()), Base64Dialect.URL_SAFE);
          ByteBufDataSource bds = new ByteBufDataSource(tokenBuf);
          for (int i = 0; i < numInToken; i++) {
             values[i] = bds.readVarInt();
-         }
-         if (values.length > 0) {
-            timedOut.set(values[0] < timeNowInMinutes());
          }
          String encoded = encode(values, numInToken);
          return encoded.equals(token);
@@ -127,5 +124,86 @@ public class AuthToken {
       long delta = System.currentTimeMillis() - NOT_THAT_LONG_AGO;
       return (int) (delta / 60000);
    }
+   
+   // encode/decode wrappers for known auth token types
+   
+   public static String encodeUserToken(int accountId, int entityId, int properties, int timeoutInMinutes) {
+      int timeout = AuthToken.timeNowInMinutes() + timeoutInMinutes;
+      int[] vals = { timeout, properties, accountId, entityId };
+      return AuthToken.encode(vals, 2);
+   }
+
+   public static String encodeAuthToken1(int accountId, int val1, int timeoutInMinutes) {
+      int timeout = AuthToken.timeNowInMinutes() + timeoutInMinutes;
+      int[] vals = { timeout, val1, accountId };
+      return AuthToken.encode(vals);
+   }
+
+   public static String encodeAuthToken2(int accountId, int val1, int val2, int timeoutInMinutes) {
+      int timeout = AuthToken.timeNowInMinutes() + timeoutInMinutes;
+      int[] vals = { timeout, val1, val2, accountId };
+      return AuthToken.encode(vals);
+   }
+
+   public static String encodeAuthToken3(int accountId, int val1, int val2, int val3, int timeoutInMinutes) {
+      int timeout = AuthToken.timeNowInMinutes() + timeoutInMinutes;
+      int[] vals = { timeout, val1, val2, val3, accountId };
+      return AuthToken.encode(vals);
+   }
+   
+   public static Decoded decodeUserToken(String token, int accountId, int entityId) {
+      int[] vals = { 0, 0, accountId, entityId };
+      if (!decode(vals, 2, token)) {
+         return null;
+      }
+      Decoded d = new Decoded();
+      d.accountId = accountId;
+      d.miscValues = new int[] { vals[1] };
+      d.timeLeft = vals[0] - timeNowInMinutes();
+      return d;
+   }
+   
+   public static Decoded decodeAuthToken1(String token) {
+      int[] vals = new int[3];
+      if (!decode(vals, 3, token)) {
+         return null;
+      }
+      Decoded d = new Decoded();
+      d.accountId = vals[2];
+      d.miscValues = new int[] { vals[1] };
+      d.timeLeft = vals[0] - timeNowInMinutes();
+      return d;
+   }
+   
+   public static Decoded decodeAuthToken2(String token) {
+      int[] vals = new int[4];
+      if (!decode(vals, 4, token)) {
+         return null;
+      }
+      Decoded d = new Decoded();
+      d.accountId = vals[3];
+      d.miscValues = new int[] { vals[1], vals[2] };
+      d.timeLeft = vals[0] - timeNowInMinutes();
+      return d;
+   }
+
+   public static Decoded decodeAuthToken3(String token) {
+      int[] vals = new int[5];
+      if (!decode(vals, 5, token)) {
+         return null;
+      }
+      Decoded d = new Decoded();
+      d.accountId = vals[4];
+      d.miscValues = new int[] { vals[1], vals[2], vals[3] };
+      d.timeLeft = vals[0] - timeNowInMinutes();
+      return d;
+   }
+
+   public static class Decoded {
+      public int accountId;
+      public int timeLeft;
+      public int[] miscValues;
+   }
+
 
 }
