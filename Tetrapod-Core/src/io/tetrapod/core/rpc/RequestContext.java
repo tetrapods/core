@@ -3,6 +3,7 @@ package io.tetrapod.core.rpc;
 import io.tetrapod.core.Session;
 import io.tetrapod.core.rpc.Structure.Security;
 import io.tetrapod.core.utils.*;
+import io.tetrapod.core.utils.AuthToken.Decoded;
 import io.tetrapod.protocol.core.*;
 import io.tetrapod.protocol.identity.*;
 
@@ -29,10 +30,9 @@ public class RequestContext {
    public Security getSenderSecurity(int accountId, String authToken, Value<Integer> errorCode) {
       if (header.fromType == Core.TYPE_TETRAPOD || header.fromType == Core.TYPE_SERVICE)
          return Security.INTERNAL;
-      int[] vals = { 0, 0, accountId, header.fromId };
-      Value<Boolean> timedOut = new Value<>(false);
-      if (AuthToken.decode(vals, 2, authToken, timedOut) && !timedOut.get()) {
-         int perms = vals[0];
+      Decoded d = AuthToken.decodeUserToken(authToken, accountId, header.fromId);
+      if (d != null && d.timeLeft >= 0) {
+         int perms = d.miscValues[0];
          int anyAdmin = User.PROPS_ADMIN_T1 | User.PROPS_ADMIN_T2 | User.PROPS_ADMIN_T3 | User.PROPS_ADMIN_T4; 
          if ((perms & anyAdmin) != 0) {
             // to get more detailed admin callers will have to decode auth token themselves
@@ -40,7 +40,7 @@ public class RequestContext {
          }
          return Security.PROTECTED;
       } else {
-         if (timedOut.get()) {
+         if (d.timeLeft < 0) {
             errorCode.set(ERROR_RIGHTS_EXPIRED);
          } else {
             errorCode.set(ERROR_UNKNOWN);

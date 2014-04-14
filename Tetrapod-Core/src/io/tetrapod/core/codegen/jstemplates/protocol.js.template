@@ -1,10 +1,14 @@
-// tetrapod protocol file, requires tetrapod main file to have been loaded first
+define(function() { return TP_{{name}} });
 
-TP.register("response", "Tetrapod", "ERROR", 1, 1);
-TP.register("response", "Tetrapod", "SUCCESS", 1, 2);
+function TP_{{name}}(server) {
 
-{{constants}}
+   server.register("response", "Tetrapod", "ERROR", 1, 1);
+   server.register("response", "Tetrapod", "SUCCESS", 1, 2);
 
-{{errors}}
+   {{constants}}
+   
+   {{errors}}
+   
+   {{register}}
 
-{{register}}
+}

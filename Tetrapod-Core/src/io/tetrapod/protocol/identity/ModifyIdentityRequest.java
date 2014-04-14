@@ -25,17 +25,19 @@ public class ModifyIdentityRequest extends Request {
       defaults();
    }
 
-   public ModifyIdentityRequest(int accountId, String authToken, Identity oldValue, Identity updatedValue) {
+   public ModifyIdentityRequest(int accountId, String authToken, Identity oldValue, Identity updatedValue, String username) {
       this.accountId = accountId;
       this.authToken = authToken;
       this.oldValue = oldValue;
       this.updatedValue = updatedValue;
+      this.username = username;
    }   
 
    public int accountId;
    public String authToken;
    public Identity oldValue;
    public Identity updatedValue;
+   public String username;
 
    public final Structure.Security getSecurity() {
       return Security.PROTECTED;
@@ -46,6 +48,7 @@ public class ModifyIdentityRequest extends Request {
       authToken = null;
       oldValue = null;
       updatedValue = null;
+      username = null;
    }
    
    @Override
@@ -54,6 +57,7 @@ public class ModifyIdentityRequest extends Request {
       data.write(2, this.authToken);
       if (this.oldValue != null) data.write(3, this.oldValue);
       if (this.updatedValue != null) data.write(4, this.updatedValue);
+      data.write(5, this.username);
       data.writeEndTag();
    }
    
@@ -67,6 +71,7 @@ public class ModifyIdentityRequest extends Request {
             case 2: this.authToken = data.read_string(tag); break;
             case 3: this.oldValue = data.read_struct(tag, new Identity()); break;
             case 4: this.updatedValue = data.read_struct(tag, new Identity()); break;
+            case 5: this.username = data.read_string(tag); break;
             case Codec.END_TAG:
                return;
             default:
@@ -99,11 +104,12 @@ public class ModifyIdentityRequest extends Request {
       // Note do not use this tags in long term serializations (to disk or databases) as 
       // implementors are free to rename them however they wish.  A null means the field
       // is not to participate in web serialization (remaining at default)
-      String[] result = new String[4+1];
+      String[] result = new String[5+1];
       result[1] = "accountId";
       result[2] = "authToken";
       result[3] = "oldValue";
       result[4] = "updatedValue";
+      result[5] = "username";
       return result;
    }
    
@@ -120,6 +126,7 @@ public class ModifyIdentityRequest extends Request {
       desc.types[2] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
       desc.types[3] = new TypeDescriptor(TypeDescriptor.T_STRUCT, Identity.CONTRACT_ID, Identity.STRUCT_ID);
       desc.types[4] = new TypeDescriptor(TypeDescriptor.T_STRUCT, Identity.CONTRACT_ID, Identity.STRUCT_ID);
+      desc.types[5] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
       return desc;
    }
 

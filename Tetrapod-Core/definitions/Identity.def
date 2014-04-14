@@ -16,15 +16,16 @@ protected request Logout
    1: int accountId
    2: string authToken
    
-public request TokenLogin
+public request LoginWithToken
    1: string authToken
    2: int tokenType
    3: int accountId // only required for AUTH_TOKEN_USER logins
 
-public response TokenLogin
+public response LoginWithToken
    1: int accountId
    2: string authToken
    3: boolean isNewUser
+   4: int[] decodedAppValues
 
 // Modifies the verification part of an identity.  Not every identity 
 // can do this.
@@ -33,6 +34,7 @@ protected request ModifyIdentity
    2: string authToken
    3: Identity oldValue
    4: Identity updatedValue
+   5: string username
    error UNMODIFIABLE_IDENTITY
 
 public request Create   
@@ -80,6 +82,7 @@ protected response Info
    1: int accountId
    2: string username 
    3: int properties
+   4: string email
    
 admin request UpdateProperties
    1: int accountId
