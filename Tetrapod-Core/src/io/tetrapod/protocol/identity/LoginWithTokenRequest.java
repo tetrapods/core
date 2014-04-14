@@ -12,16 +12,16 @@ import java.util.*;
 import java.util.concurrent.*;
 
 @SuppressWarnings("unused")
-public class TokenLoginRequest extends Request {
+public class LoginWithTokenRequest extends Request {
 
-   public static final int STRUCT_ID = 11214546;
+   public static final int STRUCT_ID = 1987710;
    public static final int CONTRACT_ID = IdentityContract.CONTRACT_ID;
    
-   public TokenLoginRequest() {
+   public LoginWithTokenRequest() {
       defaults();
    }
 
-   public TokenLoginRequest(String authToken, int tokenType, int accountId) {
+   public LoginWithTokenRequest(String authToken, int tokenType, int accountId) {
       this.authToken = authToken;
       this.tokenType = tokenType;
       this.accountId = accountId;
@@ -72,22 +72,22 @@ public class TokenLoginRequest extends Request {
    }
    
    public final int getContractId() {
-      return TokenLoginRequest.CONTRACT_ID;
+      return LoginWithTokenRequest.CONTRACT_ID;
    }
 
    public final int getStructId() {
-      return TokenLoginRequest.STRUCT_ID;
+      return LoginWithTokenRequest.STRUCT_ID;
    }
    
    @Override
    public final Response dispatch(ServiceAPI is, RequestContext ctx) {
       if (is instanceof Handler)
-         return ((Handler)is).requestTokenLogin(this, ctx);
+         return ((Handler)is).requestLoginWithToken(this, ctx);
       return is.genericRequest(this, ctx);
    }
    
    public static interface Handler extends ServiceAPI {
-      Response requestTokenLogin(TokenLoginRequest r, RequestContext ctx);
+      Response requestLoginWithToken(LoginWithTokenRequest r, RequestContext ctx);
    }
    
    public final String[] tagWebNames() {
@@ -102,7 +102,7 @@ public class TokenLoginRequest extends Request {
    }
    
    public final Structure make() {
-      return new TokenLoginRequest();
+      return new LoginWithTokenRequest();
    }
    
    public final StructDescription makeDescription() {

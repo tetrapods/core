@@ -21,9 +21,9 @@ public class IdentityContract extends Contract {
       InfoRequest.Handler,
       LinkRequest.Handler,
       LoginRequest.Handler,
+      LoginWithTokenRequest.Handler,
       LogoutRequest.Handler,
       ModifyIdentityRequest.Handler,
-      TokenLoginRequest.Handler,
       UpdatePropertiesRequest.Handler
       {}
    
@@ -31,7 +31,7 @@ public class IdentityContract extends Contract {
       return new Structure[] {
          new LoginRequest(),
          new LogoutRequest(),
-         new TokenLoginRequest(),
+         new LoginWithTokenRequest(),
          new ModifyIdentityRequest(),
          new CreateRequest(),
          new LinkRequest(),
@@ -45,7 +45,7 @@ public class IdentityContract extends Contract {
    public Structure[] getResponses() {
       return new Structure[] {
          new LoginResponse(),
-         new TokenLoginResponse(),
+         new LoginWithTokenResponse(),
          new CreateResponse(),
          new LinkResponse(),
          new InfoResponse(),

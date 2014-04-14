@@ -12,24 +12,26 @@ import java.util.*;
 import java.util.concurrent.*;
 
 @SuppressWarnings("unused")
-public class TokenLoginResponse extends Response {
+public class LoginWithTokenResponse extends Response {
    
-   public static final int STRUCT_ID = 15005038;
+   public static final int STRUCT_ID = 6988514;
    public static final int CONTRACT_ID = IdentityContract.CONTRACT_ID;
     
-   public TokenLoginResponse() {
+   public LoginWithTokenResponse() {
       defaults();
    }
 
-   public TokenLoginResponse(int accountId, String authToken, boolean isNewUser) {
+   public LoginWithTokenResponse(int accountId, String authToken, boolean isNewUser, int[] decodedAppValues) {
       this.accountId = accountId;
       this.authToken = authToken;
       this.isNewUser = isNewUser;
+      this.decodedAppValues = decodedAppValues;
    }   
    
    public int accountId;
    public String authToken;
    public boolean isNewUser;
+   public int[] decodedAppValues;
 
    public final Structure.Security getSecurity() {
       return Security.PUBLIC;
@@ -39,6 +41,7 @@ public class TokenLoginResponse extends Response {
       accountId = 0;
       authToken = null;
       isNewUser = false;
+      decodedAppValues = null;
    }
    
    @Override
@@ -46,6 +49,7 @@ public class TokenLoginResponse extends Response {
       data.write(1, this.accountId);
       data.write(2, this.authToken);
       data.write(3, this.isNewUser);
+      if (this.decodedAppValues != null) data.write(4, this.decodedAppValues);
       data.writeEndTag();
    }
    
@@ -58,6 +62,7 @@ public class TokenLoginResponse extends Response {
             case 1: this.accountId = data.read_int(tag); break;
             case 2: this.authToken = data.read_string(tag); break;
             case 3: this.isNewUser = data.read_boolean(tag); break;
+            case 4: this.decodedAppValues = data.read_int_array(tag); break;
             case Codec.END_TAG:
                return;
             default:
@@ -68,26 +73,27 @@ public class TokenLoginResponse extends Response {
    }
   
    public final int getContractId() {
-      return TokenLoginResponse.CONTRACT_ID;
+      return LoginWithTokenResponse.CONTRACT_ID;
    }
 
    public final int getStructId() {
-      return TokenLoginResponse.STRUCT_ID;
+      return LoginWithTokenResponse.STRUCT_ID;
    }
 
    public final String[] tagWebNames() {
       // Note do not use this tags in long term serializations (to disk or databases) as 
       // implementors are free to rename them however they wish.  A null means the field
       // is not to participate in web serialization (remaining at default)
-      String[] result = new String[3+1];
+      String[] result = new String[4+1];
       result[1] = "accountId";
       result[2] = "authToken";
       result[3] = "isNewUser";
+      result[4] = "decodedAppValues";
       return result;
    }
 
    public final Structure make() {
-      return new TokenLoginResponse();
+      return new LoginWithTokenResponse();
    }
 
    public final StructDescription makeDescription() {
@@ -98,6 +104,7 @@ public class TokenLoginResponse extends Response {
       desc.types[1] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
       desc.types[2] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
       desc.types[3] = new TypeDescriptor(TypeDescriptor.T_BOOLEAN, 0, 0);
+      desc.types[4] = new TypeDescriptor(TypeDescriptor.T_INT_LIST, 0, 0);
       return desc;
    }
  }
