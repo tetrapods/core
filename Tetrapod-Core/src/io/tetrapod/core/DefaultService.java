@@ -42,6 +42,15 @@ public class DefaultService implements Service, BaseServiceContract.API, Session
       addPeerContracts(new TetrapodContract());
       addMessageHandler(new EntityMessage(), this);
       addMessageHandler(new ClusterMemberMessage(), this);
+
+      Runtime.getRuntime().addShutdownHook(new Thread("Shutdown Hook") {
+         public void run() {
+            logger.info("Shutdown Hook");
+            if (!isShuttingDown()) {
+               shutdown(false);
+            }
+         }
+      });
    }
 
    public byte getEntityType() {
@@ -161,11 +170,13 @@ public class DefaultService implements Service, BaseServiceContract.API, Session
    }
 
    public void onDisconnectedFromCluster() {
-      dispatcher.dispatch(3, TimeUnit.SECONDS, new Runnable() {
-         public void run() {
-            connectToCluster();
-         }
-      });
+      if (!isShuttingDown()) {
+         dispatcher.dispatch(3, TimeUnit.SECONDS, new Runnable() {
+            public void run() {
+               connectToCluster();
+            }
+         });
+      }
    }
 
    private void connectToCluster() {

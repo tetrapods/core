@@ -134,6 +134,7 @@ public class Dispatcher {
     * Schedule a task to be executed on the thread-pool at a later time
     */
    public ScheduledFuture<?> dispatch(int delay, TimeUnit unit, final Runnable r) {
+      assert (!scheduled.isShutdown());
       return scheduled.schedule(new Runnable() {
          public void run() {
             dispatch(r);
