@@ -18,10 +18,10 @@ public class SessionTest {
 
    @Test
    public void testClientServer() throws Exception {
-      System.setProperty("sql.enabled", "false");
 
       Map<String, String> opts = new HashMap<>();
       TetrapodService pod = new TetrapodService();
+      System.setProperty("sql.enabled", "false");
       pod.startNetwork(null, null, opts);
 
       Util.sleep(1000);
