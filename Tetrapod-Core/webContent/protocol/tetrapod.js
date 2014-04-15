@@ -2,6 +2,9 @@ define(function() { return TP_Tetrapod });
 
 function TP_Tetrapod(server) {
 
+   server.register("response", "Tetrapod", "ERROR", 1, 1);
+   server.register("response", "Tetrapod", "SUCCESS", 1, 2);
+
    server.registerConst("Tetrapod", "Core", "UNADDRESSED", 0);
    server.registerConst("Tetrapod", "Core", "TYPE_TETRAPOD", 1);
    server.registerConst("Tetrapod", "Core", "TYPE_SERVICE", 2);

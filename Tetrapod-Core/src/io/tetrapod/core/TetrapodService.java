@@ -14,8 +14,9 @@ import io.tetrapod.core.utils.*;
 import io.tetrapod.core.web.*;
 import io.tetrapod.protocol.core.*;
 import io.tetrapod.protocol.service.ServiceCommand;
+import io.tetrapod.protocol.storage.*;
 
-import java.io.IOException;
+import java.io.*;
 import java.security.SecureRandom;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -26,7 +27,7 @@ import org.slf4j.*;
  * The tetrapod service is the core cluster service which handles message routing, cluster management, service discovery, and load balancing
  * of client connections
  */
-public class TetrapodService extends DefaultService implements TetrapodContract.API, RelayHandler,
+public class TetrapodService extends DefaultService implements TetrapodContract.API, StorageContract.API, RelayHandler,
       io.tetrapod.core.registry.Registry.RegistryBroadcaster {
 
    public static final Logger                         logger                  = LoggerFactory.getLogger(TetrapodService.class);
@@ -46,8 +47,9 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    private Topic                                      servicesTopic;
 
    private final TetrapodCluster                      cluster;
-
    private final TetrapodWorker                       worker;
+
+   private Storage                                    storage;
 
    private Server                                     serviceServer;
    private Server                                     publicServer;
@@ -62,16 +64,24 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    private String                                     webContentRoot;
 
    public TetrapodService() {
-      // HACK Properties hack for now
+      try (Reader reader = new FileReader("cfg/tetrapod.properties")) {
+         System.getProperties().load(reader);
+      } catch (IOException e) {
+         logger.error(e.getMessage(), e);
+      }
+
+      // Load properties for override
       for (Map.Entry<Object, Object> e : System.getProperties().entrySet()) {
          if (e.getKey().toString().startsWith("tetrapod.")) {
             properties.put(e.getKey().toString(), e.getValue().toString());
          }
       }
+
       registry = new io.tetrapod.core.registry.Registry(this);
       worker = new TetrapodWorker(this);
       cluster = new TetrapodCluster(this, properties);
       setMainContract(new TetrapodContract());
+      addContracts(new StorageContract());
 
       addSubscriptionHandler(new TetrapodContract.Registry(), registry);
    }
@@ -247,6 +257,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       logger.info(" ***** READY TO SERVE ***** ");
 
       try {
+         storage = new Storage();
          publicServer = new Server(getPublicPort(), new TypedSessionFactory(Core.TYPE_ANONYMOUS));
          serviceServer = new Server(getServicePort(), new TypedSessionFactory(Core.TYPE_SERVICE));
          webSocketsServer = new Server(getWebSocketPort(), new WebSessionFactory("/sockets", true));
@@ -674,6 +685,23 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    public Response requestLogRegistryStats(LogRegistryStatsRequest r, RequestContext ctx) {
       registry.logStats();
       Util.random(cluster.getMembers()).getSession().close();
+      return Response.SUCCESS;
+   }
+
+   @Override
+   public Response requestStorageGet(StorageGetRequest r, RequestContext ctx) {
+      return new StorageGetResponse(storage.get(r.key));
+   }
+
+   @Override
+   public Response requestStorageSet(StorageSetRequest r, RequestContext ctx) {
+      storage.put(r.key, r.value);
+      return Response.SUCCESS;
+   }
+
+   @Override
+   public Response requestStorageDelete(StorageDeleteRequest r, RequestContext ctx) {
+      storage.delete(r.key);
       return Response.SUCCESS;
    }
 

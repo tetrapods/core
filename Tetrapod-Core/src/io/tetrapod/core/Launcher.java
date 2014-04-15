@@ -2,7 +2,7 @@ package io.tetrapod.core;
 
 import io.tetrapod.protocol.core.ServerAddress;
 
-import java.io.IOException;
+import java.io.*;
 import java.lang.management.ManagementFactory;
 import java.util.*;
 import java.util.Map.Entry;
@@ -14,6 +14,7 @@ public class Launcher {
    private static Map<String, String> opts = null;
 
    public static void main(String[] args) {
+      System.setProperty("logback.configurationFile", "cfg/logback.xml");
       try {
          if (args.length < 1)
             usage();
@@ -43,23 +44,23 @@ public class Launcher {
       try {
          return Class.forName(serviceClass);
       } catch (ClassNotFoundException e) {}
-      
+
       // io.tetrapod.core.X
       try {
          return Class.forName("io.tetrapod.core." + serviceClass);
       } catch (ClassNotFoundException e) {}
-      
+
       int ix = serviceClass.indexOf("Service");
       if (ix > 0) {
          // pop off Service if it's there
          serviceClass = serviceClass.substring(0, ix);
       }
-      
+
       // io.tetrapod.core.XService
       try {
          return Class.forName("io.tetrapod.core." + serviceClass + "Service");
       } catch (ClassNotFoundException e) {}
-      
+
       // io.tetrapod.lowercase(X).X
       try {
          return Class.forName("io.tetrapod." + serviceClass.toLowerCase() + "." + serviceClass);
@@ -76,7 +77,8 @@ public class Launcher {
    private static void usage() {
       System.err.println("\nusage:\n\t java <vmopts> " + Launcher.class.getCanonicalName()
             + " serviceClass [-host hostname] [-port port] [-token authToken]\n");
-      System.err.println("\nserviceClass can omit its prefix if it's io.tetrapod.{core|serviceClass.upTo(\"Service\").toLower}.serviceClass[Service]\n");
+      System.err
+            .println("\nserviceClass can omit its prefix if it's io.tetrapod.{core|serviceClass.upTo(\"Service\").toLower}.serviceClass[Service]\n");
       System.exit(0);
    }
 
