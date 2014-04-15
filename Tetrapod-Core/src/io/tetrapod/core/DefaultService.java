@@ -8,6 +8,7 @@ import io.tetrapod.core.utils.Util;
 import io.tetrapod.protocol.core.*;
 import io.tetrapod.protocol.service.*;
 
+import java.io.*;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -34,6 +35,12 @@ public class DefaultService implements Service, BaseServiceContract.API, Session
    private final MessageHandlers           messageHandlers = new MessageHandlers();
 
    public DefaultService() {
+      try (Reader reader = new FileReader("cfg/tetrapod.properties")) {
+         System.getProperties().load(reader);
+      } catch (IOException e) {
+         logger.error(e.getMessage(), e);
+      }
+
       status |= Core.STATUS_STARTING;
       dispatcher = new Dispatcher();
       clusterClient = new Client(this);
@@ -116,7 +123,7 @@ public class DefaultService implements Service, BaseServiceContract.API, Session
             logger.error(e.getMessage(), e);
          }
       } else {
-         sendRequest(new UnregisterRequest(getEntityId()), Core.UNADDRESSED).handle(new ResponseHandler() {
+         sendDirectRequest(new UnregisterRequest(getEntityId())).handle(new ResponseHandler() {
             @Override
             public void onResponse(Response res) {
                clusterClient.close();
@@ -150,7 +157,7 @@ public class DefaultService implements Service, BaseServiceContract.API, Session
    }
 
    public void onConnectedToCluster() {
-      sendRequest(new RegisterRequest(222/* FIXME */, token, getContractId(), getShortName(), status), Core.UNADDRESSED).handle(
+      sendDirectRequest(new RegisterRequest(222/* FIXME */, token, getContractId(), getShortName(), status)).handle(
             new ResponseHandler() {
                @Override
                public void onResponse(Response res) {
@@ -253,7 +260,7 @@ public class DefaultService implements Service, BaseServiceContract.API, Session
          this.status = status;
       }
       if (clusterClient.isConnected()) {
-         sendRequest(new ServiceStatusUpdateRequest(status), Core.UNADDRESSED);
+         sendDirectRequest(new ServiceStatusUpdateRequest(status));
       }
    }
 
@@ -336,6 +343,10 @@ public class DefaultService implements Service, BaseServiceContract.API, Session
 
    public Async sendRequest(Request req) {
       return clusterClient.getSession().sendRequest(req, Core.UNADDRESSED, (byte) 30);
+   }
+
+   public Async sendDirectRequest(Request req) {
+      return clusterClient.getSession().sendRequest(req, Core.DIRECT, (byte) 30);
    }
 
    public Async sendRequest(Request req, int toEntityId) {
@@ -424,7 +435,7 @@ public class DefaultService implements Service, BaseServiceContract.API, Session
          for (Structure s : contract.getStructs()) {
             asi.structs.add(s.makeDescription());
          }
-         sendRequest(asi, Core.UNADDRESSED).handle(ResponseHandler.LOGGER);
+         sendDirectRequest(asi).handle(ResponseHandler.LOGGER);
       }
    }
 

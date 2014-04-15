@@ -12,6 +12,7 @@ abstract public class ResponseHandler {
                                                  public void onResponse(Response res) {
                                                     if (res.isError()) {
                                                        RequestHeader h = getRequestHeader();
+                                                       
                                                        logger.error("[{}] failed with error = {}", h.requestId, res.errorCode());
                                                     }
                                                  }

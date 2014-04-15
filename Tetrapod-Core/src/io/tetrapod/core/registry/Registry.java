@@ -194,6 +194,7 @@ public class Registry implements TetrapodContract.Registry.API {
       // Unsubscribe from all subscriptions
       for (Topic topic : new ArrayList<Topic>(e.getSubscriptions())) {
          EntityInfo owner = getEntity(topic.ownerId);
+         assert (owner != null);
          unsubscribe(owner, topic.topicId, e.entityId, true);
       }
    }
@@ -301,6 +302,7 @@ public class Registry implements TetrapodContract.Registry.API {
    }
 
    public void unsubscribe(final EntityInfo publisher, final int topicId, final int entityId, final boolean all) {
+      assert (publisher != null);
       lock.readLock().lock();
       try {
          final Topic topic = publisher.getTopic(topicId);

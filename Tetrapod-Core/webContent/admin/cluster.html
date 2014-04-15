@@ -317,14 +317,14 @@
 					contractId : 0,
 					name : "Web-Admin",
 					token : self.token
-				}).handle(self.onRegistered);
+				}, Core.DIRECT).handle(self.onRegistered);
 			}
 
 			self.onRegistered = function(result) {
 				if (!result.isError()) {
 					self.token = result.token;
 					setCookie("tetrapod-token", self.token);
-					TP.send("ServicesSubscribe", {}).handle(TP.logResponse)
+					TP.send("ServicesSubscribe", {}, Core.DIRECT).handle(TP.logResponse)
 				}
 			}
 
@@ -518,7 +518,7 @@
 			self.deleteService = function() {
 				TP.send("Unregister", {
 					entityId : self.entityId
-				});
+				}, Core.DIRECT);
 			}
 
 			self.canPause = function() {

@@ -58,7 +58,7 @@ public class TetrapodCluster implements SessionFactory {
          public void onSessionStart(final Session ses) {
             ses.sendRequest(
                   new RegisterRequest(222/* FIXME */, service.token, service.getContractId(), service.getShortName(), service.status),
-                  Core.UNADDRESSED).handle(new ResponseHandler() {
+                  Core.DIRECT).handle(new ResponseHandler() {
                @Override
                public void onResponse(Response res) {
                   if (res.isError()) {
@@ -203,7 +203,7 @@ public class TetrapodCluster implements SessionFactory {
          this.session.setTheirEntityId(entityId);
          this.session.sendRequest(
                new ClusterJoinRequest(service.getEntityId(), service.getHostName(), service.getServicePort(), getClusterPort()),
-               Core.UNADDRESSED).log();
+               Core.DIRECT).log();
          this.session.addSessionListener(this);
          EntityInfo e = service.registry.getEntity(entityId);
          if (e != null) {

@@ -24,7 +24,7 @@ public class RemoteTestService extends DefaultService implements RemoteTestContr
 
    @Override
    public void onRegistered() {
-      sendRequest(new PublishRequest(), getParentId()).handle(new ResponseHandler() {
+      sendDirectRequest(new PublishRequest()).handle(new ResponseHandler() {
          @Override
          public void onResponse(Response res) {
             if (res.isError()) {

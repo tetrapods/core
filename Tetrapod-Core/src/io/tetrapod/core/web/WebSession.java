@@ -35,7 +35,7 @@ abstract class WebSession extends Session {
          }
          request.read(new WebJSONDataSource(context.getRequestParams(), request.tagWebNames()));
          commsLog("%s  [%d] <- %s", this, header.requestId, request.dump());
-         if ((header.toId == UNADDRESSED && header.contractId == myContractId) || header.toId == myId) {
+         if (header.toId == DIRECT || header.toId == myId) {
             if (request instanceof Request) {
                dispatchRequest(header, (Request) request);
             } else {

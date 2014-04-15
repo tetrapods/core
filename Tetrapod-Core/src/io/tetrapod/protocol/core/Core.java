@@ -18,6 +18,11 @@ public class Core extends Structure {
     * request is not addressed to a specific entity
     */
    public static final int UNADDRESSED = 0; 
+   
+   /**
+    * request is for direct dispatch
+    */
+   public static final int DIRECT = -1; 
    public static final byte TYPE_TETRAPOD = 1; 
    public static final byte TYPE_SERVICE = 2; 
    public static final byte TYPE_ADMIN = 3; 

@@ -15,8 +15,10 @@ public class SQLMapStore implements MapStore<String, String> {
    public static final Logger    logger = LoggerFactory.getLogger(SQLMapStore.class);
 
    private final BasicDataSource dataSource;
+   private final String          tableName;
 
-   public SQLMapStore() throws IOException {
+   public SQLMapStore(String tableName) throws IOException {
+      this.tableName = tableName;
       dataSource = new BasicDataSource();
       dataSource.setDriverClassName(System.getProperty("sql.driver"));
       dataSource.setUsername(System.getProperty("sql.user"));
@@ -26,7 +28,7 @@ public class SQLMapStore implements MapStore<String, String> {
       dataSource.setLogAbandoned(true);
       dataSource.setTestWhileIdle(true);
       try (Connection con = dataSource.getConnection(); Statement s = con.createStatement()) {
-         s.execute("CREATE TABLE IF NOT EXISTS kvtable (id VARCHAR(512) PRIMARY KEY, val MEDIUMTEXT) ENGINE=InnoDB;");
+         s.execute("CREATE TABLE IF NOT EXISTS " + tableName + " (id VARCHAR(512) PRIMARY KEY, val MEDIUMTEXT) ENGINE=InnoDB;");
       } catch (SQLException e) {
          throw new IOException(e);
       }
@@ -42,7 +44,7 @@ public class SQLMapStore implements MapStore<String, String> {
 
    @Override
    public String load(String key) {
-      final String query = "SELECT val FROM kvtable WHERE id = ?";
+      final String query = "SELECT val FROM " + tableName + " WHERE id = ?";
       try (Connection con = dataSource.getConnection(); PreparedStatement s = con.prepareStatement(query)) {
          s.setString(1, key);
          try (ResultSet rs = s.executeQuery()) {
@@ -69,7 +71,7 @@ public class SQLMapStore implements MapStore<String, String> {
 
    @Override
    public void store(String key, String value) {
-      final String query = "INSERT INTO kvtable (id, val) VALUES (?, ?) ON DUPLICATE KEY UPDATE val = ?";
+      final String query = "INSERT INTO " + tableName + " (id, val) VALUES (?, ?) ON DUPLICATE KEY UPDATE val = ?";
       try (Connection con = dataSource.getConnection(); PreparedStatement s = con.prepareStatement(query)) {
          s.setString(1, key);
          s.setString(2, value);
@@ -84,7 +86,7 @@ public class SQLMapStore implements MapStore<String, String> {
    public void storeAll(Map<String, String> map) {
       if (map.size() > 0) {
          final StringBuilder query = new StringBuilder();
-         query.append("INSERT INTO kvtable (id, val) VALUES");
+         query.append("INSERT INTO " + tableName + " (id, val) VALUES");
          for (int i = 0; i < map.size(); i++) {
             query.append("\n\t(?, ?)");
             if (i < map.size() - 1) {
@@ -107,7 +109,7 @@ public class SQLMapStore implements MapStore<String, String> {
 
    @Override
    public void delete(String key) {
-      final String query = "DELETE FROM kvtable WHERE id = ?";
+      final String query = "DELETE FROM " + tableName + " WHERE id = ?";
       try (Connection con = dataSource.getConnection(); PreparedStatement s = con.prepareStatement(query)) {
          s.setString(1, key);
          s.execute();

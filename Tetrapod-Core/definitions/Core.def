@@ -7,6 +7,7 @@ service Tetrapod @version(1) @id(1)
 
 struct Core
    const int   UNADDRESSED    = 0 // request is not addressed to a specific entity 
+   const int   DIRECT         = -1 // request is for direct dispatch
    
    const byte  TYPE_TETRAPOD  = 1
    const byte  TYPE_SERVICE   = 2

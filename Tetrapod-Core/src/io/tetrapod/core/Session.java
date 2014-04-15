@@ -336,6 +336,9 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
       // making a new header lets us not worry about synchronizing the change the requestId
       RequestHeader newHeader = new RequestHeader(newRequestId, header.fromId, header.toId, header.fromType, header.timeout,
             header.version, header.contractId, header.structId);
+      if (newHeader.toId == UNADDRESSED && theirType != TYPE_TETRAPOD) {
+         newHeader.toId = theirId;
+      }
       writeFrame(makeFrame(newHeader, payload, ENVELOPE_REQUEST));
    }
 

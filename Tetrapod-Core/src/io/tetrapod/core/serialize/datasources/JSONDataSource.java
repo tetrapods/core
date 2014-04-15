@@ -9,10 +9,8 @@ import java.lang.reflect.Array;
 import java.util.*;
 
 /**
- * A datasource that supports reading and writing to json objects.  The fields
- * are keyed by the tag so it's not very readable.  Using the field names would
- * be more readable but would require introducing a constraint that field names 
- * could not change. 
+ * A datasource that supports reading and writing to json objects. The fields are keyed by the tag so it's not very readable. Using the
+ * field names would be more readable but would require introducing a constraint that field names could not change.
  */
 public class JSONDataSource implements DataSource {
 
@@ -20,17 +18,21 @@ public class JSONDataSource implements DataSource {
    protected Iterator<String> keysIterator;
 
    public JSONDataSource() {
-      this.json = new JSONObject();
+      this(new JSONObject());
    }
-   
+
    public JSONDataSource(JSONObject json) {
       this.json = json;
    }
-   
+
+   public JSONDataSource(String str) {
+      this(new JSONObject(str));
+   }
+
    public JSONObject getJSON() {
       return json;
    }
-   
+
    @Override
    public int readTag() throws IOException {
       if (keysIterator == null) {
@@ -56,7 +58,7 @@ public class JSONDataSource implements DataSource {
 
    @Override
    public byte read_byte(int tag) throws IOException {
-      return (byte)json.optInt(key(tag));
+      return (byte) json.optInt(key(tag));
    }
 
    @Override
@@ -127,7 +129,7 @@ public class JSONDataSource implements DataSource {
    public void writeEndTag() throws IOException {
       // no op
    }
-   
+
    @Override
    public <T extends Structure> T read_struct(int tag, T struct) throws IOException {
       JSONObject jo = json.getJSONObject(key(tag));
@@ -227,7 +229,7 @@ public class JSONDataSource implements DataSource {
       JSONArray arr = json.getJSONArray(key(tag));
       byte[] res = new byte[arr.length()];
       for (int i = 0; i < res.length; i++) {
-         res[i] = (byte)arr.getInt(i);
+         res[i] = (byte) arr.getInt(i);
       }
       return res;
    }
@@ -237,7 +239,7 @@ public class JSONDataSource implements DataSource {
       JSONArray arr = json.getJSONArray(key(tag));
       List<Byte> res = new ArrayList<>();
       for (int i = 0; i < arr.length(); i++) {
-         res.add((byte)arr.getInt(i));
+         res.add((byte) arr.getInt(i));
       }
       return res;
 
@@ -390,13 +392,13 @@ public class JSONDataSource implements DataSource {
    @SuppressWarnings("unchecked")
    public <T extends Structure> T[] read_struct_array(int tag, T struct) throws IOException {
       JSONArray arr = json.getJSONArray(key(tag));
-      T[] res = (T[])Array.newInstance(struct.getClass(), arr.length());
+      T[] res = (T[]) Array.newInstance(struct.getClass(), arr.length());
       for (int i = 0; i < res.length; i++) {
          JSONObject jo = arr.getJSONObject(i);
          if (jo.has("__null__")) {
             res[i] = null;
          } else {
-            T inst = i == 0 ? struct : (T)struct.make();
+            T inst = i == 0 ? struct : (T) struct.make();
             inst.read(getTemporarySource(jo, inst));
             res[i] = inst;
          }
@@ -414,7 +416,7 @@ public class JSONDataSource implements DataSource {
          if (jo.has("__null__")) {
             res.add(null);
          } else {
-            T inst = i == 0 ? struct : (T)struct.make();
+            T inst = i == 0 ? struct : (T) struct.make();
             inst.read(getTemporarySource(jo, inst));
             res.add(inst);
          }
@@ -459,11 +461,11 @@ public class JSONDataSource implements DataSource {
          json.put(k, arr);
       }
    }
-   
+
    protected String key(int tag) {
       return Integer.toString(tag);
    }
-   
+
    protected JSONDataSource getTemporarySource(Structure inst) {
       return new JSONDataSource();
    }

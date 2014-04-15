@@ -58,25 +58,20 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
    private final WebRoutes                            webRoutes               = new WebRoutes();
 
+   @Deprecated
+   // FIXME: Decide how we want to manage properties & configuration
    private final Properties                           properties              = new Properties();
 
    private long                                       lastStatsLog;
    private String                                     webContentRoot;
 
    public TetrapodService() {
-      try (Reader reader = new FileReader("cfg/tetrapod.properties")) {
-         System.getProperties().load(reader);
-      } catch (IOException e) {
-         logger.error(e.getMessage(), e);
-      }
-
       // Load properties for override
       for (Map.Entry<Object, Object> e : System.getProperties().entrySet()) {
          if (e.getKey().toString().startsWith("tetrapod.")) {
             properties.put(e.getKey().toString(), e.getValue().toString());
          }
       }
-
       registry = new io.tetrapod.core.registry.Registry(this);
       worker = new TetrapodWorker(this);
       cluster = new TetrapodCluster(this, properties);

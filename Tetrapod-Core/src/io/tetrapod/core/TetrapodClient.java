@@ -86,7 +86,7 @@ public class TetrapodClient implements SessionFactory, Session.Helper {
    }
 
    private void register() {
-      sendRequest(new RegisterRequest(0, token, getContractId(), getClientName(), 0), Core.UNADDRESSED).handle(new ResponseHandler() {
+      sendDirectRequest(new RegisterRequest(0, token, getContractId(), getClientName(), 0)).handle(new ResponseHandler() {
          @Override
          public void onResponse(Response res) {
             if (res.isError()) {
@@ -107,6 +107,10 @@ public class TetrapodClient implements SessionFactory, Session.Helper {
 
    public boolean isConnected() {
       return client.isConnected();
+   }
+
+   public Async sendDirectRequest(Request req) {
+      return client.getSession().sendRequest(req, Core.DIRECT, (byte) 30);
    }
 
    public Async sendRequest(Request req, int toEntityId) {

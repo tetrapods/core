@@ -107,6 +107,9 @@ public class WireSession extends Session {
 
       final Async async = pendingRequests.remove(header.requestId);
       if (async != null) {
+         // Dispatches response to ourselves if we sent the request (fromId == myId) or 
+         // if fromId is UNADRESSED this handles the edge case where we are registering 
+         // ourselves and so did not yet have an entityId 
          if (async.header.fromId == myId || async.header.fromId == Core.UNADDRESSED) {
             final Response res = (Response) StructureFactory.make(async.header.contractId, header.structId);
             if (res != null) {
@@ -144,7 +147,7 @@ public class WireSession extends Session {
          header.fromType = theirType;
       }
 
-      if ((header.toId == UNADDRESSED && header.contractId == myContractId) || header.toId == myId) {
+      if ((header.toId == DIRECT) || header.toId == myId) {
          final Request req = (Request) StructureFactory.make(header.contractId, header.structId);
          if (req != null) {
             req.read(reader);
