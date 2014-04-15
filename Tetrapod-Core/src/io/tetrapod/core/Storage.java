@@ -41,7 +41,9 @@ public class Storage implements MembershipListener {
 
    public void shutdown() {
       hazelcast.shutdown();
-      sqlStorage.shutdown();
+      if (sqlStorage != null) {
+         sqlStorage.shutdown();
+      }
    }
 
    private void loadDefaultProperties() throws IOException {
