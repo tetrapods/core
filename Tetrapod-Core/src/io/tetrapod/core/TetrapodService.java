@@ -283,6 +283,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       serviceServer.stop();
       webSocketsServer.stop();
       httpServer.stop();
+      storage.shutdown();
    }
 
    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

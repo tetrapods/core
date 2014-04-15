@@ -26,7 +26,9 @@ public class SessionTest {
       Util.sleep(1000);
       TestService svc1 = new TestService();
       svc1.startNetwork(new ServerAddress("localhost", TetrapodService.DEFAULT_SERVICE_PORT), null, opts);
-      Util.sleep(1000);
+      while ((svc1.status & Core.STATUS_STARTING) != 0) {
+         Util.sleep(100);
+      }
       assertTrue(svc1.getEntityId() > 0);
 
       TestService svc2 = new TestService();

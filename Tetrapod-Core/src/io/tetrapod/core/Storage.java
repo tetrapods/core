@@ -61,6 +61,15 @@ public class Storage implements MembershipListener {
       loadDefaultProperties();
    }
 
+   public void shutdown() {
+      hazelcast.shutdown();
+      try {
+         dataSource.close();
+      } catch (SQLException e) {
+         logger.error(e.getMessage(), e);
+      }
+   }
+
    private void loadDefaultProperties() throws IOException {
       final Properties props = new Properties();
       try (Reader reader = new FileReader("cfg/default.properties")) {
