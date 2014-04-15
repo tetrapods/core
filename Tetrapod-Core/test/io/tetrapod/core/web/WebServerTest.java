@@ -1,13 +1,14 @@
 package io.tetrapod.core.web;
 
-import java.util.*;
-
 import io.tetrapod.core.*;
 import io.tetrapod.core.utils.Util;
 import io.tetrapod.protocol.core.*;
 
-import org.junit.Test;
+import java.util.*;
 
+import org.junit.*;
+
+@Ignore
 public class WebServerTest {
 
    @Test
