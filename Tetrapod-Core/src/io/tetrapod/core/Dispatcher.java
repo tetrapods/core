@@ -20,15 +20,15 @@ public class Dispatcher {
    private final ExecutorService          sequential;
    private final ScheduledExecutorService scheduled;
 
-   public final MetricRegistry            metrics                = new MetricRegistry();
-   public final Counter                   workQueueSize          = metrics.counter(MetricRegistry.name(Dispatcher.class, "queue-size"));
-   public final Timer                     requestTimes           = metrics.timer(MetricRegistry.name(Dispatcher.class, "response-time"));
-   public final Meter                     requestsHandledCounter = metrics.meter(MetricRegistry.name(Dispatcher.class, "requests"));
-   public final Meter                     messagesSentCounter    = metrics.meter(MetricRegistry.name(Dispatcher.class, "messages"));
-
    private final BlockingQueue<Runnable>  overflow               = new LinkedBlockingQueue<>();
 
    private EventLoopGroup                 workerGroup;
+
+   // metrics
+   public final Counter                   workQueueSize          = Metrics.counter(this, "queue", "size");
+   public final Timer                     requestTimes           = Metrics.timer(Dispatcher.class, "response-time");
+   public final Meter                     requestsHandledCounter = Metrics.meter(Dispatcher.class, "requests");
+   public final Meter                     messagesSentCounter    = Metrics.meter(Dispatcher.class, "messages");
 
    public Dispatcher() {
       this(8);
