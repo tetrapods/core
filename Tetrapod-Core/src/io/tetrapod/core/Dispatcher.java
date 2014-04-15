@@ -26,9 +26,9 @@ public class Dispatcher {
 
    // metrics
    public final Counter                   workQueueSize          = Metrics.counter(this, "queue", "size");
-   public final Timer                     requestTimes           = Metrics.timer(Dispatcher.class, "response-time");
-   public final Meter                     requestsHandledCounter = Metrics.meter(Dispatcher.class, "requests");
-   public final Meter                     messagesSentCounter    = Metrics.meter(Dispatcher.class, "messages");
+   public final Timer                     requestTimes           = Metrics.timer(Dispatcher.class, "requests", "time");
+   public final Meter                     requestsHandledCounter = Metrics.meter(Dispatcher.class, "requests", "count");
+   public final Meter                     messagesSentCounter    = Metrics.meter(Dispatcher.class, "messages-sent", "count");
 
    public Dispatcher() {
       this(8);
@@ -83,6 +83,7 @@ public class Dispatcher {
          });
       } catch (RejectedExecutionException e) {
          overflow.add(r);
+         workQueueSize.inc();
       }
    }
 
@@ -105,6 +106,7 @@ public class Dispatcher {
    private void processOverflow() {
       Runnable r = overflow.poll();
       while (r != null) {
+         workQueueSize.dec();
          try {
             r.run();
          } catch (Throwable e) {
@@ -124,6 +126,7 @@ public class Dispatcher {
          sequential.execute(r);
       } catch (RejectedExecutionException e) {
          overflow.add(r);
+         workQueueSize.inc();
       }
    }
 
