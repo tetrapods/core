@@ -406,6 +406,7 @@ public class Registry implements TetrapodContract.Registry.API {
          if (owner != null) {
             owner.queue(new Runnable() {
                public void run() {
+                  owner.nextTopicId();// increment our topic counter
                   owner.publish(m.topicId);
                }
             }); // TODO: kick()
