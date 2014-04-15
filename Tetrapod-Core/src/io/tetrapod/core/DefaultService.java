@@ -57,6 +57,10 @@ public class DefaultService implements Service, BaseServiceContract.API, Session
       return Core.TYPE_SERVICE;
    }
 
+   public synchronized int getStatus() {
+      return status;
+   }
+
    @Override
    public void messageEntity(EntityMessage m, MessageContext ctx) {
       if (ctx.session.getTheirEntityType() == Core.TYPE_TETRAPOD) {

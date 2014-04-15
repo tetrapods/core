@@ -16,7 +16,7 @@ public class WebServerTest {
       System.setProperty("sql.enabled", "false");
       Map<String, String> opts = new HashMap<>();
       pod.startNetwork(null, null, opts);
-      while ((pod.status & Core.STATUS_STARTING) != 0) {
+      while ((pod.getStatus() & Core.STATUS_STARTING) != 0) {
          Util.sleep(100);
       }
 
