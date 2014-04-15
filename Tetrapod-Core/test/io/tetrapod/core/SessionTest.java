@@ -23,13 +23,13 @@ public class SessionTest {
       TetrapodService pod = new TetrapodService();
       System.setProperty("sql.enabled", "false");
       pod.startNetwork(null, null, opts);
+      while ((pod.status & Core.STATUS_STARTING) != 0) {
+         Util.sleep(100);
+      }
 
       Util.sleep(1000);
       TestService svc1 = new TestService();
       svc1.startNetwork(new ServerAddress("localhost", TetrapodService.DEFAULT_SERVICE_PORT), null, opts);
-      while ((svc1.status & Core.STATUS_STARTING) != 0) {
-         Util.sleep(100);
-      }
       assertTrue(svc1.getEntityId() > 0);
 
       TestService svc2 = new TestService();

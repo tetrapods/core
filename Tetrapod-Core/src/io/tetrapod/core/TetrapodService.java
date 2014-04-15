@@ -278,12 +278,24 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    @Override
    public void onShutdown(boolean restarting) {
       logger.info("Shutting Down Tetrapod");
-      cluster.shutdown();
-      publicServer.stop();
-      serviceServer.stop();
-      webSocketsServer.stop();
-      httpServer.stop();
-      storage.shutdown();
+      if (cluster != null) {
+         cluster.shutdown();
+      }
+      if (publicServer != null) {
+         publicServer.stop();
+      }
+      if (serviceServer != null) {
+         serviceServer.stop();
+      }
+      if (webSocketsServer != null) {
+         webSocketsServer.stop();
+      }
+      if (httpServer != null) {
+         httpServer.stop();
+      }
+      if (storage != null) {
+         storage.shutdown();
+      }
    }
 
    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

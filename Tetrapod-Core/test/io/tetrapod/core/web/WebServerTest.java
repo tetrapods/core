@@ -4,7 +4,7 @@ import java.util.*;
 
 import io.tetrapod.core.*;
 import io.tetrapod.core.utils.Util;
-import io.tetrapod.protocol.core.ServerAddress;
+import io.tetrapod.protocol.core.*;
 
 import org.junit.Test;
 
@@ -16,7 +16,9 @@ public class WebServerTest {
       System.setProperty("sql.enabled", "false");
       Map<String, String> opts = new HashMap<>();
       pod.startNetwork(null, null, opts);
-      Util.sleep(1000);
+      while ((pod.status & Core.STATUS_STARTING) != 0) {
+         Util.sleep(100);
+      }
 
       TestService ident = new TestService();
       ident.startNetwork(new ServerAddress("localhost", TetrapodService.DEFAULT_SERVICE_PORT), null, opts);

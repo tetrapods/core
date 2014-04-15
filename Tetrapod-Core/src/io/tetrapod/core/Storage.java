@@ -1,11 +1,8 @@
 package io.tetrapod.core;
 
 import java.io.*;
-import java.sql.*;
-import java.util.*;
-import java.util.Map.Entry;
+import java.util.Properties;
 
-import org.apache.commons.dbcp.BasicDataSource;
 import org.slf4j.*;
 
 import com.hazelcast.config.*;
