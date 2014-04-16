@@ -10,15 +10,53 @@ import org.slf4j.*;
 
 import com.hazelcast.core.MapStore;
 
-public class SQLMapStore implements MapStore<String, String> {
+public class SQLMapStore<T> implements MapStore<String, T> {
 
    public static final Logger    logger = LoggerFactory.getLogger(SQLMapStore.class);
 
    private final BasicDataSource dataSource;
    private final String          tableName;
+   private final Marshaller<T>   marshaller;
 
-   public SQLMapStore(String tableName) throws IOException {
+   public interface Marshaller<T> {
+      public void add(T t, PreparedStatement s, int index) throws SQLException;
+
+      public T get(ResultSet rs, int index) throws SQLException;
+
+      public String getSQLValueType();
+   }
+
+   public static class StringMarshaller implements Marshaller<String> {
+      public void add(String str, PreparedStatement s, int index) throws SQLException {
+         s.setString(index, str);
+      }
+
+      public String get(ResultSet rs, int index) throws SQLException {
+         return rs.getString(index);
+      }
+
+      public String getSQLValueType() {
+         return "MEDIUMTEXT";
+      }
+   }
+
+   public static class BytesMarshaller implements Marshaller<byte[]> {
+      public void add(byte[] data, PreparedStatement s, int index) throws SQLException {
+         s.setBytes(index, data);
+      }
+
+      public byte[] get(ResultSet rs, int index) throws SQLException {
+         return rs.getBytes(index);
+      }
+
+      public String getSQLValueType() {
+         return "BLOB";
+      }
+   }
+
+   public SQLMapStore(String tableName, Marshaller<T> marshaller) throws IOException {
       this.tableName = tableName;
+      this.marshaller = marshaller;
       dataSource = new BasicDataSource();
       dataSource.setDriverClassName(System.getProperty("sql.driver"));
       dataSource.setUsername(System.getProperty("sql.user"));
@@ -28,7 +66,8 @@ public class SQLMapStore implements MapStore<String, String> {
       dataSource.setLogAbandoned(true);
       dataSource.setTestWhileIdle(true);
       try (Connection con = dataSource.getConnection(); Statement s = con.createStatement()) {
-         s.execute("CREATE TABLE IF NOT EXISTS " + tableName + " (id VARCHAR(512) PRIMARY KEY, val MEDIUMTEXT) ENGINE=InnoDB;");
+         s.execute("CREATE TABLE IF NOT EXISTS " + tableName + " (id VARCHAR(255) PRIMARY KEY, val " + marshaller.getSQLValueType()
+               + ") ENGINE=InnoDB;");
       } catch (SQLException e) {
          throw new IOException(e);
       }
@@ -43,13 +82,13 @@ public class SQLMapStore implements MapStore<String, String> {
    }
 
    @Override
-   public String load(String key) {
+   public T load(String key) {
       final String query = "SELECT val FROM " + tableName + " WHERE id = ?";
       try (Connection con = dataSource.getConnection(); PreparedStatement s = con.prepareStatement(query)) {
          s.setString(1, key);
          try (ResultSet rs = s.executeQuery()) {
             if (rs.next()) {
-               return rs.getString(1);
+               return marshaller.get(rs, 1);
             } else {
                return null;
             }
@@ -60,7 +99,7 @@ public class SQLMapStore implements MapStore<String, String> {
    }
 
    @Override
-   public Map<String, String> loadAll(Collection<String> keys) {
+   public Map<String, T> loadAll(Collection<String> keys) {
       return null; // lazy load from sql
    }
 
@@ -70,12 +109,12 @@ public class SQLMapStore implements MapStore<String, String> {
    }
 
    @Override
-   public void store(String key, String value) {
+   public void store(String key, T value) {
       final String query = "INSERT INTO " + tableName + " (id, val) VALUES (?, ?) ON DUPLICATE KEY UPDATE val = ?";
       try (Connection con = dataSource.getConnection(); PreparedStatement s = con.prepareStatement(query)) {
          s.setString(1, key);
-         s.setString(2, value);
-         s.setString(3, value);
+         marshaller.add(value, s, 2);
+         marshaller.add(value, s, 3);
          s.execute();
       } catch (SQLException e) {
          throw new RuntimeException(e);
@@ -83,7 +122,7 @@ public class SQLMapStore implements MapStore<String, String> {
    }
 
    @Override
-   public void storeAll(Map<String, String> map) {
+   public void storeAll(Map<String, T> map) {
       if (map.size() > 0) {
          final StringBuilder query = new StringBuilder();
          query.append("INSERT INTO " + tableName + " (id, val) VALUES");
@@ -96,9 +135,9 @@ public class SQLMapStore implements MapStore<String, String> {
          query.append("\n\tON DUPLICATE KEY UPDATE val=VALUES(val)");
          try (Connection con = dataSource.getConnection(); PreparedStatement s = con.prepareStatement(query.toString())) {
             int n = 1;
-            for (Entry<String, String> entry : map.entrySet()) {
+            for (Entry<String, T> entry : map.entrySet()) {
                s.setString(n++, entry.getKey());
-               s.setString(n++, entry.getValue());
+               marshaller.add(entry.getValue(), s, n++);
             }
             s.execute();
          } catch (SQLException e) {

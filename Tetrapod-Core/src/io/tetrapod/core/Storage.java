@@ -24,12 +24,12 @@ public class Storage implements MembershipListener {
    private final HazelcastInstance    hazelcast;
    private final IMap<String, String> map;
 
-   private SQLMapStore                sqlStorage;
+   private SQLMapStore<String>        sqlStorage;
 
    public Storage() throws IOException {
       config = new XmlConfigBuilder(System.getProperty("hazelcast.configurationFile", "cfg/hazelcast.xml")).build();
       if (System.getProperty("sql.enabled", "false").equals("true")) {
-         sqlStorage = new SQLMapStore(MAP_NAME);
+         sqlStorage = new SQLMapStore<>(MAP_NAME, new SQLMapStore.StringMarshaller());
          config.getMapConfig(MAP_NAME).setMapStoreConfig(new MapStoreConfig().setImplementation(sqlStorage).setWriteDelaySeconds(2));
       }
       hazelcast = Hazelcast.newHazelcastInstance(config);

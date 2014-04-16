@@ -2,12 +2,12 @@ package io.tetrapod.core.rpc;
 
 import io.tetrapod.core.json.JSONObject;
 import io.tetrapod.core.serialize.DataSource;
-import io.tetrapod.core.serialize.datasources.JSONDataSource;
+import io.tetrapod.core.serialize.datasources.*;
 import io.tetrapod.protocol.core.StructDescription;
 
 import java.io.IOException;
 import java.lang.reflect.*;
-import java.util.List;
+import java.util.*;
 
 import org.slf4j.*;
 
@@ -91,6 +91,17 @@ abstract public class Structure {
          JSONDataSource ds = new JSONDataSource();
          write(ds);
          return ds.getJSON();
+      } catch (IOException e) {
+         logger.error(e.getMessage(), e);
+         return null;
+      }
+   }
+
+   public byte[] toBytes() {
+      try {
+         TempBufferDataSource temp = TempBufferDataSource.forWriting();
+         write(temp);
+         return temp.rawBuffer();
       } catch (IOException e) {
          logger.error(e.getMessage(), e);
          return null;

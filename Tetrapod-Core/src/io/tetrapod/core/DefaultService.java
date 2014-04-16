@@ -36,14 +36,7 @@ public class DefaultService implements Service, BaseServiceContract.API, Session
 
    public DefaultService() {
       // load default properties
-      final File file = new File("cfg/tetrapod.properties");
-      if (file.exists()) {
-         try (Reader reader = new FileReader(file)) {
-            System.getProperties().load(reader);
-         } catch (IOException e) {
-            logger.error(e.getMessage(), e);
-         }
-      }
+      loadProperties("cfg/tetrapod.properties");
 
       status |= Core.STATUS_STARTING;
       dispatcher = new Dispatcher();
@@ -62,6 +55,18 @@ public class DefaultService implements Service, BaseServiceContract.API, Session
             }
          }
       });
+   }
+
+   public static void loadProperties(String fileName) {
+      // load default properties
+      final File file = new File(fileName);
+      if (file.exists()) {
+         try (Reader reader = new FileReader(file)) {
+            System.getProperties().load(reader);
+         } catch (IOException e) {
+            logger.error(e.getMessage(), e);
+         }
+      }
    }
 
    public byte getEntityType() {
