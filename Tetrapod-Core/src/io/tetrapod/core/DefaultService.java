@@ -35,10 +35,14 @@ public class DefaultService implements Service, BaseServiceContract.API, Session
    private final MessageHandlers           messageHandlers = new MessageHandlers();
 
    public DefaultService() {
-      try (Reader reader = new FileReader("cfg/tetrapod.properties")) {
-         System.getProperties().load(reader);
-      } catch (IOException e) {
-         logger.error(e.getMessage(), e);
+      // load default properties
+      final File file = new File("cfg/tetrapod.properties");
+      if (file.exists()) {
+         try (Reader reader = new FileReader(file)) {
+            System.getProperties().load(reader);
+         } catch (IOException e) {
+            logger.error(e.getMessage(), e);
+         }
       }
 
       status |= Core.STATUS_STARTING;
@@ -157,27 +161,26 @@ public class DefaultService implements Service, BaseServiceContract.API, Session
    }
 
    public void onConnectedToCluster() {
-      sendDirectRequest(new RegisterRequest(222/* FIXME */, token, getContractId(), getShortName(), status)).handle(
-            new ResponseHandler() {
-               @Override
-               public void onResponse(Response res) {
-                  if (res.isError()) {
-                     fail("Unable to register {}", res.errorCode());
-                  } else {
-                     RegisterResponse r = (RegisterResponse) res;
-                     entityId = r.entityId;
-                     parentId = r.parentId;
-                     token = r.token;
+      sendDirectRequest(new RegisterRequest(222/* FIXME */, token, getContractId(), getShortName(), status)).handle(new ResponseHandler() {
+         @Override
+         public void onResponse(Response res) {
+            if (res.isError()) {
+               fail("Unable to register {}", res.errorCode());
+            } else {
+               RegisterResponse r = (RegisterResponse) res;
+               entityId = r.entityId;
+               parentId = r.parentId;
+               token = r.token;
 
-                     logger.info(String.format("%s My entityId is 0x%08X", clusterClient.getSession(), r.entityId));
-                     clusterClient.getSession().setMyEntityId(r.entityId);
-                     clusterClient.getSession().setTheirEntityId(r.parentId);
-                     clusterClient.getSession().setMyEntityType(getEntityType());
-                     clusterClient.getSession().setTheirEntityType(Core.TYPE_TETRAPOD);
-                     onServiceRegistered();
-                  }
-               }
-            });
+               logger.info(String.format("%s My entityId is 0x%08X", clusterClient.getSession(), r.entityId));
+               clusterClient.getSession().setMyEntityId(r.entityId);
+               clusterClient.getSession().setTheirEntityId(r.parentId);
+               clusterClient.getSession().setMyEntityType(getEntityType());
+               clusterClient.getSession().setTheirEntityType(Core.TYPE_TETRAPOD);
+               onServiceRegistered();
+            }
+         }
+      });
    }
 
    public void onDisconnectedFromCluster() {
