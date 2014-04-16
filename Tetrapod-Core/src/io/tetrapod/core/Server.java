@@ -19,19 +19,21 @@ import org.slf4j.*;
  */
 public class Server implements Session.Listener {
 
-   public static final Logger    logger      = LoggerFactory.getLogger(Server.class);
+   public static final Logger    logger    = LoggerFactory.getLogger(Server.class);
 
-   private Map<Integer, Session> sessions    = new ConcurrentHashMap<>();
+   private Map<Integer, Session> sessions  = new ConcurrentHashMap<>();
 
-   private EventLoopGroup        bossGroup   = new NioEventLoopGroup();
-   private EventLoopGroup        workerGroup = new NioEventLoopGroup();
+   private EventLoopGroup        bossGroup = new NioEventLoopGroup();
+   //private EventLoopGroup        workerGroup = new NioEventLoopGroup();
 
    private int                   port;
+   private final Dispatcher      dispatcher;
    private final SessionFactory  sessionFactory;
    private SslHandler            ssl;
 
-   public Server(int port, SessionFactory sessionFactory) {
+   public Server(int port, SessionFactory sessionFactory, Dispatcher dispatcher) {
       this.sessionFactory = sessionFactory;
+      this.dispatcher = dispatcher;
       this.port = port;
    }
 
@@ -44,12 +46,13 @@ public class Server implements Session.Listener {
 
    public ChannelFuture start() {
       ServerBootstrap b = new ServerBootstrap();
-      b.group(bossGroup, workerGroup).channel(NioServerSocketChannel.class).childHandler(new ChannelInitializer<SocketChannel>() {
-         @Override
-         public void initChannel(SocketChannel ch) throws Exception {
-            startSession(ch);
-         }
-      }).option(ChannelOption.SO_BACKLOG, 128).childOption(ChannelOption.SO_KEEPALIVE, true);
+      b.group(bossGroup, dispatcher.getWorkerGroup()).channel(NioServerSocketChannel.class)
+            .childHandler(new ChannelInitializer<SocketChannel>() {
+               @Override
+               public void initChannel(SocketChannel ch) throws Exception {
+                  startSession(ch);
+               }
+            }).option(ChannelOption.SO_BACKLOG, 128).childOption(ChannelOption.SO_KEEPALIVE, true);
 
       logger.info("Starting Server Listening on Port {}", port);
       return b.bind(port);
@@ -59,7 +62,7 @@ public class Server implements Session.Listener {
       logger.debug("Stopping server on port {}...", port);
       try {
          bossGroup.shutdownGracefully().sync();
-         workerGroup.shutdownGracefully().sync();
+         // workerGroup.shutdownGracefully().sync();
       } catch (Exception e) {
          logger.error(e.getMessage(), e);
       }

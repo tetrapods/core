@@ -253,10 +253,10 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
       try {
          storage = new Storage();
-         publicServer = new Server(getPublicPort(), new TypedSessionFactory(Core.TYPE_ANONYMOUS));
-         serviceServer = new Server(getServicePort(), new TypedSessionFactory(Core.TYPE_SERVICE));
-         webSocketsServer = new Server(getWebSocketPort(), new WebSessionFactory("/sockets", true));
-         httpServer = new Server(getHTTPPort(), new WebSessionFactory(webContentRoot, false));
+         publicServer = new Server(getPublicPort(), new TypedSessionFactory(Core.TYPE_ANONYMOUS), dispatcher);
+         serviceServer = new Server(getServicePort(), new TypedSessionFactory(Core.TYPE_SERVICE), dispatcher);
+         webSocketsServer = new Server(getWebSocketPort(), new WebSessionFactory("/sockets", true), dispatcher);
+         httpServer = new Server(getHTTPPort(), new WebSessionFactory(webContentRoot, false), dispatcher);
 
          serviceServer.start().sync();
          publicServer.start().sync();

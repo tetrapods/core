@@ -37,7 +37,7 @@ public class TetrapodCluster implements SessionFactory {
 
    public TetrapodCluster(TetrapodService service, Properties properties) {
       this.service = service;
-      server = new Server(service.getClusterPort(), this);
+      server = new Server(service.getClusterPort(), this, service.getDispatcher());
    }
 
    public ServerAddress getServerAddress() {
