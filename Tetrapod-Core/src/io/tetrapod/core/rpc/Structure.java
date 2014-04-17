@@ -49,6 +49,10 @@ abstract public class Structure {
    }
 
    public String dump() {
+      return dump(true, true);
+   }
+   
+   public String dump(boolean expandSubTypes, boolean includeClassname) {
       StringBuilder sb = new StringBuilder();
       Field f[] = getClass().getDeclaredFields();
 
@@ -56,15 +60,15 @@ abstract public class Structure {
          try {
             int mod = f[i].getModifiers();
             if (Modifier.isPublic(mod) && !Modifier.isStatic(mod)) {
-               Object val = dumpValue(f[i].get(this));
+               Object val = dumpValue(f[i].get(this), expandSubTypes);
                sb.append(f[i].getName() + ":" + val + ", ");
             }
          } catch (Exception e) {
             e.printStackTrace();
          }
       }
-      String s = sb.length() > 0 ? (" { " + sb.substring(0, sb.length() - 2) + " } ") : "";
-      return this.getClass().getSimpleName() + s;
+      String s = sb.length() > 0 ? ("{ " + sb.substring(0, sb.length() - 2) + " } ") : "{}";
+      return (includeClassname ? this.getClass().getSimpleName() + " " : "") + s;
    }
 
    public Security getSecurity() {
@@ -76,12 +80,15 @@ abstract public class Structure {
    }
 
    @SuppressWarnings("rawtypes")
-   protected Object dumpValue(Object val) {
+   protected Object dumpValue(Object val, boolean expandSubTypes) {
       if (val != null && val instanceof List) {
          val = "[len=" + ((List) val).size() + "]";
       }
       if (val != null && val.getClass().isArray()) {
          val = "[len=" + Array.getLength(val) + "]";
+      }
+      if (expandSubTypes && val != null && val instanceof Structure) {
+         val = ((Structure)val).dump(false, false);
       }
       return val;
    }

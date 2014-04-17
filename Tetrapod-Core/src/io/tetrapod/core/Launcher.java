@@ -9,6 +9,8 @@ import java.util.Map.Entry;
 
 /**
  * Simple service launcher. Some day it might be nice to replace with a ClusterService that was able to launch things.
+ * <p>
+ * Don't refer to logging in this class otherwise it gets initialized (upon class load) prior to being setup.
  */
 public class Launcher {
    private static Map<String, String> opts = null;
