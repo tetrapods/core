@@ -16,7 +16,7 @@ import io.tetrapod.protocol.core.*;
 import io.tetrapod.protocol.service.ServiceCommand;
 import io.tetrapod.protocol.storage.*;
 
-import java.io.*;
+import java.io.IOException;
 import java.security.SecureRandom;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -713,4 +713,38 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       return Response.SUCCESS;
    }
 
+   @Override
+   public Response requestAdminAuthorize(AdminAuthorizeRequest r, RequestContext ctx) {
+      String val = storage.get(r.token);
+      if (val != null) {
+         // TODO:
+         //         JSONObject jo = new JSONObject(val);
+         //         long expires = jo.getLong("expires");
+         //         String email = jo.getLong("email");
+         // mark them as an admin
+         ctx.session.theirType = Core.TYPE_ADMIN;
+         return Response.SUCCESS;
+      }
+      return new Error(ERROR_INVALID_RIGHTS);
+   }
+
+   @Override
+   public Response requestAdminLogin(AdminLoginRequest r, RequestContext ctx) {
+      if (r.email == null) {
+         return new Error(ERROR_INVALID_RIGHTS);
+      }
+      if (r.email.trim().length() < 3) {
+         return new Error(ERROR_INVALID_RIGHTS);
+      }
+      // FIXME: Check password
+
+      // mark them as an admin
+      ctx.session.theirType = Core.TYPE_ADMIN;
+
+      final String authtoken = Long.toHexString(random.nextLong()) + Long.toHexString(random.nextLong());
+
+      storage.put(authtoken, r.email, 5, TimeUnit.MINUTES);
+
+      return new AdminLoginResponse(authtoken);
+   }
 }

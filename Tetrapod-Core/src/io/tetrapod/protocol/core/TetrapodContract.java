@@ -2,17 +2,13 @@ package  io.tetrapod.protocol.core;
 
 // This is a code generated file.  All edits will be lost the next time code gen is run.
 
-import io.*;
-import java.util.*;
-import io.tetrapod.core.*;
+import io.tetrapod.core.Contract;
 import io.tetrapod.core.rpc.Structure;
-import io.tetrapod.protocol.core.WebRoute;
 
 /**
  * The core tetrapod service
  */
-
-@SuppressWarnings("unused")
+ 
 public class TetrapodContract extends Contract {
    public static final int VERSION = 1;
    public static final String NAME = "Tetrapod";
@@ -20,6 +16,8 @@ public class TetrapodContract extends Contract {
    
    public static interface API extends
       AddServiceInformationRequest.Handler,
+      AdminAuthorizeRequest.Handler,
+      AdminLoginRequest.Handler,
       ClusterJoinRequest.Handler,
       LogRegistryStatsRequest.Handler,
       PublishRequest.Handler,
@@ -45,6 +43,8 @@ public class TetrapodContract extends Contract {
          new ServiceStatusUpdateRequest(),
          new AddServiceInformationRequest(),
          new LogRegistryStatsRequest(),
+         new AdminLoginRequest(),
+         new AdminAuthorizeRequest(),
       };
    }
    
@@ -53,6 +53,7 @@ public class TetrapodContract extends Contract {
          new RegisterResponse(),
          new ClusterJoinResponse(),
          new PublishResponse(),
+         new AdminLoginResponse(),
       };
    }
    

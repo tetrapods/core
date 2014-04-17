@@ -12,7 +12,7 @@ import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
 /**
- * Helper class used to authenticate messages. Works by takes a message (and array of ints) and
+ * Helper class used to authenticate messages. Works by taking a message (an array of ints) and
  * computing an HMAC using a shared secret. The token is then a subset(input vals) + HMAC. Upon
  * decoding the subset of input vals are recovered, combined with any values known through other
  * means, and the HMAC is recomputed and checked for validity.
@@ -47,7 +47,7 @@ public class AuthToken {
    }
 
    /**
-    * Encodes a auth token with all passed in values also present int he auth token.
+    * Encodes a auth token with all passed in values also present in the auth token.
     * 
     * @param values the values which form the basis of the token
     * @return the base64 encoded token

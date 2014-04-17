@@ -7,7 +7,7 @@ service Tetrapod @version(1) @id(1)
 
 struct Core
    const int   UNADDRESSED    = 0 // request is not addressed to a specific entity 
-   const int   DIRECT         = -1 // request is for direct dispatch
+   const int   DIRECT         = 1 // request is for direct dispatch
    
    const byte  TYPE_TETRAPOD  = 1
    const byte  TYPE_SERVICE   = 2
@@ -163,9 +163,19 @@ internal request ServiceStatusUpdate
 internal request AddServiceInformation
    1: WebRoute[] routes
    2: StructDescription<list> structs // structs that could possibly be used in end user comms
-
-
+   
 internal request LogRegistryStats 
+
+public request AdminLogin
+   1: string email
+   2: string password 
+
+public response AdminLogin
+   2: string token 
+   
+public request AdminAuthorize
+   1: string token 
+   
 
 ################################# MESSAGES #################################
 

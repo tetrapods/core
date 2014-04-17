@@ -93,6 +93,9 @@ function TP_Tetrapod(server) {
    server.register("request", "Tetrapod", "ServiceStatusUpdate", 1, 4487218);
    server.register("request", "Tetrapod", "AddServiceInformation", 1, 14381454);
    server.register("request", "Tetrapod", "LogRegistryStats", 1, 10504592);
+   server.register("request", "Tetrapod", "AdminLogin", 1, 14191480);
+   server.register("response", "Tetrapod", "AdminLogin", 1, 4213436);
+   server.register("request", "Tetrapod", "AdminAuthorize", 1, 12706146);
    server.register("message", "Tetrapod", "Entity", 1, 10913291);
    server.register("message", "Tetrapod", "ClusterMember", 1, 1076508);
    server.register("message", "Tetrapod", "EntityRegistered", 1, 1454035);

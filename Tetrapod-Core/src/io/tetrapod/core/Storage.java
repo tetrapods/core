@@ -2,6 +2,7 @@ package io.tetrapod.core;
 
 import java.io.*;
 import java.util.Properties;
+import java.util.concurrent.TimeUnit;
 
 import org.slf4j.*;
 
@@ -86,6 +87,10 @@ public class Storage implements MembershipListener {
 
    public void put(String key, String value) {
       map.put(key, value);
+   }
+
+   public void put(String key, String value, int ttl, TimeUnit unit) {
+      map.put(key, value, ttl, unit);
    }
 
    public String delete(String key) {
