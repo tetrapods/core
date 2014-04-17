@@ -200,8 +200,8 @@ class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRequest> 
 
       // Add cache headers
       time.add(Calendar.SECOND, HTTP_CACHE_SECONDS);
-      response.headers().set(EXPIRES, dateFormatter.format(time.getTime()));
-      response.headers().set(CACHE_CONTROL, "private, max-age=" + HTTP_CACHE_SECONDS);
+//      response.headers().set(EXPIRES, dateFormatter.format(time.getTime()));
+//      response.headers().set(CACHE_CONTROL, "private, max-age=" + HTTP_CACHE_SECONDS);
       response.headers().set(LAST_MODIFIED, dateFormatter.format(new Date(fileToCache.lastModified())));
    }
 
