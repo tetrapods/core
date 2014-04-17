@@ -169,7 +169,7 @@ public class StructureAdapter extends Structure {
             sw.append(", ");
          sw.append(tagWebNames()[i]);
          sw.append(':');
-         sw.append(""+dumpValue(fields[i]));
+         sw.append(""+dumpValue(fields[i], false));
       }
       sw.append(" }");
       return sw.toString();
