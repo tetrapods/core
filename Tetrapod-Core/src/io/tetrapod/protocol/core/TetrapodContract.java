@@ -2,13 +2,17 @@ package  io.tetrapod.protocol.core;
 
 // This is a code generated file.  All edits will be lost the next time code gen is run.
 
-import io.tetrapod.core.Contract;
+import io.*;
+import java.util.*;
+import io.tetrapod.core.*;
 import io.tetrapod.core.rpc.Structure;
+import io.tetrapod.protocol.core.WebRoute;
 
 /**
  * The core tetrapod service
  */
- 
+
+@SuppressWarnings("unused")
 public class TetrapodContract extends Contract {
    public static final int VERSION = 1;
    public static final String NAME = "Tetrapod";

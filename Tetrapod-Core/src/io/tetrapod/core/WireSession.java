@@ -124,7 +124,19 @@ public class WireSession extends Session {
                logger.warn("{} Could not find response structure {}", this, header.structId);
             }
          } else if (relayHandler != null) {
-            logged = commsLog("%s  [%d] <- Response.%d", this, header.requestId, header.structId);
+
+            // HACK: Expensive, for better debug logs. 
+            Response res = null;
+            //            if (logger.isDebugEnabled() && header.structId == 1) {
+            //               res = (Response) StructureFactory.make(async.header.contractId, header.structId);
+            //               if (res != null) {
+            //                  int mark = in.readerIndex();
+            //                  res.read(reader);
+            //                  in.readerIndex(mark);
+            //               }
+            //            }
+
+            logged = commsLog("%s  [%d] <- Response.%d %s", this, header.requestId, header.structId, res == null ? "" : res.dump());
             relayResponse(header, async, in);
          }
       } else {

@@ -26,25 +26,43 @@ public class Error extends Response {
    @Override
    public void write(DataSource data) throws IOException {
       data.write(1, code);
+      data.writeEndTag();
    }
 
    @Override
    public void read(DataSource data) throws IOException {
-      code = data.read_int(1);
+      while (true) {
+         int tag = data.readTag();
+         switch (tag) {
+            case 1:
+               this.code = data.read_int(tag);
+               break;
+            case Codec.END_TAG:
+               return;
+            default:
+               data.skip(tag);
+               break;
+         }
+      }
    }
 
    @Override
    public int getStructId() {
       return STRUCT_ID;
    }
-   
+
    public int getContractId() {
       return TetrapodContract.CONTRACT_ID;
    }
-   
+
    @Override
    public String[] tagWebNames() {
       return new String[] { "", "errorCode" };
    }
-   
+
+   @Override
+   public String toString() {
+      return "ERROR-" + code;
+   }
+
 }
