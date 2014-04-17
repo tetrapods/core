@@ -20,7 +20,7 @@
 
 	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
 		<encoder>
-			<pattern>%-5level %d{HH:mm:ss.SSS} %24thread{24} - %16logger{0} -	%msg%n</pattern>
+			<pattern>%-5level %d{HH:mm:ss.SSS} %24thread{24} - %16logger{0} - %msg%n</pattern>
 		</encoder>
 	</appender>
 
@@ -29,9 +29,10 @@
 	</root>
 
 	<logger name="io.netty" level="INFO" />
-   <logger name="com.hazelcast" level="WARN" />
-   <logger name="NodeMulticastListener" level="WARN" />
+	<logger name="com.hazelcast" level="WARN" />
+	<logger name="NodeMulticastListener" level="WARN" />
 	<logger name="io.tetrapod.core.Session" level="DEBUG" />
+	<logger name="io.tetrapod.core.SQLMapStore" level="DEBUG" />
 
 	<logger name="comms" additivity="false" level="OFF">
 		<appender-ref ref="COMMS" />
