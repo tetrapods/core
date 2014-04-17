@@ -253,6 +253,9 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
       try {
          storage = new Storage();
+
+         AuthToken.setSecret(storage.getSharedSecret());
+
          publicServer = new Server(getPublicPort(), new TypedSessionFactory(Core.TYPE_ANONYMOUS), dispatcher);
          serviceServer = new Server(getServicePort(), new TypedSessionFactory(Core.TYPE_SERVICE), dispatcher);
          webSocketsServer = new Server(getWebSocketPort(), new WebSessionFactory("/sockets", true), dispatcher);
@@ -715,15 +718,14 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
    @Override
    public Response requestAdminAuthorize(AdminAuthorizeRequest r, RequestContext ctx) {
-      String val = storage.get(r.token);
-      if (val != null) {
-         // TODO:
-         //         JSONObject jo = new JSONObject(val);
-         //         long expires = jo.getLong("expires");
-         //         String email = jo.getLong("email");
-         // mark them as an admin
+      logger.info("AUTHORIZE WITH {} ...", r.token);
+      AuthToken.Decoded d = AuthToken.decodeAuthToken1(r.token);
+      if (d != null) {
+         logger.info("TOKEN {} time left = {}", r.token, d.timeLeft);
          ctx.session.theirType = Core.TYPE_ADMIN;
          return Response.SUCCESS;
+      } else {
+         logger.info("TOKEN {} NOT VALID", r.token);
       }
       return new Error(ERROR_INVALID_RIGHTS);
    }
@@ -741,9 +743,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       // mark them as an admin
       ctx.session.theirType = Core.TYPE_ADMIN;
 
-      final String authtoken = Long.toHexString(random.nextLong()) + Long.toHexString(random.nextLong());
-
-      storage.put(authtoken, r.email, 14, TimeUnit.DAYS);
+      final String authtoken = AuthToken.encodeAuthToken1(1, 1, 60 * 24 * 14);
 
       return new AdminLoginResponse(authtoken);
    }

@@ -1,13 +1,16 @@
 package io.tetrapod.core;
 
 import java.io.*;
-import java.util.Properties;
+import java.nio.charset.Charset;
+import java.security.SecureRandom;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 import org.slf4j.*;
 
 import com.hazelcast.config.*;
 import com.hazelcast.core.*;
+import com.hazelcast.util.Base64;
 
 /**
  * Storage provides a persistent in-memory KV Store with support for basic key-value storage, sequential counters, and distributed locks.
@@ -17,9 +20,10 @@ import com.hazelcast.core.*;
  * This is currently being implemented on top of hazelcast, and persisted to MySQL
  */
 public class Storage implements MembershipListener {
-   public static final Logger         logger   = LoggerFactory.getLogger(Storage.class);
+   public static final Logger         logger            = LoggerFactory.getLogger(Storage.class);
 
-   private static final String        MAP_NAME = "tetrapod";
+   private static final String        MAP_NAME          = "tetrapod";
+   private static final String        SHARED_SECRET_KEY = "tetrapod.shared.secret";
 
    private final Config               config;
    private final HazelcastInstance    hazelcast;
@@ -38,6 +42,19 @@ public class Storage implements MembershipListener {
       map = hazelcast.getMap(MAP_NAME);
 
       loadDefaultProperties();
+   }
+
+   public byte[] getSharedSecret() {
+      String str = map.get(SHARED_SECRET_KEY);
+      if (str != null) {
+         return Base64.decode(str.getBytes(Charset.forName("UTF-8")));
+      } else {
+         byte[] b = new byte[64];
+         Random r = new SecureRandom();
+         r.nextBytes(b);
+         map.put(SHARED_SECRET_KEY, new String(Base64.encode(b), Charset.forName("UTF-8")));
+         return b;
+      }
    }
 
    public void shutdown() {
