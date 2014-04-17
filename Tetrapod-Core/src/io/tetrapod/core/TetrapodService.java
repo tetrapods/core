@@ -743,7 +743,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
       final String authtoken = Long.toHexString(random.nextLong()) + Long.toHexString(random.nextLong());
 
-      storage.put(authtoken, r.email, 5, TimeUnit.MINUTES);
+      storage.put(authtoken, r.email, 14, TimeUnit.DAYS);
 
       return new AdminLoginResponse(authtoken);
    }

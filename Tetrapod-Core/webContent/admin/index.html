@@ -280,8 +280,9 @@
 					TP.send("AdminAuthorize", {
 						token : authtoken
 					}, Core.DIRECT).handle(onLogin);
-				} else {}
-				onLogout()
+				} else {
+					onLogout()
+				}
 			}
 		}
 
@@ -289,7 +290,12 @@
 			TP.send("AdminLogin", {
 				email : $('#email').val(),
 				password : $('#password').val(),
-			}, Core.DIRECT).handle(onLogin);
+			}, Core.DIRECT).handle(function(result) {
+				if (result.isError()) {
+					bootbox.alert('Login Failed');
+				}
+				onLogin(result);
+			});
 		}
 
 		function onLogin(result) {
@@ -303,7 +309,6 @@
 				TP.send("ServicesSubscribe", {}, Core.DIRECT).handle(
 						TP.logResponse);
 			} else {
-				bootbox.alert('Login Failed' + JSON.stringify(result));
 				onLogout();
 			}
 		}
