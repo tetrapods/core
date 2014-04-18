@@ -21,19 +21,13 @@ public class LoginWithTokenRequest extends Request {
       defaults();
    }
 
-   public LoginWithTokenRequest(String authToken, int tokenType, int accountId) {
+   public LoginWithTokenRequest(String authToken, int tokenType) {
       this.authToken = authToken;
       this.tokenType = tokenType;
-      this.accountId = accountId;
    }   
 
    public String authToken;
    public int tokenType;
-   
-   /**
-    * only required for AUTH_TOKEN_USER logins
-    */
-   public int accountId;
 
    public final Structure.Security getSecurity() {
       return Security.PUBLIC;
@@ -42,14 +36,12 @@ public class LoginWithTokenRequest extends Request {
    public final void defaults() {
       authToken = null;
       tokenType = 0;
-      accountId = 0;
    }
    
    @Override
    public final void write(DataSource data) throws IOException {
       data.write(1, this.authToken);
       data.write(2, this.tokenType);
-      data.write(3, this.accountId);
       data.writeEndTag();
    }
    
@@ -61,7 +53,6 @@ public class LoginWithTokenRequest extends Request {
          switch (tag) {
             case 1: this.authToken = data.read_string(tag); break;
             case 2: this.tokenType = data.read_int(tag); break;
-            case 3: this.accountId = data.read_int(tag); break;
             case Codec.END_TAG:
                return;
             default:
@@ -94,10 +85,9 @@ public class LoginWithTokenRequest extends Request {
       // Note do not use this tags in long term serializations (to disk or databases) as 
       // implementors are free to rename them however they wish.  A null means the field
       // is not to participate in web serialization (remaining at default)
-      String[] result = new String[3+1];
+      String[] result = new String[2+1];
       result[1] = "authToken";
       result[2] = "tokenType";
-      result[3] = "accountId";
       return result;
    }
    
@@ -112,7 +102,6 @@ public class LoginWithTokenRequest extends Request {
       desc.types[0] = new TypeDescriptor(TypeDescriptor.T_STRUCT, getContractId(), getStructId());
       desc.types[1] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
       desc.types[2] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
-      desc.types[3] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
       return desc;
    }
 

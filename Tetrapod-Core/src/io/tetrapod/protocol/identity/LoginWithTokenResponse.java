@@ -21,17 +21,19 @@ public class LoginWithTokenResponse extends Response {
       defaults();
    }
 
-   public LoginWithTokenResponse(int accountId, String authToken, boolean isNewUser, int[] decodedAppValues) {
+   public LoginWithTokenResponse(int accountId, String authToken, boolean isNewUser, int[] decodedAppValues, String loginAuthToken) {
       this.accountId = accountId;
       this.authToken = authToken;
       this.isNewUser = isNewUser;
       this.decodedAppValues = decodedAppValues;
+      this.loginAuthToken = loginAuthToken;
    }   
    
    public int accountId;
    public String authToken;
    public boolean isNewUser;
    public int[] decodedAppValues;
+   public String loginAuthToken;
 
    public final Structure.Security getSecurity() {
       return Security.PUBLIC;
@@ -42,6 +44,7 @@ public class LoginWithTokenResponse extends Response {
       authToken = null;
       isNewUser = false;
       decodedAppValues = null;
+      loginAuthToken = null;
    }
    
    @Override
@@ -50,6 +53,7 @@ public class LoginWithTokenResponse extends Response {
       data.write(2, this.authToken);
       data.write(3, this.isNewUser);
       if (this.decodedAppValues != null) data.write(4, this.decodedAppValues);
+      data.write(5, this.loginAuthToken);
       data.writeEndTag();
    }
    
@@ -63,6 +67,7 @@ public class LoginWithTokenResponse extends Response {
             case 2: this.authToken = data.read_string(tag); break;
             case 3: this.isNewUser = data.read_boolean(tag); break;
             case 4: this.decodedAppValues = data.read_int_array(tag); break;
+            case 5: this.loginAuthToken = data.read_string(tag); break;
             case Codec.END_TAG:
                return;
             default:
@@ -84,11 +89,12 @@ public class LoginWithTokenResponse extends Response {
       // Note do not use this tags in long term serializations (to disk or databases) as 
       // implementors are free to rename them however they wish.  A null means the field
       // is not to participate in web serialization (remaining at default)
-      String[] result = new String[4+1];
+      String[] result = new String[5+1];
       result[1] = "accountId";
       result[2] = "authToken";
       result[3] = "isNewUser";
       result[4] = "decodedAppValues";
+      result[5] = "loginAuthToken";
       return result;
    }
 
@@ -105,6 +111,7 @@ public class LoginWithTokenResponse extends Response {
       desc.types[2] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
       desc.types[3] = new TypeDescriptor(TypeDescriptor.T_BOOLEAN, 0, 0);
       desc.types[4] = new TypeDescriptor(TypeDescriptor.T_INT_LIST, 0, 0);
+      desc.types[5] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
       return desc;
    }
  }
