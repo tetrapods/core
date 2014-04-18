@@ -10,6 +10,9 @@ import org.slf4j.*;
 
 import com.hazelcast.core.MapStore;
 
+/**
+ * Handles persistence of a hazelcast distributed map to a MySQL database
+ */
 public class SQLMapStore<T> implements MapStore<String, T> {
 
    public static final Logger    logger = LoggerFactory.getLogger(SQLMapStore.class);
@@ -18,6 +21,9 @@ public class SQLMapStore<T> implements MapStore<String, T> {
    private final String          tableName;
    private final Marshaller<T>   marshaller;
 
+   /**
+    * Marshaler allows us to save different data types (the map values) to the SQLDB how we wish.
+    */
    public interface Marshaller<T> {
       public void add(T t, PreparedStatement s, int index) throws SQLException;
 
@@ -26,6 +32,9 @@ public class SQLMapStore<T> implements MapStore<String, T> {
       public String getSQLValueType();
    }
 
+   /**
+    * Marshals values as Strings
+    */
    public static class StringMarshaller implements Marshaller<String> {
       public void add(String str, PreparedStatement s, int index) throws SQLException {
          s.setString(index, str);
@@ -40,6 +49,9 @@ public class SQLMapStore<T> implements MapStore<String, T> {
       }
    }
 
+   /**
+    * Marshals values as byte arrays / blobs
+    */
    public static class BytesMarshaller implements Marshaller<byte[]> {
       public void add(byte[] data, PreparedStatement s, int index) throws SQLException {
          s.setBytes(index, data);
