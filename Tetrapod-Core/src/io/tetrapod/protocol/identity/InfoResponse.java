@@ -21,17 +21,19 @@ public class InfoResponse extends Response {
       defaults();
    }
 
-   public InfoResponse(int accountId, String username, int properties, String email) {
+   public InfoResponse(int accountId, String username, int properties, String email, String profileUrl) {
       this.accountId = accountId;
       this.username = username;
       this.properties = properties;
       this.email = email;
+      this.profileUrl = profileUrl;
    }   
    
    public int accountId;
    public String username;
    public int properties;
    public String email;
+   public String profileUrl;
 
    public final Structure.Security getSecurity() {
       return Security.PROTECTED;
@@ -42,6 +44,7 @@ public class InfoResponse extends Response {
       username = null;
       properties = 0;
       email = null;
+      profileUrl = null;
    }
    
    @Override
@@ -50,6 +53,7 @@ public class InfoResponse extends Response {
       data.write(2, this.username);
       data.write(3, this.properties);
       data.write(4, this.email);
+      data.write(5, this.profileUrl);
       data.writeEndTag();
    }
    
@@ -63,6 +67,7 @@ public class InfoResponse extends Response {
             case 2: this.username = data.read_string(tag); break;
             case 3: this.properties = data.read_int(tag); break;
             case 4: this.email = data.read_string(tag); break;
+            case 5: this.profileUrl = data.read_string(tag); break;
             case Codec.END_TAG:
                return;
             default:
@@ -84,11 +89,12 @@ public class InfoResponse extends Response {
       // Note do not use this tags in long term serializations (to disk or databases) as 
       // implementors are free to rename them however they wish.  A null means the field
       // is not to participate in web serialization (remaining at default)
-      String[] result = new String[4+1];
+      String[] result = new String[5+1];
       result[1] = "accountId";
       result[2] = "username";
       result[3] = "properties";
       result[4] = "email";
+      result[5] = "profileUrl";
       return result;
    }
 
@@ -105,6 +111,7 @@ public class InfoResponse extends Response {
       desc.types[2] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
       desc.types[3] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
       desc.types[4] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
+      desc.types[5] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
       return desc;
    }
  }

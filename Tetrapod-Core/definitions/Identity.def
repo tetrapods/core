@@ -11,6 +11,7 @@ public request Login
 public response Login
    1: int accountId      
    2: string authToken  
+   3: string loginAuthToken
 
 protected request Logout 
    1: int accountId
@@ -19,13 +20,13 @@ protected request Logout
 public request LoginWithToken
    1: string authToken
    2: int tokenType
-   3: int accountId // only required for AUTH_TOKEN_USER logins
 
 public response LoginWithToken
    1: int accountId
    2: string authToken
    3: boolean isNewUser
    4: int[] decodedAppValues
+   5: string loginAuthToken
 
 // Modifies the verification part of an identity.  Not every identity 
 // can do this.
@@ -45,6 +46,7 @@ public request Create
 public response Create  
    1: int accountId
    2: string authToken
+   3: string loginAuthToken
 
 // Link always attempts to add the identity to the current accountId   
 protected request Link
@@ -83,6 +85,7 @@ protected response Info
    2: string username 
    3: int properties
    4: string email
+   5: string profileUrl
    
 admin request UpdateProperties
    1: int accountId

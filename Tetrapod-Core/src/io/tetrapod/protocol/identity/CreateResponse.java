@@ -21,13 +21,15 @@ public class CreateResponse extends Response {
       defaults();
    }
 
-   public CreateResponse(int accountId, String authToken) {
+   public CreateResponse(int accountId, String authToken, String loginAuthToken) {
       this.accountId = accountId;
       this.authToken = authToken;
+      this.loginAuthToken = loginAuthToken;
    }   
    
    public int accountId;
    public String authToken;
+   public String loginAuthToken;
 
    public final Structure.Security getSecurity() {
       return Security.PUBLIC;
@@ -36,12 +38,14 @@ public class CreateResponse extends Response {
    public final void defaults() {
       accountId = 0;
       authToken = null;
+      loginAuthToken = null;
    }
    
    @Override
    public final void write(DataSource data) throws IOException {
       data.write(1, this.accountId);
       data.write(2, this.authToken);
+      data.write(3, this.loginAuthToken);
       data.writeEndTag();
    }
    
@@ -53,6 +57,7 @@ public class CreateResponse extends Response {
          switch (tag) {
             case 1: this.accountId = data.read_int(tag); break;
             case 2: this.authToken = data.read_string(tag); break;
+            case 3: this.loginAuthToken = data.read_string(tag); break;
             case Codec.END_TAG:
                return;
             default:
@@ -74,9 +79,10 @@ public class CreateResponse extends Response {
       // Note do not use this tags in long term serializations (to disk or databases) as 
       // implementors are free to rename them however they wish.  A null means the field
       // is not to participate in web serialization (remaining at default)
-      String[] result = new String[2+1];
+      String[] result = new String[3+1];
       result[1] = "accountId";
       result[2] = "authToken";
+      result[3] = "loginAuthToken";
       return result;
    }
 
@@ -91,6 +97,7 @@ public class CreateResponse extends Response {
       desc.types[0] = new TypeDescriptor(TypeDescriptor.T_STRUCT, getContractId(), getStructId());
       desc.types[1] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
       desc.types[2] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
+      desc.types[3] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
       return desc;
    }
  }
