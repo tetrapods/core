@@ -124,8 +124,8 @@ public class SQLMapStore<T> implements MapStore<String, T> {
 
    @Override
    public void storeAll(Map<String, T> map) {
-      logger.debug("store keys {}", map.keySet());
       if (map.size() > 0) {
+         logger.debug("store keys {}", map.keySet());
          final StringBuilder query = new StringBuilder();
          query.append("INSERT INTO " + tableName + " (id, val) VALUES");
          for (int i = 0; i < map.size(); i++) {

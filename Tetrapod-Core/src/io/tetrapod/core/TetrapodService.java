@@ -238,17 +238,13 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       }
    }
 
-   @Override
-   public void onRegistered() {
-      // TODO: wait for confirmed cluster registry sync before calling onReadyToServe
-      onReadyToServe();
-   }
-
    /**
     * As a Tetrapod service, we can't start serving as one until we've registered & fully sync'ed with the cluster, or self-registered if we
     * are the first one. We call this once this criteria has been reached
     */
-   protected void onReadyToServe() {
+   @Override
+   public void onReadyToServe() {
+      // TODO: wait for confirmed cluster registry sync before calling onReadyToServe
       logger.info(" ***** READY TO SERVE ***** ");
 
       try {
@@ -270,7 +266,6 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       }
 
       scheduleHealthCheck();
-      updateStatus(status & ~Core.STATUS_STARTING);
    }
 
    @Override

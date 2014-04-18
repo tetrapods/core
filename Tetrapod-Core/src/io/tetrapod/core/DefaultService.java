@@ -17,11 +17,12 @@ import org.slf4j.*;
 public class DefaultService implements Service, BaseServiceContract.API, SessionFactory, EntityMessage.Handler,
       ClusterMemberMessage.Handler {
    private static final Logger             logger          = LoggerFactory.getLogger(DefaultService.class);
+   protected final Set<Integer>            dependencies    = new HashSet<>();
 
    protected final Dispatcher              dispatcher;
    protected Client                        clusterClient;
    protected Contract                      contract;
-
+   protected ServiceCache                  services;
    protected boolean                       terminated;
    protected int                           entityId;
    protected int                           parentId;
@@ -46,6 +47,11 @@ public class DefaultService implements Service, BaseServiceContract.API, Session
       addPeerContracts(new TetrapodContract());
       addMessageHandler(new EntityMessage(), this);
       addMessageHandler(new ClusterMemberMessage(), this);
+
+      if (getEntityType() != Core.TYPE_TETRAPOD) {
+         services = new ServiceCache();
+         addSubscriptionHandler(new TetrapodContract.Services(), services);
+      }
 
       Runtime.getRuntime().addShutdownHook(new Thread("Shutdown Hook") {
          public void run() {
@@ -105,10 +111,33 @@ public class DefaultService implements Service, BaseServiceContract.API, Session
     */
    public void onRegistered() {}
 
+   /**
+    * Called after we've registered and dependencies are all available
+    */
+   public void onReadyToServe() {}
+
    private void onServiceRegistered() {
       registerServiceInformation();
       stats.publishTopic();
+      sendDirectRequest(new ServicesSubscribeRequest());
       onRegistered();
+      checkDependencies();
+   }
+
+   private void checkDependencies() {
+      if (!isShuttingDown()) {
+         if (getEntityType() == Core.TYPE_TETRAPOD || services.checkDependencies(dependencies)) {
+            onReadyToServe();
+            // ok, we're good to go
+            updateStatus(status & ~Core.STATUS_STARTING);
+         } else {
+            dispatcher.dispatch(1, TimeUnit.SECONDS, new Runnable() {
+               public void run() {
+                  checkDependencies();
+               }
+            });
+         }
+      }
    }
 
    /**
@@ -386,6 +415,12 @@ public class DefaultService implements Service, BaseServiceContract.API, Session
 
    public void genericMessage(Message message) {
       logger.error("unhandled message " + message.dump());
+   }
+
+   public void setDependencies(int... contractIds) {
+      for (int contractId : contractIds) {
+         dependencies.add(contractId);
+      }
    }
 
    // Session.Help implementation

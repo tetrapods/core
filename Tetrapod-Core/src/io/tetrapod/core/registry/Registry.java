@@ -102,7 +102,6 @@ public class Registry implements TetrapodContract.Registry.API {
    }
 
    public EntityInfo getFirstAvailableService(int contractId) {
-      // Using a CopyOnWrite list this method doesn't need to lock
       final List<EntityInfo> list = services.get(contractId);
       if (list != null) {
          final ListIterator<EntityInfo> li = list.listIterator();
@@ -117,7 +116,6 @@ public class Registry implements TetrapodContract.Registry.API {
    }
 
    public EntityInfo getRandomAvailableService(int contractId) {
-      // Using a CopyOnWrite list this method doesn't need to lock
       final List<EntityInfo> list = services.get(contractId);
       if (list != null) {
          final List<EntityInfo> shuffled = new ArrayList<>(list);
@@ -194,7 +192,7 @@ public class Registry implements TetrapodContract.Registry.API {
       // Unsubscribe from all subscriptions
       for (Topic topic : new ArrayList<Topic>(e.getSubscriptions())) {
          EntityInfo owner = getEntity(topic.ownerId);
-         assert (owner != null);
+         assert (owner != null); // bug here cleaning up topics on unreg, I think...
          unsubscribe(owner, topic.topicId, e.entityId, true);
       }
    }
