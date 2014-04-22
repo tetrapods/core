@@ -55,7 +55,12 @@ function TP_Server() {
 
    function registerConst(contractName, structName, constName, constValue) {
       var map = protocol["consts"];
-      var o = map[contractName + "." + structName] || {};
+      var o;
+      if (structName != null && structName != "null") {
+         o = map[contractName + "." + structName] || {};
+      } else {
+         o = map[contractName] || {};
+      }
       map[contractName + "." + structName] = o;
       o[constName] = constValue;
    }
