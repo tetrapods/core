@@ -58,10 +58,11 @@ function TP_Server() {
       var o;
       if (structName != null && structName != "null") {
          o = map[contractName + "." + structName] || {};
+         map[contractName + "." + structName] = o;
       } else {
          o = map[contractName] || {};
+         map[contractName] = o;
       }
-      map[contractName + "." + structName] = o;
       o[constName] = constValue;
    }
 
