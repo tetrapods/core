@@ -51,7 +51,7 @@ abstract public class Structure {
    public String dump() {
       return dump(true, true);
    }
-   
+
    public String dump(boolean expandSubTypes, boolean includeClassname) {
       StringBuilder sb = new StringBuilder();
       Field f[] = getClass().getDeclaredFields();
@@ -88,7 +88,12 @@ abstract public class Structure {
          val = "[len=" + Array.getLength(val) + "]";
       }
       if (expandSubTypes && val != null && val instanceof Structure) {
-         val = ((Structure)val).dump(false, false);
+         val = ((Structure) val).dump(false, false);
+      }
+      if (expandSubTypes && val instanceof String) {         
+         if (((String) val).length() > 2048) {
+            return ((String) val).substring(0, 2048) + "...";
+         }
       }
       return val;
    }
