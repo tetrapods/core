@@ -75,4 +75,16 @@ public class Util {
       return items[random(items.length)];
    }
 
+   public static byte[] readFile(File f) throws IOException {
+      try (FileInputStream in = new FileInputStream(f)) {
+         ByteArrayOutputStream out = new ByteArrayOutputStream();
+         int b = in.read();
+         while (b >= 0) {
+            out.write(b);
+            b = in.read();
+         }
+         return out.toByteArray();
+      }
+   }
+
 }
