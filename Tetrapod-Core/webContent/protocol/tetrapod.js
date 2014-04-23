@@ -59,6 +59,25 @@ function TP_Tetrapod(server) {
    server.registerConst("Identity", "User", "PROPS_BANNED_T3", 128);
    server.registerConst("Identity", "User", "PROPS_NO_PASSWORD", 256);
    
+   server.registerConst("Tetrapod", "null", "CONNECTION_CLOSED", 7);
+   server.registerConst("Tetrapod", "null", "INVALID_ENTITY", 9);
+   server.registerConst("Tetrapod", "null", "INVALID_RIGHTS", 8);
+   server.registerConst("Tetrapod", "null", "NOT_PARENT", 2219555);
+   server.registerConst("Tetrapod", "null", "NOT_READY", 12438466);
+   server.registerConst("Tetrapod", "null", "PROTOCOL_MISMATCH", 5);
+   server.registerConst("Tetrapod", "null", "RIGHTS_EXPIRED", 10);
+   server.registerConst("Tetrapod", "null", "SERIALIZATION", 4);
+   server.registerConst("Tetrapod", "null", "SERVICE_UNAVAILABLE", 2);
+   server.registerConst("Tetrapod", "null", "TIMEOUT", 3);
+   server.registerConst("Tetrapod", "null", "UNKNOWN", 1);
+   server.registerConst("Tetrapod", "null", "UNKNOWN_REQUEST", 6);
+   server.registerConst("Identity", "null", "IDENTITY_TAKEN", 5562311);
+   server.registerConst("Identity", "null", "INVALID_INPUT", 9895911);
+   server.registerConst("Identity", "null", "UNKNOWN_USERNAME", 983354);
+   server.registerConst("Identity", "null", "UNMODIFIABLE_IDENTITY", 548527);
+   server.registerConst("Identity", "null", "VERIFICATION_ERROR", 10526271);
+   server.registerConst("Identity", "null", "VERIFICATION_FAILURE", 3531687);
+   
    server.register("struct", "BaseService", "ServiceCommand", 2, 5461687);
    server.register("request", "BaseService", "Pause", 2, 14690004);
    server.register("request", "BaseService", "Unpause", 2, 10620319);

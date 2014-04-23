@@ -58,7 +58,7 @@ abstract class WebSession extends Session {
          ses.sendRelayedRequest(header, in, this);
       } else {
          logger.warn("Could not find a relay session for {} {}", header.toId, header.contractId);
-         sendResponse(new Error(ERROR_UNKNOWN), header.requestId);
+         sendResponse(new Error(ERROR_SERVICE_UNAVAILABLE), header.requestId);
       }
    }
 

@@ -1,8 +1,8 @@
 package io.tetrapod.core.codegen;
 
 import io.tetrapod.core.codegen.CodeGen.TokenizedLine;
+import io.tetrapod.core.codegen.CodeGenContext.*;
 import io.tetrapod.core.codegen.CodeGenContext.Class;
-import io.tetrapod.core.codegen.CodeGenContext.Field;
 
 import java.io.*;
 import java.util.*;
@@ -74,6 +74,14 @@ public class JavascriptGenerator implements LanguageGenerator {
                   sub.add("constValue", f.getEscapedDefaultValue());
                   t.add("constants", sub);
                }
+            }
+            for (Err err : context.allErrors) {
+               Template sub = template("register.const");
+               sub.add("contractClass", contractName);
+               sub.add("class", "null");
+               sub.add("constName", err.name);
+               sub.add("constValue", "" + err.getValue());
+               t.add("errors", sub);
             }
          }
          file.getParentFile().mkdirs();

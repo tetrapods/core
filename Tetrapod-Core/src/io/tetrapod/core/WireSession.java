@@ -295,6 +295,7 @@ public class WireSession extends Session {
          ses.sendRelayedRequest(header, in, this);
       } else {
          logger.warn("Could not find a relay session for {}", header.toId);
+         sendResponse(new Error(ERROR_SERVICE_UNAVAILABLE), header.requestId);
       }
    }
 
