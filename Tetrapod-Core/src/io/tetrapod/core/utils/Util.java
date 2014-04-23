@@ -75,4 +75,31 @@ public class Util {
       return items[random(items.length)];
    }
 
+   public static int[] toIntArray(List<Integer> list) {
+      int[] res = new int[list.size()];
+      int i = 0;
+      for (Iterator<Integer> iterator = list.iterator(); iterator.hasNext();) {
+         res[i++] = iterator.next();
+      }
+      return res;
+   }
+   
+   public static long[] toLongArray(List<Long> list) {
+      long[] res = new long[list.size()];
+      int i = 0;
+      for (Iterator<Long> iterator = list.iterator(); iterator.hasNext();) {
+         res[i++] = iterator.next();
+      }
+      return res;
+   }
+   
+   public static boolean[] toBooleanArray(List<Boolean> list) {
+      boolean[] res = new boolean[list.size()];
+      int i = 0;
+      for (Iterator<Boolean> iterator = list.iterator(); iterator.hasNext();) {
+         res[i++] = iterator.next();
+      }
+      return res;
+   }
+
 }
