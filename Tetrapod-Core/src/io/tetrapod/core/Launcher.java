@@ -103,11 +103,11 @@ public class Launcher {
       }
       return opts;
    }
-
+ 
    public static void relaunch(String token) throws IOException {
       opts.put("token", token);
       StringBuilder sb = new StringBuilder();
-      sb.append("java ");
+      sb.append("./launch ");
 
       // java args
       for (String arg : ManagementFactory.getRuntimeMXBean().getInputArguments()) {
