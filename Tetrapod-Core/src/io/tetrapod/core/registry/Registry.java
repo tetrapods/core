@@ -145,6 +145,8 @@ public class Registry implements TetrapodContract.Registry.API {
     * Issue the next available tetrapod id
     * 
     * FIXME: This is currently _very_ unsafe, but will do until we have the robust distributed counters or locks implemented
+    * 
+    * FIXME: Use hazelcast counter
     */
    public synchronized int issueTetrapodId() {
       int nextId = parentId >> PARENT_ID_SHIFT;
@@ -193,7 +195,9 @@ public class Registry implements TetrapodContract.Registry.API {
       for (Topic topic : new ArrayList<Topic>(e.getSubscriptions())) {
          EntityInfo owner = getEntity(topic.ownerId);
          assert (owner != null); // bug here cleaning up topics on unreg, I think...
-         unsubscribe(owner, topic.topicId, e.entityId, true);
+         if (owner != null) {
+            unsubscribe(owner, topic.topicId, e.entityId, true);
+         }
       }
    }
 
@@ -262,7 +266,7 @@ public class Registry implements TetrapodContract.Registry.API {
          if (topic != null) {
             // clean up all the subscriptions to this topic
             for (Subscriber sub : topic.getSubscribers()) {
-               unsubscribe(e, topicId, sub.entityId, true);
+               unsubscribe(e, topic, sub.entityId, true);
             }
             if (e.parentId == parentId) {
                broadcaster.broadcastRegistryMessage(new TopicUnpublishedMessage(e.entityId, topicId));
@@ -305,22 +309,31 @@ public class Registry implements TetrapodContract.Registry.API {
       try {
          final Topic topic = publisher.getTopic(topicId);
          if (topic != null) {
-            final EntityInfo e = getEntity(entityId);
-            if (e != null) {
-               final boolean isProxy = !e.isTetrapod() && e.parentId != parentId;
-               if (topic.unsubscribe(e.entityId, e.parentId, isProxy, all)) {
-                  e.unsubscribe(topic);
-               }
-
-               if (publisher.parentId == parentId) {
-                  broadcaster.broadcastRegistryMessage(new TopicUnsubscribedMessage(publisher.entityId, topicId, entityId));
-               }
-
-            } else {
-               logger.info("Could not find subscriber {} for topic {}", entityId, topicId);
-            }
+            unsubscribe(publisher, topic, entityId, all);
          } else {
             logger.info("Could not find topic {} for {}", topicId, publisher);
+         }
+      } finally {
+         lock.readLock().unlock();
+      }
+   }
+
+   public void unsubscribe(final EntityInfo publisher, Topic topic, final int entityId, final boolean all) {
+      assert (publisher != null);
+      assert (topic != null);
+      lock.readLock().lock();
+      try {
+         final EntityInfo e = getEntity(entityId);
+         if (e != null) {
+            final boolean isProxy = !e.isTetrapod() && e.parentId != parentId;
+            if (topic.unsubscribe(e.entityId, e.parentId, isProxy, all)) {
+               e.unsubscribe(topic);
+            }
+            if (publisher.parentId == parentId) {
+               broadcaster.broadcastRegistryMessage(new TopicUnsubscribedMessage(publisher.entityId, topic.topicId, entityId));
+            }
+         } else {
+            logger.info("Could not find subscriber {} for topic {}", entityId, topic.topicId);
          }
       } finally {
          lock.readLock().unlock();

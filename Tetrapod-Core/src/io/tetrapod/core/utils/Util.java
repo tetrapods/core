@@ -2,6 +2,7 @@ package io.tetrapod.core.utils;
 
 import java.io.*;
 import java.net.*;
+import java.nio.file.Files;
 import java.security.KeyStore;
 import java.util.*;
 
@@ -100,6 +101,10 @@ public class Util {
          res[i++] = iterator.next();
       }
       return res;
+   }
+   
+   public static byte[] readFile(File f) throws IOException {
+      return Files.readAllBytes(f.toPath());
    }
 
 }
