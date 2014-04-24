@@ -284,6 +284,10 @@ public class DefaultService implements Service, BaseServiceContract.API, Session
    public synchronized boolean isShuttingDown() {
       return (status & Core.STATUS_STOPPING) != 0;
    }
+
+   public synchronized boolean isPaused() {
+      return (status & Core.STATUS_PAUSED) != 0;
+   }
    
    public synchronized boolean isNominal() {
       int nonRunning = Core.STATUS_STARTING | Core.STATUS_FAILED | Core.STATUS_BUSY | Core.STATUS_PAUSED | Core.STATUS_STOPPING;
