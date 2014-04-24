@@ -1,6 +1,9 @@
-var define = define || function() {};
+var define = define || function() {
+};
 
-define(function() { return TP_Server; });
+define(function() {
+   return TP_Server;
+});
 
 function TP_Server() {
    var self = this;
@@ -30,10 +33,13 @@ function TP_Server() {
    self.send = send;
    self.sendRequest = sendRequest;
    self.connect = connect;
+   self.disconnect = disconnect;
    self.nameOf = nameOf;
    self.consts = protocol.consts;
-   self.setSimulator = function(s) { simulator = s; };
-   
+   self.setSimulator = function(s) {
+      simulator = s;
+   };
+
    for (var i = 0; i < arguments.length; i++) {
       new arguments[i](self);
    }
@@ -107,7 +113,7 @@ function TP_Server() {
       }
       return sendRequest(val.contractId, val.structId, args, toId);
    }
-   
+
    function sendRequest(contractId, structId, args, toId) {
       toId = typeof toId !== 'undefined' ? toId : 0;
       var requestId = requestCounter++;
@@ -117,7 +123,7 @@ function TP_Server() {
       args._toId = toId;
       if (self.commsLog)
          logRequest(args);
-      
+
       if (simulator != null) {
          var resp = simulator.request(request, args, toId);
          var i;
@@ -144,7 +150,7 @@ function TP_Server() {
       }
    }
 
-   function connect(server, port) { 		
+   function connect(server, port) {
       port = typeof port !== 'undefined' ? port : 9903;
       if (!window.WebSocket) {
          window.WebSocket = window.MozWebSocket;
@@ -157,7 +163,7 @@ function TP_Server() {
             listen : function(onOpen, onClose) {
                onOpen();
             }
-         }         
+         }
       }
       socket = new WebSocket("ws://" + server + ":" + port + "/sockets");
       socket.onopen = onSocketOpen;
@@ -166,12 +172,18 @@ function TP_Server() {
       socket.onerror = onSocketError;
       return {
          listen : function(onOpen, onClose) {
-        	openHandlers = [];
-        	closeHandlers = [];
+            openHandlers = [];
+            closeHandlers = [];
             openHandlers.push(onOpen);
             closeHandlers.push(onClose);
          }
       }
+   }
+
+   function disconnect() {
+      if (self.commsLog)
+         console.log("Disconnecting...");
+      socket.close();
    }
 
    function logResponse(result) {
@@ -226,7 +238,7 @@ function TP_Server() {
          handleMessage(result);
       }
    }
-   
+
    function handleResponse(result) {
       result.isError = function() {
          return result._contractId == 1 && result._structId == 1;
