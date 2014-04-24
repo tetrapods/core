@@ -126,6 +126,10 @@ public class Storage implements MembershipListener {
       return val;
    }
 
+   public ILock getLock(String lockKey) {
+      return hazelcast.getLock(lockKey);
+   }
+
    //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 }

@@ -84,7 +84,7 @@ public class Util {
       }
       return res;
    }
-   
+
    public static long[] toLongArray(List<Long> list) {
       long[] res = new long[list.size()];
       int i = 0;
@@ -93,7 +93,7 @@ public class Util {
       }
       return res;
    }
-   
+
    public static boolean[] toBooleanArray(List<Boolean> list) {
       boolean[] res = new boolean[list.size()];
       int i = 0;
@@ -102,9 +102,17 @@ public class Util {
       }
       return res;
    }
-   
+
    public static byte[] readFile(File f) throws IOException {
       return Files.readAllBytes(f.toPath());
+   }
+
+   public static int getProperty(String key, int defaultValue) {
+      String val = System.getProperty(key);
+      if (val == null) {
+         return defaultValue;
+      }
+      return Integer.parseInt(val);
    }
 
 }

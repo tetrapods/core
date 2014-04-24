@@ -58,23 +58,13 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
    private final WebRoutes                            webRoutes               = new WebRoutes();
 
-   @Deprecated
-   // FIXME: Decide how we want to manage properties & configuration
-   private final Properties                           properties              = new Properties();
-
    private long                                       lastStatsLog;
    private String                                     webContentRoot;
 
    public TetrapodService() {
-      // Load properties for override
-      for (Map.Entry<Object, Object> e : System.getProperties().entrySet()) {
-         if (e.getKey().toString().startsWith("tetrapod.")) {
-            properties.put(e.getKey().toString(), e.getValue().toString());
-         }
-      }
       registry = new io.tetrapod.core.registry.Registry(this);
       worker = new TetrapodWorker(this);
-      cluster = new TetrapodCluster(this, properties);
+      cluster = new TetrapodCluster(this);
       setMainContract(new TetrapodContract());
       addContracts(new StorageContract());
 
@@ -140,23 +130,23 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    }
 
    public int getServicePort() {
-      return properties.optInt("tetrapod.service.port", DEFAULT_SERVICE_PORT);
+      return Util.getProperty("tetrapod.service.port", DEFAULT_SERVICE_PORT);
    }
 
    public int getClusterPort() {
-      return properties.optInt("tetrapod.cluster.port", DEFAULT_CLUSTER_PORT);
+      return Util.getProperty("tetrapod.cluster.port", DEFAULT_CLUSTER_PORT);
    }
 
    public int getPublicPort() {
-      return properties.optInt("tetrapod.public.port", DEFAULT_PUBLIC_PORT);
+      return Util.getProperty("tetrapod.public.port", DEFAULT_PUBLIC_PORT);
    }
 
    public int getWebSocketPort() {
-      return properties.optInt("tetrapod.websocket.port", DEFAULT_WEBSOCKETS_PORT);
+      return Util.getProperty("tetrapod.websocket.port", DEFAULT_WEBSOCKETS_PORT);
    }
 
    public int getHTTPPort() {
-      return properties.optInt("tetrapod.http.port", DEFAULT_HTTP_PORT);
+      return Util.getProperty("tetrapod.http.port", DEFAULT_HTTP_PORT);
    }
 
    @Override
@@ -249,7 +239,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
       try {
          storage = new Storage();
-
+         registry.setStorage(storage);
          AuthToken.setSecret(storage.getSharedSecret());
 
          publicServer = new Server(getPublicPort(), new TypedSessionFactory(Core.TYPE_ANONYMOUS), dispatcher);

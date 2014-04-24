@@ -201,7 +201,7 @@ public class DefaultService implements Service, BaseServiceContract.API, Session
          @Override
          public void onResponse(Response res) {
             if (res.isError()) {
-               fail("Unable to register {}", res.errorCode());
+               fail("Unable to register", res.errorCode());
             } else {
                RegisterResponse r = (RegisterResponse) res;
                entityId = r.entityId;

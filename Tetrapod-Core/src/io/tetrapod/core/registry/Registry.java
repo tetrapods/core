@@ -1,6 +1,6 @@
 package io.tetrapod.core.registry;
 
-import io.tetrapod.core.Session;
+import io.tetrapod.core.*;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.protocol.core.*;
 
@@ -25,6 +25,8 @@ public class Registry implements TetrapodContract.Registry.API {
    public static final int                      PARENT_ID_SHIFT = 20;
    public static final int                      PARENT_ID_MASK  = MAX_PARENTS << PARENT_ID_SHIFT;
    public static final int                      BOOTSTRAP_ID    = 1 << PARENT_ID_SHIFT;
+
+   private static final String                  PARENT_ID_LOCK  = "REGISTRY.PARENT_ID.LOCK";
 
    /**
     * A read-write lock is used to synchronize subscriptions to the registry state, and it is a little counter-intuitive. When making write
@@ -53,6 +55,8 @@ public class Registry implements TetrapodContract.Registry.API {
     */
    private final Map<Integer, List<EntityInfo>> services        = new ConcurrentHashMap<>();
 
+   private Storage                              storage;
+
    public static interface RegistryBroadcaster {
       public void broadcastRegistryMessage(Message msg);
 
@@ -71,6 +75,14 @@ public class Registry implements TetrapodContract.Registry.API {
 
    public synchronized int getParentId() {
       return parentId;
+   }
+
+   public Storage getStorage() {
+      return storage;
+   }
+
+   public void setStorage(Storage storage) {
+      this.storage = storage;
    }
 
    public Collection<EntityInfo> getEntities() {
@@ -149,12 +161,17 @@ public class Registry implements TetrapodContract.Registry.API {
     * FIXME: Use hazelcast counter
     */
    public synchronized int issueTetrapodId() {
-      int nextId = parentId >> PARENT_ID_SHIFT;
-      while (true) {
-         int id = (++nextId % MAX_PARENTS) << PARENT_ID_SHIFT;
-         if (!entities.containsKey(id)) {
-            return id;
+      storage.getLock(PARENT_ID_LOCK).lock();
+      try {
+         int nextId = parentId >> PARENT_ID_SHIFT;
+         while (true) {
+            int id = (++nextId % MAX_PARENTS) << PARENT_ID_SHIFT;
+            if (!entities.containsKey(id)) {
+               return id;
+            }
          }
+      } finally {
+         storage.getLock(PARENT_ID_LOCK).unlock();
       }
    }
 

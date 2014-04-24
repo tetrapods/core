@@ -4,8 +4,7 @@ import io.netty.channel.*;
 import io.netty.channel.socket.SocketChannel;
 import io.tetrapod.core.registry.EntityInfo;
 import io.tetrapod.core.rpc.*;
-import io.tetrapod.core.utils.*;
-import io.tetrapod.core.utils.Properties;
+import io.tetrapod.core.utils.Util;
 import io.tetrapod.protocol.core.*;
 
 import java.io.IOException;
@@ -35,7 +34,7 @@ public class TetrapodCluster implements SessionFactory {
 
    private Session                      pendingSession;
 
-   public TetrapodCluster(TetrapodService service, Properties properties) {
+   public TetrapodCluster(TetrapodService service) {
       this.service = service;
       server = new Server(service.getClusterPort(), this, service.getDispatcher());
    }
