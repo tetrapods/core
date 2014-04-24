@@ -131,7 +131,7 @@ define(["knockout", "jquery", "bootbox", "app"], function(ko, $, bootbox, app) {
       }
       self.restart = function() {
          bootbox.confirm("Are you sure you want to restart service: "
-               + self.name + "[" + self.entitId + "]?", function(
+               + self.name + "[" + self.entityId + "]?", function(
                result) {
             if (result) {
                app.server.send("Restart", {}, self.entityId);
@@ -140,7 +140,7 @@ define(["knockout", "jquery", "bootbox", "app"], function(ko, $, bootbox, app) {
       }
       self.shutdown = function() {
          bootbox.confirm("Are you sure you want to shutdown service: "
-               + self.name + "[" + self.entitId + "]?", function(
+               + self.name + "[" + self.entityId + "]?", function(
                result) {
             if (result) {
                app.server.send("Shutdown", {}, self.entityId);
