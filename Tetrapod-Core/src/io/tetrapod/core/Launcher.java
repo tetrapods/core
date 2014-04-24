@@ -2,8 +2,7 @@ package io.tetrapod.core;
 
 import io.tetrapod.protocol.core.ServerAddress;
 
-import java.io.*;
-import java.lang.management.ManagementFactory;
+import java.io.IOException;
 import java.util.*;
 import java.util.Map.Entry;
 
@@ -13,14 +12,15 @@ import java.util.Map.Entry;
  * Don't refer to logging in this class otherwise it gets initialized (upon class load) prior to being setup.
  */
 public class Launcher {
-   private static Map<String, String> opts = null;
+   private static Map<String, String> opts         = null;
+   private static String              serviceClass = null;
 
    public static void main(String[] args) {
       System.setProperty("logback.configurationFile", "cfg/logback.xml");
       try {
          if (args.length < 1)
             usage();
-         String serviceClass = args[0];
+         serviceClass = args[0];
          opts = getOpts(args, 1, defaultOpts());
          System.setProperty("APPNAME", serviceClass.substring(serviceClass.lastIndexOf('.') + 1));
 
@@ -103,17 +103,18 @@ public class Launcher {
       }
       return opts;
    }
- 
+
    public static void relaunch(String token) throws IOException {
       opts.put("token", token);
       StringBuilder sb = new StringBuilder();
       sb.append("./launch ");
+      sb.append(serviceClass);
 
-      // java args
-      for (String arg : ManagementFactory.getRuntimeMXBean().getInputArguments()) {
-         sb.append(' ');
-         sb.append(arg);
-      }
+      // java args?
+      //      for (String arg : ManagementFactory.getRuntimeMXBean().getInputArguments()) {
+      //         sb.append(' ');
+      //         sb.append(arg);
+      //      }
 
       for (Entry<String, String> entry : opts.entrySet()) {
          if (entry.getValue() != null) {
