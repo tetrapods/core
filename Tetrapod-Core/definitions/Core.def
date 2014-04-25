@@ -119,6 +119,8 @@ internal struct StructDescription
 
 ################################# REQUESTS #################################
 
+public request KeepAlive
+ 
 public request Register
    1: int build   
    2: string token

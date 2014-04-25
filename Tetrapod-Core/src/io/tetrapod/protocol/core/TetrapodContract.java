@@ -23,6 +23,7 @@ public class TetrapodContract extends Contract {
       AdminAuthorizeRequest.Handler,
       AdminLoginRequest.Handler,
       ClusterJoinRequest.Handler,
+      KeepAliveRequest.Handler,
       LogRegistryStatsRequest.Handler,
       PublishRequest.Handler,
       RegisterRequest.Handler,
@@ -36,6 +37,7 @@ public class TetrapodContract extends Contract {
    
    public Structure[] getRequests() {
       return new Structure[] {
+         new KeepAliveRequest(),
          new RegisterRequest(),
          new ClusterJoinRequest(),
          new UnregisterRequest(),

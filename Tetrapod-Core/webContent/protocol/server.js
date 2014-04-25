@@ -36,6 +36,7 @@ function TP_Server() {
    self.disconnect = disconnect;
    self.nameOf = nameOf;
    self.consts = protocol.consts;
+   self.connected = false;
    self.setSimulator = function(s) {
       simulator = s;
    };
@@ -214,31 +215,6 @@ function TP_Server() {
       return value;
    }
 
-   // --- socket methods
-
-   function onSocketOpen(event) {
-      if (self.commsLog)
-         console.log("[socket] open")
-      var i, array = openHandlers;
-      for (i = 0; i < array.length; i++)
-         array[i]();
-   }
-
-   function onSocketMessage(event) {
-      var result = null;
-      if (event.data.indexOf("{") == 0) {
-         result = JSON.parse(event.data);
-      } else {
-         // TODO figure out how to communicate errors
-         result = parseInt(event.data);
-      }
-      if (result._requestId != null) {
-         handleResponse(result);
-      } else if (result._topicId != null) {
-         handleMessage(result);
-      }
-   }
-
    function handleResponse(result) {
       result.isError = function() {
          return result._contractId == 1 && result._structId == 1;
@@ -260,7 +236,51 @@ function TP_Server() {
       }
    }
 
+   function sendKeepAliveCheck(millis) {
+      if (self.connected && self.keepAlive == null) {
+         self.keepAlive = setTimeout(function() {
+            self.keepAlive = null;
+            if (self.connected) {
+               var d = new Date();
+               if (d.getTime() - lastHeardFrom > 20000) {
+                  disconnect();
+               } else if (d.getTime() - lastHeardFrom > 5000) {
+                  // TODO: mark as bad connection
+                  send("KeepAlive", {});
+               }
+            }
+         }, millis);
+      }
+   }
+
+   // --- socket methods
+
+   function onSocketOpen(event) {
+      self.connected = true;
+      if (self.commsLog)
+         console.log("[socket] open")
+      var i, array = openHandlers;
+      for (i = 0; i < array.length; i++)
+         array[i]();
+
+      self.keepAlive = setInterval(function() {
+         send("KeepAlive", {});
+         var now = Date.now();
+         if (now - lastHeardFrom > 20000) {
+            disconnect();
+         } else if (now - lastHeardFrom > 6000) {
+            // TODO: mark as bad connection
+         }
+      }, 5000);
+
+   }
+
    function onSocketClose(event) {
+      self.connected = false;
+      if (self.keepAlive != null) {
+         clearInterval(self.keepAlive);
+         self.keepAlive = null;
+      }
       if (self.commsLog)
          console.log("[socket] closed")
       var i, array = closeHandlers;
@@ -268,8 +288,25 @@ function TP_Server() {
          array[i]();
    }
 
+   function onSocketMessage(event) {
+      var result = null;
+      if (event.data.indexOf("{") == 0) {
+         result = JSON.parse(event.data);
+      } else {
+         // TODO figure out how to communicate errors
+         result = parseInt(event.data);
+      }
+      if (result._requestId != null) {
+         handleResponse(result);
+      } else if (result._topicId != null) {
+         handleMessage(result);
+      }
+      lastHeardFrom = Date.now();
+   }
+
    function onSocketError(event) {
       if (self.commsLog)
          console.log("[socket] error");
    }
+
 }

@@ -98,6 +98,7 @@ function TP_Tetrapod(server) {
    server.register("struct", "Tetrapod", "WebRoute", 1, 4890284);
    server.register("struct", "Tetrapod", "TypeDescriptor", 1, 6493266);
    server.register("struct", "Tetrapod", "StructDescription", 1, 9642196);
+   server.register("request", "Tetrapod", "KeepAlive", 1, 5512920);
    server.register("request", "Tetrapod", "Register", 1, 10895179);
    server.register("response", "Tetrapod", "Register", 1, 13376201);
    server.register("request", "Tetrapod", "ClusterJoin", 1, 8294880);

@@ -487,6 +487,11 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
    @Override
+   public Response requestKeepAlive(KeepAliveRequest r, RequestContext ctx) {
+      return Response.SUCCESS;
+   }
+   
+   @Override
    public Response requestRegister(RegisterRequest r, final RequestContext ctx) {
       if (getEntityId() == 0) {
          return new Error(ERROR_SERVICE_UNAVAILABLE);
@@ -732,4 +737,5 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
       return new AdminLoginResponse(authtoken);
    }
+
 }
