@@ -24,6 +24,7 @@ function TP_Server() {
    var closeHandlers = [];
    var socket;
    var simulator = null;
+   var lastHeardFrom = 0;
 
    // public interface
    self.commsLog = false;
@@ -39,8 +40,8 @@ function TP_Server() {
    self.connected = false;
    self.setSimulator = function(s) {
       simulator = s;
-   };
-
+   }; 
+   
    for (var i = 0; i < arguments.length; i++) {
       new arguments[i](self);
    }
@@ -235,23 +236,7 @@ function TP_Server() {
          func(result);
       }
    }
-
-   function sendKeepAliveCheck(millis) {
-      if (self.connected && self.keepAlive == null) {
-         self.keepAlive = setTimeout(function() {
-            self.keepAlive = null;
-            if (self.connected) {
-               var d = new Date();
-               if (d.getTime() - lastHeardFrom > 20000) {
-                  disconnect();
-               } else if (d.getTime() - lastHeardFrom > 5000) {
-                  // TODO: mark as bad connection
-                  send("KeepAlive", {});
-               }
-            }
-         }, millis);
-      }
-   }
+ 
 
    // --- socket methods
 
@@ -264,12 +249,14 @@ function TP_Server() {
          array[i]();
 
       self.keepAlive = setInterval(function() {
-         send("KeepAlive", {});
-         var now = Date.now();
-         if (now - lastHeardFrom > 20000) {
-            disconnect();
-         } else if (now - lastHeardFrom > 6000) {
+         send("KeepAlive", {}, 1/*Core.DIRECT*/);
+         var elapsed = Date.now() - lastHeardFrom; 
+         if (elapsed > 6000) {
+            console.log("We haven't heard from the server in " + elapsed + " ms")
             // TODO: mark as bad connection
+         }
+         if (elapsed > 20000) {
+            disconnect();
          }
       }, 5000);
 
