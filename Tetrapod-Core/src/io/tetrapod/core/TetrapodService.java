@@ -251,7 +251,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          // enable TLS on ports we want secured
          SSLContext ctx = Util.createSSLContext(new FileInputStream(System.getProperty("tetrapod.jks.file", "cfg/tetrapod.jks")), System
                .getProperty("tetrapod.jks.pwd", "4pod.dop4").toCharArray());
-         //httpServer.enableTLS(ctx, false);
+         httpServer.enableTLS(ctx, false);
          webSocketsServer.enableTLS(ctx, false);
 
          // start listening

@@ -166,7 +166,7 @@ function TP_Server() {
                onOpen();
             }
          }
-      }
+      } 
       socket = new WebSocket("wss://" + server + ":" + port + "/sockets");
       socket.onopen = onSocketOpen;
       socket.onmessage = onSocketMessage;
@@ -293,7 +293,7 @@ function TP_Server() {
 
    function onSocketError(event) {
       if (self.commsLog)
-         console.log("[socket] error");
+         console.log("[socket] error " + JSON.stringify(event));
    }
 
 }
