@@ -18,12 +18,13 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.regex.Pattern;
 
-import javax.activation.*;
+import javax.activation.MimetypesFileTypeMap;
+
+import org.slf4j.*;
 
 /**
- * A simple handler that serves incoming HTTP requests to send their respective
- * HTTP responses. It also implements {@code 'If-Modified-Since'} header to take
- * advantage of browser cache, as described in <a
+ * A simple handler that serves incoming HTTP requests to send their respective HTTP responses. It also implements
+ * {@code 'If-Modified-Since'} header to take advantage of browser cache, as described in <a
  * href="http://tools.ietf.org/html/rfc2616#section-14.25">RFC 2616</a>.
  * 
  * Adapted from netty.io example code.
@@ -31,17 +32,19 @@ import javax.activation.*;
 @Sharable
 class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
 
-   public static final String HTTP_DATE_FORMAT = "EEE, dd MMM yyyy HH:mm:ss zzz";
-   public static final String HTTP_DATE_GMT_TIMEZONE = "GMT";
-   public static final int HTTP_CACHE_SECONDS = 60;
-   
+   public static final Logger          logger                 = LoggerFactory.getLogger(WebStaticFileHandler.class);
+
+   public static final String          HTTP_DATE_FORMAT       = "EEE, dd MMM yyyy HH:mm:ss zzz";
+   public static final String          HTTP_DATE_GMT_TIMEZONE = "GMT";
+   public static final int             HTTP_CACHE_SECONDS     = 60;
+
    // These rules are not correct in general, but for sites with control of their file names 
    // they are safe.  We only allow alphanumeric ascii character, ., -, _, and /.  We also do 
    // not allow .. to appear anywhere in the uri
-   private static final Pattern VALID_URI = Pattern.compile("/[A-Za-z0-9._/-]+");
-   private static final Pattern INVALID_URI = Pattern.compile(".*[.][.].*");
-   
-   private static MimetypesFileTypeMap mimeTypesMap = new MimetypesFileTypeMap();
+   private static final Pattern        VALID_URI              = Pattern.compile("/[A-Za-z0-9._/-]+");
+   private static final Pattern        INVALID_URI            = Pattern.compile(".*[.][.].*");
+
+   private static MimetypesFileTypeMap mimeTypesMap           = new MimetypesFileTypeMap();
    static {
       mimeTypesMap.addMimeTypes("text/plain txt text TXT TEXT");
       mimeTypesMap.addMimeTypes("text/html html HTML htm HTM");
@@ -51,9 +54,8 @@ class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRequest> 
       mimeTypesMap.addMimeTypes("image/gif gif GIF");
    }
 
-
-   private final boolean useSendFile;
-   private final File[] rootDirs;
+   private final boolean               useSendFile;
+   private final File[]                rootDirs;
 
    public WebStaticFileHandler(boolean usingSSL, File[] rootDirs) {
       this.useSendFile = !usingSSL;
@@ -100,7 +102,7 @@ class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRequest> 
          }
       }
 
-      RandomAccessFile raf;
+      final RandomAccessFile raf;
       try {
          raf = new RandomAccessFile(file, "r");
       } catch (FileNotFoundException fnfe) {
@@ -116,20 +118,22 @@ class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRequest> 
       if (isKeepAlive(request)) {
          response.headers().set(CONNECTION, HttpHeaders.Values.KEEP_ALIVE);
       }
-
-      // Write the initial line and the header.
       ctx.write(response);
 
-      // Write the content.
+      // ship the file
+      ChannelFuture f = null;
       if (useSendFile) {
-         ctx.write(new DefaultFileRegion(raf.getChannel(), 0, fileLength), ctx.newProgressivePromise());
+         f = ctx.write(new DefaultFileRegion(raf.getChannel(), 0, fileLength), ctx.newProgressivePromise());
       } else {
-         ctx.write(new ChunkedFile(raf, 0, fileLength, 8192), ctx.newProgressivePromise());
+         f = ctx.write(new ChunkedFile(raf, 0, fileLength, 8192), ctx.newProgressivePromise());
       }
-
-      // Write the end marker
-      ChannelFuture f = ctx.writeAndFlush(LastHttpContent.EMPTY_LAST_CONTENT);
-
+      f.addListener(new ChannelFutureListener() {
+         @Override
+         public void operationComplete(ChannelFuture channelFuture) throws Exception {
+            raf.close();
+         }
+      });
+      f = ctx.writeAndFlush(LastHttpContent.EMPTY_LAST_CONTENT);
       if (!isKeepAlive(request)) {
          f.addListener(ChannelFutureListener.CLOSE);
       }
@@ -172,7 +176,8 @@ class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRequest> 
    }
 
    private void sendError(ChannelHandlerContext ctx, HttpResponseStatus status) {
-      FullHttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, status, Unpooled.copiedBuffer("Failure: " + status.toString() + "\r\n", CharsetUtil.UTF_8));
+      FullHttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, status, Unpooled.copiedBuffer("Failure: " + status.toString()
+            + "\r\n", CharsetUtil.UTF_8));
       response.headers().set(CONTENT_TYPE, "text/plain; charset=UTF-8");
       ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
    }
@@ -200,16 +205,13 @@ class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRequest> 
 
       // Add cache headers
       time.add(Calendar.SECOND, HTTP_CACHE_SECONDS);
-//      response.headers().set(EXPIRES, dateFormatter.format(time.getTime()));
-//      response.headers().set(CACHE_CONTROL, "private, max-age=" + HTTP_CACHE_SECONDS);
+      //      response.headers().set(EXPIRES, dateFormatter.format(time.getTime()));
+      //      response.headers().set(CACHE_CONTROL, "private, max-age=" + HTTP_CACHE_SECONDS);
       response.headers().set(LAST_MODIFIED, dateFormatter.format(new Date(fileToCache.lastModified())));
    }
 
    private void setContentTypeHeader(HttpResponse response, File file) {
       response.headers().set(CONTENT_TYPE, mimeTypesMap.getContentType(file.getPath()));
    }
-   
-
-
 
 }

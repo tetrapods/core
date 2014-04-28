@@ -7,6 +7,8 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.http.*;
+import io.netty.handler.ssl.SslHandler;
+import io.netty.handler.stream.ChunkedWriteHandler;
 import io.netty.util.ReferenceCountUtil;
 import io.tetrapod.core.Session;
 import io.tetrapod.core.json.JSONObject;
@@ -14,8 +16,11 @@ import io.tetrapod.protocol.core.RequestHeader;
 
 import java.io.File;
 
+import org.slf4j.*;
+
 public class WebHttpSession extends WebSession {
-   
+   protected static final Logger logger = LoggerFactory.getLogger(WebHttpSession.class);
+
    private static File[] splitContentRoot(String contentRoot) {
       String[] parts = contentRoot.split(":");
       File[] res = new File[parts.length];
@@ -29,18 +34,16 @@ public class WebHttpSession extends WebSession {
 
    public WebHttpSession(SocketChannel ch, Session.Helper helper, String contentRoot) {
       super(ch, helper);
-      
-      // Uncomment the following lines if you want HTTPS
-      // SSLEngine engine = SecureChatSslContextFactory.getServerContext().createSSLEngine();
-      // engine.setUseClientMode(false);
-      // ch.pipeline().addLast("ssl", new SslHandler(engine));
-      
+
+      final boolean usingSSL = ch.pipeline().get(SslHandler.class) != null;
+
+      ch.pipeline().addLast("encoder", new HttpResponseEncoder());
       ch.pipeline().addLast("decoder", new HttpRequestDecoder());
       ch.pipeline().addLast("aggregator", new HttpObjectAggregator(65536));
-      ch.pipeline().addLast("encoder", new HttpResponseEncoder());
       ch.pipeline().addLast("api", this);
       if (contentRoot != null) {
-         WebStaticFileHandler sfh = new WebStaticFileHandler(false, splitContentRoot(contentRoot));
+         ch.pipeline().addLast("chunkedWriter", new ChunkedWriteHandler());
+         WebStaticFileHandler sfh = new WebStaticFileHandler(usingSSL, splitContentRoot(contentRoot));
          ch.pipeline().addLast("files", sfh);
       }
    }
@@ -51,17 +54,17 @@ public class WebHttpSession extends WebSession {
          ctx.fireChannelRead(obj);
          return;
       }
-      WebContext context = new WebContext((HttpRequest)obj);
+      WebContext context = new WebContext((HttpRequest) obj);
       RequestHeader header = context.makeRequestHeader(this, relayHandler.getWebRoutes());
       if (header == null) {
          ctx.fireChannelRead(obj);
          return;
       }
-      isKeepAlive =  HttpHeaders.isKeepAlive((HttpRequest)obj);
+      isKeepAlive = HttpHeaders.isKeepAlive((HttpRequest) obj);
       ReferenceCountUtil.release(obj);
       readRequest(header, context);
    }
-   
+
    @Override
    protected Object makeFrame(JSONObject jo) {
       ByteBuf buf = WebContext.makeByteBufResult(jo.toString(3));

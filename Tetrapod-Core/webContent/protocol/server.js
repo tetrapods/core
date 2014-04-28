@@ -167,7 +167,7 @@ function TP_Server() {
             }
          }
       }
-      socket = new WebSocket("ws://" + server + ":" + port + "/sockets");
+      socket = new WebSocket("wss://" + server + ":" + port + "/sockets");
       socket.onopen = onSocketOpen;
       socket.onmessage = onSocketMessage;
       socket.onclose = onSocketClose;

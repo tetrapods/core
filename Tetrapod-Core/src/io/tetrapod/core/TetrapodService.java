@@ -16,10 +16,12 @@ import io.tetrapod.protocol.core.*;
 import io.tetrapod.protocol.service.ServiceCommand;
 import io.tetrapod.protocol.storage.*;
 
-import java.io.IOException;
+import java.io.*;
 import java.security.SecureRandom;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+
+import javax.net.ssl.SSLContext;
 
 import org.slf4j.*;
 
@@ -203,8 +205,6 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          ses.setMyEntityId(getEntityId());
          ses.setMyEntityType(Core.TYPE_TETRAPOD);
          ses.setTheirEntityType(Core.TYPE_CLIENT);
-         // FIXME: for web admins we need to set this to Core.TYPE_ADMIN
-         // But not sure how we distinguish this yet
          ses.addSessionListener(new Session.Listener() {
             @Override
             public void onSessionStop(Session ses) {
@@ -242,11 +242,19 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          registry.setStorage(storage);
          AuthToken.setSecret(storage.getSharedSecret());
 
+         // create servers
          publicServer = new Server(getPublicPort(), new TypedSessionFactory(Core.TYPE_ANONYMOUS), dispatcher);
          serviceServer = new Server(getServicePort(), new TypedSessionFactory(Core.TYPE_SERVICE), dispatcher);
          webSocketsServer = new Server(getWebSocketPort(), new WebSessionFactory("/sockets", true), dispatcher);
          httpServer = new Server(getHTTPPort(), new WebSessionFactory(webContentRoot, false), dispatcher);
 
+         // enable TLS on ports we want secured
+         SSLContext ctx = Util.createSSLContext(new FileInputStream(System.getProperty("tetrapod.jks.file")),
+               System.getProperty("tetrapod.jks.pwd").toCharArray());
+         //httpServer.enableTLS(ctx, false);
+         webSocketsServer.enableTLS(ctx, false);
+
+         // start listening
          serviceServer.start().sync();
          publicServer.start().sync();
          webSocketsServer.start().sync();
@@ -490,7 +498,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    public Response requestKeepAlive(KeepAliveRequest r, RequestContext ctx) {
       return Response.SUCCESS;
    }
-   
+
    @Override
    public Response requestRegister(RegisterRequest r, final RequestContext ctx) {
       if (getEntityId() == 0) {
@@ -685,7 +693,6 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    @Override
    public Response requestLogRegistryStats(LogRegistryStatsRequest r, RequestContext ctx) {
       registry.logStats();
-      Util.random(cluster.getMembers()).getSession().close();
       return Response.SUCCESS;
    }
 
