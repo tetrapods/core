@@ -15,7 +15,7 @@ import java.util.concurrent.*;
 public class WebRoute extends Structure {
    
    public static final int STRUCT_ID = 4890284;
-   public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;
+   public static final int CONTRACT_ID = CoreContract.CONTRACT_ID;
     
    public WebRoute() {
       defaults();

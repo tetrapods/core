@@ -1,9 +1,9 @@
 package io.tetrapod.core.rpc;
 
-import java.io.IOException;
+import io.tetrapod.core.serialize.DataSource;
+import io.tetrapod.protocol.core.CoreContract;
 
-import io.tetrapod.core.serialize.*;
-import io.tetrapod.protocol.core.TetrapodContract;
+import java.io.IOException;
 
 public class Success extends Response {
    public static final int STRUCT_ID = 2;
@@ -20,7 +20,7 @@ public class Success extends Response {
    }
    
    public int getContractId() {
-      return TetrapodContract.CONTRACT_ID;
+      return CoreContract.CONTRACT_ID;
    }
    
 }

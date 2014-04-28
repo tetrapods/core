@@ -30,7 +30,7 @@ public class TypeDescriptor extends Structure {
    public static final byte T_STRUCT_LIST = 14; 
    
    public static final int STRUCT_ID = 6493266;
-   public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;
+   public static final int CONTRACT_ID = CoreContract.CONTRACT_ID;
     
    public TypeDescriptor() {
       defaults();

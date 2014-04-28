@@ -20,9 +20,23 @@ public class CodeGen {
          System.err.println("usage: arguments are filename lang1 lang2 ...");
          System.err.println("       if filename is a folder it will recursively run on all the files");
       }
-      CodeGen cg = new CodeGen();
-      for (int i = 1; i < args.length; i++) {
-         cg.run(args[0], args[i]);
+      String[] roots = args[0].split(";");
+      String[] services = args[1].split(";");
+      for (String service : services) {
+         String folder = null;
+         for (String root : roots) {
+            String s = String.format("%s/%s/definitions", root, service);
+            if (new File(s).exists()) {
+               folder = s;
+               break;
+            }
+         }
+         if (folder == null)
+            continue;
+         CodeGen cg = new CodeGen();
+         for (int i = 2; i < args.length; i++) {
+            cg.run(folder, args[i]);
+         }
       }
    }
    

@@ -1,0 +1,7 @@
+#!/bin/sh
+file=webContent/protocol/hostname.js
+rm -f $file
+## TODO: hostname should be an environment variable or something
+echo 'define(function() { return TP_Hostname });  function TP_Hostname() {  this.hostname = "pod.tetrapod.io"; }' > $file  
+mkdir -p logs
+nohup java -cp "jars/*" io.tetrapod.core.Launcher $* < /dev/null > logs/console.$1.log 2>&1 &

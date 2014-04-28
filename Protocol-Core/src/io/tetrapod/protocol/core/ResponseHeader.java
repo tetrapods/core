@@ -15,7 +15,7 @@ import java.util.concurrent.*;
 public class ResponseHeader extends Structure {
    
    public static final int STRUCT_ID = 675609;
-   public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;
+   public static final int CONTRACT_ID = CoreContract.CONTRACT_ID;
     
    public ResponseHeader() {
       defaults();

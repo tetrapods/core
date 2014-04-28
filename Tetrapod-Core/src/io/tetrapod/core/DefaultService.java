@@ -6,7 +6,6 @@ import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.rpc.Error;
 import io.tetrapod.core.utils.Util;
 import io.tetrapod.protocol.core.*;
-import io.tetrapod.protocol.service.*;
 
 import java.io.*;
 import java.util.*;
@@ -14,7 +13,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.slf4j.*;
 
-public class DefaultService implements Service, BaseServiceContract.API, SessionFactory, EntityMessage.Handler,
+public class DefaultService implements Service, CoreContract.API, SessionFactory, EntityMessage.Handler,
       ClusterMemberMessage.Handler {
    private static final Logger             logger          = LoggerFactory.getLogger(DefaultService.class);
    protected final Set<Integer>            dependencies    = new HashSet<>();
@@ -43,7 +42,7 @@ public class DefaultService implements Service, BaseServiceContract.API, Session
       dispatcher = new Dispatcher();
       clusterClient = new Client(this);
       stats = new ServiceStats(this);
-      addContracts(new BaseServiceContract());
+      addContracts(new CoreContract());
       addPeerContracts(new TetrapodContract());
       addMessageHandler(new EntityMessage(), this);
       addMessageHandler(new ClusterMemberMessage(), this);
@@ -422,7 +421,7 @@ public class DefaultService implements Service, BaseServiceContract.API, Session
 
    public Response genericRequest(Request r, RequestContext ctx) {
       logger.error("unhandled request " + r.dump());
-      return new Error(TetrapodContract.ERROR_UNKNOWN_REQUEST);
+      return new Error(CoreContract.ERROR_UNKNOWN_REQUEST);
    }
 
    public void genericMessage(Message message) {

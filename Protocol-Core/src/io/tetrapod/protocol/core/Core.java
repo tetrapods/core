@@ -28,6 +28,11 @@ public class Core extends Structure {
    public static final byte TYPE_ADMIN = 3; 
    public static final byte TYPE_CLIENT = 4; 
    public static final byte TYPE_ANONYMOUS = 5; 
+   public static final int DEFAULT_PUBLIC_PORT = 9900; 
+   public static final int DEFAULT_SERVICE_PORT = 9901; 
+   public static final int DEFAULT_CLUSTER_PORT = 9902; 
+   public static final int DEFAULT_WEBSOCKETS_PORT = 9903; 
+   public static final int DEFAULT_HTTP_PORT = 9904; 
    public static final int STATUS_STARTING = 1; 
    public static final int STATUS_PAUSED = 2; 
    public static final int STATUS_GONE = 4; 
@@ -44,7 +49,7 @@ public class Core extends Structure {
    public static final byte ENVELOPE_PONG = 7; 
    
    public static final int STRUCT_ID = 9088168;
-   public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;
+   public static final int CONTRACT_ID = CoreContract.CONTRACT_ID;
     
    public Core() {
       defaults();

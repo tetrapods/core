@@ -15,7 +15,7 @@ import java.util.concurrent.*;
 public class StructDescription extends Structure {
    
    public static final int STRUCT_ID = 9642196;
-   public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;
+   public static final int CONTRACT_ID = CoreContract.CONTRACT_ID;
     
    public StructDescription() {
       defaults();

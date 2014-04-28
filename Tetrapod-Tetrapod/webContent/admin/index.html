@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Tetrapod Admin</title>
+
+<link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
+<link rel="stylesheet" href="http://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css">
+
+<!--  =============================================================================== -->
+<style type="text/css">
+#cluster-table {
+	margin: 4px; padding: 12px;
+}
+
+#cluster-table th {
+	background: #000; color: #fff; text-align: center;
+}
+
+#cluster-table td {
+	font-size: 90%; padding: 0px 1px; vertical-align: middle; white-space: nowrap;
+}
+
+.centered {
+	text-align: center;
+}
+
+.running {
+	background: green; color: white;
+}
+
+.gone {
+	background: red; color: white;
+}
+
+.failed {
+	background: orange; color: yellow;
+}
+
+.stopping {
+	background: #fdd; color: #a88;
+}
+
+.starting {
+	background: #eee; color: #999;
+}
+
+.paused {
+	background: yellow;
+}
+
+.dropdown-service {
+	right: auto; left: 0;
+}
+
+.service-icon {
+	width: 24px; height: 24px; margin-right: 8px; margin-left: 6px
+}
+
+.service-name {
+	font-weight: bold;
+}
+
+.service-chart-wrap {
+	position: relative; width: 80px; padding: 0px; padding-left: 0px; padding-right: 0px;
+}
+
+.service-chart {
+	height: 42px; padding: 0px; margin: -5px;
+}
+
+.service-chart-val {
+	text-shadow: 1px 1px 1px rgba(150, 150, 150, .5); text-align: center; position: absolute; top: 8px; left: 0; width: 100%
+}
+
+.alert {
+	margin-top: 20px;
+}
+
+.dropdown-menu {
+	text-align: left;
+}
+
+#page-wrapper {
+	margin: 10px; padding: 10px;
+}
+
+#login-form {
+	width: 320px; padding: 20px; margin: 20px; border-radius: 10px; box-shadow: 0 2px 2px rgba(0, 0, 0, .20);
+}
+</style>
+</head>
+
+<!--  =============================================================================== -->
+
+<body>
+
+	<div id="wrapper">
+		<nav class="navbar navbar-default navbar-static-top app-bind" role="navigation" style="margin-bottom: 0">
+			<div class="navbar-header">
+				<button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".sidebar-collapse">
+					<span class="fa fa-bars"></span>
+				</button>
+				<a class="navbar-brand" href=""> <img src="tetrapod.png"> tetrapod.io
+				</a>
+			</div>
+			<ul class="nav navbar-top-links navbar-right">
+				<li class="dropdown"><a class="dropdown-toggle" data-toggle="dropdown" href="#"> <i class="fa fa-user fa-fw"></i> <i
+						class="fa fa-caret-down"></i>
+				</a>
+					<ul class="dropdown-menu dropdown-user">
+						<li><a href="#"><i class="fa fa-gear fa-fw"></i> Settings</a></li>
+						<li class="divider"></li>
+						<li><a href="#" data-bind="click: onLogout"><i class="fa fa-sign-out fa-fw"></i> Logout</a></li>
+					</ul></li>
+			</ul>
+		</nav>
+
+		<div id="page-wrapper">
+
+			<div class="row app-bind" id="login-wrapper" align="center" hidden="true">
+				<div id="login-form">
+					<form class="form-signin">
+						<input id="email" class="form-control top" type="email" placeholder="email" required autofocus> <br /> <input
+							id="password" class="form-control bottom" type="password" placeholder="password" required> <br /> <a
+							class="btn btn-lg btn-block btn-primary" data-bind="click: login">Sign in</a>
+					</form>
+				</div>
+			</div>
+
+			<div class="row" id="app-wrapper" hidden="true">
+				<div class="col-lg-12">
+					<!--  =============================================================================== -->
+
+					<div id="disconnected-alertbox" class="alert alert-danger" hidden="true">
+						<strong>DISCONNECTED!</strong> Attempting to Reconnect...
+					</div>
+
+					<table class="table table-bordered table-condensed " id="cluster-table">
+						<thead>
+							<tr>
+								<th><i class="fa fa-gear fa-fw"></i></th>
+								<th>Name</th>
+								<th>Entity</th>
+								<th>Host</th>
+								<th>Status</th>
+								<th>Latency</th>
+								<th>RPS</th>
+								<th>MPS</th>
+								<th>Counter</th>
+							</tr>
+						</thead>
+						<tbody data-bind="foreach: services">
+							<tr data-bind='attr: {"class": row_style}'>
+								<td width="48" class="centered">
+									<div class="dropdown">
+										<a class="dropdown-toggle" data-toggle="dropdown" href="#"> <i class="fa fa-gear fa-fw"></i> <i
+											class="fa fa-caret-down"></i>
+										</a>
+										<ul class="dropdown-menu dropdown-service">
+											<li class="disabled"><a href="#" data-bind="text: name +' '+entityString()"></a></li>
+
+											<!-- ko foreach: commands -->
+											<li><a href="#" data-bind="click: function() { $parent.execute($data) }, text: name"></a></li>
+											<!-- /ko -->
+
+											<li class="divider"></li>
+
+											<li><a href="#" data-bind="click: pause, visible: canPause()"><i class="fa fa-pause fa-fw"></i>Pause</a></li>
+											<li><a href="#" data-bind="click: unpause, visible: canUnpause()"><i class="fa fa-play fa-fw"></i>Resume</a></li>
+
+											<li class="divider" data-bind=" visible: !isGone()"></li>
+
+											<li><a href="#" data-bind="click: restart, visible: !isGone()"><i class="fa fa-refresh fa-fw"></i>Restart</a></li>
+
+											<li><a href="#" data-bind="click: shutdown, visible: !isGone()"><i class="fa fa-power-off fa-fw"></i>Shutdown</a></li>
+											<li><a href="#" data-bind="click: deleteService, visible: isGone()"><i class="fa fa-trash-o fa-fw"></i>Delete</a></li>
+
+										</ul>
+									</div>
+								</td>
+
+								<td><img data-bind="attr:{src: iconURL}" class="service-icon"> <span class="service-name"
+									data-bind="text: name"></span></td>
+								<td class="centered"><span data-bind="text: entityString"></span></td>
+								<td class="centered"><span data-bind="text: host"></span></td>
+								<td data-bind="attr: {'class':status_style}"><span data-bind="text: statusName()"></span></td>
+								<td class="service-chart-wrap">
+									<div class="service-chart" data-bind="attr: {id: 'service-chart-latency-' + entityId}"></div> <span
+									class="service-chart-val" data-bind="text: latency"></span>
+								</td>
+								<td class="service-chart-wrap">
+									<div class="service-chart" data-bind="attr: {id: 'service-chart-rps-' + entityId}"></div> <span
+									class="service-chart-val" data-bind="text: rps"></span>
+								</td>
+								<td class="service-chart-wrap">
+									<div class="service-chart" data-bind="attr: {id: 'service-chart-mps-' + entityId}"></div> <span
+									class="service-chart-val" data-bind="text: mps"></span>
+								</td>
+								<td class="service-chart-wrap">
+									<div class="service-chart" data-bind="attr: {id: 'service-chart-counter-' + entityId}"></div> <span
+									class="service-chart-val" data-bind="text: counter"></span>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+
+					<div>
+						<h3>Tetrapod Platform TODOs</h3>
+						<ul>
+							<li>Admin accounts</li>
+							<li>TLS</li>
+							<li>Service Log/metrics viewing, etc...</li>
+							<li>Service direct connections</li>
+							<li>Tetrapod distributed locks, counters, KVStore, preferences</li>
+							<li>Performance testing, queue &amp; threadpool optimizations</li>
+						</ul>
+					</div>
+					<!--  =============================================================================== -->
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<script src="//cdnjs.cloudflare.com/ajax/libs/require.js/2.1.11/require.min.js" data-main="js/main.js"></script>
+</body>
+
+</html>

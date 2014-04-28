@@ -1,6 +1,6 @@
 package io.tetrapod.core;
 
-import io.tetrapod.protocol.core.ServerAddress;
+import io.tetrapod.protocol.core.*;
 
 import java.io.IOException;
 import java.util.*;
@@ -26,7 +26,7 @@ public class Launcher {
 
          ServerAddress addr = null;
          if (opts.get("host") != null) {
-            int port = TetrapodService.DEFAULT_SERVICE_PORT;
+            int port = Core.DEFAULT_SERVICE_PORT;
             if (opts.get("port") != null) {
                port = Integer.parseInt(opts.get("port"));
             }

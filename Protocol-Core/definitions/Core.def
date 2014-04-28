@@ -1,9 +1,9 @@
 java package io.tetrapod.protocol.core
 java outdir "../src"
-javascript out "../rsc/protocol/tetrapod.js"
+javascript out "../rsc/protocol/core.js"
 
 // The core tetrapod service
-service Tetrapod @version(1) @id(1)
+service Core @version(1) @id(1)
 
 struct Core
    const int   UNADDRESSED    = 0 // request is not addressed to a specific entity 
@@ -14,6 +14,13 @@ struct Core
    const byte  TYPE_ADMIN     = 3
    const byte  TYPE_CLIENT    = 4
    const byte  TYPE_ANONYMOUS = 5
+   
+   const int DEFAULT_PUBLIC_PORT     = 9900
+   const int DEFAULT_SERVICE_PORT    = 9901
+   const int DEFAULT_CLUSTER_PORT    = 9902
+   const int DEFAULT_WEBSOCKETS_PORT = 9903
+   const int DEFAULT_HTTP_PORT       = 9904
+   
     
    const int   STATUS_STARTING     = 1  # bitmask
    const int   STATUS_PAUSED       = 2
@@ -67,23 +74,41 @@ public struct MessageHeader
    4: int contractId
    5: int structId
    
-################################# STRUCTURES #################################
+################################ STRUCTURES ###################
+
+// allows an empty request to be called from admin app's service menu
+internal struct ServiceCommand
+   1: string name
+   2: string icon
+   3: int contractId
+   4: int structId
 
 public struct ServerAddress 
    1: string host
    2: int port
 
-public struct Entity
-   1: int entityId  
-   2: int parentId  
-   3: long reclaimToken  
-   4: string host
-   5: int status
-   6: byte type
-   7: string name
-   8: int build  
-   9: int version
-  10: int contractId  
+################################# REQUESTS ####################
+
+internal request Pause
+
+internal request Unpause
+
+internal request Shutdown
+
+internal request Restart
+   1: string restartNonce
+   2: boolean restartPaused
+ 
+internal request ServiceStatsSubscribe
+internal request ServiceStatsUnsubscribe
+
+internal request ServiceDetails
+internal response ServiceDetails
+   1: string iconURL
+   3: string metadata
+   2: ServiceCommand[] commands
+   
+################################# STRUCTURES #################################
 
 internal struct Subscriber
    1: int entityId  
@@ -116,124 +141,3 @@ internal struct TypeDescriptor
 internal struct StructDescription
    1: TypeDescriptor[] types
    2: string[] tagWebNames
-
-################################# REQUESTS #################################
-
-public request KeepAlive
- 
-public request Register
-   1: int build   
-   2: string token
-   3: int contractId
-   4: string name
-   5: int status
-      
-public response Register 
-   1: int entityId
-   2: int parentId
-   3: string token
-   
-public request ClusterJoin
-   1: int entityId
-   2: string host
-   3: int servicePort
-   4: int clusterPort
-   
-public response ClusterJoin
-   1: int entityId
-   
-public request Unregister
-   1: int entityId
-
-internal request Publish 
-   error NOT_READY
-   error NOT_PARENT 
-   error INVALID_ENTITY
-
-internal response Publish 
-   1: int topicId
-    
-internal request RegistrySubscribe
-internal request RegistryUnsubscribe
-internal request ServicesSubscribe
-internal request ServicesUnsubscribe
-
-internal request ServiceStatusUpdate
-   1: int status
-
-# perhaps this should be merged into a new RegisterService   
-internal request AddServiceInformation
-   1: WebRoute[] routes
-   2: StructDescription<list> structs // structs that could possibly be used in end user comms
-   
-internal request LogRegistryStats 
-
-public request AdminLogin
-   1: string email
-   2: string password 
-
-public response AdminLogin
-   2: string token 
-   
-public request AdminAuthorize
-   1: string token 
-   
-
-################################# MESSAGES #################################
-
-// a special message to avoid race conditions on the Register response
-public message Entity 
-   1: int entityId
-   
-// notification of an existing tetrapod cluster member    
-internal message ClusterMember
-   1: int entityId
-   2: string host
-   3: int servicePort
-   4: int clusterPort
-    
-##### Registry Topic Messages ##### 
-
-internal message Registry.EntityRegistered
-	1: Entity entity 
-	 
-internal message Registry.EntityUnregistered
-	1: int entityId;
-	
-internal message Registry.EntityUpdated
-	1: int entityId;
-	2: int status;	 
-	
-internal message Registry.TopicPublished
-   1: int ownerId
-   2: int topicId
-
-internal message Registry.TopicUnpublished
-   1: int ownerId
-   2: int topicId
-
-internal message Registry.TopicSubscribed
-   1: int ownerId
-   2: int topicId
-   3: int entityId
-
-internal message Registry.TopicUnsubscribed
-   1: int ownerId
-   2: int topicId
-   3: int entityId
-   
-internal message Registry.EntityListComplete
-
-##### Services Topic Messages #####
-
-internal message Services.ServiceAdded
-	1: Entity entity 
-	 
-internal message Services.ServiceRemoved
-	1: int entityId;
-	
-internal message Services.ServiceUpdated
-	1: int entityId;
-	2: int status;
-
- 

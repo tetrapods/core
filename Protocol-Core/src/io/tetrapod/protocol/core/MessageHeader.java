@@ -15,7 +15,7 @@ import java.util.concurrent.*;
 public class MessageHeader extends Structure {
    
    public static final int STRUCT_ID = 11760427;
-   public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;
+   public static final int CONTRACT_ID = CoreContract.CONTRACT_ID;
     
    public MessageHeader() {
       defaults();

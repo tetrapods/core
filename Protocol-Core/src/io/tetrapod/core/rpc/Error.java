@@ -12,7 +12,7 @@ public class Error extends Response {
    public int              code;
 
    public Error() {
-      this(TetrapodContract.ERROR_UNKNOWN);
+      this(CoreContract.ERROR_UNKNOWN);
    }
 
    public Error(int code) {
@@ -52,7 +52,7 @@ public class Error extends Response {
    }
 
    public int getContractId() {
-      return TetrapodContract.CONTRACT_ID;
+      return CoreContract.CONTRACT_ID;
    }
 
    @Override
