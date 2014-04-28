@@ -187,7 +187,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
    }
 
    private void dispatchRequest(final ServiceAPI svc, final RequestHeader header, final Request req) {
-      RequestContext ctx = new RequestContext(header, this);
+      RequestContext ctx = new SessionRequestContext(header, this);
       Response res = req.securityCheck(ctx);
       if (res == null) {
          res = req.dispatch(svc, ctx);
@@ -201,7 +201,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
 
    protected void dispatchMessage(final MessageHeader header, final Message msg) {
       // OPTIMIZE: use senderId to queue instead of using this single threaded queue
-      final MessageContext ctx = new MessageContext(header, this);
+      final MessageContext ctx = new SessionMessageContext(header, this);
       getDispatcher().dispatchSequential(new Runnable() {
          public void run() {
             for (SubscriptionAPI handler : helper.getMessageHandlers(header.contractId, header.structId)) {

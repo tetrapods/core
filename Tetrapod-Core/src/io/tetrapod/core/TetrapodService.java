@@ -492,7 +492,8 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    }
    
    @Override
-   public Response requestRegister(RegisterRequest r, final RequestContext ctx) {
+   public Response requestRegister(RegisterRequest r, final RequestContext ctxA) {
+      SessionRequestContext ctx = (SessionRequestContext)ctxA;
       if (getEntityId() == 0) {
          return new Error(ERROR_SERVICE_UNAVAILABLE);
       }
@@ -597,7 +598,8 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    }
 
    @Override
-   public Response requestRegistrySubscribe(RegistrySubscribeRequest r, RequestContext ctx) {
+   public Response requestRegistrySubscribe(RegistrySubscribeRequest r, RequestContext ctxA) {
+      SessionRequestContext ctx = (SessionRequestContext)ctxA;
       if (registryTopic == null) {
          return new Error(ERROR_UNKNOWN);
       }
@@ -613,7 +615,8 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    }
 
    @Override
-   public Response requestServicesSubscribe(ServicesSubscribeRequest r, RequestContext ctx) {
+   public Response requestServicesSubscribe(ServicesSubscribeRequest r, RequestContext ctxA) {
+      SessionRequestContext ctx = (SessionRequestContext)ctxA;
       if (servicesTopic == null) {
          return new Error(ERROR_UNKNOWN);
       }
@@ -663,7 +666,8 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    }
 
    @Override
-   public Response requestClusterJoin(ClusterJoinRequest r, RequestContext ctx) {
+   public Response requestClusterJoin(ClusterJoinRequest r, RequestContext ctxA) {
+      SessionRequestContext ctx = (SessionRequestContext)ctxA;
       if (ctx.session.getTheirEntityType() != Core.TYPE_TETRAPOD) {
          return new Error(ERROR_INVALID_RIGHTS);
       }
@@ -707,7 +711,8 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    }
 
    @Override
-   public Response requestAdminAuthorize(AdminAuthorizeRequest r, RequestContext ctx) {
+   public Response requestAdminAuthorize(AdminAuthorizeRequest r, RequestContext ctxA) {
+      SessionRequestContext ctx = (SessionRequestContext)ctxA;
       logger.info("AUTHORIZE WITH {} ...", r.token);
       AuthToken.Decoded d = AuthToken.decodeAuthToken1(r.token);
       if (d != null) {
@@ -721,7 +726,8 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    }
 
    @Override
-   public Response requestAdminLogin(AdminLoginRequest r, RequestContext ctx) {
+   public Response requestAdminLogin(AdminLoginRequest r, RequestContext ctxA) {
+      SessionRequestContext ctx = (SessionRequestContext)ctxA;
       if (r.email == null) {
          return new Error(ERROR_INVALID_RIGHTS);
       }

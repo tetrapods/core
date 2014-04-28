@@ -84,7 +84,8 @@ public class DefaultService implements Service, BaseServiceContract.API, Session
    }
 
    @Override
-   public void messageEntity(EntityMessage m, MessageContext ctx) {
+   public void messageEntity(EntityMessage m, MessageContext ctxA) {
+      SessionMessageContext ctx = (SessionMessageContext)ctxA;
       if (ctx.session.getTheirEntityType() == Core.TYPE_TETRAPOD) {
          this.entityId = m.entityId;
          ctx.session.setMyEntityId(m.entityId);
