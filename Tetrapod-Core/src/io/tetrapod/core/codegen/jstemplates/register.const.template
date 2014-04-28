@@ -1,1 +1,0 @@
-server.registerConst("{{contractClass}}", "{{class}}", "{{constName}}", {{constValue}});
