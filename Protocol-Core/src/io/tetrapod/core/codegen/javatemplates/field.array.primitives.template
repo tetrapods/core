@@ -1,0 +1,8 @@
+public {{javatype}}[] {{name}};
+{{name}} = {{default}};
+case {{tag}}: this.{{name}} = data.read_{{type}}_array(tag); break;
+if (this.{{name}} != null) data.write({{tag}}, this.{{name}});
+{{javatype}}[] {{name}}
+this.{{name}} = {{name}};
+
+Lines are: 1) declaration 2) initialization 3) read 4) write 5) constructor declaration 6) constructor initilizer 

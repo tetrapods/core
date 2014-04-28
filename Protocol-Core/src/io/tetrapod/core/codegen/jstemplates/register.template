@@ -1,0 +1,1 @@
+server.register("{{type}}", "{{contractClass}}", "{{class}}", {{contractId}}, {{structId}});

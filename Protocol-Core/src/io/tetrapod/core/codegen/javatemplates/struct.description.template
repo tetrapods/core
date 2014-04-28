@@ -1,0 +1,1 @@
+desc.types[{{tag}}] = new TypeDescriptor({{descType}}, {{descContractId}}, {{descStructId}});

@@ -1,0 +1,1 @@
+new WebRoute("{{path}}", {{requestClass}}.STRUCT_ID, {{contractClass}}.CONTRACT_ID),

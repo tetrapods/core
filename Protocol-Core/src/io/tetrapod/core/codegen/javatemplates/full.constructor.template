@@ -1,0 +1,3 @@
+public {{class}}({{inline-declarations}}) {
+   {{inline-initializers}}
+}
