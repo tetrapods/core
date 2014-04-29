@@ -10,6 +10,10 @@
 
    <modules>
       <module>../Tetrapod-Core</module>
+      <module>../Tetrapod-Tetrapod</module>
+      <module>../Protocol-Core</module>
+      <module>../Protocol-Tetrapod</module>
+      <module>./assembly</module>
    </modules>
 
    <build>
@@ -35,6 +39,15 @@
             <plugin>
                <artifactId>maven-assembly-plugin</artifactId>
                <version>2.4</version>
+               <dependencies>
+                   <dependency>
+                        <groupId>io.tetrapod.platform</groupId>
+                        <artifactId>assembly-descriptors</artifactId>
+                        <version>0.0.1-SNAPSHOT</version>
+                   </dependency>
+               </dependencies>
+               
+               
                <executions>
                   <execution>
                      <id>make-bundles</id>
@@ -43,22 +56,15 @@
                         <goal>single</goal>
                      </goals>
                      <configuration>
-                        <descriptors>
-                           <descriptor>assembly.xml</descriptor>
-                        </descriptors>
+                       <descriptorRefs>
+                         <descriptorRef>assembly</descriptorRef>
+                       </descriptorRefs>
                      </configuration>
                   </execution>
                </executions>
             </plugin>
          </plugins>
       </pluginManagement>
-      <extensions>
-         <extension>
-            <groupId>org.apache.maven.wagon</groupId>
-            <artifactId>wagon-ssh-external</artifactId>
-            <version>2.6</version>
-         </extension>
-      </extensions>
    </build>
 
    <dependencies>
@@ -69,13 +75,5 @@
          <scope>test</scope>
       </dependency>
    </dependencies>
-
-   <distributionManagement>
-      <repository>
-         <id>tetrapod.io</id>
-         <name>Tetrapod Repository</name>
-         <url>scpexe://pod@pod.tetrapod.io/var/www/maven2</url>
-      </repository>
-   </distributionManagement>
 
 </project>
