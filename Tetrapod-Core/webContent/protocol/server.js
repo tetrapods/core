@@ -40,8 +40,8 @@ function TP_Server() {
    self.connected = false;
    self.setSimulator = function(s) {
       simulator = s;
-   }; 
-   
+   };
+
    for (var i = 0; i < arguments.length; i++) {
       new arguments[i](self);
    }
@@ -166,8 +166,10 @@ function TP_Server() {
                onOpen();
             }
          }
-      } 
-      socket = new WebSocket("wss://" + server + ":" + port + "/sockets");
+      }
+      var url = "wss://" + server + ":" + port + "/sockets";
+      console.log("Connecting to " + url);
+      socket = new WebSocket(url);
       socket.onopen = onSocketOpen;
       socket.onmessage = onSocketMessage;
       socket.onclose = onSocketClose;
@@ -236,21 +238,20 @@ function TP_Server() {
          func(result);
       }
    }
- 
 
    // --- socket methods
 
    function onSocketOpen(event) {
       self.connected = true;
       if (self.commsLog)
-         console.log("[socket] open")
+         console.log("[socket] open: " + socket.URL);
       var i, array = openHandlers;
       for (i = 0; i < array.length; i++)
          array[i]();
 
       self.keepAlive = setInterval(function() {
-         send("KeepAlive", {}, 1/*Core.DIRECT*/);
-         var elapsed = Date.now() - lastHeardFrom; 
+         send("KeepAlive", {}, 1/* Core.DIRECT */);
+         var elapsed = Date.now() - lastHeardFrom;
          if (elapsed > 6000) {
             console.log("We haven't heard from the server in " + elapsed + " ms")
             // TODO: mark as bad connection
@@ -293,7 +294,7 @@ function TP_Server() {
 
    function onSocketError(event) {
       if (self.commsLog)
-         console.log("[socket] error " + JSON.stringify(event));
+         console.log("[socket] error: " + JSON.stringify(event));
    }
 
 }
