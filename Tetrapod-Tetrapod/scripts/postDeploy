@@ -1,0 +1,20 @@
+#!/bin/sh
+
+# postDeploy ROOT_DIR BUILD_NUM
+
+main() {
+   set -e
+
+   ROOT_DIR=$1
+   BUILD_NUM=$2
+   extractWebContent $ROOT_DIR/jars/protocol-core-0.0.1-SNAPSHOT.jar
+   extractWebContent $ROOT_DIR/jars/protocol-tetrapod-0.0.1-SNAPSHOT.jar
+   echo $BUILD_NUM > $ROOT_DIR/build_number.txt
+}
+
+extractWebContent() {
+   local file=$1
+   unzip -n -q $file -d $ROOT_DIR/webContent 'protocol/*'
+}
+
+main $@
