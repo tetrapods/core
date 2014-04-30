@@ -3,6 +3,8 @@ package io.tetrapod.core;
 import static io.tetrapod.protocol.core.Core.UNADDRESSED;
 import static io.tetrapod.protocol.core.TetrapodContract.*;
 import io.netty.buffer.ByteBuf;
+import io.netty.channel.EventLoopGroup;
+import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.tetrapod.core.Session.RelayHandler;
 import io.tetrapod.core.registry.*;
@@ -18,7 +20,7 @@ import io.tetrapod.protocol.storage.*;
 
 import java.io.*;
 import java.security.SecureRandom;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.SSLContext;
@@ -32,15 +34,17 @@ import org.slf4j.*;
 public class TetrapodService extends DefaultService implements TetrapodContract.API, StorageContract.API, RelayHandler,
       io.tetrapod.core.registry.Registry.RegistryBroadcaster {
 
-   public static final Logger                         logger                  = LoggerFactory.getLogger(TetrapodService.class);
+   public static final Logger                         logger               = LoggerFactory.getLogger(TetrapodService.class);
 
-   public static final int                            DEFAULT_PUBLIC_PORT     = 9900;
-   public static final int                            DEFAULT_SERVICE_PORT    = 9901;
-   public static final int                            DEFAULT_CLUSTER_PORT    = 9902;
-   public static final int                            DEFAULT_WEBSOCKETS_PORT = 9903;
-   public static final int                            DEFAULT_HTTP_PORT       = 9904;
+   public static final int                            DEFAULT_PUBLIC_PORT  = 9900;
+   public static final int                            DEFAULT_SERVICE_PORT = 9901;
+   public static final int                            DEFAULT_CLUSTER_PORT = 9902;
+   public static final int                            DEFAULT_WS_PORT      = 9903;
+   public static final int                            DEFAULT_HTTP_PORT    = 9904;
+   public static final int                            DEFAULT_WSS_PORT     = 9905;
+   public static final int                            DEFAULT_HTTPS_PORT   = 9906;
 
-   protected final SecureRandom                       random                  = new SecureRandom();
+   protected final SecureRandom                       random               = new SecureRandom();
 
    protected final io.tetrapod.core.registry.Registry registry;
 
@@ -53,12 +57,10 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
    private Storage                                    storage;
 
-   private Server                                     serviceServer;
-   private Server                                     publicServer;
-   private Server                                     webSocketsServer;
-   private Server                                     httpServer;
+   private final EventLoopGroup                       bossGroup            = new NioEventLoopGroup();
+   private final List<Server>                         servers              = new ArrayList<Server>();
 
-   private final WebRoutes                            webRoutes               = new WebRoutes();
+   private final WebRoutes                            webRoutes            = new WebRoutes();
 
    private long                                       lastStatsLog;
    private String                                     webContentRoot;
@@ -144,17 +146,28 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    }
 
    public int getWebSocketPort() {
-      return Util.getProperty("tetrapod.websocket.port", DEFAULT_WEBSOCKETS_PORT);
+      return Util.getProperty("tetrapod.ws.port", DEFAULT_WS_PORT);
+   }
+
+   public int getWebSocketSecurePort() {
+      return Util.getProperty("tetrapod.wss.port", DEFAULT_WSS_PORT);
    }
 
    public int getHTTPPort() {
       return Util.getProperty("tetrapod.http.port", DEFAULT_HTTP_PORT);
    }
 
+   public int getHTTPSPort() {
+      return Util.getProperty("tetrapod.https.port", DEFAULT_HTTPS_PORT);
+   }
+
    @Override
    public long getCounter() {
-      return serviceServer.getNumSessions() + publicServer.getNumSessions() + webSocketsServer.getNumSessions()
-            + httpServer.getNumSessions() + cluster.getNumSessions();
+      long count = cluster.getNumSessions();
+      for (Server s : servers) {
+         count += s.getNumSessions();
+      }
+      return count;
    }
 
    private class TypedSessionFactory implements SessionFactory {
@@ -243,22 +256,23 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          AuthToken.setSecret(storage.getSharedSecret());
 
          // create servers
-         publicServer = new Server(getPublicPort(), new TypedSessionFactory(Core.TYPE_ANONYMOUS), dispatcher);
-         serviceServer = new Server(getServicePort(), new TypedSessionFactory(Core.TYPE_SERVICE), dispatcher);
-         webSocketsServer = new Server(getWebSocketPort(), new WebSessionFactory("/sockets", true), dispatcher);
-         httpServer = new Server(getHTTPPort(), new WebSessionFactory(webContentRoot, false), dispatcher);
+         servers.add(new Server(getPublicPort(), new TypedSessionFactory(Core.TYPE_ANONYMOUS), dispatcher));
+         servers.add(new Server(getServicePort(), new TypedSessionFactory(Core.TYPE_SERVICE), dispatcher));
+         servers.add(new Server(getHTTPPort(), new WebSessionFactory(webContentRoot, false), dispatcher));
+         servers.add(new Server(getWebSocketPort(), new WebSessionFactory("/sockets", true), dispatcher));
 
-         // enable TLS on ports we want secured
-         SSLContext ctx = Util.createSSLContext(new FileInputStream(System.getProperty("tetrapod.jks.file", "cfg/tetrapod.jks")), System
-               .getProperty("tetrapod.jks.pwd", "4pod.dop4").toCharArray());
-       //  httpServer.enableTLS(ctx, false);
-         webSocketsServer.enableTLS(ctx, false);
+         // create secure port servers, if configured
+         if (Util.getProperty("tetrapod.tls", false)) {
+            SSLContext ctx = Util.createSSLContext(new FileInputStream(System.getProperty("tetrapod.jks.file", "cfg/tetrapod.jks")), System
+                  .getProperty("tetrapod.jks.pwd", "4pod.dop4").toCharArray());
+            servers.add(new Server(getWebSocketSecurePort(), new WebSessionFactory("/sockets", true), dispatcher, ctx, false));
+            servers.add(new Server(getHTTPSPort(), new WebSessionFactory(webContentRoot, false), dispatcher, ctx, false));
+         }
 
          // start listening
-         serviceServer.start().sync();
-         publicServer.start().sync();
-         webSocketsServer.start().sync();
-         httpServer.start().sync();
+         for (Server s : servers) {
+            s.start(bossGroup).sync();
+         }
       } catch (Exception e) {
          fail(e);
       }
@@ -272,17 +286,11 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       if (cluster != null) {
          cluster.shutdown();
       }
-      if (publicServer != null) {
-         publicServer.stop();
-      }
-      if (serviceServer != null) {
-         serviceServer.stop();
-      }
-      if (webSocketsServer != null) {
-         webSocketsServer.stop();
-      }
-      if (httpServer != null) {
-         httpServer.stop();
+      try {
+         // we have one boss group for all the other servers
+         bossGroup.shutdownGracefully().sync();
+      } catch (Exception e) {
+         logger.error(e.getMessage(), e);
       }
       if (storage != null) {
          storage.shutdown();

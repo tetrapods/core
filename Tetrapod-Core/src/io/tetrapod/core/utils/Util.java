@@ -108,11 +108,19 @@ public class Util {
    }
 
    public static int getProperty(String key, int defaultValue) {
-      String val = System.getProperty(key);
+      final String val = System.getProperty(key);
       if (val == null) {
          return defaultValue;
       }
       return Integer.parseInt(val);
+   }
+
+   public static boolean getProperty(String key, boolean defaultValue) {
+      final String val = System.getProperty(key);
+      if (val == null) {
+         return defaultValue;
+      }
+      return Boolean.parseBoolean(val);
    }
 
 }

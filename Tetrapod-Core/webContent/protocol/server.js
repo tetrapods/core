@@ -152,8 +152,8 @@ function TP_Server() {
       }
    }
 
-   function connect(server, port) {
-      port = typeof port !== 'undefined' ? port : 9903;
+   function connect(server, secure, port) {
+      port = typeof port !== 'undefined' ? port : (secure ? 9905 : 9903);
       if (!window.WebSocket) {
          window.WebSocket = window.MozWebSocket;
       }
@@ -167,10 +167,9 @@ function TP_Server() {
             }
          }
       }
- 
-      // change to wss:// for ssl
-      var url = "wss://" + server + ":" + port + "/sockets";
-      console.log("Connecting to " + url);
+
+      var url = (secure ? "wss:" : "ws:") + "//" + server + ":" + port + "/sockets";
+      console.log("Connecting to: " + url);
       socket = new WebSocket(url);
       socket.onopen = onSocketOpen;
       socket.onmessage = onSocketMessage;

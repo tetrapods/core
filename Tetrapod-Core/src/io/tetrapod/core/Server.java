@@ -19,11 +19,11 @@ import org.slf4j.*;
  */
 public class Server implements Session.Listener {
 
-   public static final Logger    logger    = LoggerFactory.getLogger(Server.class);
+   public static final Logger    logger   = LoggerFactory.getLogger(Server.class);
 
-   private Map<Integer, Session> sessions  = new ConcurrentHashMap<>();
+   private Map<Integer, Session> sessions = new ConcurrentHashMap<>();
 
-   private EventLoopGroup        bossGroup = new NioEventLoopGroup();
+   private EventLoopGroup        bossGroup;
 
    private int                   port;
    private final Dispatcher      dispatcher;
@@ -37,12 +37,22 @@ public class Server implements Session.Listener {
       this.port = port;
    }
 
+   public Server(int port, SessionFactory sessionFactory, Dispatcher dispatcher, SSLContext ctx, boolean clientAuth) {
+      this(port, sessionFactory, dispatcher);
+      enableTLS(ctx, clientAuth);
+   }
+
    public void enableTLS(SSLContext ctx, boolean clientAuth) {
       this.sslContext = ctx;
       this.clientAuth = clientAuth;
    }
 
    public ChannelFuture start() {
+      return start(new NioEventLoopGroup());
+   }
+
+   public synchronized ChannelFuture start(EventLoopGroup bossGroup) {
+      this.bossGroup = bossGroup;
       ServerBootstrap b = new ServerBootstrap();
       b.group(bossGroup, dispatcher.getWorkerGroup()).channel(NioServerSocketChannel.class)
             .childHandler(new ChannelInitializer<SocketChannel>() {
