@@ -48,6 +48,8 @@ class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRequest> 
    static {
       mimeTypesMap.addMimeTypes("text/plain txt text TXT TEXT");
       mimeTypesMap.addMimeTypes("text/html html HTML htm HTM");
+      mimeTypesMap.addMimeTypes("text/javascript js");
+      mimeTypesMap.addMimeTypes("text/json json");      
       mimeTypesMap.addMimeTypes("text/css css CSS");
       mimeTypesMap.addMimeTypes("image/png png PNG");
       mimeTypesMap.addMimeTypes("image/jpeg jpg JPG");
