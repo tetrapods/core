@@ -39,9 +39,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    public static final int                            DEFAULT_PUBLIC_PORT  = 9900;
    public static final int                            DEFAULT_SERVICE_PORT = 9901;
    public static final int                            DEFAULT_CLUSTER_PORT = 9902;
-   public static final int                            DEFAULT_WS_PORT      = 9903;
    public static final int                            DEFAULT_HTTP_PORT    = 9904;
-   public static final int                            DEFAULT_WSS_PORT     = 9905;
    public static final int                            DEFAULT_HTTPS_PORT   = 9906;
 
    protected final SecureRandom                       random               = new SecureRandom();
@@ -145,14 +143,6 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       return Util.getProperty("tetrapod.public.port", DEFAULT_PUBLIC_PORT);
    }
 
-   public int getWebSocketPort() {
-      return Util.getProperty("tetrapod.ws.port", DEFAULT_WS_PORT);
-   }
-
-   public int getWebSocketSecurePort() {
-      return Util.getProperty("tetrapod.wss.port", DEFAULT_WSS_PORT);
-   }
-
    public int getHTTPPort() {
       return Util.getProperty("tetrapod.http.port", DEFAULT_HTTP_PORT);
    }
@@ -202,18 +192,19 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    }
 
    private class WebSessionFactory implements SessionFactory {
-      public WebSessionFactory(String contentRoot, boolean webSockets) {
+      public WebSessionFactory(String contentRoot, String webSockets) {
          this.contentRoot = contentRoot;
          this.webSockets = webSockets;
       }
 
-      boolean webSockets = false;
-      String  contentRoot;
+      String webSockets;
+      String contentRoot;
 
       @Override
       public Session makeSession(SocketChannel ch) {
          TetrapodService pod = TetrapodService.this;
-         Session ses = webSockets ? new WebSocketSession(ch, pod, contentRoot) : new WebHttpSession(ch, pod, contentRoot);
+         Session ses = webSockets != null ? new WebSocketSession(ch, pod, contentRoot, webSockets) : new WebHttpSession(ch, pod,
+               contentRoot);
          ses.setRelayHandler(pod);
          ses.setMyEntityId(getEntityId());
          ses.setMyEntityType(Core.TYPE_TETRAPOD);
@@ -258,15 +249,13 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          // create servers
          servers.add(new Server(getPublicPort(), new TypedSessionFactory(Core.TYPE_ANONYMOUS), dispatcher));
          servers.add(new Server(getServicePort(), new TypedSessionFactory(Core.TYPE_SERVICE), dispatcher));
-         servers.add(new Server(getHTTPPort(), new WebSessionFactory(webContentRoot, false), dispatcher));
-         servers.add(new Server(getWebSocketPort(), new WebSessionFactory("/sockets", true), dispatcher));
+         servers.add(new Server(getHTTPPort(), new WebSessionFactory(webContentRoot, "/sockets"), dispatcher));
 
          // create secure port servers, if configured
          if (Util.getProperty("tetrapod.tls", true)) {
             SSLContext ctx = Util.createSSLContext(new FileInputStream(System.getProperty("tetrapod.jks.file", "cfg/tetrapod.jks")), System
                   .getProperty("tetrapod.jks.pwd", "4pod.dop4").toCharArray());
-            servers.add(new Server(getWebSocketSecurePort(), new WebSessionFactory("/sockets", true), dispatcher, ctx, false));
-            servers.add(new Server(getHTTPSPort(), new WebSessionFactory(webContentRoot, false), dispatcher, ctx, false));
+            servers.add(new Server(getHTTPSPort(), new WebSessionFactory(webContentRoot, "/sockets"), dispatcher, ctx, false));
          }
 
          // start listening
