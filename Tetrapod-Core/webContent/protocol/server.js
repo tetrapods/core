@@ -169,7 +169,7 @@ function TP_Server() {
       }
  
       // change to wss:// for ssl
-      var url = "ws://" + server + ":" + port + "/sockets";
+      var url = "wss://" + server + ":" + port + "/sockets";
       console.log("Connecting to " + url);
       socket = new WebSocket(url);
       socket.onopen = onSocketOpen;
