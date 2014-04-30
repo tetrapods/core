@@ -5,6 +5,7 @@ function TP_Tetrapod(server) {
    server.register("response", "Tetrapod", "ERROR", 1, 1);
    server.register("response", "Tetrapod", "SUCCESS", 1, 2);
 
+   server.registerConst("Tetrapod", "null", "HOSTNAME_MISMATCH", 12239905);
    server.registerConst("Tetrapod", "null", "NOT_PARENT", 2219555);
    server.registerConst("Tetrapod", "null", "NOT_READY", 12438466);
    
@@ -27,6 +28,7 @@ function TP_Tetrapod(server) {
    server.register("response", "Tetrapod", "AdminLogin", 1, 4213436);
    server.register("request", "Tetrapod", "AdminAuthorize", 1, 12706146);
    server.register("request", "Tetrapod", "KeepAlive", 1, 5512920);
+   server.register("request", "Tetrapod", "SetWebRoot", 1, 4029010);
    server.register("message", "Tetrapod", "Entity", 1, 10913291);
    server.register("message", "Tetrapod", "ClusterMember", 1, 1076508);
    server.register("message", "Tetrapod", "EntityRegistered", 1, 1454035);

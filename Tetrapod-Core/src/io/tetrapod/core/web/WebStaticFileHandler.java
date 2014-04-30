@@ -53,9 +53,9 @@ class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRequest> 
 
 
    private final boolean useSendFile;
-   private final File[] rootDirs;
+   private final Map<String,File> rootDirs;
 
-   public WebStaticFileHandler(boolean usingSSL, File[] rootDirs) {
+   public WebStaticFileHandler(boolean usingSSL, Map<String,File> rootDirs) {
       this.useSendFile = !usingSSL;
       this.rootDirs = rootDirs;
    }
@@ -154,7 +154,7 @@ class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRequest> 
          }
       }
       if (VALID_URI.matcher(uri).matches() && !INVALID_URI.matcher(uri).matches()) {
-         for (File rootDir : rootDirs) {
+         for (File rootDir : rootDirs.values()) {
             File f = new File(rootDir, uri);
             if (f.exists()) {
                if (f.isDirectory()) {

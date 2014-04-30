@@ -5,6 +5,8 @@ javascript out "../rsc/protocol/tetrapod.js"
 // The core tetrapod service
 service Tetrapod @version(1) @id(1)
 
+error HOSTNAME_MISMATCH
+
 ################################# STRUCTURES #################################
 
 public struct Entity
@@ -78,6 +80,11 @@ public request AdminAuthorize
    1: string token 
    
 public request KeepAlive
+
+internal request SetWebRoot
+   1: string logicalName
+   2: string webRootFolder
+   3: string hostname 
 
 ################################# MESSAGES #################################
 

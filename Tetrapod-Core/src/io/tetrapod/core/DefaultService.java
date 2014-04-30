@@ -35,9 +35,6 @@ public class DefaultService implements Service, CoreContract.API, SessionFactory
    private final MessageHandlers           messageHandlers = new MessageHandlers();
 
    public DefaultService() {
-      // load default properties
-      loadProperties("cfg/tetrapod.properties");
-
       status |= Core.STATUS_STARTING;
       dispatcher = new Dispatcher();
       clusterClient = new Client(this);
@@ -60,18 +57,6 @@ public class DefaultService implements Service, CoreContract.API, SessionFactory
             }
          }
       });
-   }
-
-   public static void loadProperties(String fileName) {
-      // load default properties
-      final File file = new File(fileName);
-      if (file.exists()) {
-         try (Reader reader = new FileReader(file)) {
-            System.getProperties().load(reader);
-         } catch (IOException e) {
-            logger.error(e.getMessage(), e);
-         }
-      }
    }
 
    public byte getEntityType() {
@@ -130,6 +115,7 @@ public class DefaultService implements Service, CoreContract.API, SessionFactory
             onReadyToServe();
             // ok, we're good to go
             updateStatus(status & ~Core.STATUS_STARTING);
+            setWebRoot();
          } else {
             dispatcher.dispatch(1, TimeUnit.SECONDS, new Runnable() {
                public void run() {
@@ -544,6 +530,46 @@ public class DefaultService implements Service, CoreContract.API, SessionFactory
    public Response requestServiceStatsUnsubscribe(ServiceStatsUnsubscribeRequest r, RequestContext ctx) {
       stats.unsubscribe(ctx.header.fromId);
       return Response.SUCCESS;
+   }
+   
+   private void setWebRoot() {
+      File f = new File("webContent"); 
+      if (f.exists()) {
+         String name = Launcher.getOpt("webOnly");
+         if (name == null) {
+            name = getShortName();
+         }
+         try {
+            final String path = f.getCanonicalPath();
+            sendDirectRequest(new SetWebRootRequest(name, path, getHostName())).handle(new ResponseHandler() {
+               public void onResponse(Response res) {
+                  if (res.isError()) {
+                     logger.error("Could not set web root {}, error = {}", path, res.errorCode());
+                  }
+                  if (Launcher.getOpt("webOnly") != null) {
+                     System.exit(0);
+                  }
+               }
+            });
+            if (System.getProperty("localDevelopment","false").equals("true")) {
+               int i = 0;
+               for (File f2 : getDevProtocolWebRoots()) {
+                  sendDirectRequest(new SetWebRootRequest(name + i++, f2.getCanonicalPath(), getHostName()));
+               }
+            }
+         } catch (IOException e) {
+            logger.error("bad web root path", e);
+         }
+      }
+   }
+
+   protected File[] getDevProtocolWebRoots() {
+      if (getShortName() == null) {
+         return new File[] {};
+      }
+      return new File[] {
+            new File("../Protocol-" + getShortName() + "/rsc")
+      };
    }
 
 }

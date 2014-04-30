@@ -13,21 +13,13 @@ import io.tetrapod.core.json.JSONObject;
 import io.tetrapod.protocol.core.RequestHeader;
 
 import java.io.File;
+import java.util.Map;
 
 public class WebHttpSession extends WebSession {
    
-   private static File[] splitContentRoot(String contentRoot) {
-      String[] parts = contentRoot.split(":");
-      File[] res = new File[parts.length];
-      for (int i = 0; i < res.length; i++) {
-         res[i] = new File(parts[i]);
-      }
-      return res;
-   }
-
    private boolean isKeepAlive;
 
-   public WebHttpSession(SocketChannel ch, Session.Helper helper, String contentRoot) {
+   public WebHttpSession(SocketChannel ch, Session.Helper helper, Map<String,File> rootDirs) {
       super(ch, helper);
       
       // Uncomment the following lines if you want HTTPS
@@ -39,10 +31,8 @@ public class WebHttpSession extends WebSession {
       ch.pipeline().addLast("aggregator", new HttpObjectAggregator(65536));
       ch.pipeline().addLast("encoder", new HttpResponseEncoder());
       ch.pipeline().addLast("api", this);
-      if (contentRoot != null) {
-         WebStaticFileHandler sfh = new WebStaticFileHandler(false, splitContentRoot(contentRoot));
-         ch.pipeline().addLast("files", sfh);
-      }
+      WebStaticFileHandler sfh = new WebStaticFileHandler(false, rootDirs);
+      ch.pipeline().addLast("files", sfh);
    }
 
    @Override

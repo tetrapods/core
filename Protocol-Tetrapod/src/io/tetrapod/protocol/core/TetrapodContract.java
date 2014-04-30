@@ -32,6 +32,7 @@ public class TetrapodContract extends Contract {
       ServiceStatusUpdateRequest.Handler,
       ServicesSubscribeRequest.Handler,
       ServicesUnsubscribeRequest.Handler,
+      SetWebRootRequest.Handler,
       UnregisterRequest.Handler
       {}
    
@@ -51,6 +52,7 @@ public class TetrapodContract extends Contract {
          new AdminLoginRequest(),
          new AdminAuthorizeRequest(),
          new KeepAliveRequest(),
+         new SetWebRootRequest(),
       };
    }
    
@@ -183,6 +185,7 @@ public class TetrapodContract extends Contract {
        
    }
       
+   public static final int ERROR_HOSTNAME_MISMATCH = 12239905; 
    public static final int ERROR_NOT_PARENT = 2219555; 
    public static final int ERROR_NOT_READY = 12438466; 
 }
