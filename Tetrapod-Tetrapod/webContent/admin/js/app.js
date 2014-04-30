@@ -1,11 +1,11 @@
-define([ "knockout", "jquery", "bootbox", "toolbox", "protocol/server", "protocol/tetrapod", "protocol/hostname" ],
-      function(ko, $, bootbox, toolbox, Server, Tetrapod, Hostname) {
+define([ "knockout", "jquery", "bootbox", "toolbox", "protocol/server", "protocol/tetrapod", "protocol/core", "protocol/hostname" ],
+      function(ko, $, bootbox, toolbox, Server, Tetrapod, CoreProt, Hostname) {
          return new App();
 
          function App() {
             var self = this;
-            var server = new Server(Tetrapod);
-            var Core = server.consts["Tetrapod.Core"];
+            var server = new Server(Tetrapod, CoreProt);
+            var Core = server.consts["Core.Core"];
             var token = null;
             var authtoken;
             var model;

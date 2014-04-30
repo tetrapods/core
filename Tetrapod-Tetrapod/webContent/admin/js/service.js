@@ -26,7 +26,7 @@ define(["knockout", "jquery", "bootbox", "app"], function(ko, $, bootbox, app) {
          }
       };
    
-   var Core = app.server.consts["Tetrapod.Core"];
+   var Core = app.server.consts["Core.Core"];
 
    return Service; // not using new means this returns a constructor function (ie class)
    
