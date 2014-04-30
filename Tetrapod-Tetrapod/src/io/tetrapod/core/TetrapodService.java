@@ -16,10 +16,10 @@ import io.tetrapod.core.web.*;
 import io.tetrapod.protocol.core.*;
 import io.tetrapod.protocol.storage.*;
 
-import java.io.IOException;
+import java.io.*;
 import java.security.SecureRandom;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 import org.slf4j.*;
 
@@ -53,7 +53,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    private final WebRoutes                            webRoutes               = new WebRoutes();
 
    private long                                       lastStatsLog;
-   private String                                     webContentRoot;
+   private Map<String,File>                           webRootDirs = new ConcurrentHashMap<>();
 
    public TetrapodService() {
       registry = new io.tetrapod.core.registry.Registry(this);
@@ -61,15 +61,15 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       cluster = new TetrapodCluster(this);
       setMainContract(new TetrapodContract());
       addContracts(new StorageContract());
-
       addSubscriptionHandler(new TetrapodContract.Registry(), registry);
+      updateHostname();
    }
 
    @Override
    public void startNetwork(ServerAddress address, String token, Map<String, String> otherOpts) throws Exception {
       logger.info(" ***** Start Network ***** ");
       cluster.startListening();
-      if (address == null && token == null) {
+      if (address.host.equals("localhost") && !otherOpts.containsKey("forceJoin")) {
          // we're not connecting anywhere, so bootstrap and self register as the first
          registerSelf(io.tetrapod.core.registry.Registry.BOOTSTRAP_ID, random.nextLong());
       } else {
@@ -77,9 +77,6 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          this.token = token;
          cluster.joinCluster(address);
       }
-      webContentRoot = "./webContent";
-      if (otherOpts.containsKey("webroot"))
-         webContentRoot = otherOpts.get("webroot");
    }
 
    /**
@@ -181,18 +178,25 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    }
 
    private class WebSessionFactory implements SessionFactory {
-      public WebSessionFactory(String contentRoot, boolean webSockets) {
-         this.contentRoot = contentRoot;
+      public WebSessionFactory(String contentRoot, Map<String,File> contentRootMap, boolean webSockets) {
          this.webSockets = webSockets;
+         this.contentRootMap = contentRootMap;
+         this.contentRoot = contentRoot;
       }
 
-      boolean webSockets = false;
-      String  contentRoot;
+      final boolean webSockets;
+      final String contentRoot;
+      final Map<String,File> contentRootMap;
 
       @Override
       public Session makeSession(SocketChannel ch) {
          TetrapodService pod = TetrapodService.this;
-         Session ses = webSockets ? new WebSocketSession(ch, pod, contentRoot) : new WebHttpSession(ch, pod, contentRoot);
+         Session ses = null;
+         if (webSockets) {
+            ses = new WebSocketSession(ch, pod, contentRoot);
+         } else {
+            ses = new WebHttpSession(ch, pod, contentRootMap);
+         }
          ses.setRelayHandler(pod);
          ses.setMyEntityId(getEntityId());
          ses.setMyEntityType(Core.TYPE_TETRAPOD);
@@ -238,8 +242,8 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
          publicServer = new Server(getPublicPort(), new TypedSessionFactory(Core.TYPE_ANONYMOUS), dispatcher);
          serviceServer = new Server(getServicePort(), new TypedSessionFactory(Core.TYPE_SERVICE), dispatcher);
-         webSocketsServer = new Server(getWebSocketPort(), new WebSessionFactory("/sockets", true), dispatcher);
-         httpServer = new Server(getHTTPPort(), new WebSessionFactory(webContentRoot, false), dispatcher);
+         webSocketsServer = new Server(getWebSocketPort(), new WebSessionFactory("/sockets", null, true), dispatcher);
+         httpServer = new Server(getHTTPPort(), new WebSessionFactory(null, webRootDirs, false), dispatcher);
 
          serviceServer.start().sync();
          publicServer.start().sync();
@@ -737,5 +741,33 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
       return new AdminLoginResponse(authtoken);
    }
+   
+   @Override
+   public Response requestSetWebRoot(SetWebRootRequest r, RequestContext ctx) {
+      if (!r.hostname.equals(getHostName())) {
+         return Response.error(ERROR_HOSTNAME_MISMATCH);
+      }
+      File f = new File(r.webRootFolder);
+      // FIXME - some security consideration around f, maybe it has to be a sibling or something?
+      webRootDirs.put(r.logicalName, f);
+      return Response.SUCCESS;
+   }
+   
+   private void updateHostname() {
+      try (Writer w = new FileWriter(new File("webContent/protocol/hostname.js"))) {
+         String hostname = System.getProperty("cluster.host", "localhost");
+         w.append(String.format("define(function() { return TP_Hostname });  function TP_Hostname() {  this.hostname = \"%s\"; }", hostname));
+      } catch (IOException e) {
+         fail(e);
+      }
+   }
+   
+   protected File[] getDevProtocolWebRoots() {
+      return new File[] {
+            new File("../Protocol-Tetrapod/rsc"),
+            new File("../Protocol-Core/rsc")
+      };
+   }
+
 
 }

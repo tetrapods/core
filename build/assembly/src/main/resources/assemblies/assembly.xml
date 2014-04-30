@@ -14,7 +14,7 @@
    <dependencySets>
       <dependencySet>
          <outputDirectory>jars</outputDirectory>
-         <useProjectArtifact>false</useProjectArtifact>
+         <useProjectArtifact>true</useProjectArtifact>
          <unpack>false</unpack>
          <scope>runtime</scope>
       </dependencySet>

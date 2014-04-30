@@ -66,7 +66,7 @@ public class Storage implements MembershipListener {
 
    private void loadDefaultProperties() throws IOException {
       final Properties props = new Properties();
-      try (Reader reader = new FileReader("cfg/default.properties")) {
+      try (Reader reader = new FileReader("cfg/storage.properties")) {
          props.load(reader);
       }
 
@@ -74,7 +74,7 @@ public class Storage implements MembershipListener {
       final int storedVersion = Integer.parseInt(get("tetrapod.storage.defaults.version", "0").trim());
 
       if (storedVersion < fileVersion) {
-         logger.info("INITIALIZING STORAGE from {} version {}", "cfg/default.properties", fileVersion);
+         logger.info("INITIALIZING STORAGE from {} version {}", "cfg/storage.properties", fileVersion);
          for (Object key : props.keySet()) {
             map.put(key.toString(), props.get(key).toString());
          }
