@@ -252,7 +252,8 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          servers.add(new Server(getHTTPPort(), new WebSessionFactory(webContentRoot, "/sockets"), dispatcher));
 
          // create secure port servers, if configured
-         if (Util.getProperty("tetrapod.tls", true)) {
+         if (Util.getProperty("tetrapod.tls", true)) {            
+            System.setProperty("jdk.certpath.disabledAlgorithms", "TLS_DHE_RSA_WITH_AES_128_CBC_SHA");
             SSLContext ctx = Util.createSSLContext(new FileInputStream(System.getProperty("tetrapod.jks.file", "cfg/tetrapod.jks")), System
                   .getProperty("tetrapod.jks.pwd", "4pod.dop4").toCharArray());
             servers.add(new Server(getHTTPSPort(), new WebSessionFactory(webContentRoot, "/sockets"), dispatcher, ctx, false));
