@@ -167,6 +167,9 @@ class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRequest> 
             throw new Error();
          }
       }
+      if (uri.equals("/")) {
+         uri = "/index.html";
+      }
       if (VALID_URI.matcher(uri).matches() && !INVALID_URI.matcher(uri).matches()) {
          if (uri.startsWith("/vbf")) {
             uri = uri.substring(uri.indexOf("/", 2));

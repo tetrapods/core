@@ -542,13 +542,13 @@ public class DefaultService implements Service, CoreContract.API, SessionFactory
    }
    
    private void setWebRoot() {
-      File f = new File("webContent"); 
-      if (f.exists()) {
-         String name = Launcher.getOpt("webOnly");
-         if (name == null) {
-            name = getShortName();
-         }
-         try {
+      String name = Launcher.getOpt("webOnly");
+      if (name == null) {
+         name = getShortName();
+      }
+      try {
+         File f = new File("webContent"); 
+         if (f.exists()) {
             final String path = f.getCanonicalPath();
             sendDirectRequest(new SetWebRootRequest(name, path, getHostName())).handle(new ResponseHandler() {
                public void onResponse(Response res) {
@@ -560,15 +560,15 @@ public class DefaultService implements Service, CoreContract.API, SessionFactory
                   }
                }
             });
-            if (System.getProperty("localDevelopment","false").equals("true")) {
-               int i = 0;
-               for (File f2 : getDevProtocolWebRoots()) {
-                  sendDirectRequest(new SetWebRootRequest(name + i++, f2.getCanonicalPath(), getHostName()));
-               }
-            }
-         } catch (IOException e) {
-            logger.error("bad web root path", e);
          }
+         if (System.getProperty("localDevelopment","false").equals("true")) {
+            int i = 0;
+            for (File f2 : getDevProtocolWebRoots()) {
+               sendDirectRequest(new SetWebRootRequest(name + i++, f2.getCanonicalPath(), getHostName()));
+            }
+         }
+      } catch (IOException e) {
+         logger.error("bad web root path", e);
       }
    }
 

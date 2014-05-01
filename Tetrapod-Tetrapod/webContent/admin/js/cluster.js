@@ -1,5 +1,5 @@
 define(["knockout", "jquery", "app", "service"], function(ko, $, app, Service) {
-   var Core = app.server.consts["Tetrapod.Core"];
+   var Core = app.server.consts["Core.Core"];
 
    return new ClusterModel();
    
