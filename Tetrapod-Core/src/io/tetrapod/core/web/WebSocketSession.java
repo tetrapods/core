@@ -13,23 +13,65 @@ import java.io.IOException;
 
 import org.slf4j.*;
 
-public class WebSocketSession extends WebSession {
+public class WebSocketSession extends WebHttpSession {
 
-   private static final Logger logger = LoggerFactory.getLogger(WebSocketSession.class);
+   private static final Logger       logger = LoggerFactory.getLogger(WebSocketSession.class);
 
-   public WebSocketSession(SocketChannel ch, Session.Helper helper, String contentRoot) {
-      super(ch, helper);
-      ch.pipeline().addLast("decoder", new HttpRequestDecoder());
-      ch.pipeline().addLast("aggregator", new HttpObjectAggregator(65536));
-      ch.pipeline().addLast("encoder", new HttpResponseEncoder());
-      ch.pipeline().addLast("websocket", new WebSocketServerProtocolHandler(contentRoot));
-      ch.pipeline().addLast("websocketHandler", this);
+   private final String              wsLocation;
+
+   private WebSocketServerHandshaker handshaker;
+
+   public WebSocketSession(SocketChannel ch, Session.Helper helper, String contentRoot, String wsLocation) {
+      super(ch, helper, contentRoot);
+      this.wsLocation = wsLocation;
    }
 
    @Override
-   public void channelRead(ChannelHandlerContext ctx, Object obj) throws Exception {
-      String request = ((TextWebSocketFrame) obj).text();
-      ReferenceCountUtil.release(obj);
+   public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+      if (msg instanceof FullHttpRequest) {
+         handleHttpRequest(ctx, (FullHttpRequest) msg);
+      } else if (msg instanceof WebSocketFrame) {
+         handleWebSocketFrame(ctx, (WebSocketFrame) msg);
+      }
+   }
+
+   @Override
+   public void channelReadComplete(ChannelHandlerContext ctx) throws Exception {
+      ctx.flush();
+   }
+
+   @Override
+   protected void handleHttpRequest(ChannelHandlerContext ctx, FullHttpRequest req) throws Exception {
+      if (wsLocation.equals(req.getUri())) {
+         // Handshake
+         WebSocketServerHandshakerFactory wsFactory = new WebSocketServerHandshakerFactory(wsLocation, null, false);
+         handshaker = wsFactory.newHandshaker(req);
+         if (handshaker == null) {
+            WebSocketServerHandshakerFactory.sendUnsupportedVersionResponse(ctx.channel());
+         } else {
+            handshaker.handshake(ctx.channel(), req);
+         }
+      } else {
+         super.handleHttpRequest(ctx, req);
+      }
+   }
+
+   private void handleWebSocketFrame(ChannelHandlerContext ctx, WebSocketFrame frame) {
+      // Check for closing frame
+      if (frame instanceof CloseWebSocketFrame) {
+         handshaker.close(ctx.channel(), (CloseWebSocketFrame) frame.retain());
+         return;
+      }
+      if (frame instanceof PingWebSocketFrame) {
+         ctx.channel().write(new PongWebSocketFrame(frame.content().retain()));
+         return;
+      }
+      if (!(frame instanceof TextWebSocketFrame)) {
+         throw new UnsupportedOperationException(String.format("%s frame types not supported", frame.getClass().getName()));
+      }
+
+      String request = ((TextWebSocketFrame) frame).text();
+      ReferenceCountUtil.release(frame);
       try {
          JSONObject jo = new JSONObject(request);
          WebContext webContext = new WebContext(jo);
@@ -47,14 +89,4 @@ public class WebSocketSession extends WebSession {
       return new TextWebSocketFrame(jo.toString(3));
    }
 
-   @Override
-   public void channelActive(final ChannelHandlerContext ctx) throws Exception {
-      fireSessionStartEvent();
-   }
-
-   @Override
-   public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-      fireSessionStopEvent();
-      cancelAllPendingRequests();
-   }
 }

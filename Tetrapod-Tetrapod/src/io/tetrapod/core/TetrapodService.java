@@ -4,6 +4,8 @@ import static io.tetrapod.protocol.core.Core.*;
 import static io.tetrapod.protocol.core.TetrapodContract.*;
 import static io.tetrapod.protocol.core.CoreContract.*;
 import io.netty.buffer.ByteBuf;
+import io.netty.channel.EventLoopGroup;
+import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.tetrapod.core.Session.RelayHandler;
 import io.tetrapod.core.registry.*;
@@ -20,6 +22,8 @@ import java.io.*;
 import java.security.SecureRandom;
 import java.util.*;
 import java.util.concurrent.*;
+
+import javax.net.ssl.SSLContext;
 
 import org.slf4j.*;
 
@@ -45,10 +49,8 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
    private Storage                                    storage;
 
-   private Server                                     serviceServer;
-   private Server                                     publicServer;
-   private Server                                     webSocketsServer;
-   private Server                                     httpServer;
+   private final EventLoopGroup                       bossGroup            = new NioEventLoopGroup();
+   private final List<Server>                         servers              = new ArrayList<Server>();
 
    private final WebRoutes                            webRoutes               = new WebRoutes();
 
@@ -132,18 +134,21 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       return Util.getProperty("tetrapod.public.port", DEFAULT_PUBLIC_PORT);
    }
 
-   public int getWebSocketPort() {
-      return Util.getProperty("tetrapod.websocket.port", DEFAULT_WEBSOCKETS_PORT);
-   }
-
    public int getHTTPPort() {
       return Util.getProperty("tetrapod.http.port", DEFAULT_HTTP_PORT);
    }
 
+   public int getHTTPSPort() {
+      return Util.getProperty("tetrapod.https.port", DEFAULT_HTTPS_PORT);
+   }
+
    @Override
    public long getCounter() {
-      return serviceServer.getNumSessions() + publicServer.getNumSessions() + webSocketsServer.getNumSessions()
-            + httpServer.getNumSessions() + cluster.getNumSessions();
+      long count = cluster.getNumSessions();
+      for (Server s : servers) {
+         count += s.getNumSessions();
+      }
+      return count;
    }
 
    private class TypedSessionFactory implements SessionFactory {
@@ -178,13 +183,13 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    }
 
    private class WebSessionFactory implements SessionFactory {
-      public WebSessionFactory(String contentRoot, Map<String,File> contentRootMap, boolean webSockets) {
+      public WebSessionFactory(String contentRoot, Map<String,File> contentRootMap, String webSockets) {
          this.webSockets = webSockets;
          this.contentRootMap = contentRootMap;
          this.contentRoot = contentRoot;
       }
 
-      final boolean webSockets;
+      final String webSockets;
       final String contentRoot;
       final Map<String,File> contentRootMap;
 
@@ -192,8 +197,8 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       public Session makeSession(SocketChannel ch) {
          TetrapodService pod = TetrapodService.this;
          Session ses = null;
-         if (webSockets) {
-            ses = new WebSocketSession(ch, pod, contentRoot);
+         if (webSockets != null) {
+            ses = new WebSocketSession(ch, pod, contentRoot, webSockets);
          } else {
             ses = new WebHttpSession(ch, pod, contentRootMap);
          }
@@ -201,8 +206,6 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          ses.setMyEntityId(getEntityId());
          ses.setMyEntityType(Core.TYPE_TETRAPOD);
          ses.setTheirEntityType(Core.TYPE_CLIENT);
-         // FIXME: for web admins we need to set this to Core.TYPE_ADMIN
-         // But not sure how we distinguish this yet
          ses.addSessionListener(new Session.Listener() {
             @Override
             public void onSessionStop(Session ses) {
@@ -240,15 +243,23 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          registry.setStorage(storage);
          AuthToken.setSecret(storage.getSharedSecret());
 
-         publicServer = new Server(getPublicPort(), new TypedSessionFactory(Core.TYPE_ANONYMOUS), dispatcher);
-         serviceServer = new Server(getServicePort(), new TypedSessionFactory(Core.TYPE_SERVICE), dispatcher);
-         webSocketsServer = new Server(getWebSocketPort(), new WebSessionFactory("/sockets", null, true), dispatcher);
-         httpServer = new Server(getHTTPPort(), new WebSessionFactory(null, webRootDirs, false), dispatcher);
+         // create servers
+         servers.add(new Server(getPublicPort(), new TypedSessionFactory(Core.TYPE_ANONYMOUS), dispatcher));
+         servers.add(new Server(getServicePort(), new TypedSessionFactory(Core.TYPE_SERVICE), dispatcher));
+         servers.add(new Server(getHTTPPort(), new WebSessionFactory(null, webRootDirs, "/sockets"), dispatcher));
 
-         serviceServer.start().sync();
-         publicServer.start().sync();
-         webSocketsServer.start().sync();
-         httpServer.start().sync();
+         // create secure port servers, if configured
+         if (Util.getProperty("tetrapod.tls", true)) {            
+            System.setProperty("jdk.certpath.disabledAlgorithms", "TLS_DHE_RSA_WITH_AES_128_CBC_SHA");
+            SSLContext ctx = Util.createSSLContext(new FileInputStream(System.getProperty("tetrapod.jks.file", "cfg/tetrapod.jks")), System
+                  .getProperty("tetrapod.jks.pwd", "4pod.dop4").toCharArray());
+            servers.add(new Server(getHTTPSPort(), new WebSessionFactory(webContentRoot, null, "/sockets"), dispatcher, ctx, false));
+         }
+
+         // start listening
+         for (Server s : servers) {
+            s.start(bossGroup).sync();
+         }
       } catch (Exception e) {
          fail(e);
       }
@@ -262,17 +273,11 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       if (cluster != null) {
          cluster.shutdown();
       }
-      if (publicServer != null) {
-         publicServer.stop();
-      }
-      if (serviceServer != null) {
-         serviceServer.stop();
-      }
-      if (webSocketsServer != null) {
-         webSocketsServer.stop();
-      }
-      if (httpServer != null) {
-         httpServer.stop();
+      try {
+         // we have one boss group for all the other servers
+         bossGroup.shutdownGracefully().sync();
+      } catch (Exception e) {
+         logger.error(e.getMessage(), e);
       }
       if (storage != null) {
          storage.shutdown();
@@ -687,7 +692,6 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    @Override
    public Response requestLogRegistryStats(LogRegistryStatsRequest r, RequestContext ctx) {
       registry.logStats();
-      Util.random(cluster.getMembers()).getSession().close();
       return Response.SUCCESS;
    }
 
@@ -741,7 +745,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
       return new AdminLoginResponse(authtoken);
    }
-   
+
    @Override
    public Response requestSetWebRoot(SetWebRootRequest r, RequestContext ctx) {
       if (!r.hostname.equals(getHostName())) {

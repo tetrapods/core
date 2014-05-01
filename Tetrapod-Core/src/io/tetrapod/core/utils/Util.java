@@ -113,7 +113,7 @@ public class Util {
    }
 
    public static int getProperty(String key, int defaultValue) {
-      String val = System.getProperty(key);
+      final String val = System.getProperty(key);
       if (val == null) {
          return defaultValue;
       }
@@ -139,6 +139,14 @@ public class Util {
       } catch (Exception ex) {
          return -1;
       }
+   }
+
+   public static boolean getProperty(String key, boolean defaultValue) {
+      final String val = System.getProperty(key);
+      if (val == null) {
+         return defaultValue;
+      }
+      return Boolean.parseBoolean(val);
    }
 
 }

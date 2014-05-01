@@ -1,13 +1,16 @@
 package io.tetrapod.core.web;
 
+import static io.netty.handler.codec.http.HttpHeaders.*;
 import static io.netty.handler.codec.http.HttpHeaders.Names.*;
-import static io.netty.handler.codec.http.HttpResponseStatus.OK;
+import static io.netty.handler.codec.http.HttpResponseStatus.*;
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
-import io.netty.buffer.ByteBuf;
-import io.netty.channel.ChannelHandlerContext;
+import io.netty.buffer.*;
+import io.netty.channel.*;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.http.*;
-import io.netty.util.ReferenceCountUtil;
+import io.netty.handler.ssl.SslHandler;
+import io.netty.handler.stream.ChunkedWriteHandler;
+import io.netty.util.*;
 import io.tetrapod.core.Session;
 import io.tetrapod.core.json.JSONObject;
 import io.tetrapod.protocol.core.RequestHeader;
@@ -15,43 +18,68 @@ import io.tetrapod.protocol.core.RequestHeader;
 import java.io.File;
 import java.util.Map;
 
+import org.slf4j.*;
+
 public class WebHttpSession extends WebSession {
-   
+   protected static final Logger logger = LoggerFactory.getLogger(WebHttpSession.class);
+
    private boolean isKeepAlive;
 
    public WebHttpSession(SocketChannel ch, Session.Helper helper, Map<String,File> rootDirs) {
       super(ch, helper);
-      
-      // Uncomment the following lines if you want HTTPS
-      // SSLEngine engine = SecureChatSslContextFactory.getServerContext().createSSLEngine();
-      // engine.setUseClientMode(false);
-      // ch.pipeline().addLast("ssl", new SslHandler(engine));
-      
-      ch.pipeline().addLast("decoder", new HttpRequestDecoder());
+
+      final boolean usingSSL = ch.pipeline().get(SslHandler.class) != null;
+
+      ch.pipeline().addLast("codec-http", new HttpServerCodec());
       ch.pipeline().addLast("aggregator", new HttpObjectAggregator(65536));
-      ch.pipeline().addLast("encoder", new HttpResponseEncoder());
       ch.pipeline().addLast("api", this);
-      WebStaticFileHandler sfh = new WebStaticFileHandler(false, rootDirs);
+      ch.pipeline().addLast("chunkedWriter", new ChunkedWriteHandler());
+      WebStaticFileHandler sfh = new WebStaticFileHandler(usingSSL, rootDirs);
       ch.pipeline().addLast("files", sfh);
    }
 
    @Override
-   public void channelRead(ChannelHandlerContext ctx, Object obj) throws Exception {
-      if (!(obj instanceof HttpRequest)) {
-         ctx.fireChannelRead(obj);
+   public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+      if (!(msg instanceof HttpRequest)) {
+         ctx.fireChannelRead(msg);
          return;
       }
-      WebContext context = new WebContext((HttpRequest)obj);
+      handleHttpRequest(ctx, (FullHttpRequest) msg);
+   }
+
+   protected void handleHttpRequest(ChannelHandlerContext ctx, FullHttpRequest req) throws Exception {
+      if (!req.getDecoderResult().isSuccess()) {
+         sendHttpResponse(ctx, req, new DefaultFullHttpResponse(HTTP_1_1, BAD_REQUEST));
+         return;
+      }
+
+      // handle a JSON API call
+      WebContext context = new WebContext(req);
       RequestHeader header = context.makeRequestHeader(this, relayHandler.getWebRoutes());
       if (header == null) {
-         ctx.fireChannelRead(obj);
+         ctx.fireChannelRead(req);
          return;
       }
-      isKeepAlive =  HttpHeaders.isKeepAlive((HttpRequest)obj);
-      ReferenceCountUtil.release(obj);
+      isKeepAlive = HttpHeaders.isKeepAlive((HttpRequest) req);
+      ReferenceCountUtil.release(req);
       readRequest(header, context);
    }
-   
+
+   protected void sendHttpResponse(ChannelHandlerContext ctx, FullHttpRequest req, FullHttpResponse res) {
+      // Generate an error page if response getStatus code is not OK (200).
+      if (res.getStatus().code() != 200) {
+         ByteBuf buf = Unpooled.copiedBuffer(res.getStatus().toString(), CharsetUtil.UTF_8);
+         res.content().writeBytes(buf);
+         buf.release();
+         setContentLength(res, res.content().readableBytes());
+      }
+      // Send the response and close the connection if necessary.
+      ChannelFuture f = ctx.channel().writeAndFlush(res);
+      if (!isKeepAlive(req) || res.getStatus().code() != 200) {
+         f.addListener(ChannelFutureListener.CLOSE);
+      }
+   }
+
    @Override
    protected Object makeFrame(JSONObject jo) {
       ByteBuf buf = WebContext.makeByteBufResult(jo.toString(3));
@@ -69,6 +97,17 @@ public class WebHttpSession extends WebSession {
    @Override
    public void checkHealth() {
       // TODO?      
+   }
+
+   @Override
+   public void channelActive(final ChannelHandlerContext ctx) throws Exception {
+      fireSessionStartEvent();
+   }
+
+   @Override
+   public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+      fireSessionStopEvent();
+      cancelAllPendingRequests();
    }
 
 }

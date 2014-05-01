@@ -1,5 +1,5 @@
-define([ "knockout", "jquery", "bootbox", "toolbox", "protocol/server", "protocol/tetrapod", "protocol/core", "protocol/hostname" ],
-      function(ko, $, bootbox, toolbox, Server, Tetrapod, CoreProt, Hostname) {
+define([ "knockout", "jquery", "bootbox", "toolbox", "protocol/server", "protocol/tetrapod", "protocol/core" ],
+      function(ko, $, bootbox, toolbox, Server, Tetrapod, CoreProt) {
          return new App();
 
          function App() {
@@ -29,7 +29,7 @@ define([ "knockout", "jquery", "bootbox", "toolbox", "protocol/server", "protoco
             }
 
             function connect() {
-               server.connect(new Hostname().hostname, 9903).listen(onConnected, onDisconnected);
+         server.connect(window.location.hostname, window.location.protocol == 'https:').listen(onConnected, onDisconnected);
             }
 
             function onConnected() {

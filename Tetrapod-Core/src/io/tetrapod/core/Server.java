@@ -19,17 +19,17 @@ import org.slf4j.*;
  */
 public class Server implements Session.Listener {
 
-   public static final Logger    logger    = LoggerFactory.getLogger(Server.class);
+   public static final Logger    logger   = LoggerFactory.getLogger(Server.class);
 
-   private Map<Integer, Session> sessions  = new ConcurrentHashMap<>();
+   private Map<Integer, Session> sessions = new ConcurrentHashMap<>();
 
-   private EventLoopGroup        bossGroup = new NioEventLoopGroup();
-   //private EventLoopGroup        workerGroup = new NioEventLoopGroup();
+   private EventLoopGroup        bossGroup;
 
    private int                   port;
    private final Dispatcher      dispatcher;
    private final SessionFactory  sessionFactory;
-   private SslHandler            ssl;
+   private SSLContext            sslContext;
+   private boolean               clientAuth;
 
    public Server(int port, SessionFactory sessionFactory, Dispatcher dispatcher) {
       this.sessionFactory = sessionFactory;
@@ -37,14 +37,22 @@ public class Server implements Session.Listener {
       this.port = port;
    }
 
+   public Server(int port, SessionFactory sessionFactory, Dispatcher dispatcher, SSLContext ctx, boolean clientAuth) {
+      this(port, sessionFactory, dispatcher);
+      enableTLS(ctx, clientAuth);
+   }
+
    public void enableTLS(SSLContext ctx, boolean clientAuth) {
-      SSLEngine engine = ctx.createSSLEngine();
-      engine.setUseClientMode(false);
-      engine.setWantClientAuth(clientAuth);
-      ssl = new SslHandler(engine);
+      this.sslContext = ctx;
+      this.clientAuth = clientAuth;
    }
 
    public ChannelFuture start() {
+      return start(new NioEventLoopGroup());
+   }
+
+   public synchronized ChannelFuture start(EventLoopGroup bossGroup) {
+      this.bossGroup = bossGroup;
       ServerBootstrap b = new ServerBootstrap();
       b.group(bossGroup, dispatcher.getWorkerGroup()).channel(NioServerSocketChannel.class)
             .childHandler(new ChannelInitializer<SocketChannel>() {
@@ -62,20 +70,23 @@ public class Server implements Session.Listener {
       logger.debug("Stopping server on port {}...", port);
       try {
          bossGroup.shutdownGracefully().sync();
-         // workerGroup.shutdownGracefully().sync();
       } catch (Exception e) {
          logger.error(e.getMessage(), e);
       }
       logger.debug("Stopped server on port {}", port);
    }
 
-   private void startSession(SocketChannel ch) {
+   private void startSession(final SocketChannel ch) throws Exception {
       logger.info("Connection from {}", ch);
-      if (ssl != null) {
-         ch.pipeline().addLast(ssl);
+      if (sslContext != null) {
+         SSLEngine engine = sslContext.createSSLEngine();
+         engine.setUseClientMode(false);
+         engine.setWantClientAuth(clientAuth);
+         SslHandler handler = new SslHandler(engine);
+         ch.pipeline().addLast("ssl", handler);
       }
       Session session = sessionFactory.makeSession(ch);
-      session.addSessionListener(this);
+      session.addSessionListener(Server.this);
    }
 
    @Override

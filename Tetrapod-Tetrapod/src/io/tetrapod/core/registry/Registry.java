@@ -282,7 +282,7 @@ public class Registry implements TetrapodContract.Registry.API {
          final Topic topic = e.unpublish(topicId);
          if (topic != null) {
             // clean up all the subscriptions to this topic
-            for (Subscriber sub : topic.getSubscribers()) {
+            for (Subscriber sub : topic.getSubscribers().toArray(new Subscriber[0])) {
                unsubscribe(e, topic, sub.entityId, true);
             }
             if (e.parentId == parentId) {
