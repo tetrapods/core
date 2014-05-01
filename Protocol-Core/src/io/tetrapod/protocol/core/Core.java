@@ -31,8 +31,8 @@ public class Core extends Structure {
    public static final int DEFAULT_PUBLIC_PORT = 9900; 
    public static final int DEFAULT_SERVICE_PORT = 9901; 
    public static final int DEFAULT_CLUSTER_PORT = 9902; 
-   public static final int DEFAULT_WEBSOCKETS_PORT = 9903; 
    public static final int DEFAULT_HTTP_PORT = 9904; 
+   public static final int DEFAULT_HTTPS_PORT = 9906; 
    public static final int STATUS_STARTING = 1; 
    public static final int STATUS_PAUSED = 2; 
    public static final int STATUS_GONE = 4; 

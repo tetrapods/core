@@ -15,8 +15,8 @@ function TP_Core(server) {
    server.registerConst("Core", "Core", "DEFAULT_PUBLIC_PORT", 9900);
    server.registerConst("Core", "Core", "DEFAULT_SERVICE_PORT", 9901);
    server.registerConst("Core", "Core", "DEFAULT_CLUSTER_PORT", 9902);
-   server.registerConst("Core", "Core", "DEFAULT_WEBSOCKETS_PORT", 9903);
    server.registerConst("Core", "Core", "DEFAULT_HTTP_PORT", 9904);
+   server.registerConst("Core", "Core", "DEFAULT_HTTPS_PORT", 9906);
    server.registerConst("Core", "Core", "STATUS_STARTING", 1);
    server.registerConst("Core", "Core", "STATUS_PAUSED", 2);
    server.registerConst("Core", "Core", "STATUS_GONE", 4);

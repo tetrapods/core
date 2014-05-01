@@ -183,25 +183,19 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    }
 
    private class WebSessionFactory implements SessionFactory {
-      public WebSessionFactory(String contentRoot, Map<String,File> contentRootMap, String webSockets) {
+      public WebSessionFactory(Map<String,File> contentRootMap, String webSockets) {
          this.webSockets = webSockets;
          this.contentRootMap = contentRootMap;
-         this.contentRoot = contentRoot;
       }
 
       final String webSockets;
-      final String contentRoot;
       final Map<String,File> contentRootMap;
 
       @Override
       public Session makeSession(SocketChannel ch) {
          TetrapodService pod = TetrapodService.this;
          Session ses = null;
-         if (webSockets != null) {
-            ses = new WebSocketSession(ch, pod, contentRoot, webSockets);
-         } else {
-            ses = new WebHttpSession(ch, pod, contentRootMap);
-         }
+         ses = new WebSocketSession(ch, pod, contentRootMap, webSockets);
          ses.setRelayHandler(pod);
          ses.setMyEntityId(getEntityId());
          ses.setMyEntityType(Core.TYPE_TETRAPOD);
@@ -246,14 +240,14 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          // create servers
          servers.add(new Server(getPublicPort(), new TypedSessionFactory(Core.TYPE_ANONYMOUS), dispatcher));
          servers.add(new Server(getServicePort(), new TypedSessionFactory(Core.TYPE_SERVICE), dispatcher));
-         servers.add(new Server(getHTTPPort(), new WebSessionFactory(null, webRootDirs, "/sockets"), dispatcher));
+         servers.add(new Server(getHTTPPort(), new WebSessionFactory(webRootDirs, "/sockets"), dispatcher));
 
          // create secure port servers, if configured
          if (Util.getProperty("tetrapod.tls", true)) {            
             System.setProperty("jdk.certpath.disabledAlgorithms", "TLS_DHE_RSA_WITH_AES_128_CBC_SHA");
             SSLContext ctx = Util.createSSLContext(new FileInputStream(System.getProperty("tetrapod.jks.file", "cfg/tetrapod.jks")), System
                   .getProperty("tetrapod.jks.pwd", "4pod.dop4").toCharArray());
-            servers.add(new Server(getHTTPSPort(), new WebSessionFactory(webContentRoot, null, "/sockets"), dispatcher, ctx, false));
+            servers.add(new Server(getHTTPSPort(), new WebSessionFactory(webRootDirs, "/sockets"), dispatcher, ctx, false));
          }
 
          // start listening

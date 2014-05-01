@@ -18,8 +18,8 @@ struct Core
    const int DEFAULT_PUBLIC_PORT     = 9900
    const int DEFAULT_SERVICE_PORT    = 9901
    const int DEFAULT_CLUSTER_PORT    = 9902
-   const int DEFAULT_WEBSOCKETS_PORT = 9903
    const int DEFAULT_HTTP_PORT       = 9904
+   const int DEFAULT_HTTPS_PORT      = 9906
    
     
    const int   STATUS_STARTING     = 1  # bitmask
