@@ -6,7 +6,6 @@ import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.rpc.Error;
 import io.tetrapod.core.utils.Util;
 import io.tetrapod.protocol.core.*;
-import io.tetrapod.protocol.service.*;
 
 import java.io.*;
 import java.util.*;
@@ -14,7 +13,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.slf4j.*;
 
-public class DefaultService implements Service, BaseServiceContract.API, SessionFactory, EntityMessage.Handler,
+public class DefaultService implements Service, CoreContract.API, SessionFactory, EntityMessage.Handler,
       ClusterMemberMessage.Handler {
    private static final Logger             logger          = LoggerFactory.getLogger(DefaultService.class);
    protected final Set<Integer>            dependencies    = new HashSet<>();
@@ -28,6 +27,7 @@ public class DefaultService implements Service, BaseServiceContract.API, Session
    protected int                           parentId;
    protected String                        token;
    protected int                           status;
+   protected final int                     buildNumber;
 
    protected final ServiceStats            stats;
 
@@ -36,14 +36,11 @@ public class DefaultService implements Service, BaseServiceContract.API, Session
    private final MessageHandlers           messageHandlers = new MessageHandlers();
 
    public DefaultService() {
-      // load default properties
-      loadProperties("cfg/tetrapod.properties");
-
       status |= Core.STATUS_STARTING;
       dispatcher = new Dispatcher();
       clusterClient = new Client(this);
       stats = new ServiceStats(this);
-      addContracts(new BaseServiceContract());
+      addContracts(new CoreContract());
       addPeerContracts(new TetrapodContract());
       addMessageHandler(new EntityMessage(), this);
       addMessageHandler(new ClusterMemberMessage(), this);
@@ -61,18 +58,14 @@ public class DefaultService implements Service, BaseServiceContract.API, Session
             }
          }
       });
-   }
-
-   public static void loadProperties(String fileName) {
-      // load default properties
-      final File file = new File(fileName);
-      if (file.exists()) {
-         try (Reader reader = new FileReader(file)) {
-            System.getProperties().load(reader);
-         } catch (IOException e) {
-            logger.error(e.getMessage(), e);
-         }
+      
+      int num = 1;
+      try {
+         String b = Util.readFileAsString(new File("build_number.txt"));
+         num = Integer.parseInt(b.trim());
+      } catch (IOException e) {
       }
+      buildNumber = num;
    }
 
    public byte getEntityType() {
@@ -84,7 +77,8 @@ public class DefaultService implements Service, BaseServiceContract.API, Session
    }
 
    @Override
-   public void messageEntity(EntityMessage m, MessageContext ctx) {
+   public void messageEntity(EntityMessage m, MessageContext ctxA) {
+      SessionMessageContext ctx = (SessionMessageContext)ctxA;
       if (ctx.session.getTheirEntityType() == Core.TYPE_TETRAPOD) {
          this.entityId = m.entityId;
          ctx.session.setMyEntityId(m.entityId);
@@ -130,6 +124,7 @@ public class DefaultService implements Service, BaseServiceContract.API, Session
             onReadyToServe();
             // ok, we're good to go
             updateStatus(status & ~Core.STATUS_STARTING);
+            setWebRoot();
          } else {
             dispatcher.dispatch(1, TimeUnit.SECONDS, new Runnable() {
                public void run() {
@@ -197,7 +192,7 @@ public class DefaultService implements Service, BaseServiceContract.API, Session
    }
 
    public void onConnectedToCluster() {
-      sendDirectRequest(new RegisterRequest(222/* FIXME */, token, getContractId(), getShortName(), status)).handle(new ResponseHandler() {
+      sendDirectRequest(new RegisterRequest(buildNumber, token, getContractId(), getShortName(), status)).handle(new ResponseHandler() {
          @Override
          public void onResponse(Response res) {
             if (res.isError()) {
@@ -421,7 +416,7 @@ public class DefaultService implements Service, BaseServiceContract.API, Session
 
    public Response genericRequest(Request r, RequestContext ctx) {
       logger.error("unhandled request " + r.dump());
-      return new Error(TetrapodContract.ERROR_UNKNOWN_REQUEST);
+      return new Error(CoreContract.ERROR_UNKNOWN_REQUEST);
    }
 
    public void genericMessage(Message message) {
@@ -544,6 +539,46 @@ public class DefaultService implements Service, BaseServiceContract.API, Session
    public Response requestServiceStatsUnsubscribe(ServiceStatsUnsubscribeRequest r, RequestContext ctx) {
       stats.unsubscribe(ctx.header.fromId);
       return Response.SUCCESS;
+   }
+   
+   private void setWebRoot() {
+      File f = new File("webContent"); 
+      if (f.exists()) {
+         String name = Launcher.getOpt("webOnly");
+         if (name == null) {
+            name = getShortName();
+         }
+         try {
+            final String path = f.getCanonicalPath();
+            sendDirectRequest(new SetWebRootRequest(name, path, getHostName())).handle(new ResponseHandler() {
+               public void onResponse(Response res) {
+                  if (res.isError()) {
+                     logger.error("Could not set web root {}, error = {}", path, res.errorCode());
+                  }
+                  if (Launcher.getOpt("webOnly") != null) {
+                     System.exit(0);
+                  }
+               }
+            });
+            if (System.getProperty("localDevelopment","false").equals("true")) {
+               int i = 0;
+               for (File f2 : getDevProtocolWebRoots()) {
+                  sendDirectRequest(new SetWebRootRequest(name + i++, f2.getCanonicalPath(), getHostName()));
+               }
+            }
+         } catch (IOException e) {
+            logger.error("bad web root path", e);
+         }
+      }
+   }
+
+   protected File[] getDevProtocolWebRoots() {
+      if (getShortName() == null) {
+         return new File[] {};
+      }
+      return new File[] {
+            new File("../Protocol-" + getShortName() + "/rsc")
+      };
    }
 
 }

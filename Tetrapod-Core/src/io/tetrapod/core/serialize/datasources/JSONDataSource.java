@@ -473,5 +473,10 @@ public class JSONDataSource implements DataSource {
    protected JSONDataSource getTemporarySource(JSONObject jo, Structure inst) {
       return new JSONDataSource(jo);
    }
+   
+   @Override
+   public Object getUnderlyingObject() {
+      return json;
+   }
 
 }

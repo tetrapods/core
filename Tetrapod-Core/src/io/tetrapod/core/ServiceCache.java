@@ -1,6 +1,5 @@
 package io.tetrapod.core;
 
-import io.tetrapod.core.registry.EntityInfo;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.protocol.core.*;
 
@@ -57,7 +56,7 @@ public class ServiceCache implements TetrapodContract.Services.API {
          final List<Entity> shuffled = new ArrayList<>(list);
          Collections.shuffle(shuffled);
          for (Entity e : shuffled) {
-            if (EntityInfo.isAvailable(e)) {
+            if (isAvailable(e)) {
                return e;
             }
          }
@@ -69,7 +68,7 @@ public class ServiceCache implements TetrapodContract.Services.API {
       final List<Entity> list = getServices(contractId);
       if (list != null) {
          for (Entity e : list) {
-            if (EntityInfo.isAvailable(e)) {
+            if (isAvailable(e)) {
                return e;
             }
          }
@@ -85,5 +84,13 @@ public class ServiceCache implements TetrapodContract.Services.API {
          }
       }
       return true;
+   }
+   
+   /**
+    * Copied form EntityInfo which is unfortunate.
+    */
+   public static final boolean isAvailable(final Entity e) {
+      return (e.status & (Core.STATUS_STARTING | Core.STATUS_PAUSED | Core.STATUS_GONE | Core.STATUS_BUSY | Core.STATUS_OVERLOADED
+            | Core.STATUS_FAILED | Core.STATUS_STOPPING)) == 0;
    }
 }

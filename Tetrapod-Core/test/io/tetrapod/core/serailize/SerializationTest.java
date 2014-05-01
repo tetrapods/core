@@ -6,7 +6,6 @@ import io.tetrapod.core.rpc.Structure;
 import io.tetrapod.core.serialize.StructureAdapter;
 import io.tetrapod.core.serialize.datasources.*;
 import io.tetrapod.protocol.core.*;
-import io.tetrapod.protocol.sample.*;
 
 import java.util.Arrays;
 
@@ -37,13 +36,13 @@ public class SerializationTest {
    
    @Test
    public void testNullInStructList() throws Exception {
-      new SampleContract().registerStructs();
-      MissingOne t = new MissingOne(new TestInfo[] {
-            new TestInfo(1),
-            new TestInfo(2),
+      new CoreContract().registerStructs();
+      StructDescription t = new StructDescription(new TypeDescriptor[] {
+            new TypeDescriptor(),
+            new TypeDescriptor(),
             null,
-            new TestInfo(3),
-      }, 666);
+            new TypeDescriptor(),
+      }, null);
       assertTrue(rinseTempBuff(t));
       assertTrue(rinseViaAdapter(t));
       assertTrue(rinseJSONBuff(t));
@@ -51,7 +50,6 @@ public class SerializationTest {
 
    @Test
    public void testLong() throws Exception {
-      new SampleContract().registerStructs();
       new TetrapodContract().registerStructs();
       EntityRegisteredMessage m = new EntityRegisteredMessage(new Entity(11, 12,  0x20E1D00AEDF8DBEDL, "xxx", 13, (byte)14, "name", 15, 16, 17));
       assertTrue("tempBuff", rinseTempBuff(m));
@@ -59,16 +57,6 @@ public class SerializationTest {
       assertTrue("json", rinseJSONBuff(m));
    }
    
-   
-   @Test
-   public void testSample() throws Exception {
-      new TetrapodContract().registerStructs();
-      new SampleContract().registerStructs();
-      TestResponse tr = new TestResponse();
-      assertTrue(rinseTempBuff(tr));
-      assertTrue(rinseViaAdapter(tr));
-   }
-
    public boolean rinseTempBuff(Structure s1) throws Exception {
       TempBufferDataSource temp = TempBufferDataSource.forWriting();
       s1.write(temp);

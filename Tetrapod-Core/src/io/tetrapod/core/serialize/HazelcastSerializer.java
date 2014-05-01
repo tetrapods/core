@@ -1,7 +1,7 @@
 package io.tetrapod.core.serialize;
 
 import io.tetrapod.core.rpc.Structure;
-import io.tetrapod.core.serialize.datasources.IOStreamDataSource;
+import io.tetrapod.core.serialize.datasources.*;
 
 import java.io.*;
 
@@ -40,7 +40,7 @@ public class HazelcastSerializer<T extends Structure> implements StreamSerialize
 
    @Override
    public void write(ObjectDataOutput out, T object) throws IOException {
-      out.write(object.toBytes());
+      out.write((byte[])object.toRawForm(TempBufferDataSource.forWriting()));
    }
 
    @Override

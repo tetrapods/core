@@ -1,8 +1,8 @@
 package io.tetrapod.core;
 
-import io.tetrapod.protocol.core.ServerAddress;
+import io.tetrapod.protocol.core.*;
 
-import java.io.IOException;
+import java.io.*;
 import java.util.*;
 import java.util.Map.Entry;
 
@@ -10,13 +10,23 @@ import java.util.Map.Entry;
  * Simple service launcher. Some day it might be nice to replace with a ClusterService that was able to launch things.
  * <p>
  * Don't refer to logging in this class otherwise it gets initialized (upon class load) prior to being setup.
+ * <p>
+ * Arguments:
+ * <ul>
+ * <li>-host hostname (host to connect to, overrides cluster.properties)
+ * <li>-port portNum (port to connect to, overrides cluster.properties)
+ * <li>-token token (reclaim token)
+ * <li>-forceJoin true (forces a tetrapod to join a cluster even if it's connecting to localhost)
+ * <li>-webOnly webRootName (service will connect, set web root, and disconnect)
+ * </ul>
  */
 public class Launcher {
    private static Map<String, String> opts         = null;
    private static String              serviceClass = null;
 
    public static void main(String[] args) {
-      System.setProperty("logback.configurationFile", "cfg/logback.xml");
+      loadProperties("cfg/service.properties");
+      loadClusterProperties();
       try {
          if (args.length < 1)
             usage();
@@ -24,15 +34,15 @@ public class Launcher {
          opts = getOpts(args, 1, defaultOpts());
          System.setProperty("APPNAME", serviceClass.substring(serviceClass.lastIndexOf('.') + 1));
 
-         ServerAddress addr = null;
+         String host = System.getProperty("cluster.host"); 
+         int port = Integer.parseInt(System.getProperty("cluster.port"));
          if (opts.get("host") != null) {
-            int port = TetrapodService.DEFAULT_SERVICE_PORT;
-            if (opts.get("port") != null) {
-               port = Integer.parseInt(opts.get("port"));
-            }
-            addr = new ServerAddress(opts.get("host"), port);
+            host = opts.get("host");
          }
-
+         if (opts.get("port") != null) {
+            port = Integer.parseInt(opts.get("port"));
+         }
+         ServerAddress addr = new ServerAddress(host, port);
          Service service = (Service) getClass(serviceClass).newInstance();
          service.startNetwork(addr, opts.get("token"), opts);
       } catch (Throwable t) {
@@ -44,12 +54,15 @@ public class Launcher {
    private static Class<?> getClass(String serviceClass) {
       // actual class
       try {
-         return Class.forName(serviceClass);
+         return tryName(serviceClass);
       } catch (ClassNotFoundException e) {}
 
+      // capitalize first letter
+      serviceClass = serviceClass.substring(0, 1).toUpperCase() + serviceClass.substring(1);
+      
       // io.tetrapod.core.X
       try {
-         return Class.forName("io.tetrapod.core." + serviceClass);
+         return tryName("io.tetrapod.core." + serviceClass);
       } catch (ClassNotFoundException e) {}
 
       int ix = serviceClass.indexOf("Service");
@@ -60,20 +73,25 @@ public class Launcher {
 
       // io.tetrapod.core.XService
       try {
-         return Class.forName("io.tetrapod.core." + serviceClass + "Service");
+         return tryName("io.tetrapod.core." + serviceClass + "Service");
       } catch (ClassNotFoundException e) {}
 
       // io.tetrapod.lowercase(X).X
       try {
-         return Class.forName("io.tetrapod." + serviceClass.toLowerCase() + "." + serviceClass);
+         return tryName("io.tetrapod." + serviceClass.toLowerCase() + "." + serviceClass);
       } catch (ClassNotFoundException e) {}
 
       // io.tetrapod.lowercase(X).XService
       try {
-         return Class.forName("io.tetrapod." + serviceClass.toLowerCase() + "." + serviceClass + "Service");
+         return tryName("io.tetrapod." + serviceClass.toLowerCase() + "." + serviceClass + "Service");
       } catch (ClassNotFoundException e) {}
 
       return null;
+   }
+   
+   private static Class<?> tryName(String name) throws ClassNotFoundException {
+      System.out.println("trying " + name);
+      return Class.forName(name);
    }
 
    private static void usage() {
@@ -107,8 +125,7 @@ public class Launcher {
    public static void relaunch(String token) throws IOException {
       opts.put("token", token);
       StringBuilder sb = new StringBuilder();
-      sb.append("./launch ");
-      sb.append(serviceClass);
+      sb.append("./scripts/launch");
 
       // java args?
       //      for (String arg : ManagementFactory.getRuntimeMXBean().getInputArguments()) {
@@ -127,6 +144,38 @@ public class Launcher {
       }
       System.out.println("EXEC: " + sb);
       Runtime.getRuntime().exec(sb.toString());
+   }
+   
+   public static boolean loadProperties(String fileName) {
+      final File file = new File(fileName);
+      if (file.exists()) {
+         try (Reader reader = new FileReader(file)) {
+            System.getProperties().load(reader);
+            return true;
+         } catch (IOException e) {
+            e.printStackTrace();
+         }
+      }
+      return false;
+   }
+   
+   private static void loadClusterProperties() {
+      String name = System.getProperty("user.name");
+      String[] locs = {
+            "cluster.properties", // in prod, gets symlinked in
+            "../../core/Tetrapod-Core/rsc/cluster/%s.cluster.properties",
+            "../../../core/Tetrapod-Core/rsc/cluster/%s.cluster.properties", // in case services are one level deeper
+      };
+      for (String f : locs) {
+         if (loadProperties(String.format(f, name)))
+            return;
+      }
+      System.err.println("ERR: no cluster properties found");
+      System.exit(0);
+   }
+
+   public static String getOpt(String key) {
+      return opts.get(key);
    }
 
 }

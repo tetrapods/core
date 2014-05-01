@@ -1,0 +1,16 @@
+#!/bin/sh
+
+main() {
+   ## cd to parent dir of script
+   DIR=$( cd "$( dirname "$0" )" && pwd )
+   cd $DIR/..
+   
+   ## service name is base name of ../.. (two levels to get by build num)
+   service=$( cd .. && pwd | xargs basename )
+   
+   vmargs=`grep vmargs.$service cluster.properties | cut -d= -f2-`
+   mkdir -p logs
+   nohup java $vmargs -cp "jars/*" io.tetrapod.core.Launcher $service $@ < /dev/null > logs/console.$service.log 2>&1 &
+}
+
+main $@

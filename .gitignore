@@ -2,3 +2,5 @@ Tetrapod-Core/src/io/tetrapod/test/
 Tetrapod-Core/webContent/sb-admin-v2/
 *.md.html
 Tetrapod-Core/webContent/sample/
+build/assembly/target
+sfortin.cluster.properties

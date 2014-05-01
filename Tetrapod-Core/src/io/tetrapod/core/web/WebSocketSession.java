@@ -9,7 +9,8 @@ import io.tetrapod.core.Session;
 import io.tetrapod.core.json.JSONObject;
 import io.tetrapod.protocol.core.RequestHeader;
 
-import java.io.IOException;
+import java.io.*;
+import java.util.Map;
 
 import org.slf4j.*;
 
@@ -21,8 +22,8 @@ public class WebSocketSession extends WebHttpSession {
 
    private WebSocketServerHandshaker handshaker;
 
-   public WebSocketSession(SocketChannel ch, Session.Helper helper, String contentRoot, String wsLocation) {
-      super(ch, helper, contentRoot);
+   public WebSocketSession(SocketChannel ch, Session.Helper helper, Map<String,File> contentRootMap, String wsLocation) {
+      super(ch, helper, contentRootMap);
       this.wsLocation = wsLocation;
    }
 
