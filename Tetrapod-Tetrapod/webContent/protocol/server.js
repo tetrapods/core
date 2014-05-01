@@ -243,6 +243,7 @@ function TP_Server() {
    // --- socket methods
 
    function onSocketOpen(event) {
+      lastHeardFrom = Date.now();
       self.connected = true;
       if (self.commsLog)
          console.log("[socket] open: " + socket.URL);
@@ -278,6 +279,7 @@ function TP_Server() {
    }
 
    function onSocketMessage(event) {
+      lastHeardFrom = Date.now();
       var result = null;
       if (event.data.indexOf("{") == 0) {
          result = JSON.parse(event.data);
@@ -290,7 +292,6 @@ function TP_Server() {
       } else if (result._topicId != null) {
          handleMessage(result);
       }
-      lastHeardFrom = Date.now();
    }
 
    function onSocketError(event) {
