@@ -27,6 +27,7 @@ public class DefaultService implements Service, CoreContract.API, SessionFactory
    protected int                           parentId;
    protected String                        token;
    protected int                           status;
+   protected final int                     buildNumber;
 
    protected final ServiceStats            stats;
 
@@ -57,6 +58,14 @@ public class DefaultService implements Service, CoreContract.API, SessionFactory
             }
          }
       });
+      
+      int num = 1;
+      try {
+         String b = Util.readFileAsString(new File("build_number.txt"));
+         num = Integer.parseInt(b.trim());
+      } catch (IOException e) {
+      }
+      buildNumber = num;
    }
 
    public byte getEntityType() {
@@ -183,7 +192,7 @@ public class DefaultService implements Service, CoreContract.API, SessionFactory
    }
 
    public void onConnectedToCluster() {
-      sendDirectRequest(new RegisterRequest(222/* FIXME */, token, getContractId(), getShortName(), status)).handle(new ResponseHandler() {
+      sendDirectRequest(new RegisterRequest(buildNumber, token, getContractId(), getShortName(), status)).handle(new ResponseHandler() {
          @Override
          public void onResponse(Response res) {
             if (res.isError()) {

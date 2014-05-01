@@ -23,6 +23,8 @@ public class TetrapodContract extends Contract {
       AdminAuthorizeRequest.Handler,
       AdminLoginRequest.Handler,
       ClusterJoinRequest.Handler,
+      ExecuteBuildCommandRequest.Handler,
+      GetServiceBuildInfoRequest.Handler,
       KeepAliveRequest.Handler,
       LogRegistryStatsRequest.Handler,
       PublishRequest.Handler,
@@ -53,6 +55,8 @@ public class TetrapodContract extends Contract {
          new AdminAuthorizeRequest(),
          new KeepAliveRequest(),
          new SetWebRootRequest(),
+         new GetServiceBuildInfoRequest(),
+         new ExecuteBuildCommandRequest(),
       };
    }
    
@@ -62,6 +66,7 @@ public class TetrapodContract extends Contract {
          new ClusterJoinResponse(),
          new PublishResponse(),
          new AdminLoginResponse(),
+         new GetServiceBuildInfoResponse(),
       };
    }
    
@@ -77,6 +82,7 @@ public class TetrapodContract extends Contract {
          new TopicSubscribedMessage(),
          new TopicUnsubscribedMessage(),
          new EntityListCompleteMessage(),
+         new BuildCommandProgressMessage(),
          new ServiceAddedMessage(),
          new ServiceRemovedMessage(),
          new ServiceUpdatedMessage(),
@@ -87,6 +93,8 @@ public class TetrapodContract extends Contract {
    public Structure[] getStructs() {
       return new Structure[] {
          new Entity(),
+         new BuildInfo(),
+         new BuildCommand(),
       };
    }
    

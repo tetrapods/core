@@ -9,89 +9,8 @@
 
 <link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
 <link rel="stylesheet" href="http://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css">
+<link rel="stylesheet" href="./admin.css">
 
-<!--  =============================================================================== -->
-<style type="text/css">
-#cluster-table {
-	margin: 4px; padding: 12px;
-}
-
-#cluster-table th {
-	background: #000; color: #fff; text-align: center;
-}
-
-#cluster-table td {
-	font-size: 90%; padding: 0px 1px; vertical-align: middle; white-space: nowrap;
-}
-
-.centered {
-	text-align: center;
-}
-
-.running {
-	background: green; color: white;
-}
-
-.gone {
-	background: red; color: white;
-}
-
-.failed {
-	background: orange; color: yellow;
-}
-
-.stopping {
-	background: #fdd; color: #a88;
-}
-
-.starting {
-	background: #eee; color: #999;
-}
-
-.paused {
-	background: yellow;
-}
-
-.dropdown-service {
-	right: auto; left: 0;
-}
-
-.service-icon {
-	width: 24px; height: 24px; margin-right: 8px; margin-left: 6px
-}
-
-.service-name {
-	font-weight: bold;
-}
-
-.service-chart-wrap {
-	position: relative; width: 80px; padding: 0px; padding-left: 0px; padding-right: 0px;
-}
-
-.service-chart {
-	height: 42px; padding: 0px; margin: -5px;
-}
-
-.service-chart-val {
-	text-shadow: 1px 1px 1px rgba(150, 150, 150, .5); text-align: center; position: absolute; top: 8px; left: 0; width: 100%
-}
-
-.alert {
-	margin-top: 20px;
-}
-
-.dropdown-menu {
-	text-align: left;
-}
-
-#page-wrapper {
-	margin: 10px; padding: 10px;
-}
-
-#login-form {
-	width: 320px; padding: 20px; margin: 20px; border-radius: 10px; box-shadow: 0 2px 2px rgba(0, 0, 0, .20);
-}
-</style>
 </head>
 
 <!--  =============================================================================== -->
@@ -167,6 +86,9 @@
 											<li><a href="#" data-bind="click: function() { $parent.execute($data) }, text: name"></a></li>
 											<!-- /ko -->
 
+ 											<li data-bind="visible: name=='Tetrapod'" class="divider"></li>
+                                            <li><a href="#" data-bind="visible: name=='Tetrapod', click: function() { popupBuild(); }">Build/Deploy/Launch</a>
+                                               
 											<li class="divider"></li>
 
 											<li><a href="#" data-bind="click: pause, visible: canPause()"><i class="fa fa-pause fa-fw"></i>Pause</a></li>
@@ -224,6 +146,54 @@
 			</div>
 		</div>
 	</div>
+   
+   <!-- Modals -->
+   <div class="modal fade app-bind" id="buildModal" tabindex="-1" role="dialog">
+     <div class="modal-dialog">
+       <div class="modal-content">
+         <div class="modal-header">
+           <button type="button" class="close" data-dismiss="modal">&times;</button>
+           <h4 class="modal-title" id="myModalLabel">Build / Deploy / Launch</h4>
+         </div>
+         <div class="modal-body">
+            <form>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                           <div class="checkbox">
+                              <label><input type="checkbox" data-bind="checked: modalData().doBuild">Build</label>
+                           </div>
+                           <div class="checkbox">
+                              <label><input type="checkbox" data-bind="checked: modalData().doDeploy">Deploy</label>
+                           </div>
+                           <div class="checkbox">
+                              <label><input type="checkbox" data-bind="checked: modalData().doLaunch">Launch</label>
+                           </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Build number</label>
+                            <input type="text" class="form-control" data-bind="value: modalData().buildNumber" placeholder="current" />
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group" data-bind="foreach: modalData().services">
+                           <div class="checkbox">
+                              <label><input type="checkbox" data-bind="checked: isChecked"><span data-bind="text: name"></span> <span data-bind="text: '(' + current + ')'" class="text-muted small"></span></label>
+                           </div>
+                        </div>
+                    </div>
+                    <div class="col-md-12 text-center">
+                       <br/>
+                        <button id="buildExecute" type="submit" class="btn btn-primary" data-bind="click: modalData().run" data-loading-text="Running...">
+                        Execute</button>
+                    </div>
+                </div>
+             </form>
+          </div>
+       </div>
+     </div>
+   </div>
+   
 
 	<script src="//cdnjs.cloudflare.com/ajax/libs/require.js/2.1.11/require.min.js" data-main="js/main.js"></script>
 </body>

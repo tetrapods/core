@@ -9,7 +9,6 @@ main() {
    BUILD_NUM=$2
    extractWebContent $ROOT_DIR/jars/protocol-core-0.0.1-SNAPSHOT.jar
    extractWebContent $ROOT_DIR/jars/protocol-tetrapod-0.0.1-SNAPSHOT.jar
-   echo $BUILD_NUM > $ROOT_DIR/build_number.txt
 }
 
 extractWebContent() {

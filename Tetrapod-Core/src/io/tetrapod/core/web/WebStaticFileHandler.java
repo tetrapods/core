@@ -11,6 +11,7 @@ import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.handler.codec.http.*;
 import io.netty.handler.stream.ChunkedFile;
 import io.netty.util.CharsetUtil;
+import io.tetrapod.core.utils.Value;
 
 import java.io.*;
 import java.net.URLDecoder;
@@ -70,7 +71,8 @@ class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRequest> 
          sendError(ctx, METHOD_NOT_ALLOWED);
          return;
       }
-      final File file = decodePath(request.getUri());
+      Value<Boolean> isIndex = new Value<>();
+      final File file = decodePath(request.getUri(), isIndex);
       if (file == null) {
          sendError(ctx, FORBIDDEN);
          return;
@@ -116,6 +118,11 @@ class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRequest> 
       if (isKeepAlive(request)) {
          response.headers().set(CONNECTION, HttpHeaders.Values.KEEP_ALIVE);
       }
+      if (isIndex.get()) {
+         // TODO: don't cache
+      } else {
+         // TODO: aggressively cache
+      }
 
       // Write the initial line and the header.
       ctx.write(response);
@@ -143,7 +150,7 @@ class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRequest> 
       }
    }
 
-   private File decodePath(String uri) {
+   private File decodePath(String uri, Value<Boolean> isIndex) {
       try {
          uri = URLDecoder.decode(uri, "UTF-8");
       } catch (UnsupportedEncodingException e) {
@@ -154,17 +161,21 @@ class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRequest> 
          }
       }
       if (VALID_URI.matcher(uri).matches() && !INVALID_URI.matcher(uri).matches()) {
+         if (uri.startsWith("/vbf")) {
+            uri = uri.substring(uri.indexOf("/", 2));
+         }
          for (File rootDir : rootDirs.values()) {
             File f = new File(rootDir, uri);
             if (f.exists()) {
-               if (f.isDirectory()) {
-                  f = new File(f, "index.html");
-                  if (f.exists())
-                     return f;
-                  else
-                     continue;
+               if (!f.isDirectory()) {
+                  isIndex.set(false);
+                  return f;
                }
-               return f;
+               f = new File(f, "index.html");
+               if (f.exists()) {
+                  isIndex.set(true);
+                  return f;
+               }
             }
          }
       }

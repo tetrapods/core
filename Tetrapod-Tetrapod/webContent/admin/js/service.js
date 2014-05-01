@@ -1,4 +1,4 @@
-define(["knockout", "jquery", "bootbox", "app"], function(ko, $, bootbox, app) {
+define(["knockout", "jquery", "bootbox", "app", "build"], function(ko, $, bootbox, app, builder) {
    // static variables
    
    var chartOptions = {
@@ -241,6 +241,10 @@ define(["knockout", "jquery", "bootbox", "app"], function(ko, $, bootbox, app) {
          self.updatePlot("mps", self.mpsSeries, 60000, self.mps());
          self.updatePlot("counter", self.counterSeries, 60000, self
                .counter());
+      }
+      
+      self.popupBuild = function() {
+         builder.load(self.entityId);
       }
 
    }

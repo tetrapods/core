@@ -2,6 +2,7 @@ package io.tetrapod.core.utils;
 
 import java.io.*;
 import java.net.*;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.security.KeyStore;
 import java.util.*;
@@ -107,12 +108,37 @@ public class Util {
       return Files.readAllBytes(f.toPath());
    }
 
+   public static String readFileAsString(File f) throws IOException {
+      return new String(readFile(f), Charset.forName("UTF-8"));
+   }
+
    public static int getProperty(String key, int defaultValue) {
       String val = System.getProperty(key);
       if (val == null) {
          return defaultValue;
       }
       return Integer.parseInt(val);
+   }
+
+   public static int runProcess(Callback<String> callback, String... commands) {
+      ProcessBuilder pb = new ProcessBuilder(commands);
+      pb.redirectErrorStream(true);
+      try {
+         Process p = pb.start();
+         String s;
+         BufferedReader stdout = new BufferedReader(new InputStreamReader(p.getInputStream()));
+         while ((s = stdout.readLine()) != null) {
+            if (callback != null)
+               callback.call(s);
+         }
+         int rc = p.waitFor();
+         p.getInputStream().close();
+         p.getOutputStream().close();
+         p.getErrorStream().close();
+         return rc;
+      } catch (Exception ex) {
+         return -1;
+      }
    }
 
 }

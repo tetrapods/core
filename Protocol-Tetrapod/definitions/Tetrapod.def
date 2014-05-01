@@ -131,6 +131,45 @@ internal message Registry.TopicUnsubscribed
    
 internal message Registry.EntityListComplete
 
+##### Building #############
+
+admin request GetServiceBuildInfo
+   1: int accountId
+   2: string authToken
+   
+admin response  GetServiceBuildInfo
+   1: BuildInfo<list> services
+   
+// An error in any one of the build commands stops processing the remaining ones
+admin request ExecuteBuildCommand
+   1: int accountId
+   2: string authToken
+   3: BuildCommand<list> commands
+
+// Sent every 10s or so for display in the UI while it's running
+admin message BuildCommandProgress
+   1: string output
+   2: boolean isDone
+
+admin struct BuildInfo
+   1: string serviceName
+   2: boolean canBuild
+   3: boolean canDeploy
+   4: boolean canLaunch
+   5: int currentBuild
+   6: int[] knownBuilds
+
+admin struct BuildCommand
+   1: string serviceName
+   2: int build
+   3: int command
+   
+   const int BUILD   = 1
+   const int DEPLOY  = 2
+   const int LAUNCH  = 3
+   const int DEPLOY_LATEST   = -1
+   const int LAUNCH_DEPLOYED = -1
+
 ##### Services Topic Messages ##### 
 
 internal message Services.ServiceAdded

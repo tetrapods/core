@@ -14,6 +14,7 @@ define([ "knockout", "jquery", "bootbox", "toolbox", "protocol/server", "protoco
             self.run = run;
             self.login = login;
             self.onLogout = onLogout;
+            self.modalData = ko.observable({});
 
             function run(clusterModel) {
                model = clusterModel;

@@ -18,7 +18,7 @@ import io.tetrapod.protocol.storage.*;
 
 import java.io.*;
 import java.security.SecureRandom;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.*;
 
 import org.slf4j.*;
@@ -767,6 +767,23 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
             new File("../Protocol-Tetrapod/rsc"),
             new File("../Protocol-Core/rsc")
       };
+   }
+   
+   //------------ building
+   
+   @Override
+   public Response requestGetServiceBuildInfo(GetServiceBuildInfoRequest r, RequestContext ctx) {
+      return new GetServiceBuildInfoResponse(Builder.getServiceInfo());
+   }
+   
+   @Override
+   public Response requestExecuteBuildCommand(ExecuteBuildCommandRequest r, RequestContext ctx) {
+      for (BuildCommand command : r.commands) {
+         boolean success = Builder.executeCommand(command, this);
+         if (!success)
+            return Response.error(ERROR_UNKNOWN);
+      }
+      return Response.SUCCESS;
    }
 
 

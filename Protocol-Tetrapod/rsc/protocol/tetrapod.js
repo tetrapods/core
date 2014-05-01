@@ -5,6 +5,12 @@ function TP_Tetrapod(server) {
    server.register("response", "Tetrapod", "ERROR", 1, 1);
    server.register("response", "Tetrapod", "SUCCESS", 1, 2);
 
+   server.registerConst("Tetrapod", "BuildCommand", "BUILD", 1);
+   server.registerConst("Tetrapod", "BuildCommand", "DEPLOY", 2);
+   server.registerConst("Tetrapod", "BuildCommand", "LAUNCH", 3);
+   server.registerConst("Tetrapod", "BuildCommand", "DEPLOY_LATEST", -1);
+   server.registerConst("Tetrapod", "BuildCommand", "LAUNCH_DEPLOYED", -1);
+   
    server.registerConst("Tetrapod", "null", "HOSTNAME_MISMATCH", 12239905);
    server.registerConst("Tetrapod", "null", "NOT_PARENT", 2219555);
    server.registerConst("Tetrapod", "null", "NOT_READY", 12438466);
@@ -39,6 +45,12 @@ function TP_Tetrapod(server) {
    server.register("message", "Tetrapod", "TopicSubscribed", 1, 1498241);
    server.register("message", "Tetrapod", "TopicUnsubscribed", 1, 6934832);
    server.register("message", "Tetrapod", "EntityListComplete", 1, 15616758);
+   server.register("request", "Tetrapod", "GetServiceBuildInfo", 1, 4482593);
+   server.register("response", "Tetrapod", "GetServiceBuildInfo", 1, 4037623);
+   server.register("request", "Tetrapod", "ExecuteBuildCommand", 1, 7902304);
+   server.register("message", "Tetrapod", "BuildCommandProgress", 1, 1646916);
+   server.register("struct", "Tetrapod", "BuildInfo", 1, 14488001);
+   server.register("struct", "Tetrapod", "BuildCommand", 1, 4239258);
    server.register("message", "Tetrapod", "ServiceAdded", 1, 15116807);
    server.register("message", "Tetrapod", "ServiceRemoved", 1, 1629937);
    server.register("message", "Tetrapod", "ServiceUpdated", 1, 1658756);

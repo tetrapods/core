@@ -1,0 +1,70 @@
+#!/bin/sh
+
+main() {
+   set -e
+
+   if [ $# -lt 2 ]
+   then
+      echo "launch {current | BUILD_NUM} {all | SERVICE_1 SERVICE_2 ...}"
+      return 0
+   fi
+
+   getPropertiesValue build.dir
+   BUILD_DIR=$PROP_VALUE
+
+   getPropertiesValue cluster.dir   
+   CLUSTER_DIR=$PROP_VALUE
+
+   getBuildNumber $1
+   shift
+
+   if [ "$1" == "all" ]
+   then
+      launchAll
+   else
+      launchList $@
+   fi
+}
+
+launchAll() {
+   for f in $CLUSTER_DIR/*
+   do
+      launchService `basename $f`
+   done
+}
+
+launchList() {
+   for f in "$@"
+   do
+      launchService $f
+   done
+}
+
+launchService() {
+   if [ -e $CLUSTER_DIR/$1/$BUILD_NUM/scripts/launch ]
+   then
+      echo "Launching $1"
+      $CLUSTER_DIR/$1/$BUILD_NUM/scripts/launch
+   fi
+}
+
+getBuildNumber() {
+   local build=$1
+   local file=$BUILD_DIR/build.number
+
+   if [ "$build" == "current" ]
+   then
+      BUILD_NUM="current"
+   else
+      BUILD_NUM=$build
+   fi
+}
+
+getPropertiesValue() {
+   local prop=$1
+   local myDir=$( cd "$( dirname "$0" )" && pwd )
+
+   PROP_VALUE=`grep $prop $myDir/cluster.properties | cut -d= -f2-`
+}
+
+main $@

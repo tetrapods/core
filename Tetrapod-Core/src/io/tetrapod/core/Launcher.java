@@ -160,13 +160,14 @@ public class Launcher {
    }
    
    private static void loadClusterProperties() {
+      String name = System.getProperty("user.name");
       String[] locs = {
             "cluster.properties", // in prod, gets symlinked in
-            "../../core/Tetrapod-Core/rsc/cluster/cluster.properties",
-            "../../../core/Tetrapod-Core/rsc/cluster/cluster.properties", // in case services are one level deeper
+            "../../core/Tetrapod-Core/rsc/cluster/%s.cluster.properties",
+            "../../../core/Tetrapod-Core/rsc/cluster/%s.cluster.properties", // in case services are one level deeper
       };
       for (String f : locs) {
-         if (loadProperties(f))
+         if (loadProperties(String.format(f, name)))
             return;
       }
       System.err.println("ERR: no cluster properties found");
