@@ -556,7 +556,7 @@ public class DefaultService implements Service, CoreContract.API, SessionFactory
                      logger.error("Could not set web root {}, error = {}", path, res.errorCode());
                   }
                   if (Launcher.getOpt("webOnly") != null) {
-                     System.exit(0);
+                     shutdown(false);
                   }
                }
             });
