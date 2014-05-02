@@ -2,7 +2,6 @@
 
 main() {
    set -e
-   set -x
 
    if [ $# -lt 2 ]
    then
@@ -26,7 +25,7 @@ main() {
 
    echo "Starting deployment of build $BUILD_NUM" | tee $LOG
 
-   if [ "$1" == "all" ]
+   if [ "$1" = "all" ]
    then
       deployAll
    else
@@ -91,7 +90,7 @@ getBuildNumber() {
    local build=$1
    local file=$BUILD_DIR/build.number
 
-   if [ "$build" == "current" ]
+   if [ "$build" = "current" ]
    then
       BUILD_NUM=`cat $file`
    else

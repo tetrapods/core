@@ -3,7 +3,7 @@
 main() {
    set -e
 
-   mvn='/usr/local/maven/apache-maven-3.2.1/bin/mvn'
+   mvn='/usr/local/apache-maven/apache-maven-3.2.1/bin/mvn'
    
    getPropertiesValue build.dir
    BUILD_DIR=$PROP_VALUE
@@ -25,11 +25,11 @@ main() {
 
    echo "\nCore: git update\n---" | tee -a $LOG
    cd $GIT_DIR/core
-   git pull >> $LOG 2>&1 && false
+   git pull >> $LOG 2>&1
 
    echo "\nPrivate: git update\n---" | tee -a $LOG
    cd $GIT_DIR/private
-   git pull >> $LOG 2>&1 && false
+   git pull >> $LOG 2>&1
 
    echo "\nCore: maven install\n---" | tee -a $LOG
    cd $GIT_DIR/core/build
@@ -56,7 +56,7 @@ setBuildNumber() {
    else
       BUILD_NUM=0
    fi
-   ((BUILD_NUM++))
+   BUILD_NUM=$((BUILD_NUM+1))
    echo $BUILD_NUM > $file
 }
 

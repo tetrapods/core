@@ -18,7 +18,7 @@ main() {
    getBuildNumber $1
    shift
 
-   if [ "$1" == "all" ]
+   if [ "$1" = "all" ]
    then
       launchAll
    else
@@ -52,7 +52,7 @@ getBuildNumber() {
    local build=$1
    local file=$BUILD_DIR/build.number
 
-   if [ "$build" == "current" ]
+   if [ "$build" = "current" ]
    then
       BUILD_NUM="current"
    else
