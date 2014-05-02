@@ -1,6 +1,7 @@
 package io.tetrapod.core.web;
 
 import static io.netty.handler.codec.http.HttpHeaders.*;
+import static io.netty.handler.codec.http.HttpHeaders.Values.*;
 import static io.netty.handler.codec.http.HttpHeaders.Names.*;
 import static io.netty.handler.codec.http.HttpMethod.GET;
 import static io.netty.handler.codec.http.HttpResponseStatus.*;
@@ -35,9 +36,7 @@ class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRequest> 
 
    public static final Logger          logger                 = LoggerFactory.getLogger(WebStaticFileHandler.class);
 
-   public static final String          HTTP_DATE_FORMAT       = "EEE, dd MMM yyyy HH:mm:ss zzz";
-   public static final String          HTTP_DATE_GMT_TIMEZONE = "GMT";
-   public static final int             HTTP_CACHE_SECONDS     = 60;
+   public static final int             ONE_YEAR               =  365 * 24 * 60 * 60 * 1000;
 
    // These rules are not correct in general, but for sites with control of their file names 
    // they are safe.  We only allow alphanumeric ascii character, ., -, _, and /.  We also do 
@@ -91,11 +90,8 @@ class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRequest> 
       }
 
       // Cache Validation
-      String ifModifiedSince = request.headers().get(IF_MODIFIED_SINCE);
-      if (ifModifiedSince != null && !ifModifiedSince.isEmpty()) {
-         SimpleDateFormat dateFormatter = new SimpleDateFormat(HTTP_DATE_FORMAT, Locale.US);
-         Date ifModifiedSinceDate = dateFormatter.parse(ifModifiedSince);
-
+      Date ifModifiedSinceDate = HttpHeaders.getDateHeader(request, IF_MODIFIED_SINCE, null);
+      if (ifModifiedSinceDate != null) {
          // Only compare up to the second because the datetime format we send to
          // the client does not have milliseconds
          long ifModifiedSinceDateSeconds = ifModifiedSinceDate.getTime() / 1000;
@@ -118,14 +114,18 @@ class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRequest> 
       HttpResponse response = new DefaultHttpResponse(HTTP_1_1, OK);
       setContentLength(response, fileLength);
       setContentTypeHeader(response, file);
-      setDateAndCacheHeaders(response, file);
+      response.headers().set(DATE, new Date());
+      response.headers().set(LAST_MODIFIED, new Date(file.lastModified()));
       if (isKeepAlive(request)) {
          response.headers().set(CONNECTION, HttpHeaders.Values.KEEP_ALIVE);
       }
       if (isIndex.get()) {
-         // TODO: don't cache
+         response.headers().set(CACHE_CONTROL, new String[] { NO_CACHE, NO_STORE, MUST_REVALIDATE });
+         response.headers().add(PRAGMA, NO_CACHE);
+         response.headers().add(EXPIRES, 0);
       } else {
-         // TODO: aggressively cache
+         response.headers().set(CACHE_CONTROL, PUBLIC);
+         response.headers().add(EXPIRES, new Date(System.currentTimeMillis() + ONE_YEAR));
       }
 
       ctx.write(response);
@@ -201,30 +201,8 @@ class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRequest> 
 
    private void sendNotModified(ChannelHandlerContext ctx) {
       FullHttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, NOT_MODIFIED);
-      setDateHeader(response);
+      response.headers().set(DATE, new Date());
       ctx.writeAndFlush(response);
-   }
-
-   private void setDateHeader(FullHttpResponse response) {
-      SimpleDateFormat dateFormatter = new SimpleDateFormat(HTTP_DATE_FORMAT, Locale.US);
-      dateFormatter.setTimeZone(TimeZone.getTimeZone(HTTP_DATE_GMT_TIMEZONE));
-      Calendar time = new GregorianCalendar();
-      response.headers().set(DATE, dateFormatter.format(time.getTime()));
-   }
-
-   private void setDateAndCacheHeaders(HttpResponse response, File fileToCache) {
-      SimpleDateFormat dateFormatter = new SimpleDateFormat(HTTP_DATE_FORMAT, Locale.US);
-      dateFormatter.setTimeZone(TimeZone.getTimeZone(HTTP_DATE_GMT_TIMEZONE));
-
-      // Date header
-      Calendar time = new GregorianCalendar();
-      response.headers().set(DATE, dateFormatter.format(time.getTime()));
-
-      // Add cache headers
-      time.add(Calendar.SECOND, HTTP_CACHE_SECONDS);
-      //      response.headers().set(EXPIRES, dateFormatter.format(time.getTime()));
-      //      response.headers().set(CACHE_CONTROL, "private, max-age=" + HTTP_CACHE_SECONDS);
-      response.headers().set(LAST_MODIFIED, dateFormatter.format(new Date(fileToCache.lastModified())));
    }
 
    private void setContentTypeHeader(HttpResponse response, File file) {
