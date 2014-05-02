@@ -1,8 +1,8 @@
 package io.tetrapod.core.web;
 
 import static io.netty.handler.codec.http.HttpHeaders.*;
-import static io.netty.handler.codec.http.HttpHeaders.Values.*;
 import static io.netty.handler.codec.http.HttpHeaders.Names.*;
+import static io.netty.handler.codec.http.HttpHeaders.Values.*;
 import static io.netty.handler.codec.http.HttpMethod.GET;
 import static io.netty.handler.codec.http.HttpResponseStatus.*;
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
@@ -16,7 +16,6 @@ import io.tetrapod.core.utils.Value;
 
 import java.io.*;
 import java.net.URLDecoder;
-import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.regex.Pattern;
 
@@ -120,10 +119,12 @@ class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRequest> 
          response.headers().set(CONNECTION, HttpHeaders.Values.KEEP_ALIVE);
       }
       if (isIndex.get()) {
+         // see http://stackoverflow.com/questions/49547/making-sure-a-web-page-is-not-cached-across-all-browsers
          response.headers().set(CACHE_CONTROL, new String[] { NO_CACHE, NO_STORE, MUST_REVALIDATE });
          response.headers().add(PRAGMA, NO_CACHE);
          response.headers().add(EXPIRES, 0);
       } else {
+         // see https://developers.google.com/speed/docs/best-practices/caching
          response.headers().set(CACHE_CONTROL, PUBLIC);
          response.headers().add(EXPIRES, new Date(System.currentTimeMillis() + ONE_YEAR));
       }
