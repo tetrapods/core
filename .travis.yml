@@ -1,5 +1,5 @@
 language: java
-before_script: cd Tetrapod-Core
+before_script: cd build
 notifications:
   slack: 
     secure: "QtozPUxmrsxLwpzYLr945zXXGhOWeAtX/tsQGP6KF0gqKl16h1vMMj8iVpjqDEHowLt7KTBLqRmlxqcCgZ9WbKJtG2twapJ3nOW
