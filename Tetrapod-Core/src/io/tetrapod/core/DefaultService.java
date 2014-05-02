@@ -561,7 +561,7 @@ public class DefaultService implements Service, CoreContract.API, SessionFactory
                }
             });
          }
-         if (System.getProperty("localDevelopment","false").equals("true")) {
+         if (Util.getProperty("localDevelopment", false)) {
             int i = 0;
             for (File f2 : getDevProtocolWebRoots()) {
                sendDirectRequest(new SetWebRootRequest(name + i++, f2.getCanonicalPath(), getHostName()));

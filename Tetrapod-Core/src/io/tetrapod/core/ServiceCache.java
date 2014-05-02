@@ -32,13 +32,17 @@ public class ServiceCache implements TetrapodContract.Services.API {
    @Override
    public void messageServiceRemoved(ServiceRemovedMessage m, MessageContext ctx) {
       Entity e = services.remove(m.entityId);
-      getServices(e.contractId).remove(e);
+      if (e != null) {
+         getServices(e.contractId).remove(e);
+      }
    }
 
    @Override
    public void messageServiceUpdated(ServiceUpdatedMessage m, MessageContext ctx) {
       Entity e = services.get(m.entityId);
-      e.status = m.status;
+      if (e != null) {
+         e.status = m.status;
+      }
    }
 
    public synchronized List<Entity> getServices(int contractId) {
