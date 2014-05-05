@@ -38,6 +38,7 @@ define(["knockout", "jquery", "bootbox", "app", "build"], function(ko, $, bootbo
       self.host = entity.host;
       self.status = ko.observable(entity.status);
       self.commands = ko.observableArray();
+      self.build = entity.build;
       self.mps = ko.observable();
       self.rps = ko.observable();
       self.latency = ko.observable();

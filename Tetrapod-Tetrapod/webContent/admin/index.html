@@ -64,7 +64,8 @@
 								<th><i class="fa fa-gear fa-fw"></i></th>
 								<th>Name</th>
 								<th>Entity</th>
-								<th>Host</th>
+                        <th>Host</th>
+                        <th>Build</th>
 								<th>Status</th>
 								<th>Latency</th>
 								<th>RPS</th>
@@ -109,6 +110,7 @@
 									data-bind="text: name"></span></td>
 								<td class="centered"><span data-bind="text: entityString"></span></td>
 								<td class="centered"><span data-bind="text: host"></span></td>
+								<td class="centered"><span data-bind="text: build"></span></td>
 								<td data-bind="attr: {'class':status_style}"><span data-bind="text: statusName()"></span></td>
 								<td class="service-chart-wrap">
 									<div class="service-chart" data-bind="attr: {id: 'service-chart-latency-' + entityId}"></div> <span

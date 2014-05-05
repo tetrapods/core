@@ -34,9 +34,9 @@ import org.slf4j.*;
 public class TetrapodService extends DefaultService implements TetrapodContract.API, StorageContract.API, RelayHandler,
       io.tetrapod.core.registry.Registry.RegistryBroadcaster {
 
-   public static final Logger                         logger                  = LoggerFactory.getLogger(TetrapodService.class);
+   public static final Logger                         logger      = LoggerFactory.getLogger(TetrapodService.class);
 
-   protected final SecureRandom                       random                  = new SecureRandom();
+   protected final SecureRandom                       random      = new SecureRandom();
 
    protected final io.tetrapod.core.registry.Registry registry;
 
@@ -49,13 +49,13 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
    private Storage                                    storage;
 
-   private final EventLoopGroup                       bossGroup            = new NioEventLoopGroup();
-   private final List<Server>                         servers              = new ArrayList<Server>();
+   private final EventLoopGroup                       bossGroup   = new NioEventLoopGroup();
+   private final List<Server>                         servers     = new ArrayList<Server>();
 
-   private final WebRoutes                            webRoutes               = new WebRoutes();
+   private final WebRoutes                            webRoutes   = new WebRoutes();
 
    private long                                       lastStatsLog;
-   private Map<String,File>                           webRootDirs = new ConcurrentHashMap<>();
+   private Map<String, File>                          webRootDirs = new ConcurrentHashMap<>();
 
    public TetrapodService() {
       registry = new io.tetrapod.core.registry.Registry(this);
@@ -90,8 +90,8 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       this.parentId = this.entityId = myEntityId;
       this.token = EntityToken.encode(entityId, reclaimToken);
 
-      final EntityInfo e = new EntityInfo(entityId, 0, reclaimToken, Util.getHostName(), 0, Core.TYPE_TETRAPOD, getShortName(), 0, 0,
-            getContractId());
+      final EntityInfo e = new EntityInfo(entityId, 0, reclaimToken, Util.getHostName(), 0, Core.TYPE_TETRAPOD, getShortName(),
+            buildNumber, 0, getContractId());
       registry.register(e);
       logger.info(String.format("SELF-REGISTERED: 0x%08X %s", entityId, e));
 
@@ -183,13 +183,13 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    }
 
    private class WebSessionFactory implements SessionFactory {
-      public WebSessionFactory(Map<String,File> contentRootMap, String webSockets) {
+      public WebSessionFactory(Map<String, File> contentRootMap, String webSockets) {
          this.webSockets = webSockets;
          this.contentRootMap = contentRootMap;
       }
 
-      final String webSockets;
-      final Map<String,File> contentRootMap;
+      final String            webSockets;
+      final Map<String, File> contentRootMap;
 
       @Override
       public Session makeSession(SocketChannel ch) {
@@ -243,7 +243,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          servers.add(new Server(getHTTPPort(), new WebSessionFactory(webRootDirs, "/sockets"), dispatcher));
 
          // create secure port servers, if configured
-         if (Util.getProperty("tetrapod.tls", true)) {            
+         if (Util.getProperty("tetrapod.tls", true)) {
             SSLContext ctx = Util.createSSLContext(new FileInputStream(System.getProperty("tetrapod.jks.file", "cfg/tetrapod.jks")), System
                   .getProperty("tetrapod.jks.pwd", "4pod.dop4").toCharArray());
             servers.add(new Server(getHTTPSPort(), new WebSessionFactory(webRootDirs, "/sockets"), dispatcher, ctx, false));
@@ -486,10 +486,10 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    public Response requestKeepAlive(KeepAliveRequest r, RequestContext ctx) {
       return Response.SUCCESS;
    }
-   
+
    @Override
    public Response requestRegister(RegisterRequest r, final RequestContext ctxA) {
-      SessionRequestContext ctx = (SessionRequestContext)ctxA;
+      SessionRequestContext ctx = (SessionRequestContext) ctxA;
       if (getEntityId() == 0) {
          return new Error(ERROR_SERVICE_UNAVAILABLE);
       }
@@ -595,7 +595,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
    @Override
    public Response requestRegistrySubscribe(RegistrySubscribeRequest r, RequestContext ctxA) {
-      SessionRequestContext ctx = (SessionRequestContext)ctxA;
+      SessionRequestContext ctx = (SessionRequestContext) ctxA;
       if (registryTopic == null) {
          return new Error(ERROR_UNKNOWN);
       }
@@ -612,7 +612,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
    @Override
    public Response requestServicesSubscribe(ServicesSubscribeRequest r, RequestContext ctxA) {
-      SessionRequestContext ctx = (SessionRequestContext)ctxA;
+      SessionRequestContext ctx = (SessionRequestContext) ctxA;
       if (servicesTopic == null) {
          return new Error(ERROR_UNKNOWN);
       }
@@ -663,7 +663,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
    @Override
    public Response requestClusterJoin(ClusterJoinRequest r, RequestContext ctxA) {
-      SessionRequestContext ctx = (SessionRequestContext)ctxA;
+      SessionRequestContext ctx = (SessionRequestContext) ctxA;
       if (ctx.session.getTheirEntityType() != Core.TYPE_TETRAPOD) {
          return new Error(ERROR_INVALID_RIGHTS);
       }
@@ -707,7 +707,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
    @Override
    public Response requestAdminAuthorize(AdminAuthorizeRequest r, RequestContext ctxA) {
-      SessionRequestContext ctx = (SessionRequestContext)ctxA;
+      SessionRequestContext ctx = (SessionRequestContext) ctxA;
       logger.info("AUTHORIZE WITH {} ...", r.token);
       AuthToken.Decoded d = AuthToken.decodeAuthToken1(r.token);
       if (d != null) {
@@ -722,7 +722,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
    @Override
    public Response requestAdminLogin(AdminLoginRequest r, RequestContext ctxA) {
-      SessionRequestContext ctx = (SessionRequestContext)ctxA;
+      SessionRequestContext ctx = (SessionRequestContext) ctxA;
       if (r.email == null) {
          return new Error(ERROR_INVALID_RIGHTS);
       }
@@ -749,30 +749,28 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       webRootDirs.put(r.logicalName, f);
       return Response.SUCCESS;
    }
-   
+
    private void updateHostname() {
       try (Writer w = new FileWriter(new File("webContent/protocol/hostname.js"))) {
          String hostname = System.getProperty("cluster.host", "localhost");
-         w.append(String.format("define(function() { return TP_Hostname });  function TP_Hostname() {  this.hostname = \"%s\"; }", hostname));
+         w.append(String
+               .format("define(function() { return TP_Hostname });  function TP_Hostname() {  this.hostname = \"%s\"; }", hostname));
       } catch (IOException e) {
          fail(e);
       }
    }
-   
+
    protected File[] getDevProtocolWebRoots() {
-      return new File[] {
-            new File("../Protocol-Tetrapod/rsc"),
-            new File("../Protocol-Core/rsc")
-      };
+      return new File[] { new File("../Protocol-Tetrapod/rsc"), new File("../Protocol-Core/rsc") };
    }
-   
+
    //------------ building
-   
+
    @Override
    public Response requestGetServiceBuildInfo(GetServiceBuildInfoRequest r, RequestContext ctx) {
       return new GetServiceBuildInfoResponse(Builder.getServiceInfo());
    }
-   
+
    @Override
    public Response requestExecuteBuildCommand(ExecuteBuildCommandRequest r, RequestContext ctx) {
       for (BuildCommand command : r.commands) {
@@ -782,6 +780,5 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       }
       return Response.SUCCESS;
    }
-
 
 }
