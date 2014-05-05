@@ -1,5 +1,7 @@
 package io.tetrapod.core;
 
+import io.tetrapod.core.utils.Util;
+
 import java.io.*;
 import java.nio.charset.Charset;
 import java.security.SecureRandom;
@@ -32,8 +34,8 @@ public class Storage implements MembershipListener {
    private SQLMapStore<String>        sqlStorage;
 
    public Storage() throws IOException {
-      config = new XmlConfigBuilder(System.getProperty("hazelcast.configurationFile", "cfg/hazelcast.xml")).build();
-      if (System.getProperty("sql.enabled", "false").equals("true")) {
+      config = new XmlConfigBuilder(Util.getProperty("hazelcast.configurationFile", "cfg/hazelcast.xml")).build();
+      if (Util.getProperty("sql.enabled", false)) {
          sqlStorage = new SQLMapStore<>(MAP_NAME, new SQLMapStore.StringMarshaller());
          config.getMapConfig(MAP_NAME).setMapStoreConfig(new MapStoreConfig().setImplementation(sqlStorage).setWriteDelaySeconds(2));
       }

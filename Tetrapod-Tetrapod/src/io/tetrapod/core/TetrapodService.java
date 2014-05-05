@@ -1,8 +1,8 @@
 package io.tetrapod.core;
 
 import static io.tetrapod.protocol.core.Core.*;
-import static io.tetrapod.protocol.core.TetrapodContract.*;
 import static io.tetrapod.protocol.core.CoreContract.*;
+import static io.tetrapod.protocol.core.TetrapodContract.*;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -28,8 +28,8 @@ import javax.net.ssl.SSLContext;
 import org.slf4j.*;
 
 /**
- * The tetrapod service is the core cluster service which handles message routing, cluster management, service discovery, and load balancing
- * of client connections
+ * The tetrapod service is the core cluster service which handles message routing, cluster
+ * management, service discovery, and load balancing of client connections
  */
 public class TetrapodService extends DefaultService implements TetrapodContract.API, StorageContract.API, RelayHandler,
       io.tetrapod.core.registry.Registry.RegistryBroadcaster {
@@ -224,8 +224,9 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    }
 
    /**
-    * As a Tetrapod service, we can't start serving as one until we've registered & fully sync'ed with the cluster, or self-registered if we
-    * are the first one. We call this once this criteria has been reached
+    * As a Tetrapod service, we can't start serving as one until we've registered & fully sync'ed
+    * with the cluster, or self-registered if we are the first one. We call this once this criteria
+    * has been reached
     */
    @Override
    public void onReadyToServe() {
@@ -244,7 +245,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
          // create secure port servers, if configured
          if (Util.getProperty("tetrapod.tls", true)) {
-            SSLContext ctx = Util.createSSLContext(new FileInputStream(System.getProperty("tetrapod.jks.file", "cfg/tetrapod.jks")), System
+            SSLContext ctx = Util.createSSLContext(new FileInputStream(Util.getProperty("tetrapod.jks.file", "cfg/tetrapod.jks")), System
                   .getProperty("tetrapod.jks.pwd", "4pod.dop4").toCharArray());
             servers.add(new Server(getHTTPSPort(), new WebSessionFactory(webRootDirs, "/sockets"), dispatcher, ctx, false));
          }
@@ -752,7 +753,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
    private void updateHostname() {
       try (Writer w = new FileWriter(new File("webContent/protocol/hostname.js"))) {
-         String hostname = System.getProperty("cluster.host", "localhost");
+         String hostname = Util.getProperty("cluster.host", "localhost");
          w.append(String
                .format("define(function() { return TP_Hostname });  function TP_Hostname() {  this.hostname = \"%s\"; }", hostname));
       } catch (IOException e) {
