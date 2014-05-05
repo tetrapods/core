@@ -9,7 +9,7 @@ import io.tetrapod.protocol.core.*;
 
 public class SessionRequestContext extends RequestContext {
 
-   private final static boolean USE_SECURITY = true;
+   private final static boolean USE_SECURITY = false;
    
    public final Session       session;
 
