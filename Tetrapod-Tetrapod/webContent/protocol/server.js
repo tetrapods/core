@@ -25,9 +25,11 @@ function TP_Server() {
    var socket;
    var simulator = null;
    var lastHeardFrom = 0;
+   var keepAliveRequestId;
 
    // public interface
    self.commsLog = false;
+   self.commsLogKeepAlives = false;
    self.register = register;
    self.registerConst = registerConst;
    self.addMessageHandler = addMessageHandler;
@@ -123,8 +125,12 @@ function TP_Server() {
       args._contractId = contractId;
       args._structId = structId;
       args._toId = toId;
-      if (self.commsLog)
-         logRequest(args);
+      if (isKeepAlive(contractId, structId) && !self.commsLogKeepAlives) {
+         keepAliveRequestId = requestId;
+      } else {
+         if (self.commsLog)
+            logRequest(args);
+      }
 
       if (simulator != null) {
          var resp = simulator.request(request, args, toId);
@@ -223,7 +229,7 @@ function TP_Server() {
       result.isError = function() {
          return result._contractId == 1 && result._structId == 1;
       };
-      if (self.commsLog)
+      if (self.commsLog && result._requestId != keepAliveRequestId)
          logResponse(result);
       var func = requestHandlers[result._requestId];
       if (func) {
@@ -297,6 +303,10 @@ function TP_Server() {
    function onSocketError(event) {
       if (self.commsLog)
          console.log("[socket] error: " + JSON.stringify(event));
+   }
+   
+   function isKeepAlive(contractId, structId) {
+      return contractId == 1 && structId == 5512920;
    }
 
 }
