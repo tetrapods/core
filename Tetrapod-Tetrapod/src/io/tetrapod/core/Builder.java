@@ -17,8 +17,8 @@ public class Builder {
 
    public static List<BuildInfo> getServiceInfo() {
       List<BuildInfo> list = new ArrayList<>();
-      File buildDir = new File(System.getProperty("build.dir"));
-      File clusterDir = new File(System.getProperty("cluster.dir"));
+      File buildDir = new File(Util.getProperty("build.dir"));
+      File clusterDir = new File(Util.getProperty("cluster.dir"));
       boolean canBuild = new File(buildDir, "build").exists();
       boolean canDeploy = new File(clusterDir, "deploy").exists();
       boolean canLaunch = new File(clusterDir, "launch").exists();
@@ -80,8 +80,8 @@ public class Builder {
    }
 
    public static boolean executeCommand(BuildCommand command, TetrapodService tetrapodService) {
-      File buildDir = new File(System.getProperty("build.dir"));
-      File clusterDir = new File(System.getProperty("cluster.dir"));
+      File buildDir = new File(Util.getProperty("build.dir"));
+      File clusterDir = new File(Util.getProperty("cluster.dir"));
       boolean canBuild = new File(buildDir, "build").exists();
       boolean canDeploy = new File(clusterDir, "deploy").exists();
       boolean canLaunch = new File(clusterDir, "launch").exists();

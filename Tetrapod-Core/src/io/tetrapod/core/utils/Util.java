@@ -119,6 +119,14 @@ public class Util {
       }
       return Integer.parseInt(val);
    }
+   
+   public static String getProperty(String key, String defaultValue) {
+      return System.getProperty(key, defaultValue);
+   }
+   
+   public static String getProperty(String key) {
+      return System.getProperty(key);
+   }
 
    public static int runProcess(Callback<String> callback, String... commands) {
       ProcessBuilder pb = new ProcessBuilder(commands);
