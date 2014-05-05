@@ -48,11 +48,12 @@ public request Unregister
    1: int entityId
 
 internal request Publish 
+   1: int numTopics
    error NOT_READY
    error NOT_PARENT 
 
 internal response Publish 
-   1: int topicId
+   1: int[] topicIds
     
 internal request RegistrySubscribe
 internal request RegistryUnsubscribe

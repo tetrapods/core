@@ -21,17 +21,23 @@ public class PublishRequest extends Request {
       defaults();
    }
 
+   public PublishRequest(int numTopics) {
+      this.numTopics = numTopics;
+   }   
+
+   public int numTopics;
+
    public final Structure.Security getSecurity() {
       return Security.INTERNAL;
    }
 
    public final void defaults() {
-      
+      numTopics = 0;
    }
    
    @Override
    public final void write(DataSource data) throws IOException {
-      
+      data.write(1, this.numTopics);
       data.writeEndTag();
    }
    
@@ -41,7 +47,7 @@ public class PublishRequest extends Request {
       while (true) {
          int tag = data.readTag();
          switch (tag) {
-            
+            case 1: this.numTopics = data.read_int(tag); break;
             case Codec.END_TAG:
                return;
             default:
@@ -74,8 +80,8 @@ public class PublishRequest extends Request {
       // Note do not use this tags in long term serializations (to disk or databases) as 
       // implementors are free to rename them however they wish.  A null means the field
       // is not to participate in web serialization (remaining at default)
-      String[] result = new String[0+1];
-      
+      String[] result = new String[1+1];
+      result[1] = "numTopics";
       return result;
    }
    
@@ -88,7 +94,7 @@ public class PublishRequest extends Request {
       desc.tagWebNames = tagWebNames();
       desc.types = new TypeDescriptor[desc.tagWebNames.length];
       desc.types[0] = new TypeDescriptor(TypeDescriptor.T_STRUCT, getContractId(), getStructId());
-      
+      desc.types[1] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
       return desc;
    }
 

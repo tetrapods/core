@@ -563,9 +563,17 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          final EntityInfo entity = registry.getEntity(ctx.header.fromId);
          if (entity != null) {
             if (entity.parentId == getEntityId()) {
-               final Topic t = registry.publish(ctx.header.fromId);
-               if (t != null) {
-                  return new PublishResponse(t.topicId);
+               int[] topicIds = new int[r.numTopics];
+               for (int i = 0; i < topicIds.length; i++) {
+                  final Topic t = registry.publish(ctx.header.fromId);
+                  if (t == null) {
+                     topicIds = null;
+                     break;
+                  }
+                  topicIds[i] = t.topicId;
+               }
+               if (topicIds != null) {
+                  return new PublishResponse(topicIds);
                }
             } else {
                return new Error(ERROR_NOT_PARENT);

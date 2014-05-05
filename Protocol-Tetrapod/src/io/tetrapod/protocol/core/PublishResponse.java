@@ -21,23 +21,23 @@ public class PublishResponse extends Response {
       defaults();
    }
 
-   public PublishResponse(int topicId) {
-      this.topicId = topicId;
+   public PublishResponse(int[] topicIds) {
+      this.topicIds = topicIds;
    }   
    
-   public int topicId;
+   public int[] topicIds;
 
    public final Structure.Security getSecurity() {
       return Security.INTERNAL;
    }
 
    public final void defaults() {
-      topicId = 0;
+      topicIds = null;
    }
    
    @Override
    public final void write(DataSource data) throws IOException {
-      data.write(1, this.topicId);
+      if (this.topicIds != null) data.write(1, this.topicIds);
       data.writeEndTag();
    }
    
@@ -47,7 +47,7 @@ public class PublishResponse extends Response {
       while (true) {
          int tag = data.readTag();
          switch (tag) {
-            case 1: this.topicId = data.read_int(tag); break;
+            case 1: this.topicIds = data.read_int_array(tag); break;
             case Codec.END_TAG:
                return;
             default:
@@ -70,7 +70,7 @@ public class PublishResponse extends Response {
       // implementors are free to rename them however they wish.  A null means the field
       // is not to participate in web serialization (remaining at default)
       String[] result = new String[1+1];
-      result[1] = "topicId";
+      result[1] = "topicIds";
       return result;
    }
 
@@ -83,7 +83,7 @@ public class PublishResponse extends Response {
       desc.tagWebNames = tagWebNames();
       desc.types = new TypeDescriptor[desc.tagWebNames.length];
       desc.types[0] = new TypeDescriptor(TypeDescriptor.T_STRUCT, getContractId(), getStructId());
-      desc.types[1] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
+      desc.types[1] = new TypeDescriptor(TypeDescriptor.T_INT_LIST, 0, 0);
       return desc;
    }
  }

@@ -32,11 +32,11 @@ public class ServiceStats {
     */
    protected void publishTopic() {
       message.entityId = service.getEntityId();
-      service.sendDirectRequest(new PublishRequest()).handle(new ResponseHandler() {
+      service.sendDirectRequest(new PublishRequest(1)).handle(new ResponseHandler() {
          @Override
          public void onResponse(Response res) {
             if (!res.isError()) {
-               setTopic(((PublishResponse) res).topicId);
+               setTopic(((PublishResponse) res).topicIds[0]);
             }
          }
       });
