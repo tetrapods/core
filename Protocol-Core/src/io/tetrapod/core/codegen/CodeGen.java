@@ -17,7 +17,7 @@ public class CodeGen {
          args = new String[] { "./definitions", "java", "javascript" };
       }
       if (args.length < 1) {
-         System.err.println("usage: arguments are filename lang1 lang2 ...");
+         System.err.println("usage PLACES_TO_LOOK(semicolon-delimited)  PROTOCOLS_TO_COMPILE(semicolon-delimited)  lang1 lang2 ...");
          System.err.println("       if filename is a folder it will recursively run on all the files");
       }
       String[] roots = args[0].split(";");
