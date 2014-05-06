@@ -18,24 +18,24 @@ public class TetrapodContract extends Contract {
    public static final String NAME = "Tetrapod";
    public static final int CONTRACT_ID = 1;
    
-   public static interface API extends
-      AddServiceInformationRequest.Handler,
-      AdminAuthorizeRequest.Handler,
-      AdminLoginRequest.Handler,
-      ClusterJoinRequest.Handler,
-      ExecuteBuildCommandRequest.Handler,
-      GetServiceBuildInfoRequest.Handler,
-      KeepAliveRequest.Handler,
-      LogRegistryStatsRequest.Handler,
-      PublishRequest.Handler,
-      RegisterRequest.Handler,
-      RegistrySubscribeRequest.Handler,
-      RegistryUnsubscribeRequest.Handler,
-      ServiceStatusUpdateRequest.Handler,
-      ServicesSubscribeRequest.Handler,
-      ServicesUnsubscribeRequest.Handler,
-      SetWebRootRequest.Handler,
-      UnregisterRequest.Handler
+   public static interface API extends APIHandler
+      , AddServiceInformationRequest.Handler
+      , AdminAuthorizeRequest.Handler
+      , AdminLoginRequest.Handler
+      , ClusterJoinRequest.Handler
+      , ExecuteBuildCommandRequest.Handler
+      , GetServiceBuildInfoRequest.Handler
+      , KeepAliveRequest.Handler
+      , LogRegistryStatsRequest.Handler
+      , PublishRequest.Handler
+      , RegisterRequest.Handler
+      , RegistrySubscribeRequest.Handler
+      , RegistryUnsubscribeRequest.Handler
+      , ServiceStatusUpdateRequest.Handler
+      , ServicesSubscribeRequest.Handler
+      , ServicesUnsubscribeRequest.Handler
+      , SetWebRootRequest.Handler
+      , UnregisterRequest.Handler
       {}
    
    public Structure[] getRequests() {

@@ -70,7 +70,7 @@ class JavaGenerator implements LanguageGenerator {
       for (String sub : context.subscriptions)
          t.add("subscriptions", genSubscriptions(context, sub, theClass));      
       for (Class c : context.classesByType("request")) {
-         t.add("handlers", c.classname() + ".Handler", ",\n");
+         t.add("handlers", ", " + c.classname() + ".Handler", "\n");
          String path = c.annotations.getFirst("web");
          if (path != null) {
             if (path.isEmpty()) 

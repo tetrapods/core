@@ -18,14 +18,14 @@ public class CoreContract extends Contract {
    public static final String NAME = "Core";
    public static final int CONTRACT_ID = 1;
    
-   public static interface API extends
-      PauseRequest.Handler,
-      RestartRequest.Handler,
-      ServiceDetailsRequest.Handler,
-      ServiceStatsSubscribeRequest.Handler,
-      ServiceStatsUnsubscribeRequest.Handler,
-      ShutdownRequest.Handler,
-      UnpauseRequest.Handler
+   public static interface API extends APIHandler
+      , PauseRequest.Handler
+      , RestartRequest.Handler
+      , ServiceDetailsRequest.Handler
+      , ServiceStatsSubscribeRequest.Handler
+      , ServiceStatsUnsubscribeRequest.Handler
+      , ShutdownRequest.Handler
+      , UnpauseRequest.Handler
       {}
    
    public Structure[] getRequests() {

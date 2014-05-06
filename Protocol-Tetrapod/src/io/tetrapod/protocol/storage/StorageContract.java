@@ -14,10 +14,10 @@ public class StorageContract extends Contract {
    public static final String NAME = "Storage";
    public static final int CONTRACT_ID = 3;
    
-   public static interface API extends
-      StorageDeleteRequest.Handler,
-      StorageGetRequest.Handler,
-      StorageSetRequest.Handler
+   public static interface API extends APIHandler
+      , StorageDeleteRequest.Handler
+      , StorageGetRequest.Handler
+      , StorageSetRequest.Handler
       {}
    
    public Structure[] getRequests() {

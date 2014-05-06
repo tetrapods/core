@@ -17,7 +17,7 @@ public class {{class}} extends Contract {
    
    {{constants}}
    
-   public static interface API extends
+   public static interface API extends APIHandler
       {{handlers}}
       {}
    
