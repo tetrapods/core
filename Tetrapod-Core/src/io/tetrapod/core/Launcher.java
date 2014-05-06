@@ -125,7 +125,7 @@ public class Launcher {
    public static void relaunch(String token) throws IOException {
       opts.put("token", token);
       StringBuilder sb = new StringBuilder();
-      sb.append("./scripts/launch");
+      sb.append("../current/scripts/launch");
 
       // java args?
       //      for (String arg : ManagementFactory.getRuntimeMXBean().getInputArguments()) {
