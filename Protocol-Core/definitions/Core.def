@@ -41,6 +41,7 @@ struct Core
    error INVALID_RIGHTS       = 8 // Caller does not have sufficient rights to call this Request     
    error INVALID_ENTITY       = 9 // An addressed entityId was invalid
    error RIGHTS_EXPIRED       = 10 // rights token has expired, need to login again     
+   error SERVICE_OVERLOADED   = 11 // This service is over capacity, so the request was not performed
 
    const byte  ENVELOPE_HANDSHAKE      = 1 
    const byte  ENVELOPE_REQUEST        = 2

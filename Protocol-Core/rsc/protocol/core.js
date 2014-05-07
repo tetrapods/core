@@ -52,6 +52,7 @@ function TP_Core(server) {
    server.registerConst("Core", "null", "PROTOCOL_MISMATCH", 5);
    server.registerConst("Core", "null", "RIGHTS_EXPIRED", 10);
    server.registerConst("Core", "null", "SERIALIZATION", 4);
+   server.registerConst("Core", "null", "SERVICE_OVERLOADED", 11);
    server.registerConst("Core", "null", "SERVICE_UNAVAILABLE", 2);
    server.registerConst("Core", "null", "TIMEOUT", 3);
    server.registerConst("Core", "null", "UNKNOWN", 1);

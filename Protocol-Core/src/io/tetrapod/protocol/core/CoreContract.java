@@ -112,6 +112,11 @@ public class CoreContract extends Contract {
    public static final int ERROR_SERIALIZATION = 4; 
    
    /**
+    * This service is over capacity, so the request was not performed
+    */
+   public static final int ERROR_SERVICE_OVERLOADED = 11; 
+   
+   /**
     * No service exists to which to relay the request
     */
    public static final int ERROR_SERVICE_UNAVAILABLE = 2; 

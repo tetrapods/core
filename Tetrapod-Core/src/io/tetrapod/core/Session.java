@@ -56,30 +56,31 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
 
    }
 
-   protected static final Logger        logger                  = LoggerFactory.getLogger(Session.class);
-   protected static final Logger        commsLog                = LoggerFactory.getLogger("comms");
+   protected static final Logger        logger                     = LoggerFactory.getLogger(Session.class);
+   protected static final Logger        commsLog                   = LoggerFactory.getLogger("comms");
 
-   public static final byte             DEFAULT_REQUEST_TIMEOUT = 30;
+   public static final byte             DEFAULT_REQUEST_TIMEOUT    = 30;
+   private static final int             DEFAULT_OVERLOAD_THRESHOLD = 1024 * 128;
 
-   protected static final AtomicInteger sessionCounter          = new AtomicInteger();
+   protected static final AtomicInteger sessionCounter             = new AtomicInteger();
 
-   protected final int                  sessionNum              = sessionCounter.incrementAndGet();
+   protected final int                  sessionNum                 = sessionCounter.incrementAndGet();
 
-   protected final List<Listener>       listeners               = new LinkedList<Listener>();
-   protected final Map<Integer, Async>  pendingRequests         = new ConcurrentHashMap<>();
-   protected final AtomicInteger        requestCounter          = new AtomicInteger();
+   protected final List<Listener>       listeners                  = new LinkedList<Listener>();
+   protected final Map<Integer, Async>  pendingRequests            = new ConcurrentHashMap<>();
+   protected final AtomicInteger        requestCounter             = new AtomicInteger();
    protected final Session.Helper       helper;
    protected final SocketChannel        channel;
-   protected final AtomicLong           lastHeardFrom           = new AtomicLong();
-   protected final AtomicLong           lastSentTo              = new AtomicLong();
+   protected final AtomicLong           lastHeardFrom              = new AtomicLong();
+   protected final AtomicLong           lastSentTo                 = new AtomicLong();
 
    protected RelayHandler               relayHandler;
 
-   protected int                        myId                    = 0;
-   protected byte                       myType                  = Core.TYPE_ANONYMOUS;
+   protected int                        myId                       = 0;
+   protected byte                       myType                     = Core.TYPE_ANONYMOUS;
 
-   protected int                        theirId                 = 0;
-   protected byte                       theirType               = Core.TYPE_ANONYMOUS;
+   protected int                        theirId                    = 0;
+   protected byte                       theirType                  = Core.TYPE_ANONYMOUS;
 
    protected int                        myContractId;
 
@@ -162,7 +163,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
       if (svc != null) {
          final long start = System.nanoTime();
          final Context context = getDispatcher().requestTimes.time();
-         getDispatcher().dispatch(new Runnable() {
+         if (!getDispatcher().dispatch(new Runnable() {
             public void run() {
                try {
                   dispatchRequest(svc, header, req);
@@ -179,7 +180,9 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
                   logger.warn("Request took {} {} millis", req, Util.nanosToMillis(elapsed));
                }
             }
-         });
+         }, DEFAULT_OVERLOAD_THRESHOLD)) {
+            sendResponse(new Error(ERROR_SERVICE_OVERLOADED), header.requestId);
+         }
       } else {
          logger.warn("{} No handler found for {}", this, header.dump());
          sendResponse(new Error(ERROR_UNKNOWN_REQUEST), header.requestId);

@@ -70,10 +70,18 @@ public class Dispatcher {
       return workerGroup;
    }
 
+   public boolean dispatch(final Runnable r) {
+      return dispatch(r, Integer.MAX_VALUE);
+   }
+
    /**
     * Dispatches a task on our thread-pool.
+    * 
+    * If we don't available threads, we post to a queue.
+    * 
+    * If the queue is > overloadThreshold, we will not queue, and will return false.
     */
-   public void dispatch(final Runnable r) {
+   public boolean dispatch(final Runnable r, final int overloadThreshold) {
       assert r != null;
       try {
          threadPool.submit(new Runnable() {
@@ -82,9 +90,13 @@ public class Dispatcher {
             }
          });
       } catch (RejectedExecutionException e) {
-         overflow.add(r);
-         workQueueSize.inc();
+         if (overflow.size() < overloadThreshold && overflow.offer(r)) {
+            workQueueSize.inc();
+         } else {
+            return false;
+         }
       }
+      return true;
    }
 
    /**
@@ -120,14 +132,18 @@ public class Dispatcher {
    /**
     * Queues a task for sequential dispatch
     */
-   public void dispatchSequential(Runnable r) {
+   public boolean dispatchSequential(Runnable r) {
       assert r != null;
       try {
          sequential.execute(r);
       } catch (RejectedExecutionException e) {
-         overflow.add(r);
-         workQueueSize.inc();
+         if (overflow.offer(r)) {
+            workQueueSize.inc();
+         } else {
+            return false;
+         }
       }
+      return true;
    }
 
    /**
