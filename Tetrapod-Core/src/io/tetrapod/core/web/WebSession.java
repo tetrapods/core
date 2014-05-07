@@ -54,8 +54,9 @@ abstract class WebSession extends Session {
    private void relayRequest(RequestHeader header, Structure request) throws IOException {
       final Session ses = relayHandler.getRelaySession(header.toId, header.contractId);
       if (ses != null) {
-         ByteBuf in = convertToByteBuf(request);
+         final ByteBuf in = convertToByteBuf(request);
          ses.sendRelayedRequest(header, in, this);
+         in.release();
       } else {
          logger.warn("Could not find a relay session for {} {}", header.toId, header.contractId);
          sendResponse(new Error(ERROR_SERVICE_UNAVAILABLE), header.requestId);
