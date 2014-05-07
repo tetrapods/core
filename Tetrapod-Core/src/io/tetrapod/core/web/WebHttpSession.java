@@ -23,9 +23,9 @@ import org.slf4j.*;
 public class WebHttpSession extends WebSession {
    protected static final Logger logger = LoggerFactory.getLogger(WebHttpSession.class);
 
-   private boolean isKeepAlive;
+   private boolean               isKeepAlive;
 
-   public WebHttpSession(SocketChannel ch, Session.Helper helper, Map<String,File> rootDirs) {
+   public WebHttpSession(SocketChannel ch, Session.Helper helper, Map<String, File> rootDirs) {
       super(ch, helper);
 
       final boolean usingSSL = ch.pipeline().get(SslHandler.class) != null;
@@ -69,8 +69,11 @@ public class WebHttpSession extends WebSession {
       // Generate an error page if response getStatus code is not OK (200).
       if (res.getStatus().code() != 200) {
          ByteBuf buf = Unpooled.copiedBuffer(res.getStatus().toString(), CharsetUtil.UTF_8);
-         res.content().writeBytes(buf);
-         buf.release();
+         try {
+            res.content().writeBytes(buf);
+         } finally {
+            buf.release();
+         }
          setContentLength(res, res.content().readableBytes());
       }
       // Send the response and close the connection if necessary.
