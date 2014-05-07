@@ -5,6 +5,10 @@ function TP_Tetrapod(server) {
    server.register("response", "Tetrapod", "ERROR", 1, 1);
    server.register("response", "Tetrapod", "SUCCESS", 1, 2);
 
+   server.registerConst("Tetrapod", "Admin", "RIGHTS_CLUSTER_READ", 1);
+   server.registerConst("Tetrapod", "Admin", "RIGHTS_CLUSTER_WRITE", 2);
+   server.registerConst("Tetrapod", "Admin", "RIGHTS_USER_READ", 4);
+   server.registerConst("Tetrapod", "Admin", "RIGHTS_USER_WRITE", 8);
    server.registerConst("Tetrapod", "BuildCommand", "BUILD", 1);
    server.registerConst("Tetrapod", "BuildCommand", "DEPLOY", 2);
    server.registerConst("Tetrapod", "BuildCommand", "LAUNCH", 3);
@@ -12,6 +16,7 @@ function TP_Tetrapod(server) {
    server.registerConst("Tetrapod", "BuildCommand", "LAUNCH_DEPLOYED", -1);
    
    server.registerConst("Tetrapod", "null", "HOSTNAME_MISMATCH", 12239905);
+   server.registerConst("Tetrapod", "null", "INVALID_ACCOUNT", 14623816);
    server.registerConst("Tetrapod", "null", "NOT_PARENT", 2219555);
    server.registerConst("Tetrapod", "null", "NOT_READY", 12438466);
    
@@ -33,6 +38,11 @@ function TP_Tetrapod(server) {
    server.register("request", "Tetrapod", "AdminLogin", 1, 14191480);
    server.register("response", "Tetrapod", "AdminLogin", 1, 4213436);
    server.register("request", "Tetrapod", "AdminAuthorize", 1, 12706146);
+   server.register("request", "Tetrapod", "AdminCreate", 1, 14596683);
+   server.register("request", "Tetrapod", "AdminDelete", 1, 7421322);
+   server.register("request", "Tetrapod", "AdminChangePassword", 1, 2877212);
+   server.register("request", "Tetrapod", "AdminChangeRights", 1, 16102706);
+   server.register("struct", "Tetrapod", "Admin", 1, 16753598);
    server.register("request", "Tetrapod", "KeepAlive", 1, 5512920);
    server.register("request", "Tetrapod", "SetWebRoot", 1, 4029010);
    server.register("message", "Tetrapod", "Entity", 1, 10913291);

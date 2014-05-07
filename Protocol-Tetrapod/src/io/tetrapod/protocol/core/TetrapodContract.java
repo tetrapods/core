@@ -21,6 +21,10 @@ public class TetrapodContract extends Contract {
    public static interface API extends APIHandler
       , AddServiceInformationRequest.Handler
       , AdminAuthorizeRequest.Handler
+      , AdminChangePasswordRequest.Handler
+      , AdminChangeRightsRequest.Handler
+      , AdminCreateRequest.Handler
+      , AdminDeleteRequest.Handler
       , AdminLoginRequest.Handler
       , ClusterJoinRequest.Handler
       , ExecuteBuildCommandRequest.Handler
@@ -53,6 +57,10 @@ public class TetrapodContract extends Contract {
          new LogRegistryStatsRequest(),
          new AdminLoginRequest(),
          new AdminAuthorizeRequest(),
+         new AdminCreateRequest(),
+         new AdminDeleteRequest(),
+         new AdminChangePasswordRequest(),
+         new AdminChangeRightsRequest(),
          new KeepAliveRequest(),
          new SetWebRootRequest(),
          new GetServiceBuildInfoRequest(),
@@ -93,6 +101,7 @@ public class TetrapodContract extends Contract {
    public Structure[] getStructs() {
       return new Structure[] {
          new Entity(),
+         new Admin(),
          new BuildInfo(),
          new BuildCommand(),
       };
@@ -194,6 +203,7 @@ public class TetrapodContract extends Contract {
    }
       
    public static final int ERROR_HOSTNAME_MISMATCH = 12239905; 
+   public static final int ERROR_INVALID_ACCOUNT = 14623816; 
    public static final int ERROR_NOT_PARENT = 2219555; 
    public static final int ERROR_NOT_READY = 12438466; 
 }

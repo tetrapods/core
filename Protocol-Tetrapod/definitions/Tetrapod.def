@@ -73,12 +73,44 @@ internal request LogRegistryStats
 public request AdminLogin
    1: string email
    2: string password 
+   
+   error INVALID_ACCOUNT         
 
 public response AdminLogin
    2: string token 
    
 public request AdminAuthorize
    1: string token 
+
+public request AdminCreate
+   1: string token 
+   2: string email
+   3: string password
+   
+public request AdminDelete
+   1: string token 
+   2: int accountId;
+   
+public request AdminChangePassword
+   1: string token
+   2: string oldPassword
+   3: string newPassword
+   
+public request AdminChangeRights
+   1: string token
+   2: int accountId;
+   3: long rights;
+   
+public struct Admin
+   1: int accountId;
+   2: string email
+   3: string hash
+   4: long rights;
+   
+   const int RIGHTS_CLUSTER_READ   = 1
+   const int RIGHTS_CLUSTER_WRITE  = 2
+   const int RIGHTS_USER_READ      = 4
+   const int RIGHTS_USER_WRITE     = 8
    
 public request KeepAlive
 

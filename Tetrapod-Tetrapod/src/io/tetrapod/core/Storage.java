@@ -1,5 +1,7 @@
 package io.tetrapod.core;
 
+import io.tetrapod.core.rpc.Structure;
+import io.tetrapod.core.serialize.datasources.JSONDataSource;
 import io.tetrapod.core.utils.Util;
 
 import java.io.*;
@@ -118,6 +120,23 @@ public class Storage implements MembershipListener {
 
    public String get(String key) {
       return map.get(key);
+   }
+
+   public <T extends Structure> T get(String key, T struct) throws IOException {
+      final String val = map.get(key);
+      if (val != null) {
+         JSONDataSource data = new JSONDataSource(val);
+         struct.read(data);
+         return struct;
+      } else {
+         return null;
+      }
+   }
+
+   public void put(String key, Structure value) throws IOException {
+      JSONDataSource data = new JSONDataSource();
+      value.write(data);
+      map.put(key, data.getJSON().toString());
    }
 
    public String get(String key, String defaultVal) {

@@ -28,8 +28,8 @@ import javax.net.ssl.SSLContext;
 import org.slf4j.*;
 
 /**
- * The tetrapod service is the core cluster service which handles message routing, cluster
- * management, service discovery, and load balancing of client connections
+ * The tetrapod service is the core cluster service which handles message routing, cluster management, service discovery, and load balancing
+ * of client connections
  */
 public class TetrapodService extends DefaultService implements TetrapodContract.API, StorageContract.API, RelayHandler,
       io.tetrapod.core.registry.Registry.RegistryBroadcaster {
@@ -224,9 +224,8 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    }
 
    /**
-    * As a Tetrapod service, we can't start serving as one until we've registered & fully sync'ed
-    * with the cluster, or self-registered if we are the first one. We call this once this criteria
-    * has been reached
+    * As a Tetrapod service, we can't start serving as one until we've registered & fully sync'ed with the cluster, or self-registered if we
+    * are the first one. We call this once this criteria has been reached
     */
    @Override
    public void onReadyToServe() {
@@ -717,14 +716,14 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    @Override
    public Response requestAdminAuthorize(AdminAuthorizeRequest r, RequestContext ctxA) {
       SessionRequestContext ctx = (SessionRequestContext) ctxA;
-      logger.info("AUTHORIZE WITH {} ...", r.token);
+      logger.debug("AUTHORIZE WITH {} ...", r.token);
       AuthToken.Decoded d = AuthToken.decodeAuthToken1(r.token);
       if (d != null) {
-         logger.info("TOKEN {} time left = {}", r.token, d.timeLeft);
+         logger.debug("TOKEN {} time left = {}", r.token, d.timeLeft);
          ctx.session.theirType = Core.TYPE_ADMIN;
          return Response.SUCCESS;
       } else {
-         logger.info("TOKEN {} NOT VALID", r.token);
+         logger.warn("TOKEN {} NOT VALID", r.token);
       }
       return new Error(ERROR_INVALID_RIGHTS);
    }
@@ -735,17 +734,55 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       if (r.email == null) {
          return new Error(ERROR_INVALID_RIGHTS);
       }
-      if (r.email.trim().length() < 3) {
-         return new Error(ERROR_INVALID_RIGHTS);
+      try {
+         Admin admin = storage.get("admin.email::" + r.email, new Admin());
+         if (admin == null) {
+            // check for default admin user
+            final String defaultAdminEmail = "admin@" + Util.getProperty("product.url", "tetrapod.io");
+            if (r.email.equals(defaultAdminEmail)) {
+               admin = new Admin(1, defaultAdminEmail, PasswordHash.createHash("admin"), 0xFF);
+            } else {
+               return new Error(ERROR_INVALID_ACCOUNT);
+            }
+         }
+
+         if (PasswordHash.validatePassword(r.password, admin.hash)) {
+            // mark the session as an admin
+            ctx.session.theirType = Core.TYPE_ADMIN;
+            final String authtoken = AuthToken.encodeAuthToken1(1, 1, 60 * 24 * 14);
+            return new AdminLoginResponse(authtoken);
+         } else {
+            return new Error(ERROR_INVALID_RIGHTS);
+         }
+
+      } catch (Exception e) {
+         logger.error(e.getMessage(), e);
+         return new Error(ERROR_UNKNOWN);
       }
-      // FIXME: Check password
+   }
 
-      // mark them as an admin
-      ctx.session.theirType = Core.TYPE_ADMIN;
+   @Override
+   public Response requestAdminChangePassword(AdminChangePasswordRequest r, RequestContext ctxA) {
+      // TODO: Implement;
+      return new Error(ERROR_UNKNOWN);
+   }
 
-      final String authtoken = AuthToken.encodeAuthToken1(1, 1, 60 * 24 * 14);
+   @Override
+   public Response requestAdminChangeRights(AdminChangeRightsRequest r, RequestContext ctx) {
+      // TODO: Implement;
+      return new Error(ERROR_UNKNOWN);
+   }
 
-      return new AdminLoginResponse(authtoken);
+   @Override
+   public Response requestAdminCreate(AdminCreateRequest r, RequestContext ctx) {
+      // TODO: Implement;
+      return new Error(ERROR_UNKNOWN);
+   }
+
+   @Override
+   public Response requestAdminDelete(AdminDeleteRequest r, RequestContext ctx) {
+      // TODO: Implement;
+      return new Error(ERROR_UNKNOWN);
    }
 
    @Override
@@ -789,5 +826,6 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       }
       return Response.SUCCESS;
    }
+
 
 }
