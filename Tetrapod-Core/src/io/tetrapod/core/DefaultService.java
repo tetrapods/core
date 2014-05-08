@@ -4,7 +4,7 @@ import static io.tetrapod.protocol.core.Core.UNADDRESSED;
 import io.netty.channel.socket.SocketChannel;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.rpc.Error;
-import io.tetrapod.core.utils.Util;
+import io.tetrapod.core.utils.*;
 import io.tetrapod.protocol.core.*;
 
 import java.io.*;
@@ -13,7 +13,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.slf4j.*;
 
-public class DefaultService implements Service, CoreContract.API, SessionFactory, EntityMessage.Handler,
+public class DefaultService implements Service, Fail.FailHandler, CoreContract.API, SessionFactory, EntityMessage.Handler,
       ClusterMemberMessage.Handler {
    private static final Logger             logger          = LoggerFactory.getLogger(DefaultService.class);
    protected final Set<Integer>            dependencies    = new HashSet<>();
@@ -36,6 +36,7 @@ public class DefaultService implements Service, CoreContract.API, SessionFactory
    private final MessageHandlers           messageHandlers = new MessageHandlers();
 
    public DefaultService() {
+      Fail.handler = this;
       status |= Core.STATUS_STARTING;
       dispatcher = new Dispatcher();
       clusterClient = new Client(this);
@@ -58,13 +59,12 @@ public class DefaultService implements Service, CoreContract.API, SessionFactory
             }
          }
       });
-      
+
       int num = 1;
       try {
          String b = Util.readFileAsString(new File("build_number.txt"));
          num = Integer.parseInt(b.trim());
-      } catch (IOException e) {
-      }
+      } catch (IOException e) {}
       buildNumber = num;
    }
 
@@ -78,7 +78,7 @@ public class DefaultService implements Service, CoreContract.API, SessionFactory
 
    @Override
    public void messageEntity(EntityMessage m, MessageContext ctxA) {
-      SessionMessageContext ctx = (SessionMessageContext)ctxA;
+      SessionMessageContext ctx = (SessionMessageContext) ctxA;
       if (ctx.session.getTheirEntityType() == Core.TYPE_TETRAPOD) {
          this.entityId = m.entityId;
          ctx.session.setMyEntityId(m.entityId);
@@ -142,7 +142,9 @@ public class DefaultService implements Service, CoreContract.API, SessionFactory
     * @param restarting true if we are shutting down in order to restart
     */
    public void onShutdown(boolean restarting) {}
+
    public void onPaused() {}
+
    public void onUnpaused() {}
 
    public void shutdown(boolean restarting) {
@@ -196,7 +198,7 @@ public class DefaultService implements Service, CoreContract.API, SessionFactory
          @Override
          public void onResponse(Response res) {
             if (res.isError()) {
-               fail("Unable to register", res.errorCode());
+               Fail.fail("Unable to register: " + res.errorCode());
             } else {
                RegisterResponse r = (RegisterResponse) res;
                entityId = r.entityId;
@@ -283,7 +285,7 @@ public class DefaultService implements Service, CoreContract.API, SessionFactory
    public synchronized boolean isPaused() {
       return (status & Core.STATUS_PAUSED) != 0;
    }
-   
+
    public synchronized boolean isNominal() {
       int nonRunning = Core.STATUS_STARTING | Core.STATUS_FAILED | Core.STATUS_BUSY | Core.STATUS_PAUSED | Core.STATUS_STOPPING;
       return (status & nonRunning) == 0;
@@ -307,13 +309,15 @@ public class DefaultService implements Service, CoreContract.API, SessionFactory
       }
    }
 
-   protected void fail(Throwable error) {
+   @Override
+   public void fail(Throwable error) {
       logger.error(error.getMessage(), error);
       updateStatus(status | Core.STATUS_FAILED);
    }
 
-   protected void fail(String reason, int errorCode) {
-      logger.error("FAIL: {} {}", reason, errorCode);
+   @Override
+   public void fail(String reason) {
+      logger.error("FAIL: {}", reason);
       updateStatus(status | Core.STATUS_FAILED);
    }
 
@@ -540,14 +544,14 @@ public class DefaultService implements Service, CoreContract.API, SessionFactory
       stats.unsubscribe(ctx.header.fromId);
       return Response.SUCCESS;
    }
-   
+
    private void setWebRoot() {
       String name = Launcher.getOpt("webOnly");
       if (name == null) {
          name = getShortName();
       }
       try {
-         File f = new File("webContent"); 
+         File f = new File("webContent");
          if (f.exists()) {
             final String path = f.getCanonicalPath();
             sendDirectRequest(new SetWebRootRequest(name, path, getHostName())).handle(new ResponseHandler() {
@@ -576,9 +580,7 @@ public class DefaultService implements Service, CoreContract.API, SessionFactory
       if (getShortName() == null) {
          return new File[] {};
       }
-      return new File[] {
-            new File("../Protocol-" + getShortName() + "/rsc")
-      };
+      return new File[] { new File("../Protocol-" + getShortName() + "/rsc") };
    }
 
 }
