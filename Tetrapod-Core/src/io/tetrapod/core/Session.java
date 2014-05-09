@@ -455,8 +455,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
       if (commsLog.isInfoEnabled()) {
          for (int i = 0; i < args.length; i++) {
             if (args[i] == this) {
-               int h = Thread.currentThread().getName().hashCode() & 0xFFFFFF;
-               args[i] = String.format("{%06x} %s:%d", h, getClass().getSimpleName().substring(0, 4), sessionNum);
+               args[i] = String.format("%s:%d", getClass().getSimpleName().substring(0, 4), sessionNum);
             }
          }
          commsLog.info(String.format(format, args));

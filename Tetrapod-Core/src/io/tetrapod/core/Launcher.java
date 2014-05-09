@@ -90,7 +90,7 @@ public class Launcher {
    }
    
    private static Class<?> tryName(String name) throws ClassNotFoundException {
-      System.out.println("trying " + name);
+//      System.out.println("trying " + name);
       return Class.forName(name);
    }
 
