@@ -22,6 +22,7 @@ public class CoreContract extends Contract {
       , PauseRequest.Handler
       , RestartRequest.Handler
       , ServiceDetailsRequest.Handler
+      , ServiceLogsRequest.Handler
       , ServiceStatsSubscribeRequest.Handler
       , ServiceStatsUnsubscribeRequest.Handler
       , ShutdownRequest.Handler
@@ -37,18 +38,20 @@ public class CoreContract extends Contract {
          new ServiceStatsSubscribeRequest(),
          new ServiceStatsUnsubscribeRequest(),
          new ServiceDetailsRequest(),
+         new ServiceLogsRequest(),
       };
    }
    
    public Structure[] getResponses() {
       return new Structure[] {
          new ServiceDetailsResponse(),
+         new ServiceLogsResponse(),
       };
    }
    
    public Structure[] getMessages() {
       return new Structure[] {
-         
+         new ServiceStatsMessage(),
       };
    }
    
@@ -64,6 +67,7 @@ public class CoreContract extends Contract {
          new WebRoute(),
          new TypeDescriptor(),
          new StructDescription(),
+         new ServiceLogEntry(),
       };
    }
    
@@ -81,6 +85,27 @@ public class CoreContract extends Contract {
       };
    }
 
+   public static class ServiceStats extends Contract {
+      public static interface API extends
+         ServiceStatsMessage.Handler
+         {}
+         
+      public Structure[] getMessages() {
+         return new Structure[] {
+            new ServiceStatsMessage(),
+         };
+      }
+      
+      public String getName() {
+         return CoreContract.NAME;
+      }
+      
+      public int getContractId() {
+         return CoreContract.CONTRACT_ID;
+      } 
+       
+   }
+      
    /**
     * Request's session was disconnected
     */

@@ -98,8 +98,8 @@ internal request Shutdown
 
 internal request Restart
    1: string restartNonce
-   2: boolean restartPaused
- 
+   2: boolean restartPaused 
+
 internal request ServiceStatsSubscribe
 internal request ServiceStatsUnsubscribe
 
@@ -108,7 +108,26 @@ internal response ServiceDetails
    1: string iconURL
    3: string metadata
    2: ServiceCommand[] commands
-   
+    
+internal request ServiceLogs
+   1: long logId
+   2: byte level
+   3: int maxItems
+
+internal response ServiceLogs
+   1: long lastLogId 
+   2: ServiceLogEntry<list> items
+ 
+################################# MESSAGES #################################
+
+internal message ServiceStats.ServiceStats
+   1: int entityId
+   2: int rps
+   3: int mps
+   4: long latency  
+   5: long counter
+
+    
 ################################# STRUCTURES #################################
 
 internal struct Subscriber
@@ -142,3 +161,18 @@ internal struct TypeDescriptor
 internal struct StructDescription
    1: TypeDescriptor[] types
    2: string[] tagWebNames
+   
+internal struct ServiceLogEntry
+   1: string msg
+   2: byte level 
+   3: long timestamp
+   4: string thread
+   5: string logger
+   
+   const byte LEVEL_ALL     = 0
+   const byte LEVEL_TRACE   = 10
+   const byte LEVEL_DEBUG   = 20
+   const byte LEVEL_INFO    = 30
+   const byte LEVEL_WARN    = 40
+   const byte LEVEL_ERROR   = 50
+   const byte LEVEL_OFF     = 255

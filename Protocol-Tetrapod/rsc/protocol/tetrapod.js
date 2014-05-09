@@ -64,6 +64,5 @@ function TP_Tetrapod(server) {
    server.register("message", "Tetrapod", "ServiceAdded", 1, 15116807);
    server.register("message", "Tetrapod", "ServiceRemoved", 1, 1629937);
    server.register("message", "Tetrapod", "ServiceUpdated", 1, 1658756);
-   server.register("message", "Tetrapod", "ServiceStats", 1, 469976);
 
 }

@@ -214,12 +214,3 @@ internal message Services.ServiceRemoved
 internal message Services.ServiceUpdated
 	1: int entityId;
 	2: int status;
-
-##### ServiceStats Topic Messages ##### 
-
-internal message ServiceStats.ServiceStats
-   1: int entityId;
-   2: int rps;
-   3: int mps;
-   4: long latency;  
-   5: long counter;
