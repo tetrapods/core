@@ -94,7 +94,6 @@ public class TetrapodContract extends Contract {
          new ServiceAddedMessage(),
          new ServiceRemovedMessage(),
          new ServiceUpdatedMessage(),
-         new ServiceStatsMessage(),
       };
    }
    
@@ -143,27 +142,6 @@ public class TetrapodContract extends Contract {
             new TopicSubscribedMessage(),
             new TopicUnpublishedMessage(),
             new TopicUnsubscribedMessage(),
-         };
-      }
-      
-      public String getName() {
-         return TetrapodContract.NAME;
-      }
-      
-      public int getContractId() {
-         return TetrapodContract.CONTRACT_ID;
-      } 
-       
-   }
-      
-   public static class ServiceStats extends Contract {
-      public static interface API extends
-         ServiceStatsMessage.Handler
-         {}
-         
-      public Structure[] getMessages() {
-         return new Structure[] {
-            new ServiceStatsMessage(),
          };
       }
       

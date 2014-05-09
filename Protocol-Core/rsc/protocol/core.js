@@ -45,6 +45,13 @@ function TP_Core(server) {
    server.registerConst("Core", "TypeDescriptor", "T_DOUBLE_LIST", 12);
    server.registerConst("Core", "TypeDescriptor", "T_STRING_LIST", 13);
    server.registerConst("Core", "TypeDescriptor", "T_STRUCT_LIST", 14);
+   server.registerConst("Core", "ServiceLogEntry", "LEVEL_ALL", 0);
+   server.registerConst("Core", "ServiceLogEntry", "LEVEL_TRACE", 10);
+   server.registerConst("Core", "ServiceLogEntry", "LEVEL_DEBUG", 20);
+   server.registerConst("Core", "ServiceLogEntry", "LEVEL_INFO", 30);
+   server.registerConst("Core", "ServiceLogEntry", "LEVEL_WARN", 40);
+   server.registerConst("Core", "ServiceLogEntry", "LEVEL_ERROR", 50);
+   server.registerConst("Core", "ServiceLogEntry", "LEVEL_OFF", 100);
    
    server.registerConst("Core", "null", "CONNECTION_CLOSED", 7);
    server.registerConst("Core", "null", "INVALID_ENTITY", 9);
@@ -72,9 +79,13 @@ function TP_Core(server) {
    server.register("request", "Core", "ServiceStatsUnsubscribe", 1, 576067);
    server.register("request", "Core", "ServiceDetails", 1, 14458441);
    server.register("response", "Core", "ServiceDetails", 1, 12435407);
+   server.register("request", "Core", "ServiceLogs", 1, 13816458);
+   server.register("response", "Core", "ServiceLogs", 1, 6345878);
+   server.register("message", "Core", "ServiceStats", 1, 469976);
    server.register("struct", "Core", "Subscriber", 1, 16013581);
    server.register("struct", "Core", "WebRoute", 1, 4890284);
    server.register("struct", "Core", "TypeDescriptor", 1, 6493266);
    server.register("struct", "Core", "StructDescription", 1, 9642196);
+   server.register("struct", "Core", "ServiceLogEntry", 1, 11222968);
 
 }

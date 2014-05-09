@@ -15,7 +15,7 @@ import java.util.concurrent.*;
 public class ServiceStatsMessage extends Message {
    
    public static final int STRUCT_ID = 469976;
-   public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;
+   public static final int CONTRACT_ID = CoreContract.CONTRACT_ID;
     
    public ServiceStatsMessage() {
       defaults();

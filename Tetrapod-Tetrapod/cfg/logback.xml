@@ -18,14 +18,18 @@
 		</sift>
 	</appender>
 
+	
 	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
 		<encoder>
 			<pattern>%-5level %d{HH:mm:ss.SSS} %24thread{24} - %16logger{0} - %msg%n</pattern>
 		</encoder>
 	</appender>
+	
+   <appender name="BUFFER" class="io.tetrapod.core.LogBuffer" />
 
 	<root level="DEBUG">
-		<appender-ref ref="STDOUT" />
+      <appender-ref ref="STDOUT" />
+      <appender-ref ref="BUFFER" />
 	</root>
 
 	<logger name="io.netty" level="INFO" />

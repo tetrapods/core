@@ -13,9 +13,13 @@ import java.util.concurrent.TimeUnit;
 
 import org.slf4j.*;
 
+import ch.qos.logback.classic.LoggerContext;
+
 public class DefaultService implements Service, Fail.FailHandler, CoreContract.API, SessionFactory, EntityMessage.Handler,
       ClusterMemberMessage.Handler {
+
    private static final Logger             logger          = LoggerFactory.getLogger(DefaultService.class);
+
    protected final Set<Integer>            dependencies    = new HashSet<>();
 
    protected final Dispatcher              dispatcher;
@@ -28,6 +32,7 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
    protected String                        token;
    protected int                           status;
    protected final int                     buildNumber;
+   protected final LogBuffer               logBuffer;
 
    protected final ServiceStats            stats;
 
@@ -36,6 +41,8 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
    private final MessageHandlers           messageHandlers = new MessageHandlers();
 
    public DefaultService() {
+      logBuffer = (LogBuffer) ((LoggerContext) LoggerFactory.getILoggerFactory()).getLogger("ROOT").getAppender("BUFFER");
+
       Fail.handler = this;
       status |= Core.STATUS_STARTING;
       dispatcher = new Dispatcher();
@@ -583,4 +590,10 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
       return new File[] { new File("../Protocol-" + getShortName() + "/rsc") };
    }
 
+   @Override
+   public Response requestServiceLogs(ServiceLogsRequest r, RequestContext ctx) {
+      final List<ServiceLogEntry> list = new ArrayList<ServiceLogEntry>();
+      long last = logBuffer.getItems(r.logId, logBuffer.convert(r.level), r.maxItems, list);
+      return new ServiceLogsResponse(last, list);
+   }
 }
