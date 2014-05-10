@@ -117,6 +117,8 @@ internal request ServiceLogs
 internal response ServiceLogs
    1: long lastLogId 
    2: ServiceLogEntry<list> items
+   
+   error NOT_CONFIGURED
  
 ################################# MESSAGES #################################
 

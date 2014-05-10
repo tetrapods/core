@@ -6,11 +6,11 @@ define(["knockout", "jquery", "app", "service"], function(ko, $, app, Service) {
    function ClusterModel() {
       var self = this;
       self.services = ko.observableArray([]);
-
+      
       // Timer to update charts
       setInterval(function updateCharts() {
-         $.each(self.services(), function(i, s) {
-            s.chart();
+         $.each(self.services(), function(i, s) {           
+            s.update();
          });
       }, 1000);
 
@@ -26,7 +26,7 @@ define(["knockout", "jquery", "app", "service"], function(ko, $, app, Service) {
       app.server.addMessageHandler("ServiceAdded", function(msg) {
          var s = self.findService(msg.entity.entityId);
          if (s) {
-            self.services.remove(s);
+            self.services.remove(s); 
          }
          self.services.push(new Service(msg.entity));
          self.services.sort(compareServices);
@@ -42,7 +42,7 @@ define(["knockout", "jquery", "app", "service"], function(ko, $, app, Service) {
       app.server.addMessageHandler("ServiceRemoved", function(msg) {
          var s = self.findService(msg.entityId);
          if (s) {
-            self.services.remove(s);
+            self.services.remove(s); 
          }
       });
 

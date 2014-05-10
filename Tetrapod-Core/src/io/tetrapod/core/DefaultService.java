@@ -592,6 +592,9 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
 
    @Override
    public Response requestServiceLogs(ServiceLogsRequest r, RequestContext ctx) {
+      if (logBuffer == null) {
+         return new Error(CoreContract.ERROR_NOT_CONFIGURED);
+      }
       final List<ServiceLogEntry> list = new ArrayList<ServiceLogEntry>();
       long last = logBuffer.getItems(r.logId, logBuffer.convert(r.level), r.maxItems, list);
       return new ServiceLogsResponse(last, list);

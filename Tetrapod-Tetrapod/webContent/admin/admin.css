@@ -77,3 +77,44 @@
 #login-form {
 	width: 320px; padding: 20px; margin: 20px; border-radius: 10px; box-shadow: 0 2px 2px rgba(0, 0, 0, .20);
 }
+
+.service-details {
+	padding: 5px; margin-bottom: 10px;
+}
+
+.service-logs-container {
+	border: 1px solid #eee; padding: 3px; margin: 3px;
+}
+
+.service-logs {
+	border: 1px solid #eee; margin: 10px; padding: 4px; overflow: auto; height: 200px; resize: vertical; font-family: monospace;
+	font-size: 11px; overflow: auto;
+}
+
+.service-logs ul {
+	padding: 0px; margin: 0px; width: 100%; list-style: none; max-width: 800px;
+}
+
+.service-logs-options {
+	padding-left: 20px; padding-right: 20px;
+}
+
+.trace {
+	color: #cc7;
+}
+
+.debug {
+	color: blue;
+}
+
+.info {
+	color: #666;
+}
+
+.warn {
+	color: #a66;
+}
+
+.error {
+	color: red;
+}

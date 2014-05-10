@@ -120,6 +120,7 @@ public class CoreContract extends Contract {
     * Caller does not have sufficient rights to call this Request
     */
    public static final int ERROR_INVALID_RIGHTS = 8; 
+   public static final int ERROR_NOT_CONFIGURED = 2718243; 
    
    /**
     * Protocol versions are not compatible

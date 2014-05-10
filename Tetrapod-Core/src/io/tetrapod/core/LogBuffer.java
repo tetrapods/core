@@ -28,7 +28,7 @@ public class LogBuffer extends AppenderBase<ILoggingEvent> {
       int n = 0;
       while (iter.hasNext()) {
          ILoggingEvent item = iter.next();
-         if (count - n++ < logId)
+         if (count - n++ <= logId)
             break;
          if (item.getLevel().isGreaterOrEqual(level)) {
             list.add(logEntryFrom(item));
@@ -37,6 +37,7 @@ public class LogBuffer extends AppenderBase<ILoggingEvent> {
             }
          }
       }
+      Collections.reverse(list);
       return count;
    }
 

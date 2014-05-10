@@ -1,35 +1,35 @@
-define(["knockout", "jquery", "bootbox", "app", "build"], function(ko, $, bootbox, app, builder) {
+define([ "knockout", "jquery", "bootbox", "app", "build" ], function(ko, $, bootbox, app, builder) {
    // static variables
-   
+
    var chartOptions = {
-         grid : {
-            labelMargin : 0,
-            axisMargin : 0,
-            margin : {
-               top : 0,
-               right : 0,
-               bottom : 0,
-               left : 0
-            },
-            borderWidth : 0,
-            color : "rgba(212, 212, 212, 0.25)"
+      grid : {
+         labelMargin : 0,
+         axisMargin : 0,
+         margin : {
+            top : 0,
+            right : 0,
+            bottom : 0,
+            left : 0
          },
-         xaxis : {
-            show : false
-         },
-         yaxis : {
-            show : false,
-            min : 0
-         },
-         legend : {
-            show : false,
-         }
-      };
-   
+         borderWidth : 0,
+         color : "rgba(212, 212, 212, 0.25)"
+      },
+      xaxis : {
+         show : false
+      },
+      yaxis : {
+         show : false,
+         min : 0
+      },
+      legend : {
+         show : false,
+      }
+   };
+
    var Core = app.server.consts["Core.Core"];
 
    return Service; // not using new means this returns a constructor function (ie class)
-   
+
    // Service Model
    function Service(entity) {
       var self = this;
@@ -46,33 +46,26 @@ define(["knockout", "jquery", "bootbox", "app", "build"], function(ko, $, bootbo
 
       self.iconURL = ko.observable("media/gear.gif");
 
-      app.server.send("ServiceStatsSubscribe", {}, self.entityId).handle(
-            app.server.logResponse)
+      app.server.send("ServiceStatsSubscribe", {}, self.entityId).handle(app.server.logResponse)
 
-      app.server
-            .send("ServiceDetails", {}, self.entityId)
-            .handle(
-                  function(result) {
-                     if (!result.isError()) {
-                        self.iconURL(result.iconURL);
-                        self.metadata = result.metadata;
-                        if (result.commands) {
-                           for (var i = 0; i < result.commands.length; i++) {
-                              self.commands
-                                    .push(result.commands[i]);
-                           }
-                        }
-                     }
-                  });
+      app.server.send("ServiceDetails", {}, self.entityId).handle(function(result) {
+         if (!result.isError()) {
+            self.iconURL(result.iconURL);
+            self.metadata = result.metadata;
+            if (result.commands) {
+               for (var i = 0; i < result.commands.length; i++) {
+                  self.commands.push(result.commands[i]);
+               }
+            }
+         }
+      });
 
       self.execute = function(command) {
-         app.server.sendRequest(command.contractId, command.structId, {},
-               self.entityId).handle(app.server.logResponse)
+         app.server.sendRequest(command.contractId, command.structId, {}, self.entityId).handle(app.server.logResponse)
       }
 
       self.entityString = ko.computed(function() {
-         return self.entityId + " (0x" + self.entityId.toString(16)
-               + ")";
+         return self.entityId + " (0x" + self.entityId.toString(16) + ")";
       });
 
       self.isPaused = function() {
@@ -131,22 +124,20 @@ define(["knockout", "jquery", "bootbox", "app", "build"], function(ko, $, bootbo
          app.server.send("Unpause", {}, self.entityId);
       }
       self.restart = function() {
-         bootbox.confirm("Are you sure you want to restart service: "
-               + self.name + "[" + self.entityId + "]?", function(
-               result) {
-            if (result) {
-               app.server.send("Restart", {}, self.entityId);
-            }
-         });
+         bootbox.confirm("Are you sure you want to restart service: " + self.name + "[" + self.entityId + "]?",
+               function(result) {
+                  if (result) {
+                     app.server.send("Restart", {}, self.entityId);
+                  }
+               });
       }
       self.shutdown = function() {
-         bootbox.confirm("Are you sure you want to shutdown service: "
-               + self.name + "[" + self.entityId + "]?", function(
-               result) {
-            if (result) {
-               app.server.send("Shutdown", {}, self.entityId);
-            }
-         });
+         bootbox.confirm("Are you sure you want to shutdown service: " + self.name + "[" + self.entityId + "]?",
+               function(result) {
+                  if (result) {
+                     app.server.send("Shutdown", {}, self.entityId);
+                  }
+               });
       }
 
       self.deleteService = function() {
@@ -170,7 +161,7 @@ define(["knockout", "jquery", "bootbox", "app", "build"], function(ko, $, bootbo
          self.counter(msg.counter);
       }
 
-      //////////////////////////////////////// stats graphs ////////////////////////////////////////
+      // ////////////////////////////////////// stats graphs ////////////////////////////////////////
       self.plots = [];
       self.getPlot = function(tag) {
          if (self.plots[tag]) {
@@ -236,17 +227,95 @@ define(["knockout", "jquery", "bootbox", "app", "build"], function(ko, $, bootbo
       };
       // updates all charts for this service
       self.chart = function() {
-         self.updatePlot("latency", self.latencySeries, 60000, self
-               .latency());
+         self.updatePlot("latency", self.latencySeries, 60000, self.latency());
          self.updatePlot("rps", self.rpsSeries, 60000, self.rps());
          self.updatePlot("mps", self.mpsSeries, 60000, self.mps());
-         self.updatePlot("counter", self.counterSeries, 60000, self
-               .counter());
+         self.updatePlot("counter", self.counterSeries, 60000, self.counter());
       }
-      
+
       self.popupBuild = function() {
          builder.load(self.entityId);
       }
+
+      var LogConsts = app.server.consts["Core.ServiceLogEntry"];
+
+      var levels = [ LogConsts.LEVEL_ALL, LogConsts.LEVEL_TRACE, LogConsts.LEVEL_DEBUG, LogConsts.LEVEL_INFO,
+            LogConsts.LEVEL_WARN, LogConsts.LEVEL_ERROR, LogConsts.LEVEL_OFF ];
+
+      self.getLogLevelStyle = function(level) {
+         switch (level) {
+         case LogConsts.LEVEL_ALL:
+            return 'all';
+         case LogConsts.LEVEL_TRACE:
+            return 'trace';
+         case LogConsts.LEVEL_DEBUG:
+            return 'debug';
+         case LogConsts.LEVEL_INFO:
+            return 'info';
+         case LogConsts.LEVEL_WARN:
+            return 'warn';
+         case LogConsts.LEVEL_ERROR:
+            return 'error';
+         case LogConsts.LEVEL_OFF:
+            return 'off';
+         }
+         return '';
+      }
+
+      self.logLevels = ko.observableArray(levels);
+
+      var months = [ "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" ];
+      function logtime(d) {
+         return d.getFullYear() + "-" + months[d.getMonth()] + "-" + d.getDate() + " " + d.getHours() + ":"
+               + d.getMinutes() + ":" + d.getSeconds() + ":" + d.getMilliseconds();
+      }
+      self.logLevel = ko.observable(LogConsts.LEVEL_INFO);
+      self.logs = ko.observableArray([]);
+      self.autoScrollLogs = ko.observable(true);
+      self.refreshLogs = function() {
+         app.server.send("ServiceLogs", {
+            logId : self.lastLogId,
+            level : self.logLevel(),
+            maxItems : 100
+         }, self.entityId).handle(function(res) {
+            if (!res.isError()) {
+               if (self.expanded()) {
+                  self.lastLogId = res.lastLogId;
+                  res.items.forEach(function(item) {
+                     item.levelStyle = self.getLogLevelStyle(item.level);
+                     item.timestamp = logtime(new Date(item.timestamp))
+                     self.logs.push(item);
+                  });
+                  // remove older items from list
+                  while (self.logs.length > 1000) {
+                     self.logs.shift();
+                  }
+                  if (self.autoScrollLogs()) {
+                     var scroll = document.getElementById("service-logs-" + self.entityId);
+                     scroll.scrollTop = scroll.scrollHeight;
+                  }
+               }
+            }
+         })
+      }
+
+      self.expanded = new ko.observable(false);
+      self.showLogs = function() {
+         self.expanded(!self.expanded());
+         self.logs.removeAll();
+         self.lastLogId = 0;
+         if (self.expanded()) {
+            self.refreshLogs();
+         }
+      }
+
+      // called by our timer in cluster.js for periodic updates
+      self.update = function() {
+         self.chart();
+         if (self.expanded()) {
+            self.refreshLogs();
+         }
+      };
 
    }
 });

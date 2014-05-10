@@ -56,6 +56,7 @@ function TP_Core(server) {
    server.registerConst("Core", "null", "CONNECTION_CLOSED", 7);
    server.registerConst("Core", "null", "INVALID_ENTITY", 9);
    server.registerConst("Core", "null", "INVALID_RIGHTS", 8);
+   server.registerConst("Core", "null", "NOT_CONFIGURED", 2718243);
    server.registerConst("Core", "null", "PROTOCOL_MISMATCH", 5);
    server.registerConst("Core", "null", "RIGHTS_EXPIRED", 10);
    server.registerConst("Core", "null", "SERIALIZATION", 4);
