@@ -451,18 +451,13 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
    }
 
    public boolean commsLog(String format, Object... args) {
-      logger.debug(String.format(format, args));
-      if (commsLog.isInfoEnabled()) {
+      if (commsLog.isDebugEnabled()) {
          for (int i = 0; i < args.length; i++) {
             if (args[i] == this) {
                args[i] = String.format("%s:%d", getClass().getSimpleName().substring(0, 4), sessionNum);
             }
          }
-         commsLog.info(String.format(format, args));
-      } else {
-         if (logger.isTraceEnabled()) {
-            logger.trace(String.format(format, args));
-         }
+         commsLog.debug(String.format(format, args));
       }
       return true;
    }
