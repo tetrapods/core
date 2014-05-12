@@ -2,6 +2,7 @@ package io.tetrapod.core;
 
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
+import io.tetrapod.core.utils.Util;
 
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -31,10 +32,11 @@ public class Dispatcher {
    public final Meter                     messagesSentCounter    = Metrics.meter(Dispatcher.class, "messages-sent", "count");
 
    public Dispatcher() {
-      this(8);
+      this(Util.getProperty("tetrapod.dispatcher.threads", 8));
    }
 
    public Dispatcher(int maxThreads) {
+      logger.info("Dispatcher starting with {} threads", maxThreads);
       threadPool = new ThreadPoolExecutor(0, maxThreads, 5L, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(), new ThreadFactory() {
          private final AtomicInteger counter = new AtomicInteger();
 

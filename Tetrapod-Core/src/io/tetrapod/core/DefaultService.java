@@ -45,6 +45,7 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
       logBuffer = (LogBuffer) ((LoggerContext) LoggerFactory.getILoggerFactory()).getLogger("ROOT").getAppender("BUFFER");
 
       Fail.handler = this;
+      Metrics.init(getMetricsPrefix());
       status |= Core.STATUS_STARTING;
       dispatcher = new Dispatcher();
       clusterClient = new Client(this);
@@ -74,6 +75,13 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
          num = Integer.parseInt(b.trim());
       } catch (IOException e) {}
       buildNumber = num;
+   }
+
+   /**
+    * Returns a prefix for all exported metrics from this service.
+    */
+   private String getMetricsPrefix() {
+      return getShortName() + "." + Util.getHostName();
    }
 
    public byte getEntityType() {

@@ -1,5 +1,6 @@
 package io.tetrapod.core;
 
+import io.tetrapod.core.utils.Util;
 import io.tetrapod.protocol.core.ServerAddress;
 
 import java.net.InetSocketAddress;
@@ -7,6 +8,7 @@ import java.util.concurrent.TimeUnit;
 
 import com.codahale.metrics.*;
 import com.codahale.metrics.graphite.*;
+import com.codahale.metrics.jvm.*;
 
 /**
  * Service metrics instrumentation
@@ -42,6 +44,18 @@ public class Metrics {
 
    public static Timer timer(Class<?> c, String... names) {
       return metrics.timer(MetricRegistry.name(c, names));
+   }
+
+   public static void init(String prefix) {
+      metrics.register(MetricRegistry.name("jvm", "gc"), new GarbageCollectorMetricSet());
+      metrics.register(MetricRegistry.name("jvm", "memory"), new MemoryUsageGaugeSet());
+      metrics.register(MetricRegistry.name("jvm", "thread-states"), new ThreadStatesGaugeSet());
+      metrics.register(MetricRegistry.name("jvm", "fd", "usage"), new FileDescriptorRatioGauge());
+
+      if (Util.getProperty("graphite.enabled", false)) {
+         startGraphite(new ServerAddress(Util.getProperty("graphite.host"), Util.getProperty("graphite.port", 0)), prefix);
+      }
+
    }
 
    /**
