@@ -6,11 +6,12 @@ import static io.netty.handler.codec.http.HttpHeaders.Values.*;
 import static io.netty.handler.codec.http.HttpMethod.GET;
 import static io.netty.handler.codec.http.HttpResponseStatus.*;
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
-import io.netty.buffer.Unpooled;
+import io.netty.buffer.*;
 import io.netty.channel.*;
 import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.handler.codec.http.*;
 import io.netty.util.CharsetUtil;
+import io.netty.util.concurrent.*;
 import io.tetrapod.core.web.WebRoot.FileResult;
 
 import java.io.UnsupportedEncodingException;
@@ -110,9 +111,7 @@ class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRequest> 
          response.headers().set(CACHE_CONTROL, PUBLIC);
          response.headers().add(EXPIRES, new Date(System.currentTimeMillis() + ONE_YEAR));
       }
-
-      ctx.write(response);
-      ChannelFuture f = ctx.writeAndFlush(LastHttpContent.EMPTY_LAST_CONTENT);
+      ChannelFuture f = ctx.writeAndFlush(response);
       if (!isKeepAlive(request)) {
          f.addListener(ChannelFutureListener.CLOSE);
       }

@@ -8,6 +8,7 @@ import io.tetrapod.core.utils.*;
 import io.tetrapod.protocol.core.*;
 
 import java.io.*;
+import java.lang.management.ManagementFactory;
 import java.nio.file.*;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -43,7 +44,9 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
 
    public DefaultService() {
       logBuffer = (LogBuffer) ((LoggerContext) LoggerFactory.getILoggerFactory()).getLogger("ROOT").getAppender("BUFFER");
-
+      String m = getStartLoggingMessage();
+      logger.info(m);
+      Session.commsLog.info(m);
       Fail.handler = this;
       Metrics.init(getMetricsPrefix());
       status |= Core.STATUS_STARTING;
@@ -644,5 +647,12 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
       final List<ServiceLogEntry> list = new ArrayList<ServiceLogEntry>();
       long last = logBuffer.getItems(r.logId, logBuffer.convert(r.level), r.maxItems, list);
       return new ServiceLogsResponse(last, list);
+   }
+   
+   protected String getStartLoggingMessage() {
+      return "*** Start Service ***" +
+             "\n   *** Service name: " + Util.getProperty("APPNAME") +
+             "\n   *** Options: " + Launcher.getAllOpts() + 
+             "\n   *** VM Args: " + ManagementFactory.getRuntimeMXBean().getInputArguments().toString();
    }
 }

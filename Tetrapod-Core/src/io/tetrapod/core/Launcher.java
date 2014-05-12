@@ -177,5 +177,16 @@ public class Launcher {
    public static String getOpt(String key) {
       return opts.get(key);
    }
+   
+   public static String getAllOpts() {
+      StringBuilder sb = new StringBuilder();
+      for (Entry<String, String> e : opts.entrySet()) {
+         sb.append(e.getKey());
+         sb.append("=");
+         sb.append(e.getValue());
+         sb.append(" ");
+      }
+      return sb.toString();
+   }
 
 }
