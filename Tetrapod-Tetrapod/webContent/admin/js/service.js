@@ -43,6 +43,10 @@ define([ "knockout", "jquery", "bootbox", "app", "build" ], function(ko, $, boot
       self.rps = ko.observable();
       self.latency = ko.observable();
       self.counter = ko.observable();
+      self.disk = ko.observable();
+      self.memory = ko.observable();
+      self.load = ko.observable();
+      self.threads = ko.observable();
 
       self.iconURL = ko.observable("media/gear.gif");
 
@@ -159,7 +163,15 @@ define([ "knockout", "jquery", "bootbox", "app", "build" ], function(ko, $, boot
          self.rps(msg.rps);
          self.mps(msg.mps);
          self.counter(msg.counter);
+         self.load(msg.load);
+         self.memory(100*msg.memory);
+         self.disk(Math.round(msg.disk/(1024*1024)));
+         self.threads(msg.threads);
       }
+      self.memoryWidth = ko.computed(function() {
+         return self.memory() + '%';
+      }, self);
+
 
       // ////////////////////////////////////// stats graphs ////////////////////////////////////////
       self.plots = [];

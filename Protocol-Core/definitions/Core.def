@@ -128,7 +128,10 @@ internal message ServiceStats.ServiceStats
    3: int mps
    4: long latency  
    5: long counter
-
+   6: double memory
+   7: double load   
+   8: long disk
+   9: int threads
     
 ################################# STRUCTURES #################################
 

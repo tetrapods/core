@@ -117,6 +117,31 @@ public class ServiceStats {
             message.counter = counter;
             dirty = true;
          }
+
+         double memory = Math.round(100 * Metrics.getUsedMemory()) / 100.0;
+         if (message.memory != memory) {
+            message.memory = memory;
+            dirty = true;
+         }
+
+         double load = Math.round(100 * Metrics.getLoadAverage()) / 100.0;
+         if (message.load != load) {
+            message.load = load;
+            dirty = true;
+         }
+
+         long disk = Metrics.getFreeDiskSpace();
+         if (message.disk != disk) {
+            message.disk = disk;
+            dirty = true;
+         }
+
+         int threads = Math.round(Metrics.getThreadCount());
+         if (message.threads != threads) {
+            message.threads = threads;
+            dirty = true;
+         }
+
          if (dirty) {
             service.sendBroadcastMessage(message, statsTopicId);
          }

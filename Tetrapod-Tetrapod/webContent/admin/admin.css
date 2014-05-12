@@ -10,6 +10,10 @@
 	font-size: 90%; padding: 0px 1px; vertical-align: middle; white-space: nowrap;
 }
 
+.righted {
+	text-align: right;
+}
+
 .centered {
 	text-align: center;
 }
@@ -82,13 +86,26 @@
 	padding: 5px; margin-bottom: 10px;
 }
 
-.service-logs-container {
-	border: 1px solid #eee; padding: 3px; margin: 3px;
+.service-metrics {
+	min-height: 250px;
+}
+
+.service-metrics dt {
+	margin-top: 10px;
+	font-weight: bold;
+}
+
+.service-metrics dd {
+	margin-left: 25px;
+}
+
+.metric-value {
+	vertical-align: middle;
 }
 
 .service-logs {
 	border: 1px solid #eee; margin: 10px; padding: 4px; overflow: auto; height: 200px; resize: vertical; font-family: monospace;
-	font-size: 11px; overflow: auto;
+	font-size: 11px; height: 200px;
 }
 
 .service-logs ul {
@@ -97,6 +114,10 @@
 
 .service-logs-options {
 	padding-left: 20px; padding-right: 20px;
+}
+
+.tab-content {
+	padding: 10px; border-bottom: 1px solid #eee; border-left: 1px solid #eee; border-right: 1px solid #eee;
 }
 
 .trace {

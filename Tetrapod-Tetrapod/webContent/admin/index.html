@@ -190,32 +190,78 @@
 								<td></td>
 								<td colspan="9" data-bind="attr: {id: 'service-details-' + entityId}">
 									<div class="service-details">
-										<div class="service-logs-container">
-											<div class="service-logs" data-bind="attr: {id: 'service-logs-' + entityId}">
-												<ul data-bind="foreach: logs">
-													<li data-bind="attr: {'class':levelStyle}">
-														<span data-bind="text: timestamp"></span>
-														<span data-bind="text: thread"></span>
-														<span data-bind="text: logger"></span>
-														<span data-bind="text: msg"></span>
-													</li>
-												</ul>
-											</div>
-											<div class="service-logs-options" align="right">
 
-												<span>
-													Log Level:
-													<select
-														data-bind="options:     logLevels,
-									                   optionsText: function(item) { return getLogLevelStyle(item);  },
+										<!-- Nav tabs -->
+										<ul class="nav nav-tabs">
+											<li class="active">
+												<a data-bind="attr: {href: '#metrics-' + entityId}" data-toggle="tab">Metrics</a>
+											</li>
+											<li>
+												<a data-bind="attr: {href: '#logs-' + entityId}" data-toggle="tab">Logs</a>
+											</li>
+										</ul>
+
+										<!-- Tab panes -->
+										<div class="tab-content">
+											<div class="tab-pane active" data-bind="attr: {id: 'metrics-' + entityId}">
+												<div class="service-metrics">
+
+													<dl>
+														<dt>Memory Usage:</dt>
+														<dd>
+															<span data-bind="text: memory"></span>
+															%
+														</dd>
+														<dt>Load Average:</dt>
+														<dd>
+															<span data-bind="text: load"></span>
+														</dd>
+
+														<dt>Load Average:</dt>
+														<dd>
+															<span data-bind="text: threads"></span>
+														</dd>
+
+														<dt>Free Disk Space:</dt>
+														<dd>
+															<span data-bind="text: disk"></span>
+															mb
+														</dd>
+													</dl>
+
+												</div>
+											</div>
+
+											<div class="tab-pane" data-bind="attr: {id: 'logs-' + entityId}">
+												<div class="service-logs" data-bind="attr: {id: 'service-logs-' + entityId}">
+													<ul data-bind="foreach: logs">
+														<li data-bind="attr: {'class':levelStyle}">
+															<span data-bind="text: timestamp"></span>
+															<span data-bind="text: thread"></span>
+															<span data-bind="text: logger"></span>
+															<span data-bind="text: msg"></span>
+														</li>
+													</ul>
+												</div>
+												<div class="service-logs-options" align="right">
+
+													<span>
+														Log Level:
+														<select
+															data-bind="options:     logLevels,
+                                              optionsText: function(item) { return getLogLevelStyle(item);  },
                                                    value: logLevel,"></select>
-												</span>
-												<span>
-													<label> <input type="checkbox" data-bind="checked: autoScrollLogs" name="Auto Scroll" /> Auto Scroll
-													</label>
-												</span>
+													</span>
+													<span>
+														<label> <input type="checkbox" data-bind="checked: autoScrollLogs" name="Auto Scroll" /> Auto Scroll
+														</label>
+													</span>
+												</div>
+
 											</div>
 										</div>
+
+
 									</div>
 								</td>
 							</tr>

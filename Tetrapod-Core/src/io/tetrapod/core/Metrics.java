@@ -3,8 +3,12 @@ package io.tetrapod.core;
 import io.tetrapod.core.utils.Util;
 import io.tetrapod.protocol.core.ServerAddress;
 
+import java.io.File;
+import java.lang.management.ManagementFactory;
 import java.net.InetSocketAddress;
 import java.util.concurrent.TimeUnit;
+
+import org.slf4j.*;
 
 import com.codahale.metrics.*;
 import com.codahale.metrics.graphite.*;
@@ -14,13 +18,19 @@ import com.codahale.metrics.jvm.*;
  * Service metrics instrumentation
  */
 public class Metrics {
+   public static final Logger              logger  = LoggerFactory.getLogger(Metrics.class);
 
    /**
     * Singleton metrics registry for the process
     */
-   public final static MetricRegistry metrics = new MetricRegistry();
+   public final static MetricRegistry      metrics = new MetricRegistry();
 
-   public static GraphiteReporter     graphiteReporter;
+   public static GraphiteReporter          graphiteReporter;
+
+   public static GarbageCollectorMetricSet gc;
+   public static MemoryUsageGaugeSet       memory;
+   public static ThreadStatesGaugeSet      threadStats;
+   public static FileDescriptorRatioGauge  fdUsage;
 
    public static Counter counter(Object o, String... names) {
       return metrics.counter(MetricRegistry.name(o.getClass(), names));
@@ -47,15 +57,14 @@ public class Metrics {
    }
 
    public static void init(String prefix) {
-      metrics.register(MetricRegistry.name("jvm", "gc"), new GarbageCollectorMetricSet());
-      metrics.register(MetricRegistry.name("jvm", "memory"), new MemoryUsageGaugeSet());
-      metrics.register(MetricRegistry.name("jvm", "thread-states"), new ThreadStatesGaugeSet());
-      metrics.register(MetricRegistry.name("jvm", "fd", "usage"), new FileDescriptorRatioGauge());
+      gc = metrics.register(MetricRegistry.name("jvm", "gc"), new GarbageCollectorMetricSet());
+      memory = metrics.register(MetricRegistry.name("jvm", "memory"), new MemoryUsageGaugeSet());
+      threadStats = metrics.register(MetricRegistry.name("jvm", "thread-states"), new ThreadStatesGaugeSet());
+      fdUsage = metrics.register(MetricRegistry.name("jvm", "fd", "usage"), new FileDescriptorRatioGauge());
 
       if (Util.getProperty("graphite.enabled", false)) {
          startGraphite(new ServerAddress(Util.getProperty("graphite.host"), Util.getProperty("graphite.port", 0)), prefix);
       }
-
    }
 
    /**
@@ -78,6 +87,23 @@ public class Metrics {
          graphiteReporter.stop();
          graphiteReporter = null;
       }
+   }
+
+   public static double getUsedMemory() {
+      return ((RatioGauge) memory.getMetrics().get("heap.usage")).getValue();
+   }
+
+   public static double getLoadAverage() {
+      return ManagementFactory.getOperatingSystemMXBean().getSystemLoadAverage();
+   }
+
+   public static long getFreeDiskSpace() {
+      File f = new File(".");
+      return f.getFreeSpace();
+   }
+
+   public static int getThreadCount() {
+      return ManagementFactory.getThreadMXBean().getThreadCount();
    }
 
 }
