@@ -272,32 +272,39 @@ define([ "knockout", "jquery", "bootbox", "app", "build" ], function(ko, $, boot
       self.logLevel = ko.observable(LogConsts.LEVEL_INFO);
       self.logs = ko.observableArray([]);
       self.autoScrollLogs = ko.observable(true);
+      var logRefreshPending = false;
+
       self.refreshLogs = function() {
-         app.server.send("ServiceLogs", {
-            logId : self.lastLogId,
-            level : self.logLevel(),
-            maxItems : 100
-         }, self.entityId).handle(function(res) {
-            if (!res.isError()) {
-               if (self.expanded()) {
-                  self.lastLogId = res.lastLogId;
-                  res.items.forEach(function(item) {
-                     item.levelStyle = self.getLogLevelStyle(item.level);
-                     item.timestamp = logtime(new Date(item.timestamp))
-                     self.logs.push(item);
-                  });
-                  // remove older items from list
-                  while (self.logs.length > 1000) {
-                     self.logs.shift();
-                  }
-                  if (self.autoScrollLogs()) {
-                     var scroll = document.getElementById("service-logs-" + self.entityId);
-                     scroll.scrollTop = scroll.scrollHeight;
+         if (!logRefreshPending) {
+            logRefreshPending = true;
+
+            app.server.send("ServiceLogs", {
+               logId : self.lastLogId,
+               level : self.logLevel(),
+               maxItems : 100
+            }, self.entityId).handle(function(res) {
+               logRefreshPending = false;
+               if (!res.isError()) {
+                  if (self.expanded()) {
+                     self.lastLogId = res.lastLogId;
+                     res.items.forEach(function(item) {
+                        item.levelStyle = self.getLogLevelStyle(item.level);
+                        item.timestamp = logtime(new Date(item.timestamp))
+                        self.logs.push(item);
+                     });
+                     // remove older items from list
+                     while (self.logs.length > 1000) {
+                        self.logs.shift();
+                     }
+                     if (self.autoScrollLogs()) {
+                        var scroll = document.getElementById("service-logs-" + self.entityId);
+                        scroll.scrollTop = scroll.scrollHeight;
+                     }
                   }
                }
-            }
-         })
-      }
+            })
+         }
+      };
 
       self.expanded = new ko.observable(false);
       self.showLogs = function() {
