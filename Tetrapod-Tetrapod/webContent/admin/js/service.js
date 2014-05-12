@@ -164,14 +164,13 @@ define([ "knockout", "jquery", "bootbox", "app", "build" ], function(ko, $, boot
          self.mps(msg.mps);
          self.counter(msg.counter);
          self.load(msg.load);
-         self.memory(100*msg.memory);
-         self.disk(Math.round(msg.disk/(1024*1024)));
+         self.memory(msg.memory);
+         self.disk(msg.disk);
          self.threads(msg.threads);
       }
       self.memoryWidth = ko.computed(function() {
          return self.memory() + '%';
       }, self);
-
 
       // ////////////////////////////////////// stats graphs ////////////////////////////////////////
       self.plots = [];

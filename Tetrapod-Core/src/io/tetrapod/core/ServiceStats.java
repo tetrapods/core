@@ -118,7 +118,7 @@ public class ServiceStats {
             dirty = true;
          }
 
-         double memory = Math.round(100 * Metrics.getUsedMemory()) / 100.0;
+         byte memory = (byte) Math.round(100 * Metrics.getUsedMemory());
          if (message.memory != memory) {
             message.memory = memory;
             dirty = true;
@@ -130,7 +130,7 @@ public class ServiceStats {
             dirty = true;
          }
 
-         long disk = Metrics.getFreeDiskSpace();
+         int disk = (int) Math.round(Metrics.getFreeDiskSpace() / (1024 * 1024));
          if (message.disk != disk) {
             message.disk = disk;
             dirty = true;

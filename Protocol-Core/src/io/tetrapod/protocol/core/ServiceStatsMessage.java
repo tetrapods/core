@@ -21,7 +21,7 @@ public class ServiceStatsMessage extends Message {
       defaults();
    }
 
-   public ServiceStatsMessage(int entityId, int rps, int mps, long latency, long counter, double memory, double load, long disk, int threads) {
+   public ServiceStatsMessage(int entityId, int rps, int mps, long latency, long counter, byte memory, double load, int disk, int threads) {
       this.entityId = entityId;
       this.rps = rps;
       this.mps = mps;
@@ -34,13 +34,45 @@ public class ServiceStatsMessage extends Message {
    }   
    
    public int entityId;
+   
+   /**
+    * the requests per second serviced
+    */
    public int rps;
+   
+   /**
+    * messages sent per second
+    */
    public int mps;
+   
+   /**
+    * average time to process each request
+    */
    public long latency;
+   
+   /**
+    * service-specific counter value
+    */
    public long counter;
-   public double memory;
+   
+   /**
+    * 0..100 the percentage of memory in use
+    */
+   public byte memory;
+   
+   /**
+    * system load average
+    */
    public double load;
-   public long disk;
+   
+   /**
+    * free disks space on working dir, in megabytes
+    */
+   public int disk;
+   
+   /**
+    * number of active threads
+    */
    public int threads;
 
    public final Structure.Security getSecurity() {
@@ -84,9 +116,9 @@ public class ServiceStatsMessage extends Message {
             case 3: this.mps = data.read_int(tag); break;
             case 4: this.latency = data.read_long(tag); break;
             case 5: this.counter = data.read_long(tag); break;
-            case 6: this.memory = data.read_double(tag); break;
+            case 6: this.memory = data.read_byte(tag); break;
             case 7: this.load = data.read_double(tag); break;
-            case 8: this.disk = data.read_long(tag); break;
+            case 8: this.disk = data.read_int(tag); break;
             case 9: this.threads = data.read_int(tag); break;
             case Codec.END_TAG:
                return;
@@ -148,9 +180,9 @@ public class ServiceStatsMessage extends Message {
       desc.types[3] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
       desc.types[4] = new TypeDescriptor(TypeDescriptor.T_LONG, 0, 0);
       desc.types[5] = new TypeDescriptor(TypeDescriptor.T_LONG, 0, 0);
-      desc.types[6] = new TypeDescriptor(TypeDescriptor.T_DOUBLE, 0, 0);
+      desc.types[6] = new TypeDescriptor(TypeDescriptor.T_BYTE, 0, 0);
       desc.types[7] = new TypeDescriptor(TypeDescriptor.T_DOUBLE, 0, 0);
-      desc.types[8] = new TypeDescriptor(TypeDescriptor.T_LONG, 0, 0);
+      desc.types[8] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
       desc.types[9] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
       return desc;
    }
