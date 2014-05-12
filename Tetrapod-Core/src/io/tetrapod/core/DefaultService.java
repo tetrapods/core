@@ -74,6 +74,8 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
          num = Integer.parseInt(b.trim());
       } catch (IOException e) {}
       buildNumber = num;
+
+      checkHealth();
    }
 
    /**
@@ -147,6 +149,26 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
                }
             });
          }
+      }
+   }
+
+   /**
+    * Periodically checks service health, updates metrics
+    */
+   private void checkHealth() {
+      if (!isShuttingDown()) {
+
+         if (dispatcher.workQueueSize.getCount() >= Session.DEFAULT_OVERLOAD_THRESHOLD) {
+            updateStatus(status | Core.STATUS_OVERLOADED);
+         } else {
+            updateStatus(status & ~Core.STATUS_OVERLOADED);
+         }
+
+         dispatcher.dispatch(1, TimeUnit.SECONDS, new Runnable() {
+            public void run() {
+               checkHealth();
+            }
+         });
       }
    }
 
@@ -316,10 +338,12 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
    }
 
    protected void updateStatus(int status) {
+      boolean changed = false;
       synchronized (this) {
+         changed = this.status != status;
          this.status = status;
       }
-      if (clusterClient.isConnected()) {
+      if (changed && clusterClient.isConnected()) {
          sendDirectRequest(new ServiceStatusUpdateRequest(status));
       }
    }
