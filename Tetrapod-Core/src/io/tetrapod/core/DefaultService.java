@@ -580,7 +580,7 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
                }
             });
          }
-         if (Util.getProperty("localDevelopment", false)) {
+         if (Util.getProperty("devMode", "local").equals("local")) {
             int i = 0;
             for (File f2 : getDevProtocolWebRoots()) {
                sendDirectRequest(new SetWebRootRequest(name + i++, f2.getCanonicalPath(), getHostName()));
