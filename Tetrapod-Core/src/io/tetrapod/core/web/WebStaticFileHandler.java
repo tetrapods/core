@@ -39,7 +39,7 @@ class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRequest> 
    // These rules are not correct in general, but for sites with control of their file names 
    // they are safe.  We only allow alphanumeric ascii character, ., -, _, and /.  We also do 
    // not allow .. to appear anywhere in the uri
-   private static final Pattern        VALID_URI              = Pattern.compile("/[A-Za-z0-9._/-]+");
+   private static final Pattern        VALID_URI              = Pattern.compile("/[A-Za-z0-9._/-]*");
    private static final Pattern        INVALID_URI            = Pattern.compile(".*[.][.].*");
 
    private static MimetypesFileTypeMap mimeTypesMap           = new MimetypesFileTypeMap();
