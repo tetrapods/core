@@ -794,7 +794,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          // an add request for a non-existant webRoot only pne new one is created
          root = webRootDirs.get(r.webRootName);
          if (root == null) {
-            root = new WebRoot();
+            root = r.contents==null ? new WebRootLocalFilesystem() : new WebRootInMemory();
             root.clear();
             webRootDirs.put(r.webRootName, root);
          }
@@ -805,7 +805,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       if (logger.isDebugEnabled()) {
          int size = 0;
          for (WebRoot roo : webRootDirs.values()) {
-            size += roo.getTotalSize();
+            size += roo.getMemoryFootprint();
          }
          logger.debug("Total web footprint is {} MBs", ((double)size/(double)(1024*1024)) );
       }
@@ -817,9 +817,14 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       WebRoot root = webRootDirs.get(r.webRootName);
       boolean first = true;
       for (String path : root.getAllPaths()) {
-         FileResult res = root.getFile(path);
-         sendRequest(new AddWebFileRequest(path, r.webRootName, res.contents, first), ctx.header.fromId);
-         first = false;
+         try {
+            FileResult res;
+            res = root.getFile(path);
+            sendRequest(new AddWebFileRequest(path, r.webRootName, res.contents, first), ctx.header.fromId);
+            first = false;
+         } catch (IOException e) {
+            logger.error("trouble sedning root", e);
+         }
       }
       return Response.SUCCESS;
    }
