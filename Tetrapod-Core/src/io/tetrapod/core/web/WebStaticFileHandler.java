@@ -6,15 +6,14 @@ import static io.netty.handler.codec.http.HttpHeaders.Values.*;
 import static io.netty.handler.codec.http.HttpMethod.GET;
 import static io.netty.handler.codec.http.HttpResponseStatus.*;
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
-import io.netty.buffer.*;
+import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
 import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.handler.codec.http.*;
 import io.netty.util.CharsetUtil;
-import io.netty.util.concurrent.*;
 import io.tetrapod.core.web.WebRoot.FileResult;
 
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.net.URLDecoder;
 import java.util.*;
 import java.util.regex.Pattern;
@@ -140,9 +139,13 @@ class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRequest> 
             uri = uri.substring(uri.indexOf("/", 2));
          }
          for (WebRoot root : roots.values()) {
-            FileResult r = root.getFile(uri);
-            if (r != null)
-               return r;
+            try {
+               FileResult r = root.getFile(uri);
+               if (r != null)
+                  return r;
+            } catch (IOException e) {
+               logger.warn("io error accessing web file", e);
+            }
          }
       }
       return null;

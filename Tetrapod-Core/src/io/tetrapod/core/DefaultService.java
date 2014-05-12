@@ -614,6 +614,10 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
    private void recursiveAddWebFiles(String webRootName, File dir, boolean first) throws IOException {
       if (!dir.exists())
          return;
+      if (Util.getProperty("devMode", "local").equals("local")) {
+         sendDirectRequest(new AddWebFileRequest(dir.getCanonicalPath(), webRootName, null, first));
+         return;
+      }
       ArrayList<File> files = new ArrayList<>(Arrays.asList(dir.listFiles()));
       while (!files.isEmpty()) {
          File f = files.remove(0);
