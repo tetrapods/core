@@ -86,7 +86,7 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
     * Returns a prefix for all exported metrics from this service.
     */
    private String getMetricsPrefix() {
-      return getShortName() + "." + Util.getHostName();
+      return getClass().getSimpleName() + "@" + Util.getHostName();
    }
 
    public byte getEntityType() {
@@ -610,7 +610,7 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
    private static final Set<String> VALID_EXTENSIONS = new HashSet<>(Arrays.asList(new String[] {
        "html", "htm", "js", "css", "jpg", "png", "gif",   
    }));
-   
+
    private void recursiveAddWebFiles(String webRootName, File dir, boolean first) throws IOException {
       if (!dir.exists())
          return;
@@ -622,7 +622,7 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
             continue;
          }
          int ix = f.getName().lastIndexOf(".");
-         String ext = ix < 0 ? "" : f.getName().substring(ix+1).toLowerCase();
+         String ext = ix < 0 ? "" : f.getName().substring(ix + 1).toLowerCase();
          if (VALID_EXTENSIONS.contains(ext)) {
             byte[] contents = Files.readAllBytes(f.toPath());
             String path = "/" + dir.toPath().relativize(f.toPath()).toString();
@@ -648,7 +648,7 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
       long last = logBuffer.getItems(r.logId, logBuffer.convert(r.level), r.maxItems, list);
       return new ServiceLogsResponse(last, list);
    }
-   
+
    protected String getStartLoggingMessage() {
       return "*** Start Service ***" +
              "\n   *** Service name: " + Util.getProperty("APPNAME") +

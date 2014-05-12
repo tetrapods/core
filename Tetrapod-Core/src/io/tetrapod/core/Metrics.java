@@ -75,6 +75,7 @@ public class Metrics {
     */
    public synchronized static void startGraphite(ServerAddress graphite, String prefix) {
       assert (graphiteReporter == null);
+      logger.info("Starting Grapite on {} as {}", graphite.dump(), prefix);
       graphiteReporter = GraphiteReporter.forRegistry(metrics).prefixedWith(prefix).convertRatesTo(TimeUnit.SECONDS)
             .convertDurationsTo(TimeUnit.MILLISECONDS).filter(MetricFilter.ALL)
             .build(new Graphite(new InetSocketAddress(graphite.host, graphite.port)));
