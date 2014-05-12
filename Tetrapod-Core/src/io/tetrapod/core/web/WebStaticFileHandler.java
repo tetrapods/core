@@ -10,11 +10,10 @@ import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
 import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.handler.codec.http.*;
-import io.netty.handler.stream.ChunkedFile;
 import io.netty.util.CharsetUtil;
-import io.tetrapod.core.utils.Value;
+import io.tetrapod.core.web.WebRoot.FileResult;
 
-import java.io.*;
+import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.*;
 import java.util.regex.Pattern;
@@ -55,12 +54,10 @@ class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRequest> 
       mimeTypesMap.addMimeTypes("image/gif gif GIF");
    }
 
-   private final boolean               useSendFile;
-   private final Map<String,File> rootDirs;
+   private final Map<String, WebRoot>  roots;
 
-   public WebStaticFileHandler(boolean usingSSL, Map<String,File> rootDirs) {
-      this.useSendFile = !usingSSL;
-      this.rootDirs = rootDirs;
+   public WebStaticFileHandler(boolean usingSSL, Map<String,WebRoot> roots) {
+      this.roots = roots;
    }
 
    @Override
@@ -73,18 +70,10 @@ class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRequest> 
          sendError(ctx, METHOD_NOT_ALLOWED);
          return;
       }
-      Value<Boolean> isIndex = new Value<>();
-      final File file = decodePath(request.getUri(), isIndex);
-      if (file == null) {
-         sendError(ctx, FORBIDDEN);
-         return;
-      }
-      if (file.isHidden() || !file.exists()) {
+      FileResult result = getURI(request.getUri());
+
+      if (result == null) {
          sendError(ctx, NOT_FOUND);
-         return;
-      }
-      if (!file.isFile()) {
-         sendError(ctx, FORBIDDEN);
          return;
       }
 
@@ -94,31 +83,24 @@ class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRequest> 
          // Only compare up to the second because the datetime format we send to
          // the client does not have milliseconds
          long ifModifiedSinceDateSeconds = ifModifiedSinceDate.getTime() / 1000;
-         long fileLastModifiedSeconds = file.lastModified() / 1000;
+         long fileLastModifiedSeconds = result.modificationTime / 1000;
          if (ifModifiedSinceDateSeconds == fileLastModifiedSeconds) {
             sendNotModified(ctx);
             return;
          }
       }
 
-      final RandomAccessFile raf;
-      try {
-         raf = new RandomAccessFile(file, "r");
-      } catch (FileNotFoundException fnfe) {
-         sendError(ctx, NOT_FOUND);
-         return;
-      }
-      long fileLength = raf.length();
+      long fileLength = result.contents.length;
 
-      HttpResponse response = new DefaultHttpResponse(HTTP_1_1, OK);
+      HttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, OK, Unpooled.wrappedBuffer(result.contents));
       setContentLength(response, fileLength);
-      setContentTypeHeader(response, file);
+      response.headers().set(CONTENT_TYPE, mimeTypesMap.getContentType(result.path));
       response.headers().set(DATE, new Date());
-      response.headers().set(LAST_MODIFIED, new Date(file.lastModified()));
+      response.headers().set(LAST_MODIFIED, new Date(result.modificationTime));
       if (isKeepAlive(request)) {
          response.headers().set(CONNECTION, HttpHeaders.Values.KEEP_ALIVE);
       }
-      if (isIndex.get()) {
+      if (result.isIndex) {
          // see http://stackoverflow.com/questions/49547/making-sure-a-web-page-is-not-cached-across-all-browsers
          response.headers().set(CACHE_CONTROL, new String[] { NO_CACHE, NO_STORE, MUST_REVALIDATE });
          response.headers().add(PRAGMA, NO_CACHE);
@@ -130,21 +112,7 @@ class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRequest> 
       }
 
       ctx.write(response);
-
-      // ship the file
-      ChannelFuture f = null;
-      if (useSendFile) {
-         f = ctx.write(new DefaultFileRegion(raf.getChannel(), 0, fileLength), ctx.newProgressivePromise());
-      } else {
-         f = ctx.write(new ChunkedFile(raf, 0, fileLength, 8192), ctx.newProgressivePromise());
-      }
-      f.addListener(new ChannelFutureListener() {
-         @Override
-         public void operationComplete(ChannelFuture channelFuture) throws Exception {
-            raf.close();
-         }
-      });
-      f = ctx.writeAndFlush(LastHttpContent.EMPTY_LAST_CONTENT);
+      ChannelFuture f = ctx.writeAndFlush(LastHttpContent.EMPTY_LAST_CONTENT);
       if (!isKeepAlive(request)) {
          f.addListener(ChannelFutureListener.CLOSE);
       }
@@ -158,7 +126,7 @@ class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRequest> 
       }
    }
 
-   private File decodePath(String uri, Value<Boolean> isIndex) {
+   private FileResult getURI(String uri) {
       try {
          uri = URLDecoder.decode(uri, "UTF-8");
       } catch (UnsupportedEncodingException e) {
@@ -168,26 +136,14 @@ class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRequest> 
             throw new Error();
          }
       }
-      if (uri.equals("/")) {
-         uri = "/index.html";
-      }
       if (VALID_URI.matcher(uri).matches() && !INVALID_URI.matcher(uri).matches()) {
          if (uri.startsWith("/vbf")) {
             uri = uri.substring(uri.indexOf("/", 2));
          }
-         for (File rootDir : rootDirs.values()) {
-            File f = new File(rootDir, uri);
-            if (f.exists()) {
-               if (!f.isDirectory()) {
-                  isIndex.set(false);
-                  return f;
-               }
-               f = new File(f, "index.html");
-               if (f.exists()) {
-                  isIndex.set(true);
-                  return f;
-               }
-            }
+         for (WebRoot root : roots.values()) {
+            FileResult r = root.getFile(uri);
+            if (r != null)
+               return r;
          }
       }
       return null;
@@ -204,10 +160,6 @@ class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRequest> 
       FullHttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, NOT_MODIFIED);
       response.headers().set(DATE, new Date());
       ctx.writeAndFlush(response);
-   }
-
-   private void setContentTypeHeader(HttpResponse response, File file) {
-      response.headers().set(CONTENT_TYPE, mimeTypesMap.getContentType(file.getPath()));
    }
 
 }

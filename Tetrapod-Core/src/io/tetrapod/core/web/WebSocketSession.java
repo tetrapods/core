@@ -22,7 +22,7 @@ public class WebSocketSession extends WebHttpSession {
 
    private WebSocketServerHandshaker handshaker;
 
-   public WebSocketSession(SocketChannel ch, Session.Helper helper, Map<String,File> contentRootMap, String wsLocation) {
+   public WebSocketSession(SocketChannel ch, Session.Helper helper, Map<String,WebRoot> contentRootMap, String wsLocation) {
       super(ch, helper, contentRootMap);
       this.wsLocation = wsLocation;
    }
