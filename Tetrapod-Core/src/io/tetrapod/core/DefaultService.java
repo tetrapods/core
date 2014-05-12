@@ -86,7 +86,8 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
     * Returns a prefix for all exported metrics from this service.
     */
    private String getMetricsPrefix() {
-      return getClass().getSimpleName() + "@" + Util.getHostName();
+      return Util.getProperty("devMode", "") + "." + Util.getProperty("product.name") + "." + Util.getHostName() + "."
+            + getClass().getSimpleName();
    }
 
    public byte getEntityType() {
@@ -607,9 +608,8 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
       }
    }
 
-   private static final Set<String> VALID_EXTENSIONS = new HashSet<>(Arrays.asList(new String[] {
-       "html", "htm", "js", "css", "jpg", "png", "gif",   
-   }));
+   private static final Set<String> VALID_EXTENSIONS = new HashSet<>(Arrays.asList(new String[] { "html", "htm", "js", "css", "jpg", "png",
+         "gif",                                     }));
 
    private void recursiveAddWebFiles(String webRootName, File dir, boolean first) throws IOException {
       if (!dir.exists())
@@ -654,9 +654,7 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
    }
 
    protected String getStartLoggingMessage() {
-      return "*** Start Service ***" +
-             "\n   *** Service name: " + Util.getProperty("APPNAME") +
-             "\n   *** Options: " + Launcher.getAllOpts() + 
-             "\n   *** VM Args: " + ManagementFactory.getRuntimeMXBean().getInputArguments().toString();
+      return "*** Start Service ***" + "\n   *** Service name: " + Util.getProperty("APPNAME") + "\n   *** Options: "
+            + Launcher.getAllOpts() + "\n   *** VM Args: " + ManagementFactory.getRuntimeMXBean().getInputArguments().toString();
    }
 }
