@@ -282,8 +282,10 @@ public class Registry implements TetrapodContract.Registry.API {
          final Topic topic = e.unpublish(topicId);
          if (topic != null) {
             // clean up all the subscriptions to this topic
-            for (Subscriber sub : topic.getSubscribers().toArray(new Subscriber[0])) {
-               unsubscribe(e, topic, sub.entityId, true);
+            synchronized (topic) {
+               for (Subscriber sub : topic.getSubscribers().toArray(new Subscriber[0])) {
+                  unsubscribe(e, topic, sub.entityId, true);
+               }
             }
             if (e.parentId == parentId) {
                broadcaster.broadcastRegistryMessage(new TopicUnpublishedMessage(e.entityId, topicId));
@@ -537,8 +539,10 @@ public class Registry implements TetrapodContract.Registry.API {
 
    private void sendSubscribers(final EntityInfo e, final Session session, final int toEntityId, final int topicId) {
       for (Topic t : e.getTopics()) {
-         for (Subscriber s : t.getSubscribers()) {
-            session.sendMessage(new TopicSubscribedMessage(t.ownerId, t.topicId, s.entityId), toEntityId, topicId);
+         synchronized (t) {
+            for (Subscriber s : t.getSubscribers()) {
+               session.sendMessage(new TopicSubscribedMessage(t.ownerId, t.topicId, s.entityId), toEntityId, topicId);
+            }
          }
       }
    }
