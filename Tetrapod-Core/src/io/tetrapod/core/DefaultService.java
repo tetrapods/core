@@ -8,6 +8,7 @@ import io.tetrapod.core.utils.*;
 import io.tetrapod.protocol.core.*;
 
 import java.io.*;
+import java.nio.file.*;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -590,28 +591,41 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
          name = getShortName();
       }
       try {
-         File f = new File("webContent");
-         if (f.exists()) {
-            final String path = f.getCanonicalPath();
-            sendDirectRequest(new SetWebRootRequest(name, path, getHostName())).handle(new ResponseHandler() {
-               public void onResponse(Response res) {
-                  if (res.isError()) {
-                     logger.error("Could not set web root {}, error = {}", path, res.errorCode());
-                  }
-                  if (Launcher.getOpt("webOnly") != null) {
-                     shutdown(false);
-                  }
-               }
-            });
-         }
+         recursiveAddWebFiles(name, new File("webContent"), true);
          if (Util.getProperty("devMode", "local").equals("local")) {
-            int i = 0;
-            for (File f2 : getDevProtocolWebRoots()) {
-               sendDirectRequest(new SetWebRootRequest(name + i++, f2.getCanonicalPath(), getHostName()));
-            }
+            for (File f : getDevProtocolWebRoots())
+               recursiveAddWebFiles(name, f, false);
+         }
+         if (Launcher.getOpt("webOnly") != null) {
+            shutdown(false);
          }
       } catch (IOException e) {
          logger.error("bad web root path", e);
+      }
+   }
+
+   private static final Set<String> VALID_EXTENSIONS = new HashSet<>(Arrays.asList(new String[] {
+       "html", "htm", "js", "css", "jpg", "png", "gif",   
+   }));
+   
+   private void recursiveAddWebFiles(String webRootName, File dir, boolean first) throws IOException {
+      if (!dir.exists())
+         return;
+      ArrayList<File> files = new ArrayList<>(Arrays.asList(dir.listFiles()));
+      while (!files.isEmpty()) {
+         File f = files.remove(0);
+         if (f.isDirectory()) {
+            files.addAll(Arrays.asList(f.listFiles()));
+            continue;
+         }
+         int ix = f.getName().lastIndexOf(".");
+         String ext = ix < 0 ? "" : f.getName().substring(ix+1).toLowerCase();
+         if (VALID_EXTENSIONS.contains(ext)) {
+            byte[] contents = Files.readAllBytes(f.toPath());
+            String path = "/" + dir.toPath().relativize(f.toPath()).toString();
+            sendDirectRequest(new AddWebFileRequest(path, webRootName, contents, first));
+            first = false;
+         }
       }
    }
 

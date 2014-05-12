@@ -114,11 +114,15 @@ public struct Admin
    
 public request KeepAlive
 
-internal request SetWebRoot
-   1: string logicalName
-   2: string webRootFolder
-   3: string hostname 
+internal request AddWebFile
+   1: string path
+   2: string webRootName
+   3: byte[] contents
+   4: boolean clearBeforAdding 
 
+private request SendWebRoot
+   1: string webRootName
+    
 ################################# MESSAGES #################################
 
 // a special message to avoid race conditions on the Register response

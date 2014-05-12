@@ -15,6 +15,7 @@ import io.tetrapod.core.serialize.StructureAdapter;
 import io.tetrapod.core.serialize.datasources.ByteBufDataSource;
 import io.tetrapod.core.utils.*;
 import io.tetrapod.core.web.*;
+import io.tetrapod.core.web.WebRoot.FileResult;
 import io.tetrapod.protocol.core.*;
 import io.tetrapod.protocol.storage.*;
 
@@ -55,7 +56,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    private final WebRoutes                            webRoutes   = new WebRoutes();
 
    private long                                       lastStatsLog;
-   private Map<String, File>                          webRootDirs = new ConcurrentHashMap<>();
+   private Map<String, WebRoot>                       webRootDirs = new ConcurrentHashMap<>();
 
    public TetrapodService() {
       registry = new io.tetrapod.core.registry.Registry(this);
@@ -183,13 +184,13 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    }
 
    private class WebSessionFactory implements SessionFactory {
-      public WebSessionFactory(Map<String, File> contentRootMap, String webSockets) {
+      public WebSessionFactory(Map<String, WebRoot> contentRootMap, String webSockets) {
          this.webSockets = webSockets;
          this.contentRootMap = contentRootMap;
       }
 
       final String            webSockets;
-      final Map<String, File> contentRootMap;
+      final Map<String, WebRoot> contentRootMap;
 
       @Override
       public Session makeSession(SocketChannel ch) {
@@ -786,16 +787,43 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    }
 
    @Override
-   public Response requestSetWebRoot(SetWebRootRequest r, RequestContext ctx) {
-      if (!r.hostname.equals(getHostName())) {
-         return Response.error(ERROR_HOSTNAME_MISMATCH);
+   public Response requestAddWebFile(AddWebFileRequest r, RequestContext ctx) {
+      WebRoot root = null;
+      synchronized (webRootDirs) {
+         // webRootsDirs is concurrent but this sync block is to make sure if two threads get
+         // an add request for a non-existant webRoot only pne new one is created
+         root = webRootDirs.get(r.webRootName);
+         if (root == null) {
+            root = new WebRoot();
+            root.clear();
+            webRootDirs.put(r.webRootName, root);
+         }
       }
-      File f = new File(r.webRootFolder);
-      // FIXME - some security consideration around f, maybe it has to be a sibling or something?
-      webRootDirs.put(r.logicalName, f);
+      if (r.clearBeforAdding)
+         root.clear();
+      root.addFile(r.path, r.contents);
+      if (logger.isDebugEnabled()) {
+         int size = 0;
+         for (WebRoot roo : webRootDirs.values()) {
+            size += roo.getTotalSize();
+         }
+         logger.debug("Total web footprint is {} MBs", ((double)size/(double)(1024*1024)) );
+      }
       return Response.SUCCESS;
    }
-
+   
+   @Override
+   public Response requestSendWebRoot(SendWebRootRequest r, RequestContext ctx) {
+      WebRoot root = webRootDirs.get(r.webRootName);
+      boolean first = true;
+      for (String path : root.getAllPaths()) {
+         FileResult res = root.getFile(path);
+         sendRequest(new AddWebFileRequest(path, r.webRootName, res.contents, first), ctx.header.fromId);
+         first = false;
+      }
+      return Response.SUCCESS;
+   }
+   
    private void updateHostname() {
       try (Writer w = new FileWriter(new File("webContent/protocol/hostname.js"))) {
          String hostname = Util.getProperty("cluster.host", "localhost");

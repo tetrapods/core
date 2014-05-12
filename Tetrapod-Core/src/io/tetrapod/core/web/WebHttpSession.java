@@ -15,7 +15,6 @@ import io.tetrapod.core.Session;
 import io.tetrapod.core.json.JSONObject;
 import io.tetrapod.protocol.core.RequestHeader;
 
-import java.io.File;
 import java.util.Map;
 
 import org.slf4j.*;
@@ -25,7 +24,7 @@ public class WebHttpSession extends WebSession {
 
    private boolean               isKeepAlive;
 
-   public WebHttpSession(SocketChannel ch, Session.Helper helper, Map<String, File> rootDirs) {
+   public WebHttpSession(SocketChannel ch, Session.Helper helper, Map<String, WebRoot> roots) {
       super(ch, helper);
 
       final boolean usingSSL = ch.pipeline().get(SslHandler.class) != null;
@@ -34,7 +33,7 @@ public class WebHttpSession extends WebSession {
       ch.pipeline().addLast("aggregator", new HttpObjectAggregator(65536));
       ch.pipeline().addLast("api", this);
       ch.pipeline().addLast("chunkedWriter", new ChunkedWriteHandler());
-      WebStaticFileHandler sfh = new WebStaticFileHandler(usingSSL, rootDirs);
+      WebStaticFileHandler sfh = new WebStaticFileHandler(usingSSL, roots);
       ch.pipeline().addLast("files", sfh);
    }
 
