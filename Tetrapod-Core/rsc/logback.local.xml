@@ -1,0 +1,12 @@
+<included>
+
+   <root level="DEBUG">
+      <appender-ref ref="STDOUT" />
+      <appender-ref ref="BUFFER" />
+   </root>
+
+   <logger name="io.netty" level="INFO" />
+   <logger name="com.hazelcast" level="WARN" />
+   <logger name="NodeMulticastListener" level="WARN" />
+
+</included>

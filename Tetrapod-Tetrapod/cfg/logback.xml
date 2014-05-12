@@ -1,6 +1,0 @@
-<configuration debug="false" scan="true" scanPeriod="30 seconds">
-
-   <appender name="BUFFER" class="io.tetrapod.core.LogBuffer" />
-   <include file="cfg/logback.dev.${localDevelopment}.xml"/>
-   
-</configuration>

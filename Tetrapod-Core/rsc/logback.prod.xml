@@ -1,0 +1,17 @@
+<included>
+   
+   <root level="INFO">
+      <appender-ref ref="LOGFILE" />
+      <appender-ref ref="BUFFER" />
+   </root>
+
+   <logger name="comms" level="DEBUG" additivity="false">
+      <!-- additivity false means it does not show up in root -->
+      <appender-ref ref="COMMSFILE" />
+   </logger>
+   
+   <logger name="io.netty" level="INFO" />
+   <logger name="com.hazelcast" level="WARN" />
+   <logger name="NodeMulticastListener" level="WARN" />
+
+</included>

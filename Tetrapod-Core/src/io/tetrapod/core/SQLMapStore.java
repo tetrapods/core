@@ -124,7 +124,7 @@ public class SQLMapStore<T> implements MapStore<String, T> {
 
    @Override
    public void store(String key, T value) {
-      logger.debug("store key {}", key);
+      logger.trace("store key {}", key);
       final String query = "INSERT INTO " + tableName + " (id, val) VALUES (?, ?) ON DUPLICATE KEY UPDATE val = ?";
       try (Connection con = dataSource.getConnection(); PreparedStatement s = con.prepareStatement(query)) {
          s.setString(1, key);
@@ -139,7 +139,7 @@ public class SQLMapStore<T> implements MapStore<String, T> {
    @Override
    public void storeAll(Map<String, T> map) {
       if (map.size() > 0) {
-         logger.debug("store keys {}", map.keySet());
+         logger.trace("store keys {}", map.keySet());
          final StringBuilder query = new StringBuilder();
          query.append("INSERT INTO " + tableName + " (id, val) VALUES");
          for (int i = 0; i < map.size(); i++) {
@@ -164,7 +164,7 @@ public class SQLMapStore<T> implements MapStore<String, T> {
 
    @Override
    public void delete(String key) {
-      logger.debug("delete keys {}", key);
+      logger.trace("delete keys {}", key);
       final String query = "DELETE FROM " + tableName + " WHERE id = ?";
       try (Connection con = dataSource.getConnection(); PreparedStatement s = con.prepareStatement(query)) {
          s.setString(1, key);
@@ -176,7 +176,7 @@ public class SQLMapStore<T> implements MapStore<String, T> {
 
    @Override
    public void deleteAll(Collection<String> keys) {
-      logger.debug("delete keys {}", keys);
+      logger.trace("delete keys {}", keys);
       // OPTIMIZE: Could use bulk delete statement
       for (String key : keys) {
          delete(key);
