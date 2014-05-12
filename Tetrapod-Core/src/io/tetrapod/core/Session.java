@@ -60,7 +60,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
    protected static final Logger        commsLog                   = LoggerFactory.getLogger("comms");
 
    public static final byte             DEFAULT_REQUEST_TIMEOUT    = 30;
-   private static final int             DEFAULT_OVERLOAD_THRESHOLD = 1024 * 128;
+   public static final int              DEFAULT_OVERLOAD_THRESHOLD = 1024 * 128;
 
    protected static final AtomicInteger sessionCounter             = new AtomicInteger();
 
