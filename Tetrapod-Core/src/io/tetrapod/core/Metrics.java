@@ -63,7 +63,7 @@ public class Metrics {
       fdUsage = metrics.register(MetricRegistry.name("jvm", "fd", "usage"), new FileDescriptorRatioGauge());
 
       if (Util.getProperty("graphite.enabled", false)) {
-         startGraphite(new ServerAddress(Util.getProperty("graphite.host"), Util.getProperty("graphite.port", 0)), prefix);
+         startGraphite(new ServerAddress(Util.getProperty("graphite.host", "localhost"), Util.getProperty("graphite.port", 2003)), prefix);
       }
    }
 
@@ -75,7 +75,7 @@ public class Metrics {
     */
    public synchronized static void startGraphite(ServerAddress graphite, String prefix) {
       assert (graphiteReporter == null);
-      logger.info("Starting Grapite on {} as {}", graphite.dump(), prefix);
+      logger.info("Starting Graphite reporting on {} as {}", graphite.dump(), prefix);
       graphiteReporter = GraphiteReporter.forRegistry(metrics).prefixedWith(prefix).convertRatesTo(TimeUnit.SECONDS)
             .convertDurationsTo(TimeUnit.MILLISECONDS).filter(MetricFilter.ALL)
             .build(new Graphite(new InetSocketAddress(graphite.host, graphite.port)));
