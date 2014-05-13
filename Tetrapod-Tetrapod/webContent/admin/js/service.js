@@ -298,18 +298,20 @@ define([ "knockout", "jquery", "bootbox", "app", "build" ], function(ko, $, boot
                if (!res.isError()) {
                   if (self.expanded()) {
                      self.lastLogId = res.lastLogId;
-                     $.each(res.items, function(i, item) {
-                        item.levelStyle = self.getLogLevelStyle(item.level);
-                        item.timestamp = logtime(new Date(item.timestamp))
-                        self.logs.push(item);
-                     });
-                     // remove older items from list
-                     while (self.logs.length > 1000) {
-                        self.logs.shift();
-                     }
-                     if (self.autoScrollLogs()) {
-                        var scroll = document.getElementById("service-logs-" + self.entityId);
-                        scroll.scrollTop = scroll.scrollHeight;
+                     if (res.items.length > 0) {
+                        $.each(res.items, function(i, item) {
+                           item.levelStyle = self.getLogLevelStyle(item.level);
+                           item.timestamp = logtime(new Date(item.timestamp))
+                           self.logs.push(item);
+                        });
+                        // remove older items from list
+                        while (self.logs.length > 1000) {
+                           self.logs.shift();
+                        }
+                        if (self.autoScrollLogs()) {
+                           var scroll = document.getElementById("service-logs-" + self.entityId);
+                           scroll.scrollTop = scroll.scrollHeight;
+                        }
                      }
                   }
                }
