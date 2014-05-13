@@ -346,11 +346,13 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    private void broadcast(final EntityInfo publisher, final MessageHeader header, final ByteBuf buf) throws IOException {
       final Topic topic = publisher.getTopic(header.topicId);
       if (topic != null) {
-         for (final Subscriber s : topic.getChildSubscribers()) {
-            broadcast(publisher, s, topic, header, buf);
-         }
-         for (final Subscriber s : topic.getProxySubscribers()) {
-            broadcast(publisher, s, topic, header, buf);
+         synchronized (topic) {
+            for (final Subscriber s : topic.getChildSubscribers()) {
+               broadcast(publisher, s, topic, header, buf);
+            }
+            for (final Subscriber s : topic.getProxySubscribers()) {
+               broadcast(publisher, s, topic, header, buf);
+            }
          }
       } else {
          logger.error("Could not find topic {} for entity {}", header.topicId, publisher);
