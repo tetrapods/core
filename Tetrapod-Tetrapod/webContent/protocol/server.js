@@ -267,7 +267,7 @@ function TP_Server() {
             send("KeepAlive", {}, 1/* Core.DIRECT */);
          }
          if (elapsedHeard > 6000) {
-            console.log("We haven't heard from the server in " + elapsed + " ms")
+            console.log("We haven't heard from the server in " + elapsedHeard + " ms")
             // TODO: mark in UI as bad connection
          }
          if (elapsedHeard > 20000) {
