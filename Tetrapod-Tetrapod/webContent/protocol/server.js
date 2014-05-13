@@ -25,6 +25,7 @@ function TP_Server() {
    var socket;
    var simulator = null;
    var lastHeardFrom = 0;
+   var lastSpokeTo = 0;
    var keepAliveRequestId;
 
    // public interface
@@ -148,6 +149,7 @@ function TP_Server() {
       }
 
       if (socket && socket.readyState == WebSocket.OPEN) {
+         lastSpokeTo = Date.now();
          socket.send(JSON.stringify(args, null, 3))
       }
 
@@ -258,13 +260,17 @@ function TP_Server() {
          array[i]();
 
       self.keepAlive = setInterval(function() {
-         send("KeepAlive", {}, 1/* Core.DIRECT */);
-         var elapsed = Date.now() - lastHeardFrom;
-         if (elapsed > 6000) {
-            console.log("We haven't heard from the server in " + elapsed + " ms")
-            // TODO: mark as bad connection
+         var elapsedHeard = Date.now() - lastHeardFrom;
+         var elapsedSpoke = Date.now() - lastSpokeTo;
+         if (elapsedSpoke > 6000) {
+            // this keep alive is a backup
+            send("KeepAlive", {}, 1/* Core.DIRECT */);
          }
-         if (elapsed > 20000) {
+         if (elapsedHeard > 6000) {
+            console.log("We haven't heard from the server in " + elapsed + " ms")
+            // TODO: mark in UI as bad connection
+         }
+         if (elapsedHeard > 20000) {
             disconnect();
          }
       }, 5000);

@@ -56,7 +56,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    private final WebRoutes                            webRoutes   = new WebRoutes();
 
    private long                                       lastStatsLog;
-   private Map<String, WebRoot>                       webRootDirs = new ConcurrentHashMap<>();
+   private ConcurrentMap<String, WebRoot>             webRootDirs = new ConcurrentHashMap<>();
 
    public TetrapodService() {
       registry = new io.tetrapod.core.registry.Registry(this);
@@ -791,15 +791,10 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    @Override
    public Response requestAddWebFile(AddWebFileRequest r, RequestContext ctx) {
       WebRoot root = null;
-      synchronized (webRootDirs) {
-         // webRootsDirs is concurrent but this sync block is to make sure if two threads get
-         // an add request for a non-existant webRoot only pne new one is created
+      root = webRootDirs.get(r.webRootName);
+      if (root == null) {
+         webRootDirs.putIfAbsent(r.webRootName, r.contents==null ? new WebRootLocalFilesystem() : new WebRootInMemory());
          root = webRootDirs.get(r.webRootName);
-         if (root == null) {
-            root = r.contents==null ? new WebRootLocalFilesystem() : new WebRootInMemory();
-            root.clear();
-            webRootDirs.put(r.webRootName, root);
-         }
       }
       if (r.clearBeforAdding)
          root.clear();

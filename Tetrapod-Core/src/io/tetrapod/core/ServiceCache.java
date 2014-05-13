@@ -4,19 +4,19 @@ import io.tetrapod.core.rpc.*;
 import io.tetrapod.protocol.core.*;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.*;
 
 public class ServiceCache implements TetrapodContract.Services.API {
 
    /**
     * Maps entityId => Entity
     */
-   private final Map<Integer, Entity>       services     = new ConcurrentHashMap<>();
+   private final ConcurrentMap<Integer, Entity>       services     = new ConcurrentHashMap<>();
 
    /**
     * Maps contractId => List of Entities that provide that service
     */
-   private final Map<Integer, List<Entity>> serviceLists = new ConcurrentHashMap<>();
+   private final ConcurrentMap<Integer, List<Entity>> serviceLists = new ConcurrentHashMap<>();
 
    @Override
    public void genericMessage(Message message, MessageContext ctx) {
@@ -41,15 +41,17 @@ public class ServiceCache implements TetrapodContract.Services.API {
    public void messageServiceUpdated(ServiceUpdatedMessage m, MessageContext ctx) {
       Entity e = services.get(m.entityId);
       if (e != null) {
-         e.status = m.status;
+         synchronized (e) {
+            e.status = m.status;
+         }
       }
    }
 
-   public synchronized List<Entity> getServices(int contractId) {
+   public List<Entity> getServices(int contractId) {
       List<Entity> list = serviceLists.get(contractId);
       if (list == null) {
-         list = new ArrayList<>();
-         serviceLists.put(contractId, list);
+         serviceLists.putIfAbsent(contractId, new CopyOnWriteArrayList<Entity>());
+         list = serviceLists.get(contractId);
       }
       return list;
    }
@@ -79,8 +81,16 @@ public class ServiceCache implements TetrapodContract.Services.API {
       }
       return null;
    }
+   
+   public boolean isServiceAvailable(int entityId) {
+      Entity e = services.get(entityId);
+      if (e != null) {
+         return isAvailable(e);
+      }
+      return false;
+   }
 
-   public synchronized boolean checkDependencies(Set<Integer> contractIds) {
+   public boolean checkDependencies(Set<Integer> contractIds) {
       for (Integer contractId : contractIds) {
          Entity e = getFirstAvailableService(contractId);
          if (e == null) {
@@ -90,11 +100,10 @@ public class ServiceCache implements TetrapodContract.Services.API {
       return true;
    }
    
-   /**
-    * Copied form EntityInfo which is unfortunate.
-    */
-   public static final boolean isAvailable(final Entity e) {
-      return (e.status & (Core.STATUS_STARTING | Core.STATUS_PAUSED | Core.STATUS_GONE | Core.STATUS_BUSY | Core.STATUS_OVERLOADED
-            | Core.STATUS_FAILED | Core.STATUS_STOPPING)) == 0;
+   private boolean isAvailable(final Entity e) {
+      synchronized (e) {
+         return (e.status & (Core.STATUS_STARTING | Core.STATUS_PAUSED | Core.STATUS_GONE | Core.STATUS_BUSY | Core.STATUS_OVERLOADED
+               | Core.STATUS_FAILED | Core.STATUS_STOPPING)) == 0;
+      }
    }
 }

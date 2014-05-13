@@ -27,7 +27,7 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
    protected final Dispatcher              dispatcher;
    protected Client                        clusterClient;
    protected Contract                      contract;
-   protected ServiceCache                  services;
+   protected final ServiceCache            services;
    protected boolean                       terminated;
    protected int                           entityId;
    protected int                           parentId;
@@ -61,6 +61,8 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
       if (getEntityType() != Core.TYPE_TETRAPOD) {
          services = new ServiceCache();
          addSubscriptionHandler(new TetrapodContract.Services(), services);
+      } else {
+         services = null;
       }
 
       Runtime.getRuntime().addShutdownHook(new Thread("Shutdown Hook") {
@@ -460,15 +462,15 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
       sendMessage(new TopicUnsubscribedMessage(getEntityId(), topicId, entityId), UNADDRESSED, UNADDRESSED);
    }
 
+   public void unpublish(int topicId) {
+      sendMessage(new TopicUnpublishedMessage(getEntityId(), topicId), UNADDRESSED, UNADDRESSED);
+   }
+
    // Generic handlers for all request/subscriptions
 
    public Response genericRequest(Request r, RequestContext ctx) {
       logger.error("unhandled request " + r.dump());
       return new Error(CoreContract.ERROR_UNKNOWN_REQUEST);
-   }
-
-   public void genericMessage(Message message) {
-      logger.error("unhandled message " + message.dump());
    }
 
    public void setDependencies(int... contractIds) {

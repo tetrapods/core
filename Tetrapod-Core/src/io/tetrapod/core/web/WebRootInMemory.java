@@ -12,7 +12,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class WebRootInMemory implements WebRoot {
    
    private Map<String, byte[]> files = new ConcurrentHashMap<>();
-   private volatile long modificationTime;
+   private volatile long modificationTime = System.currentTimeMillis();
    private AtomicInteger size = new AtomicInteger(0);
    
    public void clear() {
