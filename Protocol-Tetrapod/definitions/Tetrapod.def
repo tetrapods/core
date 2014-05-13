@@ -29,6 +29,7 @@ public request Register
    3: int contractId
    4: string name
    5: int status
+   6: string host
       
 public response Register 
    1: int entityId
