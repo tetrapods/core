@@ -298,7 +298,7 @@ define([ "knockout", "jquery", "bootbox", "app", "build" ], function(ko, $, boot
                if (!res.isError()) {
                   if (self.expanded()) {
                      self.lastLogId = res.lastLogId;
-                     res.items.forEach(function(item) {
+                     $.each(res.items, function(i, item) {
                         item.levelStyle = self.getLogLevelStyle(item.level);
                         item.timestamp = logtime(new Date(item.timestamp))
                         self.logs.push(item);
