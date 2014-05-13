@@ -2,6 +2,7 @@ package io.tetrapod.core;
 
 import io.netty.channel.socket.SocketChannel;
 import io.tetrapod.core.rpc.*;
+import io.tetrapod.core.utils.Util;
 import io.tetrapod.protocol.core.*;
 
 import java.util.List;
@@ -86,7 +87,7 @@ public class TetrapodClient implements SessionFactory, Session.Helper {
    }
 
    private void register() {
-      sendDirectRequest(new RegisterRequest(0, token, getContractId(), getClientName(), 0)).handle(new ResponseHandler() {
+      sendDirectRequest(new RegisterRequest(0, token, getContractId(), getClientName(), 0, Util.getHostName())).handle(new ResponseHandler() {
          @Override
          public void onResponse(Response res) {
             if (res.isError()) {

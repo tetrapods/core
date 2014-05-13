@@ -189,7 +189,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          this.contentRootMap = contentRootMap;
       }
 
-      final String            webSockets;
+      final String               webSockets;
       final Map<String, WebRoot> contentRootMap;
 
       @Override
@@ -510,7 +510,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          info = new EntityInfo();
          info.version = ctx.header.version;
          info.build = r.build;
-         info.host = ctx.session.getPeerHostname();
+         info.host = r.host;
          info.name = r.name;
          info.reclaimToken = random.nextLong();
          info.contractId = r.contractId;
@@ -521,6 +521,8 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       info.type = ctx.session.getTheirEntityType();
       if (info.type == Core.TYPE_ANONYMOUS) {
          info.type = Core.TYPE_CLIENT;
+         // clobber their reported host with their IP 
+         info.host = ctx.session.getPeerHostname();
       }
 
       // register/reclaim
@@ -808,11 +810,11 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          for (WebRoot roo : webRootDirs.values()) {
             size += roo.getMemoryFootprint();
          }
-         logger.debug("Total web footprint is {} MBs", ((double)size/(double)(1024*1024)) );
+         logger.debug("Total web footprint is {} MBs", ((double) size / (double) (1024 * 1024)));
       }
       return Response.SUCCESS;
    }
-   
+
    @Override
    public Response requestSendWebRoot(SendWebRootRequest r, RequestContext ctx) {
       WebRoot root = webRootDirs.get(r.webRootName);
@@ -829,7 +831,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       }
       return Response.SUCCESS;
    }
-   
+
    private void updateHostname() {
       try (Writer w = new FileWriter(new File("webContent/protocol/hostname.js"))) {
          String hostname = Util.getProperty("cluster.host", "localhost");
@@ -860,6 +862,5 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       }
       return Response.SUCCESS;
    }
-
 
 }

@@ -238,7 +238,7 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
    }
 
    public void onConnectedToCluster() {
-      sendDirectRequest(new RegisterRequest(buildNumber, token, getContractId(), getShortName(), status)).handle(new ResponseHandler() {
+      sendDirectRequest(new RegisterRequest(buildNumber, token, getContractId(), getShortName(), status, Util.getHostName())).handle(new ResponseHandler() {
          @Override
          public void onResponse(Response res) {
             if (res.isError()) {
