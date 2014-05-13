@@ -632,7 +632,12 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
          if (VALID_EXTENSIONS.contains(ext)) {
             byte[] contents = Files.readAllBytes(f.toPath());
             String path = "/" + dir.toPath().relativize(f.toPath()).toString();
-            sendDirectRequest(new AddWebFileRequest(path, webRootName, contents, first));
+            Async a = sendDirectRequest(new AddWebFileRequest(path, webRootName, contents, first));
+            if (first) {
+               // have to wait for the first one to finish so the first flag is really 
+               // the first one that is processed
+               a.waitForResponse();
+            }
             first = false;
          }
       }
