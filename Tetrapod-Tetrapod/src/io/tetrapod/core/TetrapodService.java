@@ -793,8 +793,12 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       WebRoot root = null;
       root = webRootDirs.get(r.webRootName);
       if (root == null) {
-         webRootDirs.putIfAbsent(r.webRootName, r.contents==null ? new WebRootLocalFilesystem() : new WebRootInMemory());
+         WebRoot newOne = r.contents==null ? new WebRootLocalFilesystem() : new WebRootInMemory();
+         webRootDirs.putIfAbsent(r.webRootName, newOne);
          root = webRootDirs.get(r.webRootName);
+         if (root == newOne) {
+            logger.info("NEW web root for {}", r.webRootName);
+         }
       }
       if (r.clearBeforAdding)
          root.clear();
