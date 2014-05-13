@@ -529,6 +529,9 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       // register/reclaim
       registry.register(info);
 
+      logger.info("Registering: {} type={}", info, info.type);
+      
+      
       if (info.type == Core.TYPE_TETRAPOD) {
          info.parentId = info.entityId;
       }
