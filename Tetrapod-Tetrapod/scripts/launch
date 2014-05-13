@@ -9,8 +9,11 @@ main() {
    service=$( cd .. && pwd | xargs basename )
    
    vmargs=`grep vmargs.$service cluster.properties | cut -d= -f2-`
+   javaargs=`grep javaargs.$service cluster.properties | cut -d= -f2-`
+   
    mkdir -p logs
-   nohup java $vmargs -cp "jars/*" io.tetrapod.core.Launcher $service $@ < /dev/null > logs/console.$service.log 2>&1 &
+   
+   nohup java $vmargs -cp "jars/*" io.tetrapod.core.Launcher $service $javaargs $@ < /dev/null > logs/console.$service.log 2>&1 &
 }
 
 main $@
