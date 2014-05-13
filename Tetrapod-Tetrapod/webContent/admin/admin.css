@@ -109,7 +109,11 @@
 }
 
 .service-logs ul {
-	padding: 0px; margin: 0px; width: 100%; list-style: none; max-width: 800px;
+	padding: 0px; margin: 0px; width: 100%; list-style: none; max-width: 800px; 
+}
+
+.service-logs-msg {
+   white-space: pre;
 }
 
 .service-logs-options {
