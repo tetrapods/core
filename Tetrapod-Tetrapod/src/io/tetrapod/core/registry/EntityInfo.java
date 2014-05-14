@@ -118,12 +118,20 @@ public class EntityInfo extends Entity implements Comparable<EntityInfo> {
       }
    }
 
-   public synchronized Collection<Topic> getTopics() {
-      return topics == null ? new ArrayList<Topic>() : topics.values();
+   public synchronized List<Topic> getTopics() {
+      final List<Topic> list = new ArrayList<Topic>();
+      if (topics != null) {
+         list.addAll(topics.values());
+      }
+      return list;
    }
 
-   public synchronized Collection<Topic> getSubscriptions() {
-      return subscriptions == null ? new ArrayList<Topic>(0) : subscriptions.values();
+   public synchronized List<Topic> getSubscriptions() {
+      final List<Topic> list = new ArrayList<Topic>();
+      if (subscriptions != null) {
+         list.addAll(subscriptions.values());
+      }
+      return list;
    }
 
    public synchronized int getNumTopics() {

@@ -205,11 +205,11 @@ public class Registry implements TetrapodContract.Registry.API {
 
    private void clearAllTopicsAndSubscriptions(final EntityInfo e) {
       // Unpublish all their topics
-      for (Topic topic : new ArrayList<Topic>(e.getTopics())) {
+      for (Topic topic : e.getTopics()) {
          unpublish(e, topic.topicId);
       }
       // Unsubscribe from all subscriptions
-      for (Topic topic : new ArrayList<Topic>(e.getSubscriptions())) {
+      for (Topic topic : e.getSubscriptions()) {
          EntityInfo owner = getEntity(topic.ownerId);
          assert (owner != null); // bug here cleaning up topics on unreg, I think...
          if (owner != null) {
@@ -539,10 +539,8 @@ public class Registry implements TetrapodContract.Registry.API {
 
    private void sendSubscribers(final EntityInfo e, final Session session, final int toEntityId, final int topicId) {
       for (Topic t : e.getTopics()) {
-         synchronized (t) {
-            for (Subscriber s : t.getSubscribers()) {
-               session.sendMessage(new TopicSubscribedMessage(t.ownerId, t.topicId, s.entityId), toEntityId, topicId);
-            }
+         for (Subscriber s : t.getSubscribers()) {
+            session.sendMessage(new TopicSubscribedMessage(t.ownerId, t.topicId, s.entityId), toEntityId, topicId);
          }
       }
    }
