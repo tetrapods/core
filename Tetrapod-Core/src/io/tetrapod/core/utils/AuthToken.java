@@ -107,8 +107,10 @@ public class AuthToken {
     * @return true if it decodes successfully, and as a side effect fills in values with any values which were encoded in token
     */
    public static boolean decode(int[] values, int numInToken, String token) {
-      ByteBuf tokenBuf = Base64.decode(Unpooled.wrappedBuffer(token.getBytes()), Base64Dialect.URL_SAFE);
+      ByteBuf tokenBuf = null;
       try {
+         tokenBuf = Base64.decode(Unpooled.wrappedBuffer(token.getBytes()), Base64Dialect.URL_SAFE);
+
          ByteBufDataSource bds = new ByteBufDataSource(tokenBuf);
          for (int i = 0; i < numInToken; i++) {
             values[i] = bds.readVarInt();
@@ -116,7 +118,9 @@ public class AuthToken {
          String encoded = encode(values, numInToken);
          return encoded.equals(token);
       } catch (Exception e) {} finally {
-         tokenBuf.release();
+         if (tokenBuf != null) {
+            tokenBuf.release();
+         }
       }
       return false;
    }
