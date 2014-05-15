@@ -149,8 +149,15 @@ function TP_Server() {
       }
 
       if (socket && socket.readyState == WebSocket.OPEN) {
-         lastSpokeTo = Date.now();
-         socket.send(JSON.stringify(args, null, 3))
+         var data = JSON.stringify(args, null, 3); 
+         if (data.length < 1024 * 128) {
+            lastSpokeTo = Date.now();
+            socket.send(data);
+         } else  {
+            console.log("RPC too big : " + data.length + "\n" + data);
+            // FIXME: return an error 
+         }
+         
       }
 
       return {
