@@ -114,6 +114,14 @@ public class Storage implements MembershipListener {
       map.put(key, value, ttl, unit);
    }
 
+   public void put(String key, int value) {
+      map.put(key, Integer.toString(value));
+   }
+
+   public void put(String key, long value) {
+      map.put(key, Long.toString(value));
+   }
+
    public String delete(String key) {
       return map.remove(key);
    }
@@ -122,7 +130,7 @@ public class Storage implements MembershipListener {
       return map.get(key);
    }
 
-   public <T extends Structure> T get(String key, T struct) throws IOException {
+   public <T extends Structure> T read(String key, T struct) throws IOException {
       final String val = map.get(key);
       if (val != null) {
          JSONDataSource data = new JSONDataSource(val);
@@ -139,18 +147,44 @@ public class Storage implements MembershipListener {
       map.put(key, data.getJSON().toString());
    }
 
-   public String get(String key, String defaultVal) {
+   public String get(String key, Object defaultVal) {
       String val = map.get(key);
       if (val == null) {
-         val = defaultVal;
+         val = defaultVal.toString();
       }
       return val;
+   }
+
+   public int get(String key, int defaultVal) {
+      String val = map.get(key);
+      if (val == null) {
+         return defaultVal;
+      }
+      return Integer.parseInt(val);
+   }
+
+   public long get(String key, long defaultVal) {
+      String val = map.get(key);
+      if (val == null) {
+         return defaultVal;
+      }
+      return Long.parseLong(val);
    }
 
    public ILock getLock(String lockKey) {
       return hazelcast.getLock(lockKey);
    }
 
-   //////////////////////////////////////////////////////////////////////////////////////////////////////////////
+   public long increment(String key) {
+      getLock(key).lock();
+      try {
+         long val = 1 + get(key, 0L);
+         put(key, val);
+         return val;
+      } finally {
+         getLock(key).unlock();
+      }
+   }
+ 
 
 }

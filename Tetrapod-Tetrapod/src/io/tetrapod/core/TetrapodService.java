@@ -7,6 +7,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
+import io.tetrapod.core.AdminAccounts.AdminMutator;
 import io.tetrapod.core.Session.RelayHandler;
 import io.tetrapod.core.registry.*;
 import io.tetrapod.core.rpc.*;
@@ -20,7 +21,8 @@ import io.tetrapod.protocol.core.*;
 import io.tetrapod.protocol.storage.*;
 
 import java.io.*;
-import java.security.SecureRandom;
+import java.security.*;
+import java.security.spec.InvalidKeySpecException;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -49,6 +51,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    private final TetrapodWorker                       worker;
 
    private Storage                                    storage;
+   private AdminAccounts                              adminAccounts;
 
    private final EventLoopGroup                       bossGroup   = new NioEventLoopGroup();
    private final List<Server>                         servers     = new ArrayList<Server>();
@@ -65,7 +68,6 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       setMainContract(new TetrapodContract());
       addContracts(new StorageContract());
       addSubscriptionHandler(new TetrapodContract.Registry(), registry);
-      updateHostname();
    }
 
    @Override
@@ -238,6 +240,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          storage = new Storage();
          registry.setStorage(storage);
          AuthToken.setSecret(storage.getSharedSecret());
+         adminAccounts = new AdminAccounts(storage);
 
          // create servers
          servers.add(new Server(getPublicPort(), new TypedSessionFactory(Core.TYPE_ANONYMOUS), dispatcher));
@@ -530,8 +533,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       registry.register(info);
 
       logger.info("Registering: {} type={}", info, info.type);
-      
-      
+
       if (info.type == Core.TYPE_TETRAPOD) {
          info.parentId = info.entityId;
       }
@@ -744,26 +746,19 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          return new Error(ERROR_INVALID_RIGHTS);
       }
       try {
-         Admin admin = storage.get("admin.email::" + r.email, new Admin());
-         if (admin == null) {
-            // check for default admin user
-            final String defaultAdminEmail = "admin@" + Util.getProperty("product.url", "tetrapod.io");
-            if (r.email.equals(defaultAdminEmail)) {
-               admin = new Admin(1, defaultAdminEmail, PasswordHash.createHash("admin"), 0xFF);
+         Admin admin = adminAccounts.getAdminByEmail(r.email);
+         if (admin != null) {
+            if (PasswordHash.validatePassword(r.password, admin.hash)) {
+               // mark the session as an admin
+               ctx.session.theirType = Core.TYPE_ADMIN;
+               final String authtoken = AuthToken.encodeAuthToken1(admin.accountId, 0, 60 * 24 * 14);
+               return new AdminLoginResponse(authtoken);
             } else {
-               return new Error(ERROR_INVALID_ACCOUNT);
+               return new Error(ERROR_INVALID_RIGHTS); // invalid password
             }
-         }
-
-         if (PasswordHash.validatePassword(r.password, admin.hash)) {
-            // mark the session as an admin
-            ctx.session.theirType = Core.TYPE_ADMIN;
-            final String authtoken = AuthToken.encodeAuthToken1(1, 1, 60 * 24 * 14);
-            return new AdminLoginResponse(authtoken);
          } else {
-            return new Error(ERROR_INVALID_RIGHTS);
+            return new Error(ERROR_INVALID_RIGHTS); // invalid account
          }
-
       } catch (Exception e) {
          logger.error(e.getMessage(), e);
          return new Error(ERROR_UNKNOWN);
@@ -771,8 +766,37 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    }
 
    @Override
-   public Response requestAdminChangePassword(AdminChangePasswordRequest r, RequestContext ctxA) {
-      // TODO: Implement;
+   public Response requestAdminChangePassword(final AdminChangePasswordRequest r, RequestContext ctxA) {
+      if (ctxA.header.fromType != TYPE_ADMIN) {
+         return new Error(ERROR_INVALID_RIGHTS);
+      }
+      // TODO: validate they are already logged in as an admin
+      AuthToken.Decoded d = AuthToken.decodeAuthToken1(r.token);
+      if (d != null) {
+         Admin admin = adminAccounts.getAdminByAccountId(d.accountId);
+         if (admin != null) {
+            try {
+               if (PasswordHash.validatePassword(r.oldPassword, admin.hash)) {
+                  final String newHash = PasswordHash.createHash(r.newPassword);
+                  admin = adminAccounts.mutate(admin, new AdminMutator() {
+                     @Override
+                     public void mutate(Admin admin) {
+                        admin.hash = newHash;
+                     }
+                  });
+                  if (admin != null) {
+                     return Response.SUCCESS;
+                  }
+               } else {
+                  return new Error(ERROR_INVALID_PASSWORD);
+               }
+            } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
+               logger.error(e.getMessage(), e);
+            }
+         }
+      } else {
+         return new Error(ERROR_INVALID_RIGHTS);
+      }
       return new Error(ERROR_UNKNOWN);
    }
 
@@ -830,16 +854,6 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          }
       }
       return Response.SUCCESS;
-   }
-
-   private void updateHostname() {
-      try (Writer w = new FileWriter(new File("webContent/protocol/hostname.js"))) {
-         String hostname = Util.getProperty("cluster.host", "localhost");
-         w.append(String
-               .format("define(function() { return TP_Hostname });  function TP_Hostname() {  this.hostname = \"%s\"; }", hostname));
-      } catch (IOException e) {
-         fail(e);
-      }
    }
 
    protected File[] getDevProtocolWebRoots() {

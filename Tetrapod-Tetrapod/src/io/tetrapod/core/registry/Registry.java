@@ -211,9 +211,12 @@ public class Registry implements TetrapodContract.Registry.API {
       // Unsubscribe from all subscriptions
       for (Topic topic : e.getSubscriptions()) {
          EntityInfo owner = getEntity(topic.ownerId);
-         assert (owner != null); // bug here cleaning up topics on unreg, I think...
+         // assert (owner != null); 
          if (owner != null) {
             unsubscribe(owner, topic.topicId, e.entityId, true);
+         } else {
+            // bug here cleaning up topics on unreg, I think...
+            logger.warn("clearAllTopicsAndSubscriptions: Couldn't find {} owner {}", topic, topic.ownerId);
          }
       }
    }

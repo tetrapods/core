@@ -29,7 +29,8 @@ define([ "knockout", "jquery", "bootbox", "toolbox", "protocol/server", "protoco
             }
 
             function connect() {
-         server.connect(window.location.hostname, window.location.protocol == 'https:').listen(onConnected, onDisconnected);
+               server.connect(window.location.hostname, window.location.protocol == 'https:').listen(onConnected,
+                     onDisconnected);
             }
 
             function onConnected() {
@@ -96,5 +97,31 @@ define([ "knockout", "jquery", "bootbox", "toolbox", "protocol/server", "protoco
                $('#app-wrapper').hide();
                model.services([]);
             }
+
+            self.modalOldPassword = ko.observable();
+            self.modalNewPassword = ko.observable();
+            self.onShowEditPassword = function() {
+               self.modalOldPassword('');
+               self.modalNewPassword('');
+               $('#set-password-modal').modal('show');
+            };
+            self.onEditPassword = function() {
+               server.send("AdminChangePassword", {
+                  token : authtoken,
+                  oldPassword : self.modalOldPassword(),
+                  newPassword : self.modalNewPassword()
+               }, Core.DIRECT).handle(function(res) {
+                  if (!res.isError()) {
+                     bootbox.alert('Your password has been changed');
+                  } else {
+                     if (res.errorCode == server.consts["Tetrapod"].INVALID_PASSWORD) {
+                        bootbox.alert('Error: Incorrect Password');
+                     } else {
+                        bootbox.alert('Error: Change Password Failed');
+                     }
+                  }
+               });
+            };
+
          }
       });

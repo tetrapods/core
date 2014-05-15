@@ -44,7 +44,11 @@
 							<a href="#">
 								<i class="fa fa-gear fa-fw"></i> Settings
 							</a>
+							<a href="#" data-bind="click: onShowEditPassword">
+								<i class="fa fa-lock fa-fw"></i> Change Password...
+							</a>
 						</li>
+
 						<li class="divider"></li>
 						<li>
 							<a href="#" data-bind="click: onLogout">
@@ -325,6 +329,37 @@
 		</div>
 	</div>
 
+
+	<div class="modal fade app-bind" id="set-password-modal" tabindex="-1" role="dialog">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+					<h4 class="modal-title">Change Password</h4>
+				</div>
+				<div class="modal-body">
+					<table class="form-table">
+						<tr">
+							<td class="form-label">Current password:</td>
+							<td>
+								<input type="password" data-bind="value: modalOldPassword" />
+							</td>
+						</tr>
+						<tr>
+							<td class="form-label">New password:</td>
+							<td>
+								<input type="password" data-bind="value: modalNewPassword" />
+							</td>
+						</tr>
+					</table>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+					<button type="button" class="btn btn-primary" data-dismiss="modal" data-bind="click: onEditPassword">Save changes</button>
+				</div>
+			</div>
+		</div>
+	</div>
 
 	<script src="//cdnjs.cloudflare.com/ajax/libs/require.js/2.1.11/require.min.js" data-main="js/main.js"></script>
 </body>

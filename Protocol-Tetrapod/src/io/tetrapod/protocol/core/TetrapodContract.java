@@ -184,6 +184,7 @@ public class TetrapodContract extends Contract {
       
    public static final int ERROR_HOSTNAME_MISMATCH = 12239905; 
    public static final int ERROR_INVALID_ACCOUNT = 14623816; 
+   public static final int ERROR_INVALID_PASSWORD = 13068100; 
    public static final int ERROR_NOT_PARENT = 2219555; 
    public static final int ERROR_NOT_READY = 12438466; 
 }
