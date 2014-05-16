@@ -38,7 +38,7 @@ public class Storage implements MembershipListener {
    public Storage() throws IOException {
       config = new XmlConfigBuilder(Util.getProperty("hazelcast.configurationFile", "cfg/hazelcast.xml")).build();
       if (Util.getProperty("sql.enabled", false)) {
-         sqlStorage = new SQLMapStore<>(MAP_NAME, new SQLMapStore.StringMarshaller());
+         sqlStorage = new SQLMapStore<>(MAP_NAME, new Marshaller.StringMarshaller());
          config.getMapConfig(MAP_NAME).setMapStoreConfig(new MapStoreConfig().setImplementation(sqlStorage).setWriteDelaySeconds(2));
       }
       hazelcast = Hazelcast.newHazelcastInstance(config);

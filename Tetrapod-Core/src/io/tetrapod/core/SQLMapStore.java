@@ -21,51 +21,6 @@ public class SQLMapStore<T> implements MapStore<String, T> {
    private final String          tableName;
    private final Marshaller<T>   marshaller;
 
-   /**
-    * Marshaler allows us to save different data types (the map values) to the SQLDB how we wish.
-    */
-   public interface Marshaller<T> {
-      public void add(T t, PreparedStatement s, int index) throws SQLException;
-
-      public T get(ResultSet rs, int index) throws SQLException;
-
-      public String getSQLValueType();
-   }
-
-   /**
-    * Marshals values as Strings
-    */
-   public static class StringMarshaller implements Marshaller<String> {
-      public void add(String str, PreparedStatement s, int index) throws SQLException {
-         s.setString(index, str);
-      }
-
-      public String get(ResultSet rs, int index) throws SQLException {
-         return rs.getString(index);
-      }
-
-      public String getSQLValueType() {
-         return "MEDIUMTEXT";
-      }
-   }
-
-   /**
-    * Marshals values as byte arrays / blobs
-    */
-   public static class BytesMarshaller implements Marshaller<byte[]> {
-      public void add(byte[] data, PreparedStatement s, int index) throws SQLException {
-         s.setBytes(index, data);
-      }
-
-      public byte[] get(ResultSet rs, int index) throws SQLException {
-         return rs.getBytes(index);
-      }
-
-      public String getSQLValueType() {
-         return "BLOB";
-      }
-   }
-
    public SQLMapStore(String tableName, Marshaller<T> marshaller) throws IOException {
       this.tableName = tableName;
       this.marshaller = marshaller;
@@ -99,7 +54,7 @@ public class SQLMapStore<T> implements MapStore<String, T> {
    public T load(String key) {
       final String query = "SELECT val FROM " + tableName + " WHERE id = ?";
       try (Connection con = dataSource.getConnection(); PreparedStatement s = con.prepareStatement(query)) {
-         s.setString(1, key);
+         s.setString(1, marshaller.key(key));
          try (ResultSet rs = s.executeQuery()) {
             if (rs.next()) {
                return marshaller.get(rs, 1);
@@ -127,7 +82,7 @@ public class SQLMapStore<T> implements MapStore<String, T> {
       logger.trace("store key {}", key);
       final String query = "INSERT INTO " + tableName + " (id, val) VALUES (?, ?) ON DUPLICATE KEY UPDATE val = ?";
       try (Connection con = dataSource.getConnection(); PreparedStatement s = con.prepareStatement(query)) {
-         s.setString(1, key);
+         s.setString(1, marshaller.key(key));
          marshaller.add(value, s, 2);
          marshaller.add(value, s, 3);
          s.execute();
@@ -152,7 +107,7 @@ public class SQLMapStore<T> implements MapStore<String, T> {
          try (Connection con = dataSource.getConnection(); PreparedStatement s = con.prepareStatement(query.toString())) {
             int n = 1;
             for (Entry<String, T> entry : map.entrySet()) {
-               s.setString(n++, entry.getKey());
+               s.setString(n++, marshaller.key(entry.getKey()));
                marshaller.add(entry.getValue(), s, n++);
             }
             s.execute();
