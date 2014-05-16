@@ -11,6 +11,7 @@ import io.netty.channel.*;
 import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.handler.codec.http.*;
 import io.netty.util.CharsetUtil;
+import io.tetrapod.core.utils.Util;
 import io.tetrapod.core.web.WebRoot.FileResult;
 
 import java.io.*;
@@ -55,9 +56,11 @@ class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRequest> 
    }
 
    private final Map<String, WebRoot>  roots;
+   private final String productHost;
 
    public WebStaticFileHandler(boolean usingSSL, Map<String,WebRoot> roots) {
       this.roots = roots;
+      this.productHost = Util.getProperty("product.url", "localhost").toLowerCase();
    }
 
    @Override
@@ -70,7 +73,7 @@ class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRequest> 
          sendError(ctx, METHOD_NOT_ALLOWED);
          return;
       }
-      FileResult result = getURI(request.getUri());
+      FileResult result = getURI(request.getUri(), request.headers().get(HOST));
 
       if (result == null) {
          sendError(ctx, NOT_FOUND);
@@ -124,7 +127,7 @@ class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRequest> 
       }
    }
 
-   private FileResult getURI(String uri) {
+   private FileResult getURI(String uri, String host) {
       try {
          uri = URLDecoder.decode(uri, "UTF-8");
       } catch (UnsupportedEncodingException e) {
@@ -135,9 +138,7 @@ class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRequest> 
          }
       }
       if (VALID_URI.matcher(uri).matches() && !INVALID_URI.matcher(uri).matches()) {
-         if (uri.startsWith("/vbf")) {
-            uri = uri.substring(uri.indexOf("/", 2));
-         }
+         uri = mangle(uri, host);
          for (WebRoot root : roots.values()) {
             try {
                FileResult r = root.getFile(uri);
@@ -162,6 +163,26 @@ class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRequest> 
       FullHttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, NOT_MODIFIED);
       response.headers().set(DATE, new Date());
       ctx.writeAndFlush(response);
+   }
+   
+   private String mangle(String uri, String host) {
+      if (uri.startsWith("/vbf")) {
+         uri = uri.substring(uri.indexOf("/", 2));
+      }
+      if (!host.startsWith(productHost) && !host.startsWith("localhost")) {
+         // simple virtual hosts.  if the host != productHost then prepend "/{host}" to the URI
+         int ix = host.indexOf(":");
+         if (ix >= 0) {
+            // pop off port
+            host = host.substring(0, ix);
+         }
+         if (host.startsWith("www.")) {
+            // special case www.X and X as the same virtual server
+            host = host.substring(4);
+         }
+         uri = "/" + host + uri;
+      }
+      return uri;
    }
 
 }
