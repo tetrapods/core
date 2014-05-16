@@ -100,14 +100,14 @@ public request AdminChangePassword
    
 public request AdminChangeRights
    1: string token
-   2: int accountId;
-   3: long rights;
+   2: int accountId
+   3: long rights
    
 public struct Admin
-   1: int accountId;
+   1: int accountId
    2: string email
    3: string hash
-   4: long rights;
+   4: long rights
    
    const int RIGHTS_CLUSTER_READ   = 1
    const int RIGHTS_CLUSTER_WRITE  = 2
