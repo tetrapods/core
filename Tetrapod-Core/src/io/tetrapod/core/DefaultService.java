@@ -152,11 +152,7 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
          } else {
             dispatcher.dispatch(1, TimeUnit.SECONDS, new Runnable() {
                public void run() {
-                  try {
-                     checkDependencies();
-                  } catch (Throwable t) {
-                     logger.error(t.getMessage(), t);
-                  }
+                  checkDependencies();
                }
             });
          }
@@ -177,11 +173,7 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
 
          dispatcher.dispatch(1, TimeUnit.SECONDS, new Runnable() {
             public void run() {
-               try {
-                  checkHealth();
-               } catch (Throwable t) {
-                  logger.error(t.getMessage(), t);
-               }
+               checkHealth();
             }
          });
       }
