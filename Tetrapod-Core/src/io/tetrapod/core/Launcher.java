@@ -39,7 +39,7 @@ public class Launcher {
          int port = Integer.parseInt(System.getProperty("service.port", "9901"));
          if (appName.equalsIgnoreCase("tetrapod")) {
             host = System.getProperty("tetrapod.host", "self");
-            port = Integer.parseInt(System.getProperty("tetrapod.port", "9904"));
+            port = Integer.parseInt(System.getProperty("tetrapod.port", "9902"));
          }
          if (opts.get("host") != null) {
             host = opts.get("host");

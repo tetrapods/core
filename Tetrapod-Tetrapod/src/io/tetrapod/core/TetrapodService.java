@@ -75,13 +75,12 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
    @Override
    public void startNetwork(ServerAddress address, String token, Map<String, String> otherOpts) throws Exception {
-      logger.info(" ***** Start Network ***** ");
-      cluster.startListening();
-      logger.info(" Joining Cluster: ", address.dump());
+      logger.info("***** Start Network ***** ");
+      logger.info("Joining Cluster: {}", address.dump());
       if (address.host.equals("self")) {
-         // we're not connecting anywhere, so bootstrap and self register as the first
+         cluster.startListening();
          registerSelf(io.tetrapod.core.registry.Registry.BOOTSTRAP_ID, random.nextLong());
-      } if (address.host.equals("auto")) {
+      } else if (address.host.equals("auto")) {
          boolean joined = false;
          for (String host : getAllVPCMembers()) {
             logger.info("Trying to join cluster on {}", host);
@@ -91,12 +90,14 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
             if (joined)
                break;
          }
+         // need to start listener after the auto-search but before the self reg
+         cluster.startListening();
          if (!joined) {
             logger.info("no tetrapods found, registering self");
             registerSelf(io.tetrapod.core.registry.Registry.BOOTSTRAP_ID, random.nextLong());
          }
       } else {
-         // joining existing named cluster   
+         cluster.startListening();
          this.token = token;
          cluster.joinCluster(address);
       }
