@@ -16,7 +16,6 @@ import java.util.Map.Entry;
  * <li>-host hostname (host to connect to, overrides cluster.properties)
  * <li>-port portNum (port to connect to, overrides cluster.properties)
  * <li>-token token (reclaim token)
- * <li>-forceJoin true (forces a tetrapod to join a cluster even if it's connecting to localhost)
  * <li>-webOnly webRootName (service will connect, set web root, and disconnect)
  * </ul>
  */
@@ -27,15 +26,21 @@ public class Launcher {
    public static void main(String[] args) {
       loadProperties("cfg/service.properties");
       loadClusterProperties();
+      loadSecretProperties();
       try {
          if (args.length < 1)
             usage();
          serviceClass = args[0];
          opts = getOpts(args, 1, defaultOpts());
-         System.setProperty("APPNAME", serviceClass.substring(serviceClass.lastIndexOf('.') + 1));
+         String appName = serviceClass.substring(serviceClass.lastIndexOf('.') + 1);
+         System.setProperty("APPNAME", appName);
 
-         String host = System.getProperty("cluster.host"); 
-         int port = Integer.parseInt(System.getProperty("cluster.port"));
+         String host = System.getProperty("service.host", "localhost"); 
+         int port = Integer.parseInt(System.getProperty("service.port", "9901"));
+         if (appName.equalsIgnoreCase("tetrapod")) {
+            host = System.getProperty("tetrapod.host", "self");
+            port = Integer.parseInt(System.getProperty("tetrapod.port", "9904"));
+         }
          if (opts.get("host") != null) {
             host = opts.get("host");
          }
@@ -172,6 +177,12 @@ public class Launcher {
       }
       System.err.println("ERR: no cluster properties found");
       System.exit(0);
+   }
+
+   private static void loadSecretProperties() {
+      String file = System.getProperty("secrets");
+      if (file != null && !file.isEmpty())
+         loadProperties(file);
    }
 
    public static String getOpt(String key) {

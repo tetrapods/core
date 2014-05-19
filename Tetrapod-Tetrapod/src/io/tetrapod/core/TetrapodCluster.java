@@ -46,7 +46,7 @@ public class TetrapodCluster implements SessionFactory {
    /**
     * Join an existing cluster
     */
-   public void joinCluster(final ServerAddress address) throws Exception {
+   public boolean joinCluster(final ServerAddress address) throws Exception {
       final Client client = new Client(this);
       client.connect(address.host, address.port, service.getDispatcher(), new Session.Listener() {
 
@@ -72,7 +72,8 @@ public class TetrapodCluster implements SessionFactory {
                }
             });
          }
-      });
+      }).sync();
+      return client.isConnected();
    }
 
    public void startListening() throws IOException {

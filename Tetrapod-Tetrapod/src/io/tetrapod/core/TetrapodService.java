@@ -21,10 +21,13 @@ import io.tetrapod.protocol.core.*;
 import io.tetrapod.protocol.storage.*;
 
 import java.io.*;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
 import java.security.*;
 import java.security.spec.InvalidKeySpecException;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.regex.*;
 
 import javax.net.ssl.SSLContext;
 
@@ -75,11 +78,25 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       logger.info(" ***** Start Network ***** ");
       cluster.startListening();
       logger.info(" Joining Cluster: ", address.dump());
-      if (address.host.equals("localhost") && !otherOpts.containsKey("forceJoin")) {
+      if (address.host.equals("self")) {
          // we're not connecting anywhere, so bootstrap and self register as the first
          registerSelf(io.tetrapod.core.registry.Registry.BOOTSTRAP_ID, random.nextLong());
+      } if (address.host.equals("auto")) {
+         boolean joined = false;
+         for (String host : getAllVPCMembers()) {
+            logger.info("Trying to join cluster on {}", host);
+            address.host = host;
+            this.token = token;
+            joined = cluster.joinCluster(address);
+            if (joined)
+               break;
+         }
+         if (!joined) {
+            logger.info("no tetrapods found, registering self");
+            registerSelf(io.tetrapod.core.registry.Registry.BOOTSTRAP_ID, random.nextLong());
+         }
       } else {
-         // joining existing cluster   
+         // joining existing named cluster   
          this.token = token;
          cluster.joinCluster(address);
       }
@@ -875,6 +892,22 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
             return Response.error(ERROR_UNKNOWN);
       }
       return Response.SUCCESS;
+   }
+   
+   private Set<String> getAllVPCMembers() {
+      // assume /etc/hosts has all members listed as services##
+      Set<String> res = new HashSet<>();
+      try {
+         for (String line : Files.readAllLines(new File("/etc/hosts").toPath(), Charset.forName("UTF-8"))) {
+            Matcher m = Pattern.compile(".*(services\\d\\d).*").matcher(line);
+            if (m.matches()) {
+               res.add(m.group(1));
+            }
+         }
+      } catch (IOException e) {
+         logger.error("could not read /etc/hosts", e);
+      };
+      return res;
    }
 
 }
