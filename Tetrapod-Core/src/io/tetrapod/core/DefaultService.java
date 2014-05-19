@@ -238,26 +238,27 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
    }
 
    public void onConnectedToCluster() {
-      sendDirectRequest(new RegisterRequest(buildNumber, token, getContractId(), getShortName(), status, Util.getHostName())).handle(new ResponseHandler() {
-         @Override
-         public void onResponse(Response res) {
-            if (res.isError()) {
-               Fail.fail("Unable to register: " + res.errorCode());
-            } else {
-               RegisterResponse r = (RegisterResponse) res;
-               entityId = r.entityId;
-               parentId = r.parentId;
-               token = r.token;
+      sendDirectRequest(new RegisterRequest(buildNumber, token, getContractId(), getShortName(), status, Util.getHostName())).handle(
+            new ResponseHandler() {
+               @Override
+               public void onResponse(Response res) {
+                  if (res.isError()) {
+                     Fail.fail("Unable to register: " + res.errorCode());
+                  } else {
+                     RegisterResponse r = (RegisterResponse) res;
+                     entityId = r.entityId;
+                     parentId = r.parentId;
+                     token = r.token;
 
-               logger.info(String.format("%s My entityId is 0x%08X", clusterClient.getSession(), r.entityId));
-               clusterClient.getSession().setMyEntityId(r.entityId);
-               clusterClient.getSession().setTheirEntityId(r.parentId);
-               clusterClient.getSession().setMyEntityType(getEntityType());
-               clusterClient.getSession().setTheirEntityType(Core.TYPE_TETRAPOD);
-               onServiceRegistered();
-            }
-         }
-      });
+                     logger.info(String.format("%s My entityId is 0x%08X", clusterClient.getSession(), r.entityId));
+                     clusterClient.getSession().setMyEntityId(r.entityId);
+                     clusterClient.getSession().setTheirEntityId(r.parentId);
+                     clusterClient.getSession().setMyEntityType(getEntityType());
+                     clusterClient.getSession().setTheirEntityType(Core.TYPE_TETRAPOD);
+                     onServiceRegistered();
+                  }
+               }
+            });
    }
 
    public void onDisconnectedFromCluster() {
@@ -281,7 +282,7 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
                   return;
                }
             } catch (Throwable e) {
-               logger.error(e.getMessage());
+               logger.error(e.getMessage(), e);
             }
             clusterMembers.addLast(server);
          }
@@ -611,7 +612,7 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
    }
 
    private static final Set<String> VALID_EXTENSIONS = new HashSet<>(Arrays.asList(new String[] { "html", "htm", "js", "css", "jpg", "png",
-         "gif", "wav"                                     }));
+         "gif", "wav"                               }));
 
    private void recursiveAddWebFiles(String webRootName, File dir, boolean first) throws IOException {
       if (!dir.exists())
