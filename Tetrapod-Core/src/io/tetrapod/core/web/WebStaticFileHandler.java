@@ -169,7 +169,7 @@ class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRequest> 
       if (uri.startsWith("/vbf")) {
          uri = uri.substring(uri.indexOf("/", 2));
       }
-      if (!host.startsWith(productHost) && !host.startsWith("localhost")) {
+      if (host != null && !host.startsWith(productHost) && !host.startsWith("localhost")) {
          // simple virtual hosts.  if the host != productHost then prepend "/{host}" to the URI
          int ix = host.indexOf(":");
          if (ix >= 0) {
