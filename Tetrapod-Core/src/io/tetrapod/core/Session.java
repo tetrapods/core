@@ -352,8 +352,17 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
 
    @Override
    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-      logger.error(cause.getMessage(), cause);
       ctx.close();
+      // quieter logging for certain exceptions
+      if (cause instanceof IOException) {
+         if (cause.getMessage() != null) {
+            if (cause.getMessage().equals("Connection reset by peer")) {
+               logger.info("{} {}", this, cause.getMessage());
+               return;
+            }
+         }
+      }
+      logger.error(cause.getMessage(), cause);
    }
 
    public synchronized boolean isConnected() {
