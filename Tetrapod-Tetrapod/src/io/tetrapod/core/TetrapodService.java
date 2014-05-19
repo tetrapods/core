@@ -21,6 +21,7 @@ import io.tetrapod.protocol.core.*;
 import io.tetrapod.protocol.storage.*;
 
 import java.io.*;
+import java.net.ConnectException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.security.*;
@@ -86,7 +87,9 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
             logger.info("Trying to join cluster on {}", host);
             address.host = host;
             this.token = token;
+            try {
             joined = cluster.joinCluster(address);
+            } catch (ConnectException e) {}
             if (joined)
                break;
          }
