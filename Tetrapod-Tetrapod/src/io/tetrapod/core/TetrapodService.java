@@ -88,7 +88,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
             address.host = host;
             this.token = token;
             try {
-            joined = cluster.joinCluster(address);
+               joined = cluster.joinCluster(address);
             } catch (ConnectException e) {}
             if (joined)
                break;
@@ -129,6 +129,22 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          clusterClient.connect("localhost", getClusterPort(), dispatcher).sync();
       } catch (Exception ex) {
          fail(ex);
+      }
+   }
+
+   /**
+    * We need to override the connectToCluster in superclass because that one tries to reconnect to other tetrapods, but the clusterClient
+    * connection is a special loopback connection in the tetrapod, so we should only ever reconnect back to ourselves.
+    */
+   @Override
+   protected void connectToCluster() {
+      if (!isShuttingDown() && !clusterClient.isConnected()) {
+         try {
+            clusterClient.connect("localhost", getClusterPort(), dispatcher).sync();
+         } catch (Exception ex) {
+            // something is seriously awry if we cannot connect to ourselves
+            fail(ex);
+         }
       }
    }
 
@@ -254,36 +270,38 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
     */
    @Override
    public void onReadyToServe() {
-      // TODO: wait for confirmed cluster registry sync before calling onReadyToServe
-      logger.info(" ***** READY TO SERVE ***** ");
+      if ((getStatus() & Core.STATUS_STARTING) != 0) {
+         // TODO: wait for confirmed cluster registry sync before calling onReadyToServe
+         logger.info(" ***** READY TO SERVE ***** ");
 
-      try {
-         storage = new Storage();
-         registry.setStorage(storage);
-         AuthToken.setSecret(storage.getSharedSecret());
-         adminAccounts = new AdminAccounts(storage);
+         try {
+            storage = new Storage();
+            registry.setStorage(storage);
+            AuthToken.setSecret(storage.getSharedSecret());
+            adminAccounts = new AdminAccounts(storage);
 
-         // create servers
-         servers.add(new Server(getPublicPort(), new TypedSessionFactory(Core.TYPE_ANONYMOUS), dispatcher));
-         servers.add(new Server(getServicePort(), new TypedSessionFactory(Core.TYPE_SERVICE), dispatcher));
-         servers.add(new Server(getHTTPPort(), new WebSessionFactory(webRootDirs, "/sockets"), dispatcher));
+            // create servers
+            servers.add(new Server(getPublicPort(), new TypedSessionFactory(Core.TYPE_ANONYMOUS), dispatcher));
+            servers.add(new Server(getServicePort(), new TypedSessionFactory(Core.TYPE_SERVICE), dispatcher));
+            servers.add(new Server(getHTTPPort(), new WebSessionFactory(webRootDirs, "/sockets"), dispatcher));
 
-         // create secure port servers, if configured
-         if (Util.getProperty("tetrapod.tls", true)) {
-            SSLContext ctx = Util.createSSLContext(new FileInputStream(Util.getProperty("tetrapod.jks.file", "cfg/tetrapod.jks")), System
-                  .getProperty("tetrapod.jks.pwd", "4pod.dop4").toCharArray());
-            servers.add(new Server(getHTTPSPort(), new WebSessionFactory(webRootDirs, "/sockets"), dispatcher, ctx, false));
+            // create secure port servers, if configured
+            if (Util.getProperty("tetrapod.tls", true)) {
+               SSLContext ctx = Util.createSSLContext(new FileInputStream(Util.getProperty("tetrapod.jks.file", "cfg/tetrapod.jks")),
+                     System.getProperty("tetrapod.jks.pwd", "4pod.dop4").toCharArray());
+               servers.add(new Server(getHTTPSPort(), new WebSessionFactory(webRootDirs, "/sockets"), dispatcher, ctx, false));
+            }
+
+            // start listening
+            for (Server s : servers) {
+               s.start(bossGroup).sync();
+            }
+         } catch (Exception e) {
+            fail(e);
          }
 
-         // start listening
-         for (Server s : servers) {
-            s.start(bossGroup).sync();
-         }
-      } catch (Exception e) {
-         fail(e);
+         scheduleHealthCheck();
       }
-
-      scheduleHealthCheck();
    }
 
    @Override
@@ -326,7 +344,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       } else {
          entity = registry.getEntity(entityId);
          if (entity == null) {
-            logger.warn("Could not find an entity for {}", entityId);
+            logger.debug("Could not find an entity for {}", entityId);
          }
       }
       if (entity != null) {
@@ -897,7 +915,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       }
       return Response.SUCCESS;
    }
-   
+
    private Set<String> getAllVPCMembers() {
       // assume /etc/hosts has all members listed as services##
       Set<String> res = new HashSet<>();
@@ -910,7 +928,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          }
       } catch (IOException e) {
          logger.error("could not read /etc/hosts", e);
-      };
+      }
       return res;
    }
 

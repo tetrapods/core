@@ -263,6 +263,7 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
 
    public void onDisconnectedFromCluster() {
       if (!isShuttingDown()) {
+         logger.info("Connection to tetrapod closed");
          dispatcher.dispatch(3, TimeUnit.SECONDS, new Runnable() {
             public void run() {
                connectToCluster();
@@ -271,20 +272,22 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
       }
    }
 
-   private void connectToCluster() {
+   protected void connectToCluster() {
       if (!isShuttingDown() && !clusterClient.isConnected()) {
          synchronized (clusterMembers) {
             final ServerAddress server = clusterMembers.poll();
-            try {
-               clusterClient.connect(server.host, server.port, dispatcher).sync();
-               if (clusterClient.isConnected()) {
-                  clusterMembers.addFirst(server);
-                  return;
+            if (server != null) {
+               try {                  
+                  clusterClient.connect(server.host, server.port, dispatcher).sync();
+                  if (clusterClient.isConnected()) {
+                     clusterMembers.addFirst(server);
+                     return;
+                  }
+               } catch (Throwable e) {
+                  logger.error(e.getMessage(), e);
                }
-            } catch (Throwable e) {
-               logger.error(e.getMessage(), e);
+               clusterMembers.addLast(server);
             }
-            clusterMembers.addLast(server);
          }
 
          // schedule a retry

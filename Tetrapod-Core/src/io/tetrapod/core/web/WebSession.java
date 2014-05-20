@@ -61,7 +61,7 @@ abstract class WebSession extends Session {
             in.release();
          }
       } else {
-         logger.warn("Could not find a relay session for {} {}", header.toId, header.contractId);
+         logger.debug("Could not find a relay session for {} {}", header.toId, header.contractId);
          sendResponse(new Error(ERROR_SERVICE_UNAVAILABLE), header.requestId);
       }
    }
