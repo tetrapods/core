@@ -6,7 +6,10 @@ import io.tetrapod.core.utils.Util;
 
 import java.io.*;
 
+import org.slf4j.*;
+
 import com.hazelcast.config.SerializerConfig;
+import com.hazelcast.core.*;
 import com.hazelcast.nio.*;
 import com.hazelcast.nio.serialization.StreamSerializer;
 
@@ -18,6 +21,22 @@ import com.hazelcast.nio.serialization.StreamSerializer;
  * instances of this class must have distinct structure ids.
  */
 public class HazelcastSerializer<T extends Structure> implements StreamSerializer<T> {
+   
+   public static class LoggingMembershipListener implements MembershipListener {
+      private static final Logger logger = LoggerFactory.getLogger(LoggingMembershipListener.class);
+
+      public void memberAdded(MembershipEvent membersipEvent) {
+         logger.info("Hazelcast Member Added: " + membersipEvent);
+      }
+
+      public void memberRemoved(MembershipEvent membersipEvent) {
+         logger.info("Hazelcast Member Removed: " + membersipEvent);
+      }
+
+      public void memberAttributeChanged(MemberAttributeEvent membersipEvent) {
+         logger.info("Hazelcast Attribute Changed: " + membersipEvent);
+      }
+   }
    
    public static String hazelcastConfigFile(String file) {
       try {

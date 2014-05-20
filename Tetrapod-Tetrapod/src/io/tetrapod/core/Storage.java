@@ -24,7 +24,7 @@ import com.hazelcast.util.Base64;
  * 
  * This is currently being implemented on top of hazelcast, and persisted to MySQL
  */
-public class Storage implements MembershipListener {
+public class Storage {
    public static final Logger         logger            = LoggerFactory.getLogger(Storage.class);
 
    private static final String        MAP_NAME          = "tetrapod";
@@ -44,7 +44,7 @@ public class Storage implements MembershipListener {
          config.getMapConfig(MAP_NAME).setMapStoreConfig(new MapStoreConfig().setImplementation(sqlStorage).setWriteDelaySeconds(2));
       }
       hazelcast = Hazelcast.newHazelcastInstance(config);
-      hazelcast.getCluster().addMembershipListener(this);
+      hazelcast.getCluster().addMembershipListener(new HazelcastSerializer.LoggingMembershipListener());
       map = hazelcast.getMap(MAP_NAME);
 
       loadDefaultProperties();
@@ -89,21 +89,6 @@ public class Storage implements MembershipListener {
 
    public int getPort() {
       return hazelcast.getCluster().getLocalMember().getSocketAddress().getPort();
-   }
-
-   //////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-   public void memberAdded(MembershipEvent membersipEvent) {
-      logger.info("Hazelcast Member Added: " + membersipEvent);
-   }
-
-   public void memberRemoved(MembershipEvent membersipEvent) {
-      logger.info("Hazelcast Member Removed: " + membersipEvent);
-   }
-
-   @Override
-   public void memberAttributeChanged(MemberAttributeEvent membersipEvent) {
-      logger.info("Hazelcast Attribute Changed: " + membersipEvent);
    }
 
    //////////////////////////////////////////////////////////////////////////////////////////////////////////////
