@@ -2,6 +2,7 @@ package io.tetrapod.core.serialize;
 
 import io.tetrapod.core.rpc.Structure;
 import io.tetrapod.core.serialize.datasources.*;
+import io.tetrapod.core.utils.Util;
 
 import java.io.*;
 
@@ -17,6 +18,22 @@ import com.hazelcast.nio.serialization.StreamSerializer;
  * instances of this class must have distinct structure ids.
  */
 public class HazelcastSerializer<T extends Structure> implements StreamSerializer<T> {
+   
+   public static String hazelcastConfigFile(String file) {
+      try {
+         String s = Util.readFileAsString(new File(file));
+         String awsAccess = Util.getProperty("aws.accessKey", "?");
+         String awsSecret = Util.getProperty("aws.secretKey", "?");
+         boolean aws = Util.getProperty("aws.hazelcast", false);
+         s = s.replace("{{multicastOn}}", Boolean.toString(!aws));
+         s = s.replace("{{awsOn}}", Boolean.toString(aws));
+         s = s.replace("{{awsAccess}}", awsAccess);
+         s = s.replace("{{awsSecret}}", awsSecret);
+         return s;
+      } catch (IOException e) {
+         return null;
+      }
+   }
    
    public static <S extends Structure> SerializerConfig getSerializerConfig(S example) {
       return new SerializerConfig().

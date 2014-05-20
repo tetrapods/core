@@ -1,35 +1,42 @@
 <hazelcast
-	xsi:schemaLocation="http://www.hazelcast.com/schema/config
+   xsi:schemaLocation="http://www.hazelcast.com/schema/config
     http://www.hazelcast.com/schema/config/hazelcast-config-3.1.xsd"
-	xmlns="http://www.hazelcast.com/schema/config" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+   xmlns="http://www.hazelcast.com/schema/config" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 
-	<group>
-		<name>tetrapods</name>
-		<password>ermargerhd tertrerperds</password>
-	</group>
+   <group>
+      <name>tetrapods</name>
+      <password>ermargerhd tertrerperds</password>
+   </group>
 
-	<network>
-		<port auto-increment="true">5701</port>
-		<join>
-			<multicast enabled="true" />
-		</join>
-	</network>
+   <network>
+      <port auto-increment="true">5701</port>
+      <join>
+         <multicast enabled="{{multicastOn}}" />
+         <tcp-ip enabled="false" />
+         <aws enabled="{{awsOn}}">
+            <access-key>{{awsAccess}}</access-key>
+            <secret-key>{{awsSecret}}</secret-key>
+            <region>us-west-2a</region>
+           <security-group-name>sg-fa2af29f</security-group-name>
+         </aws>
+      </join>
+   </network>
 
-	<property name="hazelcast.operation.call.timeout.millis">15000</property>
+   <property name="hazelcast.operation.call.timeout.millis">15000</property>
 
-	<properties>
-		<property name="hazelcast.logging.type">slf4j</property>
-	</properties>
+   <properties>
+      <property name="hazelcast.logging.type">slf4j</property>
+   </properties>
 
-	<map name="tetrapod">
-		<backup-count>1</backup-count>
-		<async-backup-count>1</async-backup-count>
-		<read-backup-data>false</read-backup-data>
-		<time-to-live-seconds>0</time-to-live-seconds>
-		<max-idle-seconds>0</max-idle-seconds>
-		<eviction-policy>LFU</eviction-policy>
-		<max-size policy="USED_HEAP_SIZE">128</max-size>
-		<eviction-percentage>25</eviction-percentage>
-	</map>
+   <map name="tetrapod">
+      <backup-count>1</backup-count>
+      <async-backup-count>1</async-backup-count>
+      <read-backup-data>false</read-backup-data>
+      <time-to-live-seconds>0</time-to-live-seconds>
+      <max-idle-seconds>0</max-idle-seconds>
+      <eviction-policy>LFU</eviction-policy>
+      <max-size policy="USED_HEAP_SIZE">128</max-size>
+      <eviction-percentage>25</eviction-percentage>
+   </map>
 
 </hazelcast>
