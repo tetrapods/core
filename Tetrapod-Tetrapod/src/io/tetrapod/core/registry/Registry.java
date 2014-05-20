@@ -294,6 +294,8 @@ public class Registry implements TetrapodContract.Registry.API {
                broadcaster.broadcastRegistryMessage(new TopicUnpublishedMessage(e.entityId, topicId));
             }
             return true;
+         } else {
+            logger.info("Could not find topic {} for entity {}", topicId, e);
          }
       } finally {
          lock.readLock().unlock();
@@ -459,10 +461,7 @@ public class Registry implements TetrapodContract.Registry.API {
          if (owner != null) {
             owner.queue(new Runnable() {
                public void run() {
-                  final Topic topic = owner.unpublish(m.topicId);
-                  if (topic == null) {
-                     logger.info("Could not find topic {} for entity {}", m.topicId, m.ownerId);
-                  }
+                  unpublish(owner, m.topicId);
                }
             }); // TODO: kick()
          } else {
