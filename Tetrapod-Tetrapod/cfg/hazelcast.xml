@@ -16,8 +16,8 @@
          <aws enabled="{{awsOn}}">
             <access-key>{{awsAccess}}</access-key>
             <secret-key>{{awsSecret}}</secret-key>
-            <region>us-west-2a</region>
-           <security-group-name>sg-fa2af29f</security-group-name>
+            <region>us-west-2</region>
+           <security-group-name>Servers</security-group-name>
          </aws>
       </join>
    </network>

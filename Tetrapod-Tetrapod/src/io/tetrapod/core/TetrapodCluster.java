@@ -73,7 +73,7 @@ public class TetrapodCluster implements SessionFactory {
             });
          }
       }).sync();
-      return client.isConnected();
+      return true;
    }
 
    public void startListening() throws IOException {
