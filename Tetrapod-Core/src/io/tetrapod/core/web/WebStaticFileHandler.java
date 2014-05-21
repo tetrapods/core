@@ -128,6 +128,10 @@ class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRequest> 
    }
 
    private FileResult getURI(String uri, String host) {
+      int qIx = uri.indexOf('?');
+      if (qIx > 0) {
+         uri = uri.substring(0,  qIx);
+      }
       try {
          uri = URLDecoder.decode(uri, "UTF-8");
       } catch (UnsupportedEncodingException e) {
