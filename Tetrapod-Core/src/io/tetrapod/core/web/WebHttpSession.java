@@ -28,7 +28,7 @@ public class WebHttpSession extends WebSession {
       ch.pipeline().addLast("codec-http", new HttpServerCodec());
       ch.pipeline().addLast("aggregator", new HttpObjectAggregator(65536));
       ch.pipeline().addLast("api", this);
-      ch.pipeline().addLast("deflater", new HttpContentCompressor(6));
+      //ch.pipeline().addLast("deflater", new HttpContentCompressor(6));
       ch.pipeline().addLast("files", new WebStaticFileHandler(roots));
    }
 
