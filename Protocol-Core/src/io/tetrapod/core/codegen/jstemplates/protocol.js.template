@@ -1,4 +1,4 @@
-define(function() { return TP_{{name}} });
+define([], function() { return TP_{{name}} });
 
 function TP_{{name}}(server) {
 

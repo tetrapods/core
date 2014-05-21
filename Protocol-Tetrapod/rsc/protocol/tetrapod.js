@@ -1,4 +1,4 @@
-define(function() { return TP_Tetrapod });
+define([], function() { return TP_Tetrapod });
 
 function TP_Tetrapod(server) {
 
