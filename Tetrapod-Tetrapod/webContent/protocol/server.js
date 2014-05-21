@@ -1,7 +1,4 @@
-var define = define || function() {
-};
-
-define(function() {
+define([], function() {
    return TP_Server;
 });
 
