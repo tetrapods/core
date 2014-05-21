@@ -137,7 +137,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
     * connection is a special loopback connection in the tetrapod, so we should only ever reconnect back to ourselves.
     */
    @Override
-   protected void connectToCluster() {
+   protected void connectToCluster(int retrySeconds) {
       if (!isShuttingDown() && !clusterClient.isConnected()) {
          try {
             clusterClient.connect("localhost", getClusterPort(), dispatcher).sync();
