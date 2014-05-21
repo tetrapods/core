@@ -76,8 +76,8 @@ deployFile() {
             chmod -R a+x $outdir/scripts
             echo "Running postDeploy for $service" | tee -a $LOG
             echo $BUILD_NUM > $outdir/build_number.txt
-            $outdir/scripts/postDeploy $outdir $BUILD_NUM >> $LOG 2>&1
             ln -s $CLUSTER_DIR/cluster.properties $outdir/cluster.properties
+            $outdir/scripts/postDeploy $outdir $BUILD_NUM >> $LOG 2>&1
          fi
       fi
       local latest=$CLUSTER_DIR/$service/current
