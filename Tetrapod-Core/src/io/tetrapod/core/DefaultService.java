@@ -9,6 +9,7 @@ import io.tetrapod.protocol.core.*;
 
 import java.io.*;
 import java.lang.management.ManagementFactory;
+import java.net.ConnectException;
 import java.nio.file.*;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -120,7 +121,7 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
    public void startNetwork(ServerAddress server, String token, Map<String, String> otherOpts) throws Exception {
       this.token = token;
       clusterMembers.addFirst(server);
-      connectToCluster();
+      connectToCluster(5);
    }
 
    /**
@@ -265,13 +266,13 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
       if (!isShuttingDown()) {
          dispatcher.dispatch(3, TimeUnit.SECONDS, new Runnable() {
             public void run() {
-               connectToCluster();
+               connectToCluster(1);
             }
          });
       }
    }
 
-   private void connectToCluster() {
+   private void connectToCluster(final int retrySeconds) {
       if (!isShuttingDown() && !clusterClient.isConnected()) {
          synchronized (clusterMembers) {
             final ServerAddress server = clusterMembers.poll();
@@ -281,6 +282,8 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
                   clusterMembers.addFirst(server);
                   return;
                }
+            } catch (ConnectException e) {
+               logger.info(e.getMessage());
             } catch (Throwable e) {
                logger.error(e.getMessage(), e);
             }
@@ -288,9 +291,9 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
          }
 
          // schedule a retry
-         dispatcher.dispatch(1, TimeUnit.SECONDS, new Runnable() {
+         dispatcher.dispatch(retrySeconds, TimeUnit.SECONDS, new Runnable() {
             public void run() {
-               connectToCluster();
+               connectToCluster(retrySeconds);
             }
          });
       }
