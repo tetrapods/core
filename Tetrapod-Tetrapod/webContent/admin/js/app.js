@@ -59,7 +59,7 @@ define([ "knockout", "jquery", "bootbox", "toolbox", "protocol/server", "protoco
                         token : authtoken
                      }, Core.DIRECT).handle(onLogin);
                   } else {
-                     onLogout()
+                     onLogout();
                   }
                }
             }

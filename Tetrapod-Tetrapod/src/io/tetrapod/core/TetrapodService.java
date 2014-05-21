@@ -793,10 +793,10 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
                final String authtoken = AuthToken.encodeAuthToken1(admin.accountId, 0, 60 * 24 * 14);
                return new AdminLoginResponse(authtoken);
             } else {
-               return new Error(ERROR_INVALID_RIGHTS); // invalid password
+               return new Error(ERROR_INVALID_CREDENTIALS); // invalid password
             }
          } else {
-            return new Error(ERROR_INVALID_RIGHTS); // invalid account
+            return new Error(ERROR_INVALID_CREDENTIALS); // invalid account
          }
       } catch (Exception e) {
          logger.error(e.getMessage(), e);
@@ -827,7 +827,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
                      return Response.SUCCESS;
                   }
                } else {
-                  return new Error(ERROR_INVALID_PASSWORD);
+                  return new Error(ERROR_INVALID_CREDENTIALS);
                }
             } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
                logger.error(e.getMessage(), e);

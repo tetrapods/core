@@ -6,7 +6,7 @@ javascript out "../rsc/protocol/tetrapod.js"
 service Tetrapod @version(1) @id(1)
 
 error HOSTNAME_MISMATCH
-error INVALID_PASSWORD
+error INVALID_CREDENTIALS
 
 ################################# STRUCTURES #################################
 
