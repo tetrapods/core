@@ -58,7 +58,7 @@ class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRequest> 
    private final Map<String, WebRoot>  roots;
    private final String productHost;
 
-   public WebStaticFileHandler(boolean usingSSL, Map<String,WebRoot> roots) {
+   public WebStaticFileHandler(Map<String,WebRoot> roots) {
       this.roots = roots;
       this.productHost = Util.getProperty("product.url", "localhost").toLowerCase();
    }
