@@ -77,8 +77,7 @@ public class WebSocketSession extends WebHttpSession {
    private void handleWebSocketFrame(ChannelHandlerContext ctx, WebSocketFrame frame) {
       // Check for closing frame
       if (frame instanceof CloseWebSocketFrame) {
-         //handshaker.close(ctx.channel(), (CloseWebSocketFrame) frame.retain());
-         ctx.channel().close();
+         handshaker.close(ctx.channel(), new CloseWebSocketFrame());
          return;
       }
       if (frame instanceof PingWebSocketFrame) {

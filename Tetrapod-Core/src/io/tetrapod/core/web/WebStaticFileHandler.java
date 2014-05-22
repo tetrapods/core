@@ -114,7 +114,9 @@ class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRequest> 
          response.headers().set(CACHE_CONTROL, PUBLIC);
          response.headers().add(EXPIRES, new Date(System.currentTimeMillis() + ONE_YEAR));
       }
+      
       ChannelFuture f = ctx.writeAndFlush(response);
+      f = ctx.writeAndFlush(LastHttpContent.EMPTY_LAST_CONTENT);
       if (!isKeepAlive(request)) {
          f.addListener(ChannelFutureListener.CLOSE);
       }
