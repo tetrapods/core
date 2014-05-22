@@ -24,7 +24,9 @@ public class WebSocketSession extends WebHttpSession {
    public static final Timer         requestTimes = Metrics.timer(WebSocketSession.class, "requests", "time");
 
    private final String              wsLocation;
-   
+
+   private int                       reqCounter   = 0;
+
    private WebSocketServerHandshaker handshaker;
 
    public WebSocketSession(SocketChannel ch, Session.Helper helper, Map<String, WebRoot> contentRootMap, String wsLocation) {
@@ -48,7 +50,11 @@ public class WebSocketSession extends WebHttpSession {
 
    @Override
    protected void handleHttpRequest(ChannelHandlerContext ctx, FullHttpRequest req) throws Exception {
-      logger.debug("### REQUEST = {} : {}", ctx.channel().remoteAddress(), req.getUri());
+      int reqNum = 0;
+      synchronized (this) {
+         reqNum = ++reqCounter;
+      }
+      logger.debug(String.format("### REQUEST[%d] = %s : %s", reqNum, ctx.channel().remoteAddress(), req.getUri()));
       final long now = System.currentTimeMillis();
       final Context context = requestTimes.time();
       if (wsLocation.equals(req.getUri())) {
@@ -64,7 +70,7 @@ public class WebSocketSession extends WebHttpSession {
          super.handleHttpRequest(ctx, req);
       }
       context.stop();
-      logger.debug(String.format("    REQUEST = %s : %s - DONE in %d ms", ctx.channel().remoteAddress(), req.getUri(),
+      logger.debug(String.format("    REQUEST[%d] = %s : %s - DONE in %d ms", reqNum, ctx.channel().remoteAddress(), req.getUri(),
             (System.currentTimeMillis() - now)));
    }
 
