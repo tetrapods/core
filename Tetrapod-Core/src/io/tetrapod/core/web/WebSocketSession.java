@@ -54,7 +54,7 @@ public class WebSocketSession extends WebHttpSession {
       synchronized (this) {
          reqNum = ++reqCounter;
       }
-      logger.debug(String.format("### REQUEST[%d] = %s : %s", reqNum, ctx.channel().remoteAddress(), req.getUri()));
+      logger.debug(String.format("### %s REQUEST[%d] = %s : %s", this, reqNum, ctx.channel().remoteAddress(), req.getUri()));
       final long now = System.currentTimeMillis();
       final Context context = requestTimes.time();
       if (wsLocation.equals(req.getUri())) {
@@ -70,7 +70,7 @@ public class WebSocketSession extends WebHttpSession {
          super.handleHttpRequest(ctx, req);
       }
       context.stop();
-      logger.debug(String.format("    REQUEST[%d] = %s : %s - DONE in %d ms", reqNum, ctx.channel().remoteAddress(), req.getUri(),
+      logger.debug(String.format("    %s REQUEST[%d] = %s : %s - DONE in %d ms", this, reqNum, ctx.channel().remoteAddress(), req.getUri(),
             (System.currentTimeMillis() - now)));
    }
 
