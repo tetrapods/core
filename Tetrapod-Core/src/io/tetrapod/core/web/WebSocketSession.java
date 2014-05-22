@@ -49,6 +49,7 @@ public class WebSocketSession extends WebHttpSession {
    @Override
    protected void handleHttpRequest(ChannelHandlerContext ctx, FullHttpRequest req) throws Exception {
       logger.debug("### REQUEST = {} : {}", ctx.channel().remoteAddress(), req.getUri());
+      final long now = System.currentTimeMillis();
       final Context context = requestTimes.time();
       if (wsLocation.equals(req.getUri())) {
          // Handshake
@@ -63,6 +64,8 @@ public class WebSocketSession extends WebHttpSession {
          super.handleHttpRequest(ctx, req);
       }
       context.stop();
+      logger.debug(String.format("    REQUEST = %s : %s - DONE in %d ms", 
+            ctx.channel().remoteAddress(), req.getUri(), (System.currentTimeMillis() - now)));
    }
 
    private void handleWebSocketFrame(ChannelHandlerContext ctx, WebSocketFrame frame) {
