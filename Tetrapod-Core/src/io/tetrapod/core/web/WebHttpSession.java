@@ -8,6 +8,7 @@ import io.netty.buffer.*;
 import io.netty.channel.*;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.http.*;
+import io.netty.handler.stream.ChunkedWriteHandler;
 import io.netty.util.*;
 import io.tetrapod.core.Session;
 import io.tetrapod.core.json.JSONObject;
@@ -29,6 +30,7 @@ public class WebHttpSession extends WebSession {
       ch.pipeline().addLast("aggregator", new HttpObjectAggregator(65536));
       ch.pipeline().addLast("api", this);
       ch.pipeline().addLast("deflater", new HttpContentCompressor(6));
+      ch.pipeline().addLast("chunkedWriter", new ChunkedWriteHandler());
       ch.pipeline().addLast("files", new WebStaticFileHandler(roots));
    }
 
