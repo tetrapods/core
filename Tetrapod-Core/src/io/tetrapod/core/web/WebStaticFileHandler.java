@@ -33,32 +33,33 @@ import org.slf4j.*;
 @Sharable
 class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
 
-   public static final Logger          logger                 = LoggerFactory.getLogger(WebStaticFileHandler.class);
+   public static final Logger          logger       = LoggerFactory.getLogger(WebStaticFileHandler.class);
 
-   public static final int             ONE_YEAR               =  365 * 24 * 60 * 60 * 1000;
+   public static final int             ONE_YEAR     = 365 * 24 * 60 * 60 * 1000;
 
    // These rules are not correct in general, but for sites with control of their file names 
    // they are safe.  We only allow alphanumeric ascii character, ., -, _, and /.  We also do 
    // not allow .. to appear anywhere in the uri
-   private static final Pattern        VALID_URI              = Pattern.compile("/[A-Za-z0-9._/-]*");
-   private static final Pattern        INVALID_URI            = Pattern.compile(".*[.][.].*");
+   private static final Pattern        VALID_URI    = Pattern.compile("/[A-Za-z0-9._/-]*");
+   private static final Pattern        INVALID_URI  = Pattern.compile(".*[.][.].*");
 
-   private static MimetypesFileTypeMap mimeTypesMap           = new MimetypesFileTypeMap();
+   private static MimetypesFileTypeMap mimeTypesMap = new MimetypesFileTypeMap();
    static {
       mimeTypesMap.addMimeTypes("text/plain txt text TXT TEXT");
       mimeTypesMap.addMimeTypes("text/html html HTML htm HTM");
       mimeTypesMap.addMimeTypes("text/javascript js");
-      mimeTypesMap.addMimeTypes("text/json json");      
+      mimeTypesMap.addMimeTypes("text/json json");
       mimeTypesMap.addMimeTypes("text/css css CSS");
       mimeTypesMap.addMimeTypes("image/png png PNG");
       mimeTypesMap.addMimeTypes("image/jpeg jpg JPG");
       mimeTypesMap.addMimeTypes("image/gif gif GIF");
+      mimeTypesMap.addMimeTypes("audio/wav wav WAV");
    }
 
    private final Map<String, WebRoot>  roots;
-   private final String productHost;
+   private final String                productHost;
 
-   public WebStaticFileHandler(Map<String,WebRoot> roots) {
+   public WebStaticFileHandler(Map<String, WebRoot> roots) {
       this.roots = roots;
       this.productHost = Util.getProperty("product.url", "localhost").toLowerCase();
    }
@@ -130,7 +131,7 @@ class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRequest> 
    private FileResult getURI(String uri, String host) {
       int qIx = uri.indexOf('?');
       if (qIx > 0) {
-         uri = uri.substring(0,  qIx);
+         uri = uri.substring(0, qIx);
       }
       try {
          uri = URLDecoder.decode(uri, "UTF-8");
@@ -168,7 +169,7 @@ class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRequest> 
       response.headers().set(DATE, new Date());
       ctx.writeAndFlush(response);
    }
-   
+
    private String mangle(String uri, String host) {
       if (uri.startsWith("/vbf")) {
          uri = uri.substring(uri.indexOf("/", 2));

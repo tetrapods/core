@@ -21,10 +21,10 @@ public class WebSocketSession extends WebHttpSession {
 
    private static final Logger       logger       = LoggerFactory.getLogger(WebSocketSession.class);
 
+   public static final Timer         requestTimes = Metrics.timer(WebSocketSession.class, "requests", "time");
+
    private final String              wsLocation;
-
-   public static final Timer         requestTimes = Metrics.timer(Dispatcher.class, "web", "requests", "time");
-
+   
    private WebSocketServerHandshaker handshaker;
 
    public WebSocketSession(SocketChannel ch, Session.Helper helper, Map<String, WebRoot> contentRootMap, String wsLocation) {
@@ -64,8 +64,8 @@ public class WebSocketSession extends WebHttpSession {
          super.handleHttpRequest(ctx, req);
       }
       context.stop();
-      logger.debug(String.format("    REQUEST = %s : %s - DONE in %d ms", 
-            ctx.channel().remoteAddress(), req.getUri(), (System.currentTimeMillis() - now)));
+      logger.debug(String.format("    REQUEST = %s : %s - DONE in %d ms", ctx.channel().remoteAddress(), req.getUri(),
+            (System.currentTimeMillis() - now)));
    }
 
    private void handleWebSocketFrame(ChannelHandlerContext ctx, WebSocketFrame frame) {
