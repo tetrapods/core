@@ -316,7 +316,8 @@ function TP_Server() {
    }
    
    function isKeepAlive(contractId, structId) {
-      return contractId == 1 && structId == 5512920;
+      return (contractId == 1 && structId == 5512920) ||
+         (contractId == 10 && structId == 15966706);
    }
 
 }

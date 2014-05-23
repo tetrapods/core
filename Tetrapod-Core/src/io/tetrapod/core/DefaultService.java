@@ -200,7 +200,7 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
          dispatcher.shutdown();
          setTerminated(true);
          try {
-            Launcher.relaunch(token);
+            Launcher.relaunch(getRelaunchToken());
          } catch (Exception e) {
             logger.error(e.getMessage(), e);
          }
@@ -214,6 +214,10 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
             }
          });
       }
+   }
+   
+   protected String getRelaunchToken() {
+      return token;
    }
 
    /**
@@ -321,7 +325,7 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
       }
    }
 
-   protected int getEntityId() {
+   public int getEntityId() {
       return entityId;
    }
 
