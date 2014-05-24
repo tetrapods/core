@@ -195,7 +195,11 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
 
    public void shutdown(boolean restarting) {
       updateStatus(status | Core.STATUS_STOPPING);
-      onShutdown(restarting);
+      try {
+         onShutdown(restarting);
+      } catch (Exception e) {
+         logger.error(e.getMessage(), e);
+      }
       if (restarting) {
          clusterClient.close();
          dispatcher.shutdown();
