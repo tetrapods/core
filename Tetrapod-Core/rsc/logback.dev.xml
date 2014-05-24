@@ -1,13 +1,50 @@
 <included>
+
+   <appender name="LOGFILEPID" class="ch.qos.logback.core.rolling.RollingFileAppender">
+      <file>logs/${PID}/${APPNAME}.log</file>
+
+      <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
+         <fileNamePattern>logs/${PID}/${APPNAME}.%i.log.gz</fileNamePattern>
+         <minIndex>1</minIndex>
+         <maxIndex>5</maxIndex>
+      </rollingPolicy>
+
+      <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+         <maxFileSize>10MB</maxFileSize>
+      </triggeringPolicy>
+      
+      <encoder>
+         <pattern>%d{HH:mm:ss.SSS} %-5level %24thread{24} - %16logger{0} - %msg%n</pattern>
+      </encoder>
+   </appender>
+   
+   <appender name="COMMSFILEPID" class="ch.qos.logback.core.rolling.RollingFileAppender">
+      <file>logs/${PID}/comms.${APPNAME}.log</file>
+
+      <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
+         <fileNamePattern>logs/${PID}/comms.${APPNAME}.%i.log.gz
+         </fileNamePattern>
+         <minIndex>1</minIndex>
+         <maxIndex>5</maxIndex>
+      </rollingPolicy>
+
+      <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+         <maxFileSize>10MB</maxFileSize>
+      </triggeringPolicy>
+      
+      <encoder>
+         <pattern>%d{HH:mm:ss.SSS} %-5level %24thread{24} - %16logger{0} - %msg%n</pattern>
+      </encoder>
+   </appender>
    
    <root level="DEBUG">
-      <appender-ref ref="LOGFILE" />
+      <appender-ref ref="LOGFILEPID" />
       <appender-ref ref="BUFFER" />
    </root>
 
    <logger name="comms" level="DEBUG" additivity="false">
       <!-- additivity false means it does not show up in root -->
-      <appender-ref ref="COMMSFILE" />
+      <appender-ref ref="COMMSFILEPID" />
    </logger>
    
    <logger name="io.netty" level="INFO" />

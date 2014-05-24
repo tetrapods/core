@@ -13,7 +13,7 @@ main() {
    
    mkdir -p logs
    
-   nohup java $vmargs -cp "jars/*" io.tetrapod.core.Launcher $service $javaargs $@ < /dev/null > logs/console.$service.log 2>&1 &
+   exec nohup java $vmargs -DPID=$! -cp "jars/*" io.tetrapod.core.Launcher $service $javaargs $@ < /dev/null > logs/console.$service.log 2>&1 &
 }
 
 main $@
