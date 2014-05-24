@@ -203,6 +203,14 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
    }
 
    protected void dispatchMessage(final MessageHeader header, final Message msg) {
+      // we need  to hijack this now to prevent a race with dispatching subsequent messages
+      if (header.structId == EntityMessage.STRUCT_ID) {
+         if (getTheirEntityType() == Core.TYPE_TETRAPOD) {
+            EntityMessage m = (EntityMessage) msg;
+            setMyEntityId(m.entityId);
+         }
+      }
+
       // OPTIMIZE: use senderId to queue instead of using this single threaded queue
       final MessageContext ctx = new SessionMessageContext(header, this);
       getDispatcher().dispatchSequential(new Runnable() {
@@ -409,6 +417,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
    }
 
    public synchronized void setMyEntityId(int entityId) {
+      logger.info("Setting my Entity {}", entityId);
       this.myId = entityId;
    }
 
