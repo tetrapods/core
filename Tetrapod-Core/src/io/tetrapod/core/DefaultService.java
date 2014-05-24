@@ -112,6 +112,7 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
 
    @Override
    public void genericMessage(Message message, MessageContext ctx) {
+      logger.error("Unhandled message handler: {}", message.dump());
       assert false;
    }
 
@@ -215,7 +216,7 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
          });
       }
    }
-   
+
    protected String getRelaunchToken() {
       return token;
    }
@@ -282,12 +283,12 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
          synchronized (clusterMembers) {
             final ServerAddress server = clusterMembers.poll();
             if (server != null) {
-               try {                  
+               try {
                   clusterClient.connect(server.host, server.port, dispatcher).sync();
                   if (clusterClient.isConnected()) {
                      clusterMembers.addFirst(server);
                      return;
-                  }       
+                  }
                } catch (ConnectException e) {
                   logger.info(e.getMessage());
                } catch (Throwable e) {
@@ -622,7 +623,7 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
    }
 
    private static final Set<String> VALID_EXTENSIONS = new HashSet<>(Arrays.asList(new String[] { "html", "htm", "js", "css", "jpg", "png",
-         "gif", "wav", "woff", "svg", "ttf" }));
+         "gif", "wav", "woff", "svg", "ttf"         }));
 
    private void recursiveAddWebFiles(String webRootName, File dir, boolean first) throws IOException {
       if (!dir.exists())
