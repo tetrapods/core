@@ -188,7 +188,8 @@ public class WireSession extends Session {
          header.fromId = theirId;
       }
 
-      commsLog("%s  [M] <- T%d.Message:%d %s", this, header.topicId, header.structId, getNameFor(header));
+      commsLog("%s  [M] <- T%d.Message:%d %s toId=%d, myId=%d", this, header.topicId, header.structId, getNameFor(header), header.toId,
+            myId);
       if (relayHandler == null || header.toId == myId || (header.toId == UNADDRESSED && header.topicId == UNADDRESSED)) {
          dispatchMessage(header, reader);
       } else {
