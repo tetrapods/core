@@ -54,7 +54,7 @@ abstract class WebSession extends Session {
             if (request instanceof Request) {
                dispatchRequest(header, (Request) request);
             } else {
-               logger.error("Asked to process a request I can't deserialize {}", header.dump());
+               logger.error("Asked to process a request I can't  deserialize {}", header.dump());
                sendResponse(new Error(ERROR_SERIALIZATION), header.requestId);
             }
          } else {
