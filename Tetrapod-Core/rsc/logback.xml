@@ -1,42 +1,5 @@
 <configuration debug="false" scan="true" scanPeriod="30 seconds">
 
-   <appender name="LOGFILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-      <file>logs/${APPNAME}.log</file>
-
-      <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
-         <fileNamePattern>logs/${APPNAME}.%i.log.gz</fileNamePattern>
-         <minIndex>1</minIndex>
-         <maxIndex>5</maxIndex>
-      </rollingPolicy>
-
-      <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
-         <maxFileSize>50MB</maxFileSize>
-      </triggeringPolicy>
-      
-      <encoder>
-         <pattern>%d{HH:mm:ss.SSS} %-5level %24thread{24} - %16logger{0} - %msg%n</pattern>
-      </encoder>
-   </appender>
-
-   <appender name="COMMSFILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-      <file>logs/comms.${APPNAME}.log</file>
-
-      <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
-         <fileNamePattern>logs/comms.${APPNAME}.%i.log.gz
-         </fileNamePattern>
-         <minIndex>1</minIndex>
-         <maxIndex>5</maxIndex>
-      </rollingPolicy>
-
-      <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
-         <maxFileSize>50MB</maxFileSize>
-      </triggeringPolicy>
-      
-      <encoder>
-         <pattern>%d{HH:mm:ss.SSS} %-5level %24thread{24} - %16logger{0} - %msg%n</pattern>
-      </encoder>
-   </appender>
-
    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
       <encoder>
          <pattern>%d{HH:mm:ss.SSS} %-5level %24thread{24} - %16logger{0} - %msg%n</pattern>
