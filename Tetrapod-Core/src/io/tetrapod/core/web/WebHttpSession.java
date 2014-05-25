@@ -8,7 +8,6 @@ import io.netty.buffer.*;
 import io.netty.channel.*;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.http.*;
-import io.netty.handler.stream.ChunkedWriteHandler;
 import io.netty.util.*;
 import io.tetrapod.core.Session;
 import io.tetrapod.core.json.JSONObject;
