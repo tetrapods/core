@@ -50,8 +50,10 @@ public class WebSocketSession extends WebHttpSession {
 
    @Override
    protected void handleHttpRequest(ChannelHandlerContext ctx, FullHttpRequest req) throws Exception {
-      synchronized (this) {
-         logger.debug(String.format("### %s REQUEST[%d] = %s : %s", this, ++reqCounter, ctx.channel().remoteAddress(), req.getUri()));
+      if (logger.isDebugEnabled()) {
+         synchronized (this) {
+            logger.debug(String.format("### %s REQUEST[%d] = %s : %s", this, ++reqCounter, ctx.channel().remoteAddress(), req.getUri()));
+         }
       }
       final Context context = requestTimes.time();
       if (wsLocation.equals(req.getUri())) {

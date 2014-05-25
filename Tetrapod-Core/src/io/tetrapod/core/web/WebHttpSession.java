@@ -30,7 +30,7 @@ public class WebHttpSession extends WebSession {
       ch.pipeline().addLast("aggregator", new HttpObjectAggregator(65536));
       ch.pipeline().addLast("api", this);
       ch.pipeline().addLast("deflater", new HttpContentCompressor(6));
-      ch.pipeline().addLast("chunkedWriter", new ChunkedWriteHandler());
+      //ch.pipeline().addLast("chunkedWriter", new ChunkedWriteHandler());
       ch.pipeline().addLast("files", new WebStaticFileHandler(roots));
    }
 
