@@ -12,11 +12,20 @@ import io.tetrapod.core.serialize.datasources.*;
 import io.tetrapod.protocol.core.*;
 
 import java.io.IOException;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.*;
 
 abstract class WebSession extends Session {
    private static final Logger logger = LoggerFactory.getLogger(WebSession.class);
+   
+   private static final int FLOOD_TIME_PERIOD = 3000;
+   private static final int FLOOD_WARN = 50;
+   private static final int FLOOD_IGNORE = 100;
+   private static final int FLOOD_KILL = 200;
+   
+   private volatile long floodPeriod;
+   private final AtomicInteger requestCount = new AtomicInteger(0);
 
    public WebSession(SocketChannel channel, Session.Helper helper) {
       super(channel, helper);
@@ -25,7 +34,12 @@ abstract class WebSession extends Session {
    abstract protected Object makeFrame(JSONObject jo);
 
    protected void readRequest(RequestHeader header, WebContext context) {
-      lastHeardFrom.set(System.currentTimeMillis());
+      long now = System.currentTimeMillis();
+      lastHeardFrom.set(now);
+      if (floodCheck(now, header)) {
+         // could move flood check after comms log just for the logging
+         return;
+      }
       try {
          Structure request = StructureFactory.make(header.contractId, header.structId);
          if (request == null) {
@@ -35,6 +49,7 @@ abstract class WebSession extends Session {
          }
          request.read(new WebJSONDataSource(context.getRequestParams(), request.tagWebNames()));
          commsLog("%s  [%d] <- %s", this, header.requestId, request.dump());
+         
          if (header.toId == DIRECT || header.toId == myId) {
             if (request instanceof Request) {
                dispatchRequest(header, (Request) request);
@@ -50,7 +65,7 @@ abstract class WebSession extends Session {
          sendResponse(new Error(ERROR_UNKNOWN), header.requestId);
       }
    }
-
+   
    private void relayRequest(RequestHeader header, Structure request) throws IOException {
       final Session ses = relayHandler.getRelaySession(header.toId, header.contractId);
       if (ses != null) {
@@ -127,6 +142,37 @@ abstract class WebSession extends Session {
             break;
       }
       return jo;
+   }
+   
+   private boolean floodCheck(long now, RequestHeader header) {
+      int reqs;
+      long newFloodPeriod = now / FLOOD_TIME_PERIOD;
+      if (newFloodPeriod != floodPeriod) {
+         // race condition between read and write of floodPeriod.  but is benign as it means we reset
+         // request count to 0 an extra time
+         floodPeriod = newFloodPeriod;
+         requestCount.set(0);
+         reqs = 0;
+      } else {
+         reqs = requestCount.incrementAndGet();
+      } 
+      if (reqs > FLOOD_KILL) {
+         logger.warn("flood killing {}/{}", header.contractId, header.structId);
+         close();
+         return true;
+      }
+      if (reqs > FLOOD_IGNORE) {
+         // do nothing, send no response
+         logger.warn("flood ignoring {}/{}", header.contractId, header.structId);
+         return true;
+      }
+      if (reqs > FLOOD_WARN) {
+         // respond with error so client can slow down
+         logger.warn("flood warning {}/{}", header.contractId, header.structId);
+         sendResponse(new Error(ERROR_FLOOD), header.requestId);
+         return true;
+      }
+      return false;
    }
 
 }

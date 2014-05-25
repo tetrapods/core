@@ -112,6 +112,11 @@ public class CoreContract extends Contract {
    public static final int ERROR_CONNECTION_CLOSED = 7; 
    
    /**
+    * client has sent too many requests recently
+    */
+   public static final int ERROR_FLOOD = 12; 
+   
+   /**
     * An addressed entityId was invalid
     */
    public static final int ERROR_INVALID_ENTITY = 9; 
