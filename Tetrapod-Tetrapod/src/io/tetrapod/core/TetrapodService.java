@@ -787,6 +787,9 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       try {
          Admin admin = adminAccounts.getAdminByEmail(r.email);
          if (admin != null) {
+            if (adminAccounts.recordLoginAttempt(admin)) {
+               return new Error(ERROR_INVALID_CREDENTIALS); // prevent brute force attack
+            }            
             if (PasswordHash.validatePassword(r.password, admin.hash)) {
                // mark the session as an admin
                ctx.session.theirType = Core.TYPE_ADMIN;

@@ -14,6 +14,7 @@ import java.util.concurrent.*;
 @SuppressWarnings("unused")
 public class Admin extends Structure {
    
+   public static final int MAX_LOGIN_ATTEMPTS = 5; 
    public static final int RIGHTS_CLUSTER_READ = 1; 
    public static final int RIGHTS_CLUSTER_WRITE = 2; 
    public static final int RIGHTS_USER_READ = 4; 
@@ -26,17 +27,19 @@ public class Admin extends Structure {
       defaults();
    }
 
-   public Admin(int accountId, String email, String hash, long rights) {
+   public Admin(int accountId, String email, String hash, long rights, long[] loginAttempts) {
       this.accountId = accountId;
       this.email = email;
       this.hash = hash;
       this.rights = rights;
+      this.loginAttempts = loginAttempts;
    }   
    
    public int accountId;
    public String email;
    public String hash;
    public long rights;
+   public long[] loginAttempts;
 
    public final Structure.Security getSecurity() {
       return Security.PUBLIC;
@@ -47,6 +50,7 @@ public class Admin extends Structure {
       email = null;
       hash = null;
       rights = 0;
+      loginAttempts = null;
    }
    
    @Override
@@ -55,6 +59,7 @@ public class Admin extends Structure {
       data.write(2, this.email);
       data.write(3, this.hash);
       data.write(4, this.rights);
+      if (this.loginAttempts != null) data.write(5, this.loginAttempts);
       data.writeEndTag();
    }
    
@@ -68,6 +73,7 @@ public class Admin extends Structure {
             case 2: this.email = data.read_string(tag); break;
             case 3: this.hash = data.read_string(tag); break;
             case 4: this.rights = data.read_long(tag); break;
+            case 5: this.loginAttempts = data.read_long_array(tag); break;
             case Codec.END_TAG:
                return;
             default:
@@ -89,11 +95,12 @@ public class Admin extends Structure {
       // Note do not use this tags in long term serializations (to disk or databases) as 
       // implementors are free to rename them however they wish.  A null means the field
       // is not to participate in web serialization (remaining at default)
-      String[] result = new String[4+1];
+      String[] result = new String[5+1];
       result[1] = "accountId";
       result[2] = "email";
       result[3] = "hash";
       result[4] = "rights";
+      result[5] = "loginAttempts";
       return result;
    }
 
@@ -116,6 +123,7 @@ public class Admin extends Structure {
       desc.types[2] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
       desc.types[3] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
       desc.types[4] = new TypeDescriptor(TypeDescriptor.T_LONG, 0, 0);
+      desc.types[5] = new TypeDescriptor(TypeDescriptor.T_LONG_LIST, 0, 0);
       return desc;
    }
 }

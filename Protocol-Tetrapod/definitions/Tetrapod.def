@@ -108,6 +108,9 @@ public struct Admin
    2: string email @sensitive
    3: string hash @sensitive
    4: long rights
+   5: long[] loginAttempts
+
+   const int MAX_LOGIN_ATTEMPTS    = 5
    
    const int RIGHTS_CLUSTER_READ   = 1
    const int RIGHTS_CLUSTER_WRITE  = 2

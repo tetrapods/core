@@ -53,7 +53,7 @@ public class AdminAccounts {
    public Admin addAdmin(String email, String hash, long rights) {
       try {
          int accountId = (int) storage.increment("admin.accounts");
-         Admin admin = new Admin(accountId, email, hash, 0xFF);
+         Admin admin = new Admin(accountId, email, hash, 0xFF, new long[Admin.MAX_LOGIN_ATTEMPTS]);
          storage.put("admin::" + accountId, admin);
          storage.put("admin.email::" + email, accountId);
       } catch (Exception e) {
@@ -85,6 +85,28 @@ public class AdminAccounts {
          logger.error(e.getMessage(), e);
          return null;
       }
+   }
+
+   /**
+    * Records a login attempt and returns true if we trip the flood alarm
+    */
+   public boolean recordLoginAttempt(Admin admin) {
+      admin = mutate(admin, new AdminMutator() {
+         @Override
+         public void mutate(Admin admin) {
+            if (admin.loginAttempts == null) {
+               admin.loginAttempts = new long[Admin.MAX_LOGIN_ATTEMPTS];
+            }
+            for (int j = admin.loginAttempts.length - 1; j > 0; j--) {
+               admin.loginAttempts[j] = admin.loginAttempts[j - 1];
+            }
+            admin.loginAttempts[0] = System.currentTimeMillis();
+         }
+      });
+      if (admin != null) {
+         return ((System.currentTimeMillis() - admin.loginAttempts[admin.loginAttempts.length - 1]) < 5000);
+      }
+      return true;
    }
 
 }

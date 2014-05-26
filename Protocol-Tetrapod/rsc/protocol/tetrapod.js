@@ -5,6 +5,7 @@ function TP_Tetrapod(server) {
    server.register("response", "Tetrapod", "ERROR", 1, 1);
    server.register("response", "Tetrapod", "SUCCESS", 1, 2);
 
+   server.registerConst("Tetrapod", "Admin", "MAX_LOGIN_ATTEMPTS", 5);
    server.registerConst("Tetrapod", "Admin", "RIGHTS_CLUSTER_READ", 1);
    server.registerConst("Tetrapod", "Admin", "RIGHTS_CLUSTER_WRITE", 2);
    server.registerConst("Tetrapod", "Admin", "RIGHTS_USER_READ", 4);
