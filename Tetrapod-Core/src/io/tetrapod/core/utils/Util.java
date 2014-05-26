@@ -156,5 +156,9 @@ public class Util {
       }
       return Boolean.parseBoolean(val);
    }
+   
+   public static boolean isLocal() {
+      return Util.getProperty("devMode", "local").equals("local");
+   }
 
 }

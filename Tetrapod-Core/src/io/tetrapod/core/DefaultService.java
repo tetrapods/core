@@ -614,7 +614,7 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
       }
       try {
          recursiveAddWebFiles(name, new File("webContent"), true);
-         if (Util.getProperty("devMode", "local").equals("local")) {
+         if (Util.isLocal()) {
             for (File f : getDevProtocolWebRoots())
                recursiveAddWebFiles(name, f, false);
          }
@@ -632,7 +632,7 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
    private void recursiveAddWebFiles(String webRootName, File dir, boolean first) throws IOException {
       if (!dir.exists())
          return;
-      if (Util.getProperty("devMode", "local").equals("local")) {
+      if (Util.isLocal()) {
          sendDirectRequest(new AddWebFileRequest(dir.getCanonicalPath(), webRootName, null, first));
          return;
       }
