@@ -116,6 +116,18 @@ class JavaGenerator implements LanguageGenerator {
       t.add("structid", c.getStructId());
       t.add("service", serviceName);
       t.add("securityCheck", generateSecurityCheck(c));
+      Template t2 = template("sensitivity.method");
+      boolean sensitivityUsed = false;
+      for (Field f : c.fields) {
+         if (f.annotations.has("sensitive")) {
+            Template t3 = template("sensitivity.line");
+            t2.add("sensitivityLine", t3.add("name", f.name));
+            sensitivityUsed = true;
+         }
+      }
+      if (sensitivityUsed) {
+         t.add("sensitivityCheck", t2);
+      }
       addFieldValues(c.fields, t);
       addConstantValues(c.fields, t);
       addErrors(c.errors, false, serviceName, t);
@@ -278,6 +290,9 @@ class JavaGenerator implements LanguageGenerator {
                }
                if (f.annotations.has("authToken")) {
                   authToken = f.name;
+               }
+               if (f.name.equals(authToken)) {
+                  f.annotations.add("sensitive", "");
                }
                if (f.name.equals(authId) || f.name.equals(authToken)) {
                   m++;

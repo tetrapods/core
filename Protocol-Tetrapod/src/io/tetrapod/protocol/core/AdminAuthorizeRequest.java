@@ -98,4 +98,8 @@ public class AdminAuthorizeRequest extends Request {
       return desc;
    }
 
+   protected boolean isSensitive(String fieldName) {
+      if (fieldName.equals("token")) return true;
+      return false;
+   }
 }

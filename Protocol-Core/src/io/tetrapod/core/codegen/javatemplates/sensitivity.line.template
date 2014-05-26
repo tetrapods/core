@@ -1,0 +1,1 @@
+if (fieldName.equals("{{name}}")) return true;

@@ -112,4 +112,10 @@ public class AdminChangePasswordRequest extends Request {
       return desc;
    }
 
+   protected boolean isSensitive(String fieldName) {
+      if (fieldName.equals("token")) return true;
+      if (fieldName.equals("oldPassword")) return true;
+      if (fieldName.equals("newPassword")) return true;
+      return false;
+   }
 }

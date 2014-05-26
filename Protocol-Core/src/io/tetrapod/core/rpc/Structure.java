@@ -54,7 +54,8 @@ abstract public class Structure {
          try {
             int mod = f[i].getModifiers();
             if (Modifier.isPublic(mod) && !Modifier.isStatic(mod)) {
-               Object val = dumpValue(f[i].get(this), expandSubTypes);
+               String name = f[i].getName();
+               Object val = isSensitive(name) ? "~" : dumpValue(f[i].get(this), expandSubTypes);
                sb.append(f[i].getName() + ":" + val + ", ");
             }
          } catch (Exception e) {
@@ -99,7 +100,10 @@ abstract public class Structure {
       } catch (IOException e) {
          return null;
       }
-      
+   }
+   
+   protected boolean isSensitive(String fieldName) {
+      return false;
    }
 
 }

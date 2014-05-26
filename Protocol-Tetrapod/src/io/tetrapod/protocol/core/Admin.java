@@ -101,6 +101,12 @@ public class Admin extends Structure {
       return new Admin();
    }
 
+   protected boolean isSensitive(String fieldName) {
+      if (fieldName.equals("email")) return true;
+      if (fieldName.equals("hash")) return true;
+      return false;
+   }
+
    public final StructDescription makeDescription() {
       StructDescription desc = new StructDescription();
       desc.tagWebNames = tagWebNames();

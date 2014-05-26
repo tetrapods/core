@@ -169,7 +169,10 @@ public class StructureAdapter extends Structure {
             sw.append(", ");
          sw.append(tagWebNames()[i]);
          sw.append(':');
-         sw.append(""+dumpValue(fields[i], false));
+         // TODO: this isn't @sensitive aware as that info isn't part of the description
+         //       for now we don't dump any values
+         // sw.append(""+dumpValue(fields[i], false));
+         sw.append("~");
       }
       sw.append(" }");
       return sw.toString();

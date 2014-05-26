@@ -1,0 +1,4 @@
+protected boolean isSensitive(String fieldName) {
+   {{sensitivityLine}}
+   return false;
+}

@@ -112,4 +112,10 @@ public class AdminCreateRequest extends Request {
       return desc;
    }
 
+   protected boolean isSensitive(String fieldName) {
+      if (fieldName.equals("token")) return true;
+      if (fieldName.equals("email")) return true;
+      if (fieldName.equals("password")) return true;
+      return false;
+   }
 }

@@ -78,6 +78,11 @@ public class AdminLoginResponse extends Response {
       return new AdminLoginResponse();
    }
 
+   protected boolean isSensitive(String fieldName) {
+      if (fieldName.equals("token")) return true;
+      return false;
+   }
+
    public final StructDescription makeDescription() {
       StructDescription desc = new StructDescription();
       desc.tagWebNames = tagWebNames();

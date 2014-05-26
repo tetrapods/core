@@ -79,6 +79,8 @@ public class {{class}} extends Structure {
       return new {{class}}();
    }
 
+   {{sensitivityCheck}}
+
    public final StructDescription makeDescription() {
       StructDescription desc = new StructDescription();
       desc.tagWebNames = tagWebNames();

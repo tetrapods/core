@@ -100,4 +100,6 @@ public class {{class}} extends Request {
    }
 
    {{securityCheck}}   
+   
+   {{sensitivityCheck}}
 }

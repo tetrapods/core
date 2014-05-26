@@ -73,40 +73,40 @@ internal request AddServiceInformation
 internal request LogRegistryStats 
 
 public request AdminLogin
-   1: string email
-   2: string password 
+   1: string email @sensitive
+   2: string password @sensitive
    
    error INVALID_ACCOUNT         
 
 public response AdminLogin
-   2: string token 
+   2: string token @sensitive
    
 public request AdminAuthorize
-   1: string token 
+   1: string token @sensitive
 
 public request AdminCreate
-   1: string token 
-   2: string email
-   3: string password
+   1: string token @sensitive
+   2: string email @sensitive
+   3: string password @sensitive
    
 public request AdminDelete
-   1: string token 
+   1: string token @sensitive
    2: int accountId;
    
 public request AdminChangePassword
-   1: string token
-   2: string oldPassword
-   3: string newPassword
+   1: string token @sensitive
+   2: string oldPassword @sensitive
+   3: string newPassword @sensitive
    
 public request AdminChangeRights
-   1: string token
+   1: string token @sensitive
    2: int accountId
    3: long rights
    
 public struct Admin
    1: int accountId
-   2: string email
-   3: string hash
+   2: string email @sensitive
+   3: string hash @sensitive
    4: long rights
    
    const int RIGHTS_CLUSTER_READ   = 1
@@ -174,7 +174,7 @@ internal message Registry.EntityListComplete
 
 admin request GetServiceBuildInfo
    1: int accountId
-   2: string authToken
+   2: string authToken @sensitive
    
 admin response  GetServiceBuildInfo
    1: BuildInfo<list> services
@@ -182,7 +182,7 @@ admin response  GetServiceBuildInfo
 // An error in any one of the build commands stops processing the remaining ones
 admin request ExecuteBuildCommand
    1: int accountId
-   2: string authToken
+   2: string authToken @sensitive
    3: BuildCommand<list> commands
 
 // Sent every 10s or so for display in the UI while it's running
@@ -215,8 +215,8 @@ internal message Services.ServiceAdded
 	1: Entity entity 
 	 
 internal message Services.ServiceRemoved
-	1: int entityId;
+	1: int entityId
 	
 internal message Services.ServiceUpdated
-	1: int entityId;
-	2: int status;
+	1: int entityId
+	2: int status
