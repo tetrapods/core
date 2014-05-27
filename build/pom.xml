@@ -8,14 +8,6 @@
 
    <packaging>pom</packaging>
 
-   <modules>
-      <module>../Tetrapod-Core</module>
-      <module>../Tetrapod-Tetrapod</module>
-      <module>../Protocol-Core</module>
-      <module>../Protocol-Tetrapod</module>
-      <module>./assembly</module>
-   </modules>
-
    <build>
       <sourceDirectory>src</sourceDirectory>
       <testSourceDirectory>test</testSourceDirectory>
