@@ -5,7 +5,7 @@ import io.tetrapod.protocol.core.ServiceLogEntry;
 import java.util.*;
 
 import ch.qos.logback.classic.Level;
-import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.classic.spi.*;
 import ch.qos.logback.core.AppenderBase;
 
 public class LogBuffer extends AppenderBase<ILoggingEvent> {
@@ -43,8 +43,30 @@ public class LogBuffer extends AppenderBase<ILoggingEvent> {
 
    private ServiceLogEntry logEntryFrom(ILoggingEvent e) {
       String msg = e.getFormattedMessage();
-      // TODO: Stack Traces for e.getThrowableProxy()
+      if (e.getThrowableProxy() != null) {
+         StringBuilder sb = new StringBuilder();
+
+         sb.append('\n');
+         logStack(sb, e.getThrowableProxy());
+         msg = sb.toString();
+      }
       return new ServiceLogEntry(msg, convert(e.getLevel()), e.getTimeStamp(), e.getThreadName(), e.getLoggerName());
+   }
+
+   private void logStack(StringBuilder sb, IThrowableProxy proxy) {
+      sb.append(proxy.getClassName());
+      sb.append(": ");
+      sb.append(proxy.getMessage());
+      sb.append('\n');
+      for (StackTraceElementProxy st : proxy.getStackTraceElementProxyArray()) {
+         sb.append('\t');
+         sb.append(st.getSTEAsString());
+         sb.append('\n');
+      }
+      if (proxy.getCause() != null) {
+         sb.append("Caused by: ");
+         logStack(sb, proxy.getCause());
+      }
    }
 
    public Level convert(byte level) {
