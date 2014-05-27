@@ -26,7 +26,7 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
    protected final Set<Integer>            dependencies    = new HashSet<>();
 
    protected final Dispatcher              dispatcher;
-   protected Client                        clusterClient;
+   protected final Client                  clusterClient;
    protected Contract                      contract;
    protected final ServiceCache            services;
    protected boolean                       terminated;

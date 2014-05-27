@@ -459,7 +459,12 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       if (topic != null) {
          synchronized (topic) {
             // OPTIMIZE: call broadcast() directly instead of through loop-back
-            clusterClient.getSession().sendBroadcastMessage(msg, topic.topicId);
+            Session ses = clusterClient.getSession();
+            if (ses != null) {
+               ses.sendBroadcastMessage(msg, topic.topicId);
+            } else {
+               logger.error("broadcast failed: no session for loopback connection");
+            }
          }
       }
    }
@@ -789,7 +794,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          if (admin != null) {
             if (adminAccounts.recordLoginAttempt(admin)) {
                return new Error(ERROR_INVALID_CREDENTIALS); // prevent brute force attack
-            }            
+            }
             if (PasswordHash.validatePassword(r.password, admin.hash)) {
                // mark the session as an admin
                ctx.session.theirType = Core.TYPE_ADMIN;
