@@ -92,7 +92,7 @@ public class Builder {
             case BuildCommand.BUILD:
                if (!canBuild)
                   return false;
-               return doBuild(buildDir, m);
+               return doPullBuild(buildDir, command.build, m);
             case BuildCommand.DEPLOY:
                if (!canDeploy)
                   return false;
@@ -109,13 +109,22 @@ public class Builder {
       return true;
    }
 
-   private static boolean doBuild(File buildDir, MyCallback callback) throws IOException {
-      int rc = Util.runProcess(callback, new File(buildDir, "build").getPath());
+   private static boolean doPullBuild(File buildDir, int build, MyCallback callback) throws IOException {
+      if (build == BuildCommand.DEPLOY_LATEST) {
+         // force use of real build numbers
+         return false;
+      }
+      String buildNum = "" + build; 
+      int rc = Util.runProcess(callback, new File(buildDir, "pullBuild").getPath(), buildNum);
       return rc == 0;
    }
 
    private static boolean doDeploy(File buildDir, File clusterDir, String serviceName, int build, MyCallback callback) throws IOException  {
-      String buildNum = build == BuildCommand.DEPLOY_LATEST ? "current" : "" + build; 
+      if (build == BuildCommand.DEPLOY_LATEST) {
+         // force use of real build numbers for deploy
+         return false;
+      }
+      String buildNum = "" + build; 
       int rc = Util.runProcess(callback, new File(clusterDir, "deploy").getPath(), buildNum, serviceName);
       return rc == 0;
    }

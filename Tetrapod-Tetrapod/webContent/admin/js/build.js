@@ -35,18 +35,13 @@ define(["knockout", "jquery", "app"], function(ko, $, app) {
       
       function run() {
          var array = [];
-         if (self.doBuild) {
-            array.push({ serviceName: "", build: "", command: BuildCommandConsts.BUILD});
-         }
          if (self.doDeploy) {
+            array.push({ serviceName: "", build: self.buildNumber, command: BuildCommandConsts.BUILD});
             for (var i = 0; i < self.services.length; i++) {
                var service = self.services[i];
                if (!service.isChecked)
                   continue;
                var command = { serviceName: service.name, build: self.buildNumber, command: BuildCommandConsts.DEPLOY };
-               if (command.build.length == 0) {
-                  command.build = BuildCommandConsts.DEPLOY_LATEST;
-               }
                array.push(command);
             }
          }
