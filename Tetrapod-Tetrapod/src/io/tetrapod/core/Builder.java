@@ -82,7 +82,7 @@ public class Builder {
    public static boolean executeCommand(BuildCommand command, TetrapodService tetrapodService) {
       File buildDir = new File(Util.getProperty("build.dir"));
       File clusterDir = new File(Util.getProperty("cluster.dir"));
-      boolean canBuild = new File(buildDir, "build").exists();
+      boolean canBuild = new File(buildDir, "pullBuild").exists();
       boolean canDeploy = new File(clusterDir, "deploy").exists();
       boolean canLaunch = new File(clusterDir, "launch").exists();
 
