@@ -119,7 +119,7 @@
 
 											<li data-bind="visible: name=='Tetrapod'" class="divider"></li>
 											<li>
-												<a href="#" data-bind="visible: name=='Tetrapod', click: function() { popupBuild(); }">Build/Deploy/Launch</a>
+												<a href="#" data-bind="visible: name=='Tetrapod', click: function() { popupBuild(); }">Deploy</a>
 											<li class="divider"></li>
 
 											<li>
@@ -287,16 +287,13 @@
 			<div class="modal-content">
 				<div class="modal-header">
 					<button type="button" class="close" data-dismiss="modal">&times;</button>
-					<h4 class="modal-title" id="myModalLabel">Build / Deploy / Launch</h4>
+					<h4 class="modal-title" id="myModalLabel">Deploy</h4>
 				</div>
 				<div class="modal-body">
 					<form>
 						<div class="row">
 							<div class="col-md-6">
 								<div class="form-group">
-									<div class="checkbox">
-										<label><input type="checkbox" data-bind="checked: modalData().doBuild">Build</label>
-									</div>
 									<div class="checkbox">
 										<label><input type="checkbox" data-bind="checked: modalData().doDeploy">Deploy</label>
 									</div>
