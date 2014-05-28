@@ -31,10 +31,6 @@ main() {
    cd $GIT_DIR/private
    git pull >> $LOG 2>&1
 
-   echo "\nCore: maven install\n---" | tee -a $LOG
-   cd $GIT_DIR/core/build
-   $mvn clean install >> $LOG 2>&1
-
    echo "\nPrivate: maven package\n---" | tee -a $LOG
    cd $GIT_DIR/private/build
    $mvn clean package >> $LOG 2>&1
