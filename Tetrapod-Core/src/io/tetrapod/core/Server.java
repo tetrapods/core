@@ -17,7 +17,7 @@ import org.slf4j.*;
 /**
  * A server that speaks the tetrapod wire protocol
  */
-public class Server implements Session.Listener {
+public class Server extends ChannelInitializer<SocketChannel> implements Session.Listener  {
 
    public static final Logger    logger   = LoggerFactory.getLogger(Server.class);
 
@@ -54,16 +54,20 @@ public class Server implements Session.Listener {
    public synchronized ChannelFuture start(EventLoopGroup bossGroup) {
       this.bossGroup = bossGroup;
       ServerBootstrap b = new ServerBootstrap();
-      b.group(bossGroup, dispatcher.getWorkerGroup()).channel(NioServerSocketChannel.class)
-            .childHandler(new ChannelInitializer<SocketChannel>() {
-               @Override
-               public void initChannel(SocketChannel ch) throws Exception {
-                  startSession(ch);
-               }
-            }).option(ChannelOption.SO_BACKLOG, 128).childOption(ChannelOption.SO_KEEPALIVE, true);
-
+      b.group(bossGroup, dispatcher.getWorkerGroup()).channel(NioServerSocketChannel.class);
+      b.childHandler(this);
+      setOptions(b);
       logger.info("Starting Server Listening on Port {}", port);
       return b.bind(port);
+   }
+   
+   public void initChannel(SocketChannel ch) throws Exception {
+      startSession(ch);
+   }
+
+   protected void setOptions(ServerBootstrap sb) {
+      sb.option(ChannelOption.SO_BACKLOG, 128);
+      sb.childOption(ChannelOption.SO_KEEPALIVE, true);
    }
 
    public void stop() {

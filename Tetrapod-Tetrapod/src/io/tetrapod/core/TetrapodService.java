@@ -9,6 +9,7 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.tetrapod.core.AdminAccounts.AdminMutator;
 import io.tetrapod.core.Session.RelayHandler;
+import io.tetrapod.core.flashpolicy.FlashPolicyServer;
 import io.tetrapod.core.registry.*;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.rpc.Error;
@@ -284,6 +285,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
             servers.add(new Server(getPublicPort(), new TypedSessionFactory(Core.TYPE_ANONYMOUS), dispatcher));
             servers.add(new Server(getServicePort(), new TypedSessionFactory(Core.TYPE_SERVICE), dispatcher));
             servers.add(new Server(getHTTPPort(), new WebSessionFactory(webRootDirs, "/sockets"), dispatcher));
+            servers.add(new FlashPolicyServer(dispatcher));
 
             // create secure port servers, if configured
             if (Util.getProperty("tetrapod.tls", true)) {
