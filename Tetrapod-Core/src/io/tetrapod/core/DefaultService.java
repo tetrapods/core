@@ -627,7 +627,7 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
    }
 
    private static final Set<String> VALID_EXTENSIONS = new HashSet<>(Arrays.asList(new String[] { "html", "htm", "js", "css", "jpg", "png",
-         "gif", "wav", "woff", "svg", "ttf"         }));
+         "gif", "wav", "woff", "svg", "ttf", "swf"         }));
 
    private void recursiveAddWebFiles(String webRootName, File dir, boolean first) throws IOException {
       if (!dir.exists())

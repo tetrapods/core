@@ -53,7 +53,7 @@ class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRequest> 
       mimeTypesMap.addMimeTypes("image/png png PNG");
       mimeTypesMap.addMimeTypes("image/jpeg jpg JPG");
       mimeTypesMap.addMimeTypes("image/gif gif GIF");
-      mimeTypesMap.addMimeTypes("audio/wav wav WAV");
+      mimeTypesMap.addMimeTypes("application/x-shockwave-flash swf SWF");
    }
 
    private final Map<String, WebRoot>  roots;
@@ -180,7 +180,7 @@ class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRequest> 
          // special case www.X and X as the same server
          host = host.substring(4);
       }
-      if (host != null && !host.startsWith(productHost) && !host.startsWith("localhost")) {
+      if (host != null && !host.startsWith(productHost) && !host.startsWith("localhost") && false) {
          // simple virtual hosts.  if the host != productHost then prepend "/{host}" to the URI
          int ix = host.indexOf(":");
          if (ix >= 0) {
