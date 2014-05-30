@@ -147,7 +147,11 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
    private void checkDependencies() {
       if (!isShuttingDown()) {
          if (getEntityType() == Core.TYPE_TETRAPOD || services.checkDependencies(dependencies)) {
-            onReadyToServe();
+            try {
+               onReadyToServe();
+            } catch (Throwable t) {
+               fail(t);
+            }
             // ok, we're good to go
             updateStatus(status & ~Core.STATUS_STARTING);
             setWebRoot();
@@ -627,7 +631,7 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
    }
 
    private static final Set<String> VALID_EXTENSIONS = new HashSet<>(Arrays.asList(new String[] { "html", "htm", "js", "css", "jpg", "png",
-         "gif", "wav", "woff", "svg", "ttf", "swf"         }));
+         "gif", "wav", "woff", "svg", "ttf", "swf"  }));
 
    private void recursiveAddWebFiles(String webRootName, File dir, boolean first) throws IOException {
       if (!dir.exists())
