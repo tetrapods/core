@@ -33,6 +33,8 @@ public class SQLMapStore<T> implements MapStore<String, T> {
       dataSource.setLogAbandoned(true);
       dataSource.setTestWhileIdle(true);
       dataSource.setTestOnBorrow(true);
+      dataSource.setMaxActive(16);
+      dataSource.setMaxWait(30000);
       dataSource.setValidationQuery("SELECT 1;");
       try (Connection con = dataSource.getConnection(); Statement s = con.createStatement()) {
          s.execute("CREATE TABLE IF NOT EXISTS " + tableName + " (id VARCHAR(255) PRIMARY KEY, val " + marshaller.getSQLValueType()
