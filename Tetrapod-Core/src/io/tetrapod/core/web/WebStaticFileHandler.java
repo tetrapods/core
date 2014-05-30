@@ -180,7 +180,7 @@ class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRequest> 
          // special case www.X and X as the same server
          host = host.substring(4);
       }
-      if (host != null && !host.startsWith(productHost) && !host.startsWith("localhost") && false) {
+      if (host != null && !host.startsWith(productHost) && !host.startsWith("localhost")) {
          // simple virtual hosts.  if the host != productHost then prepend "/{host}" to the URI
          int ix = host.indexOf(":");
          if (ix >= 0) {
