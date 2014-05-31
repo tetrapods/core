@@ -19,10 +19,10 @@ import org.slf4j.*;
 abstract class WebSession extends Session {
    private static final Logger logger = LoggerFactory.getLogger(WebSession.class);
    
-   private static final int FLOOD_TIME_PERIOD = 3000;
-   private static final int FLOOD_WARN = 50;
-   private static final int FLOOD_IGNORE = 100;
-   private static final int FLOOD_KILL = 200;
+   private static final int FLOOD_TIME_PERIOD = 2000;
+   private static final int FLOOD_WARN = 200;
+   private static final int FLOOD_IGNORE = 300;
+   private static final int FLOOD_KILL = 400;
    
    private volatile long floodPeriod;
    private final AtomicInteger requestCount = new AtomicInteger(0);
