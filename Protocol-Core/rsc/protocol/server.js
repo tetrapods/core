@@ -200,9 +200,19 @@ function TP_Server() {
    function disconnect() {
       if (self.commsLog)
          console.log("Disconnecting... " + socket.readyState);
+      var closeHack = (socket.readyState == WebSocket.CLOSING);
+      if (closeHack) {
+         // some sort of here when waking from sleep, it can take a very long long time
+         // to transition from CLOSING to CLOSED and call our close handler, so we
+         // take away the onclose handler and call it manually
+         socket.onclose = null;
+      }
       socket.close();
       if (self.commsLog)
          console.log("socket.close() called: " + socket.readyState);
+      if (closeHack) { // call onSocketClose manually
+         onSocketClose();
+      }
    }
 
    function logResponse(result) {
