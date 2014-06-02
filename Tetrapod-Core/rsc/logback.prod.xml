@@ -5,11 +5,11 @@
       <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
          <fileNamePattern>logs/${APPNAME}.%i.log.gz</fileNamePattern>
          <minIndex>1</minIndex>
-         <maxIndex>5</maxIndex>
+         <maxIndex>6</maxIndex>
       </rollingPolicy>
 
       <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
-         <maxFileSize>10MB</maxFileSize>
+         <maxFileSize>30MB</maxFileSize>
       </triggeringPolicy>
       
       <encoder>
@@ -24,11 +24,11 @@
          <fileNamePattern>logs/comms.${APPNAME}.%i.log.gz
          </fileNamePattern>
          <minIndex>1</minIndex>
-         <maxIndex>5</maxIndex>
+         <maxIndex>6</maxIndex>
       </rollingPolicy>
 
       <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
-         <maxFileSize>10MB</maxFileSize>
+         <maxFileSize>30MB</maxFileSize>
       </triggeringPolicy>
       
       <encoder>
