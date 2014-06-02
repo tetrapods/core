@@ -114,7 +114,8 @@ public class WireSession extends Session {
             final Response res = (Response) StructureFactory.make(async.header.contractId, header.structId);
             if (res != null) {
                res.read(reader);
-               logged = commsLog("%s  [%d] <- %s", this, header.requestId, res.dump());
+               if (!commsLogIgnore(header.structId))
+                  logged = commsLog("%s  [%d] <- %s", this, header.requestId, res.dump());
                getDispatcher().dispatch(new Runnable() {
                   public void run() {
                      async.setResponse(res);
@@ -136,14 +137,15 @@ public class WireSession extends Session {
             //               }
             //            }
 
-            logged = commsLog("%s  [%d] <- Response.%d %s", this, header.requestId, header.structId, res == null ? "" : res.dump());
+            if (!commsLogIgnore(header.structId))
+               logged = commsLog("%s  [%d] <- Response.%d %s", this, header.requestId, header.structId, res == null ? "" : res.dump());
             relayResponse(header, async, in);
          }
       } else {
          logger.warn("{} Could not find pending request for {}", this, header.dump());
       }
 
-      if (!logged)
+      if (!logged && !commsLogIgnore(header.structId))
          logged = commsLog("%s  [%d] <- Response.%d", this, header.requestId, header.structId);
    }
 
@@ -163,18 +165,20 @@ public class WireSession extends Session {
          final Request req = (Request) StructureFactory.make(header.contractId, header.structId);
          if (req != null) {
             req.read(reader);
-            logged = commsLog("%s  [%d] <- %s", this, header.requestId, req.dump());
+            if (!commsLogIgnore(req))
+               logged = commsLog("%s  [%d] <- %s", this, header.requestId, req.dump());
             dispatchRequest(header, req);
          } else {
             logger.warn("Could not find request structure {}", header.structId);
             sendResponse(new Error(ERROR_SERIALIZATION), header.requestId);
          }
       } else if (relayHandler != null) {
-         logged = commsLog("%s  [%d] <- Request.%d", this, header.requestId, header.structId);
+         if (!commsLogIgnore(header.structId))
+            logged = commsLog("%s  [%d] <- Request.%d", this, header.requestId, header.structId);
          relayRequest(header, in);
       }
 
-      if (!logged)
+      if (!logged && !commsLogIgnore(header.structId))
          logged = commsLog("%s  [%d] <- Request.%d", this, header.requestId, header.structId);
    }
 
@@ -188,7 +192,8 @@ public class WireSession extends Session {
          header.fromId = theirId;
       }
 
-      commsLog("%s  [M] <- T%d.Message:%d %s", this, header.topicId, header.structId, getNameFor(header));
+      if (!commsLogIgnore(header.structId))
+         commsLog("%s  [M] <- T%d.Message:%d %s", this, header.topicId, header.structId, getNameFor(header));
       if (relayHandler == null || header.toId == myId || (header.toId == UNADDRESSED && header.topicId == UNADDRESSED)) {
          dispatchMessage(header, reader);
       } else {
