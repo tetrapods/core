@@ -58,11 +58,17 @@ public class Builder {
    }
 
    private static List<String> getServices(File clusterDir) {
+      String parts[] = Util.getProperty("build.exclude", "").split(",");
+      Set<String> excludes = new HashSet<>();
+      for (String s : parts) {
+         if (!s.isEmpty())
+            excludes.add(s);
+      }
       List<String> services = new ArrayList<>();
       File[] files = clusterDir.listFiles();
       if (files != null) {
          for (File f : files) {
-            if (new File(f, "current").exists()) {
+            if (new File(f, "current").exists() && !excludes.contains(f.getName())) {
                services.add(f.getName());
             }
          }
