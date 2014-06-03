@@ -11,6 +11,7 @@ import io.netty.channel.*;
 import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.handler.codec.http.*;
 import io.netty.util.CharsetUtil;
+import io.tetrapod.core.utils.Util;
 import io.tetrapod.core.web.WebRoot.FileResult;
 
 import java.io.*;
@@ -56,9 +57,11 @@ class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRequest> 
    }
 
    private final Map<String, WebRoot>  roots;
+   private final boolean noCaching;
 
    public WebStaticFileHandler(Map<String, WebRoot> roots) {
       this.roots = roots;
+      this.noCaching = Util.getProperty("web.nocache", false);
    }
 
    @Override
@@ -71,7 +74,7 @@ class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRequest> 
          sendError(ctx, METHOD_NOT_ALLOWED);
          return;
       }
-      FileResult result = getURI(request.getUri(), request.headers().get(HOST));
+      FileResult result = getURI(request.getUri());
 
       if (result == null) {
          sendError(ctx, NOT_FOUND);
@@ -101,7 +104,7 @@ class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRequest> 
       if (isKeepAlive(request)) {
          response.headers().set(CONNECTION, HttpHeaders.Values.KEEP_ALIVE);
       }
-      if (result.isIndex) {
+      if (result.isIndex || noCaching) {
          // see http://stackoverflow.com/questions/49547/making-sure-a-web-page-is-not-cached-across-all-browsers
          response.headers().set(CACHE_CONTROL, new String[] { NO_CACHE, NO_STORE, MUST_REVALIDATE });
          response.headers().add(PRAGMA, NO_CACHE);
@@ -127,7 +130,7 @@ class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRequest> 
       }
    }
 
-   private FileResult getURI(String uri, String host) {
+   private FileResult getURI(String uri) {
       int qIx = uri.indexOf('?');
       if (qIx > 0) {
          uri = uri.substring(0, qIx);
@@ -142,7 +145,7 @@ class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRequest> 
          }
       }
       if (VALID_URI.matcher(uri).matches() && !INVALID_URI.matcher(uri).matches()) {
-         uri = mangle(uri, host);
+         uri = mangle(uri);
          for (WebRoot root : roots.values()) {
             try {
                FileResult r = root.getFile(uri);
@@ -169,7 +172,7 @@ class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRequest> 
       ctx.writeAndFlush(response);
    }
 
-   private String mangle(String uri, String host) {
+   private String mangle(String uri) {
       if (uri.startsWith("/vbf")) {
          uri = uri.substring(uri.indexOf("/", 2));
       }
