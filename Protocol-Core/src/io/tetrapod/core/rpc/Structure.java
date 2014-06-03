@@ -46,6 +46,10 @@ abstract public class Structure {
       return dump(true, true);
    }
 
+   public String unsafeDump() {
+      return unsafeDump(true, true);
+   }
+
    public String dump(boolean expandSubTypes, boolean includeClassname) {
       StringBuilder sb = new StringBuilder();
       Field f[] = getClass().getDeclaredFields();
@@ -65,6 +69,26 @@ abstract public class Structure {
       String s = sb.length() > 0 ? ("{ " + sb.substring(0, sb.length() - 2) + " } ") : "{}";
       return (includeClassname ? this.getClass().getSimpleName() + " " : "") + s;
    }
+   
+   public String unsafeDump(boolean expandSubTypes, boolean includeClassname) {
+      StringBuilder sb = new StringBuilder();
+      Field f[] = getClass().getDeclaredFields();
+
+      for (int i = 0; i < f.length; i++) {
+         try {
+            int mod = f[i].getModifiers();
+            if (Modifier.isPublic(mod) && !Modifier.isStatic(mod)) {
+               Object val = dumpValue(f[i].get(this), expandSubTypes);
+               sb.append(f[i].getName() + ":" + val + ", ");
+            }
+         } catch (Exception e) {
+            e.printStackTrace();
+         }
+      }
+      String s = sb.length() > 0 ? ("{ " + sb.substring(0, sb.length() - 2) + " } ") : "{}";
+      return (includeClassname ? this.getClass().getSimpleName() + " " : "") + s;
+   }
+
 
    public Security getSecurity() {
       return Security.INTERNAL;
