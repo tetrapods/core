@@ -28,7 +28,8 @@ public class AdminAccounts {
             // check for default admin user
             final String defaultAdminEmail = "admin@" + Util.getProperty("product.url", "tetrapod.io");
             if (email.equals(defaultAdminEmail)) {
-               admin = addAdmin(defaultAdminEmail, PasswordHash.createHash("admin"), 0xFF);
+               String defaultPassword = Util.getProperty("admin.default.password", "admin");
+               admin = addAdmin(defaultAdminEmail, PasswordHash.createHash(defaultPassword), 0xFF);
             } else {
                admin = null;
             }
