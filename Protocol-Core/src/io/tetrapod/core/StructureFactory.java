@@ -3,7 +3,7 @@ package io.tetrapod.core;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.rpc.Error;
 
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class StructureFactory {
@@ -12,8 +12,8 @@ public class StructureFactory {
 
    public static synchronized void add(Structure s) {
       long key = makeKey(s.getContractId(), s.getStructId());
-      if (!knownStructs.containsKey(key))
-         knownStructs.put(key, s);
+      // newest wins
+      knownStructs.put(key, s);
    }
 
    public static synchronized Structure make(int contractId, int structId) {
