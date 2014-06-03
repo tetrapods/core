@@ -74,6 +74,18 @@ class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRequest> 
          sendError(ctx, METHOD_NOT_ALLOWED);
          return;
       }
+      String host = request.headers().get(HOST);
+      if (host != null && host.toLowerCase().startsWith("www.")) {
+         host = host.substring(4);
+         String protocol = ctx.pipeline().get("ssl") != null ? "https" : "http";
+         String newLoc = String.format("%s://%s%s", protocol, host, request.getUri());
+         HttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, MOVED_PERMANENTLY);
+         response.headers().set(LOCATION, newLoc);
+         response.headers().set(CONNECTION, "close");
+         ctx.writeAndFlush(response);
+         return;
+      }
+      
       FileResult result = getURI(request.getUri());
 
       if (result == null) {
