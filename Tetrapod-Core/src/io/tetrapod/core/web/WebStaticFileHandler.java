@@ -17,7 +17,7 @@ import io.tetrapod.core.web.WebRoot.FileResult;
 import java.io.*;
 import java.net.URLDecoder;
 import java.util.*;
-import java.util.regex.Pattern;
+import java.util.regex.*;
 
 import javax.activation.MimetypesFileTypeMap;
 
@@ -75,6 +75,16 @@ class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRequest> 
          return;
       }
       String host = request.headers().get(HOST);
+      String userAgentRedirect = userAgentRedirect(request.headers().get(USER_AGENT), request.getUri());
+      if (userAgentRedirect != null) {
+         String protocol = ctx.pipeline().get("ssl") != null ? "https" : "http";
+         String newLoc = String.format("%s://%s%s", protocol, host, userAgentRedirect);
+         HttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, MOVED_PERMANENTLY);
+         response.headers().set(LOCATION, newLoc);
+         response.headers().set(CONNECTION, "close");
+         ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
+         return;
+      }
       if (host != null && host.toLowerCase().startsWith("www.")) {
          host = host.substring(4);
          String protocol = ctx.pipeline().get("ssl") != null ? "https" : "http";
@@ -190,5 +200,51 @@ class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRequest> 
       }
       return uri;
    }
+   
+   
+   private String userAgentRedirect(String userAgent, String uri) {
+      if (userAgent == null) {
+         return null;
+      }
+      if (!uri.equals("/") && !uri.equals("/index.html")) {
+         // only redirect request for main page, saves lots of calls
+         return null;
+      }
+
+      String redirect = detectStockAndroid(userAgent);
+      return redirect;
+   }
+   
+   private String detectStockAndroid(String userAgent) {
+      // detecting stock android is frustratingly difficult.  browsers lie
+      Matcher m = Pattern.compile(".*Android (\\d)[.](\\d).*").matcher(userAgent);
+      if (!m.matches()) {
+         return null;
+      }
+      int major = Integer.parseInt(m.group(1));
+      int minor = Integer.parseInt(m.group(2));
+      if (major > 4 || (major == 4 && minor >= 4)) { 
+         return null;
+      }
+       
+      if (!userAgent.contains("AppleWebKit")) {
+         return null;
+      }
+      
+      if (userAgent.contains("Chrome")) {
+         return null;
+      }
+      
+      // so that should do it, but a couple more for paranoia sake
+      if (userAgent.contains("Firefox")) {
+         return null;
+      }
+      if (userAgent.contains("Opera")) {
+         return null;
+      }
+
+      return "/android.html";
+   }
+
 
 }
