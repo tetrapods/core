@@ -82,7 +82,7 @@ class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRequest> 
          HttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, MOVED_PERMANENTLY);
          response.headers().set(LOCATION, newLoc);
          response.headers().set(CONNECTION, "close");
-         ctx.writeAndFlush(response);
+         ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
          return;
       }
       
