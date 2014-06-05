@@ -12,7 +12,7 @@ class JavaGenerator implements LanguageGenerator {
 
    private String outputDir;
    private String packageName;
-   
+
    @Override
    public void parseOption(File currentFile, TokenizedLine line, CodeGenContext context) throws ParseException {
       if (!line.parts.get(0).equals("java"))
@@ -32,12 +32,12 @@ class JavaGenerator implements LanguageGenerator {
    }
 
    @Override
-   public void generate(List<CodeGenContext> contexts) throws IOException,ParseException {
+   public void generate(List<CodeGenContext> contexts) throws IOException, ParseException {
       for (CodeGenContext c : contexts)
          generate(c);
    }
-   
-   private void generate(CodeGenContext context) throws IOException,ParseException {
+
+   private void generate(CodeGenContext context) throws IOException, ParseException {
       outputDir = context.serviceAnnotations.getFirst("java.outdir");
       packageName = context.serviceAnnotations.getFirst("java.package");
       for (File f : getFilename("c").getParentFile().listFiles()) {
@@ -48,8 +48,8 @@ class JavaGenerator implements LanguageGenerator {
       }
       generateContract(context);
    }
-   
-   private void generateContract(CodeGenContext context) throws IOException,ParseException {
+
+   private void generateContract(CodeGenContext context) throws IOException, ParseException {
       Template t = template("contract");
       String theClass = context.serviceName + "Contract";
       String serviceId = context.serviceAnnotations.getFirst("id");
@@ -68,18 +68,17 @@ class JavaGenerator implements LanguageGenerator {
          t.add("contractIdSet", "");
       }
       for (String sub : context.subscriptions)
-         t.add("subscriptions", genSubscriptions(context, sub, theClass));      
+         t.add("subscriptions", genSubscriptions(context, sub, theClass));
       for (Class c : context.classesByType("request")) {
          t.add("handlers", ", " + c.classname() + ".Handler", "\n");
          String path = c.annotations.getFirst("web");
          if (path != null) {
-            if (path.isEmpty()) 
+            if (path.isEmpty())
                path = Character.toLowerCase(c.name.charAt(0)) + c.name.substring(1);
-            path = context.serviceAnnotations.getFirst("web") + path;
-            Template sub = template("contract.webroutes.call")
-                  .add("path", path).add("requestClass", c.classname())
+            path = '/' + context.serviceAnnotations.getFirst("web") + '/' + path;
+            Template sub = template("contract.webroutes.call").add("path", path).add("requestClass", c.classname())
                   .add("contractClass", theClass);
-            t.add("webRoutes", sub.expand()); 
+            t.add("webRoutes", sub.expand());
          }
       }
       for (Class c : context.classes) {
@@ -105,7 +104,7 @@ class JavaGenerator implements LanguageGenerator {
       return t.expand();
    }
 
-   private void generateClass(Class c, String serviceName) throws IOException,ParseException {
+   private void generateClass(Class c, String serviceName) throws IOException, ParseException {
       Template t = template(c.type.toLowerCase());
       t.add("rawname", c.name);
       t.add("class", c.classname());
@@ -134,7 +133,8 @@ class JavaGenerator implements LanguageGenerator {
       t.expandAndTrim(getFilename(c.classname()));
    }
 
-   private void addErrors(Collection<Err> errors, boolean globalScope, String serviceName, Template global) throws IOException,ParseException {
+   private void addErrors(Collection<Err> errors, boolean globalScope, String serviceName, Template global) throws IOException,
+         ParseException {
       for (Err err : errors) {
          Template t = template("field.errors");
          t.add("name", err.name);
@@ -191,8 +191,9 @@ class JavaGenerator implements LanguageGenerator {
 
    private Template getFieldTemplate(Field f) throws IOException {
       JavaTypes.Info info = JavaTypes.get(f.type);
-      String defaultVal =  f.getEscapedDefaultValue();
-      if (defaultVal == null) defaultVal = info.defaultValue;
+      String defaultVal = f.getEscapedDefaultValue();
+      if (defaultVal == null)
+         defaultVal = info.defaultValue;
       String primTemplate = "field.primitives";
       String structTemplate = "field.structs";
       String descContractId = "0";
@@ -263,7 +264,7 @@ class JavaGenerator implements LanguageGenerator {
       f.mkdirs();
       return new File(f, classname + ".java");
    }
-   
+
    private String generateComment(String comment) {
       if (comment == null)
          return "";
@@ -274,7 +275,7 @@ class JavaGenerator implements LanguageGenerator {
       sb.append("\n/**\n * " + comment + "\n */\n");
       return sb.toString();
    }
-   
+
    private String generateSecurityCheck(Class c) throws IOException, ParseException {
       if (!c.type.equals("request"))
          return "";
@@ -299,19 +300,20 @@ class JavaGenerator implements LanguageGenerator {
                }
             }
             if (m != 2)
-               throw new ParseException(c.name + " is " + c.security + " and must have @authId and @authToken fields (or default accountId and authToken)");
+               throw new ParseException(c.name + " is " + c.security
+                     + " and must have @authId and @authToken fields (or default accountId and authToken)");
             return template("request.security").add("authId", authId).add("authToken", authToken).expand();
          default:
             return "";
       }
    }
-   
+
    public static String escapeString(String s) {
       s = s.replace("\\", "\\\\");
       s = s.replace("\"", "\\\"");
       return "\"" + s + "\"";
    }
-   
+
    private Template template(String name) throws IOException {
       return Template.get(getClass(), "javatemplates/" + name + ".template");
    }

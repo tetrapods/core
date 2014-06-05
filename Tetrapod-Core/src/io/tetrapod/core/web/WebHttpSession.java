@@ -11,7 +11,7 @@ import io.netty.handler.codec.http.*;
 import io.netty.util.*;
 import io.tetrapod.core.Session;
 import io.tetrapod.core.json.JSONObject;
-import io.tetrapod.protocol.core.RequestHeader;
+import io.tetrapod.protocol.core.*;
 
 import java.util.Map;
 
@@ -29,7 +29,6 @@ public class WebHttpSession extends WebSession {
       ch.pipeline().addLast("aggregator", new HttpObjectAggregator(65536));
       ch.pipeline().addLast("api", this);
       ch.pipeline().addLast("deflater", new HttpContentCompressor(6));
-      //ch.pipeline().addLast("chunkedWriter", new ChunkedWriteHandler());
       ch.pipeline().addLast("files", new WebStaticFileHandler(roots));
    }
 
@@ -48,16 +47,22 @@ public class WebHttpSession extends WebSession {
          return;
       }
 
-      // handle a JSON API call
-      WebContext context = new WebContext(req);
-      RequestHeader header = context.makeRequestHeader(this, relayHandler.getWebRoutes());
-      if (header == null) {
+      WebRoute route = relayHandler.getWebRoutes().findRoute(req.getUri());
+      if (route != null) {
+         // handle a JSON API call
+         WebContext context = new WebContext(req);
+         RequestHeader header = context.makeRequestHeader(this, route);
+         if (header != null) {
+            header.fromId = 0x00100000;//header.fromId; // TODO -- auto-register a temporary entityId or some such hackery
+            isKeepAlive = HttpHeaders.isKeepAlive((HttpRequest) req);
+            ReferenceCountUtil.release(req);
+            readRequest(header, context);
+         } else {
+            sendHttpResponse(ctx, req, new DefaultFullHttpResponse(HTTP_1_1, BAD_REQUEST));
+         }
+      } else {
          ctx.fireChannelRead(req);
-         return;
       }
-      isKeepAlive = HttpHeaders.isKeepAlive((HttpRequest) req);
-      ReferenceCountUtil.release(req);
-      readRequest(header, context);
    }
 
    protected void sendHttpResponse(ChannelHandlerContext ctx, FullHttpRequest req, FullHttpResponse res) {

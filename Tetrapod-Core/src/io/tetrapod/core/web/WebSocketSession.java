@@ -90,7 +90,7 @@ public class WebSocketSession extends WebHttpSession {
       try {
          JSONObject jo = new JSONObject(request);
          WebContext webContext = new WebContext(jo);
-         RequestHeader header = webContext.makeRequestHeader(this, relayHandler.getWebRoutes());
+         RequestHeader header = webContext.makeRequestHeader(this, null);
          readRequest(header, webContext);
          return;
       } catch (IOException e) {

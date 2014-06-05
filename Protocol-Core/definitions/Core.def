@@ -14,6 +14,7 @@ struct Core
    const byte  TYPE_ADMIN     = 3
    const byte  TYPE_CLIENT    = 4
    const byte  TYPE_ANONYMOUS = 5
+   const byte  TYPE_WEBAPI    = 6
    
    const int DEFAULT_PUBLIC_PORT     = 9900
    const int DEFAULT_SERVICE_PORT    = 9901
