@@ -1,9 +1,10 @@
 package io.tetrapod.core.registry;
 
-import io.tetrapod.core.*;
+import io.tetrapod.core.Session;
 import io.tetrapod.protocol.core.*;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.locks.*;
 
 import org.slf4j.*;
@@ -191,14 +192,14 @@ public class EntityInfo extends Entity implements Comparable<EntityInfo> {
 
    public synchronized void queue(final Runnable task) {
       if (queue == null) {
-         queue = new LinkedList<Runnable>();
+         queue = new ConcurrentLinkedQueue<Runnable>();
          consumerLock = new ReentrantLock();
       }
       queue.add(task);
    }
 
-   public synchronized int getQueueLength() {
-      return queue == null ? 0 : queue.size();
+   public synchronized boolean isQueueEmpty() {
+      return queue == null ? true : queue.isEmpty();
    }
 
    /**
