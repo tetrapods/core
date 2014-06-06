@@ -4,7 +4,7 @@ import java.io.*;
 import java.net.*;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
-import java.security.KeyStore;
+import java.security.*;
 import java.util.*;
 
 import javax.net.ssl.*;
@@ -13,6 +13,8 @@ import javax.net.ssl.*;
  * A random collection of useful static utility methods
  */
 public class Util {
+   
+   public static final SecureRandom random = new SecureRandom();
 
    /**
     * Sleeps the current thread for a number of milliseconds, ignores interrupts.
@@ -53,7 +55,7 @@ public class Util {
    }
 
    public static int random(int range) {
-      return (int) (Math.random() * range);
+      return random.nextInt(range);
    }
 
    public static String format(String fmt, Object... args) {

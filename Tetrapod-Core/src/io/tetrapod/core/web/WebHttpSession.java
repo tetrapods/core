@@ -68,8 +68,9 @@ public class WebHttpSession extends WebSession {
                   @Override
                   public void onResponse(Response res) {
                      try {
-                        // calling this goes into a rabbit hole: sendResponse(res, header.requestId);
-                        ctx.writeAndFlush(makeFrame(res, header.requestId)).addListener(ChannelFutureListener.CLOSE);
+                        // Mystery: calling this goes into a rabbit hole: sendResponse(res, header.requestId);
+                        // TODO: Make this JSON Response tastier
+                        ctx.writeAndFlush(makeFrame(res, header.requestId)).addListener(ChannelFutureListener.CLOSE);                        
                      } catch (Throwable e) {
                         logger.error(e.getMessage(), e);
                      }
