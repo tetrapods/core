@@ -16,7 +16,7 @@ public class TetrapodWorker implements Runnable {
    public void run() {
       while (!service.isShuttingDown()) {
          for (final EntityInfo e : service.registry.getEntities()) {
-            if (e.getQueueLength() > 0) {
+            if (!e.isQueueEmpty()) {
                service.dispatcher.dispatch(new Runnable() {
                   public void run() {
                      // we turn off auto flush in case we end up writing a lot of 

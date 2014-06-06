@@ -65,7 +65,15 @@ define([ "knockout", "jquery", "bootbox", "app", "build" ], function(ko, $, boot
       });
 
       self.execute = function(command) {
-         app.server.sendRequest(command.contractId, command.structId, {}, self.entityId).handle(app.server.logResponse)
+         if (command.hasArgument) {
+            bootbox.prompt("Enter argument value:", function(result) {                
+               if (result !== null) {                                             
+                  app.server.sendRequest(command.contractId, command.structId, { data: result }, self.entityId).handle(app.server.logResponse);
+               }
+             }); 
+         } else {
+            app.server.sendRequest(command.contractId, command.structId, {}, self.entityId).handle(app.server.logResponse);
+         }
       }
 
       self.entityString = ko.computed(function() {

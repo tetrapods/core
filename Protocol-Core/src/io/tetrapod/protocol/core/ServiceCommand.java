@@ -12,7 +12,7 @@ import java.util.*;
 import java.util.concurrent.*;
 
 /**
- * allows an empty request to be called from admin app's service menu
+ * allows an empty or one-string-arg-called-data request to be called from admin app's service menu
  */
 
 @SuppressWarnings("unused")
@@ -25,17 +25,19 @@ public class ServiceCommand extends Structure {
       defaults();
    }
 
-   public ServiceCommand(String name, String icon, int contractId, int structId) {
+   public ServiceCommand(String name, String icon, int contractId, int structId, boolean hasArgument) {
       this.name = name;
       this.icon = icon;
       this.contractId = contractId;
       this.structId = structId;
+      this.hasArgument = hasArgument;
    }   
    
    public String name;
    public String icon;
    public int contractId;
    public int structId;
+   public boolean hasArgument;
 
    public final Structure.Security getSecurity() {
       return Security.INTERNAL;
@@ -46,6 +48,7 @@ public class ServiceCommand extends Structure {
       icon = null;
       contractId = 0;
       structId = 0;
+      hasArgument = false;
    }
    
    @Override
@@ -54,6 +57,7 @@ public class ServiceCommand extends Structure {
       data.write(2, this.icon);
       data.write(3, this.contractId);
       data.write(4, this.structId);
+      data.write(5, this.hasArgument);
       data.writeEndTag();
    }
    
@@ -67,6 +71,7 @@ public class ServiceCommand extends Structure {
             case 2: this.icon = data.read_string(tag); break;
             case 3: this.contractId = data.read_int(tag); break;
             case 4: this.structId = data.read_int(tag); break;
+            case 5: this.hasArgument = data.read_boolean(tag); break;
             case Codec.END_TAG:
                return;
             default:
@@ -88,11 +93,12 @@ public class ServiceCommand extends Structure {
       // Note do not use this tags in long term serializations (to disk or databases) as 
       // implementors are free to rename them however they wish.  A null means the field
       // is not to participate in web serialization (remaining at default)
-      String[] result = new String[4+1];
+      String[] result = new String[5+1];
       result[1] = "name";
       result[2] = "icon";
       result[3] = "contractId";
       result[4] = "structId";
+      result[5] = "hasArgument";
       return result;
    }
 
@@ -109,6 +115,7 @@ public class ServiceCommand extends Structure {
       desc.types[2] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
       desc.types[3] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
       desc.types[4] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
+      desc.types[5] = new TypeDescriptor(TypeDescriptor.T_BOOLEAN, 0, 0);
       return desc;
    }
 }

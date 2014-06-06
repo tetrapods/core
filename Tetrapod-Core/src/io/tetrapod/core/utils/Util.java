@@ -77,7 +77,7 @@ public class Util {
       return items[random(items.length)];
    }
 
-   public static int[] toIntArray(List<Integer> list) {
+   public static int[] toIntArray(Collection<Integer> list) {
       int[] res = new int[list.size()];
       int i = 0;
       for (Iterator<Integer> iterator = list.iterator(); iterator.hasNext();) {

@@ -157,7 +157,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    @Override
    public ServiceCommand[] getServiceCommands() {
       return new ServiceCommand[] { new ServiceCommand("Log Registry Stats", null, LogRegistryStatsRequest.CONTRACT_ID,
-            LogRegistryStatsRequest.STRUCT_ID) };
+            LogRegistryStatsRequest.STRUCT_ID, false) };
    }
 
    public byte getEntityType() {

@@ -79,12 +79,13 @@ public struct MessageHeader
    
 ################################ STRUCTURES ###################
 
-// allows an empty request to be called from admin app's service menu
+// allows an empty or one-string-arg-called-data request to be called from admin app's service menu
 internal struct ServiceCommand
    1: string name
    2: string icon
    3: int contractId
    4: int structId
+   5: boolean hasArgument
 
 public struct ServerAddress 
    1: string host
