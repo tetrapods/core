@@ -7,7 +7,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class WebRoutes {
 
-   private Map<String,WebRoute> routes = new ConcurrentHashMap<>();
+   private final Map<String,WebRoute> routes = new ConcurrentHashMap<>();
    
    public void setRoute(String path, int contractId, int structId) {
       // "/api/LoginRequest  contractId=2, structId=1244334
