@@ -51,10 +51,6 @@ class WebContext {
       } else {
          header.contractId = route.contractId;
          header.structId = route.structId;
-         // header.fromType = TYPE_WEBAPI
-         // header.fromId = parent tetrapod id?
-         // header.requestId = special id issued by tetrapod for correlation
-         header.requestId = requestParameters.optInt("_requestId", -1);
       }
       if (header.requestId < 0 || header.contractId < 0 || header.structId < 0) {
          return null;

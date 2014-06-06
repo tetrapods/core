@@ -12,6 +12,7 @@ function TP_Core(server) {
    server.registerConst("Core", "Core", "TYPE_ADMIN", 3);
    server.registerConst("Core", "Core", "TYPE_CLIENT", 4);
    server.registerConst("Core", "Core", "TYPE_ANONYMOUS", 5);
+   server.registerConst("Core", "Core", "TYPE_WEBAPI", 6);
    server.registerConst("Core", "Core", "DEFAULT_PUBLIC_PORT", 9900);
    server.registerConst("Core", "Core", "DEFAULT_SERVICE_PORT", 9901);
    server.registerConst("Core", "Core", "DEFAULT_CLUSTER_PORT", 9902);

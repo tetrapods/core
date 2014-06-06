@@ -1,6 +1,5 @@
 package io.tetrapod.core.web;
 
-import static io.tetrapod.protocol.core.Core.*;
 import static io.tetrapod.protocol.core.CoreContract.*;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.socket.SocketChannel;
@@ -17,15 +16,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.slf4j.*;
 
 abstract class WebSession extends Session {
-   private static final Logger logger = LoggerFactory.getLogger(WebSession.class);
-   
-   private static final int FLOOD_TIME_PERIOD = 2000;
-   private static final int FLOOD_WARN = 200;
-   private static final int FLOOD_IGNORE = 300;
-   private static final int FLOOD_KILL = 400;
-   
-   private volatile long floodPeriod;
-   private final AtomicInteger requestCount = new AtomicInteger(0);
+   private static final Logger   logger       = LoggerFactory.getLogger(WebSession.class);
+
+   protected final AtomicInteger requestCount = new AtomicInteger(0);
 
    public WebSession(SocketChannel channel, Session.Helper helper) {
       super(channel, helper);
@@ -33,59 +26,16 @@ abstract class WebSession extends Session {
 
    abstract protected Object makeFrame(JSONObject jo);
 
-   protected void readRequest(RequestHeader header, WebContext context) {
-      long now = System.currentTimeMillis();
-      lastHeardFrom.set(now);
-      if (floodCheck(now, header)) {
-         // could move flood check after comms log just for the logging
-         return;
+   protected Structure readRequest(RequestHeader header, WebContext context) throws IOException {
+      Structure request = StructureFactory.make(header.contractId, header.structId);
+      if (request == null) {
+         logger.error("Could not find request structure contractId={} structId-{}", header.contractId, header.structId);
+         sendResponse(new Error(ERROR_SERIALIZATION), header.requestId);
+         return null;
       }
-      try {
-         Structure request = StructureFactory.make(header.contractId, header.structId);
-         if (request == null) {
-            logger.error("Could not find request structure contractId={} structId-{}", header.contractId, header.structId);
-            sendResponse(new Error(ERROR_SERIALIZATION), header.requestId);
-            return;
-         }
-         request.read(new WebJSONDataSource(context.getRequestParams(), request.tagWebNames()));
-         commsLog("%s  [%d] <- %s", this, header.requestId, request.dump());
-         
-         if (header.toId == DIRECT || header.toId == myId) {
-            if (request instanceof Request) {
-               dispatchRequest(header, (Request) request);
-            } else {
-               logger.error("Asked to process a request I can't  deserialize {}", header.dump());
-               sendResponse(new Error(ERROR_SERIALIZATION), header.requestId);
-            }
-         } else {
-            relayRequest(header, request);
-         }
-      } catch (IOException e) {
-         logger.error("Error processing request {}", header.dump());
-         sendResponse(new Error(ERROR_UNKNOWN), header.requestId);
-      }
-   }
-   
-   private void relayRequest(RequestHeader header, Structure request) throws IOException {
-      final Session ses = relayHandler.getRelaySession(header.toId, header.contractId);
-      if (ses != null) {
-         final ByteBuf in = convertToByteBuf(request);
-         try {
-            ses.sendRelayedRequest(header, in, this);
-         } finally {
-            in.release();
-         }
-      } else {
-         logger.debug("Could not find a relay session for {} {}", header.toId, header.contractId);
-         sendResponse(new Error(ERROR_SERVICE_UNAVAILABLE), header.requestId);
-      }
-   }
-
-   private ByteBuf convertToByteBuf(Structure struct) throws IOException {
-      ByteBuf buffer = channel.alloc().buffer(32);
-      ByteBufDataSource data = new ByteBufDataSource(buffer);
-      struct.write(data);
-      return buffer;
+      request.read(new WebJSONDataSource(context.getRequestParams(), request.tagWebNames()));
+      commsLog("%s  [%d] <- %s", this, header.requestId, request.dump());
+      return request;
    }
 
    @Override
@@ -142,37 +92,6 @@ abstract class WebSession extends Session {
             break;
       }
       return jo;
-   }
-   
-   private boolean floodCheck(long now, RequestHeader header) {
-      int reqs;
-      long newFloodPeriod = now / FLOOD_TIME_PERIOD;
-      if (newFloodPeriod != floodPeriod) {
-         // race condition between read and write of floodPeriod.  but is benign as it means we reset
-         // request count to 0 an extra time
-         floodPeriod = newFloodPeriod;
-         requestCount.set(0);
-         reqs = 0;
-      } else {
-         reqs = requestCount.incrementAndGet();
-      } 
-      if (reqs > FLOOD_KILL) {
-         logger.warn("flood killing {}/{}", header.contractId, header.structId);
-         close();
-         return true;
-      }
-      if (reqs > FLOOD_IGNORE) {
-         // do nothing, send no response
-         logger.warn("flood ignoring {}/{}", header.contractId, header.structId);
-         return true;
-      }
-      if (reqs > FLOOD_WARN) {
-         // respond with error so client can slow down
-         logger.warn("flood warning {}/{}", header.contractId, header.structId);
-         sendResponse(new Error(ERROR_FLOOD), header.requestId);
-         return true;
-      }
-      return false;
    }
 
 }

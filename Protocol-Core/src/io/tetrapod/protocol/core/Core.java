@@ -28,6 +28,7 @@ public class Core extends Structure {
    public static final byte TYPE_ADMIN = 3; 
    public static final byte TYPE_CLIENT = 4; 
    public static final byte TYPE_ANONYMOUS = 5; 
+   public static final byte TYPE_WEBAPI = 6; 
    public static final int DEFAULT_PUBLIC_PORT = 9900; 
    public static final int DEFAULT_SERVICE_PORT = 9901; 
    public static final int DEFAULT_CLUSTER_PORT = 9902; 

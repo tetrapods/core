@@ -1,6 +1,6 @@
 package io.tetrapod.protocol.core;
 
-// This is a code generated file. All edits will be lost the next time code gen is run.
+// This is a code generated file.  All edits will be lost the next time code gen is run.
 
 import io.*;
 import io.tetrapod.core.rpc.*;
@@ -13,10 +13,10 @@ import java.util.concurrent.*;
 
 @SuppressWarnings("unused")
 public class WebRoute extends Structure {
-
-   public static final int STRUCT_ID   = 4890284;
+   
+   public static final int STRUCT_ID = 4890284;
    public static final int CONTRACT_ID = CoreContract.CONTRACT_ID;
-
+    
    public WebRoute() {
       defaults();
    }
@@ -25,11 +25,11 @@ public class WebRoute extends Structure {
       this.path = path;
       this.structId = structId;
       this.contractId = contractId;
-   }
-
+   }   
+   
    public String path;
-   public int    structId;
-   public int    contractId;
+   public int structId;
+   public int contractId;
 
    public final Structure.Security getSecurity() {
       return Security.INTERNAL;
@@ -40,7 +40,7 @@ public class WebRoute extends Structure {
       structId = 0;
       contractId = 0;
    }
-
+   
    @Override
    public final void write(DataSource data) throws IOException {
       data.write(1, this.path);
@@ -48,22 +48,16 @@ public class WebRoute extends Structure {
       data.write(3, this.contractId);
       data.writeEndTag();
    }
-
+   
    @Override
    public final void read(DataSource data) throws IOException {
       defaults();
       while (true) {
          int tag = data.readTag();
          switch (tag) {
-            case 1:
-               this.path = data.read_string(tag);
-               break;
-            case 2:
-               this.structId = data.read_int(tag);
-               break;
-            case 3:
-               this.contractId = data.read_int(tag);
-               break;
+            case 1: this.path = data.read_string(tag); break;
+            case 2: this.structId = data.read_int(tag); break;
+            case 3: this.contractId = data.read_int(tag); break;
             case Codec.END_TAG:
                return;
             default:
@@ -72,7 +66,7 @@ public class WebRoute extends Structure {
          }
       }
    }
-
+   
    public final int getContractId() {
       return WebRoute.CONTRACT_ID;
    }
@@ -85,7 +79,7 @@ public class WebRoute extends Structure {
       // Note do not use this tags in long term serializations (to disk or databases) as 
       // implementors are free to rename them however they wish.  A null means the field
       // is not to participate in web serialization (remaining at default)
-      String[] result = new String[3 + 1];
+      String[] result = new String[3+1];
       result[1] = "path";
       result[2] = "structId";
       result[3] = "contractId";

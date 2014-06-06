@@ -4,6 +4,7 @@ import static io.netty.handler.codec.http.HttpHeaders.*;
 import static io.netty.handler.codec.http.HttpHeaders.Names.*;
 import static io.netty.handler.codec.http.HttpResponseStatus.*;
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
+import static io.tetrapod.protocol.core.CoreContract.ERROR_SERVICE_UNAVAILABLE;
 import io.netty.buffer.*;
 import io.netty.channel.*;
 import io.netty.channel.socket.SocketChannel;
@@ -11,8 +12,12 @@ import io.netty.handler.codec.http.*;
 import io.netty.util.*;
 import io.tetrapod.core.Session;
 import io.tetrapod.core.json.JSONObject;
+import io.tetrapod.core.rpc.*;
+import io.tetrapod.core.rpc.Error;
+import io.tetrapod.core.serialize.datasources.ByteBufDataSource;
 import io.tetrapod.protocol.core.*;
 
+import java.io.IOException;
 import java.util.Map;
 
 import org.slf4j.*;
@@ -41,22 +46,36 @@ public class WebHttpSession extends WebSession {
       handleHttpRequest(ctx, (FullHttpRequest) msg);
    }
 
-   protected void handleHttpRequest(ChannelHandlerContext ctx, FullHttpRequest req) throws Exception {
+   protected void handleHttpRequest(final ChannelHandlerContext ctx, FullHttpRequest req) throws Exception {
       if (!req.getDecoderResult().isSuccess()) {
          sendHttpResponse(ctx, req, new DefaultFullHttpResponse(HTTP_1_1, BAD_REQUEST));
          return;
       }
 
-      WebRoute route = relayHandler.getWebRoutes().findRoute(req.getUri());
+      final WebRoute route = relayHandler.getWebRoutes().findRoute(req.getUri());
       if (route != null) {
          // handle a JSON API call
-         WebContext context = new WebContext(req);
-         RequestHeader header = context.makeRequestHeader(this, route);
+         final WebContext context = new WebContext(req);
+         final RequestHeader header = context.makeRequestHeader(this, route);
          if (header != null) {
-            header.fromId = 0x00100000;//header.fromId; // TODO -- auto-register a temporary entityId or some such hackery
+            header.requestId = requestCounter.incrementAndGet();
             isKeepAlive = HttpHeaders.isKeepAlive((HttpRequest) req);
             ReferenceCountUtil.release(req);
-            readRequest(header, context);
+            Structure request = readRequest(header, context);
+            if (request != null) {
+               header.fromType = Core.TYPE_WEBAPI;
+               relayRequest(header, request).handle(new ResponseHandler() {
+                  @Override
+                  public void onResponse(Response res) {
+                     try {
+                        // calling this goes into a rabbit hole: sendResponse(res, header.requestId);
+                        ctx.writeAndFlush(makeFrame(res, header.requestId)).addListener(ChannelFutureListener.CLOSE);
+                     } catch (Throwable e) {
+                        logger.error(e.getMessage(), e);
+                     }
+                  }
+               });
+            }
          } else {
             sendHttpResponse(ctx, req, new DefaultFullHttpResponse(HTTP_1_1, BAD_REQUEST));
          }
@@ -98,11 +117,6 @@ public class WebHttpSession extends WebSession {
    }
 
    @Override
-   public void checkHealth() {
-      // TODO?      
-   }
-
-   @Override
    public void channelActive(final ChannelHandlerContext ctx) throws Exception {
       fireSessionStartEvent();
    }
@@ -113,4 +127,26 @@ public class WebHttpSession extends WebSession {
       cancelAllPendingRequests();
    }
 
+   protected Async relayRequest(RequestHeader header, Structure request) throws IOException {
+      final Session ses = relayHandler.getRelaySession(header.toId, header.contractId);
+      if (ses != null) {
+         final ByteBuf in = convertToByteBuf(request);
+         try {
+            return ses.sendRelayedRequest(header, in, this);
+         } finally {
+            in.release();
+         }
+      } else {
+         logger.debug("Could not find a relay session for {} {}", header.toId, header.contractId);
+         sendResponse(new Error(ERROR_SERVICE_UNAVAILABLE), header.requestId);
+      }
+      return null;
+   }
+
+   protected ByteBuf convertToByteBuf(Structure struct) throws IOException {
+      ByteBuf buffer = channel.alloc().buffer(32);
+      ByteBufDataSource data = new ByteBufDataSource(buffer);
+      struct.write(data);
+      return buffer;
+   }
 }

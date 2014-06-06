@@ -257,12 +257,15 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
       header.contractId = req.getContractId();
       header.structId = req.getStructId();
       header.fromType = myType;
+      return sendRequest(req, header);
+   }
 
+   public Async sendRequest(Request req, final RequestHeader header) {
       final Async async = new Async(req, header, this);
       pendingRequests.put(header.requestId, async);
 
       if (!commsLogIgnore(req))
-         commsLog("%s  [%d] => %s (to %d)", this, header.requestId, req.dump(), toId);
+         commsLog("%s  [%d] => %s (to %d)", this, header.requestId, req.dump(), header.toId);
 
       final Object buffer = makeFrame(header, req, ENVELOPE_REQUEST);
       if (buffer != null) {
@@ -281,11 +284,15 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
       if (res != Response.PENDING) {
          if (!commsLogIgnore(res))
             commsLog("%s  [%d] => %s", this, requestId, res.dump());
-         final Object buffer = makeFrame(new ResponseHeader(requestId, res.getContractId(), res.getStructId()), res, ENVELOPE_RESPONSE);
+         final Object buffer = makeFrame(res, requestId);
          if (buffer != null) {
             writeFrame(buffer);
          }
       }
+   }
+
+   public Object makeFrame(Response res, int requestId) {
+      return makeFrame(new ResponseHeader(requestId, res.getContractId(), res.getStructId()), res, ENVELOPE_RESPONSE);
    }
 
    public void sendBroadcastMessage(Message msg, int topicId) {
@@ -344,7 +351,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
       writeFrame(makeFrame(header, payload, envelope));
    }
 
-   public void sendRelayedRequest(RequestHeader header, ByteBuf payload, Session originator) {
+   public Async sendRelayedRequest(RequestHeader header, ByteBuf payload, Session originator) {
       final Async async = new Async(null, header, originator);
       int origRequestId = async.header.requestId;
       int newRequestId = addPendingRequest(async);
@@ -357,6 +364,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
          newHeader.toId = theirId;
       }
       writeFrame(makeFrame(newHeader, payload, ENVELOPE_REQUEST));
+      return async;
    }
 
    public void sendRelayedResponse(ResponseHeader header, ByteBuf payload) {
@@ -490,11 +498,11 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
    public String getNameFor(MessageHeader header) {
       return StructureFactory.getName(header.contractId, header.structId);
    }
-   
+
    public boolean commsLogIgnore(Structure struct) {
       return commsLogIgnore(struct.getStructId());
    }
-   
+
    public boolean commsLogIgnore(int structId) {
       if (commsLog.isTraceEnabled())
          return false;
