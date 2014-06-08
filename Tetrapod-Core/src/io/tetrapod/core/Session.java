@@ -167,6 +167,8 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
             public void run() {
                try {
                   dispatchRequest(svc, header, req);
+               } catch (ErrorResponseException e) {
+                  sendResponse(new Error(e.errorCode), header.requestId);
                } catch (Throwable e) {
                   logger.error(e.getMessage(), e);
                   sendResponse(new Error(ERROR_UNKNOWN), header.requestId);
