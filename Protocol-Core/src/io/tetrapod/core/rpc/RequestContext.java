@@ -1,6 +1,6 @@
 package io.tetrapod.core.rpc;
 
-import io.tetrapod.protocol.core.RequestHeader;
+import io.tetrapod.protocol.core.*;
 
 abstract public class RequestContext {
    
@@ -13,5 +13,9 @@ abstract public class RequestContext {
    abstract public Response securityCheck(Request request, int accountId, String authToken);
 
    abstract public Response securityCheck(Request request);
+
+   public boolean isFromClient() {
+      return header.fromType == Core.TYPE_CLIENT;
+   }
    
 }
