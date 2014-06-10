@@ -119,11 +119,11 @@ public class Util {
       }
       return Integer.parseInt(val);
    }
-   
+
    public static String getProperty(String key, String defaultValue) {
       return System.getProperty(key, defaultValue);
    }
-   
+
    public static String getProperty(String key) {
       return System.getProperty(key);
    }
@@ -156,9 +156,19 @@ public class Util {
       }
       return Boolean.parseBoolean(val);
    }
-   
+
    public static boolean isLocal() {
       return Util.getProperty("devMode", "local").equals("local");
+   }
+
+   public static String formatFileSize(long bytes) {
+      if (bytes < 4096) {
+         return bytes + " bytes";
+      } else if (bytes < 1024 * 1024) {
+         return (Math.round(10 * bytes / 1024) / 10) + " kb";
+      } else {
+         return (Math.round(10 * bytes / (1024 * 1024)) / 10) + " mb";
+      }
    }
 
 }
