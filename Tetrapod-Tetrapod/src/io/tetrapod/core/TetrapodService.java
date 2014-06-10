@@ -271,7 +271,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
     */
    @Override
    public void onReadyToServe() {
-      if ((getStatus() & Core.STATUS_STARTING) != 0) {
+      if (isStartingUp()) {
          // TODO: wait for confirmed cluster registry sync before calling onReadyToServe
          logger.info(" ***** READY TO SERVE ***** ");
 

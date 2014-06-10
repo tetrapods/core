@@ -350,6 +350,10 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
       return (status & Core.STATUS_PAUSED) != 0;
    }
 
+   public synchronized boolean isStartingUp() {
+      return (status & Core.STATUS_STARTING) != 0;
+   }
+
    public synchronized boolean isNominal() {
       int nonRunning = Core.STATUS_STARTING | Core.STATUS_FAILED | Core.STATUS_BUSY | Core.STATUS_PAUSED | Core.STATUS_STOPPING;
       return (status & nonRunning) == 0;
