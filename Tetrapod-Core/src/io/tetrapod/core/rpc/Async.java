@@ -52,7 +52,7 @@ public class Async {
    public synchronized Response waitForResponse() {
       while (response == null) {
          try {
-            wait();
+            wait(1000);
          } catch (InterruptedException e) {}
       }
       return response;
