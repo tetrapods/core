@@ -84,11 +84,11 @@ public class WebHttpSession extends WebSession {
                if (header.structId == WebAPIRequest.STRUCT_ID) {
                   // @webapi() generic WebAPIRequest call
                   logger.info("REQUEST = {}", req);
-                  String body = req.content().toString(CharsetUtil.UTF_8);
-                  WebAPIRequest request = new WebAPIRequest(route.path, context.getRequestParams().toString(), body);
+                  WebAPIRequest request = new WebAPIRequest(route.path, getHeaders(req).toString(), context.getRequestParams().toString(),
+                        req.content().toString(CharsetUtil.UTF_8));
                   final Session ses = relayHandler.getRelaySession(Core.UNADDRESSED, header.contractId);
                   if (ses != null) {
-                     header.contractId = Core.CONTRACT_ID;                           
+                     header.contractId = Core.CONTRACT_ID;
                      relayRequest(header, request, ses).handle(handler);
                   } else {
                      logger.debug("Could not find a relay session for {} {}", header.toId, header.contractId);
@@ -111,6 +111,14 @@ public class WebHttpSession extends WebSession {
       } else {
          ctx.fireChannelRead(req);
       }
+   }
+
+   private JSONObject getHeaders(FullHttpRequest req) {
+      JSONObject jo = new JSONObject();
+      for (Map.Entry<String, String> e : req.headers()) {
+         jo.put(e.getKey(), e.getValue());
+      }
+      return jo;
    }
 
    protected void sendHttpResponse(ChannelHandlerContext ctx, FullHttpRequest req, FullHttpResponse res) {

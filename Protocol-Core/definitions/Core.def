@@ -124,9 +124,10 @@ internal response ServiceLogs
    error NOT_CONFIGURED
    
 public request WebAPI
-   1: string route  // route name
-   2: string params // json string
-   3: string body   // json string
+   1: string route   // route name
+   2: string headers // json string
+   3: string params  // json string
+   4: string body    // json string
  
 public response WebAPI
    1: string json
