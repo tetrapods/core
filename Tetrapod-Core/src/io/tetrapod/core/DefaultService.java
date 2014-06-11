@@ -10,7 +10,7 @@ import io.tetrapod.protocol.core.*;
 import java.io.*;
 import java.lang.management.ManagementFactory;
 import java.net.ConnectException;
-import java.nio.file.*;
+import java.nio.file.Files;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -688,4 +688,10 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
       return "*** Start Service ***" + "\n   *** Service name: " + Util.getProperty("APPNAME") + "\n   *** Options: "
             + Launcher.getAllOpts() + "\n   *** VM Args: " + ManagementFactory.getRuntimeMXBean().getInputArguments().toString();
    }
+
+   @Override
+   public Response requestWebAPI(WebAPIRequest r, RequestContext ctx) {
+      return Response.error(CoreContract.ERROR_UNKNOWN_REQUEST);
+   }
+
 }

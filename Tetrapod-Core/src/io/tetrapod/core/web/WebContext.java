@@ -26,10 +26,11 @@ class WebContext {
    }
 
    private JSONObject requestParameters;
-   private String     requestPath;
+   private String     requestPath; 
 
    public WebContext(HttpRequest request) throws IOException {
       parseRequestParameters(request);
+      
    }
 
    public WebContext(JSONObject json) throws IOException {

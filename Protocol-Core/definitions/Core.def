@@ -122,6 +122,14 @@ internal response ServiceLogs
    2: ServiceLogEntry<list> items
    
    error NOT_CONFIGURED
+   
+public request WebAPI
+   1: string route  // route name
+   2: string params // json string
+   3: string body   // json string
+ 
+public response WebAPI
+   1: string json
  
 ################################# MESSAGES #################################
 

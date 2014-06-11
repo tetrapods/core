@@ -27,6 +27,7 @@ public class CoreContract extends Contract {
       , ServiceStatsUnsubscribeRequest.Handler
       , ShutdownRequest.Handler
       , UnpauseRequest.Handler
+      , WebAPIRequest.Handler
       {}
    
    public Structure[] getRequests() {
@@ -39,6 +40,7 @@ public class CoreContract extends Contract {
          new ServiceStatsUnsubscribeRequest(),
          new ServiceDetailsRequest(),
          new ServiceLogsRequest(),
+         new WebAPIRequest(),
       };
    }
    
@@ -46,6 +48,7 @@ public class CoreContract extends Contract {
       return new Structure[] {
          new ServiceDetailsResponse(),
          new ServiceLogsResponse(),
+         new WebAPIResponse(),
       };
    }
    

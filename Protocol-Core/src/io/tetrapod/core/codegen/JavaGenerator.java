@@ -67,6 +67,20 @@ class JavaGenerator implements LanguageGenerator {
          t.add("contractIdVolatile", "final");
          t.add("contractIdSet", "");
       }
+
+      for (Field f : context.globalConstants) {
+         String path = f.annotations.getFirst("webapi");
+         if (path != null) {
+            if (path.isEmpty())
+               path = f.defaultValue;
+            path = '/' + context.serviceAnnotations.getFirst("web") + '/' + path;
+            // HACK this is horrible -- hard coding WebAPIRequest for requestClass... 
+            Template sub = template("contract.webroutes.call").add("path", path)
+                  .add("requestClass", "io.tetrapod.protocol.core.WebAPIRequest").add("contractClass", theClass);
+            t.add("webRoutes", sub.expand());
+         }
+      }
+
       for (String sub : context.subscriptions)
          t.add("subscriptions", genSubscriptions(context, sub, theClass));
       for (Class c : context.classesByType("request")) {

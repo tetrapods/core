@@ -59,29 +59,52 @@ public class WebHttpSession extends WebSession {
          final RequestHeader header = context.makeRequestHeader(this, route);
          if (header != null) {
             header.requestId = requestCounter.incrementAndGet();
+            header.fromType = Core.TYPE_WEBAPI;
             isKeepAlive = HttpHeaders.isKeepAlive((HttpRequest) req);
-            ReferenceCountUtil.release(req);
-            Structure request = readRequest(header, context);
-            if (request != null) {
-               header.fromType = Core.TYPE_WEBAPI;
-               relayRequest(header, request).handle(new ResponseHandler() {
-                  @Override
-                  public void onResponse(Response res) {
-                     try {
-                        JSONObject jo = new JSONObject();
-                        if (res.isError()) {
-                           jo.put("result", "ERROR");
-                           jo.put("error", res.errorCode());
-                        } else {
-                           jo.put("result", "SUCCESS");
-                        }
-                        ctx.writeAndFlush(makeFrame(jo)).addListener(ChannelFutureListener.CLOSE);
-                     } catch (Throwable e) {
-                        logger.error(e.getMessage(), e);
+
+            final ResponseHandler handler = new ResponseHandler() {
+               @Override
+               public void onResponse(Response res) {
+                  try {
+                     JSONObject jo = new JSONObject();
+                     if (res.isError()) {
+                        jo.put("result", "ERROR");
+                        jo.put("error", res.errorCode());
+                     } else {
+                        jo.put("result", "SUCCESS");
                      }
+                     ctx.writeAndFlush(makeFrame(jo)).addListener(ChannelFutureListener.CLOSE);
+                  } catch (Throwable e) {
+                     logger.error(e.getMessage(), e);
                   }
-               });
+               }
+            };
+
+            try {
+               if (header.structId == WebAPIRequest.STRUCT_ID) {
+                  // @webapi() generic WebAPIRequest call
+                  logger.info("REQUEST = {}", req);
+                  String body = req.content().toString(CharsetUtil.UTF_8);
+                  WebAPIRequest request = new WebAPIRequest(route.path, context.getRequestParams().toString(), body);
+                  final Session ses = relayHandler.getRelaySession(Core.UNADDRESSED, header.contractId);
+                  if (ses != null) {
+                     header.contractId = Core.CONTRACT_ID;                           
+                     relayRequest(header, request, ses).handle(handler);
+                  } else {
+                     logger.debug("Could not find a relay session for {} {}", header.toId, header.contractId);
+                     handler.onResponse(new Error(ERROR_SERVICE_UNAVAILABLE));
+                  }
+               } else {
+                  // @web() specific Request mapping 
+                  Structure request = readRequest(header, context);
+                  if (request != null) {
+                     relayRequest(header, request).handle(handler);
+                  }
+               }
+            } finally {
+               ReferenceCountUtil.release(req);
             }
+
          } else {
             sendHttpResponse(ctx, req, new DefaultFullHttpResponse(HTTP_1_1, BAD_REQUEST));
          }
@@ -136,17 +159,21 @@ public class WebHttpSession extends WebSession {
    protected Async relayRequest(RequestHeader header, Structure request) throws IOException {
       final Session ses = relayHandler.getRelaySession(header.toId, header.contractId);
       if (ses != null) {
-         final ByteBuf in = convertToByteBuf(request);
-         try {
-            return ses.sendRelayedRequest(header, in, this);
-         } finally {
-            in.release();
-         }
+         return relayRequest(header, request, ses);
       } else {
          logger.debug("Could not find a relay session for {} {}", header.toId, header.contractId);
          sendResponse(new Error(ERROR_SERVICE_UNAVAILABLE), header.requestId);
       }
       return null;
+   }
+
+   protected Async relayRequest(RequestHeader header, Structure request, Session ses) throws IOException {
+      final ByteBuf in = convertToByteBuf(request);
+      try {
+         return ses.sendRelayedRequest(header, in, this);
+      } finally {
+         in.release();
+      }
    }
 
    protected ByteBuf convertToByteBuf(Structure struct) throws IOException {

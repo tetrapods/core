@@ -84,6 +84,8 @@ function TP_Core(server) {
    server.register("response", "Core", "ServiceDetails", 1, 12435407);
    server.register("request", "Core", "ServiceLogs", 1, 13816458);
    server.register("response", "Core", "ServiceLogs", 1, 6345878);
+   server.register("request", "Core", "WebAPI", 1, 9321342);
+   server.register("response", "Core", "WebAPI", 1, 9652194);
    server.register("message", "Core", "ServiceStats", 1, 469976);
    server.register("struct", "Core", "Subscriber", 1, 16013581);
    server.register("struct", "Core", "WebRoute", 1, 4890284);
