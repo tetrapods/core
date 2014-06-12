@@ -111,7 +111,7 @@ public class WireSession extends Session {
          // if fromId is UNADRESSED this handles the edge case where we are registering 
          // ourselves and so did not yet have an entityId 
          if (async.header.fromId == myId || async.header.fromId == Core.UNADDRESSED) {
-            final Response res = (Response) StructureFactory.make(async.header.contractId, header.structId);
+            final Response res = (Response) StructureFactory.make(header.contractId, header.structId);
             if (res != null) {
                res.read(reader);
                if (!commsLogIgnore(header.structId))
