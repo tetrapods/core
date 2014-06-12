@@ -56,6 +56,7 @@ class WebContext {
       if (header.requestId < 0 || header.contractId < 0 || header.structId < 0) {
          return null;
       }
+      header.timeout = (byte) 30;
       return header;
    }
 
