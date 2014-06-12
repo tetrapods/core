@@ -21,11 +21,13 @@ public class WebAPIResponse extends Response {
       defaults();
    }
 
-   public WebAPIResponse(String json) {
+   public WebAPIResponse(String json, String redirect) {
       this.json = json;
+      this.redirect = redirect;
    }   
    
    public String json;
+   public String redirect;
 
    public final Structure.Security getSecurity() {
       return Security.PUBLIC;
@@ -33,11 +35,13 @@ public class WebAPIResponse extends Response {
 
    public final void defaults() {
       json = null;
+      redirect = null;
    }
    
    @Override
    public final void write(DataSource data) throws IOException {
       data.write(1, this.json);
+      data.write(2, this.redirect);
       data.writeEndTag();
    }
    
@@ -48,6 +52,7 @@ public class WebAPIResponse extends Response {
          int tag = data.readTag();
          switch (tag) {
             case 1: this.json = data.read_string(tag); break;
+            case 2: this.redirect = data.read_string(tag); break;
             case Codec.END_TAG:
                return;
             default:
@@ -69,8 +74,9 @@ public class WebAPIResponse extends Response {
       // Note do not use this tags in long term serializations (to disk or databases) as 
       // implementors are free to rename them however they wish.  A null means the field
       // is not to participate in web serialization (remaining at default)
-      String[] result = new String[1+1];
+      String[] result = new String[2+1];
       result[1] = "json";
+      result[2] = "redirect";
       return result;
    }
 
@@ -84,6 +90,7 @@ public class WebAPIResponse extends Response {
       desc.types = new TypeDescriptor[desc.tagWebNames.length];
       desc.types[0] = new TypeDescriptor(TypeDescriptor.T_STRUCT, getContractId(), getStructId());
       desc.types[1] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
+      desc.types[2] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
       return desc;
    }
  }

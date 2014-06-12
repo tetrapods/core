@@ -66,14 +66,24 @@ public class WebHttpSession extends WebSession {
                @Override
                public void onResponse(Response res) {
                   try {
-                     JSONObject jo = new JSONObject();
                      if (res.isError()) {
+                        JSONObject jo = new JSONObject();
                         jo.put("result", "ERROR");
                         jo.put("error", res.errorCode());
-                     } else {
+                        ctx.writeAndFlush(makeFrame(jo)).addListener(ChannelFutureListener.CLOSE);
+                     } else if (res.isGenericSuccess()) {
+                        // bad form to allow two types of non-error response but most calls will just want to return SUCCESS
+                        JSONObject jo = new JSONObject();
                         jo.put("result", "SUCCESS");
+                        ctx.writeAndFlush(makeFrame(jo)).addListener(ChannelFutureListener.CLOSE);
+                     } else {
+                        WebAPIResponse resp = (WebAPIResponse)res;
+                        if (resp.redirect != null) {
+                           redirect(resp.redirect, ctx);
+                        } else {
+                           ctx.writeAndFlush(makeFrame(new JSONObject(resp.json))).addListener(ChannelFutureListener.CLOSE);
+                        }
                      }
-                     ctx.writeAndFlush(makeFrame(jo)).addListener(ChannelFutureListener.CLOSE);
                   } catch (Throwable e) {
                      logger.error(e.getMessage(), e);
                   }
@@ -189,5 +199,12 @@ public class WebHttpSession extends WebSession {
       ByteBufDataSource data = new ByteBufDataSource(buffer);
       struct.write(data);
       return buffer;
+   }
+   
+   private void redirect(String newURL, ChannelHandlerContext ctx) {
+      HttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, FOUND);
+      response.headers().set(LOCATION, newURL);
+      response.headers().set(CONNECTION, "close");
+      ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
    }
 }

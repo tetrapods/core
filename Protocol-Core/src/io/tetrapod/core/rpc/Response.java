@@ -20,4 +20,9 @@ abstract public class Response extends Structure {
       return 0;
    }
 
+   public boolean isGenericSuccess() {
+      Response s = Response.SUCCESS;
+      return s.getContractId() == getContractId() && s.getStructId() == getStructId();
+   }
+
 }

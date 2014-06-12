@@ -131,6 +131,7 @@ public request WebAPI
  
 public response WebAPI
    1: string json
+   2: string redirect
  
 ################################# MESSAGES #################################
 
