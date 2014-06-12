@@ -13,6 +13,7 @@ import io.tetrapod.protocol.core.*;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.Map.Entry;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 
@@ -106,9 +107,10 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
          }
       }
       // Timeout pending requests past their due
-      for (Async a : pendingRequests.values()) {
+      for (Entry<Integer,Async> entry : pendingRequests.entrySet()) {
+         Async a = entry.getValue();
          if (a.isTimedout()) {
-            pendingRequests.remove(a.header.requestId);
+            pendingRequests.remove(entry.getKey());
             a.setResponse(ERROR_TIMEOUT);
          }
       }
