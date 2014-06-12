@@ -13,7 +13,7 @@ import javax.net.ssl.*;
  * A random collection of useful static utility methods
  */
 public class Util {
-   
+
    public static final SecureRandom random = new SecureRandom();
 
    /**
@@ -171,6 +171,50 @@ public class Util {
       } else {
          return (Math.round(10 * bytes / (1024 * 1024)) / 10) + " mb";
       }
+   }
+
+   public static String escapeHTML(String text) {
+      if (text == null) {
+         return "";
+      }
+      StringBuilder sb = new StringBuilder();
+      char[] chars = text.toCharArray();
+      int i = 0;
+      int n = chars.length;
+      while (i < n) {
+         char c = chars[i];
+
+         // escape html < and > and &
+         if (c == '<') {
+            sb.append("&lt;");
+            i++;
+            continue;
+         }
+         if (c == '>') {
+            sb.append("&gt;");
+            i++;
+            continue;
+         }
+         if (c == '&') {
+            sb.append("&amp;");
+            i++;
+            continue;
+         }
+         if (c == '"') {
+            sb.append("&quot;");
+            i++;
+            continue;
+         }
+         if (c == '\'') {
+            sb.append("&#x27;");
+            i++;
+            continue;
+         }
+
+         i++;
+         sb.append(c);
+      }
+      return sb.toString();
    }
 
 }
