@@ -164,7 +164,7 @@ public class Launcher {
       return false;
    }
    
-   private static void loadClusterProperties() {
+   public static void loadClusterProperties() {
       String name = System.getProperty("user.name");
       String[] locs = {
             "cluster.properties", // in prod, gets symlinked in
@@ -179,7 +179,7 @@ public class Launcher {
       System.exit(0);
    }
 
-   private static void loadSecretProperties() {
+   public static void loadSecretProperties() {
       String file = System.getProperty("secrets");
       if (file != null && !file.isEmpty())
          loadProperties(file);
