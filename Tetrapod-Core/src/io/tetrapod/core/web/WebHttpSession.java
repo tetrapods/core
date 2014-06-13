@@ -10,7 +10,7 @@ import io.netty.channel.*;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.http.*;
 import io.netty.util.*;
-import io.tetrapod.core.Session;
+import io.tetrapod.core.*;
 import io.tetrapod.core.json.JSONObject;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.rpc.Error;
@@ -70,6 +70,7 @@ public class WebHttpSession extends WebSession {
                         JSONObject jo = new JSONObject();
                         jo.put("result", "ERROR");
                         jo.put("error", res.errorCode());
+                        jo.put("message", Contract.getErrorCode(res.errorCode(), res.getContractId()));
                         ctx.writeAndFlush(makeFrame(jo)).addListener(ChannelFutureListener.CLOSE);
                      } else if (res.isGenericSuccess()) {
                         // bad form to allow two types of non-error response but most calls will just want to return SUCCESS
@@ -92,8 +93,7 @@ public class WebHttpSession extends WebSession {
 
             try {
                if (header.structId == WebAPIRequest.STRUCT_ID) {
-                  // @webapi() generic WebAPIRequest call
-                  // logger.info("REQUEST = {}", req);
+                  // @webapi() generic WebAPIRequest call 
                   final WebAPIRequest request = new WebAPIRequest(route.path, getHeaders(req).toString(), context.getRequestParams()
                         .toString(), req.content().toString(CharsetUtil.UTF_8));
                   final int toEntityId = relayHandler.getAvailableService(header.contractId);
@@ -114,7 +114,7 @@ public class WebHttpSession extends WebSession {
                   // @web() specific Request mapping 
                   Structure request = readRequest(header, context);
                   if (request != null) {
-                     relayRequest(header, request).handle(handler);
+                     relayRequest(header, request, handler);
                   }
                }
             } finally {
@@ -180,15 +180,14 @@ public class WebHttpSession extends WebSession {
       cancelAllPendingRequests();
    }
 
-   protected Async relayRequest(RequestHeader header, Structure request) throws IOException {
+   private  void relayRequest(RequestHeader header, Structure request, ResponseHandler handler) throws IOException {
       final Session ses = relayHandler.getRelaySession(header.toId, header.contractId);
       if (ses != null) {
-         return relayRequest(header, request, ses);
+         relayRequest(header, request, ses).handle(handler);
       } else {
          logger.debug("Could not find a relay session for {} {}", header.toId, header.contractId);
-         sendResponse(new Error(ERROR_SERVICE_UNAVAILABLE), header.requestId);
+         handler.onResponse(new Error(ERROR_SERVICE_UNAVAILABLE));
       }
-      return null;
    }
 
    protected Async relayRequest(RequestHeader header, Structure request, Session ses) throws IOException {

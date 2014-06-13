@@ -181,4 +181,15 @@ public class WebSocketSession extends WebHttpSession {
       }
    }
 
+   protected Async relayRequest(RequestHeader header, Structure request) throws IOException {
+      final Session ses = relayHandler.getRelaySession(header.toId, header.contractId);
+      if (ses != null) {
+         return relayRequest(header, request, ses);
+      } else {
+         logger.debug("Could not find a relay session for {} {}", header.toId, header.contractId);
+         sendResponse(new Error(ERROR_SERVICE_UNAVAILABLE), header.requestId);
+         return null;
+      }
+   }
+
 }

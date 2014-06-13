@@ -105,7 +105,9 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
    public void messageEntity(EntityMessage m, MessageContext ctxA) {
       SessionMessageContext ctx = (SessionMessageContext) ctxA;
       if (ctx.session.getTheirEntityType() == Core.TYPE_TETRAPOD) {
-         this.entityId = m.entityId;
+         synchronized (this) { 
+            this.entityId = m.entityId;
+         }
          ctx.session.setMyEntityId(m.entityId);
       }
    }
