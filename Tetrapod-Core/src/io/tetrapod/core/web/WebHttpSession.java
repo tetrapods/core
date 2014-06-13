@@ -77,7 +77,7 @@ public class WebHttpSession extends WebSession {
                         jo.put("result", "SUCCESS");
                         ctx.writeAndFlush(makeFrame(jo)).addListener(ChannelFutureListener.CLOSE);
                      } else {
-                        WebAPIResponse resp = (WebAPIResponse)res;
+                        WebAPIResponse resp = (WebAPIResponse) res;
                         if (resp.redirect != null) {
                            redirect(resp.redirect, ctx);
                         } else {
@@ -93,15 +93,20 @@ public class WebHttpSession extends WebSession {
             try {
                if (header.structId == WebAPIRequest.STRUCT_ID) {
                   // @webapi() generic WebAPIRequest call
-                  logger.info("REQUEST = {}", req);
-                  WebAPIRequest request = new WebAPIRequest(route.path, getHeaders(req).toString(), context.getRequestParams().toString(),
-                        req.content().toString(CharsetUtil.UTF_8));
-                  final Session ses = relayHandler.getRelaySession(Core.UNADDRESSED, header.contractId);
-                  if (ses != null) {
-                     header.contractId = Core.CONTRACT_ID;
-                     relayRequest(header, request, ses).handle(handler);
+                  // logger.info("REQUEST = {}", req);
+                  final WebAPIRequest request = new WebAPIRequest(route.path, getHeaders(req).toString(), context.getRequestParams()
+                        .toString(), req.content().toString(CharsetUtil.UTF_8));
+                  final int toEntityId = relayHandler.getAvailableService(header.contractId);
+                  if (toEntityId != 0) {
+                     final Session ses = relayHandler.getRelaySession(toEntityId, header.contractId);
+                     if (ses != null) {
+                        header.contractId = Core.CONTRACT_ID;
+                        relayRequest(header, request, ses).handle(handler);
+                     } else {
+                        logger.debug("Could not find a relay session for {} {}", header.toId, header.contractId);
+                        handler.onResponse(new Error(ERROR_SERVICE_UNAVAILABLE));
+                     }
                   } else {
-                     logger.debug("Could not find a relay session for {} {}", header.toId, header.contractId);
                      handler.onResponse(new Error(ERROR_SERVICE_UNAVAILABLE));
                   }
                } else {
@@ -200,7 +205,7 @@ public class WebHttpSession extends WebSession {
       struct.write(data);
       return buffer;
    }
-   
+
    private void redirect(String newURL, ChannelHandlerContext ctx) {
       HttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, FOUND);
       response.headers().set(LOCATION, newURL);

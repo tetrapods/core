@@ -337,7 +337,16 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          return cluster.getSession(parent.entityId);
       }
    }
-
+   
+   @Override
+   public int getAvailableService(int contractId) {
+      EntityInfo entity = registry.getRandomAvailableService(contractId);
+      if (entity != null) {
+         return entity.entityId;
+      }
+      return 0;
+   }
+   
    @Override
    public Session getRelaySession(int entityId, int contractId) {
       EntityInfo entity = null;

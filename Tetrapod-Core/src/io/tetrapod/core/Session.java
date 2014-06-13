@@ -49,6 +49,8 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
 
    public static interface RelayHandler {
 
+      public int getAvailableService(int contractid);
+
       public Session getRelaySession(int toId, int contractid);
 
       public void relayMessage(MessageHeader header, ByteBuf buf, boolean isBroadcast) throws IOException;

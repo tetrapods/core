@@ -22,6 +22,10 @@ public class Async {
       this.session = session;
    }
 
+   public synchronized boolean hasHandler() {
+      return handler != null;
+   }
+   
    public synchronized void handle(ResponseHandler handler) {
       this.handler = handler;
       if (response != null) {
