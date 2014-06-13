@@ -102,7 +102,7 @@ public class WebHttpSession extends WebSession {
                      if (ses != null) {
                         header.contractId = Core.CONTRACT_ID;
                         header.toId = toEntityId;
-                        relayRequest(header, request, ses).handle(handler);
+                        ses.sendRequest(request, header).handle(handler);
                      } else {
                         logger.debug("Could not find a relay session for {} {}", header.toId, header.contractId);
                         handler.onResponse(new Error(ERROR_SERVICE_UNAVAILABLE));
