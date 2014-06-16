@@ -108,7 +108,14 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
             close();
          }
       }
-      // Timeout pending requests past their due
+      timeoutPendingRequests();    
+   }
+   
+   /**
+    * 
+    */
+   public void timeoutPendingRequests() {
+      // 
       for (Entry<Integer,Async> entry : pendingRequests.entrySet()) {
          Async a = entry.getValue();
          if (a.isTimedout()) {

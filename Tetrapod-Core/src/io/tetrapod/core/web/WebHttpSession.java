@@ -46,7 +46,14 @@ public class WebHttpSession extends WebSession {
       handleHttpRequest(ctx, (FullHttpRequest) msg);
    }
 
-   protected void handleHttpRequest(final ChannelHandlerContext ctx, FullHttpRequest req) throws Exception {
+   @Override
+   public void checkHealth() {
+      if (isConnected()) {
+         timeoutPendingRequests();
+      }
+   }
+
+   protected void handleHttpRequest(final ChannelHandlerContext ctx, final FullHttpRequest req) throws Exception {
       if (!req.getDecoderResult().isSuccess()) {
          sendHttpResponse(ctx, req, new DefaultFullHttpResponse(HTTP_1_1, BAD_REQUEST));
          return;
@@ -58,25 +65,29 @@ public class WebHttpSession extends WebSession {
          final WebContext context = new WebContext(req);
          final RequestHeader header = context.makeRequestHeader(this, route);
          if (header != null) {
-            final long t0 = System.currentTimeMillis();
-            logger.info("{} WEB API REQEUST: {}", this, req.getUri());
+            // final long t0 = System.currentTimeMillis();
+            // logger.info("{} WEB API REQEUST: {} keepAlive = {}", this, req.getUri(), isKeepAlive);
             header.requestId = requestCounter.incrementAndGet();
             header.fromType = Core.TYPE_WEBAPI;
             header.fromId = getMyEntityId();
-            isKeepAlive = HttpHeaders.isKeepAlive((HttpRequest) req);
+            isKeepAlive = HttpHeaders.isKeepAlive(req);
 
             final ResponseHandler handler = new ResponseHandler() {
                @Override
                public void onResponse(Response res) {
-                  logger.info("{} WEB API RESPONSE: {} {} ms", WebHttpSession.this, res, (System.currentTimeMillis() - t0));
+                  //logger.info("{} WEB API RESPONSE: {} {} ms", WebHttpSession.this, res, (System.currentTimeMillis() - t0));
                   try {
                      ChannelFuture cf = null;
                      if (res.isError()) {
-                        JSONObject jo = new JSONObject();
-                        jo.put("result", "ERROR");
-                        jo.put("error", res.errorCode());
-                        jo.put("message", Contract.getErrorCode(res.errorCode(), res.getContractId()));
-                        cf = ctx.writeAndFlush(makeFrame(jo));
+                        if (res.errorCode() == CoreContract.ERROR_TIMEOUT) {
+                           sendHttpResponse(ctx, req, new DefaultFullHttpResponse(HTTP_1_1, REQUEST_TIMEOUT));
+                        } else {
+                           JSONObject jo = new JSONObject();
+                           jo.put("result", "ERROR");
+                           jo.put("error", res.errorCode());
+                           jo.put("message", Contract.getErrorCode(res.errorCode(), res.getContractId()));
+                           cf = ctx.writeAndFlush(makeFrame(jo));
+                        }
                      } else if (res.isGenericSuccess()) {
                         // bad form to allow two types of non-error response but most calls will just want to return SUCCESS
                         JSONObject jo = new JSONObject();
@@ -85,7 +96,7 @@ public class WebHttpSession extends WebSession {
                      } else {
                         WebAPIResponse resp = (WebAPIResponse) res;
                         if (resp.redirect != null) {
-                           redirect(resp.redirect, ctx);
+                           cf = redirect(resp.redirect, ctx);
                         } else {
                            cf = ctx.writeAndFlush(makeFrame(new JSONObject(resp.json)));
                         }
@@ -110,15 +121,14 @@ public class WebHttpSession extends WebSession {
                      if (ses != null) {
                         header.contractId = Core.CONTRACT_ID;
                         header.toId = toEntityId;
-                        logger.info("{} WEB API REQEUST ROUTING TO {} {}", this, toEntityId, header.dump());
-                        // FIXME -- This is NOT timing out... we don't call checkHealth on WebSessions...
+                        //logger.info("{} WEB API REQEUST ROUTING TO {} {}", this, toEntityId, header.dump()); 
                         relayRequest(header, request, ses, handler);
                      } else {
                         logger.debug("{} Could not find a relay session for {} {}", this, header.toId, header.contractId);
                         handler.onResponse(new Error(ERROR_SERVICE_UNAVAILABLE));
                      }
                   } else {
-                     logger.debug("{} Could not find a service for {} {}", this, header.toId, header.contractId);
+                     logger.debug("{} Could not find a service for {}", this, header.contractId);
                      handler.onResponse(new Error(ERROR_SERVICE_UNAVAILABLE));
                   }
                } else {
@@ -183,6 +193,7 @@ public class WebHttpSession extends WebSession {
    @Override
    public void channelActive(final ChannelHandlerContext ctx) throws Exception {
       fireSessionStartEvent();
+      scheduleHealthCheck();
    }
 
    @Override
@@ -217,10 +228,10 @@ public class WebHttpSession extends WebSession {
       return buffer;
    }
 
-   private void redirect(String newURL, ChannelHandlerContext ctx) {
+   private ChannelFuture redirect(String newURL, ChannelHandlerContext ctx) {
       HttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, FOUND);
       response.headers().set(LOCATION, newURL);
       response.headers().set(CONNECTION, "close");
-      ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
+      return ctx.writeAndFlush(response);
    }
 }
