@@ -24,7 +24,7 @@ abstract class WebSession extends Session {
       super(channel, helper);
    }
 
-   abstract protected Object makeFrame(JSONObject jo);
+   abstract protected Object makeFrame(JSONObject jo, boolean keepAlive);
 
    protected Structure readRequest(RequestHeader header, WebContext context) throws IOException {
       Structure request = StructureFactory.make(header.contractId, header.structId);
@@ -44,7 +44,7 @@ abstract class WebSession extends Session {
          JSONObject jo = extractHeader(header);
          JSONDataSource jd = new WebJSONDataSource(jo, payload.tagWebNames());
          payload.write(jd);
-         return makeFrame(jo);
+         return makeFrame(jo, true);
       } catch (IOException e) {
          logger.error("Could not make web frame for {}", header.dump());
          return null;
@@ -60,7 +60,7 @@ abstract class WebSession extends Session {
          payload.read(bd);
          JSONDataSource jd = new WebJSONDataSource(jo, payload.tagWebNames());
          payload.write(jd);
-         return makeFrame(jo);
+         return makeFrame(jo, true);
       } catch (IOException e) {
          logger.error("Could not make web frame for {}", header.dump());
          return null;

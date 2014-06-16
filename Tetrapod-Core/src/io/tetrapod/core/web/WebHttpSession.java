@@ -25,8 +25,6 @@ import org.slf4j.*;
 public class WebHttpSession extends WebSession {
    protected static final Logger logger = LoggerFactory.getLogger(WebHttpSession.class);
 
-   private boolean               isKeepAlive;
-
    public WebHttpSession(SocketChannel ch, Session.Helper helper, Map<String, WebRoot> roots) {
       super(ch, helper);
 
@@ -65,48 +63,17 @@ public class WebHttpSession extends WebSession {
          final WebContext context = new WebContext(req);
          final RequestHeader header = context.makeRequestHeader(this, route);
          if (header != null) {
-            final long t0 = System.currentTimeMillis();
-            logger.info("{} WEB API REQEUST: {} keepAlive = {}", this, req.getUri(), isKeepAlive);
+            //final long t0 = System.currentTimeMillis();
+            // logger.info("{} WEB API REQEUST: {} keepAlive = {}", this, req.getUri(), HttpHeaders.isKeepAlive(req));
             header.requestId = requestCounter.incrementAndGet();
             header.fromType = Core.TYPE_WEBAPI;
             header.fromId = getMyEntityId();
-            isKeepAlive = HttpHeaders.isKeepAlive(req);
 
             final ResponseHandler handler = new ResponseHandler() {
                @Override
                public void onResponse(Response res) {
-                  logger.info("{} WEB API RESPONSE: {} {} ms", WebHttpSession.this, res, (System.currentTimeMillis() - t0));
-                  try {
-                     ChannelFuture cf = null;
-                     if (res.isError()) {
-                        if (res.errorCode() == CoreContract.ERROR_TIMEOUT) {
-                           sendHttpResponse(ctx, req, new DefaultFullHttpResponse(HTTP_1_1, REQUEST_TIMEOUT));
-                        } else {
-                           JSONObject jo = new JSONObject();
-                           jo.put("result", "ERROR");
-                           jo.put("error", res.errorCode());
-                           jo.put("message", Contract.getErrorCode(res.errorCode(), res.getContractId()));
-                           cf = ctx.writeAndFlush(makeFrame(jo));
-                        }
-                     } else if (res.isGenericSuccess()) {
-                        // bad form to allow two types of non-error response but most calls will just want to return SUCCESS
-                        JSONObject jo = new JSONObject();
-                        jo.put("result", "SUCCESS");
-                        cf = ctx.writeAndFlush(makeFrame(jo));
-                     } else {
-                        WebAPIResponse resp = (WebAPIResponse) res;
-                        if (resp.redirect != null) {
-                           cf = redirect(resp.redirect, ctx);
-                        } else {
-                           cf = ctx.writeAndFlush(makeFrame(new JSONObject(resp.json)));
-                        }
-                     }
-                     if (cf != null && !isKeepAlive) {
-                        cf.addListener(ChannelFutureListener.CLOSE);
-                     }
-                  } catch (Throwable e) {
-                     logger.error(e.getMessage(), e);
-                  }
+                  //logger.info("{} WEB API RESPONSE: {} {} ms", WebHttpSession.this, res, (System.currentTimeMillis() - t0));
+                  handleWebAPIResponse(ctx, req, res);
                }
             };
 
@@ -121,7 +88,7 @@ public class WebHttpSession extends WebSession {
                      if (ses != null) {
                         header.contractId = Core.CONTRACT_ID;
                         header.toId = toEntityId;
-                        logger.info("{} WEB API REQEUST ROUTING TO {} {}", this, toEntityId, header.dump());
+                        //logger.info("{} WEB API REQEUST ROUTING TO {} {}", this, toEntityId, header.dump());
                         relayRequest(header, request, ses, handler);
                      } else {
                         logger.debug("{} Could not find a relay session for {} {}", this, header.toId, header.contractId);
@@ -147,6 +114,41 @@ public class WebHttpSession extends WebSession {
          }
       } else {
          ctx.fireChannelRead(req);
+      }
+   }
+
+   private void handleWebAPIResponse(final ChannelHandlerContext ctx, final FullHttpRequest req, Response res) {
+      final boolean keepAlive = HttpHeaders.isKeepAlive(req);
+      try {
+         ChannelFuture cf = null;
+         if (res.isError()) {
+            if (res.errorCode() == CoreContract.ERROR_TIMEOUT) {
+               sendHttpResponse(ctx, req, new DefaultFullHttpResponse(HTTP_1_1, REQUEST_TIMEOUT));
+            } else {
+               JSONObject jo = new JSONObject();
+               jo.put("result", "ERROR");
+               jo.put("error", res.errorCode());
+               jo.put("message", Contract.getErrorCode(res.errorCode(), res.getContractId()));
+               cf = ctx.writeAndFlush(makeFrame(jo, keepAlive));
+            }
+         } else if (res.isGenericSuccess()) {
+            // bad form to allow two types of non-error response but most calls will just want to return SUCCESS
+            JSONObject jo = new JSONObject();
+            jo.put("result", "SUCCESS");
+            cf = ctx.writeAndFlush(makeFrame(jo, keepAlive));
+         } else {
+            WebAPIResponse resp = (WebAPIResponse) res;
+            if (resp.redirect != null) {
+               redirect(resp.redirect, ctx);
+            } else {
+               cf = ctx.writeAndFlush(makeFrame(new JSONObject(resp.json), keepAlive));
+            }
+         }
+         if (cf != null && !keepAlive) {
+            cf.addListener(ChannelFutureListener.CLOSE);
+         }
+      } catch (Throwable e) {
+         logger.error(e.getMessage(), e);
       }
    }
 
@@ -177,12 +179,12 @@ public class WebHttpSession extends WebSession {
    }
 
    @Override
-   protected Object makeFrame(JSONObject jo) {
+   protected Object makeFrame(JSONObject jo, boolean keepAlive) {
       ByteBuf buf = WebContext.makeByteBufResult(jo.toString(3));
       FullHttpResponse httpResponse = new DefaultFullHttpResponse(HTTP_1_1, OK, buf);
       httpResponse.headers().set(CONTENT_TYPE, "text/json");
       httpResponse.headers().set(CONTENT_LENGTH, httpResponse.content().readableBytes());
-      if (isKeepAlive) {
+      if (keepAlive) {
          httpResponse.headers().set(CONNECTION, HttpHeaders.Values.KEEP_ALIVE);
       } else {
          httpResponse.headers().set(CONNECTION, HttpHeaders.Values.CLOSE);
@@ -228,14 +230,10 @@ public class WebHttpSession extends WebSession {
       return buffer;
    }
 
-   private ChannelFuture redirect(String newURL, ChannelHandlerContext ctx) {
+   private void redirect(String newURL, ChannelHandlerContext ctx) {
       HttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, FOUND);
       response.headers().set(LOCATION, newURL);
-      if (isKeepAlive) {
-         response.headers().set(CONNECTION, HttpHeaders.Values.KEEP_ALIVE);
-      } else {
-         response.headers().set(CONNECTION, HttpHeaders.Values.CLOSE);
-      }
-      return ctx.writeAndFlush(response);
+      response.headers().set(CONNECTION, HttpHeaders.Values.CLOSE);
+      ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
    }
 }

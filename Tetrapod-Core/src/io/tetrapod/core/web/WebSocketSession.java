@@ -114,10 +114,10 @@ public class WebSocketSession extends WebHttpSession {
    }
 
    @Override
-   protected Object makeFrame(JSONObject jo) {
+   protected Object makeFrame(JSONObject jo, boolean keepAlive) {
       synchronized (this) {
          if (handshaker == null) {
-            return super.makeFrame(jo);
+            return super.makeFrame(jo, keepAlive);
          }
       }
       return new TextWebSocketFrame(jo.toString(3));
