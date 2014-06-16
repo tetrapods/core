@@ -54,12 +54,12 @@ public class WebHttpSession extends WebSession {
 
       final WebRoute route = relayHandler.getWebRoutes().findRoute(req.getUri());
       if (route != null) {
-         final long t0 = System.currentTimeMillis();
-         logger.info("{} WEB API REQEUST: {}", this, req.getUri());
          // handle a JSON API call
          final WebContext context = new WebContext(req);
          final RequestHeader header = context.makeRequestHeader(this, route);
          if (header != null) {
+            final long t0 = System.currentTimeMillis();
+            logger.info("{} WEB API REQEUST: {}", this, req.getUri());
             header.requestId = requestCounter.incrementAndGet();
             header.fromType = Core.TYPE_WEBAPI;
             isKeepAlive = HttpHeaders.isKeepAlive((HttpRequest) req);
@@ -105,13 +105,15 @@ public class WebHttpSession extends WebSession {
                      if (ses != null) {
                         header.contractId = Core.CONTRACT_ID;
                         header.toId = toEntityId;
-                        //                      ses.sendRequest(request, header).handle(handler);
+                        logger.info("{} WEB API REQEUST ROUTING TO {}", this, toEntityId);
+                        // FIXME -- This is NOT timing out... we don't call checkHealth on WebSessions...
                         relayRequest(header, request, ses).handle(handler);
                      } else {
-                        logger.debug("Could not find a relay session for {} {}", header.toId, header.contractId);
+                        logger.debug("{} Could not find a relay session for {} {}", this, header.toId, header.contractId);
                         handler.onResponse(new Error(ERROR_SERVICE_UNAVAILABLE));
                      }
                   } else {
+                     logger.debug("{} Could not find a service for {} {}", this, header.toId, header.contractId);
                      handler.onResponse(new Error(ERROR_SERVICE_UNAVAILABLE));
                   }
                } else {
