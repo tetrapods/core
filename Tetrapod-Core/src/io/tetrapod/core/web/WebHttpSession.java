@@ -54,6 +54,8 @@ public class WebHttpSession extends WebSession {
 
       final WebRoute route = relayHandler.getWebRoutes().findRoute(req.getUri());
       if (route != null) {
+         final long t0 = System.currentTimeMillis();
+         logger.info("{} WEB API REQEUST: {}", this, req.getUri());
          // handle a JSON API call
          final WebContext context = new WebContext(req);
          final RequestHeader header = context.makeRequestHeader(this, route);
@@ -65,6 +67,8 @@ public class WebHttpSession extends WebSession {
             final ResponseHandler handler = new ResponseHandler() {
                @Override
                public void onResponse(Response res) {
+
+                  logger.info("{} WEB API RESPONSE: {} {} ms", this, res, (System.currentTimeMillis()-t0));
                   try {
                      if (res.isError()) {
                         JSONObject jo = new JSONObject();
