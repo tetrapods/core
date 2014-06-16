@@ -231,7 +231,11 @@ public class WebHttpSession extends WebSession {
    private ChannelFuture redirect(String newURL, ChannelHandlerContext ctx) {
       HttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, FOUND);
       response.headers().set(LOCATION, newURL);
-      response.headers().set(CONNECTION, "close");
+      if (isKeepAlive) {
+         response.headers().set(CONNECTION, HttpHeaders.Values.KEEP_ALIVE);
+      } else {
+         response.headers().set(CONNECTION, HttpHeaders.Values.CLOSE);
+      }
       return ctx.writeAndFlush(response);
    }
 }
