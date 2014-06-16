@@ -69,24 +69,28 @@ public class WebHttpSession extends WebSession {
                public void onResponse(Response res) {
                   logger.info("{} WEB API RESPONSE: {} {} ms", WebHttpSession.this, res, (System.currentTimeMillis() - t0));
                   try {
+                     ChannelFuture cf = null;
                      if (res.isError()) {
                         JSONObject jo = new JSONObject();
                         jo.put("result", "ERROR");
                         jo.put("error", res.errorCode());
                         jo.put("message", Contract.getErrorCode(res.errorCode(), res.getContractId()));
-                        ctx.writeAndFlush(makeFrame(jo)).addListener(ChannelFutureListener.CLOSE);
+                        cf = ctx.writeAndFlush(makeFrame(jo));
                      } else if (res.isGenericSuccess()) {
                         // bad form to allow two types of non-error response but most calls will just want to return SUCCESS
                         JSONObject jo = new JSONObject();
                         jo.put("result", "SUCCESS");
-                        ctx.writeAndFlush(makeFrame(jo)).addListener(ChannelFutureListener.CLOSE);
+                        cf = ctx.writeAndFlush(makeFrame(jo));
                      } else {
                         WebAPIResponse resp = (WebAPIResponse) res;
                         if (resp.redirect != null) {
                            redirect(resp.redirect, ctx);
                         } else {
-                           ctx.writeAndFlush(makeFrame(new JSONObject(resp.json))).addListener(ChannelFutureListener.CLOSE);
+                           cf = ctx.writeAndFlush(makeFrame(new JSONObject(resp.json)));
                         }
+                     }
+                     if (cf != null && !isKeepAlive) {
+                        cf.addListener(ChannelFutureListener.CLOSE);
                      }
                   } catch (Throwable e) {
                      logger.error(e.getMessage(), e);
