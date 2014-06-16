@@ -357,8 +357,8 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
       writeFrame(makeFrame(header, payload, envelope));
    }
 
-   public Async sendRelayedRequest(RequestHeader header, ByteBuf payload, Session originator) {
-      final Async async = new Async(null, header, originator);
+   public Async sendRelayedRequest(RequestHeader header, ByteBuf payload, Session originator, ResponseHandler handler) {
+      final Async async = new Async(null, header, originator, handler);
       int origRequestId = async.header.requestId;
       int newRequestId = addPendingRequest(async);
       if (!commsLogIgnore(header.structId))

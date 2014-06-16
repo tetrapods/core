@@ -62,6 +62,7 @@ public class WebHttpSession extends WebSession {
             logger.info("{} WEB API REQEUST: {}", this, req.getUri());
             header.requestId = requestCounter.incrementAndGet();
             header.fromType = Core.TYPE_WEBAPI;
+            header.fromId = getMyEntityId();
             isKeepAlive = HttpHeaders.isKeepAlive((HttpRequest) req);
 
             final ResponseHandler handler = new ResponseHandler() {
@@ -111,7 +112,7 @@ public class WebHttpSession extends WebSession {
                         header.toId = toEntityId;
                         logger.info("{} WEB API REQEUST ROUTING TO {} {}", this, toEntityId, header.dump());
                         // FIXME -- This is NOT timing out... we don't call checkHealth on WebSessions...
-                        relayRequest(header, request, ses).handle(handler);
+                        relayRequest(header, request, ses, handler);
                      } else {
                         logger.debug("{} Could not find a relay session for {} {}", this, header.toId, header.contractId);
                         handler.onResponse(new Error(ERROR_SERVICE_UNAVAILABLE));
@@ -193,17 +194,17 @@ public class WebHttpSession extends WebSession {
    private void relayRequest(RequestHeader header, Structure request, ResponseHandler handler) throws IOException {
       final Session ses = relayHandler.getRelaySession(header.toId, header.contractId);
       if (ses != null) {
-         relayRequest(header, request, ses).handle(handler);
+         relayRequest(header, request, ses, handler);
       } else {
          logger.debug("Could not find a relay session for {} {}", header.toId, header.contractId);
          handler.onResponse(new Error(ERROR_SERVICE_UNAVAILABLE));
       }
    }
 
-   protected Async relayRequest(RequestHeader header, Structure request, Session ses) throws IOException {
+   protected Async relayRequest(RequestHeader header, Structure request, Session ses, ResponseHandler handler) throws IOException {
       final ByteBuf in = convertToByteBuf(request);
       try {
-         return ses.sendRelayedRequest(header, in, this);
+         return ses.sendRelayedRequest(header, in, this, handler);
       } finally {
          in.release();
       }

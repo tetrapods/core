@@ -22,10 +22,15 @@ public class Async {
       this.session = session;
    }
 
+   public Async(Request request, RequestHeader header, Session session, ResponseHandler handler) {
+      this(request, header, session);
+      this.handler = handler;
+   }
+
    public synchronized boolean hasHandler() {
       return handler != null;
    }
-   
+
    public synchronized void handle(ResponseHandler handler) {
       this.handler = handler;
       if (response != null) {
