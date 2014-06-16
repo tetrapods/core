@@ -68,7 +68,7 @@ public class WebHttpSession extends WebSession {
                @Override
                public void onResponse(Response res) {
 
-                  logger.info("{} WEB API RESPONSE: {} {} ms", this, res, (System.currentTimeMillis()-t0));
+                  logger.info("{} WEB API RESPONSE: {} {} ms", WebHttpSession.this, res, (System.currentTimeMillis()-t0));
                   try {
                      if (res.isError()) {
                         JSONObject jo = new JSONObject();
