@@ -65,8 +65,8 @@ public class WebHttpSession extends WebSession {
          final WebContext context = new WebContext(req);
          final RequestHeader header = context.makeRequestHeader(this, route);
          if (header != null) {
-            // final long t0 = System.currentTimeMillis();
-            // logger.info("{} WEB API REQEUST: {} keepAlive = {}", this, req.getUri(), isKeepAlive);
+            final long t0 = System.currentTimeMillis();
+            logger.info("{} WEB API REQEUST: {} keepAlive = {}", this, req.getUri(), isKeepAlive);
             header.requestId = requestCounter.incrementAndGet();
             header.fromType = Core.TYPE_WEBAPI;
             header.fromId = getMyEntityId();
@@ -75,7 +75,7 @@ public class WebHttpSession extends WebSession {
             final ResponseHandler handler = new ResponseHandler() {
                @Override
                public void onResponse(Response res) {
-                  //logger.info("{} WEB API RESPONSE: {} {} ms", WebHttpSession.this, res, (System.currentTimeMillis() - t0));
+                  logger.info("{} WEB API RESPONSE: {} {} ms", WebHttpSession.this, res, (System.currentTimeMillis() - t0));
                   try {
                      ChannelFuture cf = null;
                      if (res.isError()) {
@@ -121,7 +121,7 @@ public class WebHttpSession extends WebSession {
                      if (ses != null) {
                         header.contractId = Core.CONTRACT_ID;
                         header.toId = toEntityId;
-                        //logger.info("{} WEB API REQEUST ROUTING TO {} {}", this, toEntityId, header.dump()); 
+                        logger.info("{} WEB API REQEUST ROUTING TO {} {}", this, toEntityId, header.dump());
                         relayRequest(header, request, ses, handler);
                      } else {
                         logger.debug("{} Could not find a relay session for {} {}", this, header.toId, header.contractId);
