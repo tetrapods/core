@@ -105,7 +105,7 @@ public class WebHttpSession extends WebSession {
                      if (ses != null) {
                         header.contractId = Core.CONTRACT_ID;
                         header.toId = toEntityId;
-                        logger.info("{} WEB API REQEUST ROUTING TO {}", this, toEntityId);
+                        logger.info("{} WEB API REQEUST ROUTING TO {} {}", this, toEntityId, header.dump());
                         // FIXME -- This is NOT timing out... we don't call checkHealth on WebSessions...
                         relayRequest(header, request, ses).handle(handler);
                      } else {
