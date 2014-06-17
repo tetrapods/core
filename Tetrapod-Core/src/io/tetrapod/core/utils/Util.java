@@ -1,5 +1,7 @@
 package io.tetrapod.core.utils;
 
+import io.tetrapod.core.json.JSONArray;
+
 import java.io.*;
 import java.net.*;
 import java.nio.charset.Charset;
@@ -215,6 +217,14 @@ public class Util {
          sb.append(c);
       }
       return sb.toString();
+   }
+
+   public static List<String> jsonArrayToStringList(JSONArray array) {
+      List<String> result = new ArrayList<>();
+      for (int i = 0; i < array.length(); i++) {
+         result.add(array.getString(i));
+      }
+      return result;
    }
 
 }
