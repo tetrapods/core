@@ -12,18 +12,18 @@
 	</parent>
 
 	<dependencies>
-      <dependency>
-         <artifactId>protocol-core</artifactId>
-         <groupId>${project.groupId}</groupId>
-         <version>${project.version}</version>
-      </dependency>
-      <dependency>
-         <artifactId>protocol-tetrapod</artifactId>
-         <groupId>${project.groupId}</groupId>
-         <version>${project.version}</version>
-      </dependency>
-      
-      
+		<dependency>
+			<artifactId>protocol-core</artifactId>
+			<groupId>${project.groupId}</groupId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<artifactId>protocol-tetrapod</artifactId>
+			<groupId>${project.groupId}</groupId>
+			<version>${project.version}</version>
+		</dependency>
+
+
 		<dependency>
 			<groupId>ch.qos.logback</groupId>
 			<artifactId>logback-classic</artifactId>
@@ -33,7 +33,7 @@
 		<dependency>
 			<groupId>io.netty</groupId>
 			<artifactId>netty-all</artifactId>
-			<version>4.0.19.Final</version>
+			<version>4.0.20.Final</version>
 		</dependency>
 
 		<dependency>
@@ -41,13 +41,13 @@
 			<artifactId>metrics-core</artifactId>
 			<version>3.0.2</version>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>com.codahale.metrics</groupId>
 			<artifactId>metrics-graphite</artifactId>
 			<version>3.0.2</version>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>com.codahale.metrics</groupId>
 			<artifactId>metrics-jvm</artifactId>
@@ -57,7 +57,7 @@
 		<dependency>
 			<groupId>com.hazelcast</groupId>
 			<artifactId>hazelcast</artifactId>
-			<version>3.2.1</version>
+			<version>3.2.2</version>
 			<optional>true</optional>
 		</dependency>
 
