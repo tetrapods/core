@@ -81,7 +81,7 @@ public class ServiceCache implements TetrapodContract.Services.API {
       }
       return null;
    }
-   
+
    public boolean isServiceAvailable(int entityId) {
       Entity e = services.get(entityId);
       if (e != null) {
@@ -99,7 +99,7 @@ public class ServiceCache implements TetrapodContract.Services.API {
       }
       return true;
    }
-   
+
    private boolean isAvailable(final Entity e) {
       synchronized (e) {
          return (e.status & (Core.STATUS_STARTING | Core.STATUS_PAUSED | Core.STATUS_GONE | Core.STATUS_BUSY | Core.STATUS_OVERLOADED

@@ -2,7 +2,6 @@ package io.tetrapod.core;
 
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
-import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.ssl.SslHandler;
@@ -17,7 +16,7 @@ import org.slf4j.*;
 /**
  * A server that speaks the tetrapod wire protocol
  */
-public class Server extends ChannelInitializer<SocketChannel> implements Session.Listener  {
+public class Server extends ChannelInitializer<SocketChannel> implements Session.Listener {
 
    public static final Logger    logger   = LoggerFactory.getLogger(Server.class);
 
@@ -47,12 +46,13 @@ public class Server extends ChannelInitializer<SocketChannel> implements Session
       this.clientAuth = clientAuth;
    }
 
-   public ChannelFuture start() {
-      return start(new NioEventLoopGroup());
+   public synchronized ChannelFuture start(int port) {
+      this.port = port;
+      return start();
    }
 
-   public synchronized ChannelFuture start(EventLoopGroup bossGroup) {
-      this.bossGroup = bossGroup;
+   public synchronized ChannelFuture start() {
+      bossGroup = dispatcher.getBossGroup();
       ServerBootstrap b = new ServerBootstrap();
       b.group(bossGroup, dispatcher.getWorkerGroup()).channel(NioServerSocketChannel.class);
       b.childHandler(this);
@@ -60,7 +60,7 @@ public class Server extends ChannelInitializer<SocketChannel> implements Session
       logger.info("Starting Server Listening on Port {}", port);
       return b.bind(port);
    }
-   
+
    public void initChannel(SocketChannel ch) throws Exception {
       startSession(ch);
    }
@@ -103,7 +103,7 @@ public class Server extends ChannelInitializer<SocketChannel> implements Session
       sessions.remove(ses.getSessionNum());
    }
 
-   public int getPort() {
+   public synchronized int getPort() {
       return port;
    }
 

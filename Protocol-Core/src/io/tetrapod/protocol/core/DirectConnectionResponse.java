@@ -12,62 +12,36 @@ import java.util.*;
 import java.util.concurrent.*;
 
 @SuppressWarnings("unused")
-public class Core extends Structure {
+public class DirectConnectionResponse extends Response {
    
-   /**
-    * request is not addressed to a specific entity
-    */
-   public static final int UNADDRESSED = 0; 
-   
-   /**
-    * request is for direct dispatch
-    */
-   public static final int DIRECT = 1; 
-   public static final byte TYPE_TETRAPOD = 1; 
-   public static final byte TYPE_SERVICE = 2; 
-   public static final byte TYPE_ADMIN = 3; 
-   public static final byte TYPE_CLIENT = 4; 
-   public static final byte TYPE_ANONYMOUS = 5; 
-   public static final byte TYPE_WEBAPI = 6; 
-   public static final int DEFAULT_PUBLIC_PORT = 9900; 
-   public static final int DEFAULT_SERVICE_PORT = 9901; 
-   public static final int DEFAULT_CLUSTER_PORT = 9902; 
-   public static final int DEFAULT_HTTP_PORT = 9904; 
-   public static final int DEFAULT_HTTPS_PORT = 9906; 
-   public static final int DEFAULT_DIRECT_PORT = 9800; 
-   public static final int STATUS_STARTING = 1; 
-   public static final int STATUS_PAUSED = 2; 
-   public static final int STATUS_GONE = 4; 
-   public static final int STATUS_BUSY = 8; 
-   public static final int STATUS_OVERLOADED = 16; 
-   public static final int STATUS_FAILED = 32; 
-   public static final int STATUS_STOPPING = 64; 
-   public static final byte ENVELOPE_HANDSHAKE = 1; 
-   public static final byte ENVELOPE_REQUEST = 2; 
-   public static final byte ENVELOPE_RESPONSE = 3; 
-   public static final byte ENVELOPE_MESSAGE = 4; 
-   public static final byte ENVELOPE_BROADCAST = 5; 
-   public static final byte ENVELOPE_PING = 6; 
-   public static final byte ENVELOPE_PONG = 7; 
-   
-   public static final int STRUCT_ID = 9088168;
+   public static final int STRUCT_ID = 16162197;
    public static final int CONTRACT_ID = CoreContract.CONTRACT_ID;
     
-   public Core() {
+   public DirectConnectionResponse() {
       defaults();
    }
+
+   public DirectConnectionResponse(ServerAddress address, String token) {
+      this.address = address;
+      this.token = token;
+   }   
+   
+   public ServerAddress address;
+   public String token;
 
    public final Structure.Security getSecurity() {
       return Security.INTERNAL;
    }
 
    public final void defaults() {
-      
+      address = null;
+      token = null;
    }
    
    @Override
    public final void write(DataSource data) throws IOException {
-      
+      if (this.address != null) data.write(1, this.address);
+      data.write(2, this.token);
       data.writeEndTag();
    }
    
@@ -77,7 +51,8 @@ public class Core extends Structure {
       while (true) {
          int tag = data.readTag();
          switch (tag) {
-            
+            case 1: this.address = data.read_struct(tag, new ServerAddress()); break;
+            case 2: this.token = data.read_string(tag); break;
             case Codec.END_TAG:
                return;
             default:
@@ -86,26 +61,27 @@ public class Core extends Structure {
          }
       }
    }
-   
+  
    public final int getContractId() {
-      return Core.CONTRACT_ID;
+      return DirectConnectionResponse.CONTRACT_ID;
    }
 
    public final int getStructId() {
-      return Core.STRUCT_ID;
+      return DirectConnectionResponse.STRUCT_ID;
    }
 
    public final String[] tagWebNames() {
       // Note do not use this tags in long term serializations (to disk or databases) as 
       // implementors are free to rename them however they wish.  A null means the field
       // is not to participate in web serialization (remaining at default)
-      String[] result = new String[0+1];
-      
+      String[] result = new String[2+1];
+      result[1] = "address";
+      result[2] = "token";
       return result;
    }
 
    public final Structure make() {
-      return new Core();
+      return new DirectConnectionResponse();
    }
 
    public final StructDescription makeDescription() {
@@ -113,7 +89,8 @@ public class Core extends Structure {
       desc.tagWebNames = tagWebNames();
       desc.types = new TypeDescriptor[desc.tagWebNames.length];
       desc.types[0] = new TypeDescriptor(TypeDescriptor.T_STRUCT, getContractId(), getStructId());
-      
+      desc.types[1] = new TypeDescriptor(TypeDescriptor.T_STRUCT, ServerAddress.CONTRACT_ID, ServerAddress.STRUCT_ID);
+      desc.types[2] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
       return desc;
    }
-}
+ }

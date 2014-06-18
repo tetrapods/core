@@ -18,6 +18,7 @@ function TP_Core(server) {
    server.registerConst("Core", "Core", "DEFAULT_CLUSTER_PORT", 9902);
    server.registerConst("Core", "Core", "DEFAULT_HTTP_PORT", 9904);
    server.registerConst("Core", "Core", "DEFAULT_HTTPS_PORT", 9906);
+   server.registerConst("Core", "Core", "DEFAULT_DIRECT_PORT", 9800);
    server.registerConst("Core", "Core", "STATUS_STARTING", 1);
    server.registerConst("Core", "Core", "STATUS_PAUSED", 2);
    server.registerConst("Core", "Core", "STATUS_GONE", 4);
@@ -58,6 +59,7 @@ function TP_Core(server) {
    server.registerConst("Core", "null", "FLOOD", 12);
    server.registerConst("Core", "null", "INVALID_ENTITY", 9);
    server.registerConst("Core", "null", "INVALID_RIGHTS", 8);
+   server.registerConst("Core", "null", "INVALID_TOKEN", 13);
    server.registerConst("Core", "null", "NOT_CONFIGURED", 2718243);
    server.registerConst("Core", "null", "PROTOCOL_MISMATCH", 5);
    server.registerConst("Core", "null", "RIGHTS_EXPIRED", 10);
@@ -86,6 +88,10 @@ function TP_Core(server) {
    server.register("response", "Core", "ServiceLogs", 1, 6345878);
    server.register("request", "Core", "WebAPI", 1, 9321342);
    server.register("response", "Core", "WebAPI", 1, 9652194);
+   server.register("request", "Core", "DirectConnection", 1, 1361471);
+   server.register("response", "Core", "DirectConnection", 1, 16162197);
+   server.register("request", "Core", "ValidateConnection", 1, 6315662);
+   server.register("response", "Core", "ValidateConnection", 1, 1291890);
    server.register("message", "Core", "ServiceStats", 1, 469976);
    server.register("struct", "Core", "Subscriber", 1, 16013581);
    server.register("struct", "Core", "WebRoute", 1, 4890284);

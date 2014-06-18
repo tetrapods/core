@@ -1,6 +1,8 @@
 package io.tetrapod.core;
 
-import static io.tetrapod.protocol.core.Core.UNADDRESSED;
+import static io.tetrapod.protocol.core.Core.*;
+import io.netty.channel.EventLoopGroup;
+import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.rpc.Error;
@@ -12,7 +14,7 @@ import java.lang.management.ManagementFactory;
 import java.net.ConnectException;
 import java.nio.file.Files;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 import org.slf4j.*;
 
@@ -22,6 +24,8 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
       ClusterMemberMessage.Handler {
 
    private static final Logger             logger          = LoggerFactory.getLogger(DefaultService.class);
+
+   protected final EventLoopGroup          bossGroup       = new NioEventLoopGroup();
 
    protected final Set<Integer>            dependencies    = new HashSet<>();
 
@@ -36,6 +40,7 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
    protected int                           status;
    protected final int                     buildNumber;
    protected final LogBuffer               logBuffer;
+   private ServiceConnector                serviceConnector;
 
    protected final ServiceStats            stats;
 
@@ -105,7 +110,7 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
    public void messageEntity(EntityMessage m, MessageContext ctxA) {
       SessionMessageContext ctx = (SessionMessageContext) ctxA;
       if (ctx.session.getTheirEntityType() == Core.TYPE_TETRAPOD) {
-         synchronized (this) { 
+         synchronized (this) {
             this.entityId = m.entityId;
          }
          ctx.session.setMyEntityId(m.entityId);
@@ -151,6 +156,9 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
          if (getEntityType() == Core.TYPE_TETRAPOD || services.checkDependencies(dependencies)) {
             try {
                onReadyToServe();
+               if (getEntityType() != Core.TYPE_TETRAPOD) {
+                  serviceConnector = new ServiceConnector(this);
+               }
             } catch (Throwable t) {
                fail(t);
             }
@@ -206,6 +214,14 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
       } catch (Exception e) {
          logger.error(e.getMessage(), e);
       }
+
+      try {
+         // we have one boss group for all our servers
+         bossGroup.shutdownGracefully().sync();
+      } catch (Exception e) {
+         logger.error(e.getMessage(), e);
+      }
+
       if (restarting) {
          clusterClient.close();
          dispatcher.shutdown();
@@ -452,24 +468,40 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
       return dispatcher.messagesSentCounter.getCount();
    }
 
-   public Response sendPendingRequest(Request req, PendingResponseHandler handler) {
-      return clusterClient.getSession().sendPendingRequest(req, Core.UNADDRESSED, (byte) 30, handler);
-   }
-
    public Response sendPendingRequest(Request req, int toEntityId, PendingResponseHandler handler) {
+      if (serviceConnector != null) {
+         return serviceConnector.sendPendingRequest(req, toEntityId, handler);
+      }
       return clusterClient.getSession().sendPendingRequest(req, toEntityId, (byte) 30, handler);
    }
 
+   public Response sendPendingRequest(Request req, PendingResponseHandler handler) {
+      if (serviceConnector != null) {
+         return serviceConnector.sendPendingRequest(req, Core.UNADDRESSED, handler);
+      }
+      return clusterClient.getSession().sendPendingRequest(req, Core.UNADDRESSED, (byte) 30, handler);
+   }
+
+   public Response sendPendingDirectRequest(Request req, PendingResponseHandler handler) {
+      return clusterClient.getSession().sendPendingRequest(req, Core.DIRECT, (byte) 30, handler);
+   }
+
    public Async sendRequest(Request req) {
+      if (serviceConnector != null) {
+         return serviceConnector.sendRequest(req, Core.UNADDRESSED);
+      }
       return clusterClient.getSession().sendRequest(req, Core.UNADDRESSED, (byte) 30);
+   }
+
+   public Async sendRequest(Request req, int toEntityId) {
+      if (serviceConnector != null) {
+         return serviceConnector.sendRequest(req, toEntityId);
+      }
+      return clusterClient.getSession().sendRequest(req, toEntityId, (byte) 30);
    }
 
    public Async sendDirectRequest(Request req) {
       return clusterClient.getSession().sendRequest(req, Core.DIRECT, (byte) 30);
-   }
-
-   public Async sendRequest(Request req, int toEntityId) {
-      return clusterClient.getSession().sendRequest(req, toEntityId, (byte) 30);
    }
 
    public void sendMessage(Message msg, int toEntityId, int topicId) {
@@ -694,6 +726,22 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
    @Override
    public Response requestWebAPI(WebAPIRequest r, RequestContext ctx) {
       return Response.error(CoreContract.ERROR_UNKNOWN_REQUEST);
+   }
+
+   @Override
+   public Response requestDirectConnection(DirectConnectionRequest r, RequestContext ctx) {
+      if (serviceConnector != null) {
+         return serviceConnector.requestDirectConnection(r, ctx);
+      }
+      return new Error(CoreContract.ERROR_NOT_CONFIGURED);
+   }
+
+   @Override
+   public Response requestValidateConnection(ValidateConnectionRequest r, RequestContext ctx) {
+      if (serviceConnector != null) {
+         return serviceConnector.requestValidateConnection(r, ctx);
+      }
+      return new Error(CoreContract.ERROR_NOT_CONFIGURED);
    }
 
 }

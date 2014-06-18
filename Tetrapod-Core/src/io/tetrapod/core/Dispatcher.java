@@ -23,6 +23,7 @@ public class Dispatcher {
 
    private final BlockingQueue<Runnable>  overflow               = new LinkedBlockingQueue<>();
 
+   private EventLoopGroup                 bossGroup;
    private EventLoopGroup                 workerGroup;
 
    // metrics
@@ -70,6 +71,13 @@ public class Dispatcher {
          workerGroup = new NioEventLoopGroup();
       }
       return workerGroup;
+   }
+
+   public synchronized EventLoopGroup getBossGroup() {
+      if (bossGroup == null) {
+         bossGroup = new NioEventLoopGroup();
+      }
+      return bossGroup;
    }
 
    public boolean dispatch(final Runnable r) {
@@ -167,6 +175,9 @@ public class Dispatcher {
       threadPool.shutdown();
       sequential.shutdown();
       scheduled.shutdown();
+      if (bossGroup != null) {
+         bossGroup.shutdownGracefully();
+      }
       if (workerGroup != null) {
          workerGroup.shutdownGracefully();
       }

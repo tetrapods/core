@@ -4,8 +4,6 @@ import static io.tetrapod.protocol.core.Core.*;
 import static io.tetrapod.protocol.core.CoreContract.*;
 import static io.tetrapod.protocol.core.TetrapodContract.*;
 import io.netty.buffer.ByteBuf;
-import io.netty.channel.EventLoopGroup;
-import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.tetrapod.core.AdminAccounts.AdminMutator;
 import io.tetrapod.core.Session.RelayHandler;
@@ -58,9 +56,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    private Storage                                    storage;
    private AdminAccounts                              adminAccounts;
 
-   private final EventLoopGroup                       bossGroup   = new NioEventLoopGroup();
    private final List<Server>                         servers     = new ArrayList<Server>();
-
    private final WebRoutes                            webRoutes   = new WebRoutes();
 
    private long                                       lastStatsLog;
@@ -193,24 +189,10 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       return count;
    }
 
-   private class TypedSessionFactory implements SessionFactory {
-      private final byte type;
+   private class TypedSessionFactory extends WireSessionFactory {
 
       private TypedSessionFactory(byte type) {
-         this.type = type;
-      }
-
-      /**
-       * Session factory for our sessions from clients and services
-       */
-      @Override
-      public Session makeSession(SocketChannel ch) {
-         final Session ses = new WireSession(ch, TetrapodService.this);
-         ses.setMyEntityId(getEntityId());
-         ses.setMyEntityType(Core.TYPE_TETRAPOD);
-         ses.setTheirEntityType(type);
-         ses.setRelayHandler(TetrapodService.this);
-         ses.addSessionListener(new Session.Listener() {
+         super(TetrapodService.this, type, new Session.Listener() {
             @Override
             public void onSessionStop(Session ses) {
                logger.info("Session Stopped: {}", ses);
@@ -220,6 +202,15 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
             @Override
             public void onSessionStart(Session ses) {}
          });
+      }
+
+      /**
+       * Session factory for our sessions from clients and services
+       */
+      @Override
+      public Session makeSession(SocketChannel ch) {
+         final Session ses = super.makeSession(ch);
+         ses.setRelayHandler(TetrapodService.this);
          return ses;
       }
    }
@@ -296,7 +287,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
             // start listening
             for (Server s : servers) {
-               s.start(bossGroup).sync();
+               s.start().sync();
             }
          } catch (Exception e) {
             fail(e);
@@ -311,12 +302,6 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       logger.info("Shutting Down Tetrapod");
       if (cluster != null) {
          cluster.shutdown();
-      }
-      try {
-         // we have one boss group for all the other servers
-         bossGroup.shutdownGracefully().sync();
-      } catch (Exception e) {
-         logger.error(e.getMessage(), e);
       }
       if (storage != null) {
          storage.shutdown();
@@ -337,7 +322,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          return cluster.getSession(parent.entityId);
       }
    }
-   
+
    @Override
    public int getAvailableService(int contractId) {
       EntityInfo entity = registry.getRandomAvailableService(contractId);
@@ -346,7 +331,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       }
       return 0;
    }
-   
+
    @Override
    public Session getRelaySession(int entityId, int contractId) {
       EntityInfo entity = null;

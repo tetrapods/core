@@ -21,6 +21,7 @@ struct Core
    const int DEFAULT_CLUSTER_PORT    = 9902
    const int DEFAULT_HTTP_PORT       = 9904
    const int DEFAULT_HTTPS_PORT      = 9906
+   const int DEFAULT_DIRECT_PORT     = 9800
    
     
    const int   STATUS_STARTING     = 1  # bitmask
@@ -44,6 +45,7 @@ struct Core
    error RIGHTS_EXPIRED       = 10 // rights token has expired, need to login again     
    error SERVICE_OVERLOADED   = 11 // This service is over capacity, so the request was not performed
    error FLOOD                = 12 // client has sent too many requests recently
+   error INVALID_TOKEN        = 13 // for any sort of invalid token
 
    const byte  ENVELOPE_HANDSHAKE      = 1 
    const byte  ENVELOPE_REQUEST        = 2
@@ -111,7 +113,7 @@ internal response ServiceDetails
    1: string iconURL
    3: string metadata
    2: ServiceCommand[] commands
-    
+
 internal request ServiceLogs
    1: long logId
    2: byte level
@@ -132,6 +134,20 @@ public request WebAPI
 public response WebAPI
    1: string json
    2: string redirect
+
+internal request DirectConnection
+   1: string token
+
+internal response DirectConnection
+   1: ServerAddress address
+   2: string token
+   
+public request ValidateConnection
+   1: int entityId
+   2: string token
+
+public response ValidateConnection
+   1: string token   
  
 ################################# MESSAGES #################################
 

@@ -19,6 +19,7 @@ public class CoreContract extends Contract {
    public static final int CONTRACT_ID = 1;
    
    public static interface API extends APIHandler
+      , DirectConnectionRequest.Handler
       , PauseRequest.Handler
       , RestartRequest.Handler
       , ServiceDetailsRequest.Handler
@@ -27,6 +28,7 @@ public class CoreContract extends Contract {
       , ServiceStatsUnsubscribeRequest.Handler
       , ShutdownRequest.Handler
       , UnpauseRequest.Handler
+      , ValidateConnectionRequest.Handler
       , WebAPIRequest.Handler
       {}
    
@@ -41,6 +43,8 @@ public class CoreContract extends Contract {
          new ServiceDetailsRequest(),
          new ServiceLogsRequest(),
          new WebAPIRequest(),
+         new DirectConnectionRequest(),
+         new ValidateConnectionRequest(),
       };
    }
    
@@ -49,6 +53,8 @@ public class CoreContract extends Contract {
          new ServiceDetailsResponse(),
          new ServiceLogsResponse(),
          new WebAPIResponse(),
+         new DirectConnectionResponse(),
+         new ValidateConnectionResponse(),
       };
    }
    
@@ -128,6 +134,11 @@ public class CoreContract extends Contract {
     * Caller does not have sufficient rights to call this Request
     */
    public static final int ERROR_INVALID_RIGHTS = 8; 
+   
+   /**
+    * for any sort of invalid token
+    */
+   public static final int ERROR_INVALID_TOKEN = 13; 
    public static final int ERROR_NOT_CONFIGURED = 2718243; 
    
    /**
