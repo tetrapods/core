@@ -226,5 +226,14 @@ public class Util {
       }
       return result;
    }
+   
+   public static List<Integer> jsonArrayToIntegerList(JSONArray array) {
+      List<Integer> result = new ArrayList<>();
+      for (int i = 0; i < array.length(); i++) {
+         result.add(array.getInt(i));
+      }
+      return result;
+   }
+
 
 }
