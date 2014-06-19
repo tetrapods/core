@@ -21,7 +21,7 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
    /**
     * The number of requests sent to a specific service that triggers us to start a direct session
     */
-   private static final int                REQUEST_THRESHOLD = 10;
+   private static final int                REQUEST_THRESHOLD = 100;
 
    private Map<Integer, DirectServiceInfo> services          = new ConcurrentHashMap<>();
 
@@ -149,6 +149,7 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
             pending = false;
             valid = true;
             failures = 0;
+            logger.info("Direct Connection Established with {}", ses);
          } else {
             failure();
          }
@@ -241,6 +242,4 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
       }
    }
 
-   
-   // TODO: Health checks
 }
