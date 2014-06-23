@@ -9,10 +9,11 @@ import ch.qos.logback.classic.spi.*;
 import ch.qos.logback.core.AppenderBase;
 
 public class LogBuffer extends AppenderBase<ILoggingEvent> {
-   private static final int                MAX_ITEMS = 1000;
+   private static final int                MAX_ITEMS       = 1000;
+   private static final int                MAX_MESSAGE_LEN = 1024 * 8;
 
-   private final LinkedList<ILoggingEvent> items     = new LinkedList<>();
-   private long                            count     = 0;
+   private final LinkedList<ILoggingEvent> items           = new LinkedList<>();
+   private long                            count           = 0;
 
    @Override
    protected synchronized void append(ILoggingEvent e) {
@@ -49,6 +50,9 @@ public class LogBuffer extends AppenderBase<ILoggingEvent> {
          sb.append('\n');
          logStack(sb, e.getThrowableProxy());
          msg = sb.toString();
+      }
+      if (msg.length() > MAX_MESSAGE_LEN) {
+         msg = msg.substring(0, MAX_MESSAGE_LEN - 3) + "...";
       }
       return new ServiceLogEntry(msg, convert(e.getLevel()), e.getTimeStamp(), e.getThreadName(), e.getLoggerName());
    }

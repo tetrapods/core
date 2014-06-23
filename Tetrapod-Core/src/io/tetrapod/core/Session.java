@@ -108,15 +108,15 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
             close();
          }
       }
-      timeoutPendingRequests();    
+      timeoutPendingRequests();
    }
-   
+
    /**
     * 
     */
    public void timeoutPendingRequests() {
       // 
-      for (Entry<Integer,Async> entry : pendingRequests.entrySet()) {
+      for (Entry<Integer, Async> entry : pendingRequests.entrySet()) {
          Async a = entry.getValue();
          if (a.isTimedout()) {
             pendingRequests.remove(entry.getKey());
@@ -398,6 +398,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
             }
          }
       }
+      logger.error("{} : {} : {}", this, cause.getClass().getSimpleName(), cause.getMessage());
       logger.error(cause.getMessage(), cause);
    }
 
