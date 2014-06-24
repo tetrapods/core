@@ -3,7 +3,6 @@ package io.tetrapod.core.utils;
 import io.netty.buffer.*;
 import io.netty.handler.codec.base64.*;
 import io.tetrapod.core.serialize.datasources.ByteBufDataSource;
-
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.Arrays;
@@ -159,12 +158,6 @@ public class AuthToken {
       return AuthToken.encode(vals);
    }
 
-   public static String encodeAuthTokenPub(int roomId, int timeoutInMinutes) {
-      int timeout = AuthToken.timeNowInMinutes() + timeoutInMinutes;
-      int[] vals = { timeout, roomId };
-      return AuthToken.encode(vals);
-   }
-
    public static Decoded decodeUserToken(String token, int accountId, int entityId) {
       int[] vals = { 0, 0, accountId, entityId };
       if (!decode(vals, 2, token)) {
@@ -209,18 +202,6 @@ public class AuthToken {
       Decoded d = new Decoded();
       d.accountId = vals[4];
       d.miscValues = new int[] { vals[1], vals[2], vals[3] };
-      d.timeLeft = vals[0] - timeNowInMinutes();
-      return d;
-   }
-
-   public static Decoded decodeAuthTokenPub(String token) {
-      int[] vals = new int[2];
-      if (!decode(vals, 2, token)) {
-         return null;
-      }
-      Decoded d = new Decoded();
-      d.accountId = 0;
-      d.miscValues = new int[] { vals[1] };
       d.timeLeft = vals[0] - timeNowInMinutes();
       return d;
    }
