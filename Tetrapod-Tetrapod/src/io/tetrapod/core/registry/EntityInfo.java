@@ -213,26 +213,26 @@ public class EntityInfo extends Entity implements Comparable<EntityInfo> {
             return false;
          }
       }
-      boolean res = false;
+      boolean processedSomething = false;
       if (consumerLock.tryLock()) {
          try {
             Runnable task = null;
             do {
                task = queue.poll();
                if (task != null) {
+                  processedSomething = true;
                   try {
                      task.run();
                   } catch (Throwable e) {
                      logger.error(e.getMessage(), e);
                   }
-                  res = true;
                }
             } while (task != null);
          } finally {
             consumerLock.unlock();
          }
       }
-      return res;
+      return processedSomething;
    }
 
 }

@@ -19,10 +19,11 @@ public class TetrapodWorker implements Runnable {
             if (!e.isQueueEmpty()) {
                service.dispatcher.dispatch(new Runnable() {
                   public void run() {
-                     // we turn off auto flush in case we end up writing a lot of 
+                     // we turn off auto flush in case we end up writing a lot 
                      final Session s = e.getSession();
                      if (s != null) {
-                        s.setAutoFlush(false);
+                        // HACK--temporarily disabling this in prod to rule it out as a culprit
+                        //s.setAutoFlush(false);
                      }
                      if (e.process()) {
                         if (s != null) {
