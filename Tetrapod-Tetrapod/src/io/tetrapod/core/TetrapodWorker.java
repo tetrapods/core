@@ -22,8 +22,7 @@ public class TetrapodWorker implements Runnable {
                      // we turn off auto flush in case we end up writing a lot 
                      final Session s = e.getSession();
                      if (s != null) {
-                        // HACK--temporarily disabling this in prod to rule it out as a culprit
-                        //s.setAutoFlush(false);
+                        s.setAutoFlush(false);
                      }
                      if (e.process()) {
                         if (s != null) {
