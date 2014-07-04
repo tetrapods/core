@@ -3,9 +3,10 @@ define(["knockout", "jquery", "app"], function(ko, $, app) {
    
    function Builder() {
       self = this;
-      self.doBuild = true;
-      self.doDeploy = true;
-      self.doLaunch = true;
+      self.doBuild = false;
+      self.doDeploy = false;
+      self.doLaunch = false;
+      self.doFullCycle = false;
       self.buildNumber = "";
       self.run = run;
       self.services = [];
@@ -57,6 +58,9 @@ define(["knockout", "jquery", "app"], function(ko, $, app) {
                array.push(command);
             }
          }
+         if (self.fullCycle) {
+            array.push({ serviceName: "", build: self.buildNumber, command: BuildCommandConsts.FULL_CYCLE});
+         }
          $("#buildExecute").button('loading');
          app.server.send("Tetrapod.ExecuteBuildCommand", { commands: array }, entityId).handle(function (res) {
             load(entityId);
@@ -70,7 +74,7 @@ define(["knockout", "jquery", "app"], function(ko, $, app) {
                return service.isChecked;
             }
          }
-         return true;
+         return false;
       }
    }
 });

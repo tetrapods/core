@@ -107,6 +107,10 @@ public class Builder {
                if (!canLaunch)
                   return false;
                return doLaunch(clusterDir, command.serviceName, command.build, m);
+            case BuildCommand.FULL_CYCLE:
+               if (!canLaunch)
+                  return false;
+               return doFullCycle(clusterDir, command.serviceName, command.build, m);
          }
       } catch (IOException e) {
          logger.error("failed build command", e);
@@ -140,4 +144,11 @@ public class Builder {
       int rc = Util.runProcess(callback, new File(clusterDir, "launch").getPath(), buildNum, serviceName);
       return rc == 0;
    }
+
+   private static boolean doFullCycle(File clusterDir, String serviceName, int build, MyCallback callback) throws IOException {
+      String buildNum = build == BuildCommand.LAUNCH_DEPLOYED ? "current" : "" + build; 
+      int rc = Util.runProcess(callback, new File(clusterDir, "fullCycle").getPath(), buildNum, serviceName);
+      return rc == 0;
+   }
+
 }

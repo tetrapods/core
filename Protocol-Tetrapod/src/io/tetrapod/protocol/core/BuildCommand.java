@@ -17,6 +17,7 @@ public class BuildCommand extends Structure {
    public static final int BUILD = 1; 
    public static final int DEPLOY = 2; 
    public static final int LAUNCH = 3; 
+   public static final int FULL_CYCLE = 4; 
    public static final int DEPLOY_LATEST = -1; 
    public static final int LAUNCH_DEPLOYED = -1; 
    
