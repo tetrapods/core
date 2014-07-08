@@ -58,7 +58,7 @@ define(["knockout", "jquery", "app"], function(ko, $, app) {
                array.push(command);
             }
          }
-         if (self.fullCycle) {
+         if (self.doFullCycle) {
             array.push({ serviceName: "", build: self.buildNumber, command: BuildCommandConsts.FULL_CYCLE});
          }
          $("#buildExecute").button('loading');
