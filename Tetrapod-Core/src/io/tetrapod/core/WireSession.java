@@ -192,9 +192,11 @@ public class WireSession extends Session {
          header.fromId = theirId;
       }
 
-      if (!commsLogIgnore(header.structId))
-         commsLog("%s  [M] <- T%d.Message:%d %s", this, header.topicId, header.structId, getNameFor(header));
-      if (relayHandler == null || header.toId == myId || (header.toId == UNADDRESSED && header.topicId == UNADDRESSED)) {
+      if (!commsLogIgnore(header.structId)) {
+         commsLog("%s  [M] <- Message:%d %s (to %s:%d)", this, header.structId, getNameFor(header), TO_TYPES[header.toType], header.toId);
+      }
+      boolean selfDispatch = header.toType == MessageHeader.TO_ENTITY && (header.toId == myId || header.toId == UNADDRESSED);
+      if (relayHandler == null || selfDispatch) {
          dispatchMessage(header, reader);
       } else {
          relayHandler.relayMessage(header, in, isBroadcast);

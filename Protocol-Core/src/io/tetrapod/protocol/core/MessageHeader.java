@@ -14,6 +14,10 @@ import java.util.concurrent.*;
 @SuppressWarnings("unused")
 public class MessageHeader extends Structure {
    
+   public static final byte TO_TOPIC = 1; 
+   public static final byte TO_ENTITY = 2; 
+   public static final byte TO_ALTERNATE = 3; 
+   
    public static final int STRUCT_ID = 11760427;
    public static final int CONTRACT_ID = CoreContract.CONTRACT_ID;
     
@@ -21,16 +25,16 @@ public class MessageHeader extends Structure {
       defaults();
    }
 
-   public MessageHeader(int fromId, int topicId, int toId, int contractId, int structId) {
+   public MessageHeader(int fromId, byte toType, int toId, int contractId, int structId) {
       this.fromId = fromId;
-      this.topicId = topicId;
+      this.toType = toType;
       this.toId = toId;
       this.contractId = contractId;
       this.structId = structId;
    }   
    
    public int fromId;
-   public int topicId;
+   public byte toType;
    public int toId;
    public int contractId;
    public int structId;
@@ -41,7 +45,7 @@ public class MessageHeader extends Structure {
 
    public final void defaults() {
       fromId = 0;
-      topicId = 0;
+      toType = 0;
       toId = 0;
       contractId = 0;
       structId = 0;
@@ -50,7 +54,7 @@ public class MessageHeader extends Structure {
    @Override
    public final void write(DataSource data) throws IOException {
       data.write(1, this.fromId);
-      data.write(2, this.topicId);
+      data.write(2, this.toType);
       data.write(3, this.toId);
       data.write(4, this.contractId);
       data.write(5, this.structId);
@@ -64,7 +68,7 @@ public class MessageHeader extends Structure {
          int tag = data.readTag();
          switch (tag) {
             case 1: this.fromId = data.read_int(tag); break;
-            case 2: this.topicId = data.read_int(tag); break;
+            case 2: this.toType = data.read_byte(tag); break;
             case 3: this.toId = data.read_int(tag); break;
             case 4: this.contractId = data.read_int(tag); break;
             case 5: this.structId = data.read_int(tag); break;
@@ -91,7 +95,7 @@ public class MessageHeader extends Structure {
       // is not to participate in web serialization (remaining at default)
       String[] result = new String[5+1];
       result[1] = "fromId";
-      result[2] = "topicId";
+      result[2] = "toType";
       result[3] = "toId";
       result[4] = "contractId";
       result[5] = "structId";
@@ -108,7 +112,7 @@ public class MessageHeader extends Structure {
       desc.types = new TypeDescriptor[desc.tagWebNames.length];
       desc.types[0] = new TypeDescriptor(TypeDescriptor.T_STRUCT, getContractId(), getStructId());
       desc.types[1] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
-      desc.types[2] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
+      desc.types[2] = new TypeDescriptor(TypeDescriptor.T_BYTE, 0, 0);
       desc.types[3] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
       desc.types[4] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
       desc.types[5] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);

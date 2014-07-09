@@ -1,10 +1,10 @@
 <included>
 
    <appender name="LOGFILEPID" class="ch.qos.logback.core.rolling.RollingFileAppender">
-      <file>logs/${PID}/${APPNAME}.log</file>
+      <file>logs/${APPNAME}.log</file>
 
       <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
-         <fileNamePattern>logs/${PID}/${APPNAME}.%i.log.gz</fileNamePattern>
+         <fileNamePattern>logs/${APPNAME}.%i.log.gz</fileNamePattern>
          <minIndex>1</minIndex>
          <maxIndex>5</maxIndex>
       </rollingPolicy>
@@ -19,10 +19,10 @@
    </appender>
    
    <appender name="COMMSFILEPID" class="ch.qos.logback.core.rolling.RollingFileAppender">
-      <file>logs/${PID}/comms.${APPNAME}.log</file>
+      <file>logs/comms.${APPNAME}.log</file>
 
       <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
-         <fileNamePattern>logs/${PID}/comms.${APPNAME}.%i.log.gz
+         <fileNamePattern>logs/comms.${APPNAME}.%i.log.gz
          </fileNamePattern>
          <minIndex>1</minIndex>
          <maxIndex>5</maxIndex>
@@ -45,7 +45,6 @@
 
    <logger name="comms" level="DEBUG" additivity="false">
       <!-- additivity false means it does not show up in root -->
-      <appender-ref ref="STDOUT" />
       <appender-ref ref="COMMSFILEPID" />
    </logger>
    

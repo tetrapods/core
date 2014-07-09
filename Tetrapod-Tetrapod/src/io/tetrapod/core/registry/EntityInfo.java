@@ -5,6 +5,7 @@ import io.tetrapod.protocol.core.*;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.*;
 
 import org.slf4j.*;
@@ -33,6 +34,13 @@ public class EntityInfo extends Entity implements Comparable<EntityInfo> {
    protected Map<Long, Topic>    subscriptions;
 
    protected Session             session;
+   
+   /**
+    * An alternate not-necessarily-unique ID.  This can be set by a service and
+    * used as a broadcast target.  This is only set on the tetrapod that owns the
+    * entity.
+    */
+   protected final AtomicInteger alternateId = new AtomicInteger(0);
 
    protected Long                goneSince;
 
@@ -233,6 +241,14 @@ public class EntityInfo extends Entity implements Comparable<EntityInfo> {
          }
       }
       return processedSomething;
+   }
+   
+   public int getAlternateId() {
+      return alternateId.get();
+   }
+   
+   public void setAlternateId(int id) {
+      alternateId.set(id);
    }
 
 }

@@ -57,7 +57,7 @@ public class ServiceStats {
       statsSubscribers.add(entityId);
       if (statsTopicId != null) {
          service.subscribe(statsTopicId, entityId);
-         service.sendMessage(message, entityId, statsTopicId);
+         service.sendMessage(message, entityId);
       }
    }
 

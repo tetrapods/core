@@ -8,6 +8,8 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.locks.*;
 
+import static io.tetrapod.protocol.core.MessageHeader.*;
+
 import org.slf4j.*;
 
 /**
@@ -516,15 +518,15 @@ public class Registry implements TetrapodContract.Registry.API {
       try {
          // Sends all current entities -- ourselves, and our children
          final EntityInfo me = getEntity(parentId);
-         session.sendMessage(new EntityRegisteredMessage(me), toEntityId, topicId);
+         session.sendMessage(new EntityRegisteredMessage(me), TO_ENTITY, toEntityId);
          for (Topic t : me.getTopics()) {
-            session.sendMessage(new TopicPublishedMessage(me.entityId, t.topicId), toEntityId, topicId);
+            session.sendMessage(new TopicPublishedMessage(me.entityId, t.topicId), TO_ENTITY, toEntityId);
          }
 
          for (EntityInfo e : getChildren()) {
-            session.sendMessage(new EntityRegisteredMessage(e), toEntityId, topicId);
+            session.sendMessage(new EntityRegisteredMessage(e), TO_ENTITY, toEntityId);
             for (Topic t : e.getTopics()) {
-               session.sendMessage(new TopicPublishedMessage(e.entityId, t.topicId), toEntityId, topicId);
+               session.sendMessage(new TopicPublishedMessage(e.entityId, t.topicId), TO_ENTITY, toEntityId);
             }
          }
          // send topic info
@@ -533,7 +535,7 @@ public class Registry implements TetrapodContract.Registry.API {
          for (EntityInfo e : getChildren()) {
             sendSubscribers(e, session, toEntityId, topicId);
          }
-         session.sendMessage(new EntityListCompleteMessage(), toEntityId, topicId);
+         session.sendMessage(new EntityListCompleteMessage(), TO_ENTITY, toEntityId);
       } finally {
          lock.writeLock().unlock();
       }
@@ -542,7 +544,7 @@ public class Registry implements TetrapodContract.Registry.API {
    private void sendSubscribers(final EntityInfo e, final Session session, final int toEntityId, final int topicId) {
       for (Topic t : e.getTopics()) {
          for (Subscriber s : t.getSubscribers()) {
-            session.sendMessage(new TopicSubscribedMessage(t.ownerId, t.topicId, s.entityId), toEntityId, topicId);
+            session.sendMessage(new TopicSubscribedMessage(t.ownerId, t.topicId, s.entityId), TO_ENTITY, toEntityId);
          }
       }
    }

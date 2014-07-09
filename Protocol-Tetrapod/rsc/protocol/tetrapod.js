@@ -49,6 +49,7 @@ function TP_Tetrapod(server) {
    server.register("request", "Tetrapod", "KeepAlive", 1, 5512920);
    server.register("request", "Tetrapod", "AddWebFile", 1, 5158759);
    server.register("request", "Tetrapod", "SendWebRoot", 1, 16081718);
+   server.register("request", "Tetrapod", "SetAlternateId", 1, 10499521);
    server.register("message", "Tetrapod", "Entity", 1, 10913291);
    server.register("message", "Tetrapod", "ClusterMember", 1, 1076508);
    server.register("message", "Tetrapod", "EntityRegistered", 1, 1454035);

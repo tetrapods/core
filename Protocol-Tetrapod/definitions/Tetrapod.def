@@ -128,6 +128,10 @@ internal request AddWebFile
 private request SendWebRoot
    1: string webRootName
     
+internal request SetAlternateId
+   1: int entityId
+   2: int alternateId
+   
 ################################# MESSAGES #################################
 
 // a special message to avoid race conditions on the Register response
