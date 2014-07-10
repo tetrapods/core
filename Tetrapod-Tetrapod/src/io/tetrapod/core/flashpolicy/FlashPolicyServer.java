@@ -23,15 +23,16 @@ import io.netty.channel.*;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.tetrapod.core.*;
+import io.tetrapod.core.utils.Util;
 
 
 public class FlashPolicyServer extends Server {  
    
    
    public FlashPolicyServer(Dispatcher dispatcher) {
-      super(8843, null, dispatcher);
+      super(Util.getProperty("tetrapod.flashpolicy.port", 8843), null, dispatcher);
    }
-    
+   
    @Override
    protected void setOptions(ServerBootstrap sb) {
        sb.childOption(ChannelOption.TCP_NODELAY, true);

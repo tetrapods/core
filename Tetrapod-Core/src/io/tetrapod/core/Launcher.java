@@ -30,6 +30,7 @@ public class Launcher {
       try {
          if (args.length < 1)
             usage();
+         deleteLogs();
          serviceClass = args[0];
          opts = getOpts(args, 1, defaultOpts());
          String appName = serviceClass.substring(serviceClass.lastIndexOf('.') + 1);
@@ -198,6 +199,19 @@ public class Launcher {
          sb.append(" ");
       }
       return sb.toString();
+   }
+
+   private static void deleteLogs() {
+      if (System.getProperty("delete.logs", "false").equals("true")) {
+         File logs = new File(System.getProperty("delete.logs.location", "logs"));
+         if (logs.isDirectory()) {
+            for (File f : logs.listFiles()) {
+               f.delete();
+            }
+         } else {
+            logs.delete();
+         }
+      }
    }
 
 }

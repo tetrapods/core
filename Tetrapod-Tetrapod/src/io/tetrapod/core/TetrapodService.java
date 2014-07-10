@@ -977,6 +977,9 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       } catch (IOException e) {
          logger.error("could not read /etc/hosts", e);
       }
+      if (res.isEmpty() && Util.getProperty("dev.mode", "local").equals("local")) {
+         res.add("localhost");
+      }
       return res;
    }
 
