@@ -204,7 +204,8 @@ public class WireSession extends Session {
    }
 
    protected void dispatchMessage(final MessageHeader header, final ByteBufDataSource reader) throws IOException {
-      final Message msg = (Message) StructureFactory.make(header.contractId, header.structId);
+      Object obj = StructureFactory.make(header.contractId, header.structId);
+      final Message msg = (obj instanceof Message) ? (Message)obj : null; 
       if (msg != null) {
          msg.read(reader);
          dispatchMessage(header, msg);

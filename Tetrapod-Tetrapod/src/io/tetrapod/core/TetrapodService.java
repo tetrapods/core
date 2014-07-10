@@ -413,7 +413,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       boolean myChildOriginated = publisher.parentId == myId;
       boolean toAll = header.toId == UNADDRESSED;
       for (EntityInfo e : registry.getEntities()) {
-         if (e.isTetrapod()) {
+         if (e.isTetrapod() && e.entityId != myId) {
             if (myChildOriginated)
                broadcastToAlt(e, header, buf);
             continue;
