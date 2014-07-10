@@ -40,6 +40,7 @@ public class TetrapodContract extends Contract {
       , ServiceStatusUpdateRequest.Handler
       , ServicesSubscribeRequest.Handler
       , ServicesUnsubscribeRequest.Handler
+      , SetAlternateIdRequest.Handler
       , UnregisterRequest.Handler
       {}
    
@@ -65,6 +66,7 @@ public class TetrapodContract extends Contract {
          new KeepAliveRequest(),
          new AddWebFileRequest(),
          new SendWebRootRequest(),
+         new SetAlternateIdRequest(),
          new GetServiceBuildInfoRequest(),
          new ExecuteBuildCommandRequest(),
       };

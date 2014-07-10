@@ -308,12 +308,12 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
       return makeFrame(new ResponseHeader(requestId, res.getContractId(), res.getStructId()), res, ENVELOPE_RESPONSE);
    }
 
-   public void sendBroadcastMessage(Message msg, int topicId) {
+   public void sendBroadcastMessage(Message msg, byte toType, int toId) {
       if (getMyEntityId() != 0) {
          if (!commsLogIgnore(msg))
-            commsLog("%s  [B] => T%d.%s", this, topicId, msg.dump());
+            commsLog("%s  [B] => %s (to %s:%d)", this, msg.dump(), TO_TYPES[toType], toId);
          final Object buffer = makeFrame(
-               new MessageHeader(getMyEntityId(), topicId, Core.UNADDRESSED, msg.getContractId(), msg.getStructId()), msg,
+               new MessageHeader(getMyEntityId(), toType, toId, msg.getContractId(), msg.getStructId()), msg,
                ENVELOPE_BROADCAST);
          if (buffer != null) {
             writeFrame(buffer);
@@ -322,11 +322,11 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
       }
    }
 
-   public void sendMessage(Message msg, int toEntityId, int topicId) {
+   public void sendMessage(Message msg, byte toType, int toId) {
       if (getMyEntityId() != 0) {
          if (!commsLogIgnore(msg))
-            commsLog("%s  [M] => T%d.%s (to %d)", this, topicId, msg.dump(), toEntityId);
-         final Object buffer = makeFrame(new MessageHeader(getMyEntityId(), topicId, toEntityId, msg.getContractId(), msg.getStructId()),
+            commsLog("%s  [M] => %s (to %s:%d)", this, msg.dump(), TO_TYPES[toType], toId);
+         final Object buffer = makeFrame(new MessageHeader(getMyEntityId(), toType, toId, msg.getContractId(), msg.getStructId()),
                msg, ENVELOPE_MESSAGE);
          if (buffer != null) {
             writeFrame(buffer);
@@ -357,9 +357,11 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
       return null;
    }
 
+   public static final String[] TO_TYPES = { "Unknown", "Topic", "Entity", "Alt" };
    public void sendRelayedMessage(MessageHeader header, ByteBuf payload, boolean broadcast) {
-      if (!commsLogIgnore(header.structId))
-         commsLog("%s  [M] ~> T%d.Message:%d %s (to %d)", this, header.topicId, header.structId, getNameFor(header), header.toId);
+      if (!commsLogIgnore(header.structId)) {
+         commsLog("%s  [M] ~> Message:%d %s (to %s:%d)", this, header.structId, getNameFor(header), TO_TYPES[header.toType], header.toId);
+      }
       byte envelope = broadcast ? ENVELOPE_BROADCAST : ENVELOPE_MESSAGE;
       writeFrame(makeFrame(header, payload, envelope));
    }

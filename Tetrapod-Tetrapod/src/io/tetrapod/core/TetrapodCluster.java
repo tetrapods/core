@@ -267,7 +267,7 @@ public class TetrapodCluster implements SessionFactory {
          if (pod.entityId != service.getEntityId()) {
             if (pod.isConnected()) {
                Session ses = pod.getSession();
-               ses.sendMessage(msg, ses.getTheirEntityId(), Core.UNADDRESSED);
+               ses.sendMessage(msg, MessageHeader.TO_ENTITY, ses.getTheirEntityId());
             }
          }
       }
@@ -276,10 +276,10 @@ public class TetrapodCluster implements SessionFactory {
    protected void sendClusterDetails(Session ses, int toEntityId, int topicId) {
       // send ourselves
       ses.sendMessage(new ClusterMemberMessage(service.getEntityId(), service.getHostName(), service.getServicePort(), getClusterPort()),
-            toEntityId, topicId);
+            MessageHeader.TO_ENTITY, toEntityId);
       // send all current members
       for (Tetrapod pod : cluster.values()) {
-         ses.sendMessage(new ClusterMemberMessage(pod.entityId, pod.host, pod.servicePort, pod.clusterPort), toEntityId, topicId);
+         ses.sendMessage(new ClusterMemberMessage(pod.entityId, pod.host, pod.servicePort, pod.clusterPort), MessageHeader.TO_ENTITY, toEntityId);
       }
    }
 

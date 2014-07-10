@@ -504,24 +504,28 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
       return clusterClient.getSession().sendRequest(req, Core.DIRECT, (byte) 30);
    }
 
-   public void sendMessage(Message msg, int toEntityId, int topicId) {
-      clusterClient.getSession().sendMessage(msg, toEntityId, topicId);
+   public void sendMessage(Message msg, int toEntityId) {
+      clusterClient.getSession().sendMessage(msg, MessageHeader.TO_ENTITY, toEntityId);
    }
 
    public void sendBroadcastMessage(Message msg, int topicId) {
-      clusterClient.getSession().sendBroadcastMessage(msg, topicId);
+      clusterClient.getSession().sendBroadcastMessage(msg, MessageHeader.TO_TOPIC, topicId);
+   }
+
+   public void sendAltBroadcastMessage(Message msg, int altId) {
+      clusterClient.getSession().sendBroadcastMessage(msg, MessageHeader.TO_ALTERNATE, altId);
    }
 
    public void subscribe(int topicId, int entityId) {
-      sendMessage(new TopicSubscribedMessage(getEntityId(), topicId, entityId), UNADDRESSED, UNADDRESSED);
+      sendMessage(new TopicSubscribedMessage(getEntityId(), topicId, entityId), UNADDRESSED);
    }
 
    public void unsubscribe(int topicId, int entityId) {
-      sendMessage(new TopicUnsubscribedMessage(getEntityId(), topicId, entityId), UNADDRESSED, UNADDRESSED);
+      sendMessage(new TopicUnsubscribedMessage(getEntityId(), topicId, entityId), UNADDRESSED);
    }
 
    public void unpublish(int topicId) {
-      sendMessage(new TopicUnpublishedMessage(getEntityId(), topicId), UNADDRESSED, UNADDRESSED);
+      sendMessage(new TopicUnpublishedMessage(getEntityId(), topicId), UNADDRESSED);
    }
 
    // Generic handlers for all request/subscriptions

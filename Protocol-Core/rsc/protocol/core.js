@@ -33,6 +33,9 @@ function TP_Core(server) {
    server.registerConst("Core", "Core", "ENVELOPE_BROADCAST", 5);
    server.registerConst("Core", "Core", "ENVELOPE_PING", 6);
    server.registerConst("Core", "Core", "ENVELOPE_PONG", 7);
+   server.registerConst("Core", "MessageHeader", "TO_TOPIC", 1);
+   server.registerConst("Core", "MessageHeader", "TO_ENTITY", 2);
+   server.registerConst("Core", "MessageHeader", "TO_ALTERNATE", 3);
    server.registerConst("Core", "TypeDescriptor", "T_BOOLEAN", 1);
    server.registerConst("Core", "TypeDescriptor", "T_BYTE", 2);
    server.registerConst("Core", "TypeDescriptor", "T_INT", 3);

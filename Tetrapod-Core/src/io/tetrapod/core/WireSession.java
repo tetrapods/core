@@ -192,9 +192,11 @@ public class WireSession extends Session {
          header.fromId = theirId;
       }
 
-      if (!commsLogIgnore(header.structId))
-         commsLog("%s  [M] <- T%d.Message:%d %s", this, header.topicId, header.structId, getNameFor(header));
-      if (relayHandler == null || header.toId == myId || (header.toId == UNADDRESSED && header.topicId == UNADDRESSED)) {
+      if (!commsLogIgnore(header.structId)) {
+         commsLog("%s  [M] <- Message:%d %s (to %s:%d)", this, header.structId, getNameFor(header), TO_TYPES[header.toType], header.toId);
+      }
+      boolean selfDispatch = header.toType == MessageHeader.TO_ENTITY && (header.toId == myId || header.toId == UNADDRESSED);
+      if (relayHandler == null || selfDispatch) {
          dispatchMessage(header, reader);
       } else {
          relayHandler.relayMessage(header, in, isBroadcast);
@@ -202,7 +204,8 @@ public class WireSession extends Session {
    }
 
    protected void dispatchMessage(final MessageHeader header, final ByteBufDataSource reader) throws IOException {
-      final Message msg = (Message) StructureFactory.make(header.contractId, header.structId);
+      Object obj = StructureFactory.make(header.contractId, header.structId);
+      final Message msg = (obj instanceof Message) ? (Message)obj : null; 
       if (msg != null) {
          msg.read(reader);
          dispatchMessage(header, msg);

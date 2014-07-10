@@ -88,7 +88,7 @@ abstract class WebSession extends Session {
             MessageHeader messH = (MessageHeader) header;
             jo.put("_contractId", messH.contractId);
             jo.put("_structId", messH.structId);
-            jo.put("_topicId", messH.topicId);
+            jo.put("_topicId", messH.toType == MessageHeader.TO_TOPIC ? messH.toId : 0);
             break;
       }
       return jo;

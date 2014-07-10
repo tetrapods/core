@@ -357,15 +357,25 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          sender.queue(new Runnable() {
             public void run() {
                try {
-                  if (header.toId == UNADDRESSED) {
-                     if (isBroadcast) {
-                        broadcast(sender, header, buf);
-                     }
-                  } else {
-                     final Session ses = getRelaySession(header.toId, header.contractId);
-                     if (ses != null) {
-                        ses.sendRelayedMessage(header, buf, false);
-                     }
+                  switch (header.toType) {
+                     case MessageHeader.TO_TOPIC:
+                        if (isBroadcast) {
+                           broadcastTopic(sender, header, buf);
+                        }
+                        break;
+                        
+                     case MessageHeader.TO_ENTITY:
+                        final Session ses = getRelaySession(header.toId, header.contractId);
+                        if (ses != null) {
+                           ses.sendRelayedMessage(header, buf, false);
+                        }
+                        break;
+
+                     case MessageHeader.TO_ALTERNATE:
+                        if (isBroadcast) {
+                           broadcastAlt(sender, header, buf);
+                        }
+                        break;
                   }
                } catch (Throwable e) {
                   logger.error(e.getMessage(), e);
@@ -382,23 +392,42 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       }
    }
 
-   private void broadcast(final EntityInfo publisher, final MessageHeader header, final ByteBuf buf) throws IOException {
-      final Topic topic = publisher.getTopic(header.topicId);
+   private void broadcastTopic(final EntityInfo publisher, final MessageHeader header, final ByteBuf buf) throws IOException {
+      final Topic topic = publisher.getTopic(header.toId);
       if (topic != null) {
          synchronized (topic) {
             for (final Subscriber s : topic.getChildSubscribers()) {
-               broadcast(publisher, s, topic, header, buf);
+               broadcastTopic(publisher, s, topic, header, buf);
             }
             for (final Subscriber s : topic.getProxySubscribers()) {
-               broadcast(publisher, s, topic, header, buf);
+               broadcastTopic(publisher, s, topic, header, buf);
             }
          }
       } else {
-         logger.error("Could not find topic {} for entity {}", header.topicId, publisher);
+         logger.error("Could not find topic {} for entity {}", header.toId, publisher);
+      }
+   }
+   
+   private void broadcastAlt(final EntityInfo publisher, final MessageHeader header, final ByteBuf buf) throws IOException {
+      int myId = getEntityId();
+      boolean myChildOriginated = publisher.parentId == myId;
+      boolean toAll = header.toId == UNADDRESSED;
+      for (EntityInfo e : registry.getEntities()) {
+         if (e.isTetrapod() && e.entityId != myId) {
+            if (myChildOriginated)
+               broadcastToAlt(e, header, buf);
+            continue;
+         }
+         if (e.isService()) {
+            continue;
+         }
+         if (toAll || e.getAlternateId() == header.toId) {
+            broadcastToAlt(e, header, buf);
+         }
       }
    }
 
-   private void broadcast(final EntityInfo publisher, final Subscriber sub, final Topic topic, final MessageHeader header, final ByteBuf buf)
+   private void broadcastTopic(final EntityInfo publisher, final Subscriber sub, final Topic topic, final MessageHeader header, final ByteBuf buf)
          throws IOException {
       final int ri = buf.readerIndex();
       final EntityInfo e = registry.getEntity(sub.entityId);
@@ -430,6 +459,21 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       }
    }
 
+   private void broadcastToAlt(final EntityInfo e, final MessageHeader header, final ByteBuf buf)
+         throws IOException {
+      final int ri = buf.readerIndex();
+      if (!e.isGone()) {
+         final Session session = findSession(e);
+         if (session != null) {
+            final boolean keepBroadcasting = e.isTetrapod();
+            session.sendRelayedMessage(header, buf, keepBroadcasting);
+            buf.readerIndex(ri);
+         } else {
+            logger.error("Could not find session for {} {}", e, header.dump());
+         }
+      }
+   }
+   
    @Override
    public WebRoutes getWebRoutes() {
       return webRoutes;
@@ -457,7 +501,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
             // OPTIMIZE: call broadcast() directly instead of through loop-back
             Session ses = clusterClient.getSession();
             if (ses != null) {
-               ses.sendBroadcastMessage(msg, topic.topicId);
+               ses.sendBroadcastMessage(msg, MessageHeader.TO_TOPIC, topic.topicId);
             } else {
                logger.error("broadcast failed: no session for loopback connection");
             }
@@ -585,7 +629,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       info.setSession(ctx.session);
 
       // deliver them their entityId immediately to avoid some race conditions with the response
-      ctx.session.sendMessage(new EntityMessage(info.entityId), Core.UNADDRESSED, Core.UNADDRESSED);
+      ctx.session.sendMessage(new EntityMessage(info.entityId), MessageHeader.TO_ENTITY, Core.UNADDRESSED);
 
       if (info.isService() && info.entityId != entityId) {
          subscribeToCluster(ctx.session, info.entityId);
@@ -679,7 +723,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          subscribe(servicesTopic.topicId, ctx.header.fromId);
          // send all current entities
          for (EntityInfo e : registry.getServices()) {
-            ctx.session.sendMessage(new ServiceAddedMessage(e), ctx.header.fromId, servicesTopic.topicId);
+            ctx.session.sendMessage(new ServiceAddedMessage(e), MessageHeader.TO_ENTITY, ctx.header.fromId);
          }
       }
       return Response.SUCCESS;
@@ -933,7 +977,20 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       } catch (IOException e) {
          logger.error("could not read /etc/hosts", e);
       }
+      if (res.isEmpty() && Util.getProperty("dev.mode", "local").equals("local")) {
+         res.add("localhost");
+      }
       return res;
+   }
+
+   @Override
+   public Response requestSetAlternateId(SetAlternateIdRequest r, RequestContext ctx) {
+      EntityInfo e = registry.getEntity(r.entityId);
+      if (e != null) {
+         e.setAlternateId(r.alternateId);
+         return Response.SUCCESS;
+      }
+      return Response.error(ERROR_INVALID_ENTITY);
    }
 
 }
