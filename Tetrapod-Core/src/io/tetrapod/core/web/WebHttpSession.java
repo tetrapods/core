@@ -138,7 +138,7 @@ public class WebHttpSession extends WebSession {
             cf = ctx.writeAndFlush(makeFrame(jo, keepAlive));
          } else {
             WebAPIResponse resp = (WebAPIResponse) res;
-            if (resp.redirect != null) {
+            if (resp.redirect != null && !resp.redirect.isEmpty()) {
                redirect(resp.redirect, ctx);
             } else {
                cf = ctx.writeAndFlush(makeFrame(new JSONObject(resp.json), keepAlive));
