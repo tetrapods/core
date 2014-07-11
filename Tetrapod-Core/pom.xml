@@ -33,7 +33,7 @@
 		<dependency>
 			<groupId>io.netty</groupId>
 			<artifactId>netty-all</artifactId>
-			<version>4.0.20.Final</version>
+			<version>4.0.21.Final</version>
 		</dependency>
 
 		<dependency>
@@ -57,7 +57,7 @@
 		<dependency>
 			<groupId>com.hazelcast</groupId>
 			<artifactId>hazelcast</artifactId>
-			<version>3.2.2</version>
+			<version>3.2.3</version>
 			<optional>true</optional>
 		</dependency>
 
