@@ -224,15 +224,15 @@ function TP_Server() {
       } else {
          str = JSON.stringify(result);
       }
-      console.log("[%d] <- %s%s", result._requestId, nameOf(result), JSON.stringify(result, dropUnderscored));
+      console.debug("[%d] <- %s%s", result._requestId, nameOf(result), JSON.stringify(result, dropUnderscored));
    }
 
    function logRequest(result) {
-      console.log("[%d] => %s%s", result._requestId, nameOf(result), JSON.stringify(result, dropUnderscored));
+      console.debug("[%d] => %s%s", result._requestId, nameOf(result), JSON.stringify(result, dropUnderscored));
    }
 
    function logMessage(result) {
-      console.log("[M:%d] <- %s%s", result._topicId, nameOf(result), JSON.stringify(result, dropUnderscored));
+      console.debug("[M:%d] <- %s%s", result._topicId, nameOf(result), JSON.stringify(result, dropUnderscored));
    }
 
    function dropUnderscored(key, value) {
