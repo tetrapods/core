@@ -3,7 +3,9 @@ package io.tetrapod.core.utils;
 import java.util.*;
 
 public class LRUCache<K, V> extends LinkedHashMap<K, V> {
-   private static final float LOAD_FACTOR = 0.75f;
+   private static final long  serialVersionUID = 1L;
+
+   private static final float LOAD_FACTOR      = 0.75f;
 
    private final int          maxSize;
 
