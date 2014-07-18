@@ -18,6 +18,7 @@ import io.netty.util.ReferenceCountUtil;
 import io.tetrapod.core.Contract;
 import io.tetrapod.core.Session;
 import io.tetrapod.core.json.JSONObject;
+import io.tetrapod.core.registry.EntityToken;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.rpc.Error;
 import io.tetrapod.core.serialize.datasources.ByteBufDataSource;
@@ -85,14 +86,18 @@ public class WebHttpSession extends WebSession {
 
             final JSONObject params = context.getRequestParams();
             // FIXME: Use auth-cookie instead?
-            if (params.has("_token") && params.has("_fromId")) {
-               // find & validate entity
-               // mark socket as a poller            
-               // keep socket alive if we can
-               setTheirEntityId(params.getInt("_fromId"));
-               setTheirEntityType(Core.TYPE_CLIENT);
-               header.fromType = Core.TYPE_CLIENT;
-               header.fromId = getMyEntityId();
+            if (params.has("_token")) {
+
+               final EntityToken t = EntityToken.decode(params.getString("_token"));
+               if (t != null) {
+                  // FIXME: VALIDATE token/entity ############################################ FIXME
+                  // mark socket as a poller            
+                  // keep socket alive if we can
+                  setTheirEntityId(t.entityId);
+                  setTheirEntityType(Core.TYPE_CLIENT);
+                  header.fromType = Core.TYPE_CLIENT;
+                  header.fromId = getMyEntityId();
+               }
             }
             synchronized (contexts) {
                contexts.put(header.requestId, ctx);
@@ -236,7 +241,7 @@ public class WebHttpSession extends WebSession {
       } else {
          httpResponse.headers().set(CONNECTION, HttpHeaders.Values.CLOSE);
       }
-      logger.debug("MAKE FRAME " + jo);
+      // logger.debug("MAKE FRAME " + jo);
       return httpResponse;
    }
 

@@ -362,9 +362,8 @@ function TP_Server() {
    function sendRPC(data) {
       if (self.entityInfo != null) {
          data._token = self.entityInfo.token;
-         data._fromId = self.entityInfo.entityId;
       }
-      console.debug("SEND RPC: " + JSON.stringify(data));
+      //console.debug("SEND RPC: " + JSON.stringify(data));
       $.ajax({
          type : "POST",
          url : "/rpc",
@@ -372,7 +371,7 @@ function TP_Server() {
          data : data,
          success : function(data) {
             self.connected = true;
-            console.log(data);
+            //console.log(data);
             handleResponse(data);
          },
          error : function(XMLHttpRequest, textStatus, errorThrown) {
