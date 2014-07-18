@@ -38,6 +38,7 @@ function TP_Server() {
    self.nameOf = nameOf;
    self.consts = protocol.consts;
    self.connected = false;
+   self.polling = false;
    self.setSimulator = function(s) {
       simulator = s;
    };
@@ -145,16 +146,20 @@ function TP_Server() {
          }
       }
 
-      if (socket && socket.readyState == WebSocket.OPEN) {
-         var data = JSON.stringify(args, null, 3);
-         if (data.length < 1024 * 128) {
-            lastSpokeTo = Date.now();
-            socket.send(data);
-         } else {
-            console.log("RPC too big : " + data.length + "\n" + data);
-            // FIXME: return an error
+      if (self.polling) {
+         lastSpokeTo = Date.now();
+         sendRPC(args);
+      } else {
+         if (isConnected() || self.polling) {
+            var data = JSON.stringify(args, null, 3);
+            if (data.length < 1024 * 128) {
+               lastSpokeTo = Date.now();
+               socket.send(data);
+            } else {
+               console.log("RPC too big : " + data.length + "\n" + data);
+               // FIXME: return an error
+            }
          }
-
       }
 
       return {
@@ -164,14 +169,22 @@ function TP_Server() {
       }
    }
 
+   function isConnected() {
+      return (socket && socket.readyState == WebSocket.OPEN);
+   }
+
    function connect(server, secure, port) {
       port = typeof port !== 'undefined' ? port : window.location.port;
       if (!window.WebSocket) {
          window.WebSocket = window.MozWebSocket;
       }
-      if (!window.WebSocket) {
-         return null;
+
+      /////////////////////////////////////////
+      if (!window.WebSocket || true) {
+         return startPollingSession(server, secure);
       }
+      /////////////////////////////////////////
+
       if (simulator != null) {
          return {
             listen : function(onOpen, onClose) {
@@ -283,8 +296,7 @@ function TP_Server() {
             send("KeepAlive", {}, 1/* Core.DIRECT */);
          }
          if (elapsedHeard > 6000) {
-            console.log("We haven't heard from the server in " + elapsedHeard + " ms")
-            // TODO: mark in UI as bad connection
+            console.debug("We haven't heard from the server in " + elapsedHeard + " ms")
          }
          if (elapsedHeard > 20000) {
             disconnect();
@@ -329,6 +341,59 @@ function TP_Server() {
 
    function isKeepAlive(contractId, structId) {
       return (contractId == 1 && structId == 5512920) || (contractId == 10 && structId == 15966706);
+   }
+
+   // ------------------------ long polling fall-back ----------------------------- //
+
+   function startPollingSession(host, secure) {
+      self.polling = true;
+      self.connected = true;
+      self.entityInfo = null;
+      lastHeardFrom = Date.now();
+      if (self.commsLog)
+         console.log("[poller] open: " + host);
+      return {
+         listen : function(onOpen, onClose) {
+            onOpen();
+         }
+      }
+   }
+
+   function sendRPC(data) {
+      if (self.entityInfo != null) {
+         data._token = self.entityInfo.token;
+         data._fromId = self.entityInfo.entityId;
+      }
+      console.debug("SEND RPC: " + JSON.stringify(data));
+      $.ajax({
+         type : "POST",
+         url : "/rpc",
+         timeout : 12000,
+         data : data,
+         success : function(data) {
+            self.connected = true;
+            console.log(data);
+            handleResponse(data);
+         },
+         error : function(XMLHttpRequest, textStatus, errorThrown) {
+            console.error(textStatus + " (" + errorThrown + ")");
+            self.connected = false;
+            if (textStatus == 'timeout')
+               handleResponse({
+                  _requestId : data._requestId,
+                  _contractId : 1,
+                  _structId : 1,
+                  code : 3
+               });
+            else
+               handleResponse({
+                  _requestId : data._requestId,
+                  _contractId : 1,
+                  _structId : 1,
+                  code : 1
+               });
+         }
+      });
    }
 
 }

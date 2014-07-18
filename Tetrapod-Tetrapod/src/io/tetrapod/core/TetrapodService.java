@@ -68,6 +68,11 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       cluster = new TetrapodCluster(this);
       setMainContract(new TetrapodContract());
       addContracts(new StorageContract());
+
+      // add tetrapod web routes
+      for (WebRoute r : contract.getWebRoutes())
+         webRoutes.setRoute(r.path, r.contractId, r.structId);
+
       addSubscriptionHandler(new TetrapodContract.Registry(), registry);
    }
 
@@ -363,7 +368,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
                            broadcastTopic(sender, header, buf);
                         }
                         break;
-                        
+
                      case MessageHeader.TO_ENTITY:
                         final Session ses = getRelaySession(header.toId, header.contractId);
                         if (ses != null) {
@@ -407,7 +412,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          logger.error("Could not find topic {} for entity {}", header.toId, publisher);
       }
    }
-   
+
    private void broadcastAlt(final EntityInfo publisher, final MessageHeader header, final ByteBuf buf) throws IOException {
       int myId = getEntityId();
       boolean myChildOriginated = publisher.parentId == myId;
@@ -427,8 +432,8 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       }
    }
 
-   private void broadcastTopic(final EntityInfo publisher, final Subscriber sub, final Topic topic, final MessageHeader header, final ByteBuf buf)
-         throws IOException {
+   private void broadcastTopic(final EntityInfo publisher, final Subscriber sub, final Topic topic, final MessageHeader header,
+         final ByteBuf buf) throws IOException {
       final int ri = buf.readerIndex();
       final EntityInfo e = registry.getEntity(sub.entityId);
       if (e != null) {
@@ -459,8 +464,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       }
    }
 
-   private void broadcastToAlt(final EntityInfo e, final MessageHeader header, final ByteBuf buf)
-         throws IOException {
+   private void broadcastToAlt(final EntityInfo e, final MessageHeader header, final ByteBuf buf) throws IOException {
       final int ri = buf.readerIndex();
       if (!e.isGone()) {
          final Session session = findSession(e);
@@ -473,7 +477,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          }
       }
    }
-   
+
    @Override
    public WebRoutes getWebRoutes() {
       return webRoutes;

@@ -67,7 +67,7 @@ abstract class WebSession extends Session {
       }
    }
 
-   private JSONObject extractHeader(Structure header) {
+   protected JSONObject extractHeader(Structure header) {
       JSONObject jo = new JSONObject();
       switch (header.getStructId()) {
          case RequestHeader.STRUCT_ID:

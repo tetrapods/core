@@ -3,7 +3,9 @@ java outdir "../src"
 javascript out "../rsc/protocol/tetrapod.js"
 
 // The core tetrapod service
-service Tetrapod @version(1) @id(1)
+service Tetrapod @version(1) @id(1) @web(core)
+
+const string WEBAPI_RPC = "rpc" @webroute
 
 error HOSTNAME_MISMATCH
 error INVALID_CREDENTIALS

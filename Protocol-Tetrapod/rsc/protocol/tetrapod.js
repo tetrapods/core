@@ -16,6 +16,7 @@ function TP_Tetrapod(server) {
    server.registerConst("Tetrapod", "BuildCommand", "FULL_CYCLE", 4);
    server.registerConst("Tetrapod", "BuildCommand", "DEPLOY_LATEST", -1);
    server.registerConst("Tetrapod", "BuildCommand", "LAUNCH_DEPLOYED", -1);
+   server.registerConst("Tetrapod", "null", "WEBAPI_RPC", "rpc");
    
    server.registerConst("Tetrapod", "null", "HOSTNAME_MISMATCH", 12239905);
    server.registerConst("Tetrapod", "null", "INVALID_ACCOUNT", 14623816);

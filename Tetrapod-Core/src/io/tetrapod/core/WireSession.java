@@ -104,7 +104,6 @@ public class WireSession extends Session {
       final ResponseHeader header = new ResponseHeader();
       boolean logged = false;
       header.read(reader);
-
       final Async async = pendingRequests.remove(header.requestId);
       if (async != null) {
          // Dispatches response to ourselves if we sent the request (fromId == myId) or 
@@ -205,7 +204,7 @@ public class WireSession extends Session {
 
    protected void dispatchMessage(final MessageHeader header, final ByteBufDataSource reader) throws IOException {
       Object obj = StructureFactory.make(header.contractId, header.structId);
-      final Message msg = (obj instanceof Message) ? (Message)obj : null; 
+      final Message msg = (obj instanceof Message) ? (Message) obj : null;
       if (msg != null) {
          msg.read(reader);
          dispatchMessage(header, msg);

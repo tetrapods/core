@@ -18,6 +18,8 @@ public class TetrapodContract extends Contract {
    public static final String NAME = "Tetrapod";
    public static final int CONTRACT_ID = 1;
    
+   public static final String WEBAPI_RPC = "rpc"; 
+   
    public static interface API extends APIHandler
       , AddServiceInformationRequest.Handler
       , AddWebFileRequest.Handler

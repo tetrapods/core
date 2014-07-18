@@ -45,7 +45,7 @@ class WebContext {
       header.fromId = s.getTheirEntityId();
       header.fromType = s.getTheirEntityType();
       if (route == null) {
-         // route is null for web socket calls
+         // route is null for web socket & poller calls
          header.requestId = requestParameters.optInt("_requestId", -1);
          header.contractId = requestParameters.optInt("_contractId", -1);
          header.structId = requestParameters.optInt("_structId", -1);
