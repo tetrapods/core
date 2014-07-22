@@ -573,7 +573,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
             registry.unregister(e);
          }
          if (!e.isGone() && e.getLastContact() != null) {
-            if (System.currentTimeMillis() - e.getLastContact() > 60 * 10000) {
+            if (System.currentTimeMillis() - e.getLastContact() > 60 * 1000) {
                e.setLastContact(null);
                registry.setGone(e);
             }

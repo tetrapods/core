@@ -515,7 +515,7 @@ public class WebHttpSession extends WebSession {
          initLongPoll();
          // FIXME: Need a sensible way to protect against memory gobbling if this queue isn't cleared fast enough
          messages.add(toJSON(header, payload, ENVELOPE_MESSAGE));
-         logger.debug("{} Queued {} messages for longPoller", this, messages.size());
+         logger.debug("{} Queued {} messages for longPoller {}", this, messages.size(), messages.getEntityId());
       }
    }
 
