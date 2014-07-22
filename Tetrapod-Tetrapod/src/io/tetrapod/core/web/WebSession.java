@@ -51,8 +51,7 @@ abstract class WebSession extends Session {
       }
    }
 
-   @Override
-   protected Object makeFrame(Structure header, ByteBuf payloadBuf, byte envelope) {
+   protected JSONObject toJSON(Structure header, ByteBuf payloadBuf, byte envelope) {
       try {
          JSONObject jo = extractHeader(header);
          Structure payload = StructureFactory.make(jo.optInt("_contractId"), jo.optInt("_structId"));
@@ -60,9 +59,19 @@ abstract class WebSession extends Session {
          payload.read(bd);
          JSONDataSource jd = new WebJSONDataSource(jo, payload.tagWebNames());
          payload.write(jd);
-         return makeFrame(jo, true);
+         return jo;
       } catch (IOException e) {
          logger.error("Could not make web frame for {}", header.dump());
+         return null;
+      }
+   }
+
+   @Override
+   protected Object makeFrame(Structure header, ByteBuf payloadBuf, byte envelope) {
+      JSONObject jo = toJSON(header, payloadBuf, envelope);
+      if (jo != null) {
+         return makeFrame(jo, true);
+      } else {
          return null;
       }
    }

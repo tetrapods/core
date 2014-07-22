@@ -26,6 +26,7 @@ function TP_Server() {
    var keepAliveRequestId;
 
    // public interface
+   self.forceLongPolling = false;
    self.commsLog = false;
    self.commsLogKeepAlives = false;
    self.register = register;
@@ -180,7 +181,7 @@ function TP_Server() {
       }
 
       /////////////////////////////////////////
-      if (!window.WebSocket || true) {
+      if (!window.WebSocket || self.forceLongPolling) {
          return startPollingSession(server, secure);
       }
       /////////////////////////////////////////
@@ -347,6 +348,7 @@ function TP_Server() {
 
    function startPollingSession(host, secure) {
       self.polling = true;
+      self.pollPending = false;
       self.connected = true;
       self.entityInfo = null;
       lastHeardFrom = Date.now();
@@ -366,13 +368,13 @@ function TP_Server() {
       //console.debug("SEND RPC: " + JSON.stringify(data));
       $.ajax({
          type : "POST",
-         url : "/rpc",
-         timeout : 12000,
+         url : "/poll",
+         timeout : 24000,
          data : data,
          success : function(data) {
             self.connected = true;
-            //console.log(data);
             handleResponse(data);
+            schedulePoll(100);
          },
          error : function(XMLHttpRequest, textStatus, errorThrown) {
             console.error(textStatus + " (" + errorThrown + ")");
@@ -393,6 +395,46 @@ function TP_Server() {
                });
          }
       });
+   }
+
+   function schedulePoll(millis) {
+      setTimeout(function() {
+         poll()
+      }, millis);
+   }
+
+   function poll() {
+      if (!self.polling)
+         return;
+      if (self.entityInfo != null && self.entityInfo.entityId != 0) {
+         if (self.pollPending == false) {
+            var data = {
+               _token : self.entityInfo.token
+            };
+            console.debug("POLL -> " + JSON.stringify(data));
+            self.pollPending = true;
+            $.ajax({
+               type : "POST",
+               url : "/poll",
+               timeout : 12000,
+               data : data,
+               success : function(data) {
+                  console.debug("POLL <- " + data.messages.length + " items");
+                  self.connected = true;
+                  self.pollPending = false;
+                  $.each(data.messages, function(i, m) {
+                     handleMessage(m)
+                  });
+                  schedulePoll(100);
+               },
+               error : function(XMLHttpRequest, textStatus, errorThrown) {
+                  console.error(textStatus + " (" + errorThrown + ")");
+                  self.connected = false;
+                  self.pollPending = false;
+               }
+            });
+         }
+      }
    }
 
 }

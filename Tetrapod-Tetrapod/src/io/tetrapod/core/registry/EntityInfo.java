@@ -1,21 +1,24 @@
 package io.tetrapod.core.registry;
 
 import io.tetrapod.core.Session;
-import io.tetrapod.protocol.core.*;
+import io.tetrapod.protocol.core.Core;
+import io.tetrapod.protocol.core.Entity;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.locks.*;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
-import org.slf4j.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * All the meta data associated with a tetrapod entity
  */
 public class EntityInfo extends Entity implements Comparable<EntityInfo> {
 
-   public static final Logger    logger = LoggerFactory.getLogger(EntityInfo.class);
+   public static final Logger    logger      = LoggerFactory.getLogger(EntityInfo.class);
 
    protected int                 topicCounter;
 
@@ -34,14 +37,14 @@ public class EntityInfo extends Entity implements Comparable<EntityInfo> {
    protected Map<Long, Topic>    subscriptions;
 
    protected Session             session;
-   
+
    /**
-    * An alternate not-necessarily-unique ID.  This can be set by a service and
-    * used as a broadcast target.  This is only set on the tetrapod that owns the
-    * entity.
+    * An alternate not-necessarily-unique ID. This can be set by a service and used as a broadcast target. This is only set on the tetrapod
+    * that owns the entity.
     */
    protected final AtomicInteger alternateId = new AtomicInteger(0);
 
+   protected Long                lastContact;
    protected Long                goneSince;
 
    protected Lock                consumerLock;
@@ -200,7 +203,7 @@ public class EntityInfo extends Entity implements Comparable<EntityInfo> {
 
    public synchronized void queue(final Runnable task) {
       if (queue == null) {
-         queue = new ConcurrentLinkedQueue<Runnable>();
+         queue = new ConcurrentLinkedQueue<>();
          consumerLock = new ReentrantLock();
       }
       queue.add(task);
@@ -242,13 +245,21 @@ public class EntityInfo extends Entity implements Comparable<EntityInfo> {
       }
       return processedSomething;
    }
-   
-   public int getAlternateId() {
+
+   public synchronized int getAlternateId() {
       return alternateId.get();
    }
-   
-   public void setAlternateId(int id) {
+
+   public synchronized void setAlternateId(int id) {
       alternateId.set(id);
+   }
+
+   public synchronized void setLastContact(Long val) {
+      this.lastContact = val;
+   }
+
+   public synchronized Long getLastContact() {
+      return lastContact;
    }
 
 }

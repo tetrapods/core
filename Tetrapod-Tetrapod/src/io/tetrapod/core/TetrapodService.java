@@ -233,7 +233,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       public Session makeSession(SocketChannel ch) {
          TetrapodService pod = TetrapodService.this;
          Session ses = null;
-         ses = new WebSocketSession(ch, pod, contentRootMap, webSockets);
+         ses = new WebHttpSession(ch, pod, contentRootMap, webSockets);
          ses.setRelayHandler(pod);
          ses.setMyEntityId(getEntityId());
          ses.setMyEntityType(Core.TYPE_TETRAPOD);
@@ -330,11 +330,27 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
    @Override
    public int getAvailableService(int contractId) {
-      EntityInfo entity = registry.getRandomAvailableService(contractId);
+      final EntityInfo entity = registry.getRandomAvailableService(contractId);
       if (entity != null) {
          return entity.entityId;
       }
       return 0;
+   }
+
+   /**
+    * Validates a long-polling session to an entityId 
+    */
+   @Override
+   public boolean validate(int entityId, long token) {
+      final EntityInfo e = registry.getEntity(entityId);
+      if (e != null) {
+         if ( e.reclaimToken == token) {
+            // HACK: as a side-effect, we update last contact time 
+            e.setLastContact(System.currentTimeMillis());
+            return true;
+         }
+      }
+      return false;
    }
 
    @Override
@@ -414,9 +430,9 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    }
 
    private void broadcastAlt(final EntityInfo publisher, final MessageHeader header, final ByteBuf buf) throws IOException {
-      int myId = getEntityId();
-      boolean myChildOriginated = publisher.parentId == myId;
-      boolean toAll = header.toId == UNADDRESSED;
+      final int myId = getEntityId();
+      final boolean myChildOriginated = publisher.parentId == myId;
+      final boolean toAll = header.toId == UNADDRESSED;
       for (EntityInfo e : registry.getEntities()) {
          if (e.isTetrapod() && e.entityId != myId) {
             if (myChildOriginated)
@@ -440,10 +456,13 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          if (e.entityId == getEntityId()) {
             // dispatch to self
             ByteBufDataSource reader = new ByteBufDataSource(buf);
-            final Message msg = (Message) StructureFactory.make(header.contractId, header.structId);
+            final Object obj = StructureFactory.make(header.contractId, header.structId);
+            final Message msg = (obj instanceof Message) ? (Message) obj : null;
             if (msg != null) {
                msg.read(reader);
                clusterClient.getSession().dispatchMessage(header, msg);
+            } else {
+               logger.warn("Could not read message for self-dispatch {}", header.dump());
             }
             buf.readerIndex(ri);
          } else {
@@ -552,6 +571,12 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          if (e.isGone() && System.currentTimeMillis() - e.getGoneSince() > 60 * 1000) {
             logger.info("Reaping: {}", e);
             registry.unregister(e);
+         }
+         if (!e.isGone() && e.getLastContact() != null) {
+            if (System.currentTimeMillis() - e.getLastContact() > 60 * 10000) {
+               e.setLastContact(null);
+               registry.setGone(e);
+            }
          }
       }
    }

@@ -14,10 +14,13 @@ import io.tetrapod.protocol.core.*;
 import java.io.IOException;
 import java.util.*;
 import java.util.Map.Entry;
-import java.util.concurrent.*;
-import java.util.concurrent.atomic.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
-import org.slf4j.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.Timer.Context;
 
@@ -56,6 +59,8 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
       public void relayMessage(MessageHeader header, ByteBuf buf, boolean isBroadcast) throws IOException;
 
       public WebRoutes getWebRoutes();
+
+      public boolean validate(int entityId, long token);
 
    }
 
@@ -111,11 +116,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
       timeoutPendingRequests();
    }
 
-   /**
-    * 
-    */
    public void timeoutPendingRequests() {
-      // 
       for (Entry<Integer, Async> entry : pendingRequests.entrySet()) {
          Async a = entry.getValue();
          if (a.isTimedout()) {
@@ -312,8 +313,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
       if (getMyEntityId() != 0) {
          if (!commsLogIgnore(msg))
             commsLog("%s  [B] => %s (to %s:%d)", this, msg.dump(), TO_TYPES[toType], toId);
-         final Object buffer = makeFrame(
-               new MessageHeader(getMyEntityId(), toType, toId, msg.getContractId(), msg.getStructId()), msg,
+         final Object buffer = makeFrame(new MessageHeader(getMyEntityId(), toType, toId, msg.getContractId(), msg.getStructId()), msg,
                ENVELOPE_BROADCAST);
          if (buffer != null) {
             writeFrame(buffer);
@@ -326,8 +326,8 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
       if (getMyEntityId() != 0) {
          if (!commsLogIgnore(msg))
             commsLog("%s  [M] => %s (to %s:%d)", this, msg.dump(), TO_TYPES[toType], toId);
-         final Object buffer = makeFrame(new MessageHeader(getMyEntityId(), toType, toId, msg.getContractId(), msg.getStructId()),
-               msg, ENVELOPE_MESSAGE);
+         final Object buffer = makeFrame(new MessageHeader(getMyEntityId(), toType, toId, msg.getContractId(), msg.getStructId()), msg,
+               ENVELOPE_MESSAGE);
          if (buffer != null) {
             writeFrame(buffer);
             getDispatcher().messagesSentCounter.mark();
@@ -358,6 +358,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
    }
 
    public static final String[] TO_TYPES = { "Unknown", "Topic", "Entity", "Alt" };
+
    public void sendRelayedMessage(MessageHeader header, ByteBuf payload, boolean broadcast) {
       if (!commsLogIgnore(header.structId)) {
          commsLog("%s  [M] ~> Message:%d %s (to %s:%d)", this, header.structId, getNameFor(header), TO_TYPES[header.toType], header.toId);

@@ -1,16 +1,21 @@
 package io.tetrapod.core.registry;
 
-import io.tetrapod.core.*;
-import io.tetrapod.core.rpc.*;
+import static io.tetrapod.protocol.core.MessageHeader.TO_ENTITY;
+import io.tetrapod.core.Session;
+import io.tetrapod.core.Storage;
+import io.tetrapod.core.rpc.Message;
+import io.tetrapod.core.rpc.MessageContext;
+import io.tetrapod.core.web.LongPollQueue;
 import io.tetrapod.protocol.core.*;
 
 import java.util.*;
-import java.util.concurrent.*;
-import java.util.concurrent.locks.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import static io.tetrapod.protocol.core.MessageHeader.*;
-
-import org.slf4j.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The global registry of all current actors in the system and their published topics and subscriptions
@@ -245,6 +250,8 @@ public class Registry implements TetrapodContract.Registry.API {
       } finally {
          lock.readLock().unlock();
       }
+      // HACK -- would be 'cleaner' as a listener interface
+      LongPollQueue.clearEntity(e.entityId);
    }
 
    public void updateStatus(final EntityInfo e, int status) {
@@ -572,6 +579,15 @@ public class Registry implements TetrapodContract.Registry.API {
    }
 
    public void setGone(EntityInfo e) {
+      
+      if (e.getLastContact() != null) {
+         // we set this value to non-null only for web-polling sessions, 
+         // which need to be handled differently since multiple sessions can 
+         // be in use for the same entity, we only set gone when health monitor 
+         // nulls this value and calls setGone
+         return;
+      }
+
       lock.readLock().lock();
       try {
          updateStatus(e, e.status | Core.STATUS_GONE);

@@ -26,11 +26,11 @@ class WebContext {
    }
 
    private JSONObject requestParameters;
-   private String     requestPath; 
+   private String     requestPath;
 
    public WebContext(HttpRequest request) throws IOException {
       parseRequestParameters(request);
-      
+
    }
 
    public WebContext(JSONObject json) throws IOException {
@@ -93,8 +93,9 @@ class WebContext {
       } catch (HttpPostRequestDecoder.EndOfDataDecoderException ex) {
          // Exception when the body is fully decoded, even if there
          // is still data
+      } finally {
+         decoder.destroy();
       }
-      decoder.destroy();
    }
 
 }
