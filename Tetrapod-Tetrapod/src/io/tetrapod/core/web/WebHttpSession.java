@@ -84,11 +84,6 @@ public class WebHttpSession extends WebSession {
       }
    }
 
-   //   @Override
-   //   public void channelReadComplete(ChannelHandlerContext ctx) throws Exception {
-   //       ctx.flush(); 
-   //   }
-
    @Override
    public void channelActive(final ChannelHandlerContext ctx) throws Exception {
       fireSessionStartEvent();
