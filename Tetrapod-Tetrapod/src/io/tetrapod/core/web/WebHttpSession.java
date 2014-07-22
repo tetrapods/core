@@ -25,6 +25,7 @@ import io.tetrapod.core.serialize.datasources.ByteBufDataSource;
 import io.tetrapod.protocol.core.*;
 
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.*;
@@ -140,7 +141,7 @@ public class WebHttpSession extends WebSession {
          JSONObject jo = new JSONObject(request);
          WebContext webContext = new WebContext(jo);
          RequestHeader header = webContext.makeRequestHeader(this, null);
-         readAndDispatchRequest(header, webContext);
+         readAndDispatchRequest(header, webContext.getRequestParams());
          return;
       } catch (IOException e) {
          logger.error("error processing websocket request", e);
@@ -192,7 +193,8 @@ public class WebHttpSession extends WebSession {
    private void handlePoll(final ChannelHandlerContext ctx, final FullHttpRequest req) throws Exception {
       //logger.debug("{} POLLER: {} keepAlive = {}", this, req.getUri(), HttpHeaders.isKeepAlive(req));
       final WebContext context = new WebContext(req);
-      final JSONObject params = context.getRequestParams();
+      final String content = req.content().toString(Charset.forName("UTF-8"));
+      final JSONObject params = new JSONObject(content);
 
       // authenticate this session, if needed
       if (params.has("_token")) {
@@ -211,20 +213,17 @@ public class WebHttpSession extends WebSession {
       initLongPoll();
 
       if (params.has("_requestId")) {
-         logger.debug("{} RPC: structId={}", this,  params.getInt("_structId"));
+         logger.debug("{} RPC: structId={}", this, params.getInt("_structId"));
          // dispatch a request
-         final RequestHeader header = context.makeRequestHeader(this, null);
-         final Structure request = readRequest(header, context);
-         if (request != null) {
-            header.fromType = Core.TYPE_CLIENT;
-            header.fromId = getTheirEntityId();
-            synchronized (contexts) {
-               contexts.put(header.requestId, ctx);
-            }
-            readAndDispatchRequest(header, context);
-         } else {
-            sendHttpResponse(ctx, req, new DefaultFullHttpResponse(HTTP_1_1, BAD_REQUEST));
+         final RequestHeader header = WebContext.makeRequestHeader(this, null, params);
+
+         header.fromType = Core.TYPE_CLIENT;
+         header.fromId = getTheirEntityId();
+         synchronized (contexts) {
+            contexts.put(header.requestId, ctx);
          }
+         readAndDispatchRequest(header, params);
+
       } else {
          // long poll -- wait until there are messages in queue, and return them
          final JSONArray arr = new JSONArray();
@@ -292,7 +291,7 @@ public class WebHttpSession extends WebSession {
                }
             } else {
                // @web() specific Request mapping 
-               final Structure request = readRequest(header, context);
+               final Structure request = readRequest(header, context.getRequestParams());
                if (request != null) {
                   relayRequest(header, request, handler);
                }
@@ -419,7 +418,7 @@ public class WebHttpSession extends WebSession {
       ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
    }
 
-   protected void readAndDispatchRequest(RequestHeader header, WebContext context) {
+   protected void readAndDispatchRequest(RequestHeader header, JSONObject params) {
       long now = System.currentTimeMillis();
       lastHeardFrom.set(now);
 
@@ -428,16 +427,20 @@ public class WebHttpSession extends WebSession {
          return;
       }
       try {
-         final Structure request = readRequest(header, context);
-         if (header.toId == DIRECT || header.toId == myId) {
-            if (request instanceof Request) {
-               dispatchRequest(header, (Request) request);
+         final Structure request = readRequest(header, params);
+         if (request != null) {
+            if (header.toId == DIRECT || header.toId == myId) {
+               if (request instanceof Request) {
+                  dispatchRequest(header, (Request) request);
+               } else {
+                  logger.error("Asked to process a request I can't  deserialize {}", header.dump());
+                  sendResponse(new Error(ERROR_SERIALIZATION), header.requestId);
+               }
             } else {
-               logger.error("Asked to process a request I can't  deserialize {}", header.dump());
-               sendResponse(new Error(ERROR_SERIALIZATION), header.requestId);
+               relayRequest(header, request);
             }
          } else {
-            relayRequest(header, request);
+            sendResponse(new Error(ERROR_UNKNOWN_REQUEST), header.requestId);
          }
       } catch (IOException e) {
          logger.error("Error processing request {}", header.dump());
@@ -515,7 +518,7 @@ public class WebHttpSession extends WebSession {
          initLongPoll();
          // FIXME: Need a sensible way to protect against memory gobbling if this queue isn't cleared fast enough
          messages.add(toJSON(header, payload, ENVELOPE_MESSAGE));
-         logger.debug("{} Queued {} messages for longPoller {}", this, messages.size(), messages.getEntityId());
+         //logger.debug("{} Queued {} messages for longPoller {}", this, messages.size(), messages.getEntityId());
       }
    }
 

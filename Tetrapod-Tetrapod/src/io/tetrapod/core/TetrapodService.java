@@ -338,15 +338,18 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    }
 
    /**
-    * Validates a long-polling session to an entityId 
+    * Validates a long-polling session to an entityId
     */
    @Override
    public boolean validate(int entityId, long token) {
       final EntityInfo e = registry.getEntity(entityId);
       if (e != null) {
-         if ( e.reclaimToken == token) {
+         if (e.reclaimToken == token) {
             // HACK: as a side-effect, we update last contact time 
             e.setLastContact(System.currentTimeMillis());
+            if (e.isGone()) {
+               registry.updateStatus(e, e.status & ~Core.STATUS_GONE);
+            }
             return true;
          }
       }

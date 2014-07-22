@@ -180,11 +180,10 @@ function TP_Server() {
          window.WebSocket = window.MozWebSocket;
       }
 
-      /////////////////////////////////////////
+      // fall back to long polling if we have no WebSocket support
       if (!window.WebSocket || self.forceLongPolling) {
          return startPollingSession(server, secure);
       }
-      /////////////////////////////////////////
 
       if (simulator != null) {
          return {
@@ -370,7 +369,8 @@ function TP_Server() {
          type : "POST",
          url : "/poll",
          timeout : 24000,
-         data : data,
+         data : JSON.stringify(data),
+         dataType : 'json',
          success : function(data) {
             self.connected = true;
             handleResponse(data);
@@ -417,7 +417,8 @@ function TP_Server() {
                type : "POST",
                url : "/poll",
                timeout : 12000,
-               data : data,
+               data : JSON.stringify(data),
+               dataType : 'json',
                success : function(data) {
                   console.debug("POLL <- " + data.messages.length + " items");
                   self.connected = true;

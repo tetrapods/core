@@ -39,8 +39,8 @@ public class LongPollQueue extends LinkedBlockingQueue<JSONObject> {
    public static void clearEntity(int entityId) {
       synchronized (queues) {
          queues.remove(entityId);
-         logger.debug("Removing long poll queue for {}", entityId);
       }
+      logger.debug("Removing long poll queue for {}", entityId);
    }
 
    private final int entityId;

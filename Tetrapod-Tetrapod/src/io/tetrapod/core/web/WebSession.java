@@ -26,14 +26,14 @@ abstract class WebSession extends Session {
 
    abstract protected Object makeFrame(JSONObject jo, boolean keepAlive);
 
-   protected Structure readRequest(RequestHeader header, WebContext context) throws IOException {
+   protected Structure readRequest(RequestHeader header, JSONObject params) throws IOException {
       Structure request = StructureFactory.make(header.contractId, header.structId);
       if (request == null) {
          logger.error("Could not find request structure contractId={} structId-{}", header.contractId, header.structId);
          sendResponse(new Error(ERROR_SERIALIZATION), header.requestId);
          return null;
       }
-      request.read(new WebJSONDataSource(context.getRequestParams(), request.tagWebNames()));
+      request.read(new WebJSONDataSource(params, request.tagWebNames()));
       commsLog("%s  [%d] <- %s", this, header.requestId, request.dump());
       return request;
    }
