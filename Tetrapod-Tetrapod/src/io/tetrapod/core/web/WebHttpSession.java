@@ -185,10 +185,18 @@ public class WebHttpSession extends WebSession {
       }
    }
 
+   private String getContent(final FullHttpRequest req) {
+      final ByteBuf contentBuf = req.content();
+      try {
+         return contentBuf.toString(Charset.forName("UTF-8"));
+      } finally {
+         contentBuf.release();
+      }
+   }
+
    private void handlePoll(final ChannelHandlerContext ctx, final FullHttpRequest req) throws Exception {
       //logger.debug("{} POLLER: {} keepAlive = {}", this, req.getUri(), HttpHeaders.isKeepAlive(req));
-      final String content = req.content().toString(Charset.forName("UTF-8"));
-      final JSONObject params = new JSONObject(content);
+      final JSONObject params = new JSONObject(getContent(req));
 
       // authenticate this session, if needed
       if (params.has("_token")) {
@@ -529,18 +537,18 @@ public class WebHttpSession extends WebSession {
          reqs = requestCount.incrementAndGet();
       }
       if (reqs > FLOOD_KILL) {
-         logger.warn("flood killing {}/{}", header.contractId, header.structId);
+         logger.warn("{} flood killing {}/{}", this, header.contractId, header.structId);
          close();
          return true;
       }
       if (reqs > FLOOD_IGNORE) {
          // do nothing, send no response
-         logger.warn("flood ignoring {}/{}", header.contractId, header.structId);
+         logger.warn("{} flood ignoring {}/{}", this, header.contractId, header.structId);
          return true;
       }
       if (reqs > FLOOD_WARN) {
          // respond with error so client can slow down
-         logger.warn("flood warning {}/{}", header.contractId, header.structId);
+         logger.warn("{} flood warning {}/{}", this, header.contractId, header.structId);
          sendResponse(new Error(ERROR_FLOOD), header.requestId);
          return true;
       }
