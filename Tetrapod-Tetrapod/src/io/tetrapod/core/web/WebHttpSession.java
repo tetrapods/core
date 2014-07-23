@@ -392,7 +392,7 @@ public class WebHttpSession extends WebSession {
       if (ses != null) {
          relayRequest(header, request, ses, handler);
       } else {
-         logger.debug("Could not find a relay session for {} {}", header.toId, header.contractId);
+         logger.debug("{} Could not find a relay session for {} {}", this, header.toId, header.contractId);
          handler.onResponse(new Error(ERROR_SERVICE_UNAVAILABLE));
       }
    }
