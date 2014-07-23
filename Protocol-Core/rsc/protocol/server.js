@@ -211,20 +211,22 @@ function TP_Server() {
    }
 
    function disconnect() {
-      if (self.commsLog)
-         console.log("Disconnecting... " + socket.readyState);
-      var closeHack = (socket.readyState == WebSocket.CLOSING);
-      if (closeHack) {
-         // some sort of here when waking from sleep, it can take a very long long time
-         // to transition from CLOSING to CLOSED and call our close handler, so we
-         // take away the onclose handler and call it manually
-         socket.onclose = null;
-      }
-      socket.close();
-      if (self.commsLog)
-         console.log("socket.close() called: " + socket.readyState);
-      if (closeHack) { // call onSocketClose manually
-         onSocketClose();
+      if (socket) {
+         if (self.commsLog)
+            console.log("Disconnecting... " + socket.readyState);
+         var closeHack = (socket.readyState == WebSocket.CLOSING);
+         if (closeHack) {
+            // some sort of here when waking from sleep, it can take a very long long time
+            // to transition from CLOSING to CLOSED and call our close handler, so we
+            // take away the onclose handler and call it manually
+            socket.onclose = null;
+         }
+         socket.close();
+         if (self.commsLog)
+            console.log("socket.close() called: " + socket.readyState);
+         if (closeHack) { // call onSocketClose manually
+            onSocketClose();
+         }
       }
    }
 
@@ -378,21 +380,22 @@ function TP_Server() {
          },
          error : function(XMLHttpRequest, textStatus, errorThrown) {
             console.error(textStatus + " (" + errorThrown + ")");
-            self.connected = false;
-            if (textStatus == 'timeout')
+            if (textStatus == 'timeout') {
                handleResponse({
                   _requestId : data._requestId,
                   _contractId : 1,
                   _structId : 1,
                   code : 3
                });
-            else
+            } else {
                handleResponse({
                   _requestId : data._requestId,
                   _contractId : 1,
                   _structId : 1,
                   code : 1
                });
+            }
+            onSocketClose(); // do a fake socket close event
          }
       });
    }
@@ -435,8 +438,8 @@ function TP_Server() {
                },
                error : function(XMLHttpRequest, textStatus, errorThrown) {
                   console.error(textStatus + " (" + errorThrown + ")");
-                  self.connected = false;
                   self.pollPending = false;
+                  onSocketClose(); // fake socket close event 
                }
             });
          }
