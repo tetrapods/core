@@ -54,7 +54,6 @@ public class WebHttpSession extends WebSession {
    private WebSocketServerHandshaker           handshaker;
 
    private Map<Integer, ChannelHandlerContext> contexts;
-   private LongPollQueue                       messages;
 
    public WebHttpSession(SocketChannel ch, Session.Helper helper, Map<String, WebRoot> roots, String wsLocation) {
       super(ch, helper);
@@ -94,12 +93,6 @@ public class WebHttpSession extends WebSession {
    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
       fireSessionStopEvent();
       cancelAllPendingRequests();
-      synchronized (this) {
-         if (messages != null) {
-            LongPollQueue.releaseQueue(messages);
-            messages = null;
-         }
-      }
    }
 
    public synchronized boolean isWebSocket() {
@@ -107,11 +100,6 @@ public class WebHttpSession extends WebSession {
    }
 
    public synchronized void initLongPoll() {
-      if (messages == null) {
-         if (getTheirEntityId() != 0) {
-            messages = LongPollQueue.acquireQueue(getTheirEntityId());
-         }
-      }
       if (contexts == null) {
          contexts = new HashMap<>();
       }
@@ -227,27 +215,35 @@ public class WebHttpSession extends WebSession {
          readAndDispatchRequest(header, params);
 
       } else {
-         // long poll -- wait until there are messages in queue, and return them
-         final JSONArray arr = new JSONArray();
-         logger.debug("{} long poll {} has {} items\n", this, messages.getEntityId(), messages.size());
-         assert messages != null;
-         if (messages.tryLock()) {
-            try {
-               JSONObject jo = messages.poll(10, TimeUnit.SECONDS);
-               if (jo != null) {
-                  arr.put(jo);
-                  while (jo != null) {
-                     jo = messages.poll();
+         getDispatcher().dispatch(new Runnable() {
+            public void run() {
+               final LongPollQueue messages = LongPollQueue.getQueue(getTheirEntityId());
+               // long poll -- wait until there are messages in queue, and return them
+               final JSONArray arr = new JSONArray();
+               assert messages != null;
+               if (messages.tryLock()) {
+                  try {
+                     // FIXME -- this blocks an entire thread on the long poll, which isn't ideal.
+                     JSONObject jo = messages.poll(10, TimeUnit.SECONDS);
                      if (jo != null) {
                         arr.put(jo);
+                        while (jo != null) {
+                           jo = messages.poll();
+                           if (jo != null) {
+                              arr.put(jo);
+                           }
+                        }
                      }
+                  } catch (InterruptedException e) {} finally {
+                     messages.unlock();
                   }
+                  logger.debug("{} long poll {} has {} items\n", this, messages.getEntityId(), messages.size());
+                  ctx.writeAndFlush(makeFrame(new JSONObject().put("messages", arr), HttpHeaders.isKeepAlive(req)));
+               } else {
+                  ctx.writeAndFlush(makeFrame(new JSONObject().put("error", "locked"), HttpHeaders.isKeepAlive(req)));
                }
-            } finally {
-               messages.unlock();
             }
-         }
-         ctx.writeAndFlush(makeFrame(new JSONObject().put("messages", arr), HttpHeaders.isKeepAlive(req)));
+         });
       }
    }
 
@@ -517,7 +513,7 @@ public class WebHttpSession extends WebSession {
          if (!commsLogIgnore(header.structId)) {
             commsLog("%s  [M] ~] Message:%d %s (to %s:%d)", this, header.structId, getNameFor(header), TO_TYPES[header.toType], header.toId);
          }
-         initLongPoll();
+         final LongPollQueue messages = LongPollQueue.getQueue(getTheirEntityId());
          // FIXME: Need a sensible way to protect against memory gobbling if this queue isn't cleared fast enough
          messages.add(toJSON(header, payload, ENVELOPE_MESSAGE));
          //logger.debug("{} Queued {} messages for longPoller {}", this, messages.size(), messages.getEntityId());

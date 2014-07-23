@@ -420,13 +420,18 @@ function TP_Server() {
                data : JSON.stringify(data),
                dataType : 'json',
                success : function(data) {
-                  console.debug("POLL <- " + data.messages.length + " items");
                   self.connected = true;
                   self.pollPending = false;
-                  $.each(data.messages, function(i, m) {
-                     handleMessage(m)
-                  });
-                  schedulePoll(100);
+                  if (data.error) {
+                     console.debug("POLL <- ERROR: " + data.error);
+                     schedulePoll(1000);
+                  } else {
+                     console.debug("POLL <- " + data.messages.length + " items");
+                     $.each(data.messages, function(i, m) {
+                        handleMessage(m)
+                     });
+                     schedulePoll(100);
+                  }
                },
                error : function(XMLHttpRequest, textStatus, errorThrown) {
                   console.error(textStatus + " (" + errorThrown + ")");

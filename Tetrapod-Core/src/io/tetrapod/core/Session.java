@@ -110,6 +110,9 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
          }
          if (now - lastHeardFrom.get() > 10000) {
             logger.warn("{} Timeout", this);
+            if (theirId == myId) {
+               logger.warn("{} Timeout on LOOPBACK!", this);
+            }
             close();
          }
       }
@@ -449,7 +452,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
    }
 
    public synchronized void setMyEntityId(int entityId) {
-      logger.info("Setting my Entity {}", entityId);
+      logger.debug("{} Setting my Entity {}", this, entityId);
       this.myId = entityId;
    }
 
