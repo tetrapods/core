@@ -28,7 +28,7 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.*;
+import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -187,7 +187,6 @@ public class WebHttpSession extends WebSession {
 
    private void handlePoll(final ChannelHandlerContext ctx, final FullHttpRequest req) throws Exception {
       //logger.debug("{} POLLER: {} keepAlive = {}", this, req.getUri(), HttpHeaders.isKeepAlive(req));
-      final WebContext context = new WebContext(req);
       final String content = req.content().toString(Charset.forName("UTF-8"));
       final JSONObject params = new JSONObject(content);
 
