@@ -91,7 +91,7 @@ public class Topic {
    /**
     * Get the total number of unique subscribers to this topic
     */
-   public synchronized int getNumScubscribers() {
+   public synchronized int getNumSubscribers() {
       return subscribers.size();
    }
 

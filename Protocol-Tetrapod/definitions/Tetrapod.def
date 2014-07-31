@@ -132,6 +132,12 @@ internal request SetAlternateId
    1: int entityId
    2: int alternateId
    
+internal request GetSubscriberCount
+   1: int topicId
+   
+internal response GetSubscriberCount
+   1: int count
+   
 ################################# MESSAGES #################################
 
 // a special message to avoid race conditions on the Register response
