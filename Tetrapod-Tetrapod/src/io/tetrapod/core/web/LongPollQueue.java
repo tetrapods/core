@@ -18,33 +18,26 @@ public class LongPollQueue extends LinkedBlockingQueue<JSONObject> {
 
    private static final Map<Integer, LongPollQueue> queues           = new HashMap<>();
 
-   public static LongPollQueue acquireQueue(int entityId) {
+   public static LongPollQueue getQueue(int entityId) {
       synchronized (queues) {
          LongPollQueue q = queues.get(entityId);
          if (q == null) {
             q = new LongPollQueue(entityId);
             queues.put(entityId, q);
          }
-         q.refCount++;
          return q;
-      }
-   }
-
-   public static void releaseQueue(LongPollQueue q) {
-      synchronized (queues) {
-         q.refCount--;
       }
    }
 
    public static void clearEntity(int entityId) {
       synchronized (queues) {
-         queues.remove(entityId);
+         if (queues.remove(entityId) != null) {
+            logger.debug("Removing long poll queue for {}", entityId);
+         }
       }
-      logger.debug("Removing long poll queue for {}", entityId);
    }
 
    private final int entityId;
-   private int       refCount;
    private Lock      lock = new ReentrantLock(true);
 
    public LongPollQueue(int entityId) {
@@ -61,10 +54,6 @@ public class LongPollQueue extends LinkedBlockingQueue<JSONObject> {
 
    public int getEntityId() {
       return entityId;
-   }
-
-   public int getRefCount() {
-      return refCount;
    }
 
 }

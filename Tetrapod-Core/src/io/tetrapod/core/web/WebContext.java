@@ -7,6 +7,8 @@ import static io.tetrapod.protocol.core.Core.UNADDRESSED;
 import io.netty.buffer.ByteBuf;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.QueryStringDecoder;
+import io.netty.handler.codec.http.multipart.*;
+import io.netty.handler.codec.http.multipart.InterfaceHttpData.HttpDataType;
 import io.netty.util.CharsetUtil;
 import io.tetrapod.core.Session;
 import io.tetrapod.core.json.JSONObject;
@@ -28,7 +30,7 @@ public class WebContext {
    }
 
    private JSONObject requestParameters;
-   private String     requestPath; 
+   private String     requestPath;
 
    public WebContext(FullHttpRequest request) throws IOException {
       parseRequestParameters(request);
@@ -39,10 +41,10 @@ public class WebContext {
       this.requestPath = json.optString("_uri", "/unknown");
    }
 
-   public RequestHeader makeRequestHeader(Session s, WebRoute route) {       
+   public RequestHeader makeRequestHeader(Session s, WebRoute route) {
       return makeRequestHeader(s, route, requestParameters);
    }
-   
+
    public static RequestHeader makeRequestHeader(Session s, WebRoute route, JSONObject params) {
       RequestHeader header = new RequestHeader();
 
@@ -64,7 +66,6 @@ public class WebContext {
       header.timeout = (byte) 30;
       return header;
    }
-   
 
    public JSONObject getRequestParams() {
       return requestParameters;
@@ -72,7 +73,7 @@ public class WebContext {
 
    public String getRequestPath() {
       return requestPath;
-   } 
+   }
 
    private void parseRequestParameters(FullHttpRequest request) throws IOException {
       final QueryStringDecoder queryStringDecoder = new QueryStringDecoder(request.getUri());
@@ -86,23 +87,23 @@ public class WebContext {
       // Add POST parameters
       if (request.getMethod() != POST)
          return;
- 
-//      final HttpPostRequestDecoder decoder = new HttpPostRequestDecoder(new DefaultHttpDataFactory(false), request);
-//      try {
-//         while (decoder.hasNext()) {
-//            InterfaceHttpData httpData = decoder.next();
-//
-//            if (httpData.getHttpDataType() == HttpDataType.Attribute) {
-//               Attribute attribute = (Attribute) httpData;
-//               requestParameters.accumulate(attribute.getName(), attribute.getValue());
-//               attribute.release();
-//            }
-//         }
-//      } catch (HttpPostRequestDecoder.EndOfDataDecoderException ex) {
-//         // Exception when the body is fully decoded, even if there is still data
-//      } finally {
-//         decoder.destroy();
-//      }
+
+      final HttpPostRequestDecoder decoder = new HttpPostRequestDecoder(new DefaultHttpDataFactory(false), request);
+      try {
+         while (decoder.hasNext()) {
+            InterfaceHttpData httpData = decoder.next();
+
+            if (httpData.getHttpDataType() == HttpDataType.Attribute) {
+               Attribute attribute = (Attribute) httpData;
+               requestParameters.accumulate(attribute.getName(), attribute.getValue());
+               attribute.release();
+            }
+         }
+      } catch (HttpPostRequestDecoder.EndOfDataDecoderException ex) {
+         // Exception when the body is fully decoded, even if there is still data
+      } finally {
+         decoder.destroy();
+      }
    }
 
 }

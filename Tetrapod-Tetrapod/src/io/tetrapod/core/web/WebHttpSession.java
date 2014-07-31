@@ -28,7 +28,7 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.*;
+import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,7 +54,6 @@ public class WebHttpSession extends WebSession {
    private WebSocketServerHandshaker           handshaker;
 
    private Map<Integer, ChannelHandlerContext> contexts;
-   private LongPollQueue                       messages;
 
    public WebHttpSession(SocketChannel ch, Session.Helper helper, Map<String, WebRoot> roots, String wsLocation) {
       super(ch, helper);
@@ -94,12 +93,6 @@ public class WebHttpSession extends WebSession {
    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
       fireSessionStopEvent();
       cancelAllPendingRequests();
-      synchronized (this) {
-         if (messages != null) {
-            LongPollQueue.releaseQueue(messages);
-            messages = null;
-         }
-      }
    }
 
    public synchronized boolean isWebSocket() {
@@ -107,11 +100,6 @@ public class WebHttpSession extends WebSession {
    }
 
    public synchronized void initLongPoll() {
-      if (messages == null) {
-         if (getTheirEntityId() != 0) {
-            messages = LongPollQueue.acquireQueue(getTheirEntityId());
-         }
-      }
       if (contexts == null) {
          contexts = new HashMap<>();
       }
@@ -185,11 +173,18 @@ public class WebHttpSession extends WebSession {
       }
    }
 
+   private String getContent(final FullHttpRequest req) {
+      final ByteBuf contentBuf = req.content();
+      try {
+         return contentBuf.toString(Charset.forName("UTF-8"));
+      } finally {
+         contentBuf.release();
+      }
+   }
+
    private void handlePoll(final ChannelHandlerContext ctx, final FullHttpRequest req) throws Exception {
       //logger.debug("{} POLLER: {} keepAlive = {}", this, req.getUri(), HttpHeaders.isKeepAlive(req));
-      final WebContext context = new WebContext(req);
-      final String content = req.content().toString(Charset.forName("UTF-8"));
-      final JSONObject params = new JSONObject(content);
+      final JSONObject params = new JSONObject(getContent(req));
 
       // authenticate this session, if needed
       if (params.has("_token")) {
@@ -220,27 +215,35 @@ public class WebHttpSession extends WebSession {
          readAndDispatchRequest(header, params);
 
       } else {
-         // long poll -- wait until there are messages in queue, and return them
-         final JSONArray arr = new JSONArray();
-         logger.debug("{} long poll {} has {} items\n", this, messages.getEntityId(), messages.size());
-         assert messages != null;
-         if (messages.tryLock()) {
-            try {
-               JSONObject jo = messages.poll(10, TimeUnit.SECONDS);
-               if (jo != null) {
-                  arr.put(jo);
-                  while (jo != null) {
-                     jo = messages.poll();
+         getDispatcher().dispatch(new Runnable() {
+            public void run() {
+               final LongPollQueue messages = LongPollQueue.getQueue(getTheirEntityId());
+               // long poll -- wait until there are messages in queue, and return them
+               final JSONArray arr = new JSONArray();
+               assert messages != null;
+               if (messages.tryLock()) {
+                  try {
+                     // FIXME -- this blocks an entire thread on the long poll, which isn't ideal.
+                     JSONObject jo = messages.poll(10, TimeUnit.SECONDS);
                      if (jo != null) {
                         arr.put(jo);
+                        while (jo != null) {
+                           jo = messages.poll();
+                           if (jo != null) {
+                              arr.put(jo);
+                           }
+                        }
                      }
+                  } catch (InterruptedException e) {} finally {
+                     messages.unlock();
                   }
+                  logger.debug("{} long poll {} has {} items\n", this, messages.getEntityId(), messages.size());
+                  ctx.writeAndFlush(makeFrame(new JSONObject().put("messages", arr), HttpHeaders.isKeepAlive(req)));
+               } else {
+                  ctx.writeAndFlush(makeFrame(new JSONObject().put("error", "locked"), HttpHeaders.isKeepAlive(req)));
                }
-            } finally {
-               messages.unlock();
             }
-         }
-         ctx.writeAndFlush(makeFrame(new JSONObject().put("messages", arr), HttpHeaders.isKeepAlive(req)));
+         });
       }
    }
 
@@ -385,7 +388,7 @@ public class WebHttpSession extends WebSession {
       if (ses != null) {
          relayRequest(header, request, ses, handler);
       } else {
-         logger.debug("Could not find a relay session for {} {}", header.toId, header.contractId);
+         logger.debug("{} Could not find a relay session for {} {}", this, header.toId, header.contractId);
          handler.onResponse(new Error(ERROR_SERVICE_UNAVAILABLE));
       }
    }
@@ -510,7 +513,7 @@ public class WebHttpSession extends WebSession {
          if (!commsLogIgnore(header.structId)) {
             commsLog("%s  [M] ~] Message:%d %s (to %s:%d)", this, header.structId, getNameFor(header), TO_TYPES[header.toType], header.toId);
          }
-         initLongPoll();
+         final LongPollQueue messages = LongPollQueue.getQueue(getTheirEntityId());
          // FIXME: Need a sensible way to protect against memory gobbling if this queue isn't cleared fast enough
          messages.add(toJSON(header, payload, ENVELOPE_MESSAGE));
          //logger.debug("{} Queued {} messages for longPoller {}", this, messages.size(), messages.getEntityId());
@@ -530,18 +533,18 @@ public class WebHttpSession extends WebSession {
          reqs = requestCount.incrementAndGet();
       }
       if (reqs > FLOOD_KILL) {
-         logger.warn("flood killing {}/{}", header.contractId, header.structId);
+         logger.warn("{} flood killing {}/{}", this, header.contractId, header.structId);
          close();
          return true;
       }
       if (reqs > FLOOD_IGNORE) {
          // do nothing, send no response
-         logger.warn("flood ignoring {}/{}", header.contractId, header.structId);
+         logger.warn("{} flood ignoring {}/{}", this, header.contractId, header.structId);
          return true;
       }
       if (reqs > FLOOD_WARN) {
          // respond with error so client can slow down
-         logger.warn("flood warning {}/{}", header.contractId, header.structId);
+         logger.warn("{} flood warning {}/{}", this, header.contractId, header.structId);
          sendResponse(new Error(ERROR_FLOOD), header.requestId);
          return true;
       }

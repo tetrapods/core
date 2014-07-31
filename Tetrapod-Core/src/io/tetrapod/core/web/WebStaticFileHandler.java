@@ -241,8 +241,8 @@ class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRequest> 
       if (userAgent.contains("Opera")) {
          return null;
       }
-
-      return "/android.html";
+// TEMP HACK TO TEST ANDROID WITH LONG POLLING ON DEV
+      return null;//"/android.html";
    }
 
 
