@@ -150,7 +150,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
    }
 
    protected void scheduleHealthCheck() {
-      if (isConnected()) {
+      if (isConnected() || !pendingRequests.isEmpty()) {
          getDispatcher().dispatch(1, TimeUnit.SECONDS, new Runnable() {
             public void run() {
                checkHealth();
@@ -279,20 +279,20 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
 
    public Async sendRequest(Request req, final RequestHeader header) {
       final Async async = new Async(req, header, this);
-      pendingRequests.put(header.requestId, async);
+      if (channel.isActive()) {
+         pendingRequests.put(header.requestId, async);
 
-      if (!commsLogIgnore(req))
-         commsLog("%s  [%d] => %s (to %d)", this, header.requestId, req.dump(), header.toId);
+         if (!commsLogIgnore(req))
+            commsLog("%s  [%d] => %s (to %d)", this, header.requestId, req.dump(), header.toId);
 
-      final Object buffer = makeFrame(header, req, ENVELOPE_REQUEST);
-      if (buffer != null) {
-         if (channel.isActive()) {
+         final Object buffer = makeFrame(header, req, ENVELOPE_REQUEST);
+         if (buffer != null) {
             writeFrame(buffer);
          } else {
-            async.setResponse(ERROR_CONNECTION_CLOSED);
+            async.setResponse(ERROR_SERIALIZATION);
          }
       } else {
-         async.setResponse(ERROR_SERIALIZATION);
+         async.setResponse(ERROR_CONNECTION_CLOSED);
       }
       return async;
    }
