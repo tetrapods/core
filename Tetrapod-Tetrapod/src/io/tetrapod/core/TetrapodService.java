@@ -509,7 +509,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
    @Override
    public void broadcastRegistryMessage(Message msg) {
-      if (registryTopic.getNumScubscribers() > 0) {
+      if (registryTopic.getNumSubscribers() > 0) {
          broadcast(msg, registryTopic);
       }
       cluster.broadcast(msg);
@@ -1023,6 +1023,18 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          return Response.SUCCESS;
       }
       return Response.error(ERROR_INVALID_ENTITY);
+   }
+   
+   @Override
+   public Response requestGetSubscriberCount(GetSubscriberCountRequest r, RequestContext ctx) {
+      EntityInfo ei = registry.getEntity(ctx.header.fromId);
+      if (ei != null) {
+         Topic t = ei.getTopic(r.topicId);
+         if (t != null) {
+            return new GetSubscriberCountResponse(t.getNumSubscribers());
+         }
+      }
+      return Response.error(ERROR_UNKNOWN);
    }
 
 }

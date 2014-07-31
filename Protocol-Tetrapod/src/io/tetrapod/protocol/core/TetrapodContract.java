@@ -30,6 +30,7 @@ public class TetrapodContract extends Contract {
       , ClusterJoinRequest.Handler
       , ExecuteBuildCommandRequest.Handler
       , GetServiceBuildInfoRequest.Handler
+      , GetSubscriberCountRequest.Handler
       , KeepAliveRequest.Handler
       , LogRegistryStatsRequest.Handler
       , PublishRequest.Handler
@@ -67,6 +68,7 @@ public class TetrapodContract extends Contract {
          new AddWebFileRequest(),
          new SendWebRootRequest(),
          new SetAlternateIdRequest(),
+         new GetSubscriberCountRequest(),
          new GetServiceBuildInfoRequest(),
          new ExecuteBuildCommandRequest(),
       };
@@ -78,6 +80,7 @@ public class TetrapodContract extends Contract {
          new ClusterJoinResponse(),
          new PublishResponse(),
          new AdminLoginResponse(),
+         new GetSubscriberCountResponse(),
          new GetServiceBuildInfoResponse(),
       };
    }
