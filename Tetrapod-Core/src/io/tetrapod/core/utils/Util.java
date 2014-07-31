@@ -165,6 +165,10 @@ public class Util {
       return Util.getProperty("devMode", "local").equals("local");
    }
 
+   public static boolean isProduction() {
+      return Util.getProperty("devMode", "local").equals("prod");
+   }
+
    public static String formatFileSize(long bytes) {
       if (bytes < 4096) {
          return bytes + " bytes";
@@ -226,7 +230,7 @@ public class Util {
       }
       return result;
    }
-   
+
    public static List<Integer> jsonArrayToIntegerList(JSONArray array) {
       List<Integer> result = new ArrayList<>();
       for (int i = 0; i < array.length(); i++) {
@@ -234,6 +238,5 @@ public class Util {
       }
       return result;
    }
-
 
 }
