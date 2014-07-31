@@ -1,9 +1,11 @@
 package io.tetrapod.core.rpc;
 
 import io.tetrapod.core.Session;
+import io.tetrapod.protocol.core.CoreContract;
 import io.tetrapod.protocol.core.RequestHeader;
 
-import org.slf4j.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class Async {
    public static final Logger logger   = LoggerFactory.getLogger(Async.class);
@@ -63,6 +65,8 @@ public class Async {
          try {
             wait(1000);
          } catch (InterruptedException e) {}
+         if (isTimedout())
+            setResponse(CoreContract.ERROR_TIMEOUT);
       }
       return response;
    }
