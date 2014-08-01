@@ -43,11 +43,13 @@ public class HazelcastSerializer<T extends Structure> implements StreamSerialize
          String s = Util.readFileAsString(new File(file));
          String awsAccess = Util.getProperty("aws.hazelcast.accessKey", "?");
          String awsSecret = Util.getProperty("aws.hazelcast.secretKey", "?");
+         String awsSecurityGroup = Util.getProperty("aws.hazelcast.securitygroup", "?");
          boolean aws = Util.getProperty("aws.hazelcast", false);
          s = s.replace("{{multicastOn}}", Boolean.toString(!aws));
          s = s.replace("{{awsOn}}", Boolean.toString(aws));
          s = s.replace("{{awsAccess}}", awsAccess);
          s = s.replace("{{awsSecret}}", awsSecret);
+         s = s.replace("{{awsSecurityGroup}}", awsSecurityGroup);
          return s;
       } catch (IOException e) {
          return null;

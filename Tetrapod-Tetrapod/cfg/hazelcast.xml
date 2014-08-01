@@ -17,7 +17,7 @@
             <access-key>{{awsAccess}}</access-key>
             <secret-key>{{awsSecret}}</secret-key>
             <region>us-west-2</region>
-           <security-group-name>Servers</security-group-name>
+           <security-group-name>{{awsSecurityGroup}}</security-group-name>
          </aws>
       </join>
    </network>
