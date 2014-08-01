@@ -10,15 +10,18 @@ import java.util.*;
 public class WebRootLocalFilesystem implements WebRoot {
 
    private final List<Path> roots = new ArrayList<>();
-   
+
    @Override
-   public void clear() {
+   public synchronized void clear() {
       roots.clear();
    }
 
    @Override
-   public void addFile(String path, byte[] content) {
+   public synchronized void addFile(String path, byte[] content) {
+      assert path != null;
       File f = new File(path);
+      assert f != null;
+      assert f.toPath() != null;
       roots.add(f.toPath());
    }
 
@@ -31,14 +34,16 @@ public class WebRootLocalFilesystem implements WebRoot {
          path = path.substring(1);
       }
       for (Path rr : roots) {
-         Path p = rr.resolve(path);
-         if (Files.exists(p)) {
-            FileResult r = new FileResult();
-            r.isIndex = path.endsWith("index.html");
-            r.modificationTime = Files.getLastModifiedTime(p).toMillis();
-            r.path = "/" + path;
-            r.contents = Files.readAllBytes(p);
-            return r;
+         if (rr != null) {
+            Path p = rr.resolve(path);
+            if (Files.exists(p)) {
+               FileResult r = new FileResult();
+               r.isIndex = path.endsWith("index.html");
+               r.modificationTime = Files.getLastModifiedTime(p).toMillis();
+               r.path = "/" + path;
+               r.contents = Files.readAllBytes(p);
+               return r;
+            }
          }
       }
       return null;

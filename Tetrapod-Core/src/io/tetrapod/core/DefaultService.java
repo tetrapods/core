@@ -180,7 +180,9 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
     */
    private void checkHealth() {
       if (!isShuttingDown()) {
-
+         if (dispatcher.workQueueSize.getCount() > 0) {
+            logger.warn("DISPATCHER QUEUE SIZE = {}", dispatcher.workQueueSize.getCount());
+         }
          if (dispatcher.workQueueSize.getCount() >= Session.DEFAULT_OVERLOAD_THRESHOLD) {
             updateStatus(status | Core.STATUS_OVERLOADED);
          } else {
@@ -450,7 +452,8 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
    }
 
    public long getAverageResponseTime() {
-      return (long) dispatcher.requestTimes.getOneMinuteRate();
+      // TODO: verify this is correctly converting nanos to millis
+      return (long) dispatcher.requestTimes.getSnapshot().getMean() / 1000000L; 
    }
 
    /**

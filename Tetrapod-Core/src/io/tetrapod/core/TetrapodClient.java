@@ -6,6 +6,7 @@ import io.tetrapod.core.utils.Util;
 import io.tetrapod.protocol.core.*;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import org.slf4j.*;
 
@@ -19,17 +20,19 @@ public class TetrapodClient implements SessionFactory, Session.Helper {
    private final Dispatcher      dispatcher;
    private final MessageHandlers messageHandlers = new MessageHandlers();
    private final Client          client;
+   private final ServerAddress   address;
 
    private String                token;
 
-   public TetrapodClient(Dispatcher dispatcher) {
+   public TetrapodClient(Dispatcher dispatcher, String host, int port) {
       this.dispatcher = dispatcher;
+      this.address = new ServerAddress(host, port);
       addContracts(new TetrapodContract());
       client = new Client(this);
    }
 
-   public void connect(String host, int port) throws Exception {
-      client.connect(host, port, dispatcher).sync();
+   public void connect() throws Exception {
+      client.connect(address.host, address.port, dispatcher).sync();
    }
 
    public void addContracts(Contract... contracts) {
@@ -56,7 +59,7 @@ public class TetrapodClient implements SessionFactory, Session.Helper {
       ses.addSessionListener(new Session.Listener() {
          @Override
          public void onSessionStop(Session ses) {
-            // TODO: reconnect
+            scheduleReconnect(1);
          }
 
          @Override
@@ -140,6 +143,22 @@ public class TetrapodClient implements SessionFactory, Session.Helper {
     */
    public String getClientName() {
       return "Client";
+   }
+
+   private void scheduleReconnect(final int seconds) {
+      dispatcher.dispatch(seconds, TimeUnit.SECONDS, new Runnable() {
+         public void run() {
+            try {
+               if (!isConnected()) {
+                  logger.debug("Reconnecting");
+                  connect();
+               }
+            } catch (Exception e) {
+               logger.error(e.getMessage(), e);
+               scheduleReconnect(seconds * 2);
+            }
+         }
+      });
    }
 
 }
