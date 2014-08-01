@@ -79,8 +79,8 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
    protected final AtomicInteger        requestCounter             = new AtomicInteger();
    protected final Session.Helper       helper;
    protected final SocketChannel        channel;
-   protected final AtomicLong           lastHeardFrom              = new AtomicLong();
-   protected final AtomicLong           lastSentTo                 = new AtomicLong();
+   protected final AtomicLong           lastHeardFrom              = new AtomicLong(System.currentTimeMillis());
+   protected final AtomicLong           lastSentTo                 = new AtomicLong(System.currentTimeMillis());
 
    protected RelayHandler               relayHandler;
 
@@ -110,7 +110,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
          }
          if (now - lastHeardFrom.get() > 10000) {
             logger.warn("{} Timeout", this);
-            if (theirId == myId) {
+            if (theirId == myId && myId != 0) {
                logger.warn("{} Timeout on LOOPBACK!", this);
             }
             close();

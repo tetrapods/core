@@ -90,7 +90,7 @@ public class Server extends ChannelInitializer<SocketChannel> implements Session
          ch.pipeline().addLast("ssl", handler);
       }
       Session session = sessionFactory.makeSession(ch);
-      session.addSessionListener(Server.this);
+      session.addSessionListener(this);
    }
 
    @Override

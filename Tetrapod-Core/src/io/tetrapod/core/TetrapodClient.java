@@ -5,34 +5,60 @@ import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.utils.Util;
 import io.tetrapod.protocol.core.*;
 
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import org.slf4j.*;
+import javax.net.ssl.*;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A base class for implementing a client or bot
  */
 public class TetrapodClient implements SessionFactory, Session.Helper {
 
-   public static final Logger    logger          = LoggerFactory.getLogger(TetrapodClient.class);
+   /**
+    * FIXME -- only used for test bots right now, but this should be fixed if we ever need for serious use
+    */
+   private static final TrustManager DUMMY_TRUST_MANAGER = new X509TrustManager() {
+                                                            public X509Certificate[] getAcceptedIssuers() {
+                                                               return new X509Certificate[0];
+                                                            }
 
-   private final Dispatcher      dispatcher;
-   private final MessageHandlers messageHandlers = new MessageHandlers();
-   private final Client          client;
-   private final ServerAddress   address;
+                                                            public void checkClientTrusted(X509Certificate[] chain, String authType)
+                                                                  throws CertificateException {}
 
-   private String                token;
+                                                            public void checkServerTrusted(X509Certificate[] chain, String authType)
+                                                                  throws CertificateException {}
+                                                         };
+   public static final Logger        logger              = LoggerFactory.getLogger(TetrapodClient.class);
 
-   public TetrapodClient(Dispatcher dispatcher, String host, int port) {
+   private final Dispatcher          dispatcher;
+   private final MessageHandlers     messageHandlers     = new MessageHandlers();
+   private final Client              client;
+   private final ServerAddress       address;
+   private final boolean             ssl;
+   private String                    token;
+
+   public TetrapodClient(Dispatcher dispatcher, String host, int port, boolean ssl) {
       this.dispatcher = dispatcher;
       this.address = new ServerAddress(host, port);
+      this.ssl = ssl;
       addContracts(new TetrapodContract());
       client = new Client(this);
    }
 
    public void connect() throws Exception {
-      client.connect(address.host, address.port, dispatcher).sync();
+      if (ssl) {
+         final SSLContext ctx = SSLContext.getInstance("TLS");
+         ctx.init(null, new TrustManager[] { DUMMY_TRUST_MANAGER }, null);
+
+         client.enableTLS(ctx);
+      }
+      client.connect(address.host, address.port, dispatcher).sync(); 
    }
 
    public void addContracts(Contract... contracts) {
@@ -129,6 +155,10 @@ public class TetrapodClient implements SessionFactory, Session.Helper {
 
    public int getParentId() {
       return client.getSession().getTheirEntityId();
+   }
+
+   public Response sendPendingRequest(Request req, int toEntityId, PendingResponseHandler handler) {
+      return client.getSession().sendPendingRequest(req, toEntityId, (byte) 30, handler);
    }
 
    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

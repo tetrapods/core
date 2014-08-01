@@ -27,6 +27,7 @@ public class Client implements Session.Listener {
    public void enableTLS(SSLContext ctx) {
       SSLEngine engine = ctx.createSSLEngine();
       engine.setUseClientMode(true);
+      engine.setNeedClientAuth(false);
       ssl = new SslHandler(engine);
    }
 
