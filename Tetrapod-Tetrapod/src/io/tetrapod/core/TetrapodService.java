@@ -571,14 +571,18 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          lastStatsLog = System.currentTimeMillis();
       }
       for (EntityInfo e : registry.getChildren()) {
-         if (e.isGone() && System.currentTimeMillis() - e.getGoneSince() > 60 * 1000) {
-            logger.info("Reaping: {}", e);
-            registry.unregister(e);
-         }
-         if (!e.isGone() && e.getLastContact() != null) {
-            if (System.currentTimeMillis() - e.getLastContact() > 60 * 1000) {
-               e.setLastContact(null);
-               registry.setGone(e);
+         if (e.isGone()) {
+            if (System.currentTimeMillis() - e.getGoneSince() > 60 * 1000) {
+               logger.info("Reaping: {}", e);
+               registry.unregister(e);
+            }
+         } else {
+            // special check for long-polling clients
+            if (e.getLastContact() != null) {
+               if (System.currentTimeMillis() - e.getLastContact() > 60 * 1000) {
+                  e.setLastContact(null);
+                  registry.setGone(e);
+               }
             }
          }
       }
@@ -1024,7 +1028,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       }
       return Response.error(ERROR_INVALID_ENTITY);
    }
-   
+
    @Override
    public Response requestGetSubscriberCount(GetSubscriberCountRequest r, RequestContext ctx) {
       EntityInfo ei = registry.getEntity(ctx.header.fromId);
