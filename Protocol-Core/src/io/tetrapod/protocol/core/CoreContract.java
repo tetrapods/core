@@ -20,6 +20,7 @@ public class CoreContract extends Contract {
    
    public static interface API extends APIHandler
       , DirectConnectionRequest.Handler
+      , DummyRequest.Handler
       , PauseRequest.Handler
       , RestartRequest.Handler
       , ServiceDetailsRequest.Handler
@@ -45,6 +46,7 @@ public class CoreContract extends Contract {
          new WebAPIRequest(),
          new DirectConnectionRequest(),
          new ValidateConnectionRequest(),
+         new DummyRequest(),
       };
    }
    

@@ -5,6 +5,7 @@ import static io.tetrapod.protocol.core.CoreContract.*;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.*;
 import io.netty.channel.socket.SocketChannel;
+import io.netty.util.ReferenceCountUtil;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.rpc.Error;
 import io.tetrapod.core.utils.Util;
@@ -106,10 +107,12 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
       if (isConnected()) {
          final long now = System.currentTimeMillis();
          if (now - lastHeardFrom.get() > 5000 || now - lastSentTo.get() > 5000) {
+            if (theirType == TYPE_SERVICE || theirType == TYPE_TETRAPOD)
+               logger.debug("{} Sending PING ({}/{} ms)", this, now - lastHeardFrom.get(), now - lastSentTo.get());
             sendPing();
          }
          if (now - lastHeardFrom.get() > 10000) {
-            logger.warn("{} Timeout", this);
+            logger.warn("{} Timeout ({} ms)", this, now - lastHeardFrom.get());
             if (theirId == myId && myId != 0) {
                logger.warn("{} Timeout on LOOPBACK!", this);
             }
@@ -349,12 +352,16 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
    }
 
    public ChannelFuture writeFrame(Object frame) {
-      if (frame != null && channel.isActive()) {
-         lastSentTo.set(System.currentTimeMillis());
-         if (autoFlush) {
-            return channel.writeAndFlush(frame);
+      if (frame != null) {
+         if (channel.isActive()) {
+            lastSentTo.set(System.currentTimeMillis());
+            if (autoFlush) {
+               return channel.writeAndFlush(frame);
+            } else {
+               return channel.write(frame);
+            }
          } else {
-            return channel.write(frame);
+            ReferenceCountUtil.release(frame);
          }
       }
       return null;

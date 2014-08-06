@@ -153,6 +153,8 @@ public request ValidateConnection
 
 public response ValidateConnection
    1: string token   
+   
+public request Dummy // dummy request for RPC load testing
  
 ################################# MESSAGES #################################
 

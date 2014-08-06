@@ -566,24 +566,43 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    }
 
    private void healthCheck() {
-      if (System.currentTimeMillis() - lastStatsLog > 5 * 60 * 1000) {
+      final long now = System.currentTimeMillis();
+      if (now - lastStatsLog > 5 * 60 * 1000) {
          registry.logStats();
          lastStatsLog = System.currentTimeMillis();
       }
-      for (EntityInfo e : registry.getChildren()) {
+      for (final EntityInfo e : registry.getChildren()) {
          if (e.isGone()) {
-            if (System.currentTimeMillis() - e.getGoneSince() > 60 * 1000) {
+            if (now - e.getGoneSince() > 60 * 1000) {
                logger.info("Reaping: {}", e);
                registry.unregister(e);
             }
          } else {
             // special check for long-polling clients
             if (e.getLastContact() != null) {
-               if (System.currentTimeMillis() - e.getLastContact() > 60 * 1000) {
+               if (now - e.getLastContact() > 60 * 1000) {
                   e.setLastContact(null);
                   registry.setGone(e);
                }
             }
+
+            // push through a dummy request to help keep dispatch pool metrics fresh
+            if (e.isService()) {
+               final Session ses = e.getSession();
+               if (ses != null && now - ses.getLastHeardFrom() > 500) {
+                  final long t0 = System.currentTimeMillis();
+                  sendRequest(new DummyRequest(), e.entityId).handle(new ResponseHandler() {
+                     @Override
+                     public void onResponse(Response res) {
+                        final long tf = System.currentTimeMillis() - t0;
+                        if (tf > 1000) {
+                           logger.warn("Round trip to dispatch {} took {} ms", e, tf);
+                        }
+                     }
+                  });
+               }
+            }
+
          }
       }
    }

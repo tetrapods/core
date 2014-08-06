@@ -48,6 +48,13 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
       }
    }
 
+   public void shutdown() {
+      server.stop();
+      for (DirectServiceInfo service : services.values()) {
+         service.close();
+      }
+   }
+
    private class DirectSessionFactory extends WireSessionFactory {
       private DirectSessionFactory(byte type, Session.Listener listener) {
          super(service, type, listener);
@@ -72,18 +79,22 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
          this.entityId = entityId;
       }
 
-      /**
-       * Fail our attempt to establish the connection. We won't try again for a while
-       */
-      private synchronized void failure() {
+      public synchronized void close() {
          pending = false;
          valid = false;
-         failures++;
-         restUntil = System.currentTimeMillis() + 1000 * failures;
          if (ses != null) {
             ses.close();
             ses = null;
          }
+      }
+
+      /**
+       * Fail our attempt to establish the connection. We won't try again for a while
+       */
+      private synchronized void failure() {
+         failures++;
+         restUntil = System.currentTimeMillis() + 1000 * failures;
+         close();
       }
 
       @Override

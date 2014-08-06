@@ -59,6 +59,8 @@ public class WireSession extends Session {
    }
 
    private void read(final ByteBuf in, final int len, final byte envelope) throws IOException {
+      final long t0 = System.currentTimeMillis();
+
       assert (len == in.readableBytes());
       logger.trace("Read message {} with {} bytes", envelope, len);
       switch (envelope) {
@@ -73,14 +75,23 @@ public class WireSession extends Session {
             readMessage(in, envelope == ENVELOPE_BROADCAST);
             break;
          case ENVELOPE_PING:
+            if (theirType == TYPE_SERVICE || theirType == TYPE_TETRAPOD)
+               logger.debug("{} GOT PING, SENDING PONG", this);
             sendPong();
             break;
          case ENVELOPE_PONG:
+            if (theirType == TYPE_SERVICE || theirType == TYPE_TETRAPOD)
+               logger.debug("{} GOT PONG", this);
             break;
          default:
             logger.error("{} Unexpected Envelope Type {}", this, envelope);
             close();
       }
+
+      if (System.currentTimeMillis() - t0 > 100) {
+         logger.warn("Something blocked in read() for {} ms env={}", System.currentTimeMillis() - t0, envelope);
+      }
+
    }
 
    private void readHandshake(final ByteBuf in, final byte envelope) throws IOException {
@@ -149,7 +160,7 @@ public class WireSession extends Session {
    }
 
    private void readRequest(final ByteBuf in) throws IOException {
-      DataSource reader = new ByteBufDataSource(in);
+      final DataSource reader = new ByteBufDataSource(in);
       final RequestHeader header = new RequestHeader();
       boolean logged = true;
       header.read(reader);
@@ -203,7 +214,7 @@ public class WireSession extends Session {
    }
 
    protected void dispatchMessage(final MessageHeader header, final ByteBufDataSource reader) throws IOException {
-      Object obj = StructureFactory.make(header.contractId, header.structId);
+      final Object obj = StructureFactory.make(header.contractId, header.structId);
       final Message msg = (obj instanceof Message) ? (Message) obj : null;
       if (msg != null) {
          msg.read(reader);

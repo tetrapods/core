@@ -95,6 +95,7 @@ function TP_Core(server) {
    server.register("response", "Core", "DirectConnection", 1, 16162197);
    server.register("request", "Core", "ValidateConnection", 1, 6315662);
    server.register("response", "Core", "ValidateConnection", 1, 1291890);
+   server.register("request", "Core", "Dummy", 1, 6747086);
    server.register("message", "Core", "ServiceStats", 1, 469976);
    server.register("struct", "Core", "Subscriber", 1, 16013581);
    server.register("struct", "Core", "WebRoute", 1, 4890284);

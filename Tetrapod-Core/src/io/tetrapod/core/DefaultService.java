@@ -1,22 +1,25 @@
 package io.tetrapod.core;
 
-import static io.tetrapod.protocol.core.Core.*;
+import static io.tetrapod.protocol.core.Core.UNADDRESSED;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.rpc.Error;
-import io.tetrapod.core.utils.*;
+import io.tetrapod.core.utils.Fail;
+import io.tetrapod.core.utils.Util;
 import io.tetrapod.protocol.core.*;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.net.ConnectException;
 import java.nio.file.Files;
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.TimeUnit;
 
-import org.slf4j.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import ch.qos.logback.classic.LoggerContext;
 
@@ -157,7 +160,11 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
             try {
                onReadyToServe();
                if (getEntityType() != Core.TYPE_TETRAPOD) {
+                  if (serviceConnector != null) {
+                     serviceConnector.shutdown();
+                  }
                   serviceConnector = new ServiceConnector(this);
+
                }
             } catch (Throwable t) {
                fail(t);
@@ -453,7 +460,7 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
 
    public long getAverageResponseTime() {
       // TODO: verify this is correctly converting nanos to millis
-      return (long) dispatcher.requestTimes.getSnapshot().getMean() / 1000000L; 
+      return (long) dispatcher.requestTimes.getSnapshot().getMean() / 1000000L;
    }
 
    /**
@@ -749,6 +756,11 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
          return serviceConnector.requestValidateConnection(r, ctx);
       }
       return new Error(CoreContract.ERROR_NOT_CONFIGURED);
+   }
+
+   @Override
+   public Response requestDummy(DummyRequest r, RequestContext ctx) {
+      return Response.SUCCESS;
    }
 
 }
