@@ -43,7 +43,7 @@
       <appender-ref ref="BUFFER" />
    </root>
 
-   <logger name="comms" level="DEBUG" additivity="false">
+   <logger name="comms" level="INFO" additivity="false">
       <!-- additivity false means it does not show up in root -->
       <appender-ref ref="COMMSFILE" />
    </logger>
