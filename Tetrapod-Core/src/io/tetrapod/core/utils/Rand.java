@@ -24,4 +24,10 @@ public class Rand {
       }
       return sb.toString();
    }
+
+   public static byte[] bytes(int len) {
+      byte[] bytes = new byte[len];
+      r.nextBytes(bytes);
+      return bytes;
+   }
 }
