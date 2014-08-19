@@ -1,5 +1,5 @@
 #cluster-table {
-	margin: 4px; padding: 12px;
+	margin: 4px; padding: 12px; background: white;
 }
 
 #cluster-table th {
@@ -79,7 +79,7 @@
 }
 
 #login-form {
-	width: 320px; padding: 20px; margin: 20px; border-radius: 10px; box-shadow: 0 2px 2px rgba(0, 0, 0, .20);
+	width: 320px; padding: 20px; margin: 20px; border-radius: 10px; box-shadow: 0 2px 2px rgba(0, 0, 0, .20); background: white;
 }
 
 .service-details {
@@ -153,4 +153,9 @@
 
 .form-label {
 	font-weight: bold; text-align: right;
+}
+
+.prod {
+   background: repeating-linear-gradient( -45deg, yellow, yellow 25%, black 25%, black 50%, yellow 50% ) top left fixed;
+   background-size: 20px 20px;
 }

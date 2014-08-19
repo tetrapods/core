@@ -15,8 +15,15 @@ define([ "knockout", "jquery", "bootbox", "toolbox", "protocol/server", "protoco
             self.login = login;
             self.onLogout = onLogout;
             self.modalData = ko.observable({});
+            self.name = window.location.hostname;
+            self.isProd = self.name == "chatbox.com" || (self.name.indexOf(".prod.") > 0);  
 
             function run(clusterModel) {
+               ko.bindingHandlers.stopBinding = {
+                     init: function() {
+                         return { controlsDescendantBindings: true };
+                     }
+               };
                model = clusterModel;
                server.commsLog = true;
                authtoken = toolbox.getCookie("auth-token");

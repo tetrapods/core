@@ -30,8 +30,7 @@
 					<span class="fa fa-bars"></span>
 				</button>
 				<a class="navbar-brand" href="">
-					<img src="tetrapod.png">
-					tetrapod.io
+               <span data-bind="text: name"></span>
 				</a>
 			</div>
 			<ul class="nav navbar-top-links navbar-right">
@@ -60,7 +59,7 @@
 			</ul>
 		</nav>
 
-		<div id="page-wrapper">
+		<div id="page-wrapper" data-bind="css: {prod: isProd}, stopBinding: true" class="app-bind">
 
 			<div class="row app-bind" id="login-wrapper" align="center" hidden="true">
 				<div id="login-form">
