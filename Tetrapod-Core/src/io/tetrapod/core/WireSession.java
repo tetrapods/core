@@ -10,6 +10,7 @@ import io.netty.util.ReferenceCountUtil;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.rpc.Error;
 import io.tetrapod.core.serialize.DataSource;
+import io.tetrapod.core.serialize.StructureAdapter;
 import io.tetrapod.core.serialize.datasources.ByteBufDataSource;
 import io.tetrapod.protocol.core.*;
 
@@ -121,14 +122,18 @@ public class WireSession extends Session {
          // if fromId is UNADRESSED this handles the edge case where we are registering 
          // ourselves and so did not yet have an entityId           
          if ((async.header.fromId == myId || async.header.fromId == Core.UNADDRESSED) && (async.request != null || async.hasHandler())) {
-            final Response res = (Response) StructureFactory.make(header.contractId, header.structId);
+            final Structure res = StructureFactory.make(header.contractId, header.structId);
             if (res != null) {
                res.read(reader);
                if (!commsLogIgnore(header.structId))
                   logged = commsLog("%s  [%d] <- %s", this, header.requestId, res.dump());
                getDispatcher().dispatch(new Runnable() {
                   public void run() {
-                     async.setResponse(res);
+                     if (res instanceof StructureAdapter) {
+                        async.setResponse(new ResponseAdapter(res));
+                     } else {
+                        async.setResponse((Response) res);
+                     }
                   }
                });
             } else {

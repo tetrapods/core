@@ -67,16 +67,20 @@ public class Dispatcher {
    }
 
    public synchronized EventLoopGroup getWorkerGroup() {
-      if (workerGroup == null) {
+      if (workerGroup == null || workerGroup.isShuttingDown()) {
          workerGroup = new NioEventLoopGroup();
       }
+      assert (!workerGroup.isShutdown());
+      assert (!workerGroup.isShuttingDown()); 
       return workerGroup;
    }
 
    public synchronized EventLoopGroup getBossGroup() {
-      if (bossGroup == null) {
+      if (bossGroup == null || bossGroup.isShuttingDown()) {
          bossGroup = new NioEventLoopGroup();
       }
+      assert (!bossGroup.isShutdown());
+      assert (!bossGroup.isShuttingDown()); 
       return bossGroup;
    }
 
@@ -180,6 +184,10 @@ public class Dispatcher {
       }
       if (workerGroup != null) {
          workerGroup.shutdownGracefully();
+      }
+      synchronized (this) {
+         bossGroup = null;
+         workerGroup = null;
       }
    }
 

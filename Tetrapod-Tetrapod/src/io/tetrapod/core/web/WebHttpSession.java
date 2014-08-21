@@ -253,7 +253,7 @@ public class WebHttpSession extends WebSession {
       final RequestHeader header = context.makeRequestHeader(this, route);
       if (header != null) {
          //final long t0 = System.currentTimeMillis();
-         logger.debug("{} WEB API REQEUST: {} keepAlive = {}", this, req.getUri(), HttpHeaders.isKeepAlive(req));
+         logger.debug("{} WEB API REQUEST: {} keepAlive = {}", this, req.getUri(), HttpHeaders.isKeepAlive(req));
          header.requestId = requestCounter.incrementAndGet();
          header.fromType = Core.TYPE_WEBAPI;
          header.fromId = getMyEntityId();
@@ -322,13 +322,15 @@ public class WebHttpSession extends WebSession {
             JSONObject jo = new JSONObject();
             jo.put("result", "SUCCESS");
             cf = ctx.writeAndFlush(makeFrame(jo, keepAlive));
-         } else {
+         } else if (res instanceof WebAPIResponse) {
             WebAPIResponse resp = (WebAPIResponse) res;
             if (resp.redirect != null && !resp.redirect.isEmpty()) {
                redirect(resp.redirect, ctx);
             } else {
                cf = ctx.writeAndFlush(makeFrame(new JSONObject(resp.json), keepAlive));
             }
+         } else {
+            ctx.writeAndFlush(makeFrame(res, 0));
          }
          if (cf != null && !keepAlive) {
             cf.addListener(ChannelFutureListener.CLOSE);

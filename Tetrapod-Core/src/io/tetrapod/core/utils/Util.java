@@ -253,4 +253,20 @@ public class Util {
       return -1;
    }
 
+   public static String readStream(InputStream is) throws IOException {
+      String str = null;
+      ByteArrayOutputStream baos = new ByteArrayOutputStream();
+      try {
+         int r;
+         while ((r = is.read()) != -1) {
+            baos.write(r);
+         }
+         str = new String(baos.toByteArray());
+      } finally {
+         baos.close();
+         is.close();
+      }
+      return str;
+   }
+
 }
