@@ -9,7 +9,10 @@ import io.tetrapod.protocol.core.*;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.slf4j.*;
+import javax.net.ssl.SSLContext;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Allows a service to spawn direct connections with one another for faster RPC
@@ -26,13 +29,16 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
    private Map<Integer, DirectServiceInfo> services          = new ConcurrentHashMap<>();
 
    private final DefaultService            service;
+   private final SSLContext                sslContext;
+
    private Server                          server;
 
-   public ServiceConnector(DefaultService service) {
+   public ServiceConnector(DefaultService service, SSLContext sslContext) {
       this.service = service;
+      this.sslContext = sslContext;
 
       int port = Util.getProperty("tetrapod.direct.port", DEFAULT_DIRECT_PORT);
-      server = new Server(port, new DirectSessionFactory(Core.TYPE_ANONYMOUS, null), service.getDispatcher());
+      server = new Server(port, new DirectSessionFactory(Core.TYPE_ANONYMOUS, null), service.getDispatcher(), sslContext, false);
       int n = 0;
       while (true) {
          try {
@@ -130,6 +136,9 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
          DirectConnectionResponse r = (DirectConnectionResponse) res;
          Client c = new Client(new DirectSessionFactory(Core.TYPE_SERVICE, this));
          try {
+            if (sslContext != null) {
+               c.enableTLS(sslContext);
+            }
             c.connect(r.address.host, r.address.port, service.getDispatcher()).sync();
             ses = c.getSession();
             ses.setMyEntityId(service.getEntityId());

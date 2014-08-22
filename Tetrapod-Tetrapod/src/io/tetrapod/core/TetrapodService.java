@@ -278,17 +278,15 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
             adminAccounts = new AdminAccounts(storage);
 
             // create servers
-            servers.add(new Server(getPublicPort(), new TypedSessionFactory(Core.TYPE_ANONYMOUS), dispatcher));
-            servers.add(new Server(getServicePort(), new TypedSessionFactory(Core.TYPE_SERVICE), dispatcher));
             servers.add(new Server(getHTTPPort(), new WebSessionFactory(webRootDirs, "/sockets"), dispatcher));
             servers.add(new FlashPolicyServer(dispatcher));
 
             // create secure port servers, if configured
-            if (Util.getProperty("tetrapod.tls", true)) {
-               SSLContext ctx = Util.createSSLContext(new FileInputStream(Util.getProperty("tetrapod.jks.file", "cfg/tetrapod.jks")),
-                     System.getProperty("tetrapod.jks.pwd", "4pod.dop4").toCharArray());
-               servers.add(new Server(getHTTPSPort(), new WebSessionFactory(webRootDirs, "/sockets"), dispatcher, ctx, false));
+            if (sslContext != null) {
+               servers.add(new Server(getHTTPSPort(), new WebSessionFactory(webRootDirs, "/sockets"), dispatcher, sslContext, false));
             }
+            servers.add(new Server(getPublicPort(), new TypedSessionFactory(Core.TYPE_ANONYMOUS), dispatcher, sslContext, false));
+            servers.add(new Server(getServicePort(), new TypedSessionFactory(Core.TYPE_SERVICE), dispatcher, sslContext, false));
 
             // start listening
             for (Server s : servers) {

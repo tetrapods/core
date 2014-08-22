@@ -10,13 +10,14 @@ import io.tetrapod.core.utils.Fail;
 import io.tetrapod.core.utils.Util;
 import io.tetrapod.protocol.core.*;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.lang.management.ManagementFactory;
 import java.net.ConnectException;
 import java.nio.file.Files;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+
+import javax.net.ssl.SSLContext;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,6 +44,8 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
    protected int                           status;
    protected final int                     buildNumber;
    protected final LogBuffer               logBuffer;
+   protected SSLContext                    sslContext;
+
    private ServiceConnector                serviceConnector;
 
    protected final ServiceStats            stats;
@@ -66,6 +69,15 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
       addPeerContracts(new TetrapodContract());
       addMessageHandler(new EntityMessage(), this);
       addMessageHandler(new ClusterMemberMessage(), this);
+
+      try {
+         if (Util.getProperty("tetrapod.tls", true)) {
+            sslContext = Util.createSSLContext(new FileInputStream(Util.getProperty("tetrapod.jks.file", "cfg/tetrapod.jks")), System
+                  .getProperty("tetrapod.jks.pwd", "4pod.dop4").toCharArray());
+         }
+      } catch (Exception e) {
+         fail(e);
+      }
 
       if (getEntityType() != Core.TYPE_TETRAPOD) {
          services = new ServiceCache();
@@ -163,7 +175,7 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
                   if (serviceConnector != null) {
                      serviceConnector.shutdown();
                   }
-                  serviceConnector = new ServiceConnector(this);
+                  serviceConnector = new ServiceConnector(this, sslContext);
 
                }
             } catch (Throwable t) {
@@ -319,6 +331,9 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
             final ServerAddress server = clusterMembers.poll();
             if (server != null) {
                try {
+                  if (sslContext != null) {
+                     clusterClient.enableTLS(sslContext);
+                  }
                   clusterClient.connect(server.host, server.port, dispatcher).sync();
                   if (clusterClient.isConnected()) {
                      clusterMembers.addFirst(server);
