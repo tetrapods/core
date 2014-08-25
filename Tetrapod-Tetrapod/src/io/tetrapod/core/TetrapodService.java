@@ -29,8 +29,6 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.regex.*;
 
-import javax.net.ssl.SSLContext;
-
 import org.slf4j.*;
 
 /**
