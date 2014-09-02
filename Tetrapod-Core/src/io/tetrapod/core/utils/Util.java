@@ -231,6 +231,9 @@ public class Util {
 
    public static List<String> jsonArrayToStringList(JSONArray array) {
       List<String> result = new ArrayList<>();
+      if (array == null) {
+         return result;
+      }
       for (int i = 0; i < array.length(); i++) {
          result.add(array.getString(i));
       }
@@ -239,6 +242,9 @@ public class Util {
 
    public static List<Integer> jsonArrayToIntegerList(JSONArray array) {
       List<Integer> result = new ArrayList<>();
+      if (array == null) {
+         return result;
+      }
       for (int i = 0; i < array.length(); i++) {
          result.add(array.getInt(i));
       }
@@ -271,6 +277,10 @@ public class Util {
    
    public static boolean isEmpty(String s) {
       return s == null || s.isEmpty();
+   }
+
+   public static boolean isEmpty(String val) {
+      return val == null || val.length() == 0;
    }
 
 }
