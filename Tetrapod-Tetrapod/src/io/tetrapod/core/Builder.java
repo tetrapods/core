@@ -73,6 +73,7 @@ public class Builder {
             }
          }
       }
+      Collections.sort(services);
       return services;
    }
    
