@@ -106,4 +106,8 @@ public class ServiceCache implements TetrapodContract.Services.API {
                | Core.STATUS_FAILED | Core.STATUS_STOPPING)) == 0;
       }
    }
+
+   public Entity getEntity(int entityId) {
+      return services.get(entityId);
+   }
 }
