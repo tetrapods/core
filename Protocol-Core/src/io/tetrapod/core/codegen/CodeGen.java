@@ -12,20 +12,51 @@ import java.util.*;
 public class CodeGen {
 
    public static void main(String[] args) {
-      if (args.length < 1) {
-         // defaults
-         args = new String[] { "./definitions", "java", "javascript" };
+      System.out.println("args: [-root DIR] [-protocol STRING] [-language STRING]");
+      System.out.println("       roots to look in, protocols (eg: chat) to compile, into what languages. there can be many root, protocol, lang arguments");
+      System.out.println("       defaults assume you have core and private git repos as sibling folders, and wish to compile everything");
+
+      List<String> roots = new ArrayList<>();
+      List<String> services = new ArrayList<>();
+      List<String> langs = new ArrayList<>();
+      for (int i = 0; i < args.length - 1; i += 2) {
+         switch (args[i]) {
+            case "-root":
+               roots.add(args[i+1]);
+               break;
+            case "-protocol":
+               services.add(args[i+1]);
+               break;
+            case "-language":
+               langs.add(args[i+1]);
+               break;
+         }
       }
-      if (args.length < 1) {
-         System.err.println("usage PLACES_TO_LOOK(semicolon-delimited)  PROTOCOLS_TO_COMPILE(semicolon-delimited)  lang1 lang2 ...");
-         System.err.println("       if filename is a folder it will recursively run on all the files");
+      if (roots.isEmpty()) {
+         // ../../core/;../../private/services/ Protocol-Core;Protocol-Identity;Protocol-Chat;Protocol-Email;Protocol-Tetrapod java javascript
+         System.out.println("using defaults for roots");
+         roots.add("../../core");
+         roots.add("../../private/services");
       }
-      String[] roots = args[0].split(";");
-      String[] services = args[1].split(";");
+      if (services.isEmpty()) {
+         System.out.println("using defaults for protocols");
+         services.add("core");
+         services.add("identity");
+         services.add("chat");
+         services.add("email");
+         services.add("tetrapod");
+         services.add("search");
+      }
+      if (langs.isEmpty()) {
+         System.out.println("using defaults for languages");
+         langs.add("java");
+         langs.add("javascript");
+      }
       for (String service : services) {
          String folder = null;
          for (String root : roots) {
-            String s = String.format("%s/%s/definitions", root, service);
+            String serviceName = "Protocol-" + service.substring(0, 1).toUpperCase() + service.substring(1);
+            String s = String.format("%s/%s/definitions", root, serviceName);
             if (new File(s).exists()) {
                folder = s;
                break;
@@ -34,8 +65,8 @@ public class CodeGen {
          if (folder == null)
             continue;
          CodeGen cg = new CodeGen();
-         for (int i = 2; i < args.length; i++) {
-            cg.run(folder, args[i]);
+         for (String lang : langs) {
+            cg.run(folder, lang);
          }
       }
    }
