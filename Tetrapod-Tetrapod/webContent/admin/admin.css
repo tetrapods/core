@@ -47,12 +47,17 @@
 }
 
 .service-icon {
-	width: 24px; height: 24px; margin-right: 8px; margin-left: 6px
+	width: 16px; height: 16px; margin-left: 3px;
+}
+
+.service-fa {
+   margin-left: 3px;
 }
 
 .service-name {
-	font-weight: bold;
+	font-weight: bold; margin-left: 3px;
 }
+
 
 .service-chart-wrap {
 	position: relative; width: 80px; padding: 0px; padding-left: 0px; padding-right: 0px;

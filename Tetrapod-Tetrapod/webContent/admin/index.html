@@ -156,7 +156,8 @@
 								</td>
 
 								<td>
-									<img data-bind="attr:{src: iconURL}" class="service-icon">
+									<img data-bind="attr:{src: iconURL}, visible: iconURL().indexOf('fa-') != 0" class="service-icon">
+                           <i class="service-fa fa fa-fw" data-bind="css:iconURL, visible: iconURL().indexOf('fa-') == 0"></i>
 									<span class="service-name" data-bind="text: name"></span>
 								</td>
 								<td class="centered">
