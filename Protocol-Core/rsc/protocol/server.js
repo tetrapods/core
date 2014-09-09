@@ -192,6 +192,12 @@ function TP_Server() {
             }
          }
       }
+      
+      // support for websocket spec 76 and make sure we're closed before unloading the page
+      // or else we crash on iOS
+      window.onbeforeunload = function() {
+          disconnect();
+      };
 
       var url = (secure ? "wss:" : "ws:") + "//" + server + (port ? ":" + port : "") + "/sockets";
       console.log("Connecting to: " + url);
@@ -216,7 +222,7 @@ function TP_Server() {
             console.log("Disconnecting... " + socket.readyState);
          var closeHack = (socket.readyState == WebSocket.CLOSING);
          if (closeHack) {
-            // some sort of here when waking from sleep, it can take a very long long time
+            // some sort of bug here when waking from sleep, it can take a very long long time
             // to transition from CLOSING to CLOSED and call our close handler, so we
             // take away the onclose handler and call it manually
             socket.onclose = null;
