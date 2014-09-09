@@ -192,11 +192,11 @@ function TP_Server() {
             }
          }
       }
-      
+
       // support for websocket spec 76 and make sure we're closed before unloading the page
       // or else we crash on iOS
       window.onbeforeunload = function() {
-          disconnect();
+         disconnect();
       };
 
       var url = (secure ? "wss:" : "ws:") + "//" + server + (port ? ":" + port : "") + "/sockets";
@@ -237,23 +237,20 @@ function TP_Server() {
    }
 
    function logResponse(result) {
-      var str = "";
+      var str = '[' + result._requestId + '] <- ' + nameOf(result) + ' ' + JSON.stringify(result, dropUnderscored);
       if (result.isError()) {
-         str = "ERROR " + result.errorCode;
-      } else if (result._contractId == 1 && result._structId == 2) {
-         str = "SUCCESS";
+         console.warn(str);
       } else {
-         str = JSON.stringify(result);
+         console.debug(str);
       }
-      console.debug("[%d] <- %s%s", result._requestId, nameOf(result), JSON.stringify(result, dropUnderscored));
    }
 
    function logRequest(result) {
-      console.debug("[%d] => %s%s", result._requestId, nameOf(result), JSON.stringify(result, dropUnderscored));
+      console.debug('[' + result._requestId + '] => ' + nameOf(result) + ' ' + JSON.stringify(result, dropUnderscored));
    }
 
    function logMessage(result) {
-      console.debug("[M:%d] <- %s%s", result._topicId, nameOf(result), JSON.stringify(result, dropUnderscored));
+      console.debug('[M:' + result._topicId + '] <- ' + nameOf(result) + ' ' + JSON.stringify(result, dropUnderscored));
    }
 
    function dropUnderscored(key, value) {
@@ -324,6 +321,16 @@ function TP_Server() {
       var i, array = closeHandlers;
       for (i = 0; i < array.length; i++)
          array[i]();
+
+      // terminate all pending requests (only if using websockets I think...)      
+      //      for ( var requestId in requestHandlers) {
+      //         handleResponse({
+      //            _requestId : requestId,
+      //            _contractId : 1,
+      //            _structId : 1,
+      //            code : 7
+      //         });
+      //      }
    }
 
    function onSocketMessage(event) {
