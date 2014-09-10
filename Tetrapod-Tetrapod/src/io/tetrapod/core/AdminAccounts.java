@@ -57,6 +57,7 @@ public class AdminAccounts {
          Admin admin = new Admin(accountId, email, hash, 0xFF, new long[Admin.MAX_LOGIN_ATTEMPTS]);
          storage.put("admin::" + accountId, admin);
          storage.put("admin.email::" + email, accountId);
+         return admin;
       } catch (Exception e) {
          logger.error(e.getMessage(), e);
       }
