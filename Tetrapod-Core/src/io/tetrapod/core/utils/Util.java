@@ -268,5 +268,9 @@ public class Util {
       }
       return str;
    }
+   
+   public static boolean isEmpty(String s) {
+      return s == null || s.isEmpty();
+   }
 
 }
