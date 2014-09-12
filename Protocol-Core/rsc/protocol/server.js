@@ -180,6 +180,12 @@ function TP_Server() {
          window.WebSocket = window.MozWebSocket;
       }
 
+      // I suspect Safari 5.1 fails because it claims to have websockets but the implementation is only partial, so we detect the user agent and force it here
+      // Mozilla/5.0 (iPad; CPU OS 5_1 like Mac OS X) AppleWebKit/534.46 (KHTML, like Gecko) Version/5.1 Mobile/9B176 Safari/7534.48.3
+      if (navigator.userAgent.indexOf("AppleWebKit") > 0 && navigator.userAgent.indexOf("Version/5.1") > 0) {
+         self.forceLongPolling = true;
+      }
+
       // fall back to long polling if we have no WebSocket support
       if (!window.WebSocket || self.forceLongPolling) {
          return startPollingSession(server, secure);
