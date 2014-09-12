@@ -274,10 +274,6 @@ public class Util {
       }
       return str;
    }
-   
-   public static boolean isEmpty(String s) {
-      return s == null || s.isEmpty();
-   }
 
    public static boolean isEmpty(String val) {
       return val == null || val.length() == 0;
