@@ -202,6 +202,7 @@ function TP_Server() {
       // support for websocket spec 76 and make sure we're closed before unloading the page
       // or else we crash on iOS
       window.onbeforeunload = function() {
+         closeHandlers = [];
          disconnect();
       };
 
