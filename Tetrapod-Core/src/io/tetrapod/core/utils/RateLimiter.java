@@ -11,7 +11,8 @@ public class RateLimiter {
    protected int          perMillis;
 
    public RateLimiter(int max, int perMillis) {
-      samples = new long[max];
+      this.samples = new long[max];
+      this.perMillis = perMillis;
    }
 
    public synchronized void mark() {
