@@ -51,7 +51,7 @@ public class Client implements Session.Listener {
             }
          }
       });
-      return b.connect(host, port).sync();
+      return b.connect(host, port);
    }
 
    private synchronized void startSession(SocketChannel ch) {
