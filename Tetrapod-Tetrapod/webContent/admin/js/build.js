@@ -7,6 +7,7 @@ define(["knockout", "jquery", "app"], function(ko, $, app) {
       self.doDeploy = false;
       self.doLaunch = false;
       self.doFullCycle = false;
+      self.paused = false;
       self.buildNumber = "";
       self.run = run;
       self.services = [];
@@ -51,7 +52,8 @@ define(["knockout", "jquery", "app"], function(ko, $, app) {
                var service = self.services[i];
                if (!service.isChecked)
                   continue;
-               var command = { serviceName: service.name, build: self.buildNumber, command: BuildCommandConsts.LAUNCH };
+               var c = self.paused ? BuildCommandConsts.LAUNCH_PAUSED : BuildCommandConsts.LAUNCH;
+               var command = { serviceName: service.name, build: self.buildNumber, command: c };
                if (command.build.length == 0) {
                   command.build = BuildCommandConsts.LAUNCH_DEPLOYED;
                }

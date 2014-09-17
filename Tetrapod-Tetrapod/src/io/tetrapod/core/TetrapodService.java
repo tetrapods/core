@@ -78,6 +78,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    public void startNetwork(ServerAddress address, String token, Map<String, String> otherOpts) throws Exception {
       logger.info("***** Start Network ***** ");
       logger.info("Joining Cluster: {}", address.dump());
+      this.startPaused = otherOpts.get("paused").equals("true");
       if (address.host.equals("self")) {
          cluster.startListening();
          registerSelf(io.tetrapod.core.registry.Registry.BOOTSTRAP_ID, random.nextLong());
