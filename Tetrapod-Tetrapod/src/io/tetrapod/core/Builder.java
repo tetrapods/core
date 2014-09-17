@@ -147,7 +147,7 @@ public class Builder {
          int rc = Util.runProcess(callback, new File(clusterDir, "launch").getPath(), "paused", buildNum, serviceName);
          return rc == 0;
       }
-      int rc = Util.runProcess(callback, new File(clusterDir, "launch").getPath(), buildNum, serviceName);
+      int rc = Util.runProcess(callback, new File(clusterDir, "launch").getPath(), "running", buildNum, serviceName);
       return rc == 0;
    }
 
