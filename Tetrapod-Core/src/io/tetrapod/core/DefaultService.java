@@ -170,6 +170,9 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
       if (!isShuttingDown()) {
          if (getEntityType() == Core.TYPE_TETRAPOD || services.checkDependencies(dependencies)) {
             try {
+               if (startPaused) {
+                  updateStatus(status | Core.STATUS_PAUSED);
+               }
                onReadyToServe();
                if (getEntityType() != Core.TYPE_TETRAPOD) {
                   if (serviceConnector != null) {
@@ -183,9 +186,10 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
             }
             // ok, we're good to go
             updateStatus(status & ~Core.STATUS_STARTING);
+            onStarted();
             setWebRoot();
             if (startPaused) {
-               requestPause(null, null);
+               onPaused();
             }
          } else {
             dispatcher.dispatch(1, TimeUnit.SECONDS, new Runnable() {
@@ -230,6 +234,8 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
    public void onPaused() {}
 
    public void onUnpaused() {}
+   
+   public void onStarted() {}
 
    public void shutdown(boolean restarting) {
       updateStatus(status | Core.STATUS_STOPPING);
