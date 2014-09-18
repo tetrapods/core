@@ -105,9 +105,10 @@ public class Builder {
                   return false;
                return doDeploy(buildDir, clusterDir, command.serviceName, command.build, m);
             case BuildCommand.LAUNCH:
+            case BuildCommand.LAUNCH_PAUSED:
                if (!canLaunch)
                   return false;
-               return doLaunch(clusterDir, command.serviceName, command.build, m);
+               return doLaunch(clusterDir, command.serviceName, command.build, m, command.command == BuildCommand.LAUNCH_PAUSED);
             case BuildCommand.FULL_CYCLE:
                if (!canLaunch)
                   return false;
@@ -140,9 +141,13 @@ public class Builder {
       return rc == 0;
    }
 
-   private static boolean doLaunch(File clusterDir, String serviceName, int build, MyCallback callback) throws IOException {
+   private static boolean doLaunch(File clusterDir, String serviceName, int build, MyCallback callback, boolean startPaused) throws IOException {
       String buildNum = build == BuildCommand.LAUNCH_DEPLOYED ? "current" : "" + build; 
-      int rc = Util.runProcess(callback, new File(clusterDir, "launch").getPath(), buildNum, serviceName);
+      if (startPaused) {
+         int rc = Util.runProcess(callback, new File(clusterDir, "launch").getPath(), "paused", buildNum, serviceName);
+         return rc == 0;
+      }
+      int rc = Util.runProcess(callback, new File(clusterDir, "launch").getPath(), "running", buildNum, serviceName);
       return rc == 0;
    }
 

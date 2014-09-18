@@ -17,6 +17,7 @@ import java.util.Map.Entry;
  * <li>-port portNum (port to connect to, overrides cluster.properties)
  * <li>-token token (reclaim token)
  * <li>-webOnly webRootName (service will connect, set web root, and disconnect)
+ * <li>-paused true|false (will start paused, overrides .properties)
  * </ul>
  */
 public class Launcher {
@@ -32,9 +33,9 @@ public class Launcher {
             usage();
          deleteLogs();
          serviceClass = args[0];
-         opts = getOpts(args, 1, defaultOpts());
          String appName = serviceClass.substring(serviceClass.lastIndexOf('.') + 1);
          System.setProperty("APPNAME", appName);
+         opts = getOpts(args, 1, defaultOpts(appName));
 
          String host = System.getProperty("service.host", "localhost"); 
          int port = Integer.parseInt(System.getProperty("service.port", "9901"));
@@ -108,11 +109,12 @@ public class Launcher {
       System.exit(0);
    }
 
-   private static Map<String, String> defaultOpts() {
+   private static Map<String, String> defaultOpts(String appName) {
       Map<String, String> map = new HashMap<>();
       map.put("host", null);
       map.put("port", null);
       map.put("token", null);
+      map.put("paused", System.getProperty(appName + ".start_paused", "false"));
       return map;
    }
 

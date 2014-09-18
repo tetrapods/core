@@ -220,6 +220,7 @@ admin struct BuildCommand
    const int DEPLOY  = 2
    const int LAUNCH  = 3
    const int FULL_CYCLE = 4
+   const int LAUNCH_PAUSED  = 5
    
    const int DEPLOY_LATEST   = -1
    const int LAUNCH_DEPLOYED = -1

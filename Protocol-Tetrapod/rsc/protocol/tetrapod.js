@@ -14,6 +14,7 @@ function TP_Tetrapod(server) {
    server.registerConst("Tetrapod", "BuildCommand", "DEPLOY", 2);
    server.registerConst("Tetrapod", "BuildCommand", "LAUNCH", 3);
    server.registerConst("Tetrapod", "BuildCommand", "FULL_CYCLE", 4);
+   server.registerConst("Tetrapod", "BuildCommand", "LAUNCH_PAUSED", 5);
    server.registerConst("Tetrapod", "BuildCommand", "DEPLOY_LATEST", -1);
    server.registerConst("Tetrapod", "BuildCommand", "LAUNCH_DEPLOYED", -1);
    
