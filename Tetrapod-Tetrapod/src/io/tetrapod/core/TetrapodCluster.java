@@ -1,6 +1,5 @@
 package io.tetrapod.core;
 
-import io.netty.channel.*;
 import io.netty.channel.socket.SocketChannel;
 import io.tetrapod.core.registry.EntityInfo;
 import io.tetrapod.core.rpc.*;
@@ -182,6 +181,7 @@ public class TetrapodCluster implements SessionFactory {
       public final int    clusterPort;
       private Session     session;
       private int         failures;
+      private boolean     pendingConnect;
 
       //private boolean     synced = false;
 
@@ -215,25 +215,29 @@ public class TetrapodCluster implements SessionFactory {
          return session;
       }
 
-      private synchronized void connect() {
+      private void connect() {
          try {
+            // note: we briefly sync to make sure we don't try at the same time as another thread,  
+            // but we can't hold the lock while calling sync() on the connect() call below
+            synchronized (this) {
+               if (pendingConnect) {
+                  return;
+               }
+               pendingConnect = true;
+            }
             if (!service.isShuttingDown() && !isConnected()) {
                logger.info(" - Joining Tetrapod {} @ {}", entityId, host);
                final Client client = new Client(TetrapodCluster.this);
-               client.connect(host, clusterPort, service.getDispatcher()).addListener(new ChannelFutureListener() {
-                  @Override
-                  public void operationComplete(ChannelFuture future) throws Exception {
-                     if (!future.isSuccess()) {
-                        scheduleReconnect(Math.max(++failures, 30));
-                     } else {
-                        setSession(client.getSession());
-                     }
-                  }
-               });
+               client.connect(host, clusterPort, service.getDispatcher()).sync();
+               setSession(client.getSession());
             }
          } catch (Throwable e) {
             logger.error(e.getMessage());
             scheduleReconnect(++failures);
+         } finally {
+            synchronized (this) {
+               pendingConnect = false;
+            }
          }
       }
 
@@ -279,7 +283,8 @@ public class TetrapodCluster implements SessionFactory {
             MessageHeader.TO_ENTITY, toEntityId);
       // send all current members
       for (Tetrapod pod : cluster.values()) {
-         ses.sendMessage(new ClusterMemberMessage(pod.entityId, pod.host, pod.servicePort, pod.clusterPort), MessageHeader.TO_ENTITY, toEntityId);
+         ses.sendMessage(new ClusterMemberMessage(pod.entityId, pod.host, pod.servicePort, pod.clusterPort), MessageHeader.TO_ENTITY,
+               toEntityId);
       }
    }
 

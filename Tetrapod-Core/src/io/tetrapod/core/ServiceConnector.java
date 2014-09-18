@@ -139,7 +139,7 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
             if (sslContext != null) {
                c.enableTLS(sslContext);
             }
-            c.connect(r.address.host, r.address.port, service.getDispatcher()).sync();
+            c.connect(r.address.host, r.address.port, service.getDispatcher()).sync(); // FIXME: not good to be calling this while holding synchronized block
             ses = c.getSession();
             ses.setMyEntityId(service.getEntityId());
             validate(r.token);
