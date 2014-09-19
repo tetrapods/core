@@ -182,4 +182,9 @@ public class CoreContract extends Contract {
     * Service exists and received request, but doesn't know how to handle it
     */
    public static final int ERROR_UNKNOWN_REQUEST = 6; 
+   
+   /**
+    * request is currently unsupported
+    */
+   public static final int ERROR_UNSUPPORTED = 14; 
 }

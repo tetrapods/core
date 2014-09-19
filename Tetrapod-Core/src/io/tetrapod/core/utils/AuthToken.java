@@ -50,7 +50,7 @@ public class AuthToken {
     * @param values the values which form the basis of the token
     * @return the base64 encoded token
     */
-   public static String encode(int[] values) {
+   public static String encode(int... values) {
       return encode(values, values.length);
    }
 
@@ -142,20 +142,22 @@ public class AuthToken {
 
    public static String encodeAuthToken1(int accountId, int val1, int timeoutInMinutes) {
       int timeout = AuthToken.timeNowInMinutes() + timeoutInMinutes;
-      int[] vals = { timeout, val1, accountId };
-      return AuthToken.encode(vals);
+      return AuthToken.encode(timeout, val1, accountId);
    }
 
    public static String encodeAuthToken2(int accountId, int val1, int val2, int timeoutInMinutes) {
       int timeout = AuthToken.timeNowInMinutes() + timeoutInMinutes;
-      int[] vals = { timeout, val1, val2, accountId };
-      return AuthToken.encode(vals);
+      return AuthToken.encode(timeout, val1, val2, accountId);
    }
 
    public static String encodeAuthToken3(int accountId, int val1, int val2, int val3, int timeoutInMinutes) {
       int timeout = AuthToken.timeNowInMinutes() + timeoutInMinutes;
-      int[] vals = { timeout, val1, val2, val3, accountId };
-      return AuthToken.encode(vals);
+      return AuthToken.encode(timeout, val1, val2, val3, accountId);
+   }
+
+   public static String encodeAuthToken4(int accountId, int val1, int val2, int val3, int val4, int timeoutInMinutes) {
+      int timeout = AuthToken.timeNowInMinutes() + timeoutInMinutes;
+      return AuthToken.encode(timeout, val1, val2, val3, val4, accountId);
    }
 
    public static Decoded decodeUserToken(String token, int accountId, int entityId) {

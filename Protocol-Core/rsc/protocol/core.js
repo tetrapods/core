@@ -72,6 +72,7 @@ function TP_Core(server) {
    server.registerConst("Core", "null", "TIMEOUT", 3);
    server.registerConst("Core", "null", "UNKNOWN", 1);
    server.registerConst("Core", "null", "UNKNOWN_REQUEST", 6);
+   server.registerConst("Core", "null", "UNSUPPORTED", 14);
    
    server.register("struct", "Core", "Core", 1, 9088168);
    server.register("struct", "Core", "RequestHeader", 1, 7165109);
