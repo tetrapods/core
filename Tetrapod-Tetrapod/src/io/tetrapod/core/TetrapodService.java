@@ -38,9 +38,9 @@ import org.slf4j.*;
 public class TetrapodService extends DefaultService implements TetrapodContract.API, StorageContract.API, RelayHandler,
       io.tetrapod.core.registry.Registry.RegistryBroadcaster {
 
-   public static final Logger                         logger      = LoggerFactory.getLogger(TetrapodService.class);
+   public static final Logger                         logger            = LoggerFactory.getLogger(TetrapodService.class);
 
-   protected final SecureRandom                       random      = new SecureRandom();
+   protected final SecureRandom                       random            = new SecureRandom();
 
    protected final io.tetrapod.core.registry.Registry registry;
 
@@ -48,17 +48,19 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    private Topic                                      registryTopic;
    private Topic                                      servicesTopic;
 
+   private final Object                               registryTopicLock = new Object();
+
    private final TetrapodCluster                      cluster;
    private final TetrapodWorker                       worker;
 
    private Storage                                    storage;
    private AdminAccounts                              adminAccounts;
 
-   private final List<Server>                         servers     = new ArrayList<Server>();
-   private final WebRoutes                            webRoutes   = new WebRoutes();
+   private final List<Server>                         servers           = new ArrayList<Server>();
+   private final WebRoutes                            webRoutes         = new WebRoutes();
 
    private long                                       lastStatsLog;
-   private ConcurrentMap<String, WebRoot>             webRootDirs = new ConcurrentHashMap<>();
+   private ConcurrentMap<String, WebRoot>             webRootDirs       = new ConcurrentHashMap<>();
 
    public TetrapodService() {
       registry = new io.tetrapod.core.registry.Registry(this);
@@ -80,7 +82,6 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       logger.info("Joining Cluster: {}", address.dump());
       this.startPaused = otherOpts.get("paused").equals("true");
       if (address.host.equals("self")) {
-         cluster.startListening();
          registerSelf(io.tetrapod.core.registry.Registry.BOOTSTRAP_ID, random.nextLong());
       } else if (address.host.equals("auto")) {
          boolean joined = false;
@@ -91,17 +92,16 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
             try {
                joined = cluster.joinCluster(address);
             } catch (ConnectException e) {}
-            if (joined)
+            if (joined) {
                break;
+            }
          }
          // need to start listener after the auto-search but before the self reg
-         cluster.startListening();
          if (!joined) {
             logger.info("no tetrapods found, registering self");
             registerSelf(io.tetrapod.core.registry.Registry.BOOTSTRAP_ID, random.nextLong());
          }
       } else {
-         cluster.startListening();
          this.token = token;
          cluster.joinCluster(address);
       }
@@ -124,7 +124,9 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       clusterTopic = registry.publish(entityId);
       registryTopic = registry.publish(entityId);
       servicesTopic = registry.publish(entityId);
+
       try {
+         cluster.startListening();
          // Establish a special loopback connection to ourselves
          // connects to self on localhost on our clusterport
          clusterClient.connect("localhost", getClusterPort(), dispatcher).sync();
@@ -736,7 +738,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
     */
    protected void registrySubscribe(final Session session, final int toEntityId, boolean clusterMode) {
       if (registryTopic != null) {
-         synchronized (registryTopic) {
+         synchronized (registryTopicLock) {
             // cluster members are not subscribed through this subscription, due to chicken-and-egg issues
             // synchronizing registries using topics. Cluster members are implicitly auto-subscribed without
             // an entry in the topic.
@@ -761,7 +763,9 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    @Override
    public Response requestRegistryUnsubscribe(RegistryUnsubscribeRequest r, RequestContext ctx) {
       // TODO: validate  
-      unsubscribe(registryTopic.topicId, ctx.header.fromId);
+      synchronized (registryTopicLock) {
+         unsubscribe(registryTopic.topicId, ctx.header.fromId);
+      }
       return Response.SUCCESS;
    }
 

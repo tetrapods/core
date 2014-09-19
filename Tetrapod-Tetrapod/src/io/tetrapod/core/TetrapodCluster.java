@@ -60,7 +60,21 @@ public class TetrapodCluster implements SessionFactory {
                @Override
                public void onResponse(Response res) {
                   if (res.isError()) {
-                     service.fail("Unable to register: " + res.errorCode());
+                     logger.error("Unable to register: {}", res.errorCode());
+                     ses.close();
+                     service.getDispatcher().dispatch(1, TimeUnit.SECONDS, new Runnable() {
+                        public void run() {
+                           if (!service.isShuttingDown()) {
+                              try {
+                                 if (!joinCluster(address)) {
+                                    service.fail("Unable to register");
+                                 }
+                              } catch (Exception e) {
+                                 service.fail("Unable to register: {}" + e);
+                              }
+                           }
+                        }
+                     });
                   } else {
                      RegisterResponse r = (RegisterResponse) res;
                      ses.setMyEntityId(r.entityId);

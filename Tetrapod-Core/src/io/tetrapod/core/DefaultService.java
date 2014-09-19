@@ -299,13 +299,13 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
       return ses;
    }
 
-   public void onConnectedToCluster() {
+   private void onConnectedToCluster() {
       sendDirectRequest(new RegisterRequest(buildNumber, token, getContractId(), getShortName(), status, Util.getHostName())).handle(
             new ResponseHandler() {
                @Override
                public void onResponse(Response res) {
                   if (res.isError()) {
-                     Fail.fail("Unable to register: " + res.errorCode());
+                     Fail.fail("Unable to register: " + res.errorCode()); 
                   } else {
                      RegisterResponse r = (RegisterResponse) res;
                      entityId = r.entityId;
