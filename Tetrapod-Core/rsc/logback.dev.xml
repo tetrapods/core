@@ -48,6 +48,7 @@
    </logger>
    
    <logger name="io.netty" level="INFO" />
+   <logger name="twitter4j" level="INFO" />
    <logger name="com.hazelcast" level="WARN" />
    <logger name="NodeMulticastListener" level="WARN" />
 

@@ -46,7 +46,7 @@ public class CodeGen {
          services.add("email");
          services.add("tetrapod");
          services.add("search");
-         services.add("ticket");
+         services.add("twitter");
       }
       if (langs.isEmpty()) {
          System.out.println("using defaults for languages");
