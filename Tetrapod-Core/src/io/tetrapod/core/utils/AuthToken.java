@@ -208,6 +208,18 @@ public class AuthToken {
       return d;
    }
 
+   public static Decoded decodeAuthToken4(String token) {
+      int[] vals = new int[6];
+      if (!decode(vals, 6, token)) {
+         return null;
+      }
+      Decoded d = new Decoded();
+      d.accountId = vals[5];
+      d.miscValues = new int[] { vals[1], vals[2], vals[3], vals[4] };
+      d.timeLeft = vals[0] - timeNowInMinutes();
+      return d;
+   }
+
    public static class Decoded {
       public int   accountId;
       public int   timeLeft;
