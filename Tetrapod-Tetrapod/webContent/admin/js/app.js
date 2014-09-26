@@ -16,13 +16,15 @@ define([ "knockout", "jquery", "bootbox", "toolbox", "protocol/server", "protoco
             self.onLogout = onLogout;
             self.modalData = ko.observable({});
             self.name = window.location.hostname;
-            self.isProd = self.name == "chatbox.com" || (self.name.indexOf(".prod.") > 0);  
+            self.isProd = self.name == "chatbox.com" || (self.name.indexOf(".prod.") > 0);
 
             function run(clusterModel) {
                ko.bindingHandlers.stopBinding = {
-                     init: function() {
-                         return { controlsDescendantBindings: true };
-                     }
+                  init : function() {
+                     return {
+                        controlsDescendantBindings : true
+                     };
+                  }
                };
                model = clusterModel;
                server.commsLog = true;
@@ -43,12 +45,12 @@ define([ "knockout", "jquery", "bootbox", "toolbox", "protocol/server", "protoco
             function onConnected() {
                $('#disconnected-alertbox').hide();
                model.services.removeAll();
-               server.send("Register", {
+               server.sendDirect("Register", {
                   build : 0,
                   contractId : 0,
                   name : "Web-Admin",
                   token : token
-               }, Core.DIRECT).handle(onRegistered);
+               }, onRegistered);
             }
 
             function onDisconnected() {
@@ -62,9 +64,9 @@ define([ "knockout", "jquery", "bootbox", "toolbox", "protocol/server", "protoco
                if (!result.isError()) {
                   token = result.token;
                   if (authtoken != null && authtoken != "") {
-                     server.send("AdminAuthorize", {
+                     server.sendDirect("AdminAuthorize", {
                         token : authtoken
-                     }, Core.DIRECT).handle(onLogin);
+                     }, onLogin);
                   } else {
                      onLogout();
                   }
@@ -72,10 +74,10 @@ define([ "knockout", "jquery", "bootbox", "toolbox", "protocol/server", "protoco
             }
 
             function login() {
-               server.send("AdminLogin", {
+               server.sendDirect("AdminLogin", {
                   email : $('#email').val(),
                   password : $('#password').val(),
-               }, Core.DIRECT).handle(function(result) {
+               }, function(result) {
                   if (result.isError()) {
                      bootbox.alert('Login Failed');
                   }
@@ -91,7 +93,7 @@ define([ "knockout", "jquery", "bootbox", "toolbox", "protocol/server", "protoco
                   }
                   $('#login-wrapper').hide();
                   $('#app-wrapper').show();
-                  server.send("ServicesSubscribe", {}, Core.DIRECT).handle(server.logResponse);
+                  server.sendDirect("ServicesSubscribe", {}, server.logResponse);
                } else {
                   onLogout();
                }
@@ -113,11 +115,11 @@ define([ "knockout", "jquery", "bootbox", "toolbox", "protocol/server", "protoco
                $('#set-password-modal').modal('show');
             };
             self.onEditPassword = function() {
-               server.send("AdminChangePassword", {
+               server.sendDirect("AdminChangePassword", {
                   token : authtoken,
                   oldPassword : self.modalOldPassword(),
                   newPassword : self.modalNewPassword()
-               }, Core.DIRECT).handle(function(res) {
+               }, function(res) {
                   if (!res.isError()) {
                      bootbox.alert('Your password has been changed');
                   } else {

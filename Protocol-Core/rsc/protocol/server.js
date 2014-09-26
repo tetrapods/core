@@ -15,7 +15,7 @@ function TP_Server() {
       reverseMap : {}
    };
    var requestCounter = 0;
-   var requestHandlers = [];
+   var requestHandlers = new Object();
    var messageHandlers = [];
    var openHandlers = [];
    var closeHandlers = [];
@@ -32,7 +32,9 @@ function TP_Server() {
    self.register = register;
    self.registerConst = registerConst;
    self.addMessageHandler = addMessageHandler;
-   self.send = send;
+   self.send = send; // to any
+   self.sendTo = sendTo;
+   self.sendDirect = sendDirect;
    self.sendRequest = sendRequest;
    self.connect = connect;
    self.disconnect = disconnect;
@@ -105,7 +107,18 @@ function TP_Server() {
       messageHandlers[val.contractId + "." + val.structId] = handler;
    }
 
-   function send(request, args, toId) {
+   // sends to any available service for this request's contract
+   function send(request, args, requestHandler) {
+      sendTo(request, args, 0, requestHandler);
+   }
+
+   // sends direct to the other end of the connection
+   function sendDirect(request, args, requestHandler) {
+      sendTo(request, args, 1, requestHandler);
+   }
+
+   // sends to the passed in toId
+   function sendTo(request, args, toId, requestHandler) {
       var val = protocol.request[request];
       if (!val) {
          console.log("unknown request: " + request);
@@ -115,10 +128,11 @@ function TP_Server() {
          console.log("ambiguous request: " + request);
          return;
       }
-      return sendRequest(val.contractId, val.structId, args, toId);
+      return sendRequest(val.contractId, val.structId, args, toId, requestHandler);
    }
 
-   function sendRequest(contractId, structId, args, toId) {
+   // dispatch a request
+   function sendRequest(contractId, structId, args, toId, requestHandler) {
       toId = typeof toId !== 'undefined' ? toId : 0;
       var requestId = requestCounter++;
       args._requestId = requestId;
@@ -132,6 +146,10 @@ function TP_Server() {
             logRequest(args);
       }
 
+      if (requestHandler) {
+         requestHandlers[requestId] = requestHandler;
+      }
+
       if (simulator != null) {
          var resp = simulator.request(request, args, toId);
          var i;
@@ -139,34 +157,42 @@ function TP_Server() {
             var mess = resp.messages[i];
             handleMessage(mess);
          }
-         return {
-            handle : function(func) {
-               requestHandlers[requestId] = func;
-               handleResponse(resp.response);
-            }
-         }
+         handleResponse(resp.response);
       }
 
       if (self.polling) {
          lastSpokeTo = Date.now();
          sendRPC(args);
       } else {
-         if (isConnected() || self.polling) {
+         if (isConnected()) {
             var data = JSON.stringify(args, null, 3);
             if (data.length < 1024 * 128) {
                lastSpokeTo = Date.now();
                socket.send(data);
             } else {
                console.log("RPC too big : " + data.length + "\n" + data);
-               // FIXME: return an error
+               handleResponse(makeError(requestId, 1)); // UNKNOWN 
             }
+         } else {
+            handleResponse(makeError(requestId, 7)); // CONNECTION_CLOSED 
          }
       }
 
+      // DEPRACATED for android 1.0.2 client backwards compat:
+      // DELETE after 1.0.3+ ships
       return {
          handle : function(func) {
             requestHandlers[requestId] = func;
          }
+      }
+   }
+
+   function makeError(requestId, code) {
+      return {
+         _requestId : requestId,
+         _contractId : 1,
+         _structId : 1,
+         code : code
       }
    }
 
@@ -278,6 +304,7 @@ function TP_Server() {
       if (func) {
          func(result);
       }
+      delete requestHandlers[result._requestId];
    }
 
    function handleMessage(result) {
@@ -305,7 +332,7 @@ function TP_Server() {
          var elapsedSpoke = Date.now() - lastSpokeTo;
          if (elapsedSpoke > 6000) {
             // this keep alive is a backup
-            send("KeepAlive", {}, 1/* Core.DIRECT */);
+            sendDirect("KeepAlive", {});
          }
          if (elapsedHeard > 6000) {
             console.debug("We haven't heard from the server in " + elapsedHeard + " ms")
@@ -331,12 +358,7 @@ function TP_Server() {
 
       // terminate all pending requests (only if using websockets I think...)      
       //      for ( var requestId in requestHandlers) {
-      //         handleResponse({
-      //            _requestId : requestId,
-      //            _contractId : 1,
-      //            _structId : 1,
-      //            code : 7
-      //         });
+      //         handleResponse(7);
       //      }
    }
 
@@ -401,19 +423,9 @@ function TP_Server() {
          error : function(XMLHttpRequest, textStatus, errorThrown) {
             console.error(textStatus + " (" + errorThrown + ")");
             if (textStatus == 'timeout') {
-               handleResponse({
-                  _requestId : data._requestId,
-                  _contractId : 1,
-                  _structId : 1,
-                  code : 3
-               });
+               handleResponse(makeError(data._requestId, 3));
             } else {
-               handleResponse({
-                  _requestId : data._requestId,
-                  _contractId : 1,
-                  _structId : 1,
-                  code : 1
-               });
+               handleResponse(makeError(data._requestId, 1));
             }
             onSocketClose(); // do a fake socket close event
          }

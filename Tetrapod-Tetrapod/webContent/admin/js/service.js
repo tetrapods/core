@@ -50,9 +50,9 @@ define([ "knockout", "jquery", "bootbox", "app", "build" ], function(ko, $, boot
 
       self.iconURL = ko.observable("media/gear.gif");
 
-      app.server.send("ServiceStatsSubscribe", {}, self.entityId).handle(app.server.logResponse)
+      app.server.sendTo("ServiceStatsSubscribe", {}, self.entityId, app.server.logResponse)
 
-      app.server.send("ServiceDetails", {}, self.entityId).handle(function(result) {
+      app.server.sendTo("ServiceDetails", {}, self.entityId, function(result) {
          if (!result.isError()) {
             self.iconURL(result.iconURL);
             self.metadata = result.metadata;
@@ -66,13 +66,15 @@ define([ "knockout", "jquery", "bootbox", "app", "build" ], function(ko, $, boot
 
       self.execute = function(command) {
          if (command.hasArgument) {
-            bootbox.prompt("Enter argument value:", function(result) {                
-               if (result !== null) {                                             
-                  app.server.sendRequest(command.contractId, command.structId, { data: result }, self.entityId).handle(app.server.logResponse);
+            bootbox.prompt("Enter argument value:", function(result) {
+               if (result !== null) {
+                  app.server.sendRequest(command.contractId, command.structId, {
+                     data : result
+                  }, self.entityId, app.server.logResponse);
                }
-             }); 
+            });
          } else {
-            app.server.sendRequest(command.contractId, command.structId, {}, self.entityId).handle(app.server.logResponse);
+            app.server.sendRequest(command.contractId, command.structId, {}, self.entityId, app.server.logResponse);
          }
       }
 
@@ -129,17 +131,17 @@ define([ "knockout", "jquery", "bootbox", "app", "build" ], function(ko, $, boot
       });
 
       self.pause = function() {
-         app.server.send("Pause", {}, self.entityId);
+         app.server.sendTo("Pause", {}, self.entityId);
       }
 
       self.unpause = function() {
-         app.server.send("Unpause", {}, self.entityId);
+         app.server.sendTo("Unpause", {}, self.entityId);
       }
       self.restart = function() {
          bootbox.confirm("Are you sure you want to restart service: " + self.name + "[" + self.entityId + "]?",
                function(result) {
                   if (result) {
-                     app.server.send("Restart", {}, self.entityId);
+                     app.server.sendTo("Restart", {}, self.entityId);
                   }
                });
       }
@@ -147,15 +149,15 @@ define([ "knockout", "jquery", "bootbox", "app", "build" ], function(ko, $, boot
          bootbox.confirm("Are you sure you want to shutdown service: " + self.name + "[" + self.entityId + "]?",
                function(result) {
                   if (result) {
-                     app.server.send("Shutdown", {}, self.entityId);
+                     app.server.sendTo("Shutdown", {}, self.entityId);
                   }
                });
       }
 
       self.deleteService = function() {
-         app.server.send("Unregister", {
+         app.server.sendDirect("Unregister", {
             entityId : self.entityId
-         }, Core.DIRECT);
+         });
       }
 
       self.canPause = function() {
@@ -297,11 +299,11 @@ define([ "knockout", "jquery", "bootbox", "app", "build" ], function(ko, $, boot
          if (!logRefreshPending) {
             logRefreshPending = true;
 
-            app.server.send("ServiceLogs", {
+            app.server.sendTo("ServiceLogs", {
                logId : self.lastLogId,
                level : self.logLevel(),
                maxItems : 100
-            }, self.entityId).handle(function(res) {
+            }, self.entityId, function(res) {
                logRefreshPending = false;
                if (!res.isError()) {
                   if (self.expanded()) {
