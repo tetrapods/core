@@ -192,7 +192,7 @@ function TP_Server() {
          _requestId : requestId,
          _contractId : 1,
          _structId : 1,
-         code : code
+         errorCode : code
       }
    }
 
