@@ -1,12 +1,10 @@
 package io.tetrapod.core.web;
 
-import static io.tetrapod.protocol.core.CoreContract.*;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.socket.SocketChannel;
 import io.tetrapod.core.*;
 import io.tetrapod.core.json.JSONObject;
-import io.tetrapod.core.rpc.*;
-import io.tetrapod.core.rpc.Error;
+import io.tetrapod.core.rpc.Structure;
 import io.tetrapod.core.serialize.datasources.*;
 import io.tetrapod.protocol.core.*;
 
