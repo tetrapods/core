@@ -292,6 +292,8 @@ public class WebHttpSession extends WebSession {
                final Structure request = readRequest(header, context.getRequestParams());
                if (request != null) {
                   relayRequest(header, request, handler);
+               } else {
+                  handler.onResponse(new Error(ERROR_UNKNOWN_REQUEST));
                }
             }
          } finally {

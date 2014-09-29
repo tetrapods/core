@@ -30,7 +30,6 @@ abstract class WebSession extends Session {
       Structure request = StructureFactory.make(header.contractId, header.structId);
       if (request == null) {
          logger.error("Could not find request structure contractId={} structId-{}", header.contractId, header.structId);
-         sendResponse(new Error(ERROR_SERIALIZATION), header.requestId);
          return null;
       }
       request.read(new WebJSONDataSource(params, request.tagWebNames()));
