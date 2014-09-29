@@ -214,7 +214,8 @@ function TP_Server() {
 
       // fall back to long polling if we have no WebSocket support
       if (!window.WebSocket || self.forceLongPolling) {
-         return startPollingSession(server, secure);
+         // have to long poll to same-origin
+         return startPollingSession(window.location.hostname, secure);
       }
 
       if (simulator != null) {
