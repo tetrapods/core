@@ -27,7 +27,32 @@ public class Rand {
 
    public static byte[] bytes(int len) {
       byte[] bytes = new byte[len];
-      r.nextBytes(bytes);
+      nextBytes(bytes);
       return bytes;
    }
+
+   public static long nextLong() {
+      return r.nextLong();
+   }
+   
+   public static boolean nextBoolean() {
+      return r.nextBoolean();
+   }
+   
+   public static double nextDouble() {
+      return r.nextDouble();
+   }
+
+   public static float nextFloat() {
+      return r.nextFloat();
+   }
+
+   public static double nextGaussian() {
+      return r.nextGaussian();
+   }
+   
+   public static void nextBytes(byte[] arr) {
+      r.nextBytes(arr);
+   }
+
 }
