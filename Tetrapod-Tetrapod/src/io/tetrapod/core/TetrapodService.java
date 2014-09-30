@@ -1061,4 +1061,19 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       return Response.error(ERROR_UNKNOWN);
    }
 
+   @Override
+   public Response requestVerifyEntityToken(VerifyEntityTokenRequest r, RequestContext ctx) {
+      EntityToken t = EntityToken.decode(r.token);
+      if (t.entityId == r.entityId) {
+         EntityInfo e = registry.getEntity(r.entityId);
+         if (e != null) {
+            synchronized (e) {
+               if (e.reclaimToken == t.nonce)
+                  return Response.SUCCESS;
+            }
+         }
+      }
+      return Response.error(ERROR_INVALID_TOKEN);
+   }
+
 }

@@ -236,3 +236,11 @@ internal message Services.ServiceRemoved
 internal message Services.ServiceUpdated
 	1: int entityId
 	2: int status
+	
+## 3rd party auth add-ons
+
+internal request VerifyEntityToken
+   1: int entityId
+   2: string token
+     
+     

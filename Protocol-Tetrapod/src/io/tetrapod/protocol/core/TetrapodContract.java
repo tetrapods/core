@@ -43,6 +43,7 @@ public class TetrapodContract extends Contract {
       , ServicesUnsubscribeRequest.Handler
       , SetAlternateIdRequest.Handler
       , UnregisterRequest.Handler
+      , VerifyEntityTokenRequest.Handler
       {}
    
    public Structure[] getRequests() {
@@ -71,6 +72,7 @@ public class TetrapodContract extends Contract {
          new GetSubscriberCountRequest(),
          new GetServiceBuildInfoRequest(),
          new ExecuteBuildCommandRequest(),
+         new VerifyEntityTokenRequest(),
       };
    }
    
