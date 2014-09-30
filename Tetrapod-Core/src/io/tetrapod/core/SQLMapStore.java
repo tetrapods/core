@@ -124,7 +124,7 @@ public class SQLMapStore<T> implements MapStore<String, T> {
       logger.trace("delete keys {}", key);
       final String query = "DELETE FROM " + tableName + " WHERE id = ?";
       try (Connection con = dataSource.getConnection(); PreparedStatement s = con.prepareStatement(query)) {
-         s.setString(1, key);
+         s.setString(1, marshaller.key(key));
          s.execute();
       } catch (SQLException e) {
          throw new RuntimeException(e);
