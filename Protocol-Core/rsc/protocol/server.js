@@ -143,7 +143,7 @@ function TP_Server() {
          keepAliveRequestId = requestId;
       } else {
          if (self.commsLog)
-            logRequest(args);
+            logRequest(args, toId);
       }
 
       if (requestHandler) {
@@ -279,8 +279,9 @@ function TP_Server() {
       }
    }
 
-   function logRequest(result) {
-      console.debug('[' + result._requestId + '] => ' + nameOf(result) + ' ' + JSON.stringify(result, dropUnderscored));
+   function logRequest(result, toId) {
+      var toStr = toId == 0 ? " to any" : (toId == 1 ? " to direct" : " to " + toId);
+      console.debug('[' + result._requestId + '] => ' + nameOf(result) + ' ' + JSON.stringify(result, dropUnderscored) + toStr);
    }
 
    function logMessage(result) {
