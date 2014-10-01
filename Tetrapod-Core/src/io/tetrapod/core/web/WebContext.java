@@ -32,8 +32,8 @@ public class WebContext {
    private JSONObject requestParameters;
    private String     requestPath;
 
-   public WebContext(FullHttpRequest request) throws IOException {
-      parseRequestParameters(request);
+   public WebContext(FullHttpRequest request, String routePath) throws IOException {
+      parseRequestParameters(request, routePath);
    }
 
    public WebContext(JSONObject json) throws IOException {
@@ -75,8 +75,14 @@ public class WebContext {
       return requestPath;
    }
 
-   private void parseRequestParameters(FullHttpRequest request) throws IOException {
-      final QueryStringDecoder queryStringDecoder = new QueryStringDecoder(request.getUri());
+   private void parseRequestParameters(FullHttpRequest request, String routePath) throws IOException {
+      QueryStringDecoder queryStringDecoder = new QueryStringDecoder(request.getUri());
+      if (!queryStringDecoder.path().equals(routePath) && !request.getUri().contains("?")) {
+         // this happens if we're using / to start the params
+         String uri = request.getUri();
+         uri = routePath + "?" + uri.substring(routePath.length() + 1);
+         queryStringDecoder = new QueryStringDecoder(uri);
+      }
       this.requestPath = queryStringDecoder.path();
       this.requestParameters = new JSONObject();
       final Map<String, List<String>> reqs = queryStringDecoder.parameters();

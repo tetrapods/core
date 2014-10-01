@@ -249,7 +249,7 @@ public class WebHttpSession extends WebSession {
 
    // handle a JSON API call
    private void handleWebRoute(final ChannelHandlerContext ctx, final FullHttpRequest req, final WebRoute route) throws Exception {
-      final WebContext context = new WebContext(req);
+      final WebContext context = new WebContext(req, route.path);
       final RequestHeader header = context.makeRequestHeader(this, route);
       if (header != null) {
          //final long t0 = System.currentTimeMillis();

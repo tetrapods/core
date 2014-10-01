@@ -18,7 +18,14 @@ public class WebRoutes {
    public WebRoute findRoute(String uri) {
       int ix = uri.indexOf('?');
       String path = ix < 0 ? uri : uri.substring(0, ix);
-      return routes.get(path);
+      WebRoute r = routes.get(path);
+      if (r == null) {
+         // allow /route/params instead of /route?params
+         ix = uri.lastIndexOf('/');
+         path = ix < 0 ? uri : uri.substring(0, ix);
+         r = routes.get(path);
+      }
+      return r;
    }
    
 

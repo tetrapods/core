@@ -73,7 +73,11 @@ class JavaGenerator implements LanguageGenerator {
          if (path != null) {
             if (path.isEmpty())
                path = f.defaultValue;
-            path = '/' + context.serviceAnnotations.getFirst("web") + '/' + path;
+            if (f.annotations.has("root")) {
+               path = '/' + path;
+            } else {
+               path = '/' + context.serviceAnnotations.getFirst("web") + '/' + path;
+            }
             // HACK this is horrible -- hard coding WebAPIRequest for requestClass... 
             Template sub = template("contract.webroutes.call").add("path", path)
                   .add("requestClass", "io.tetrapod.protocol.core.WebAPIRequest").add("contractClass", theClass);
