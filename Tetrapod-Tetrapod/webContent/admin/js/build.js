@@ -18,7 +18,7 @@ define(["knockout", "jquery", "app"], function(ko, $, app) {
       
       function load(id) {
          entityId = id;
-         app.server.sendTo("Tetrapod.GetServiceBuildInfo", {}, entityId).handle(onLoaded);
+         app.server.sendTo("Tetrapod.GetServiceBuildInfo", {}, entityId, onLoaded);
       }
       
       function onLoaded(result) {
@@ -64,7 +64,7 @@ define(["knockout", "jquery", "app"], function(ko, $, app) {
             array.push({ serviceName: "", build: self.buildNumber, command: BuildCommandConsts.FULL_CYCLE});
          }
          $("#buildExecute").button('loading');
-         app.server.sendTo("Tetrapod.ExecuteBuildCommand", { commands: array }, entityId).handle(function (res) {
+         app.server.sendTo("Tetrapod.ExecuteBuildCommand", { commands: array }, entityId, function (res) {
             load(entityId);
          });
       }
