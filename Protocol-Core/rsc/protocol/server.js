@@ -177,14 +177,6 @@ function TP_Server() {
             handleResponse(makeError(requestId, 7)); // CONNECTION_CLOSED 
          }
       }
-
-      // DEPRACATED for android 1.0.2 client backwards compat:
-      // DELETE after 1.0.3+ ships
-      return {
-         handle : function(func) {
-            requestHandlers[requestId] = func;
-         }
-      }
    }
 
    function makeError(requestId, code) {
