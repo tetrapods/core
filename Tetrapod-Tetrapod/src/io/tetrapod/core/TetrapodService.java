@@ -322,8 +322,13 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
             return cluster.getSession(entity.entityId);
          }
          final EntityInfo parent = registry.getEntity(entity.parentId);
-         assert (parent != null);
-         return cluster.getSession(parent.entityId);
+         if (parent != null) {
+            assert (parent != null);
+            return cluster.getSession(parent.entityId);
+         } else {
+            logger.warn("Could not find parent entity {} for {}", entity.parentId, entity);
+            return null;
+         }
       }
    }
 
