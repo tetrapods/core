@@ -10,7 +10,11 @@ public abstract class PendingResponseHandler {
    public PendingResponseHandler(RequestContext ctx) {
       originalRequestId = ctx.header.requestId;
    }
-   
+
+   public PendingResponseHandler(PendingResponseHandler handler) {
+      originalRequestId = handler.originalRequestId;
+   }
+
    abstract public Response onResponse(Response res);
 
 }
