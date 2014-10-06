@@ -813,8 +813,10 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
    @Override
    public Response requestAddServiceInformation(AddServiceInformationRequest req, RequestContext ctx) {
-      for (WebRoute r : req.routes)
+      for (WebRoute r : req.routes) {
          webRoutes.setRoute(r.path, r.contractId, r.structId);
+         logger.debug("Setting Web route [{}] for {}", r.path, r.contractId);
+      }
       for (StructDescription sd : req.structs)
          StructureFactory.add(new StructureAdapter(sd));
       return Response.SUCCESS;
