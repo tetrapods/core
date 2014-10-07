@@ -142,8 +142,7 @@ function TP_Server() {
       if (isKeepAlive(contractId, structId) && !self.commsLogKeepAlives) {
          keepAliveRequestId = requestId;
       } else {
-         if (self.commsLog)
-            logRequest(args, toId);
+         logRequest(args, toId);
       }
 
       if (requestHandler) {
@@ -244,8 +243,7 @@ function TP_Server() {
 
    function disconnect() {
       if (socket) {
-         if (self.commsLog)
-            console.log("Disconnecting... " + socket.readyState);
+         commslog("Disconnecting... " + socket.readyState);
          var closeHack = (socket.readyState == WebSocket.CLOSING);
          if (closeHack) {
             // some sort of bug here when waking from sleep, it can take a very long long time
@@ -254,8 +252,7 @@ function TP_Server() {
             socket.onclose = null;
          }
          socket.close();
-         if (self.commsLog)
-            console.log("socket.close() called: " + socket.readyState);
+         commslog("socket.close() called: " + socket.readyState);
          if (closeHack) { // call onSocketClose manually
             onSocketClose();
          }
@@ -263,21 +260,30 @@ function TP_Server() {
    }
 
    function logResponse(result) {
-      var str = '[' + result._requestId + '] <- ' + nameOf(result) + ' ' + JSON.stringify(result, dropUnderscored);
-      if (result.isError()) {
-         console.warn(str);
-      } else {
-         console.debug(str);
+      if (self.commsLog) {
+         var str = logstamp() + ' [' + result._requestId + '] <- ' + nameOf(result) + ' '
+               + JSON.stringify(result, dropUnderscored);
+         if (result.isError()) {
+            console.warn(str);
+         } else {
+            console.debug(str);
+         }
       }
    }
 
    function logRequest(result, toId) {
-      var toStr = toId == 0 ? " to any" : (toId == 1 ? " to direct" : " to " + toId);
-      console.debug('[' + result._requestId + '] => ' + nameOf(result) + ' ' + JSON.stringify(result, dropUnderscored) + toStr);
+      if (self.commsLog) {
+         var toStr = toId == 0 ? " to any" : (toId == 1 ? " to direct" : " to " + toId);
+         console.debug(logstamp() + ' [' + result._requestId + '] => ' + nameOf(result) + ' '
+               + JSON.stringify(result, dropUnderscored) + toStr);
+      }
    }
 
    function logMessage(result) {
-      console.debug('[M:' + result._topicId + '] <- ' + nameOf(result) + ' ' + JSON.stringify(result, dropUnderscored));
+      if (self.commsLog) {
+         console.debug(logstamp() + ' [M:' + result._topicId + '] <- ' + nameOf(result) + ' '
+               + JSON.stringify(result, dropUnderscored));
+      }
    }
 
    function dropUnderscored(key, value) {
@@ -292,7 +298,7 @@ function TP_Server() {
       result.isError = function() {
          return result._contractId == 1 && result._structId == 1;
       };
-      if (self.commsLog && result._requestId != keepAliveRequestId)
+      if (result._requestId != keepAliveRequestId)
          logResponse(result);
       var func = requestHandlers[result._requestId];
       if (func) {
@@ -302,8 +308,7 @@ function TP_Server() {
    }
 
    function handleMessage(result) {
-      if (self.commsLog)
-         logMessage(result);
+      logMessage(result);
       var func = messageHandlers[result._contractId + "." + result._structId];
       if (func) {
          func(result);
@@ -315,8 +320,7 @@ function TP_Server() {
    function onSocketOpen(event) {
       lastHeardFrom = Date.now();
       self.connected = true;
-      if (self.commsLog)
-         console.log("[socket] open: " + socket.URL);
+      commslog("[socket] open: " + socket.URL);
       var i, array = openHandlers;
       for (i = 0; i < array.length; i++)
          array[i]();
@@ -344,8 +348,7 @@ function TP_Server() {
          clearInterval(self.keepAlive);
          self.keepAlive = null;
       }
-      if (self.commsLog)
-         console.log("[socket] closed")
+      commslog("[socket] closed")
       var i, array = closeHandlers;
       for (i = 0; i < array.length; i++)
          array[i]();
@@ -372,9 +375,28 @@ function TP_Server() {
       }
    }
 
-   function onSocketError(event) {
+   function pad(pad, str) {
+      str = str.toString();
+      while (str.length < pad) {
+         str = '0' + str;
+      }
+      return str;
+   }
+
+   function logstamp() {
+      var now = new Date();
+      var p2 = '00';
+      return pad(2, now.getHours()) + ':' + pad(2, now.getMinutes()) + ':' + pad(2, now.getSeconds()) + '.'
+            + pad(3, now.getMilliseconds());
+   }
+
+   function commslog(msg) {
       if (self.commsLog)
-         console.log("[socket] error: " + JSON.stringify(event));
+         console.log(logstamp() + ' ' + msg);
+   }
+
+   function onSocketError(event) {
+      commslog("[socket] error: " + JSON.stringify(event));
    }
 
    function isKeepAlive(contractId, structId) {
@@ -389,8 +411,7 @@ function TP_Server() {
       self.connected = true;
       self.entityInfo = null;
       lastHeardFrom = Date.now();
-      if (self.commsLog)
-         console.log("[poller] open: " + host);
+      commslog("[poller] open: " + host);
       return {
          listen : function(onOpen, onClose) {
             onOpen();
