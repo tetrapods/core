@@ -328,12 +328,12 @@ function TP_Server() {
       self.keepAlive = setInterval(function() {
          var elapsedHeard = Date.now() - lastHeardFrom;
          var elapsedSpoke = Date.now() - lastSpokeTo;
-         if (elapsedSpoke > 6000) {
+         if (elapsedSpoke > 6000) { 
             // this keep alive is a backup
             sendDirect("KeepAlive", {});
          }
          if (elapsedHeard > 6000) {
-            console.debug("We haven't heard from the server in " + elapsedHeard + " ms")
+            commslog("We haven't heard from the server in " + elapsedHeard + " ms")
          }
          if (elapsedHeard > 20000) {
             disconnect();
