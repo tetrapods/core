@@ -1,7 +1,6 @@
 package io.tetrapod.core.utils;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 public class PrefMap {
 
@@ -39,4 +38,11 @@ public class PrefMap {
       prefs.put(key, Long.toString(val));
    }
 
+   public int size() {
+      return prefs.size();
+   }
+
+   public Set<String> keys() {
+      return prefs.keySet();
+   }
 }
