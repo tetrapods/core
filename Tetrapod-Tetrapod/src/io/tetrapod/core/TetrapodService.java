@@ -280,7 +280,6 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
             // create servers
             servers.add(new Server(getHTTPPort(), new WebSessionFactory(webRootDirs, "/sockets"), dispatcher));
-            servers.add(new FlashPolicyServer(dispatcher));
 
             // create secure port servers, if configured
             if (sslContext != null) {
