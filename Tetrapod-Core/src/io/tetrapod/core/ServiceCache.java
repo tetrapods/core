@@ -62,7 +62,7 @@ public class ServiceCache implements TetrapodContract.Services.API {
          final List<Entity> shuffled = new ArrayList<>(list);
          Collections.shuffle(shuffled);
          for (Entity e : shuffled) {
-            if (isAvailable(e)) {
+            if (checkAvailable(e)) {
                return e;
             }
          }
@@ -74,7 +74,7 @@ public class ServiceCache implements TetrapodContract.Services.API {
       final List<Entity> list = getServices(contractId);
       if (list != null) {
          for (Entity e : list) {
-            if (isAvailable(e)) {
+            if (checkAvailable(e)) {
                return e;
             }
          }
@@ -95,7 +95,7 @@ public class ServiceCache implements TetrapodContract.Services.API {
    public boolean isServiceAvailable(int entityId) {
       Entity e = services.get(entityId);
       if (e != null) {
-         return isAvailable(e);
+         return checkAvailable(e);
       }
       return false;
    }
@@ -110,14 +110,18 @@ public class ServiceCache implements TetrapodContract.Services.API {
       return true;
    }
 
-   private boolean isAvailable(final Entity e) {
+   private boolean checkAvailable(final Entity e) {
       synchronized (e) {
-         return (e.status & (Core.STATUS_STARTING | Core.STATUS_PAUSED | Core.STATUS_GONE | Core.STATUS_BUSY | Core.STATUS_OVERLOADED
-               | Core.STATUS_FAILED | Core.STATUS_STOPPING)) == 0;
+         return isAvailable(e.status);
       }
    }
 
    public Entity getEntity(int entityId) {
       return services.get(entityId);
+   }
+   
+   public static final boolean isAvailable(final int status) {
+      return (status & (Core.STATUS_STARTING | Core.STATUS_PAUSED | Core.STATUS_GONE | Core.STATUS_BUSY | Core.STATUS_OVERLOADED
+            | Core.STATUS_FAILED | Core.STATUS_STOPPING | Core.STATUS_PASSIVE)) == 0;
    }
 }

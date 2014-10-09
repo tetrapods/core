@@ -26,6 +26,7 @@ function TP_Core(server) {
    server.registerConst("Core", "Core", "STATUS_OVERLOADED", 16);
    server.registerConst("Core", "Core", "STATUS_FAILED", 32);
    server.registerConst("Core", "Core", "STATUS_STOPPING", 64);
+   server.registerConst("Core", "Core", "STATUS_PASSIVE", 128);
    server.registerConst("Core", "Core", "ENVELOPE_HANDSHAKE", 1);
    server.registerConst("Core", "Core", "ENVELOPE_REQUEST", 2);
    server.registerConst("Core", "Core", "ENVELOPE_RESPONSE", 3);
