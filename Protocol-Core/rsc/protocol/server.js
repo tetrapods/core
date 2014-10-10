@@ -322,7 +322,7 @@ function TP_Server() {
    function onSocketOpen(event) {
       lastHeardFrom = Date.now();
       self.connected = true;
-      commslog("[socket] open: " + socket.URL);
+      commslog("[socket] open: " + socket.url);
       var i, array = openHandlers;
       for (i = 0; i < array.length; i++)
          array[i]();
