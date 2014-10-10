@@ -15,7 +15,7 @@ function TP_Server() {
       reverseMap : {}
    };
    var requestCounter = 0;
-   var requestHandlers = new Object();
+   var requestContexts = {};
    var messageHandlers = [];
    var openHandlers = [];
    var closeHandlers = [];
@@ -23,7 +23,6 @@ function TP_Server() {
    var simulator = null;
    var lastHeardFrom = 0;
    var lastSpokeTo = 0;
-   var keepAliveRequestId;
 
    // public interface
    self.forceLongPolling = false;
@@ -139,14 +138,12 @@ function TP_Server() {
       args._contractId = contractId;
       args._structId = structId;
       args._toId = toId;
-      if (isKeepAlive(contractId, structId) && !self.commsLogKeepAlives) {
-         keepAliveRequestId = requestId;
-      } else {
-         logRequest(args, toId);
-      }
 
-      if (requestHandler) {
-         requestHandlers[requestId] = requestHandler;
+      logRequest(args, toId);
+
+      requestContexts[requestId] = {
+         request : args,
+         handler : requestHandler
       }
 
       if (simulator != null) {
@@ -259,23 +256,27 @@ function TP_Server() {
       }
    }
 
-   function logResponse(result) {
+   function logResponse(result, req) {
       if (self.commsLog) {
-         var str = logstamp() + ' [' + result._requestId + '] <- ' + nameOf(result) + ' '
-               + JSON.stringify(result, dropUnderscored);
-         if (result.isError()) {
-            console.warn(str);
-         } else {
-            console.debug(str);
+         if (!isKeepAlive(req._contractId, req._structId) || self.commsLogKeepAlives) {
+            var str = logstamp() + ' [' + result._requestId + '] <- ' + nameOf(result) + ' '
+                  + JSON.stringify(result, dropUnderscored);
+            if (result.isError()) {
+               console.warn(str);
+            } else {
+               console.debug(str);
+            }
          }
       }
    }
 
-   function logRequest(result, toId) {
+   function logRequest(req, toId) {
       if (self.commsLog) {
-         var toStr = toId == 0 ? " to any" : (toId == 1 ? " to direct" : " to " + toId);
-         console.debug(logstamp() + ' [' + result._requestId + '] => ' + nameOf(result) + ' '
-               + JSON.stringify(result, dropUnderscored) + toStr);
+         if (!isKeepAlive(req._contractId, req._structId) || self.commsLogKeepAlives) {
+            var toStr = toId == 0 ? " to any" : (toId == 1 ? " to direct" : " to " + toId);
+            console.debug(logstamp() + ' [' + req._requestId + '] => ' + nameOf(req) + ' '
+                  + JSON.stringify(req, dropUnderscored) + toStr);
+         }
       }
    }
 
@@ -298,13 +299,14 @@ function TP_Server() {
       result.isError = function() {
          return result._contractId == 1 && result._structId == 1;
       };
-      if (result._requestId != keepAliveRequestId)
-         logResponse(result);
-      var func = requestHandlers[result._requestId];
-      if (func) {
-         func(result);
+      var ctx = requestContexts[result._requestId];
+
+      logResponse(result, ctx.request);
+
+      if (ctx.handler) {
+         ctx.handler(result);
       }
-      delete requestHandlers[result._requestId];
+      delete requestContexts[result._requestId];
    }
 
    function handleMessage(result) {
@@ -328,7 +330,7 @@ function TP_Server() {
       self.keepAlive = setInterval(function() {
          var elapsedHeard = Date.now() - lastHeardFrom;
          var elapsedSpoke = Date.now() - lastSpokeTo;
-         if (elapsedSpoke > 6000) { 
+         if (elapsedSpoke > 6000) {
             // this keep alive is a backup
             sendDirect("KeepAlive", {});
          }
@@ -354,7 +356,7 @@ function TP_Server() {
          array[i]();
 
       // terminate all pending requests (only if using websockets I think...)      
-      //      for ( var requestId in requestHandlers) {
+      //      for ( var requestId in requestContexts) {
       //         handleResponse(7);
       //      }
    }
