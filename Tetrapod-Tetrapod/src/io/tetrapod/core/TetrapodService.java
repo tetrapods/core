@@ -7,7 +7,6 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.socket.SocketChannel;
 import io.tetrapod.core.AdminAccounts.AdminMutator;
 import io.tetrapod.core.Session.RelayHandler;
-import io.tetrapod.core.flashpolicy.FlashPolicyServer;
 import io.tetrapod.core.registry.*;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.rpc.Error;
