@@ -6,6 +6,7 @@ public class ErrorResponseException extends RuntimeException {
    public final int errorCode;
 
    public ErrorResponseException(int errorCode) {
+      super("ErrorCode = " + errorCode);
       this.errorCode = errorCode;
    }
 }

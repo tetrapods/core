@@ -279,4 +279,18 @@ public class Util {
       return val == null || val.length() == 0;
    }
 
+   public final static String ALPHANUMERIC_CHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+
+   public static String makeRandomAlphanumericString(int len) {
+      return makeRandomString(len, ALPHANUMERIC_CHARS);
+   }
+
+   public static String makeRandomString(int len, String chars) {
+      final StringBuilder sb = new StringBuilder();
+      while (--len >= 0) {
+         sb.append(chars.charAt(Util.random(chars.length())));
+      }
+      return sb.toString();
+   }
+
 }
