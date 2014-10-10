@@ -274,8 +274,13 @@ function TP_Server() {
       if (self.commsLog) {
          if (!isKeepAlive(req._contractId, req._structId) || self.commsLogKeepAlives) {
             var toStr = toId == 0 ? " to any" : (toId == 1 ? " to direct" : " to " + toId);
-            console.debug(logstamp() + ' [' + req._requestId + '] => ' + nameOf(req) + ' '
-                  + JSON.stringify(req, dropUnderscored) + toStr);
+            try {
+               console.debug(logstamp() + ' [' + req._requestId + '] => ' + nameOf(req) + ' '
+                     + JSON.stringify(req, dropUnderscored) + toStr);
+            } catch (e) {
+               console.error('Error logging a request: ' + e);
+               console.error(req);
+            }
          }
       }
    }
