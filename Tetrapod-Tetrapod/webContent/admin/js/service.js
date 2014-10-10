@@ -98,6 +98,10 @@ define([ "knockout", "jquery", "bootbox", "app", "build" ], function(ko, $, boot
          return (self.status() & Core.STATUS_FAILED) != 0;
       }
 
+      self.isPassive = function() {
+         return (self.status() & Core.STATUS_PASSIVE) != 0;
+      }
+
       self.isStopping = function() {
          return (self.status() & Core.STATUS_STOPPING) != 0;
       }
@@ -113,6 +117,8 @@ define([ "knockout", "jquery", "bootbox", "app", "build" ], function(ko, $, boot
             return "PAUSED";
          if (self.isStarting())
             return "STARTING";
+         if (self.isPassive())
+            return "PASSIVE";
          return "RUNNING";
       });
 

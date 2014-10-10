@@ -1,17 +1,14 @@
 package io.tetrapod.core.registry;
 
-import io.tetrapod.core.Session;
-import io.tetrapod.protocol.core.Core;
-import io.tetrapod.protocol.core.Entity;
+import io.tetrapod.core.*;
+import io.tetrapod.protocol.core.*;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.*;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.slf4j.*;
 
 /**
  * All the meta data associated with a tetrapod entity
@@ -193,12 +190,7 @@ public class EntityInfo extends Entity implements Comparable<EntityInfo> {
     * @return
     */
    public boolean isAvailable() {
-      return isAvailable(this);
-   }
-
-   public static final boolean isAvailable(final Entity e) {
-      return (e.status & (Core.STATUS_STARTING | Core.STATUS_PAUSED | Core.STATUS_GONE | Core.STATUS_BUSY | Core.STATUS_OVERLOADED
-            | Core.STATUS_FAILED | Core.STATUS_STOPPING)) == 0;
+      return ServiceCache.isAvailable(this.status);
    }
 
    public synchronized void queue(final Runnable task) {

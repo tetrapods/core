@@ -22,6 +22,10 @@
 	background: green; color: white;
 }
 
+.passive {
+   background: #599; color: white;
+}
+
 .gone {
 	background: red; color: white;
 }
