@@ -32,6 +32,8 @@ struct Core
    const int   STATUS_FAILED       = 32
    const int   STATUS_STOPPING     = 64
    const int   STATUS_PASSIVE      = 128
+   const int   STATUS_ERRORS       = 256
+   const int   STATUS_WARNINGS     = 512
 
    # assigning values to errors should only be done for core errors
    error UNKNOWN              = 1  // catch all error
@@ -131,6 +133,20 @@ internal response ServiceLogs
    2: ServiceLogEntry<list> items
    
    error NOT_CONFIGURED
+
+internal request ServiceErrorLogs
+   1: long logId
+   2: byte level
+   3: int maxItems
+
+internal response ServiceErrorLogs
+   1: long lastLogId 
+   2: ServiceLogEntry<list> errors
+   3: ServiceLogEntry<list> warnings
+
+   error NOT_CONFIGURED
+   
+internal request ResetServiceErrorLogs
    
 public request WebAPI
    1: string route   // route name

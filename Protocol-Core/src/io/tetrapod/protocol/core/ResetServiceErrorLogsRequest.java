@@ -12,51 +12,12 @@ import java.util.*;
 import java.util.concurrent.*;
 
 @SuppressWarnings("unused")
-public class Core extends Structure {
-   
-   /**
-    * request is not addressed to a specific entity
-    */
-   public static final int UNADDRESSED = 0; 
-   
-   /**
-    * request is for direct dispatch
-    */
-   public static final int DIRECT = 1; 
-   public static final byte TYPE_TETRAPOD = 1; 
-   public static final byte TYPE_SERVICE = 2; 
-   public static final byte TYPE_ADMIN = 3; 
-   public static final byte TYPE_CLIENT = 4; 
-   public static final byte TYPE_ANONYMOUS = 5; 
-   public static final byte TYPE_WEBAPI = 6; 
-   public static final int DEFAULT_PUBLIC_PORT = 9900; 
-   public static final int DEFAULT_SERVICE_PORT = 9901; 
-   public static final int DEFAULT_CLUSTER_PORT = 9902; 
-   public static final int DEFAULT_HTTP_PORT = 9904; 
-   public static final int DEFAULT_HTTPS_PORT = 9906; 
-   public static final int DEFAULT_DIRECT_PORT = 9800; 
-   public static final int STATUS_STARTING = 1; 
-   public static final int STATUS_PAUSED = 2; 
-   public static final int STATUS_GONE = 4; 
-   public static final int STATUS_BUSY = 8; 
-   public static final int STATUS_OVERLOADED = 16; 
-   public static final int STATUS_FAILED = 32; 
-   public static final int STATUS_STOPPING = 64; 
-   public static final int STATUS_PASSIVE = 128; 
-   public static final int STATUS_ERRORS = 256; 
-   public static final int STATUS_WARNINGS = 512; 
-   public static final byte ENVELOPE_HANDSHAKE = 1; 
-   public static final byte ENVELOPE_REQUEST = 2; 
-   public static final byte ENVELOPE_RESPONSE = 3; 
-   public static final byte ENVELOPE_MESSAGE = 4; 
-   public static final byte ENVELOPE_BROADCAST = 5; 
-   public static final byte ENVELOPE_PING = 6; 
-   public static final byte ENVELOPE_PONG = 7; 
-   
-   public static final int STRUCT_ID = 9088168;
+public class ResetServiceErrorLogsRequest extends Request {
+
+   public static final int STRUCT_ID = 9359779;
    public static final int CONTRACT_ID = CoreContract.CONTRACT_ID;
-    
-   public Core() {
+   
+   public ResetServiceErrorLogsRequest() {
       defaults();
    }
 
@@ -91,13 +52,24 @@ public class Core extends Structure {
    }
    
    public final int getContractId() {
-      return Core.CONTRACT_ID;
+      return ResetServiceErrorLogsRequest.CONTRACT_ID;
    }
 
    public final int getStructId() {
-      return Core.STRUCT_ID;
+      return ResetServiceErrorLogsRequest.STRUCT_ID;
    }
-
+   
+   @Override
+   public final Response dispatch(ServiceAPI is, RequestContext ctx) {
+      if (is instanceof Handler)
+         return ((Handler)is).requestResetServiceErrorLogs(this, ctx);
+      return is.genericRequest(this, ctx);
+   }
+   
+   public static interface Handler extends ServiceAPI {
+      Response requestResetServiceErrorLogs(ResetServiceErrorLogsRequest r, RequestContext ctx);
+   }
+   
    public final String[] tagWebNames() {
       // Note do not use this tags in long term serializations (to disk or databases) as 
       // implementors are free to rename them however they wish.  A null means the field
@@ -106,11 +78,11 @@ public class Core extends Structure {
       
       return result;
    }
-
+   
    public final Structure make() {
-      return new Core();
+      return new ResetServiceErrorLogsRequest();
    }
-
+   
    public final StructDescription makeDescription() {
       StructDescription desc = new StructDescription();
       desc.tagWebNames = tagWebNames();
@@ -119,4 +91,5 @@ public class Core extends Structure {
       
       return desc;
    }
+
 }

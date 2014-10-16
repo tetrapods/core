@@ -215,6 +215,18 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
             updateStatus(status & ~Core.STATUS_OVERLOADED);
          }
 
+         if (logBuffer.hasErrors()) {
+         	updateStatus(status | Core.STATUS_ERRORS);
+         } else {
+         	updateStatus(status & ~Core.STATUS_ERRORS);
+         }
+         if (logBuffer.hasWarnings()) {
+         	updateStatus(status | Core.STATUS_WARNINGS);
+         } else {
+         	updateStatus(status & ~Core.STATUS_WARNINGS);
+         }
+
+         
          dispatcher.dispatch(1, TimeUnit.SECONDS, new Runnable() {
             public void run() {
                checkHealth();
@@ -760,7 +772,28 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
       return "*** Start Service ***" + "\n   *** Service name: " + Util.getProperty("APPNAME") + "\n   *** Options: "
             + Launcher.getAllOpts() + "\n   *** VM Args: " + ManagementFactory.getRuntimeMXBean().getInputArguments().toString();
    }
+   
+   @Override
+   public Response requestServiceErrorLogs(ServiceErrorLogsRequest r, RequestContext ctx) {
+      if (logBuffer == null) {
+         return new Error(CoreContract.ERROR_NOT_CONFIGURED);
+      }
 
+      // TODO
+      return Response.SUCCESS;
+   }
+
+   @Override
+   public Response requestResetServiceErrorLogs(ResetServiceErrorLogsRequest r, RequestContext ctx) {
+      if (logBuffer == null) {
+         return new Error(CoreContract.ERROR_NOT_CONFIGURED);
+      }
+
+      logBuffer.resetErrorLogs();
+
+      return Response.SUCCESS;
+   }
+   
    @Override
    public Response requestWebAPI(WebAPIRequest r, RequestContext ctx) {
       return Response.error(CoreContract.ERROR_UNKNOWN_REQUEST);

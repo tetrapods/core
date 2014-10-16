@@ -100,7 +100,7 @@
 						</thead>
 						<tbody data-bind="foreach: services">
 							<tr data-bind='attr: {"class": row_style}'>
-								<td width="48" class="centered">
+								<td width="48" margin-left: 3px>
 									<div class="dropdown">
 										<a class="dropdown-toggle" data-toggle="dropdown" href="#">
 											<i class="fa fa-gear fa-fw"></i> <i class="fa fa-caret-down"></i>
@@ -115,6 +115,11 @@
 												<a href="#" data-bind="click: function() { $parent.execute($data) }, text: name"></a>
 											</li>
 											<!-- /ko -->
+
+											<li class="divider" data-bind=" visible: hasErrorsOrWarnings()"></li>
+											<li>
+												<a href="#" data-bind="click: resetErrors, visible: hasErrorsOrWarnings()">Reset Errors</a>
+											</li>
 
 											<li data-bind="visible: name=='Tetrapod'" class="divider"></li>
 											<li>
@@ -152,9 +157,9 @@
 											</li>
 
 										</ul>
+    									<img data-bind="attr:{src: hasErrors() ? '/admin/media/error.png' : '/admin/media/warning.png'}, visible: hasErrorsOrWarnings()" class="status-icon">
 									</div>
-								</td>
-
+									
 								<td>
 									<img data-bind="attr:{src: iconURL().indexOf('fa-')==0 ? '/admin/media/lizard.png' : iconURL()}, visible: iconURL().indexOf('fa-') != 0" class="service-icon">
                            <i class="service-fa fa fa-fw" data-bind="css:iconURL, visible: iconURL().indexOf('fa-') == 0"></i>

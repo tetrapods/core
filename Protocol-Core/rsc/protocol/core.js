@@ -27,6 +27,8 @@ function TP_Core(server) {
    server.registerConst("Core", "Core", "STATUS_FAILED", 32);
    server.registerConst("Core", "Core", "STATUS_STOPPING", 64);
    server.registerConst("Core", "Core", "STATUS_PASSIVE", 128);
+   server.registerConst("Core", "Core", "STATUS_ERRORS", 256);
+   server.registerConst("Core", "Core", "STATUS_WARNINGS", 512);
    server.registerConst("Core", "Core", "ENVELOPE_HANDSHAKE", 1);
    server.registerConst("Core", "Core", "ENVELOPE_REQUEST", 2);
    server.registerConst("Core", "Core", "ENVELOPE_RESPONSE", 3);
@@ -91,6 +93,9 @@ function TP_Core(server) {
    server.register("response", "Core", "ServiceDetails", 1, 12435407);
    server.register("request", "Core", "ServiceLogs", 1, 13816458);
    server.register("response", "Core", "ServiceLogs", 1, 6345878);
+   server.register("request", "Core", "ServiceErrorLogs", 1, 16327568);
+   server.register("response", "Core", "ServiceErrorLogs", 1, 9302372);
+   server.register("request", "Core", "ResetServiceErrorLogs", 1, 9359779);
    server.register("request", "Core", "WebAPI", 1, 9321342);
    server.register("response", "Core", "WebAPI", 1, 9652194);
    server.register("request", "Core", "DirectConnection", 1, 1361471);

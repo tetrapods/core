@@ -22,8 +22,10 @@ public class CoreContract extends Contract {
       , DirectConnectionRequest.Handler
       , DummyRequest.Handler
       , PauseRequest.Handler
+      , ResetServiceErrorLogsRequest.Handler
       , RestartRequest.Handler
       , ServiceDetailsRequest.Handler
+      , ServiceErrorLogsRequest.Handler
       , ServiceLogsRequest.Handler
       , ServiceStatsSubscribeRequest.Handler
       , ServiceStatsUnsubscribeRequest.Handler
@@ -43,6 +45,8 @@ public class CoreContract extends Contract {
          new ServiceStatsUnsubscribeRequest(),
          new ServiceDetailsRequest(),
          new ServiceLogsRequest(),
+         new ServiceErrorLogsRequest(),
+         new ResetServiceErrorLogsRequest(),
          new WebAPIRequest(),
          new DirectConnectionRequest(),
          new ValidateConnectionRequest(),
@@ -54,6 +58,7 @@ public class CoreContract extends Contract {
       return new Structure[] {
          new ServiceDetailsResponse(),
          new ServiceLogsResponse(),
+         new ServiceErrorLogsResponse(),
          new WebAPIResponse(),
          new DirectConnectionResponse(),
          new ValidateConnectionResponse(),

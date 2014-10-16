@@ -160,6 +160,18 @@ define([ "knockout", "jquery", "bootbox", "app", "build" ], function(ko, $, boot
                });
       }
 
+      self.resetErrors = function() {
+         app.server.sendTo("ResetServiceErrorLogs", {}, self.entityId);
+      }
+
+      self.hasErrors = function() {
+         return (self.status() & Core.STATUS_ERRORS) != 0;
+      }
+
+      self.hasErrorsOrWarnings = function() {
+         return (self.status() & Core.STATUS_ERRORS) != 0 || (self.status() & Core.STATUS_WARNINGS) != 0;
+      }
+
       self.deleteService = function() {
          app.server.sendDirect("Unregister", {
             entityId : self.entityId
