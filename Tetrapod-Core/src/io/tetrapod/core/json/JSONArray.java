@@ -805,6 +805,10 @@ public class JSONArray {
         return this;
     }
 
+    public void clear() {
+       this.myArrayList.clear();
+    }
+    
     /**
      * Remove an index and close the hole.
      *

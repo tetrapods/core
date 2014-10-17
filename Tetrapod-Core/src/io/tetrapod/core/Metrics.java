@@ -56,6 +56,10 @@ public class Metrics {
       return metrics.timer(MetricRegistry.name(c, names));
    }
 
+   public static Metric register(Metric metric, Object o, String... names) {
+      return metrics.register(MetricRegistry.name(o.getClass(), names), metric);
+   }
+
    public static void init(String prefix) {
       gc = metrics.register(MetricRegistry.name("jvm", "gc"), new GarbageCollectorMetricSet());
       memory = metrics.register(MetricRegistry.name("jvm", "memory"), new MemoryUsageGaugeSet());
@@ -106,5 +110,4 @@ public class Metrics {
    public static int getThreadCount() {
       return ManagementFactory.getThreadMXBean().getThreadCount();
    }
-
 }
