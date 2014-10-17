@@ -28,6 +28,10 @@ public class Client implements Session.Listener {
       SSLEngine engine = ctx.createSSLEngine();
       engine.setUseClientMode(true);
       engine.setNeedClientAuth(false);
+      
+      // explicitly removes "SSLv3" from supported protocols to prevent the 'POODLE' exploit
+      engine.setEnabledProtocols(new String[] { "SSLv2Hello", "TLSv1", "TLSv1.1", "TLSv1.2" });
+      
       ssl = new SslHandler(engine);
    }
 
