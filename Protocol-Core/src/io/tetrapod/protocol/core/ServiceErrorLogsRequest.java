@@ -21,31 +21,17 @@ public class ServiceErrorLogsRequest extends Request {
       defaults();
    }
 
-   public ServiceErrorLogsRequest(long logId, byte level, int maxItems) {
-      this.logId = logId;
-      this.level = level;
-      this.maxItems = maxItems;
-   }   
-
-   public long logId;
-   public byte level;
-   public int maxItems;
-
    public final Structure.Security getSecurity() {
       return Security.INTERNAL;
    }
 
    public final void defaults() {
-      logId = 0;
-      level = 0;
-      maxItems = 0;
+      
    }
    
    @Override
    public final void write(DataSource data) throws IOException {
-      data.write(1, this.logId);
-      data.write(2, this.level);
-      data.write(3, this.maxItems);
+      
       data.writeEndTag();
    }
    
@@ -55,9 +41,7 @@ public class ServiceErrorLogsRequest extends Request {
       while (true) {
          int tag = data.readTag();
          switch (tag) {
-            case 1: this.logId = data.read_long(tag); break;
-            case 2: this.level = data.read_byte(tag); break;
-            case 3: this.maxItems = data.read_int(tag); break;
+            
             case Codec.END_TAG:
                return;
             default:
@@ -90,10 +74,8 @@ public class ServiceErrorLogsRequest extends Request {
       // Note do not use this tags in long term serializations (to disk or databases) as 
       // implementors are free to rename them however they wish.  A null means the field
       // is not to participate in web serialization (remaining at default)
-      String[] result = new String[3+1];
-      result[1] = "logId";
-      result[2] = "level";
-      result[3] = "maxItems";
+      String[] result = new String[0+1];
+      
       return result;
    }
    
@@ -106,9 +88,7 @@ public class ServiceErrorLogsRequest extends Request {
       desc.tagWebNames = tagWebNames();
       desc.types = new TypeDescriptor[desc.tagWebNames.length];
       desc.types[0] = new TypeDescriptor(TypeDescriptor.T_STRUCT, getContractId(), getStructId());
-      desc.types[1] = new TypeDescriptor(TypeDescriptor.T_LONG, 0, 0);
-      desc.types[2] = new TypeDescriptor(TypeDescriptor.T_BYTE, 0, 0);
-      desc.types[3] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
+      
       return desc;
    }
 

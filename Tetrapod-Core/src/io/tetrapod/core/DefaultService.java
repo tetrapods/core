@@ -779,8 +779,17 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
          return new Error(CoreContract.ERROR_NOT_CONFIGURED);
       }
 
-      // TODO
-      return Response.SUCCESS;
+      final List<ServiceLogEntry> list = new ArrayList<ServiceLogEntry>();
+      list.addAll(logBuffer.getErrors());
+      list.addAll(logBuffer.getWarnings());
+      Collections.sort(list, new Comparator<ServiceLogEntry>() {
+         @Override
+         public int compare(ServiceLogEntry e1, ServiceLogEntry e2) {
+            return ((Long)e1.timestamp).compareTo(e2.timestamp);
+         }
+      });
+      
+      return new ServiceErrorLogsResponse(list);
    }
 
    @Override

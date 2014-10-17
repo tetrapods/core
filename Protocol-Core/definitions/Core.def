@@ -135,14 +135,9 @@ internal response ServiceLogs
    error NOT_CONFIGURED
 
 internal request ServiceErrorLogs
-   1: long logId
-   2: byte level
-   3: int maxItems
 
 internal response ServiceErrorLogs
-   1: long lastLogId 
-   2: ServiceLogEntry<list> errors
-   3: ServiceLogEntry<list> warnings
+   1: ServiceLogEntry<list> errors
 
    error NOT_CONFIGURED
    

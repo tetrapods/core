@@ -106,6 +106,22 @@ public class LogBuffer extends AppenderBase<ILoggingEvent> {
 		warnings.clear();
 	}
 	
+   public List<ServiceLogEntry> getErrors() {
+      final List<ServiceLogEntry> list = new ArrayList<ServiceLogEntry>();
+      for(ILoggingEvent error : errors) {
+         list.add(logEntryFrom(error));
+      }
+      return list;
+   }
+
+   public List<ServiceLogEntry> getWarnings() {
+      final List<ServiceLogEntry> list = new ArrayList<ServiceLogEntry>();
+      for(ILoggingEvent warning : warnings) {
+         list.add(logEntryFrom(warning));
+      }
+      return list;
+   }
+	
    public Level convert(byte level) {
       switch (level) {
          case ServiceLogEntry.LEVEL_ALL:

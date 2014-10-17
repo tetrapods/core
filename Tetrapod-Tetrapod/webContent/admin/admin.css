@@ -131,6 +131,10 @@
 	padding-left: 20px; padding-right: 20px;
 }
 
+.service-error-logs-dialog {
+    width: 80%;
+}
+
 .tab-content {
 	padding: 10px; border-bottom: 1px solid #eee; border-left: 1px solid #eee; border-right: 1px solid #eee;
 }
