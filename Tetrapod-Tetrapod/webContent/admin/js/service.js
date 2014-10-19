@@ -160,6 +160,51 @@ define([ "knockout", "jquery", "bootbox", "app", "build" ], function(ko, $, boot
                });
       }
 
+      self.clearErrors = function() {
+         app.server.sendTo("ResetServiceErrorLogs", {}, self.entityId);
+      }
+
+      self.showErrors = function() {
+         app.server.sendTo("ServiceErrorLogs", {}, self.entityId, function(result) {
+            if (!result.isError()) {
+               var messages = []; 
+               messages.push('<div class="service-logs" style="height: 100%; min-height: 200px">');
+               messages.push('<ul>');
+               
+               for (var i = 0; i < result.errors.length; i++) {
+                  var error = result.errors[i];
+                  var levelStyle = self.getLogLevelStyle(error.level);
+                  var timestamp = logtime(new Date(error.timestamp));
+                  messages.push('<li class="' + levelStyle + '">');
+                  messages.push(timestamp + "&nbsp;");
+                  messages.push(error.thread + "&nbsp;");
+                  messages.push(error.logger);
+                  messages.push('<span class="service-logs-msg">' + error.msg + '</span>');
+                  messages.push('</li>');
+               }
+               messages.push('</ul>');										
+               messages.push('</div>');												
+               
+               var text = messages.join("");
+               bootbox.dialog({
+                  message: text
+               }).find("div.modal-dialog").addClass("service-error-logs-dialog"); 	
+            }
+      	});
+      }
+
+      self.hasErrors = function() {
+         return (self.status() & Core.STATUS_ERRORS) != 0;
+      }
+
+      self.hasWarningsOnly = function() {
+         return (self.status() & Core.STATUS_WARNINGS) != 0 && (self.status() & Core.STATUS_ERRORS) == 0;
+      }
+
+      self.hasErrorsOrWarnings = function() {
+         return (self.status() & Core.STATUS_ERRORS) != 0 || (self.status() & Core.STATUS_WARNINGS) != 0;
+      }
+
       self.deleteService = function() {
          app.server.sendDirect("Unregister", {
             entityId : self.entityId

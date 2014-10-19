@@ -116,6 +116,14 @@
 											</li>
 											<!-- /ko -->
 
+											<li class="divider" data-bind=" visible: hasErrorsOrWarnings()"></li>
+											<li>
+												<a href="#" data-bind="click: showErrors, visible: hasErrorsOrWarnings()">Show Errors</a>
+											</li>
+											<li>
+												<a href="#" data-bind="click: clearErrors, visible: hasErrorsOrWarnings()">Clear Errors</a>
+											</li>
+
 											<li data-bind="visible: name=='Tetrapod'" class="divider"></li>
 											<li>
 												<a href="#" data-bind="visible: name=='Tetrapod', click: function() { popupBuild(); }">Deploy</a>
@@ -151,16 +159,18 @@
 												</a>
 											</li>
 
-										</ul>
+										</ul>																							
 									</div>
-								</td>
-
+									
 								<td>
 									<img data-bind="attr:{src: iconURL().indexOf('fa-')==0 ? '/admin/media/lizard.png' : iconURL()}, visible: iconURL().indexOf('fa-') != 0" class="service-icon">
                            <i class="service-fa fa fa-fw" data-bind="css:iconURL, visible: iconURL().indexOf('fa-') == 0"></i>
 									<span class="service-name" data-bind="text: name"></span>
 								</td>
 								<td class="centered">
+									<i class="fa fa-warning fa-fw" style="float:left; color:orange" data-bind="visible: hasWarningsOnly()"></i>
+									<i class="fa fa-exclamation-circle fa-fw" style="float:left; color:red" data-bind="visible: hasErrors()"></i>
+									<i class="fa fa-exclamation-circle fa-fw" style="float:left; visibility:hidden" data-bind="visible: !hasErrorsOrWarnings()"></i>
 									<a data-bind="text: entityString, click: showLogs"></a>
 								</td>
 								<td class="centered">

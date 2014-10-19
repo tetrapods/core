@@ -215,6 +215,18 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
             updateStatus(status & ~Core.STATUS_OVERLOADED);
          }
 
+         if (logBuffer.hasErrors()) {
+         	updateStatus(status | Core.STATUS_ERRORS);
+         } else {
+         	updateStatus(status & ~Core.STATUS_ERRORS);
+         }
+         if (logBuffer.hasWarnings()) {
+         	updateStatus(status | Core.STATUS_WARNINGS);
+         } else {
+         	updateStatus(status & ~Core.STATUS_WARNINGS);
+         }
+
+         
          dispatcher.dispatch(1, TimeUnit.SECONDS, new Runnable() {
             public void run() {
                checkHealth();
@@ -760,7 +772,37 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
       return "*** Start Service ***" + "\n   *** Service name: " + Util.getProperty("APPNAME") + "\n   *** Options: "
             + Launcher.getAllOpts() + "\n   *** VM Args: " + ManagementFactory.getRuntimeMXBean().getInputArguments().toString();
    }
+   
+   @Override
+   public Response requestServiceErrorLogs(ServiceErrorLogsRequest r, RequestContext ctx) {
+      if (logBuffer == null) {
+         return new Error(CoreContract.ERROR_NOT_CONFIGURED);
+      }
 
+      final List<ServiceLogEntry> list = new ArrayList<ServiceLogEntry>();
+      list.addAll(logBuffer.getErrors());
+      list.addAll(logBuffer.getWarnings());
+      Collections.sort(list, new Comparator<ServiceLogEntry>() {
+         @Override
+         public int compare(ServiceLogEntry e1, ServiceLogEntry e2) {
+            return ((Long)e1.timestamp).compareTo(e2.timestamp);
+         }
+      });
+      
+      return new ServiceErrorLogsResponse(list);
+   }
+
+   @Override
+   public Response requestResetServiceErrorLogs(ResetServiceErrorLogsRequest r, RequestContext ctx) {
+      if (logBuffer == null) {
+         return new Error(CoreContract.ERROR_NOT_CONFIGURED);
+      }
+
+      logBuffer.resetErrorLogs();
+
+      return Response.SUCCESS;
+   }
+   
    @Override
    public Response requestWebAPI(WebAPIRequest r, RequestContext ctx) {
       return Response.error(CoreContract.ERROR_UNKNOWN_REQUEST);

@@ -10,9 +10,15 @@ import ch.qos.logback.core.AppenderBase;
 
 public class LogBuffer extends AppenderBase<ILoggingEvent> {
    private static final int                MAX_ITEMS       = 1000;
+   private static final int                MAX_ERRORS      = 20;
+
    private static final int                MAX_MESSAGE_LEN = 1024 * 8;
 
    private final LinkedList<ILoggingEvent> items           = new LinkedList<>();
+   private final LinkedList<ILoggingEvent> errors          = new LinkedList<>();
+   private final LinkedList<ILoggingEvent> warnings        = new LinkedList<>();
+
+   
    private long                            count           = 0;
 
    @Override
@@ -21,6 +27,20 @@ public class LogBuffer extends AppenderBase<ILoggingEvent> {
       items.addLast(e);
       if (items.size() > MAX_ITEMS) {
          items.removeFirst();
+      }
+      
+      if (e.getLevel() == Level.ERROR) {
+      	errors.addLast(e);
+         if (errors.size() > MAX_ERRORS) {
+         	errors.removeFirst();
+         }
+      }
+
+      if (e.getLevel() == Level.WARN) {
+      	warnings.addLast(e);
+         if (warnings.size() > MAX_ERRORS) {
+         	warnings.removeFirst();
+         }
       }
    }
 
@@ -72,7 +92,36 @@ public class LogBuffer extends AppenderBase<ILoggingEvent> {
          logStack(sb, proxy.getCause());
       }
    }
+   
+	public boolean hasErrors() {
+		return !errors.isEmpty();
+	}
 
+	public boolean hasWarnings() {
+		return !warnings.isEmpty();
+	}
+
+	public void resetErrorLogs() {
+		errors.clear();
+		warnings.clear();
+	}
+	
+   public List<ServiceLogEntry> getErrors() {
+      final List<ServiceLogEntry> list = new ArrayList<ServiceLogEntry>();
+      for(ILoggingEvent error : errors) {
+         list.add(logEntryFrom(error));
+      }
+      return list;
+   }
+
+   public List<ServiceLogEntry> getWarnings() {
+      final List<ServiceLogEntry> list = new ArrayList<ServiceLogEntry>();
+      for(ILoggingEvent warning : warnings) {
+         list.add(logEntryFrom(warning));
+      }
+      return list;
+   }
+	
    public Level convert(byte level) {
       switch (level) {
          case ServiceLogEntry.LEVEL_ALL:
