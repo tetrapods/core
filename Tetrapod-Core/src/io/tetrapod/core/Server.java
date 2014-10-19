@@ -86,6 +86,10 @@ public class Server extends ChannelInitializer<SocketChannel> implements Session
          SSLEngine engine = sslContext.createSSLEngine();
          engine.setUseClientMode(false);
          engine.setWantClientAuth(clientAuth);
+
+         // explicitly removes "SSLv3" from supported protocols to prevent the 'POODLE' exploit
+         engine.setEnabledProtocols(new String[] { "SSLv2Hello", "TLSv1", "TLSv1.1", "TLSv1.2" });
+
          SslHandler handler = new SslHandler(engine);
          ch.pipeline().addLast("ssl", handler);
       }
