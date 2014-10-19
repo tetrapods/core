@@ -100,7 +100,7 @@
 						</thead>
 						<tbody data-bind="foreach: services">
 							<tr data-bind='attr: {"class": row_style}'>
-								<td width="48" margin-left: 3px>
+								<td width="48" class="centered">
 									<div class="dropdown">
 										<a class="dropdown-toggle" data-toggle="dropdown" href="#">
 											<i class="fa fa-gear fa-fw"></i> <i class="fa fa-caret-down"></i>
@@ -159,8 +159,7 @@
 												</a>
 											</li>
 
-										</ul>
-    									<img data-bind="attr:{src: hasErrors() ? '/admin/media/error.png' : '/admin/media/warning.png'}, visible: hasErrorsOrWarnings()" class="status-icon">
+										</ul>																							
 									</div>
 									
 								<td>
@@ -169,6 +168,9 @@
 									<span class="service-name" data-bind="text: name"></span>
 								</td>
 								<td class="centered">
+									<i class="fa fa-warning fa-fw" style="float:left; color:orange" data-bind="visible: hasWarningsOnly()"></i>
+									<i class="fa fa-exclamation-circle fa-fw" style="float:left; color:red" data-bind="visible: hasErrors()"></i>
+									<i class="fa fa-exclamation-circle fa-fw" style="float:left; visibility:hidden" data-bind="visible: !hasErrorsOrWarnings()"></i>
 									<a data-bind="text: entityString, click: showLogs"></a>
 								</td>
 								<td class="centered">

@@ -197,6 +197,10 @@ define([ "knockout", "jquery", "bootbox", "app", "build" ], function(ko, $, boot
          return (self.status() & Core.STATUS_ERRORS) != 0;
       }
 
+      self.hasWarningsOnly = function() {
+         return (self.status() & Core.STATUS_WARNINGS) != 0 && (self.status() & Core.STATUS_ERRORS) == 0;
+      }
+
       self.hasErrorsOrWarnings = function() {
          return (self.status() & Core.STATUS_ERRORS) != 0 || (self.status() & Core.STATUS_WARNINGS) != 0;
       }
