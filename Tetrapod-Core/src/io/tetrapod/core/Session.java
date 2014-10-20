@@ -405,7 +405,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
       // quieter logging for certain exceptions
       if (cause instanceof IOException) {
          if (cause.getMessage() != null) {
-            if (cause.getMessage().equals("Connection reset by peer")) {
+            if (cause.getMessage().equals("Connection reset by peer") || cause.getMessage().equals("Connection timed out")) {
                logger.info("{} {}", this, cause.getMessage());
                return;
             }
