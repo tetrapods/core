@@ -85,7 +85,18 @@
 						<thead>
 							<tr>
 								<th>
-									<i class="fa fa-gear fa-fw"></i>
+									<div data-bind="stopBinding: true"> 
+										<div class="dropdown app-bind">
+											<a class="dropdown-toggle" data-toggle="dropdown" style="color: white" href="#">
+												<i class="fa fa-gear fa-fw"></i> <i class="fa fa-caret-down"></i>
+											</a>
+											<ul class="dropdown-menu dropdown-service">
+												<li>
+													<a href="#" data-bind="click: onClearAllErrors">Clear All Errors</a>
+												</li>
+											</ul>																							
+										</div>
+									</div>									
 								</th>
 								<th>Name</th>
 								<th>Entity</th>
