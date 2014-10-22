@@ -46,7 +46,7 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
             return;
          } catch (Exception e) {
             port++;
-            logger.error(e.getMessage());
+            logger.info(e.getMessage());
             if (n++ >= 100) {
                throw new RuntimeException(e);
             }

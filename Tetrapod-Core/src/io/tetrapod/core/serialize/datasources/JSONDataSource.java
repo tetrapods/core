@@ -149,7 +149,8 @@ public class JSONDataSource implements DataSource {
 
    @Override
    public int[] read_int_array(int tag) throws IOException {
-      JSONArray arr = json.getJSONArray(key(tag));
+      JSONArray arr = getJSONArrayOrNull(json, key(tag));
+      if (arr == null) return null;
       int[] res = new int[arr.length()];
       for (int i = 0; i < res.length; i++) {
          res[i] = arr.getInt(i);
@@ -159,7 +160,8 @@ public class JSONDataSource implements DataSource {
 
    @Override
    public List<Integer> read_int_list(int tag) throws IOException {
-      JSONArray arr = json.getJSONArray(key(tag));
+      JSONArray arr = getJSONArrayOrNull(json, key(tag));
+      if (arr == null) return null;
       List<Integer> res = new ArrayList<>();
       for (int i = 0; i < arr.length(); i++) {
          res.add(arr.getInt(i));
@@ -187,7 +189,8 @@ public class JSONDataSource implements DataSource {
 
    @Override
    public long[] read_long_array(int tag) throws IOException {
-      JSONArray arr = json.getJSONArray(key(tag));
+      JSONArray arr = getJSONArrayOrNull(json, key(tag));
+      if (arr == null) return null;
       long[] res = new long[arr.length()];
       for (int i = 0; i < res.length; i++) {
          res[i] = arr.getLong(i);
@@ -197,7 +200,8 @@ public class JSONDataSource implements DataSource {
 
    @Override
    public List<Long> read_long_list(int tag) throws IOException {
-      JSONArray arr = json.getJSONArray(key(tag));
+      JSONArray arr = getJSONArrayOrNull(json, key(tag));
+      if (arr == null) return null;
       List<Long> res = new ArrayList<>();
       for (int i = 0; i < arr.length(); i++) {
          res.add(arr.getLong(i));
@@ -226,7 +230,8 @@ public class JSONDataSource implements DataSource {
 
    @Override
    public byte[] read_byte_array(int tag) throws IOException {
-      JSONArray arr = json.getJSONArray(key(tag));
+      JSONArray arr = getJSONArrayOrNull(json, key(tag));
+      if (arr == null) return null;
       byte[] res = new byte[arr.length()];
       for (int i = 0; i < res.length; i++) {
          res[i] = (byte) arr.getInt(i);
@@ -236,7 +241,8 @@ public class JSONDataSource implements DataSource {
 
    @Override
    public List<Byte> read_byte_list(int tag) throws IOException {
-      JSONArray arr = json.getJSONArray(key(tag));
+      JSONArray arr = getJSONArrayOrNull(json, key(tag));
+      if (arr == null) return null;
       List<Byte> res = new ArrayList<>();
       for (int i = 0; i < arr.length(); i++) {
          res.add((byte) arr.getInt(i));
@@ -265,7 +271,8 @@ public class JSONDataSource implements DataSource {
 
    @Override
    public boolean[] read_boolean_array(int tag) throws IOException {
-      JSONArray arr = json.getJSONArray(key(tag));
+      JSONArray arr = getJSONArrayOrNull(json, key(tag));
+      if (arr == null) return null;
       boolean[] res = new boolean[arr.length()];
       for (int i = 0; i < res.length; i++) {
          res[i] = arr.getBoolean(i);
@@ -275,7 +282,8 @@ public class JSONDataSource implements DataSource {
 
    @Override
    public List<Boolean> read_boolean_list(int tag) throws IOException {
-      JSONArray arr = json.getJSONArray(key(tag));
+      JSONArray arr = getJSONArrayOrNull(json, key(tag));
+      if (arr == null) return null;
       List<Boolean> res = new ArrayList<>();
       for (int i = 0; i < arr.length(); i++) {
          res.add(arr.getBoolean(i));
@@ -304,7 +312,8 @@ public class JSONDataSource implements DataSource {
 
    @Override
    public double[] read_double_array(int tag) throws IOException {
-      JSONArray arr = json.getJSONArray(key(tag));
+      JSONArray arr = getJSONArrayOrNull(json, key(tag));
+      if (arr == null) return null;
       double[] res = new double[arr.length()];
       for (int i = 0; i < res.length; i++) {
          res[i] = arr.getDouble(i);
@@ -314,7 +323,8 @@ public class JSONDataSource implements DataSource {
 
    @Override
    public List<Double> read_double_list(int tag) throws IOException {
-      JSONArray arr = json.getJSONArray(key(tag));
+      JSONArray arr = getJSONArrayOrNull(json, key(tag));
+      if (arr == null) return null;
       List<Double> res = new ArrayList<>();
       for (int i = 0; i < arr.length(); i++) {
          res.add(arr.getDouble(i));
@@ -342,7 +352,8 @@ public class JSONDataSource implements DataSource {
 
    @Override
    public String[] read_string_array(int tag) throws IOException {
-      JSONArray arr = json.getJSONArray(key(tag));
+      JSONArray arr = getJSONArrayOrNull(json, key(tag));
+      if (arr == null) return null;
       String[] res = new String[arr.length()];
       for (int i = 0; i < res.length; i++) {
          res[i] = arr.getString(i);
@@ -352,7 +363,8 @@ public class JSONDataSource implements DataSource {
 
    @Override
    public List<String> read_string_list(int tag) throws IOException {
-      JSONArray arr = json.getJSONArray(key(tag));
+      JSONArray arr = getJSONArrayOrNull(json, key(tag));
+      if (arr == null) return null;
       List<String> res = new ArrayList<>();
       for (int i = 0; i < arr.length(); i++) {
          res.add(arr.getString(i));
@@ -391,7 +403,8 @@ public class JSONDataSource implements DataSource {
    @Override
    @SuppressWarnings("unchecked")
    public <T extends Structure> T[] read_struct_array(int tag, T struct) throws IOException {
-      JSONArray arr = json.getJSONArray(key(tag));
+      JSONArray arr = getJSONArrayOrNull(json, key(tag));
+      if (arr == null) return null;
       T[] res = (T[]) Array.newInstance(struct.getClass(), arr.length());
       for (int i = 0; i < res.length; i++) {
          JSONObject jo = arr.getJSONObject(i);
@@ -409,7 +422,8 @@ public class JSONDataSource implements DataSource {
    @Override
    @SuppressWarnings("unchecked")
    public <T extends Structure> List<T> read_struct_list(int tag, T struct) throws IOException {
-      JSONArray arr = json.getJSONArray(key(tag));
+      JSONArray arr = getJSONArrayOrNull(json, key(tag));
+      if (arr == null) return null;
       List<T> res = new ArrayList<>();
       for (int i = 0; i < arr.length(); i++) {
          JSONObject jo = arr.getJSONObject(i);
@@ -477,6 +491,12 @@ public class JSONDataSource implements DataSource {
    @Override
    public Object getUnderlyingObject() {
       return json;
+   }
+   
+   private JSONArray getJSONArrayOrNull(JSONObject jo, String key) {
+      if (jo.isNull(key))
+         return null;
+      return json.getJSONArray(key);
    }
 
 }
