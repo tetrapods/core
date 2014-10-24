@@ -127,12 +127,15 @@
 											</li>
 											<!-- /ko -->
 
-											<li class="divider" data-bind=" visible: hasErrorsOrWarnings()"></li>
+											<li class="divider"></li>
 											<li>
 												<a href="#" data-bind="click: showErrors, visible: hasErrorsOrWarnings()">Show Errors</a>
 											</li>
 											<li>
 												<a href="#" data-bind="click: clearErrors, visible: hasErrorsOrWarnings()">Clear Errors</a>
+											</li>
+											<li>
+												<a href="#" data-bind="click: setCommsLogLevel">Set Comms Log Level...</a>
 											</li>
 
 											<li data-bind="visible: name=='Tetrapod'" class="divider"></li>

@@ -96,6 +96,7 @@ function TP_Core(server) {
    server.register("request", "Core", "ServiceErrorLogs", 1, 16327568);
    server.register("response", "Core", "ServiceErrorLogs", 1, 9302372);
    server.register("request", "Core", "ResetServiceErrorLogs", 1, 9359779);
+   server.register("request", "Core", "SetCommsLogLevel", 1, 10256079);
    server.register("request", "Core", "WebAPI", 1, 9321342);
    server.register("response", "Core", "WebAPI", 1, 9652194);
    server.register("request", "Core", "DirectConnection", 1, 1361471);

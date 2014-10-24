@@ -29,6 +29,7 @@ public class CoreContract extends Contract {
       , ServiceLogsRequest.Handler
       , ServiceStatsSubscribeRequest.Handler
       , ServiceStatsUnsubscribeRequest.Handler
+      , SetCommsLogLevelRequest.Handler
       , ShutdownRequest.Handler
       , UnpauseRequest.Handler
       , ValidateConnectionRequest.Handler
@@ -47,6 +48,7 @@ public class CoreContract extends Contract {
          new ServiceLogsRequest(),
          new ServiceErrorLogsRequest(),
          new ResetServiceErrorLogsRequest(),
+         new SetCommsLogLevelRequest(),
          new WebAPIRequest(),
          new DirectConnectionRequest(),
          new ValidateConnectionRequest(),

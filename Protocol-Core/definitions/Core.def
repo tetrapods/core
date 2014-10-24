@@ -142,6 +142,10 @@ internal response ServiceErrorLogs
    error NOT_CONFIGURED
    
 internal request ResetServiceErrorLogs
+
+internal request SetCommsLogLevel
+	1: string level
+
    
 public request WebAPI
    1: string route   // route name

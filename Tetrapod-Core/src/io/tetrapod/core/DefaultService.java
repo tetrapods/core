@@ -803,6 +803,19 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
       return Response.SUCCESS;
    }
    
+
+   @Override
+   public Response requestSetCommsLogLevel(SetCommsLogLevelRequest r, RequestContext ctx) {
+      ch.qos.logback.classic.Logger logger = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger("comms");
+      if (logger == null) {
+         return new Error(CoreContract.ERROR_NOT_CONFIGURED);
+      }
+      
+      logger.setLevel(ch.qos.logback.classic.Level.valueOf(r.level));
+
+      return Response.SUCCESS;
+   }
+  
    @Override
    public Response requestWebAPI(WebAPIRequest r, RequestContext ctx) {
       return Response.error(CoreContract.ERROR_UNKNOWN_REQUEST);

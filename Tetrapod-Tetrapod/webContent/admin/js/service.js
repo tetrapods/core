@@ -204,6 +204,34 @@ define([ "knockout", "jquery", "bootbox", "app", "build" ], function(ko, $, boot
       self.hasErrorsOrWarnings = function() {
          return (self.status() & Core.STATUS_ERRORS) != 0 || (self.status() & Core.STATUS_WARNINGS) != 0;
       }
+      
+      self.setCommsLogLevel = function() {
+         bootbox.dialog({
+            message: 'Log Level: <select id="level">' +
+                     '<option value="off">Off</option>' +
+                     '<option value="error">Error</option>' +
+                     '<option value="warn">Warning</option>' +
+                     '<option value="info">Info</option>' +
+                     '<option value="debug">Debug</option>' +
+                     '<option value="trace">Trace</option>' +
+                     '<option value="all">All</option>' +
+                     '</select>',
+            buttons: {
+               success: {
+                  label: "OK",
+                  className: "btn-success",
+                  callback: function () {
+                     var level = $('#level').val();
+                     app.server.sendTo("SetCommsLogLevel", {level : level}, self.entityId);
+                  }
+               },
+               cancel: {
+                  label: "Cancel",
+                  className: "btn-cancel"
+               }
+            }
+         });
+      }
 
       self.deleteService = function() {
          app.server.sendDirect("Unregister", {
