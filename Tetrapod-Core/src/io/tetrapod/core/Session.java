@@ -539,7 +539,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
          case ServiceStatsMessage.STRUCT_ID:
             return true;
       }
-      return false;
+      return commsLog.isDebugEnabled();
    }
 
 }
