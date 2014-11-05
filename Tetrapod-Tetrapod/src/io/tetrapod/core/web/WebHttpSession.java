@@ -22,6 +22,7 @@ import io.tetrapod.core.registry.EntityToken;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.rpc.Error;
 import io.tetrapod.core.serialize.datasources.ByteBufDataSource;
+import io.tetrapod.core.utils.Util;
 import io.tetrapod.protocol.core.*;
 
 import java.io.IOException;
@@ -218,33 +219,48 @@ public class WebHttpSession extends WebSession {
          getDispatcher().dispatch(new Runnable() {
             public void run() {
                final LongPollQueue messages = LongPollQueue.getQueue(getTheirEntityId());
+               final long startTime = System.currentTimeMillis();
                // long poll -- wait until there are messages in queue, and return them
-               final JSONArray arr = new JSONArray();
                assert messages != null;
-               if (messages.tryLock()) {
-                  try {
-                     // FIXME -- this blocks an entire thread on the long poll, which isn't ideal.
-                     JSONObject jo = messages.poll(10, TimeUnit.SECONDS);
-                     if (jo != null) {
-                        arr.put(jo);
-                        while (jo != null) {
-                           jo = messages.poll();
-                           if (jo != null) {
-                              arr.put(jo);
-                           }
-                        }
-                     }
-                  } catch (InterruptedException e) {} finally {
-                     messages.unlock();
-                  }
-                  logger.debug("{} long poll {} has {} items\n", this, messages.getEntityId(), messages.size());
-                  ctx.writeAndFlush(makeFrame(new JSONObject().put("messages", arr), HttpHeaders.isKeepAlive(req)));
-               } else {
-                  ctx.writeAndFlush(makeFrame(new JSONObject().put("error", "locked"), HttpHeaders.isKeepAlive(req)));
-               }
+               // we grab a lock so only one poll request processes at a time
+               longPoll(25, messages, startTime, ctx, req);
             }
          });
       }
+   }
+
+   private void longPoll(final int millis, final LongPollQueue messages, final long startTime, final ChannelHandlerContext ctx,
+         final FullHttpRequest req) {
+      getDispatcher().dispatch(millis, TimeUnit.MILLISECONDS, new Runnable() {
+         public void run() {
+            if (messages.tryLock()) {
+               try {
+                  if (messages.size() > 0) {
+                     final JSONArray arr = new JSONArray();
+                     while (!messages.isEmpty()) {
+                        JSONObject jo = messages.poll();
+                        if (jo != null) {
+                           arr.put(jo);
+                        }
+                     }
+                     logger.debug("{} long poll {} has {} items\n", this, messages.getEntityId(), messages.size());
+                     ctx.writeAndFlush(makeFrame(new JSONObject().put("messages", arr), HttpHeaders.isKeepAlive(req)));
+                  } else {
+                     if (System.currentTimeMillis() - startTime > Util.ONE_SECOND * 10) {
+                        ctx.writeAndFlush(makeFrame(new JSONObject().put("messages", new JSONArray()), HttpHeaders.isKeepAlive(req)));
+                     } else {
+                        // wait a bit and check again
+                        longPoll(50, messages, startTime, ctx, req);
+                     }
+                  }
+               } finally {
+                  messages.unlock();
+               }
+            } else {
+               ctx.writeAndFlush(makeFrame(new JSONObject().put("error", "locked"), HttpHeaders.isKeepAlive(req)));
+            }
+         } 
+      });
    }
 
    // handle a JSON API call
