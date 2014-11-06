@@ -87,8 +87,10 @@ public class Server extends ChannelInitializer<SocketChannel> implements Session
          engine.setUseClientMode(false);
          engine.setWantClientAuth(clientAuth);
 
+         // Netty 4.0.24 should mean we don't need this poodle hack anymore -- VERIFY:
+         logger.warn("FIXME : Enabled Protocols = {}", engine.getEnabledProtocols().toString());
          // explicitly removes "SSLv3" from supported protocols to prevent the 'POODLE' exploit
-         engine.setEnabledProtocols(new String[] { "SSLv2Hello", "TLSv1", "TLSv1.1", "TLSv1.2" });
+         //engine.setEnabledProtocols(new String[] { "SSLv2Hello", "TLSv1", "TLSv1.1", "TLSv1.2" });
 
          SslHandler handler = new SslHandler(engine);
          ch.pipeline().addLast("ssl", handler);
