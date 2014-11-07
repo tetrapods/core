@@ -6,7 +6,7 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.ssl.SslHandler;
 
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.net.ssl.*;
@@ -87,10 +87,14 @@ public class Server extends ChannelInitializer<SocketChannel> implements Session
          engine.setUseClientMode(false);
          engine.setWantClientAuth(clientAuth);
 
-         // Netty 4.0.24 should mean we don't need this poodle hack anymore -- VERIFY:
-         logger.warn("FIXME : Enabled Protocols = {}", engine.getEnabledProtocols().toString());
-         // explicitly removes "SSLv3" from supported protocols to prevent the 'POODLE' exploit
-         //engine.setEnabledProtocols(new String[] { "SSLv2Hello", "TLSv1", "TLSv1.1", "TLSv1.2" });
+         // Explicitly removes "SSLv3" from supported protocols to prevent the 'POODLE' exploit
+         final List<String> list = new ArrayList<>();
+         for (String p : engine.getEnabledProtocols()) {
+            if (!p.equals("SSLv3")) {
+               list.add(p);
+            }
+         }
+         engine.setEnabledProtocols(list.toArray(new String[list.size()]));
 
          SslHandler handler = new SslHandler(engine);
          ch.pipeline().addLast("ssl", handler);

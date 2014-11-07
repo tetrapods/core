@@ -1,5 +1,7 @@
 package io.tetrapod.core;
 
+import java.util.*;
+
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
 import io.netty.channel.socket.SocketChannel;
@@ -28,11 +30,16 @@ public class Client implements Session.Listener {
       SSLEngine engine = ctx.createSSLEngine();
       engine.setUseClientMode(true);
       engine.setNeedClientAuth(false);
-      
-      // Netty 4.0.24 should mean we don't need this poodle hack anymore -- VERIFY
-      // explicitly removes "SSLv3" from supported protocols to prevent the 'POODLE' exploit
-      // engine.setEnabledProtocols(new String[] { "SSLv2Hello", "TLSv1", "TLSv1.1", "TLSv1.2" });
-      
+
+      // Explicitly removes "SSLv3" from supported protocols to prevent the 'POODLE' exploit
+      final List<String> list = new ArrayList<>();
+      for (String p : engine.getEnabledProtocols()) {
+         if (!p.equals("SSLv3")) {
+            list.add(p);
+         }
+      }
+      engine.setEnabledProtocols(list.toArray(new String[list.size()]));
+
       ssl = new SslHandler(engine);
    }
 
