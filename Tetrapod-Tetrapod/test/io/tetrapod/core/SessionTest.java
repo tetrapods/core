@@ -21,7 +21,7 @@ public class SessionTest {
       TetrapodService pod = new TetrapodService();
       System.setProperty("sql.enabled", "false");
       pod.startNetwork(null, null, opts);
-      while ((pod.status & Core.STATUS_STARTING) != 0) {
+      while ((pod.getStatus() & Core.STATUS_STARTING) != 0) {
          Util.sleep(100);
       }
 

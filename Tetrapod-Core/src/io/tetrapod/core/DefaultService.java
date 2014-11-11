@@ -39,7 +39,7 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
    protected int                           entityId;
    protected int                           parentId;
    protected String                        token;
-   protected int                           status;
+   private int                             status;
    protected final int                     buildNumber;
    protected final LogBuffer               logBuffer;
    protected SSLContext                    sslContext;
@@ -60,7 +60,9 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
       Session.commsLog.info(m);
       Fail.handler = this;
       Metrics.init(getMetricsPrefix());
-      status |= Core.STATUS_STARTING;
+      synchronized (this) {
+         status |= Core.STATUS_STARTING;
+      }
       dispatcher = new Dispatcher();
       clusterClient = new Client(this);
       stats = new ServiceStats(this);
@@ -171,7 +173,7 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
          if (getEntityType() == Core.TYPE_TETRAPOD || services.checkDependencies(dependencies)) {
             try {
                if (startPaused) {
-                  updateStatus(status | Core.STATUS_PAUSED);
+                  updateStatus(getStatus() | Core.STATUS_PAUSED);
                }
                onReadyToServe();
                if (getEntityType() != Core.TYPE_TETRAPOD) {
@@ -185,7 +187,7 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
                fail(t);
             }
             // ok, we're good to go
-            updateStatus(status & ~Core.STATUS_STARTING);
+            updateStatus(getStatus() & ~Core.STATUS_STARTING);
             onStarted();
             setWebRoot();
             if (startPaused) {
@@ -210,20 +212,20 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
             logger.warn("DISPATCHER QUEUE SIZE = {}", dispatcher.workQueueSize.getCount());
          }
          if (dispatcher.workQueueSize.getCount() >= Session.DEFAULT_OVERLOAD_THRESHOLD) {
-            updateStatus(status | Core.STATUS_OVERLOADED);
+            updateStatus(getStatus() | Core.STATUS_OVERLOADED);
          } else {
-            updateStatus(status & ~Core.STATUS_OVERLOADED);
+            updateStatus(getStatus() & ~Core.STATUS_OVERLOADED);
          }
 
          if (logBuffer.hasErrors()) {
-         	updateStatus(status | Core.STATUS_ERRORS);
+         	updateStatus(getStatus() | Core.STATUS_ERRORS);
          } else {
-         	updateStatus(status & ~Core.STATUS_ERRORS);
+         	updateStatus(getStatus() & ~Core.STATUS_ERRORS);
          }
          if (logBuffer.hasWarnings()) {
-         	updateStatus(status | Core.STATUS_WARNINGS);
+         	updateStatus(getStatus() | Core.STATUS_WARNINGS);
          } else {
-         	updateStatus(status & ~Core.STATUS_WARNINGS);
+         	updateStatus(getStatus() & ~Core.STATUS_WARNINGS);
          }
 
          
@@ -250,7 +252,7 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
    public void onStarted() {}
 
    public void shutdown(boolean restarting) {
-      updateStatus(status | Core.STATUS_STOPPING);
+      updateStatus(getStatus() | Core.STATUS_STOPPING);
       try {
          onShutdown(restarting);
       } catch (Exception e) {
@@ -312,7 +314,7 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
    }
 
    private void onConnectedToCluster() {
-      sendDirectRequest(new RegisterRequest(buildNumber, token, getContractId(), getShortName(), status, Util.getHostName())).handle(
+      sendDirectRequest(new RegisterRequest(buildNumber, token, getContractId(), getShortName(), getStatus(), Util.getHostName())).handle(
             new ResponseHandler() {
                @Override
                public void onResponse(Response res) {
@@ -438,7 +440,7 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
          this.status = status;
       }
       if (changed && clusterClient.isConnected()) {
-         sendDirectRequest(new ServiceStatusUpdateRequest(status));
+         sendDirectRequest(new ServiceStatusUpdateRequest(status)).log();
       }
    }
 
@@ -650,14 +652,14 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
 
    @Override
    public Response requestPause(PauseRequest r, RequestContext ctx) {
-      updateStatus(status | Core.STATUS_PAUSED);
+      updateStatus(getStatus() | Core.STATUS_PAUSED);
       onPaused();
       return Response.SUCCESS;
    }
 
    @Override
    public Response requestUnpause(UnpauseRequest r, RequestContext ctx) {
-      updateStatus(status & ~Core.STATUS_PAUSED);
+      updateStatus(getStatus() & ~Core.STATUS_PAUSED);
       onUnpaused();
       return Response.SUCCESS;
    }

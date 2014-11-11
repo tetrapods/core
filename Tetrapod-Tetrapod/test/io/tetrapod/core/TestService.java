@@ -15,7 +15,7 @@ public class TestService extends DefaultService  {
    @Override
    public void onRegistered() {
 
-      updateStatus(status & ~Core.STATUS_STARTING);
+      updateStatus(getStatus() & ~Core.STATUS_STARTING);
    }
 
    @Override

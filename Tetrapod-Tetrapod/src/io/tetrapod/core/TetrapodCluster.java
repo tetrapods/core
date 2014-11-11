@@ -55,7 +55,7 @@ public class TetrapodCluster implements SessionFactory {
          @Override
          public void onSessionStart(final Session ses) {
             ses.sendRequest(
-                  new RegisterRequest(service.buildNumber, service.token, service.getContractId(), service.getShortName(), service.status,
+                  new RegisterRequest(service.buildNumber, service.token, service.getContractId(), service.getShortName(), service.getStatus(),
                         Util.getHostName()), Core.DIRECT).handle(new ResponseHandler() {
                @Override
                public void onResponse(Response res) {
