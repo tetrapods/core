@@ -220,7 +220,7 @@
 <setting id="org.eclipse.wst.jsdt.core.formatter.insert_space_before_opening_brace_in_constructor_declaration" value="insert"/>
 <setting id="org.eclipse.wst.jsdt.core.formatter.insert_space_before_semicolon_in_for" value="do not insert"/>
 <setting id="org.eclipse.wst.jsdt.core.formatter.brace_position_for_array_initializer" value="end_of_line"/>
-<setting id="org.eclipse.wst.jsdt.core.formatter.lineSplit" value="120"/>
+<setting id="org.eclipse.wst.jsdt.core.formatter.lineSplit" value="9999"/>
 <setting id="org.eclipse.wst.jsdt.core.formatter.insert_space_before_closing_paren_in_constructor_declaration" value="do not insert"/>
 <setting id="org.eclipse.wst.jsdt.core.formatter.tabulation.char" value="space"/>
 <setting id="org.eclipse.wst.jsdt.core.formatter.insert_space_before_opening_brace_in_enum_declaration" value="insert"/>
