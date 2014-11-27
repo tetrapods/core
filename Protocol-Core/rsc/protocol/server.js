@@ -103,7 +103,11 @@ function TP_Server() {
          console.log("ambiguous message: " + message);
          return;
       }
-      messageHandlers[val.contractId + "." + val.structId] = handler;
+      var list = messageHandlers[val.contractId + "." + val.structId];
+      if (!list) {
+         messageHandlers[val.contractId + "." + val.structId] = list = [];
+      }
+      list.push(handler);
    }
 
    // sends to any available service for this request's contract
@@ -316,9 +320,11 @@ function TP_Server() {
 
    function handleMessage(result) {
       logMessage(result);
-      var func = messageHandlers[result._contractId + "." + result._structId];
-      if (func) {
-         func(result);
+      var list = messageHandlers[result._contractId + "." + result._structId];
+      if (list) {
+         for (var i = 0; i < list.length; i++) {
+            list[i](result);
+         }
       }
    }
 
