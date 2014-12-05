@@ -72,9 +72,11 @@ public class Topic {
             children.remove(entityId);
             if (proxy) {
                Subscriber psub = parents.get(parentId);
-               psub.counter--;
-               if (psub.counter == 0) {
-                  parents.remove(parentId);
+               if (psub != null) {
+                  psub.counter--;
+                  if (psub.counter == 0) {
+                     parents.remove(parentId);
+                  }
                }
             }
             return true;
