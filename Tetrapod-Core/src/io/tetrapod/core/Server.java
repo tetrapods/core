@@ -80,6 +80,18 @@ public class Server extends ChannelInitializer<SocketChannel> implements Session
       logger.debug("Stopped server on port {}", port);
    }
 
+   private static final Set<String> WEAK_CIPHERS = new HashSet<>();
+   static {
+      WEAK_CIPHERS.add("SSL_RSA_WITH_RC4_128_MD5");
+      WEAK_CIPHERS.add("SSL_RSA_WITH_RC4_128_SHA");
+      WEAK_CIPHERS.add("SSL_DHE_RSA_WITH_3DES_EDE_CBC_SHA");
+      WEAK_CIPHERS.add("TLS_ECDHE_RSA_WITH_RC4_128_SHA");
+      WEAK_CIPHERS.add("TLS_DHE_RSA_WITH_AES_128_CBC_SHA");
+      WEAK_CIPHERS.add("TLS_DHE_RSA_WITH_AES_128_CBC_SHA256");
+      WEAK_CIPHERS.add("TLS_DHE_RSA_WITH_AES_256_CBC_SHA");
+      WEAK_CIPHERS.add("TLS_DHE_RSA_WITH_AES_256_CBC_SHA256");
+   };
+
    private void startSession(final SocketChannel ch) throws Exception {
       logger.info("Connection from {}", ch);
       if (sslContext != null) {
@@ -88,13 +100,24 @@ public class Server extends ChannelInitializer<SocketChannel> implements Session
          engine.setWantClientAuth(clientAuth);
 
          // Explicitly removes "SSLv3" from supported protocols to prevent the 'POODLE' exploit
-         final List<String> list = new ArrayList<>();
+         final List<String> protocols = new ArrayList<>();
          for (String p : engine.getEnabledProtocols()) {
             if (!p.equals("SSLv3")) {
-               list.add(p);
+               protocols.add(p);
             }
          }
-         engine.setEnabledProtocols(list.toArray(new String[list.size()]));
+         engine.setEnabledProtocols(protocols.toArray(new String[protocols.size()]));
+
+         // remove weak cipher suites from the enabled list
+         final List<String> ciphers = new ArrayList<>();
+         for (String p : engine.getEnabledCipherSuites()) {
+            if (!WEAK_CIPHERS.contains(p)) {
+               ciphers.add(p);
+            } else {
+               logger.trace("removing weak cipher suit {}", p);
+            }
+         }
+         engine.setEnabledCipherSuites(ciphers.toArray(new String[ciphers.size()]));
 
          SslHandler handler = new SslHandler(engine);
          ch.pipeline().addLast("ssl", handler);
