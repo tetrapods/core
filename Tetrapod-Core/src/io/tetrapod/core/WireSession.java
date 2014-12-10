@@ -27,6 +27,7 @@ public class WireSession extends Session {
 
    private static final int    WIRE_VERSION   = 1;
    private static final int    WIRE_OPTIONS   = 0x00000000;
+   private static final long   LOADED_TIME    = System.currentTimeMillis();
 
    private boolean             needsHandshake = true;
 
@@ -90,7 +91,11 @@ public class WireSession extends Session {
       }
 
       if (System.currentTimeMillis() - t0 > 100) {
-         logger.warn("Something blocked in read() for {} ms env={}", System.currentTimeMillis() - t0, envelope);
+         if (t0 - LOADED_TIME < 30000) {
+            logger.info("Something blocked in read() for {} ms env={}", System.currentTimeMillis() - t0, envelope);
+         } else {
+            logger.warn("Something blocked in read() for {} ms env={}", System.currentTimeMillis() - t0, envelope);
+         }
       }
 
    }
