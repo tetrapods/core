@@ -312,18 +312,18 @@ public class Registry implements TetrapodContract.Registry.API {
       return false;
    }
 
-   public void subscribe(final EntityInfo publisher, final int topicId, final int entityId) {
+   public void subscribe(final EntityInfo publisher, final int topicId, final int entityId, final boolean once) {
       lock.readLock().lock();
       try {
          final Topic topic = publisher.getTopic(topicId);
          if (topic != null) {
             final EntityInfo e = getEntity(entityId);
             if (e != null) {
-               topic.subscribe(publisher, e, parentId);
+               topic.subscribe(publisher, e, parentId, once);
                e.subscribe(topic);
 
                if (publisher.parentId == parentId) {
-                  broadcaster.broadcastRegistryMessage(new TopicSubscribedMessage(topic.ownerId, topic.topicId, e.entityId));
+                  broadcaster.broadcastRegistryMessage(new TopicSubscribedMessage(topic.ownerId, topic.topicId, e.entityId, once));
                }
             } else {
                logger.info("Could not find subscriber {} for topic {}", entityId, topicId);
@@ -487,7 +487,7 @@ public class Registry implements TetrapodContract.Registry.API {
          if (owner != null) {
             owner.queue(new Runnable() {
                public void run() {
-                  subscribe(owner, m.topicId, m.entityId);
+                  subscribe(owner, m.topicId, m.entityId, m.once);
                }
             }); // TODO: kick() 
          } else {
@@ -551,7 +551,7 @@ public class Registry implements TetrapodContract.Registry.API {
    private void sendSubscribers(final EntityInfo e, final Session session, final int toEntityId, final int topicId) {
       for (Topic t : e.getTopics()) {
          for (Subscriber s : t.getSubscribers()) {
-            session.sendMessage(new TopicSubscribedMessage(t.ownerId, t.topicId, s.entityId), TO_ENTITY, toEntityId);
+            session.sendMessage(new TopicSubscribedMessage(t.ownerId, t.topicId, s.entityId, false), TO_ENTITY, toEntityId);
          }
       }
    }
@@ -579,7 +579,7 @@ public class Registry implements TetrapodContract.Registry.API {
    }
 
    public void setGone(EntityInfo e) {
-      
+
       if (e.getLastContact() != null) {
          // we set this value to non-null only for web-polling sessions, 
          // which need to be handled differently since multiple sessions can 

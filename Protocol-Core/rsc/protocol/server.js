@@ -7,12 +7,12 @@ function TP_Server() {
 
    // private vars
    var protocol = {
-      request : {},
-      response : {},
-      struct : {},
-      message : {},
-      consts : {},
-      reverseMap : {}
+      request: {},
+      response: {},
+      struct: {},
+      message: {},
+      consts: {},
+      reverseMap: {}
    };
    var requestCounter = 0;
    var requestContexts = {};
@@ -52,8 +52,8 @@ function TP_Server() {
    function register(type, contractName, structName, contractId, structId) {
       var map = protocol[type];
       var val = {
-         contractId : contractId,
-         structId : structId
+         contractId: contractId,
+         structId: structId
       };
       map[contractName + "." + structName] = val;
       if (map[structName]) {
@@ -103,7 +103,11 @@ function TP_Server() {
          console.log("ambiguous message: " + message);
          return;
       }
-      messageHandlers[val.contractId + "." + val.structId] = handler;
+      var list = messageHandlers[val.contractId + "." + val.structId];
+      if (!list) {
+         messageHandlers[val.contractId + "." + val.structId] = list = [];
+      }
+      list.push(handler);
    }
 
    // sends to any available service for this request's contract
@@ -142,8 +146,8 @@ function TP_Server() {
       logRequest(args, toId);
 
       requestContexts[requestId] = {
-         request : args,
-         handler : requestHandler
+         request: args,
+         handler: requestHandler
       }
 
       if (simulator != null) {
@@ -177,10 +181,10 @@ function TP_Server() {
 
    function makeError(requestId, code) {
       return {
-         _requestId : requestId,
-         _contractId : 1,
-         _structId : 1,
-         errorCode : code
+         _requestId: requestId,
+         _contractId: 1,
+         _structId: 1,
+         errorCode: code
       }
    }
 
@@ -208,7 +212,7 @@ function TP_Server() {
 
       if (simulator != null) {
          return {
-            listen : function(onOpen, onClose) {
+            listen: function(onOpen, onClose) {
                onOpen();
             }
          }
@@ -229,7 +233,7 @@ function TP_Server() {
       socket.onclose = onSocketClose;
       socket.onerror = onSocketError;
       return {
-         listen : function(onOpen, onClose) {
+         listen: function(onOpen, onClose) {
             openHandlers = [];
             closeHandlers = [];
             openHandlers.push(onOpen);
@@ -259,8 +263,7 @@ function TP_Server() {
    function logResponse(result, req) {
       if (self.commsLog) {
          if (!isKeepAlive(req._contractId, req._structId) || self.commsLogKeepAlives) {
-            var str = logstamp() + ' [' + result._requestId + '] <- ' + nameOf(result) + ' '
-                  + JSON.stringify(result, dropUnderscored);
+            var str = logstamp() + ' [' + result._requestId + '] <- ' + nameOf(result) + ' ' + JSON.stringify(result, dropUnderscored);
             if (result.isError()) {
                console.warn(str);
             } else {
@@ -275,8 +278,7 @@ function TP_Server() {
          if (!isKeepAlive(req._contractId, req._structId) || self.commsLogKeepAlives) {
             var toStr = toId == 0 ? " to any" : (toId == 1 ? " to direct" : " to " + toId);
             try {
-               console.debug(logstamp() + ' [' + req._requestId + '] => ' + nameOf(req) + ' '
-                     + JSON.stringify(req, dropUnderscored) + toStr);
+               console.debug(logstamp() + ' [' + req._requestId + '] => ' + nameOf(req) + ' ' + JSON.stringify(req, dropUnderscored) + toStr);
             } catch (e) {
                console.error('Error logging a request: ' + e);
                console.error(req);
@@ -287,8 +289,7 @@ function TP_Server() {
 
    function logMessage(result) {
       if (self.commsLog) {
-         console.debug(logstamp() + ' [M:' + result._topicId + '] <- ' + nameOf(result) + ' '
-               + JSON.stringify(result, dropUnderscored));
+         console.debug(logstamp() + ' [M:' + result._topicId + '] <- ' + nameOf(result) + ' ' + JSON.stringify(result, dropUnderscored));
       }
    }
 
@@ -316,9 +317,11 @@ function TP_Server() {
 
    function handleMessage(result) {
       logMessage(result);
-      var func = messageHandlers[result._contractId + "." + result._structId];
-      if (func) {
-         func(result);
+      var list = messageHandlers[result._contractId + "." + result._structId];
+      if (list) {
+         for (var i = 0; i < list.length; i++) {
+            list[i](result);
+         }
       }
    }
 
@@ -393,8 +396,7 @@ function TP_Server() {
    function logstamp() {
       var now = new Date();
       var p2 = '00';
-      return pad(2, now.getHours()) + ':' + pad(2, now.getMinutes()) + ':' + pad(2, now.getSeconds()) + '.'
-            + pad(3, now.getMilliseconds());
+      return pad(2, now.getHours()) + ':' + pad(2, now.getMinutes()) + ':' + pad(2, now.getSeconds()) + '.' + pad(3, now.getMilliseconds());
    }
 
    function commslog(msg) {
@@ -420,7 +422,7 @@ function TP_Server() {
       lastHeardFrom = Date.now();
       commslog("[poller] open: " + host);
       return {
-         listen : function(onOpen, onClose) {
+         listen: function(onOpen, onClose) {
             onOpen();
          }
       }
@@ -432,17 +434,17 @@ function TP_Server() {
       }
       //console.debug("SEND RPC: " + JSON.stringify(data));
       $.ajax({
-         type : "POST",
-         url : "/poll",
-         timeout : 24000,
-         data : JSON.stringify(data),
-         dataType : 'json',
-         success : function(data) {
+         type: "POST",
+         url: "/poll",
+         timeout: 24000,
+         data: JSON.stringify(data),
+         dataType: 'json',
+         success: function(data) {
             self.connected = true;
             handleResponse(data);
             schedulePoll(100);
          },
-         error : function(XMLHttpRequest, textStatus, errorThrown) {
+         error: function(XMLHttpRequest, textStatus, errorThrown) {
             console.error(textStatus + " (" + errorThrown + ")");
             if (textStatus == 'timeout') {
                handleResponse(makeError(data._requestId, 3));
@@ -466,17 +468,17 @@ function TP_Server() {
       if (self.entityInfo != null && self.entityInfo.entityId != 0) {
          if (self.pollPending == false) {
             var data = {
-               _token : self.entityInfo.token
+               _token: self.entityInfo.token
             };
             console.debug("POLL -> " + JSON.stringify(data));
             self.pollPending = true;
             $.ajax({
-               type : "POST",
-               url : "/poll",
-               timeout : 12000,
-               data : JSON.stringify(data),
-               dataType : 'json',
-               success : function(data) {
+               type: "POST",
+               url: "/poll",
+               timeout: 12000,
+               data: JSON.stringify(data),
+               dataType: 'json',
+               success: function(data) {
                   self.connected = true;
                   self.pollPending = false;
                   if (data.error) {
@@ -490,7 +492,7 @@ function TP_Server() {
                      schedulePoll(100);
                   }
                },
-               error : function(XMLHttpRequest, textStatus, errorThrown) {
+               error: function(XMLHttpRequest, textStatus, errorThrown) {
                   console.error(textStatus + " (" + errorThrown + ")");
                   self.pollPending = false;
                   onSocketClose(); // fake socket close event 

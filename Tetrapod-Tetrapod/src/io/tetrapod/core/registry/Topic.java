@@ -27,10 +27,10 @@ public class Topic {
     * 
     * @return true if the client was not already subscribed
     */
-   public synchronized boolean subscribe(final EntityInfo publisher, final EntityInfo e, final int parentId) {
+   public synchronized boolean subscribe(final EntityInfo publisher, final EntityInfo e, final int parentId, final boolean once) {
       Subscriber sub = subscribers.get(e.entityId);
       if (sub == null) {
-         sub = new Subscriber(e.entityId, 0);
+         sub = new Subscriber(e.entityId, 1);
          subscribers.put(e.entityId, sub);
 
          if (e.isTetrapod()) {
@@ -52,8 +52,9 @@ public class Topic {
                children.put(e.entityId, sub);
             }
          }
+      } else if (!once) {  
+         sub.counter++;
       }
-      sub.counter++;
 
       return sub.counter == 1;
    }
@@ -72,9 +73,11 @@ public class Topic {
             children.remove(entityId);
             if (proxy) {
                Subscriber psub = parents.get(parentId);
-               psub.counter--;
-               if (psub.counter == 0) {
-                  parents.remove(parentId);
+               if (psub != null) {
+                  psub.counter--;
+                  if (psub.counter == 0) {
+                     parents.remove(parentId);
+                  }
                }
             }
             return true;

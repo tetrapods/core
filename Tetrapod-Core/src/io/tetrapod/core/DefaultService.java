@@ -218,17 +218,16 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
          }
 
          if (logBuffer.hasErrors()) {
-         	updateStatus(getStatus() | Core.STATUS_ERRORS);
+            updateStatus(getStatus() | Core.STATUS_ERRORS);
          } else {
-         	updateStatus(getStatus() & ~Core.STATUS_ERRORS);
+            updateStatus(getStatus() & ~Core.STATUS_ERRORS);
          }
          if (logBuffer.hasWarnings()) {
-         	updateStatus(getStatus() | Core.STATUS_WARNINGS);
+            updateStatus(getStatus() | Core.STATUS_WARNINGS);
          } else {
-         	updateStatus(getStatus() & ~Core.STATUS_WARNINGS);
+            updateStatus(getStatus() & ~Core.STATUS_WARNINGS);
          }
 
-         
          dispatcher.dispatch(1, TimeUnit.SECONDS, new Runnable() {
             public void run() {
                checkHealth();
@@ -248,7 +247,7 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
    public void onPaused() {}
 
    public void onUnpaused() {}
-   
+
    public void onStarted() {}
 
    public void shutdown(boolean restarting) {
@@ -319,7 +318,7 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
                @Override
                public void onResponse(Response res) {
                   if (res.isError()) {
-                     Fail.fail("Unable to register: " + res.errorCode()); 
+                     Fail.fail("Unable to register: " + res.errorCode());
                   } else {
                      RegisterResponse r = (RegisterResponse) res;
                      entityId = r.entityId;
@@ -564,8 +563,15 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
       clusterClient.getSession().sendBroadcastMessage(msg, MessageHeader.TO_ALTERNATE, altId);
    }
 
+   /**
+    * Subscribe an entity to the given topic. If once is true, tetrapod won't subscribe them a second time
+    */
+   public void subscribe(int topicId, int entityId, boolean once) {
+      sendMessage(new TopicSubscribedMessage(getEntityId(), topicId, entityId, once), UNADDRESSED);
+   }
+
    public void subscribe(int topicId, int entityId) {
-      sendMessage(new TopicSubscribedMessage(getEntityId(), topicId, entityId), UNADDRESSED);
+      subscribe(topicId, entityId, false);
    }
 
    public void unsubscribe(int topicId, int entityId) {
@@ -774,7 +780,7 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
       return "*** Start Service ***" + "\n   *** Service name: " + Util.getProperty("APPNAME") + "\n   *** Options: "
             + Launcher.getAllOpts() + "\n   *** VM Args: " + ManagementFactory.getRuntimeMXBean().getInputArguments().toString();
    }
-   
+
    @Override
    public Response requestServiceErrorLogs(ServiceErrorLogsRequest r, RequestContext ctx) {
       if (logBuffer == null) {
@@ -787,10 +793,10 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
       Collections.sort(list, new Comparator<ServiceLogEntry>() {
          @Override
          public int compare(ServiceLogEntry e1, ServiceLogEntry e2) {
-            return ((Long)e1.timestamp).compareTo(e2.timestamp);
+            return ((Long) e1.timestamp).compareTo(e2.timestamp);
          }
       });
-      
+
       return new ServiceErrorLogsResponse(list);
    }
 
@@ -804,7 +810,6 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
 
       return Response.SUCCESS;
    }
-   
 
    @Override
    public Response requestSetCommsLogLevel(SetCommsLogLevelRequest r, RequestContext ctx) {
@@ -812,12 +817,12 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
       if (logger == null) {
          return new Error(CoreContract.ERROR_NOT_CONFIGURED);
       }
-      
+
       logger.setLevel(ch.qos.logback.classic.Level.valueOf(r.level));
 
       return Response.SUCCESS;
    }
-  
+
    @Override
    public Response requestWebAPI(WebAPIRequest r, RequestContext ctx) {
       return Response.error(CoreContract.ERROR_UNKNOWN_REQUEST);

@@ -539,7 +539,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
    @Override
    public void subscribe(int topicId, int entityId) {
-      registry.subscribe(registry.getEntity(getEntityId()), topicId, entityId);
+      registry.subscribe(registry.getEntity(getEntityId()), topicId, entityId, false);
    }
 
    @Override
