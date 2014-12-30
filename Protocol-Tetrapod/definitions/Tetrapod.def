@@ -1,6 +1,7 @@
 java package io.tetrapod.protocol.core
 java outdir "../src"
 javascript out "../rsc/protocol/tetrapod.js"
+objc outdir "../rsc/objcprotocol"
 
 // The core tetrapod service
 service Tetrapod @version(1) @id(1)

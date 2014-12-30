@@ -1,0 +1,14 @@
+#import "TPProtocol.h"
+#import "{{name}}Protocol.h"
+
+{{consts}}
+
+{{errors}}
+
+@implementation {{contractClass}}Protocol : NSObject
+
++ (void)registerStructs:(TPProtocol *)protocol {
+{{register}}
+}
+
+@end

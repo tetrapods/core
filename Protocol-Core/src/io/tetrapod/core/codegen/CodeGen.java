@@ -53,6 +53,7 @@ public class CodeGen {
          System.out.println("using defaults for languages");
          langs.add("java");
          langs.add("javascript");
+         langs.add("objc");
       }
       for (String service : services) {
          String folder = null;
@@ -269,6 +270,9 @@ public class CodeGen {
             break;
          case "javascript":
             generator = new JavascriptGenerator();
+            break;
+         case "objc":
+            generator = new ObjCWebSocketsGenerator();
             break;
          default:
             throw new ParseException("unknowm language: " + language);
