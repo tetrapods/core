@@ -1,1 +1,0 @@
-    [protocol addType:@"{{type}}" contract:@"{{contractClass}}" structName:@"{{class}}" contractId:{{contractId}} structId:{{structId}}];

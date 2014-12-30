@@ -1,9 +1,0 @@
-{{defConsts}}
-
-{{defErrors}}
-
-@interface {{contractClass}}Protocol : NSObject
-
-+ (void)registerStructs:(TPProtocol *)protocol;
-
-@end
