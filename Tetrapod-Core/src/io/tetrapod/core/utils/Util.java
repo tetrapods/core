@@ -317,8 +317,9 @@ public class Util {
       wr.close();
  
       int responseCode = con.getResponseCode();
- 
-      BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+      
+      InputStream is = responseCode == 200 ? con.getInputStream() : con.getErrorStream();
+      BufferedReader in = new BufferedReader(new InputStreamReader(is));
       String inputLine;
       StringBuilder response = new StringBuilder();
       while ((inputLine = in.readLine()) != null) {
