@@ -171,6 +171,10 @@ public class Util {
       return Util.getProperty("devMode", "local").equals("local");
    }
 
+   public static boolean isDev() {
+      return Util.getProperty("devMode", "dev").equals("dev");
+   }
+
    public static boolean isProduction() {
       return Util.getProperty("devMode", "local").equals("prod");
    }
@@ -292,7 +296,7 @@ public class Util {
       }
       return sb.toString();
    }
-   
+
    public static JSONObject httpPost(String uri, String data, JSONObject headers) throws IOException {
       URL obj = new URL(uri);
       HttpURLConnection con = (HttpURLConnection) obj.openConnection();
@@ -315,9 +319,9 @@ public class Util {
       wr.write(data.getBytes("UTF-8"));
       wr.flush();
       wr.close();
- 
+
       int responseCode = con.getResponseCode();
-      
+
       InputStream is = responseCode == 200 ? con.getInputStream() : con.getErrorStream();
       BufferedReader in = new BufferedReader(new InputStreamReader(is));
       String inputLine;
