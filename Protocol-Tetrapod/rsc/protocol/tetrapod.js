@@ -23,6 +23,7 @@ function TP_Tetrapod(server) {
    server.registerConst("Tetrapod", "null", "INVALID_CREDENTIALS", 8845805);
    server.registerConst("Tetrapod", "null", "NOT_PARENT", 2219555);
    server.registerConst("Tetrapod", "null", "NOT_READY", 12438466);
+   server.registerConst("Tetrapod", "null", "UNKNOWN_ENTITY_ID", 15576171);
    
    server.register("struct", "Tetrapod", "Entity", 1, 10171140);
    server.register("request", "Tetrapod", "Register", 1, 10895179);
@@ -53,6 +54,8 @@ function TP_Tetrapod(server) {
    server.register("request", "Tetrapod", "SetAlternateId", 1, 10499521);
    server.register("request", "Tetrapod", "GetSubscriberCount", 1, 9966915);
    server.register("response", "Tetrapod", "GetSubscriberCount", 1, 6503857);
+   server.register("request", "Tetrapod", "GetEntityInfo", 1, 14891231);
+   server.register("response", "Tetrapod", "GetEntityInfo", 1, 11007413);
    server.register("message", "Tetrapod", "Entity", 1, 10913291);
    server.register("message", "Tetrapod", "ClusterMember", 1, 1076508);
    server.register("message", "Tetrapod", "EntityRegistered", 1, 1454035);

@@ -29,6 +29,7 @@ public class TetrapodContract extends Contract {
       , AdminLoginRequest.Handler
       , ClusterJoinRequest.Handler
       , ExecuteBuildCommandRequest.Handler
+      , GetEntityInfoRequest.Handler
       , GetServiceBuildInfoRequest.Handler
       , GetSubscriberCountRequest.Handler
       , KeepAliveRequest.Handler
@@ -70,6 +71,7 @@ public class TetrapodContract extends Contract {
          new SendWebRootRequest(),
          new SetAlternateIdRequest(),
          new GetSubscriberCountRequest(),
+         new GetEntityInfoRequest(),
          new GetServiceBuildInfoRequest(),
          new ExecuteBuildCommandRequest(),
          new VerifyEntityTokenRequest(),
@@ -83,6 +85,7 @@ public class TetrapodContract extends Contract {
          new PublishResponse(),
          new AdminLoginResponse(),
          new GetSubscriberCountResponse(),
+         new GetEntityInfoResponse(),
          new GetServiceBuildInfoResponse(),
       };
    }
@@ -194,4 +197,5 @@ public class TetrapodContract extends Contract {
    public static final int ERROR_INVALID_CREDENTIALS = 8845805; 
    public static final int ERROR_NOT_PARENT = 2219555; 
    public static final int ERROR_NOT_READY = 12438466; 
+   public static final int ERROR_UNKNOWN_ENTITY_ID = 15576171; 
 }

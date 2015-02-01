@@ -5,3 +5,4 @@ Tetrapod-Core/webContent/sample/
 build/assembly/target
 sfortin.cluster.properties
 jspencer.cluster.properties
+*.iml
