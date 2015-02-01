@@ -1086,7 +1086,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       EntityInfo e = registry.getEntity(r.entityId);
       if (e != null) {
          synchronized (e) {
-            return new GetEntityInfoResponse(e.build, e.name, e.host);
+               return new GetEntityInfoResponse(e.build, e.name, e.getSession().channel.remoteAddress().getAddress().getHostAddress());
          }
       }
 
