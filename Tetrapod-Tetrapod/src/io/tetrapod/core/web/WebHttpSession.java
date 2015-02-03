@@ -281,11 +281,6 @@ public class WebHttpSession extends WebSession {
                handleWebAPIResponse(ctx, req, res);
             }
          };
-         
-         // TEMP DEBUG LOGGING
-         String debug = String.format("webapi: %s\nHEADERS\n%s\nPARAMS\n%s\nCONTENT\n%s", 
-               req.getUri(), getHeaders(req).toString(), context.getRequestParams().toString(), req.content().toString(CharsetUtil.UTF_8));
-         logger.debug(debug);
 
          try {
             if (header.structId == WebAPIRequest.STRUCT_ID) {
