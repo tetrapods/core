@@ -25,13 +25,13 @@ public struct Entity
 ################################# REQUESTS #################################
 
 public request Register
-   1: int build   
+   1: int build
    2: string token
    3: int contractId
    4: string name
    5: int status
    6: string host
-      
+
 public response Register 
    1: int entityId
    2: int parentId
@@ -137,7 +137,17 @@ internal request GetSubscriberCount
    
 internal response GetSubscriberCount
    1: int count
-   
+
+internal request GetEntityInfo
+   1: int entityId
+
+   error UNKNOWN_ENTITY_ID
+
+internal response GetEntityInfo
+   1: int build
+   2: string name
+   3: string host
+
 ################################# MESSAGES #################################
 
 // a special message to avoid race conditions on the Register response

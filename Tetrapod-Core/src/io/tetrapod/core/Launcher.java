@@ -81,17 +81,22 @@ public class Launcher {
       // io.tetrapod.core.XService
       try {
          return tryName("io.tetrapod.core." + serviceClass + "Service");
-      } catch (ClassNotFoundException e) {}
+      } catch (ClassNotFoundException | NoClassDefFoundError e) {}
 
       // io.tetrapod.lowercase(X).X
       try {
          return tryName("io.tetrapod." + serviceClass.toLowerCase() + "." + serviceClass);
-      } catch (ClassNotFoundException e) {}
+      } catch (ClassNotFoundException | NoClassDefFoundError e) {}
 
       // io.tetrapod.lowercase(X).XService
       try {
          return tryName("io.tetrapod." + serviceClass.toLowerCase() + "." + serviceClass + "Service");
-      } catch (ClassNotFoundException e) {}
+      } catch (ClassNotFoundException | NoClassDefFoundError e) {}
+      
+      // io.tetrapod.lowercase(X).uppercase(X)Service
+      try {
+         return tryName("io.tetrapod." + serviceClass.toLowerCase() + "." + serviceClass.toUpperCase() + "Service");
+      } catch (ClassNotFoundException | NoClassDefFoundError e) {}
 
       return null;
    }

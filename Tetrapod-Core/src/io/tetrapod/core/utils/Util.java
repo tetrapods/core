@@ -1,6 +1,6 @@
 package io.tetrapod.core.utils;
 
-import io.tetrapod.core.json.JSONArray;
+import io.tetrapod.core.json.*;
 
 import java.io.*;
 import java.net.*;
@@ -171,6 +171,10 @@ public class Util {
       return Util.getProperty("devMode", "local").equals("local");
    }
 
+   public static boolean isDev() {
+      return Util.getProperty("devMode", "dev").equals("dev");
+   }
+
    public static boolean isProduction() {
       return Util.getProperty("devMode", "local").equals("prod");
    }
@@ -291,6 +295,43 @@ public class Util {
          sb.append(chars.charAt(Util.random(chars.length())));
       }
       return sb.toString();
+   }
+
+   public static JSONObject httpPost(String uri, String data, JSONObject headers) throws IOException {
+      URL obj = new URL(uri);
+      HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+      con.setRequestMethod("POST");
+      con.setRequestProperty("Content-Length", String.valueOf(data.length()));
+      if (headers == null)
+         headers = new JSONObject();
+      if (!headers.has("Accept-Charset"))
+         con.setRequestProperty("Accept-Charset", "UTF-8");
+      if (!headers.has("Charset"))
+         con.setRequestProperty("Charset", "UTF-8");
+      if (!headers.has("Content-Type"))
+         con.setRequestProperty("Content-Type", "application/json");
+      for (Object k : headers.keySet()) {
+         con.setRequestProperty(k.toString(), headers.optString(k.toString()));
+      }
+
+      con.setDoOutput(true);
+      OutputStream wr = con.getOutputStream();
+      wr.write(data.getBytes("UTF-8"));
+      wr.flush();
+      wr.close();
+
+      int responseCode = con.getResponseCode();
+
+      InputStream is = responseCode == 200 ? con.getInputStream() : con.getErrorStream();
+      BufferedReader in = new BufferedReader(new InputStreamReader(is));
+      String inputLine;
+      StringBuilder response = new StringBuilder();
+      while ((inputLine = in.readLine()) != null) {
+         response.append(inputLine);
+      }
+      in.close();
+
+      return new JSONObject().put("status", responseCode).put("body", response.toString());
    }
 
 }
