@@ -20,6 +20,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
+import javax.net.ssl.SSLException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -404,13 +406,17 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
       ctx.close();
       // quieter logging for certain exceptions
       if (cause instanceof IOException) {
-         if (cause.getMessage() != null) {
+         if (cause instanceof SSLException) {
+            logger.warn("{} {}", this, cause.getMessage());
+            return;
+         } else if (cause.getMessage() != null) {
             if (cause.getMessage().equals("Connection reset by peer") || cause.getMessage().equals("Connection timed out")) {
                logger.info("{} {}", this, cause.getMessage());
                return;
             }
          }
       }
+
       logger.error("{} : {} : {}", this, cause.getClass().getSimpleName(), cause.getMessage());
       logger.error(cause.getMessage(), cause);
    }
