@@ -1083,10 +1083,15 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
    @Override
    public Response requestGetEntityInfo(GetEntityInfoRequest r, RequestContext ctx) {
-      EntityInfo e = registry.getEntity(r.entityId);
+      final EntityInfo e = registry.getEntity(r.entityId);
       if (e != null) {
          synchronized (e) {
-               return new GetEntityInfoResponse(e.build, e.name, e.getSession().channel.remoteAddress().getAddress().getHostAddress());
+            final Session s = e.getSession();
+            if (s != null) {
+               return new GetEntityInfoResponse(e.build, e.name, s.channel.remoteAddress().getAddress().getHostAddress());
+            } else {
+               return new GetEntityInfoResponse(e.build, e.name, null);
+            }
          }
       }
 
