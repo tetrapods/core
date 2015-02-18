@@ -2,6 +2,7 @@ package io.tetrapod.core.storage;
 
 import io.tetrapod.core.TetrapodService;
 import io.tetrapod.core.rpc.*;
+import io.tetrapod.core.utils.Util;
 import io.tetrapod.protocol.raft.*;
 import io.tetrapod.raft.*;
 import io.tetrapod.raft.RaftEngine.Role;
@@ -21,7 +22,8 @@ public class RaftStorage implements RaftRPC<StorageStateMachine>, io.tetrapod.pr
 
    public RaftStorage(TetrapodService service) {
       this.service = service;
-      this.cfg = new Config().setLogDir(new File("logs/raft")).setClusterName("RaftStorage");
+      this.cfg = new Config().setLogDir(new File(Util.getProperty("raft.logs", "logs/raft"))).setClusterName(
+            Util.getProperty("raft.name", "RaftStorage"));
 
       RaftEngine<StorageStateMachine> raftEngine = null;
       try {
