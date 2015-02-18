@@ -22,7 +22,12 @@
 			<groupId>${project.groupId}</groupId>
 			<version>${project.version}</version>
 		</dependency>
-
+		<dependency>
+			<artifactId>tetrapod-raft</artifactId>
+			<groupId>tetrapod-raft</groupId>
+			<version>0.0.1-SNAPSHOT</version>
+		</dependency>
+		
 		<dependency>
 			<groupId>com.hazelcast</groupId>
 			<artifactId>hazelcast-cloud</artifactId>

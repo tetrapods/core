@@ -12,10 +12,12 @@ import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.rpc.Error;
 import io.tetrapod.core.serialize.StructureAdapter;
 import io.tetrapod.core.serialize.datasources.ByteBufDataSource;
+import io.tetrapod.core.storage.RaftStorage;
 import io.tetrapod.core.utils.*;
 import io.tetrapod.core.web.*;
 import io.tetrapod.core.web.WebRoot.FileResult;
 import io.tetrapod.protocol.core.*;
+import io.tetrapod.protocol.raft.*;
 import io.tetrapod.protocol.storage.*;
 
 import java.io.*;
@@ -34,7 +36,7 @@ import org.slf4j.*;
  * The tetrapod service is the core cluster service which handles message routing, cluster management, service discovery, and load balancing
  * of client connections
  */
-public class TetrapodService extends DefaultService implements TetrapodContract.API, StorageContract.API, RelayHandler,
+public class TetrapodService extends DefaultService implements TetrapodContract.API, StorageContract.API, RaftContract.API, RelayHandler,
       io.tetrapod.core.registry.Registry.RegistryBroadcaster {
 
    public static final Logger                         logger            = LoggerFactory.getLogger(TetrapodService.class);
@@ -67,6 +69,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       cluster = new TetrapodCluster(this);
       setMainContract(new TetrapodContract());
       addContracts(new StorageContract());
+      addContracts(new RaftContract());
 
       // add tetrapod web routes
       for (WebRoute r : contract.getWebRoutes())
@@ -291,6 +294,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
             for (Server s : servers) {
                s.start().sync();
             }
+            raftStorage.start();
          } catch (Exception e) {
             fail(e);
          }
@@ -568,6 +572,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    }
 
    private void healthCheck() {
+      raftStorage.logStatus();
       final long now = System.currentTimeMillis();
       if (now - lastStatsLog > 5 * 60 * 1000) {
          registry.logStats();
@@ -624,6 +629,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       synchronized (cluster) {
          if (cluster.addMember(m.entityId, m.host, m.servicePort, m.clusterPort, null)) {
             broadcast(new ClusterMemberMessage(m.entityId, m.host, m.servicePort, m.clusterPort), clusterTopic);
+            raftStorage.addMember(m.entityId);
          }
       }
    }
@@ -1096,6 +1102,26 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       }
 
       return Response.error(ERROR_UNKNOWN_ENTITY_ID);
+   }
+
+   /////////////// RAFT ///////////////
+
+   final private RaftStorage raftStorage = new RaftStorage(this);
+
+   @Override
+   public Response requestAppendEntries(AppendEntriesRequest r, RequestContext ctx) {
+      if (raftStorage != null) {
+         return raftStorage.requestAppendEntries(r, ctx);
+      }
+      return Response.error(ERROR_NOT_CONFIGURED);
+   }
+
+   @Override
+   public Response requestVote(VoteRequest r, RequestContext ctx) {
+      if (raftStorage != null) {
+         return raftStorage.requestVote(r, ctx);
+      }
+      return Response.error(ERROR_NOT_CONFIGURED);
    }
 
 }

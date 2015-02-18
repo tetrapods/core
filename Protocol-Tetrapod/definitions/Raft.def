@@ -1,0 +1,45 @@
+java package io.tetrapod.protocol.raft
+java outdir "../src"
+ 
+service Raft @version(1) @id(16)
+
+
+################################ STRUCTURES ################################
+
+internal struct LogEntry 
+   1: long   term
+   2: long   index;
+   3: int    type;
+   4: byte[] command;
+
+################################# REQUESTS #################################
+
+internal request Vote
+   1: string clusterName
+   2: long   term
+   3: int    candidateId
+   4: long   lastLogIndex
+   5: long   lastLogTerm
+   
+internal response Vote
+   1: long    term
+   2: boolean voteGranted
+
+internal request AppendEntries
+   1: long       term
+   2: int        leaderId
+   3: long       prevLogIndex
+   4: long       prevLogTerm
+   5: LogEntry[] entries
+   6: long       leaderCommit
+   
+internal response AppendEntries
+   1: long    term
+   2: boolean success
+   3: long    lastLogIndex
+
+################################# MESSAGES #################################
+ 
+ 
+ 
+ 
