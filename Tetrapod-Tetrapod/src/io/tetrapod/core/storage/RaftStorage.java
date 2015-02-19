@@ -12,6 +12,9 @@ import java.io.*;
 
 import org.slf4j.*;
 
+/**
+ * Wraps a RaftEngine in our Tetrapod-RPC and implements the StorageContract via StorageStateMachine
+ */
 public class RaftStorage implements RaftRPC<StorageStateMachine>, io.tetrapod.protocol.raft.RaftContract.API {
 
    static final Logger                           logger = LoggerFactory.getLogger(RaftStorage.class);
@@ -37,6 +40,14 @@ public class RaftStorage implements RaftRPC<StorageStateMachine>, io.tetrapod.pr
    public void start() {
       raft.setPeerId(service.getEntityId());
       raft.start();
+   }
+
+   public void stop() {
+      raft.stop();
+   }
+
+   public void addMember(int entityId) {
+      raft.addPeer(entityId);
    }
 
    @Override
@@ -112,6 +123,8 @@ public class RaftStorage implements RaftRPC<StorageStateMachine>, io.tetrapod.pr
 
    @Override
    public Response requestVote(VoteRequest r, RequestContext ctx) {
+
+      // HACK: A rude way to do cluster joins
       if (r.clusterName.equals(cfg.getClusterName())) {
          if (!raft.isValidPeer(r.candidateId)) {
             raft.addPeer(r.candidateId);
@@ -170,22 +183,20 @@ public class RaftStorage implements RaftRPC<StorageStateMachine>, io.tetrapod.pr
       return null;
    }
 
-   public void addMember(int entityId) {
-      raft.addPeer(entityId);
-   }
-
    public void logStatus() {
       logger.info(String.format("#%d: %9s term=%d, lastIndex=%d, lastTerm=%d commitIndex=%d, %s, peers=%d", raft.getPeerId(), raft
             .getRole(), raft.getCurrentTerm(), raft.getLog().getLastIndex(), raft.getLog().getLastTerm(), raft.getLog().getCommitIndex(),
             raft.getStateMachine(), raft.getClusterSize()));
 
       if (raft.getRole() == Role.Leader) {
-         raft.executeCommand(new PutItemCommand("foo", "bar".getBytes()), new ClientResponseHandler<StorageStateMachine>() {
-            @Override
-            public void handleResponse(boolean success, Command<StorageStateMachine> command) {
+         // HACK: generate some command activity for testing
+         raft.executeCommand(new PutItemCommand("foo", ("bar-" + raft.getLog().getCommitIndex()).getBytes()),
+               new ClientResponseHandler<StorageStateMachine>() {
+                  @Override
+                  public void handleResponse(boolean success, Command<StorageStateMachine> command) {
 
-            }
-         });
+                  }
+               });
       }
    }
 }
