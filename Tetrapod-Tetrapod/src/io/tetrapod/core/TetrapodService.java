@@ -12,7 +12,7 @@ import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.rpc.Error;
 import io.tetrapod.core.serialize.StructureAdapter;
 import io.tetrapod.core.serialize.datasources.ByteBufDataSource;
-import io.tetrapod.core.storage.RaftStorage;
+import io.tetrapod.core.storage.*;
 import io.tetrapod.core.utils.*;
 import io.tetrapod.core.web.*;
 import io.tetrapod.core.web.WebRoot.FileResult;
@@ -32,6 +32,8 @@ import java.util.regex.*;
 
 import org.slf4j.*;
 
+import com.hazelcast.util.Base64;
+
 /**
  * The tetrapod service is the core cluster service which handles message routing, cluster management, service discovery, and load balancing
  * of client connections
@@ -40,6 +42,8 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       io.tetrapod.core.registry.Registry.RegistryBroadcaster {
 
    public static final Logger                         logger            = LoggerFactory.getLogger(TetrapodService.class);
+
+   private static final String                        SHARED_SECRET_KEY = "tetrapod.shared.secret";
 
    protected final SecureRandom                       random            = new SecureRandom();
 
@@ -54,7 +58,10 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    private final TetrapodCluster                      cluster;
    private final TetrapodWorker                       worker;
 
+   final private RaftStorage                          raftStorage       = new RaftStorage(this);
+
    private Storage                                    storage;
+
    private AdminAccounts                              adminAccounts;
 
    private final List<Server>                         servers           = new ArrayList<Server>();
@@ -275,9 +282,9 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          logger.info(" ***** READY TO SERVE ***** ");
 
          try {
-            storage = new Storage();
+            storage = new HazelcastStorage();
             registry.setStorage(storage);
-            AuthToken.setSecret(storage.getSharedSecret());
+            AuthToken.setSecret(getSharedSecret());
             adminAccounts = new AdminAccounts(storage);
 
             // create servers
@@ -311,6 +318,23 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       }
       if (storage != null) {
          storage.shutdown();
+      }
+   }
+
+   /**
+    * This needs to be properly managed by RaftStorage
+    */
+   @Deprecated
+   public byte[] getSharedSecret() {
+      String str = storage.get(SHARED_SECRET_KEY);
+      if (str != null) {
+         return Base64.decode(str.getBytes(Charset.forName("UTF-8")));
+      } else {
+         byte[] b = new byte[64];
+         Random r = new SecureRandom();
+         r.nextBytes(b);
+         storage.put(SHARED_SECRET_KEY, new String(Base64.encode(b), Charset.forName("UTF-8")));
+         return b;
       }
    }
 
@@ -1105,8 +1129,6 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    }
 
    /////////////// RAFT ///////////////
-
-   final private RaftStorage raftStorage = new RaftStorage(this);
 
    @Override
    public Response requestAppendEntries(AppendEntriesRequest r, RequestContext ctx) {

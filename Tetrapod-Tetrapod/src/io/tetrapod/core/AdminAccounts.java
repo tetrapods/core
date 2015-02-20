@@ -1,5 +1,6 @@
 package io.tetrapod.core;
 
+import io.tetrapod.core.storage.Storage;
 import io.tetrapod.core.utils.*;
 import io.tetrapod.protocol.core.Admin;
 

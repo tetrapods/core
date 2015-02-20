@@ -1,6 +1,6 @@
 package io.tetrapod.core.storage;
 
-import io.tetrapod.core.TetrapodService;
+import io.tetrapod.core.*;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.utils.Util;
 import io.tetrapod.protocol.raft.*;
@@ -12,12 +12,14 @@ import java.io.*;
 
 import org.slf4j.*;
 
+import com.hazelcast.core.ILock;
+
 /**
  * Wraps a RaftEngine in our Tetrapod-RPC and implements the StorageContract via StorageStateMachine
  */
-public class RaftStorage implements RaftRPC<StorageStateMachine>, io.tetrapod.protocol.raft.RaftContract.API {
+public class RaftStorage extends Storage implements RaftRPC<StorageStateMachine>, io.tetrapod.protocol.raft.RaftContract.API {
 
-   static final Logger                           logger = LoggerFactory.getLogger(RaftStorage.class);
+   private static final Logger                   logger = LoggerFactory.getLogger(RaftStorage.class);
 
    private final TetrapodService                 service;
    private final RaftEngine<StorageStateMachine> raft;
@@ -44,6 +46,11 @@ public class RaftStorage implements RaftRPC<StorageStateMachine>, io.tetrapod.pr
 
    public void stop() {
       raft.stop();
+   }
+
+   @Override
+   public void shutdown() {
+      stop();
    }
 
    public void addMember(int entityId) {
@@ -198,5 +205,34 @@ public class RaftStorage implements RaftRPC<StorageStateMachine>, io.tetrapod.pr
                   }
                });
       }
+   }
+
+   @Override
+   public void put(String key, String value) {
+      // TODO Auto-generated method stub
+   }
+
+   @Override
+   public String delete(String key) {
+      // TODO Auto-generated method stub
+      return null;
+   }
+
+   @Override
+   public String get(String key) {
+      // TODO Auto-generated method stub
+      return null;
+   }
+
+   @Override
+   public ILock getLock(String lockKey) {
+      // TODO Auto-generated method stub
+      return null;
+   }
+
+   @Override
+   public long increment(String key) {
+      // TODO Auto-generated method stub
+      return 0;
    }
 }

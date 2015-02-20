@@ -2,9 +2,9 @@ package io.tetrapod.core.registry;
 
 import static io.tetrapod.protocol.core.MessageHeader.TO_ENTITY;
 import io.tetrapod.core.Session;
-import io.tetrapod.core.Storage;
 import io.tetrapod.core.rpc.Message;
 import io.tetrapod.core.rpc.MessageContext;
+import io.tetrapod.core.storage.Storage;
 import io.tetrapod.core.web.LongPollQueue;
 import io.tetrapod.protocol.core.*;
 
