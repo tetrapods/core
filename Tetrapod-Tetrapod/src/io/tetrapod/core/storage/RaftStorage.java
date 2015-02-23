@@ -1,12 +1,13 @@
 package io.tetrapod.core.storage;
 
-import io.tetrapod.core.*;
+import io.tetrapod.core.TetrapodService;
 import io.tetrapod.core.rpc.*;
+import io.tetrapod.core.storage.TetrapodStateMachine.IssueTetrapodEntityIdCommand;
 import io.tetrapod.core.utils.Util;
 import io.tetrapod.protocol.raft.*;
 import io.tetrapod.raft.*;
 import io.tetrapod.raft.RaftEngine.Role;
-import io.tetrapod.raft.storage.*;
+import io.tetrapod.raft.storage.PutItemCommand;
 
 import java.io.*;
 
@@ -15,24 +16,24 @@ import org.slf4j.*;
 import com.hazelcast.core.ILock;
 
 /**
- * Wraps a RaftEngine in our Tetrapod-RPC and implements the StorageContract via StorageStateMachine
+ * Wraps a RaftEngine in our Tetrapod-RPC and implements the StorageContract via TetrapodStateMachine
  */
-public class RaftStorage extends Storage implements RaftRPC<StorageStateMachine>, io.tetrapod.protocol.raft.RaftContract.API {
+public class RaftStorage extends Storage implements RaftRPC<TetrapodStateMachine>, RaftContract.API {
 
-   private static final Logger                   logger = LoggerFactory.getLogger(RaftStorage.class);
+   private static final Logger                    logger = LoggerFactory.getLogger(RaftStorage.class);
 
-   private final TetrapodService                 service;
-   private final RaftEngine<StorageStateMachine> raft;
-   private final Config                          cfg;
+   private final TetrapodService                  service;
+   private final RaftEngine<TetrapodStateMachine> raft;
+   private final Config                           cfg;
 
    public RaftStorage(TetrapodService service) {
       this.service = service;
       this.cfg = new Config().setLogDir(new File(Util.getProperty("raft.logs", "logs/raft"))).setClusterName(
             Util.getProperty("raft.name", "RaftStorage"));
 
-      RaftEngine<StorageStateMachine> raftEngine = null;
+      RaftEngine<TetrapodStateMachine> raftEngine = null;
       try {
-         raftEngine = new RaftEngine<StorageStateMachine>(cfg, new StorageStateMachine.Factory(), this);
+         raftEngine = new RaftEngine<TetrapodStateMachine>(cfg, new TetrapodStateMachine.Factory(), this);
       } catch (IOException e) {
          service.fail(e);
       }
@@ -59,32 +60,31 @@ public class RaftStorage extends Storage implements RaftRPC<StorageStateMachine>
 
    @Override
    public void sendRequestVote(String clusterName, int peerId, long term, int candidateId, long lastLogIndex, long lastLogTerm,
-         final io.tetrapod.raft.RaftRPC.VoteResponseHandler handler) {
+         final VoteResponseHandler handler) {
 
-      service.sendRequest(new io.tetrapod.protocol.raft.VoteRequest(clusterName, term, candidateId, lastLogIndex, lastLogTerm), peerId)
-            .handle(new ResponseHandler() {
-               @Override
-               public void onResponse(Response res) {
-                  if (res.isError()) {
-                     logger.error("{}", res);
-                  } else {
-                     io.tetrapod.protocol.raft.VoteResponse r = (io.tetrapod.protocol.raft.VoteResponse) res;
-                     handler.handleResponse(r.term, r.voteGranted);
-                  }
-               }
-            });
+      service.sendRequest(new VoteRequest(clusterName, term, candidateId, lastLogIndex, lastLogTerm), peerId).handle(new ResponseHandler() {
+         @Override
+         public void onResponse(Response res) {
+            if (res.isError()) {
+               logger.error("{}", res);
+            } else {
+               VoteResponse r = (VoteResponse) res;
+               handler.handleResponse(r.term, r.voteGranted);
+            }
+         }
+      });
 
    }
 
    @Override
    public void sendAppendEntries(int peerId, long term, int leaderId, long prevLogIndex, long prevLogTerm,
-         Entry<StorageStateMachine>[] entries, long leaderCommit, final io.tetrapod.raft.RaftRPC.AppendEntriesResponseHandler handler) {
+         Entry<TetrapodStateMachine>[] entries, long leaderCommit, final AppendEntriesResponseHandler handler) {
 
       final LogEntry[] entryList = entries == null ? null : new LogEntry[entries.length];
       if (entryList != null) {
          try {
             int i = 0;
-            for (Entry<StorageStateMachine> e : entries) {
+            for (Entry<TetrapodStateMachine> e : entries) {
                byte[] data = commandToBytes(e.getCommand());
                entryList[i++] = new LogEntry(e.getTerm(), e.getIndex(), e.getCommand().getCommandType(), data);
             }
@@ -93,15 +93,14 @@ public class RaftStorage extends Storage implements RaftRPC<StorageStateMachine>
          }
       }
 
-      service.sendRequest(
-            new io.tetrapod.protocol.raft.AppendEntriesRequest(term, leaderId, prevLogIndex, prevLogTerm, entryList, leaderCommit), peerId)
-            .handle(new ResponseHandler() {
+      service.sendRequest(new AppendEntriesRequest(term, leaderId, prevLogIndex, prevLogTerm, entryList, leaderCommit), peerId).handle(
+            new ResponseHandler() {
                @Override
                public void onResponse(Response res) {
                   if (res.isError()) {
                      logger.error("{}", res);
                   } else {
-                     io.tetrapod.protocol.raft.AppendEntriesResponse r = (io.tetrapod.protocol.raft.AppendEntriesResponse) res;
+                     AppendEntriesResponse r = (AppendEntriesResponse) res;
                      handler.handleResponse(r.term, r.success, r.lastLogIndex);
                   }
                }
@@ -109,7 +108,50 @@ public class RaftStorage extends Storage implements RaftRPC<StorageStateMachine>
 
    }
 
+   @Override
+   public void sendInstallSnapshot(int peerId, long term, long index, long length, int partSize, int part, byte[] data,
+         final InstallSnapshotResponseHandler handler) {
+      service.sendRequest(new InstallSnapshotRequest(term, index, length, partSize, part, data), peerId).handle(new ResponseHandler() {
+         @Override
+         public void onResponse(Response res) {
+            if (res.isError()) {
+               logger.error("{}", res);
+            } else {
+               InstallSnapshotResponse r = (InstallSnapshotResponse) res;
+               handler.handleResponse(r.success);
+            }
+         }
+      });
+   }
+
+   @Override
+   public void sendIssueCommand(int peerId, final Command<TetrapodStateMachine> command,
+         final ClientResponseHandler<TetrapodStateMachine> handler) {
+      try {
+         final byte[] data = commandToBytes(command);
+         service.sendRequest(new IssueCommandRequest(command.getCommandType(), data), peerId).handle(new ResponseHandler() {
+            @Override
+            public void onResponse(Response res) {
+               if (res.isError()) {
+                  logger.error("{}", res);
+               } else {
+                  IssueCommandResponse r = (IssueCommandResponse) res;
+                  try {
+                     handler.handleResponse(bytesToCommand(r.command, command.getCommandType()));
+                  } catch (IOException e) {
+                     logger.error(e.getMessage(), e);
+                  }
+               }
+            }
+         });
+      } catch (IOException e) {
+         throw new RuntimeException(e);
+      }
+   }
+
    private byte[] commandToBytes(Command<?> command) throws IOException {
+      if (command == null)
+         return null;
       try (ByteArrayOutputStream buf = new ByteArrayOutputStream()) {
          try (DataOutputStream out = new DataOutputStream(buf)) {
             command.write(out);
@@ -118,8 +160,10 @@ public class RaftStorage extends Storage implements RaftRPC<StorageStateMachine>
       }
    }
 
-   private Command<StorageStateMachine> bytesToCommand(byte[] data, int type) throws IOException {
-      Command<StorageStateMachine> cmd = (Command<StorageStateMachine>) raft.getStateMachine().makeCommandById(type);
+   private Command<TetrapodStateMachine> bytesToCommand(byte[] data, int type) throws IOException {
+      if (data == null)
+         return null;
+      Command<TetrapodStateMachine> cmd = (Command<TetrapodStateMachine>) raft.getStateMachine().makeCommandById(type);
       try (ByteArrayInputStream buf = new ByteArrayInputStream(data)) {
          try (DataInputStream in = new DataInputStream(buf)) {
             cmd.read(in);
@@ -154,13 +198,13 @@ public class RaftStorage extends Storage implements RaftRPC<StorageStateMachine>
       final AppendEntriesResponse res = new AppendEntriesResponse();
 
       @SuppressWarnings("unchecked")
-      Entry<StorageStateMachine>[] entries = r.entries == null ? null : (Entry<StorageStateMachine>[]) new Entry<?>[r.entries.length];
+      Entry<TetrapodStateMachine>[] entries = r.entries == null ? null : (Entry<TetrapodStateMachine>[]) new Entry<?>[r.entries.length];
       if (entries != null) {
          try {
             int i = 0;
             for (LogEntry e : r.entries) {
-               Command<StorageStateMachine> cmd = bytesToCommand(e.command, e.type);
-               entries[i++] = new Entry<StorageStateMachine>(e.term, e.index, cmd);
+               Command<TetrapodStateMachine> cmd = bytesToCommand(e.command, e.type);
+               entries[i++] = new Entry<TetrapodStateMachine>(e.term, e.index, cmd);
             }
          } catch (IOException e) {
             throw new RuntimeException(e);
@@ -180,9 +224,35 @@ public class RaftStorage extends Storage implements RaftRPC<StorageStateMachine>
    }
 
    @Override
-   public void sendInstallSnapshot(int peerId, long term, long index, long length, int partSize, int part, byte[] data,
-         io.tetrapod.raft.RaftRPC.InstallSnapshotResponseHandler handler) {
+   public Response requestInstallSnapshot(InstallSnapshotRequest r, RequestContext ctx) {
+      final InstallSnapshotResponse res = new InstallSnapshotResponse();
+      raft.handleInstallSnapshotRequest(r.term, r.index, r.length, r.partSize, r.part, r.data, new InstallSnapshotResponseHandler() {
+         @Override
+         public void handleResponse(boolean success) {
+            res.success = success;
+         }
+      });
+      return res;
+   }
 
+   @Override
+   public Response requestIssueCommand(IssueCommandRequest r, RequestContext ctx) {
+      final IssueCommandResponse res = new IssueCommandResponse();
+      try {
+         raft.handleClientRequest(bytesToCommand(r.command, r.type), new ClientResponseHandler<TetrapodStateMachine>() {
+            @Override
+            public void handleResponse(Command<TetrapodStateMachine> command) {
+               try {
+                  res.command = commandToBytes(command);
+               } catch (IOException e) {
+                  logger.error(e.getMessage(), e);
+               }
+            }
+         });
+      } catch (IOException e) {
+         throw new RuntimeException(e);
+      }
+      return res;
    }
 
    @Override
@@ -197,14 +267,28 @@ public class RaftStorage extends Storage implements RaftRPC<StorageStateMachine>
 
       if (raft.getRole() == Role.Leader) {
          // HACK: generate some command activity for testing
-         raft.executeCommand(new PutItemCommand("foo", ("bar-" + raft.getLog().getCommitIndex()).getBytes()),
-               new ClientResponseHandler<StorageStateMachine>() {
-                  @Override
-                  public void handleResponse(boolean success, Command<StorageStateMachine> command) {
-
-                  }
-               });
+         raft.executeCommand(new PutItemCommand<TetrapodStateMachine>("foo", ("bar-" + raft.getLog().getCommitIndex()).getBytes()), null);
       }
+   }
+
+   public synchronized int issueTetrapodId() {
+      final IssueTetrapodEntityIdCommand cmd = new IssueTetrapodEntityIdCommand();
+      if (raft.getRole() == Role.Leader) {
+         if (raft.executeCommand(cmd, null)) {
+            return cmd.entityId;
+         }
+      }
+      // Send RPC to leader
+      sendIssueCommand(raft.getLeader(), cmd, new ClientResponseHandler<TetrapodStateMachine>() {
+         @Override
+         public void handleResponse(Command<TetrapodStateMachine> command) {
+            if (command != null) {
+               int e = ((IssueTetrapodEntityIdCommand) command).entityId;
+            }
+         }
+      });
+
+      return 0;
    }
 
    @Override
@@ -235,4 +319,5 @@ public class RaftStorage extends Storage implements RaftRPC<StorageStateMachine>
       // TODO Auto-generated method stub
       return 0;
    }
+
 }

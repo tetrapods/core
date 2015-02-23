@@ -16,6 +16,8 @@ public class RaftContract extends Contract {
    
    public static interface API extends APIHandler
       , AppendEntriesRequest.Handler
+      , InstallSnapshotRequest.Handler
+      , IssueCommandRequest.Handler
       , VoteRequest.Handler
       {}
    
@@ -23,6 +25,8 @@ public class RaftContract extends Contract {
       return new Structure[] {
          new VoteRequest(),
          new AppendEntriesRequest(),
+         new InstallSnapshotRequest(),
+         new IssueCommandRequest(),
       };
    }
    
@@ -30,6 +34,8 @@ public class RaftContract extends Contract {
       return new Structure[] {
          new VoteResponse(),
          new AppendEntriesResponse(),
+         new InstallSnapshotResponse(),
+         new IssueCommandResponse(),
       };
    }
    

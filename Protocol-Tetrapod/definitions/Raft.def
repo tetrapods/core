@@ -38,6 +38,24 @@ internal response AppendEntries
    2: boolean success
    3: long    lastLogIndex
 
+internal request InstallSnapshot
+   1: long     term
+   2: long     index
+   3: long     length
+   4: int      partSize
+   5: int      part
+   6: byte[]   data 
+   
+internal response InstallSnapshot
+   1: boolean success
+  
+internal request IssueCommand
+   1: int    type;
+   2: byte[] command;
+   
+internal response IssueCommand
+   1: byte[] command;
+ 
 ################################# MESSAGES #################################
  
  

@@ -58,7 +58,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    private final TetrapodCluster                      cluster;
    private final TetrapodWorker                       worker;
 
-   final private RaftStorage                          raftStorage       = new RaftStorage(this);
+   final protected RaftStorage                        raftStorage       = new RaftStorage(this);
 
    private Storage                                    storage;
 
@@ -1142,6 +1142,22 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    public Response requestVote(VoteRequest r, RequestContext ctx) {
       if (raftStorage != null) {
          return raftStorage.requestVote(r, ctx);
+      }
+      return Response.error(ERROR_NOT_CONFIGURED);
+   }
+
+   @Override
+   public Response requestInstallSnapshot(InstallSnapshotRequest r, RequestContext ctx) {
+      if (raftStorage != null) {
+         return raftStorage.requestInstallSnapshot(r, ctx);
+      }
+      return Response.error(ERROR_NOT_CONFIGURED);
+   }
+
+   @Override
+   public Response requestIssueCommand(IssueCommandRequest r, RequestContext ctx) {
+      if (raftStorage != null) {
+         return raftStorage.requestIssueCommand(r, ctx);
       }
       return Response.error(ERROR_NOT_CONFIGURED);
    }
