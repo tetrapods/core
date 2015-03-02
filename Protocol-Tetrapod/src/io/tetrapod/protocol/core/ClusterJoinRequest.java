@@ -21,14 +21,12 @@ public class ClusterJoinRequest extends Request {
       defaults();
    }
 
-   public ClusterJoinRequest(int entityId, String host, int servicePort, int clusterPort) {
-      this.entityId = entityId;
+   public ClusterJoinRequest(String host, int servicePort, int clusterPort) {
       this.host = host;
       this.servicePort = servicePort;
       this.clusterPort = clusterPort;
    }   
 
-   public int entityId;
    public String host;
    public int servicePort;
    public int clusterPort;
@@ -38,7 +36,6 @@ public class ClusterJoinRequest extends Request {
    }
 
    public final void defaults() {
-      entityId = 0;
       host = null;
       servicePort = 0;
       clusterPort = 0;
@@ -46,10 +43,9 @@ public class ClusterJoinRequest extends Request {
    
    @Override
    public final void write(DataSource data) throws IOException {
-      data.write(1, this.entityId);
-      data.write(2, this.host);
-      data.write(3, this.servicePort);
-      data.write(4, this.clusterPort);
+      data.write(1, this.host);
+      data.write(2, this.servicePort);
+      data.write(3, this.clusterPort);
       data.writeEndTag();
    }
    
@@ -59,10 +55,9 @@ public class ClusterJoinRequest extends Request {
       while (true) {
          int tag = data.readTag();
          switch (tag) {
-            case 1: this.entityId = data.read_int(tag); break;
-            case 2: this.host = data.read_string(tag); break;
-            case 3: this.servicePort = data.read_int(tag); break;
-            case 4: this.clusterPort = data.read_int(tag); break;
+            case 1: this.host = data.read_string(tag); break;
+            case 2: this.servicePort = data.read_int(tag); break;
+            case 3: this.clusterPort = data.read_int(tag); break;
             case Codec.END_TAG:
                return;
             default:
@@ -95,11 +90,10 @@ public class ClusterJoinRequest extends Request {
       // Note do not use this tags in long term serializations (to disk or databases) as 
       // implementors are free to rename them however they wish.  A null means the field
       // is not to participate in web serialization (remaining at default)
-      String[] result = new String[4+1];
-      result[1] = "entityId";
-      result[2] = "host";
-      result[3] = "servicePort";
-      result[4] = "clusterPort";
+      String[] result = new String[3+1];
+      result[1] = "host";
+      result[2] = "servicePort";
+      result[3] = "clusterPort";
       return result;
    }
    
@@ -112,10 +106,9 @@ public class ClusterJoinRequest extends Request {
       desc.tagWebNames = tagWebNames();
       desc.types = new TypeDescriptor[desc.tagWebNames.length];
       desc.types[0] = new TypeDescriptor(TypeDescriptor.T_STRUCT, getContractId(), getStructId());
-      desc.types[1] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
-      desc.types[2] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
+      desc.types[1] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
+      desc.types[2] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
       desc.types[3] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
-      desc.types[4] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
       return desc;
    }
 

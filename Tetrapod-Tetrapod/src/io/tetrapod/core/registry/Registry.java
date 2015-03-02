@@ -2,20 +2,15 @@ package io.tetrapod.core.registry;
 
 import static io.tetrapod.protocol.core.MessageHeader.TO_ENTITY;
 import io.tetrapod.core.Session;
-import io.tetrapod.core.rpc.Message;
-import io.tetrapod.core.rpc.MessageContext;
-import io.tetrapod.core.storage.Storage;
+import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.web.LongPollQueue;
 import io.tetrapod.protocol.core.*;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.concurrent.*;
+import java.util.concurrent.locks.*;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.slf4j.*;
 
 /**
  * The global registry of all current actors in the system and their published topics and subscriptions
@@ -32,8 +27,6 @@ public class Registry implements TetrapodContract.Registry.API {
    public static final int                      PARENT_ID_SHIFT = 20;
    public static final int                      PARENT_ID_MASK  = MAX_PARENTS << PARENT_ID_SHIFT;
    public static final int                      BOOTSTRAP_ID    = 1 << PARENT_ID_SHIFT;
-
-   private static final String                  PARENT_ID_LOCK  = "REGISTRY.PARENT_ID.LOCK";
 
    /**
     * A read-write lock is used to synchronize subscriptions to the registry state, and it is a little counter-intuitive. When making write
@@ -62,8 +55,6 @@ public class Registry implements TetrapodContract.Registry.API {
     */
    private final Map<Integer, List<EntityInfo>> services        = new ConcurrentHashMap<>();
 
-   private Storage                              storage;
-
    public static interface RegistryBroadcaster {
       public void broadcastRegistryMessage(Message msg);
 
@@ -82,14 +73,6 @@ public class Registry implements TetrapodContract.Registry.API {
 
    public synchronized int getParentId() {
       return parentId;
-   }
-
-   public Storage getStorage() {
-      return storage;
-   }
-
-   public void setStorage(Storage storage) {
-      this.storage = storage;
    }
 
    public Collection<EntityInfo> getEntities() {
@@ -160,35 +143,14 @@ public class Registry implements TetrapodContract.Registry.API {
       }
    }
 
-   /**
-    * Issue the next available tetrapod id
-    * 
-    * FIXME: This is currently _very_ unsafe, but will do until we have the robust distributed counters or locks implemented
-    * 
-    * FIXME: Use hazelcast counter
-    */
-   public synchronized int issueTetrapodId() {
-      storage.getLock(PARENT_ID_LOCK).lock();
-      try {
-         int nextId = parentId >> PARENT_ID_SHIFT;
-         while (true) {
-            int id = (++nextId % MAX_PARENTS) << PARENT_ID_SHIFT;
-            if (!entities.containsKey(id)) {
-               return id;
-            }
-         }
-      } finally {
-         storage.getLock(PARENT_ID_LOCK).unlock();
-      }
-   }
-
    public void register(EntityInfo entity) {
       lock.readLock().lock();
       try {
 
          if (entity.entityId <= 0) {
             if (entity.isTetrapod()) {
-               entity.entityId = issueTetrapodId();
+               throw new RuntimeException("Tetrapod needs an assigned entityId");
+               //entity.entityId = issueTetrapodId();
             } else {
                entity.entityId = issueId();
             }

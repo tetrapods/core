@@ -21,7 +21,6 @@ import io.tetrapod.protocol.raft.*;
 import io.tetrapod.protocol.storage.*;
 
 import java.io.*;
-import java.net.ConnectException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.security.*;
@@ -55,7 +54,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
    private final Object                               registryTopicLock = new Object();
 
-   private final TetrapodCluster                      cluster;
+   //private final TetrapodCluster                      cluster;
    private final TetrapodWorker                       worker;
 
    final protected RaftStorage                        raftStorage       = new RaftStorage(this);
@@ -73,7 +72,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    public TetrapodService() {
       registry = new io.tetrapod.core.registry.Registry(this);
       worker = new TetrapodWorker(this);
-      cluster = new TetrapodCluster(this);
+      // cluster = new TetrapodCluster(this);
       setMainContract(new TetrapodContract());
       addContracts(new StorageContract());
       addContracts(new RaftContract());
@@ -90,29 +89,12 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       logger.info("***** Start Network ***** ");
       logger.info("Joining Cluster: {}", address.dump());
       this.startPaused = otherOpts.get("paused").equals("true");
+      raftStorage.startListening();
       if (address.host.equals("self")) {
-         registerSelf(io.tetrapod.core.registry.Registry.BOOTSTRAP_ID, random.nextLong());
-      } else if (address.host.equals("auto")) {
-         boolean joined = false;
-         for (String host : getAllVPCMembers()) {
-            logger.info("Trying to join cluster on {}", host);
-            address.host = host;
-            this.token = token;
-            try {
-               joined = cluster.joinCluster(address);
-            } catch (ConnectException e) {}
-            if (joined) {
-               break;
-            }
-         }
-         // need to start listener after the auto-search but before the self reg
-         if (!joined) {
-            logger.info("no tetrapods found, registering self");
-            registerSelf(io.tetrapod.core.registry.Registry.BOOTSTRAP_ID, random.nextLong());
-         }
+         raftStorage.bootstrap();
       } else {
          this.token = token;
-         cluster.joinCluster(address);
+         raftStorage.joinCluster(address);
       }
    }
 
@@ -135,7 +117,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       servicesTopic = registry.publish(entityId);
 
       try {
-         cluster.startListening();
+         //   cluster.startListening();
          // Establish a special loopback connection to ourselves
          // connects to self on localhost on our clusterport
          clusterClient.connect("localhost", getClusterPort(), dispatcher).sync();
@@ -197,7 +179,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
    @Override
    public long getCounter() {
-      long count = cluster.getNumSessions();
+      long count = raftStorage.getNumSessions();
       for (Server s : servers) {
          count += s.getNumSessions();
       }
@@ -283,7 +265,6 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
          try {
             storage = new HazelcastStorage();
-            registry.setStorage(storage);
             AuthToken.setSecret(getSharedSecret());
             adminAccounts = new AdminAccounts(storage);
 
@@ -301,11 +282,9 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
             for (Server s : servers) {
                s.start().sync();
             }
-            raftStorage.start();
          } catch (Exception e) {
             fail(e);
          }
-
          scheduleHealthCheck();
       }
    }
@@ -313,9 +292,6 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    @Override
    public void onShutdown(boolean restarting) {
       logger.info("Shutting Down Tetrapod");
-      if (cluster != null) {
-         cluster.shutdown();
-      }
       if (storage != null) {
          storage.shutdown();
       }
@@ -326,6 +302,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
     */
    @Deprecated
    public byte[] getSharedSecret() {
+      // FIXME: Move to secret.properties?
       String str = storage.get(SHARED_SECRET_KEY);
       if (str != null) {
          return Base64.decode(str.getBytes(Charset.forName("UTF-8")));
@@ -333,7 +310,8 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          byte[] b = new byte[64];
          Random r = new SecureRandom();
          r.nextBytes(b);
-         storage.put(SHARED_SECRET_KEY, new String(Base64.encode(b), Charset.forName("UTF-8")));
+         String secret = new String(Base64.encode(b), Charset.forName("UTF-8"));
+         storage.put(SHARED_SECRET_KEY, secret);
          return b;
       }
    }
@@ -345,12 +323,12 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          return entity.getSession();
       } else {
          if (entity.isTetrapod()) {
-            return cluster.getSession(entity.entityId);
+            return raftStorage.getSession(entity.entityId);
          }
          final EntityInfo parent = registry.getEntity(entity.parentId);
          if (parent != null) {
             assert (parent != null);
-            return cluster.getSession(parent.entityId);
+            return raftStorage.getSession(parent.entityId);
          } else {
             logger.warn("Could not find parent entity {} for {}", entity.parentId, entity);
             return null;
@@ -542,7 +520,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       if (registryTopic.getNumSubscribers() > 0) {
          broadcast(msg, registryTopic);
       }
-      cluster.broadcast(msg);
+      raftStorage.broadcast(msg);
    }
 
    @Override
@@ -585,7 +563,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
             if (dispatcher.isRunning()) {
                try {
                   healthCheck();
-                  cluster.service();
+                  raftStorage.service();
                } catch (Throwable e) {
                   logger.error(e.getMessage(), e);
                }
@@ -642,21 +620,21 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
    private void subscribeToCluster(Session ses, int toEntityId) {
       assert (clusterTopic != null);
-      synchronized (cluster) {
+      synchronized (raftStorage) {
          subscribe(clusterTopic.topicId, toEntityId);
-         cluster.sendClusterDetails(ses, toEntityId, clusterTopic.topicId);
+         raftStorage.sendClusterDetails(ses, toEntityId, clusterTopic.topicId);
       }
    }
 
-   @Override
-   public void messageClusterMember(ClusterMemberMessage m, MessageContext ctx) {
-      synchronized (cluster) {
-         if (cluster.addMember(m.entityId, m.host, m.servicePort, m.clusterPort, null)) {
-            broadcast(new ClusterMemberMessage(m.entityId, m.host, m.servicePort, m.clusterPort), clusterTopic);
-            raftStorage.addMember(m.entityId);
-         }
-      }
-   }
+   //   @Override
+   //   public void messageClusterMember(ClusterMemberMessage m, MessageContext ctx) {
+   //      synchronized (raftStorage) {
+   //         if (raftStorage.addMember(m.entityId, m.host, m.servicePort, m.clusterPort, null)) {
+   //            broadcast(new ClusterMemberMessage(m.entityId, m.host, m.servicePort, m.clusterPort), clusterTopic);
+   //            raftStorage.addMember(m.entityId);
+   //         }
+   //      }
+   //   }
 
    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -699,6 +677,24 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          // clobber their reported host with their IP 
          info.host = ctx.session.getPeerHostname();
       }
+
+      //      if (info.isTetrapod() && info.entityId == 0) {
+      //         final Value<Integer> val = new Value<>();
+      //         final CountDownLatch latch = new CountDownLatch(1);
+      //         raftStorage.issueTetrapodId(new Callback<Integer>() {
+      //            @Override
+      //            public void call(Integer data) throws Exception {
+      //               val.set(data);
+      //               latch.countDown();
+      //            }
+      //         });
+      //         while (latch.getCount() > 0) {
+      //            try {
+      //               latch.await();
+      //            } catch (InterruptedException e) {}
+      //         }
+      //         info.entityId = val.get();
+      //      }
 
       // register/reclaim
       registry.register(info);
@@ -856,24 +852,26 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    }
 
    @Override
-   public Response requestClusterJoin(ClusterJoinRequest r, RequestContext ctxA) {
-      SessionRequestContext ctx = (SessionRequestContext) ctxA;
-      if (ctx.session.getTheirEntityType() != Core.TYPE_TETRAPOD) {
-         return new Error(ERROR_INVALID_RIGHTS);
-      }
-      ctx.session.setTheirEntityId(r.entityId);
-
-      logger.info("JOINING TETRAPOD {} {}", ctx.session);
-
-      synchronized (cluster) {
-         if (cluster.addMember(r.entityId, r.host, r.servicePort, r.clusterPort, ctx.session)) {
-            broadcast(new ClusterMemberMessage(r.entityId, r.host, r.servicePort, r.clusterPort), clusterTopic);
-         }
-      }
-
-      registrySubscribe(ctx.session, ctx.session.getTheirEntityId(), true);
-
-      return new ClusterJoinResponse(getEntityId());
+   public Response requestClusterJoin(ClusterJoinRequest r, RequestContext ctx) {
+      return raftStorage.requestClusterJoin(r, ctx);
+      //      SessionRequestContext ctx = (SessionRequestContext) ctxA;
+      //      if (ctx.session.getTheirEntityType() != Core.TYPE_TETRAPOD) {
+      //         return new Error(ERROR_INVALID_RIGHTS);
+      //      }
+      //
+      //      ctx.session.setTheirEntityId(r.entityId);
+      //
+      //      logger.info("JOINING TETRAPOD {} {}", ctx.session);
+      //
+      //      synchronized (cluster) {
+      //         if (cluster.addMember(r.entityId, r.host, r.servicePort, r.clusterPort, ctx.session)) {
+      //            broadcast(new ClusterMemberMessage(r.entityId, r.host, r.servicePort, r.clusterPort), clusterTopic);
+      //         }
+      //      }
+      //
+      //      registrySubscribe(ctx.session, ctx.session.getTheirEntityId(), true);
+      //
+      //      return new ClusterJoinResponse(getEntityId());
    }
 
    @Override

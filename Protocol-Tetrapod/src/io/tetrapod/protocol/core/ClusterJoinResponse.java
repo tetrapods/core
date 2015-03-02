@@ -21,10 +21,19 @@ public class ClusterJoinResponse extends Response {
       defaults();
    }
 
-   public ClusterJoinResponse(int entityId) {
+   public ClusterJoinResponse(int peerId, int entityId) {
+      this.peerId = peerId;
       this.entityId = entityId;
    }   
    
+   /**
+    * our new peerId
+    */
+   public int peerId;
+   
+   /**
+    * of the host we are talking to
+    */
    public int entityId;
 
    public final Structure.Security getSecurity() {
@@ -32,12 +41,14 @@ public class ClusterJoinResponse extends Response {
    }
 
    public final void defaults() {
+      peerId = 0;
       entityId = 0;
    }
    
    @Override
    public final void write(DataSource data) throws IOException {
-      data.write(1, this.entityId);
+      data.write(1, this.peerId);
+      data.write(2, this.entityId);
       data.writeEndTag();
    }
    
@@ -47,7 +58,8 @@ public class ClusterJoinResponse extends Response {
       while (true) {
          int tag = data.readTag();
          switch (tag) {
-            case 1: this.entityId = data.read_int(tag); break;
+            case 1: this.peerId = data.read_int(tag); break;
+            case 2: this.entityId = data.read_int(tag); break;
             case Codec.END_TAG:
                return;
             default:
@@ -69,8 +81,9 @@ public class ClusterJoinResponse extends Response {
       // Note do not use this tags in long term serializations (to disk or databases) as 
       // implementors are free to rename them however they wish.  A null means the field
       // is not to participate in web serialization (remaining at default)
-      String[] result = new String[1+1];
-      result[1] = "entityId";
+      String[] result = new String[2+1];
+      result[1] = "peerId";
+      result[2] = "entityId";
       return result;
    }
 
@@ -84,6 +97,7 @@ public class ClusterJoinResponse extends Response {
       desc.types = new TypeDescriptor[desc.tagWebNames.length];
       desc.types[0] = new TypeDescriptor(TypeDescriptor.T_STRUCT, getContractId(), getStructId());
       desc.types[1] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
+      desc.types[2] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
       return desc;
    }
  }

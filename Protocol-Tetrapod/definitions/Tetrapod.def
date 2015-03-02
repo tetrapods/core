@@ -21,7 +21,7 @@ public struct Entity
    8: int build  
    9: int version
   10: int contractId  
-
+  
 ################################# REQUESTS #################################
 
 public request Register
@@ -38,13 +38,13 @@ public response Register
    3: string token
    
 public request ClusterJoin
-   1: int entityId
-   2: string host
-   3: int servicePort
-   4: int clusterPort
+   1: string host
+   2: int servicePort
+   3: int clusterPort
    
 public response ClusterJoin
-   1: int entityId
+   1: int peerId   // our new peerId 
+   2: int entityId // of the host we are talking to
    
 public request Unregister
    1: int entityId

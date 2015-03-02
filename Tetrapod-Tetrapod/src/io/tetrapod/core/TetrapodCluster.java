@@ -21,6 +21,7 @@ import org.slf4j.*;
  * <li>Synchronizes registry state with tetrapod cluster</li>
  * </ul>
  */
+@Deprecated
 public class TetrapodCluster implements SessionFactory {
 
    public static final Logger           logger  = LoggerFactory.getLogger(TetrapodCluster.class);
@@ -45,7 +46,7 @@ public class TetrapodCluster implements SessionFactory {
    /**
     * Join an existing cluster
     */
-   public boolean joinCluster(final ServerAddress address) throws Exception {
+   public boolean joinCluster(final ServerAddress address) throws Exception {      
       final Client client = new Client(this);
       client.connect(address.host, address.port, service.getDispatcher(), new Session.Listener() {
 
@@ -215,9 +216,9 @@ public class TetrapodCluster implements SessionFactory {
          this.failures = 0;
          this.session = ses;
          this.session.setTheirEntityId(entityId);
-         this.session.sendRequest(
-               new ClusterJoinRequest(service.getEntityId(), service.getHostName(), service.getServicePort(), getClusterPort()),
-               Core.DIRECT).log();
+//         this.session.sendRequest(
+//               new ClusterJoinRequest(service.getEntityId(), service.getHostName(), service.getServicePort(), getClusterPort()),
+//               Core.DIRECT).log();
          this.session.addSessionListener(this);
          EntityInfo e = service.registry.getEntity(entityId);
          if (e != null) {
