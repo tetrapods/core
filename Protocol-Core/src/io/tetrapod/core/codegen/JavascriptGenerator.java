@@ -90,7 +90,7 @@ class JavascriptGenerator implements LanguageGenerator {
    }
 
    private Template template(String name) throws IOException {
-      return Template.get(getClass(), "jstemplates/" + name + ".template");
+      return Template.get(getClass(), "/templates/jstemplates/" + name + ".template");
    }
 
 }
