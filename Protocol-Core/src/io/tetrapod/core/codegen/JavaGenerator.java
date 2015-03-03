@@ -333,6 +333,6 @@ class JavaGenerator implements LanguageGenerator {
    }
 
    private Template template(String name) throws IOException {
-      return Template.get(getClass(), "javatemplates/" + name + ".template");
+      return Template.get(getClass(), "/templates/javatemplates/" + name + ".template");
    }
 }
