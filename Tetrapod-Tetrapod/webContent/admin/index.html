@@ -13,8 +13,8 @@
 
 <title>Tetrapod Admin</title>
 
-<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
-<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css">
 <link rel="stylesheet" href="./admin.css">
 <link id="favicon" rel="shortcut icon" href="media/tetrapod.png" type="image/png" />
 </head>
@@ -23,369 +23,389 @@
 
 <body>
 
-	<div id="wrapper">
-		<nav class="navbar navbar-default navbar-static-top app-bind" role="navigation" style="margin-bottom: 0">
-			<div class="navbar-header">
-				<button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".sidebar-collapse">
-					<span class="fa fa-bars"></span>
-				</button>
-				<a class="navbar-brand" href="">
+   <div id="wrapper">
+      <nav class="navbar navbar-default navbar-static-top app-bind" role="navigation" style="margin-bottom: 0">
+         <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".sidebar-collapse">
+               <span class="fa fa-bars"></span>
+            </button>
+            <a class="navbar-brand" href="">
                <span data-bind="text: name"></span>
-				</a>
-			</div>
-			<ul class="nav navbar-top-links navbar-right">
-				<li class="dropdown">
-					<a class="dropdown-toggle" data-toggle="dropdown" href="#">
-						<i class="fa fa-user fa-fw"></i> <i class="fa fa-caret-down"></i>
-					</a>
-					<ul class="dropdown-menu dropdown-user">
-						<li>
-							<a href="#">
-								<i class="fa fa-gear fa-fw"></i> Settings
-							</a>
-							<a href="#" data-bind="click: onShowEditPassword">
-								<i class="fa fa-lock fa-fw"></i> Change Password...
-							</a>
-						</li>
+            </a>
+         </div>
+         <ul class="nav navbar-top-links navbar-right">
+            <li class="dropdown"><a class="dropdown-toggle" data-toggle="dropdown" href="#">
+                  <i class="fa fa-user fa-fw"></i> <i class="fa fa-caret-down"></i>
+               </a>
+               <ul class="dropdown-menu dropdown-user">
+                  <li><a href="#">
+                        <i class="fa fa-gear fa-fw"></i> Settings
+                     </a> <a href="#" data-bind="click: onShowEditPassword">
+                        <i class="fa fa-lock fa-fw"></i> Change Password...
+                     </a> <a href="#" data-bind="click: manageAdminUsers">
+                        <i class="fa fa-lock fa-fw"></i> Manage Admin Users...
+                     </a></li>
 
-						<li class="divider"></li>
-						<li>
-							<a href="#" data-bind="click: onLogout">
-								<i class="fa fa-sign-out fa-fw"></i> Logout
-							</a>
-						</li>
-					</ul>
-				</li>
-			</ul>
-		</nav>
+                  <li class="divider"></li>
+                  <li><a href="#" data-bind="click: onLogout">
+                        <i class="fa fa-sign-out fa-fw"></i> Logout
+                     </a></li>
+               </ul></li>
+         </ul>
+      </nav>
 
-		<div id="page-wrapper" data-bind="css: {prod: isProd}, stopBinding: true" class="app-bind">
+      <div id="page-wrapper" data-bind="css: {prod: isProd}, stopBinding: true" class="app-bind">
 
-			<div class="row app-bind" id="login-wrapper" align="center" hidden="true">
-				<div id="login-form">
-					<form class="form-signin">
-						<input id="email" class="form-control top" type="email" placeholder="email" required autofocus>
-						<br />
-						<input id="password" class="form-control bottom" type="password" placeholder="password" required>
-						<br />
-						<a class="btn btn-lg btn-block btn-primary" data-bind="click: login">Sign in</a>
-					</form>
-				</div>
-			</div>
+         <div class="row app-bind" id="login-wrapper" align="center" hidden="true">
+            <div id="login-form">
+               <form class="form-signin">
+                  <input id="email" class="form-control top" type="email" placeholder="email" required autofocus>
+                  <br />
+                  <input id="password" class="form-control bottom" type="password" placeholder="password" required>
+                  <br />
+                  <a class="btn btn-lg btn-block btn-primary" data-bind="click: login">Sign in</a>
+               </form>
+            </div>
+         </div>
 
-			<div class="row" id="app-wrapper" hidden="true">
-				<div class="col-lg-12">
-					<!--  =============================================================================== -->
+         <div class="row" id="app-wrapper" hidden="true">
+            <div class="col-lg-12">
+               <!--  =============================================================================== -->
 
-					<div id="disconnected-alertbox" class="alert alert-danger" hidden="true">
-						<strong>DISCONNECTED!</strong> Attempting to Reconnect...
-					</div>
+               <div id="disconnected-alertbox" class="alert alert-danger" hidden="true">
+                  <strong>DISCONNECTED!</strong> Attempting to Reconnect...
+               </div>
 
-					<table class="table table-bordered table-condensed " id="cluster-table">
-						<thead>
-							<tr>
-								<th>
-									<div data-bind="stopBinding: true"> 
-										<div class="dropdown app-bind">
-											<a class="dropdown-toggle" data-toggle="dropdown" style="color: white" href="#">
-												<i class="fa fa-gear fa-fw"></i> <i class="fa fa-caret-down"></i>
-											</a>
-											<ul class="dropdown-menu dropdown-service">
-												<li>
-													<a href="#" data-bind="click: onClearAllErrors">Clear All Errors</a>
-												</li>
-											</ul>																							
-										</div>
-									</div>									
-								</th>
-								<th>Name</th>
-								<th>Entity</th>
-								<th>Host</th>
-								<th>Build</th>
-								<th>Status</th>
-								<th>Latency</th>
-								<th>RPS</th>
-								<th>MPS</th>
-								<th>Counter</th>
-							</tr>
-						</thead>
-						<tbody data-bind="foreach: services">
-							<tr data-bind='attr: {"class": row_style}'>
-								<td width="48" class="centered">
-									<div class="dropdown">
-										<a class="dropdown-toggle" data-toggle="dropdown" href="#">
-											<i class="fa fa-gear fa-fw"></i> <i class="fa fa-caret-down"></i>
-										</a>
-										<ul class="dropdown-menu dropdown-service">
-											<li class="disabled">
-												<a href="#" data-bind="text: name +' '+entityString()"></a>
-											</li>
+               <table class="table table-bordered table-condensed " id="cluster-table">
+                  <thead>
+                     <tr>
+                        <th>
+                           <div data-bind="stopBinding: true">
+                              <div class="dropdown app-bind">
+                                 <a class="dropdown-toggle" data-toggle="dropdown" style="color: white" href="#">
+                                    <i class="fa fa-gear fa-fw"></i> <i class="fa fa-caret-down"></i>
+                                 </a>
+                                 <ul class="dropdown-menu dropdown-service">
+                                    <li><a href="#" data-bind="click: onClearAllErrors">Clear All Errors</a></li>
+                                 </ul>
+                              </div>
+                           </div>
+                        </th>
+                        <th>Name</th>
+                        <th>Entity</th>
+                        <th>Host</th>
+                        <th>Build</th>
+                        <th>Status</th>
+                        <th>Latency</th>
+                        <th>RPS</th>
+                        <th>MPS</th>
+                        <th>Counter</th>
+                     </tr>
+                  </thead>
+                  <tbody data-bind="foreach: services">
+                     <tr data-bind='attr: {"class": row_style}'>
+                        <td width="48" class="centered">
+                           <div class="dropdown">
+                              <a class="dropdown-toggle" data-toggle="dropdown" href="#">
+                                 <i class="fa fa-gear fa-fw"></i> <i class="fa fa-caret-down"></i>
+                              </a>
+                              <ul class="dropdown-menu dropdown-service">
+                                 <li class="disabled"><a href="#" data-bind="text: name +' '+entityString()"></a></li>
 
-											<!-- ko foreach: commands -->
-											<li>
-												<a href="#" data-bind="click: function() { $parent.execute($data) }, text: name"></a>
-											</li>
-											<!-- /ko -->
+                                 <!-- ko foreach: commands -->
+                                 <li><a href="#" data-bind="click: function() { $parent.execute($data) }, text: name"></a>
+                                 </li>
+                                 <!-- /ko -->
 
-											<li class="divider"></li>
-											<li>
-												<a href="#" data-bind="click: showErrors, visible: hasErrorsOrWarnings()">Show Errors</a>
-											</li>
-											<li>
-												<a href="#" data-bind="click: clearErrors, visible: hasErrorsOrWarnings()">Clear Errors</a>
-											</li>
-											<li>
-												<a href="#" data-bind="click: setCommsLogLevel">Set Comms Log Level...</a>
-											</li>
+                                 <li class="divider"></li>
+                                 <li><a href="#" data-bind="click: showErrors, visible: hasErrorsOrWarnings()">Show
+                                       Errors</a></li>
+                                 <li><a href="#" data-bind="click: clearErrors, visible: hasErrorsOrWarnings()">Clear
+                                       Errors</a></li>
+                                 <li><a href="#" data-bind="click: setCommsLogLevel">Set Comms Log Level...</a></li>
 
-											<li data-bind="visible: name=='Tetrapod'" class="divider"></li>
-											<li>
-												<a href="#" data-bind="visible: name=='Tetrapod', click: function() { popupBuild(); }">Deploy</a>
-											<li class="divider"></li>
+                                 <li data-bind="visible: name=='Tetrapod'" class="divider"></li>
+                                 <li><a href="#" data-bind="visible: name=='Tetrapod', click: function() { popupBuild(); }">Deploy</a>
+                                 <li class="divider"></li>
 
-											<li>
-												<a href="#" data-bind="click: pause, visible: canPause()">
-													<i class="fa fa-pause fa-fw"></i>Pause
-												</a>
-											</li>
-											<li>
-												<a href="#" data-bind="click: unpause, visible: canUnpause()">
-													<i class="fa fa-play fa-fw"></i>Resume
-												</a>
-											</li>
+                                 <li><a href="#" data-bind="click: pause, visible: canPause()">
+                                       <i class="fa fa-pause fa-fw"></i>Pause
+                                    </a></li>
+                                 <li><a href="#" data-bind="click: unpause, visible: canUnpause()">
+                                       <i class="fa fa-play fa-fw"></i>Resume
+                                    </a></li>
 
-											<li class="divider" data-bind=" visible: !isGone()"></li>
+                                 <li class="divider" data-bind=" visible: !isGone()"></li>
 
-											<li>
-												<a href="#" data-bind="click: restart, visible: !isGone()">
-													<i class="fa fa-refresh fa-fw"></i>Restart
-												</a>
-											</li>
+                                 <li><a href="#" data-bind="click: restart, visible: !isGone()">
+                                       <i class="fa fa-refresh fa-fw"></i>Restart
+                                    </a></li>
 
-											<li>
-												<a href="#" data-bind="click: shutdown, visible: !isGone()">
-													<i class="fa fa-power-off fa-fw"></i>Shutdown
-												</a>
-											</li>
-											<li>
-												<a href="#" data-bind="click: deleteService, visible: isGone()">
-													<i class="fa fa-trash-o fa-fw"></i>Delete
-												</a>
-											</li>
+                                 <li><a href="#" data-bind="click: shutdown, visible: !isGone()">
+                                       <i class="fa fa-power-off fa-fw"></i>Shutdown
+                                    </a></li>
+                                 <li><a href="#" data-bind="click: deleteService, visible: isGone()">
+                                       <i class="fa fa-trash-o fa-fw"></i>Delete
+                                    </a></li>
 
-										</ul>																							
-									</div>
-									
-								<td>
-									<img data-bind="attr:{src: iconURL().indexOf('fa-')==0 ? '/admin/media/lizard.png' : iconURL()}, visible: iconURL().indexOf('fa-') != 0" class="service-icon">
+                              </ul>
+                           </div>
+                        <td>
+                           <img
+                              data-bind="attr:{src: iconURL().indexOf('fa-')==0 ? '/admin/media/lizard.png' : iconURL()}, visible: iconURL().indexOf('fa-') != 0"
+                              class="service-icon">
                            <i class="service-fa fa fa-fw" data-bind="css:iconURL, visible: iconURL().indexOf('fa-') == 0"></i>
-									<span class="service-name" data-bind="text: name"></span>
-								</td>
-								<td class="centered">
-									<i class="fa fa-warning fa-fw" style="float:left; color:orange" data-bind="visible: hasWarningsOnly()"></i>
-									<i class="fa fa-exclamation-circle fa-fw" style="float:left; color:red" data-bind="visible: hasErrors()"></i>
-									<i class="fa fa-exclamation-circle fa-fw" style="float:left; visibility:hidden" data-bind="visible: !hasErrorsOrWarnings()"></i>
-									<a data-bind="text: entityString, click: showLogs"></a>
-								</td>
-								<td class="centered">
-									<span data-bind="text: host"></span>
-								</td>
-								<td class="centered">
-									<span data-bind="text: build"></span>
-								</td>
-								<td data-bind="attr: {'class':status_style}">
-									<span data-bind="text: statusName()"></span>
-								</td>
-								<td class="service-chart-wrap">
-									<div class="service-chart" data-bind="attr: {id: 'service-chart-latency-' + entityId}"></div>
-									<span class="service-chart-val" data-bind="text: latency"></span>
-								</td>
-								<td class="service-chart-wrap">
-									<div class="service-chart" data-bind="attr: {id: 'service-chart-rps-' + entityId}"></div>
-									<span class="service-chart-val" data-bind="text: rps"></span>
-								</td>
-								<td class="service-chart-wrap">
-									<div class="service-chart" data-bind="attr: {id: 'service-chart-mps-' + entityId}"></div>
-									<span class="service-chart-val" data-bind="text: mps"></span>
-								</td>
-								<td class="service-chart-wrap">
-									<div class="service-chart" data-bind="attr: {id: 'service-chart-counter-' + entityId}"></div>
-									<span class="service-chart-val" data-bind="text: counter"></span>
-								</td>
-							</tr>
+                           <span class="service-name" data-bind="text: name"></span>
+                        </td>
+                        <td class="centered">
+                           <i class="fa fa-warning fa-fw" style="float: left; color: orange"
+                              data-bind="visible: hasWarningsOnly()"></i> <i class="fa fa-exclamation-circle fa-fw"
+                              style="float: left; color: red" data-bind="visible: hasErrors()"></i> <i
+                              class="fa fa-exclamation-circle fa-fw" style="float: left; visibility: hidden"
+                              data-bind="visible: !hasErrorsOrWarnings()"></i>
+                           <a data-bind="text: entityString, click: showLogs"></a>
+                        </td>
+                        <td class="centered">
+                           <span data-bind="text: host"></span>
+                        </td>
+                        <td class="centered">
+                           <span data-bind="text: build"></span>
+                        </td>
+                        <td data-bind="attr: {'class':status_style}">
+                           <span data-bind="text: statusName()"></span>
+                        </td>
+                        <td class="service-chart-wrap">
+                           <div class="service-chart" data-bind="attr: {id: 'service-chart-latency-' + entityId}"></div>
+                           <span class="service-chart-val" data-bind="text: latency"></span>
+                        </td>
+                        <td class="service-chart-wrap">
+                           <div class="service-chart" data-bind="attr: {id: 'service-chart-rps-' + entityId}"></div>
+                           <span class="service-chart-val" data-bind="text: rps"></span>
+                        </td>
+                        <td class="service-chart-wrap">
+                           <div class="service-chart" data-bind="attr: {id: 'service-chart-mps-' + entityId}"></div>
+                           <span class="service-chart-val" data-bind="text: mps"></span>
+                        </td>
+                        <td class="service-chart-wrap">
+                           <div class="service-chart" data-bind="attr: {id: 'service-chart-counter-' + entityId}"></div>
+                           <span class="service-chart-val" data-bind="text: counter"></span>
+                        </td>
+                     </tr>
 
-							<tr data-bind='visible: expanded'>
-								<td></td>
-								<td colspan="9" data-bind="attr: {id: 'service-details-' + entityId}">
-									<div class="service-details">
+                     <tr data-bind='visible: expanded'>
+                        <td></td>
+                        <td colspan="9" data-bind="attr: {id: 'service-details-' + entityId}">
+                           <div class="service-details">
 
-										<!-- Nav tabs -->
-										<ul class="nav nav-tabs">
-											<li class="active">
-												<a data-bind="attr: {href: '#metrics-' + entityId}" data-toggle="tab">Metrics</a>
-											</li>
-											<li>
-												<a data-bind="attr: {href: '#logs-' + entityId}" data-toggle="tab">Logs</a>
-											</li>
-										</ul>
+                              <!-- Nav tabs -->
+                              <ul class="nav nav-tabs">
+                                 <li class="active"><a data-bind="attr: {href: '#metrics-' + entityId}" data-toggle="tab">Metrics</a>
+                                 </li>
+                                 <li><a data-bind="attr: {href: '#logs-' + entityId}" data-toggle="tab">Logs</a></li>
+                              </ul>
 
-										<!-- Tab panes -->
-										<div class="tab-content">
-											<div class="tab-pane active" data-bind="attr: {id: 'metrics-' + entityId}">
-												<div class="service-metrics">
+                              <!-- Tab panes -->
+                              <div class="tab-content">
+                                 <div class="tab-pane active" data-bind="attr: {id: 'metrics-' + entityId}">
+                                    <div class="service-metrics">
 
-													<dl>
-														<dt>Memory Usage:</dt>
-														<dd>
-															<span data-bind="text: memory"></span>
-															%
-														</dd>
-														<dt>Load Average:</dt>
-														<dd>
-															<span data-bind="text: load"></span>
-														</dd>
+                                       <dl>
+                                          <dt>Memory Usage:</dt>
+                                          <dd>
+                                             <span data-bind="text: memory"></span>
+                                             %
+                                          </dd>
+                                          <dt>Load Average:</dt>
+                                          <dd>
+                                             <span data-bind="text: load"></span>
+                                          </dd>
 
-														<dt>Thread Count:</dt>
-														<dd>
-															<span data-bind="text: threads"></span>
-														</dd>
+                                          <dt>Thread Count:</dt>
+                                          <dd>
+                                             <span data-bind="text: threads"></span>
+                                          </dd>
 
-														<dt>Free Disk Space:</dt>
-														<dd>
-															<span data-bind="text: disk"></span>
-															mb
-														</dd>
-													</dl>
+                                          <dt>Free Disk Space:</dt>
+                                          <dd>
+                                             <span data-bind="text: disk"></span>
+                                             mb
+                                          </dd>
+                                       </dl>
 
-												</div>
-											</div>
+                                    </div>
+                                 </div>
 
-											<div class="tab-pane" data-bind="attr: {id: 'logs-' + entityId}">
-												<div class="service-logs" data-bind="attr: {id: 'service-logs-' + entityId}">
-													<ul data-bind="foreach: logs">
-														<li data-bind="attr: {'class':levelStyle}">
-															<span data-bind="text: timestamp"></span>
-															<span data-bind="text: thread"></span>
-															<span data-bind="text: logger"></span>
-															<span class="service-logs-msg" data-bind="text: msg"></span>
-														</li>
-													</ul>
-												</div>
-												<div class="service-logs-options" align="right">
+                                 <div class="tab-pane" data-bind="attr: {id: 'logs-' + entityId}">
+                                    <div class="service-logs" data-bind="attr: {id: 'service-logs-' + entityId}">
+                                       <ul data-bind="foreach: logs">
+                                          <li data-bind="attr: {'class':levelStyle}"><span data-bind="text: timestamp"></span>
+                                             <span data-bind="text: thread"></span> <span data-bind="text: logger"></span> <span
+                                                class="service-logs-msg" data-bind="text: msg"></span></li>
+                                       </ul>
+                                    </div>
+                                    <div class="service-logs-options" align="right">
 
-													<span>
-														Log Level:
-														<select
-															data-bind="options:     logLevels,
+                                       <span>
+                                          Log Level:
+                                          <select
+                                             data-bind="options:     logLevels,
                                               optionsText: function(item) { return getLogLevelStyle(item);  },
                                                    value: logLevel,"></select>
-													</span>
-													<span>
-														<label> <input type="checkbox" data-bind="checked: autoScrollLogs" name="Auto Scroll" /> Auto Scroll
-														</label>
-													</span>
-												</div>
+                                       </span>
+                                       <span>
+                                          <label>
+                                             <input type="checkbox" data-bind="checked: autoScrollLogs" name="Auto Scroll" />
+                                             Auto Scroll
+                                          </label>
+                                       </span>
+                                    </div>
 
-											</div>
-										</div>
-
-
-									</div>
-								</td>
-							</tr>
-
-						</tbody>
-					</table>
-
-					<!--  =============================================================================== -->
-				</div>
-			</div>
-		</div>
-	</div>
+                                 </div>
+                              </div>
 
 
-
-	<!-- Modals -->
-	<div class="modal fade app-bind" id="buildModal" tabindex="-1" role="dialog">
-		<div class="modal-dialog">
-			<div class="modal-content">
-				<div class="modal-header">
-					<button type="button" class="close" data-dismiss="modal">&times;</button>
-					<h4 class="modal-title" id="myModalLabel">Deploy</h4>
-				</div>
-				<div class="modal-body">
-					<form>
-						<div class="row">
-							<div class="col-md-6">
-								<div class="form-group">
-									<div class="checkbox">
-										<label><input type="checkbox" data-bind="checked: modalData().doDeploy">Deploy</label>
-									</div>
-									<div class="checkbox">
-										<label><input type="checkbox" data-bind="checked: modalData().doLaunch">Launch</label>
-									</div>
-                           <div class="checkbox">
-                              <label><input type="checkbox" data-bind="checked: modalData().paused">Start Paused</label>
                            </div>
-								</div>
-								<div class="form-group">
-									<label>Build number</label>
-									<input type="text" class="form-control" data-bind="value: modalData().buildNumber" placeholder="current" />
-								</div>
-							</div>
-							<div class="col-md-6">
-								<div class="form-group" data-bind="foreach: modalData().services">
-									<div class="checkbox">
-										<label><input type="checkbox" data-bind="checked: isChecked"> <span data-bind="text: name"></span> <span
-												data-bind="text: '(' + current + ')'" class="text-muted small"></span></label>
-									</div>
-								</div>
-							</div>
-							<div class="col-md-12 text-center">
-								<br />
-								<button id="buildExecute" type="submit" class="btn btn-primary" data-bind="click: modalData().run"
-									data-loading-text="Running...">Execute</button>
-							</div>
-						</div>
-					</form>
-				</div>
-			</div>
-		</div>
-	</div>
+                        </td>
+                     </tr>
+
+                  </tbody>
+               </table>
+
+               <!--  =============================================================================== -->
+            </div>
+         </div>
+      </div>
+   </div>
 
 
-	<div class="modal fade app-bind" id="set-password-modal" tabindex="-1" role="dialog">
-		<div class="modal-dialog">
-			<div class="modal-content">
-				<div class="modal-header">
-					<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-					<h4 class="modal-title">Change Password</h4>
-				</div>
-				<div class="modal-body">
-					<table class="form-table">
-						<tr">
-							<td class="form-label">Current password:</td>
-							<td>
-								<input type="password" data-bind="value: modalOldPassword" />
-							</td>
-						</tr>
-						<tr>
-							<td class="form-label">New password:</td>
-							<td>
-								<input type="password" data-bind="value: modalNewPassword" />
-							</td>
-						</tr>
-					</table>
-				</div>
-				<div class="modal-footer">
-					<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-					<button type="button" class="btn btn-primary" data-dismiss="modal" data-bind="click: onEditPassword">Save changes</button>
-				</div>
-			</div>
-		</div>
-	</div>
 
-	<script src="//cdnjs.cloudflare.com/ajax/libs/require.js/2.1.11/require.min.js" data-main="js/main.js"></script>
+   <!-- Modals -->
+   <div class="modal fade app-bind" id="buildModal" tabindex="-1" role="dialog">
+      <div class="modal-dialog">
+         <div class="modal-content">
+            <div class="modal-header">
+               <button type="button" class="close" data-dismiss="modal">&times;</button>
+               <h4 class="modal-title" id="myModalLabel">Deploy</h4>
+            </div>
+            <div class="modal-body">
+               <form>
+                  <div class="row">
+                     <div class="col-md-6">
+                        <div class="form-group">
+                           <div class="checkbox">
+                              <label>
+                                 <input type="checkbox" data-bind="checked: modalData().doDeploy">
+                                 Deploy
+                              </label>
+                           </div>
+                           <div class="checkbox">
+                              <label>
+                                 <input type="checkbox" data-bind="checked: modalData().doLaunch">
+                                 Launch
+                              </label>
+                           </div>
+                           <div class="checkbox">
+                              <label>
+                                 <input type="checkbox" data-bind="checked: modalData().paused">
+                                 Start Paused
+                              </label>
+                           </div>
+                        </div>
+                        <div class="form-group">
+                           <label>Build number</label>
+                           <input type="text" class="form-control" data-bind="value: modalData().buildNumber"
+                              placeholder="current" />
+                        </div>
+                     </div>
+                     <div class="col-md-6">
+                        <div class="form-group" data-bind="foreach: modalData().services">
+                           <div class="checkbox">
+                              <label>
+                                 <input type="checkbox" data-bind="checked: isChecked">
+                                 <span data-bind="text: name"></span>
+                                 <span data-bind="text: '(' + current + ')'" class="text-muted small"></span>
+                              </label>
+                           </div>
+                        </div>
+                     </div>
+                     <div class="col-md-12 text-center">
+                        <br />
+                        <button id="buildExecute" type="submit" class="btn btn-primary" data-bind="click: modalData().run"
+                           data-loading-text="Running...">Execute</button>
+                     </div>
+                  </div>
+               </form>
+            </div>
+         </div>
+      </div>
+   </div>
+
+   <div class="modal fade app-bind" id="set-password-modal" tabindex="-1" role="dialog">
+      <div class="modal-dialog">
+         <div class="modal-content">
+            <div class="modal-header">
+               <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+               <h4 class="modal-title">Change Password</h4>
+            </div>
+            <div class="modal-body">
+               <table class="form-table">
+                  <tr">
+                     <td class="form-label">Current password:</td>
+                     <td>
+                        <input type="password" data-bind="value: modalOldPassword" />
+                     </td>
+                  </tr>
+                  <tr>
+                     <td class="form-label">New password:</td>
+                     <td>
+                        <input type="password" data-bind="value: modalNewPassword" />
+                     </td>
+                  </tr>
+               </table>
+            </div>
+            <div class="modal-footer">
+               <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+               <button type="button" class="btn btn-primary" data-dismiss="modal" data-bind="click: onEditPassword">Save
+                  changes</button>
+            </div>
+         </div>
+      </div>
+   </div>
+
+
+   <div class="modal fade app-bind" id="add-user-modal" tabindex="-1" role="dialog">
+      <div class="modal-dialog">
+         <div class="modal-content">
+            <div class="modal-header">
+               <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+               <h4 class="modal-title">Add Admin User</h4>
+            </div>
+            <div class="modal-body">
+               <table class="form-table">
+                  <tr>
+                     <td class="form-label">Email:</td>
+                     <td>
+                        <input type="email" data-bind="value: addUserEmail" />
+                     </td>
+                  </tr>
+                  <tr>
+                     <td class="form-label">New password:</td>
+                     <td>
+                        <input type="password" data-bind="value: addUserPassword" />
+                     </td>
+                  </tr>
+               </table>
+            </div>
+            <div class="modal-footer">
+               <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+               <button type="button" class="btn btn-primary" data-dismiss="modal" data-bind="click: onAddAdminUser">Add
+                  Admin User</button>
+            </div>
+         </div>
+      </div>
+   </div>
+
+   <script src="//cdnjs.cloudflare.com/ajax/libs/require.js/2.1.11/require.min.js" data-main="js/main.js"></script>
 </body>
 
 </html>

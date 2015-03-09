@@ -12,7 +12,6 @@ import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.rpc.Error;
 import io.tetrapod.core.serialize.StructureAdapter;
 import io.tetrapod.core.serialize.datasources.ByteBufDataSource;
-import io.tetrapod.core.storage.*;
 import io.tetrapod.core.utils.*;
 import io.tetrapod.core.web.*;
 import io.tetrapod.core.web.WebRoot.FileResult;
@@ -22,12 +21,10 @@ import io.tetrapod.protocol.storage.*;
 
 import java.io.*;
 import java.nio.charset.Charset;
-import java.nio.file.Files;
 import java.security.*;
 import java.security.spec.InvalidKeySpecException;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.regex.*;
 
 import org.slf4j.*;
 
@@ -58,8 +55,6 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    private final TetrapodWorker                       worker;
 
    final protected RaftStorage                        raftStorage       = new RaftStorage(this);
-
-   private Storage                                    storage;
 
    private AdminAccounts                              adminAccounts;
 
@@ -264,9 +259,10 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          logger.info(" ***** READY TO SERVE ***** ");
 
          try {
-            storage = new HazelcastStorage();
+
             AuthToken.setSecret(getSharedSecret());
-            adminAccounts = new AdminAccounts(storage);
+
+            adminAccounts = new AdminAccounts(raftStorage);
 
             // create servers
             servers.add(new Server(getHTTPPort(), new WebSessionFactory(webRootDirs, "/sockets"), dispatcher));
@@ -292,28 +288,31 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    @Override
    public void onShutdown(boolean restarting) {
       logger.info("Shutting Down Tetrapod");
-      if (storage != null) {
-         storage.shutdown();
+      if (raftStorage != null) {
+         raftStorage.shutdown();
       }
    }
 
    /**
     * This needs to be properly managed by RaftStorage
     */
-   @Deprecated
    public byte[] getSharedSecret() {
-      // FIXME: Move to secret.properties?
-      String str = storage.get(SHARED_SECRET_KEY);
-      if (str != null) {
-         return Base64.decode(str.getBytes(Charset.forName("UTF-8")));
-      } else {
-         byte[] b = new byte[64];
-         Random r = new SecureRandom();
-         r.nextBytes(b);
-         String secret = new String(Base64.encode(b), Charset.forName("UTF-8"));
-         storage.put(SHARED_SECRET_KEY, secret);
-         return b;
-      }
+      String str = Util.getProperty(SHARED_SECRET_KEY);
+      return Base64.decode(str.getBytes(Charset.forName("UTF-8")));
+      //      
+      //      // FIXME: Move to secret.properties?
+      //      String str = storage.get(SHARED_SECRET_KEY);
+      //      if (str != null) {
+      //         logger.info("SHARED SECRET = {}", str);
+      //         return Base64.decode(str.getBytes(Charset.forName("UTF-8")));
+      //      } else {
+      //         byte[] b = new byte[64];
+      //         Random r = new SecureRandom();
+      //         r.nextBytes(b);
+      //         String secret = new String(Base64.encode(b), Charset.forName("UTF-8"));
+      //         storage.put(SHARED_SECRET_KEY, secret);
+      //         return b;
+      //      }
    }
 
    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -852,8 +851,16 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    }
 
    @Override
-   public Response requestClusterJoin(ClusterJoinRequest r, RequestContext ctx) {
-      return raftStorage.requestClusterJoin(r, ctx);
+   public Response requestClusterJoin(ClusterJoinRequest r, RequestContext ctxA) {
+      SessionRequestContext ctx = (SessionRequestContext) ctxA;
+      if (ctx.session.getTheirEntityType() != Core.TYPE_TETRAPOD) {
+         return new Error(ERROR_INVALID_RIGHTS);
+      }
+
+      Response res = raftStorage.requestClusterJoin(r, ctx);
+      if (!res.isError()) {
+         registrySubscribe(ctx.session, ctx.session.getTheirEntityId(), true);
+      }
       //      SessionRequestContext ctx = (SessionRequestContext) ctxA;
       //      if (ctx.session.getTheirEntityType() != Core.TYPE_TETRAPOD) {
       //         return new Error(ERROR_INVALID_RIGHTS);
@@ -872,6 +879,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       //      registrySubscribe(ctx.session, ctx.session.getTheirEntityId(), true);
       //
       //      return new ClusterJoinResponse(getEntityId());
+      return res;
    }
 
    @Override
@@ -882,18 +890,18 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
    @Override
    public Response requestStorageGet(StorageGetRequest r, RequestContext ctx) {
-      return new StorageGetResponse(storage.get(r.key));
+      return new StorageGetResponse(raftStorage.get(r.key));
    }
 
    @Override
    public Response requestStorageSet(StorageSetRequest r, RequestContext ctx) {
-      storage.put(r.key, r.value);
+      raftStorage.put(r.key, r.value);
       return Response.SUCCESS;
    }
 
    @Override
    public Response requestStorageDelete(StorageDeleteRequest r, RequestContext ctx) {
-      storage.delete(r.key);
+      raftStorage.delete(r.key);
       return Response.SUCCESS;
    }
 
@@ -984,7 +992,33 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
    @Override
    public Response requestAdminCreate(AdminCreateRequest r, RequestContext ctx) {
-      // TODO: Implement;
+      if (ctx.header.fromType != TYPE_ADMIN) {
+         return new Error(ERROR_INVALID_RIGHTS);
+      }
+      final AuthToken.Decoded d = AuthToken.decodeAuthToken1(r.token);
+      if (d != null) {
+         final Admin admin = adminAccounts.getAdminByAccountId(d.accountId);
+         if (admin != null) {
+            try {
+               if (adminAccounts.verifyPermission(admin, Admin.RIGHTS_USER_WRITE)) {
+                  final String hash = PasswordHash.createHash(r.password);
+                  final Admin newUser = adminAccounts.addAdmin(r.email.trim(), hash, r.rights);
+                  if (newUser != null) {
+                     return Response.SUCCESS;
+                  } else {
+                     // they probably already exist
+                     return new Error(ERROR_INVALID_ACCOUNT);
+                  }
+               } else {
+                  return new Error(ERROR_INVALID_RIGHTS);
+               }
+            } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
+               logger.error(e.getMessage(), e);
+            }
+         }
+      } else {
+         return new Error(ERROR_INVALID_RIGHTS);
+      }
       return new Error(ERROR_UNKNOWN);
    }
 
@@ -1051,25 +1085,6 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
             return Response.error(ERROR_UNKNOWN);
       }
       return Response.SUCCESS;
-   }
-
-   private Set<String> getAllVPCMembers() {
-      // assume /etc/hosts has all members listed as services##
-      Set<String> res = new HashSet<>();
-      try {
-         for (String line : Files.readAllLines(new File("/etc/hosts").toPath(), Charset.forName("UTF-8"))) {
-            Matcher m = Pattern.compile(".*(services\\d\\d).*").matcher(line);
-            if (m.matches()) {
-               res.add(m.group(1));
-            }
-         }
-      } catch (IOException e) {
-         logger.error("could not read /etc/hosts", e);
-      }
-      if (res.isEmpty() && Util.getProperty("dev.mode", "local").equals("local")) {
-         res.add("localhost");
-      }
-      return res;
    }
 
    @Override

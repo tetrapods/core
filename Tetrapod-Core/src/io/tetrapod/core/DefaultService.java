@@ -658,6 +658,7 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
 
    @Override
    public Response requestPause(PauseRequest r, RequestContext ctx) {
+      // TODO: Check admin rights or macaroon
       updateStatus(getStatus() | Core.STATUS_PAUSED);
       onPaused();
       return Response.SUCCESS;
@@ -665,6 +666,7 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
 
    @Override
    public Response requestUnpause(UnpauseRequest r, RequestContext ctx) {
+      // TODO: Check admin rights or macaroon
       updateStatus(getStatus() & ~Core.STATUS_PAUSED);
       onUnpaused();
       return Response.SUCCESS;
@@ -672,6 +674,7 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
 
    @Override
    public Response requestRestart(RestartRequest r, RequestContext ctx) {
+      // TODO: Check admin rights or macaroon
       dispatcher.dispatch(new Runnable() {
          public void run() {
             shutdown(true);
@@ -682,6 +685,7 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
 
    @Override
    public Response requestShutdown(ShutdownRequest r, RequestContext ctx) {
+      // TODO: Check admin rights or macaroon
       dispatcher.dispatch(new Runnable() {
          public void run() {
             shutdown(false);

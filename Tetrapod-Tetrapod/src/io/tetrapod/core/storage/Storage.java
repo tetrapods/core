@@ -1,5 +1,6 @@
 package io.tetrapod.core.storage;
 
+import io.tetrapod.core.DistributedLock;
 import io.tetrapod.core.rpc.Structure;
 import io.tetrapod.core.serialize.datasources.JSONDataSource;
 
@@ -7,8 +8,6 @@ import java.io.*;
 import java.util.Properties;
 
 import org.slf4j.*;
-
-import com.hazelcast.core.ILock;
 
 /**
  * Storage provides a persistent in-memory KV Store with support for basic key-value storage, sequential counters, and distributed locks.
@@ -42,11 +41,11 @@ public abstract class Storage {
 
    public abstract void put(String key, String value);
 
-   public abstract String delete(String key);
+   public abstract void delete(String key);
 
    public abstract String get(String key);
 
-   public abstract ILock getLock(String lockKey);
+   public abstract DistributedLock getLock(String lockKey);
 
    public abstract long increment(String key);
 

@@ -4,12 +4,12 @@ import io.netty.channel.socket.SocketChannel;
 import io.tetrapod.core.registry.Registry;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.storage.Storage;
-import io.tetrapod.core.utils.Util;
+import io.tetrapod.core.utils.*;
 import io.tetrapod.protocol.core.*;
 import io.tetrapod.protocol.raft.*;
 import io.tetrapod.raft.*;
 import io.tetrapod.raft.RaftEngine.Role;
-import io.tetrapod.raft.storage.PutItemCommand;
+import io.tetrapod.raft.storage.*;
 
 import java.io.*;
 import java.security.SecureRandom;
@@ -17,8 +17,6 @@ import java.util.*;
 import java.util.concurrent.*;
 
 import org.slf4j.*;
-
-import com.hazelcast.core.ILock;
 
 /**
  * Wraps a RaftEngine in our Tetrapod-RPC and implements the StorageContract via TetrapodStateMachine
@@ -62,7 +60,6 @@ public class RaftStorage extends Storage implements RaftRPC<TetrapodStateMachine
 
       // FIXME: build initial peer list from loaded state here?
 
-      
    }
 
    public void startListening() throws IOException {
@@ -70,7 +67,7 @@ public class RaftStorage extends Storage implements RaftRPC<TetrapodStateMachine
          server.start().sync();
       } catch (Exception e) {
          service.fail(e);
-      } 
+      }
    }
 
    /**
@@ -373,7 +370,7 @@ public class RaftStorage extends Storage implements RaftRPC<TetrapodStateMachine
    /**
     * A tetrapod has contacted us to join the cluster. We execute a AddPeerCommand to add them, and return them their peerId.
     */
-   public Response requestClusterJoin(ClusterJoinRequest req, final RequestContext ctx) {
+   public Response requestClusterJoin(ClusterJoinRequest req, final SessionRequestContext ctx) {
       final ClientResponseHandler<TetrapodStateMachine> handler = new ClientResponseHandler<TetrapodStateMachine>() {
          @Override
          public void handleResponse(Command<TetrapodStateMachine> command) {
@@ -386,7 +383,7 @@ public class RaftStorage extends Storage implements RaftRPC<TetrapodStateMachine
                }
             } finally {
                // return the pending result
-               ((SessionRequestContext) ctx).session.sendResponse(res, ctx.header.requestId);
+               ctx.session.sendResponse(res, ctx.header.requestId);
             }
          }
       };
@@ -482,33 +479,53 @@ public class RaftStorage extends Storage implements RaftRPC<TetrapodStateMachine
 
    ///////////////////////////////////// STORAGE API ///////////////////////////////////////
 
-   @Override
-   public void put(String key, String value) {
-      // TODO Auto-generated method stub
+   private void executeCommand(Command<TetrapodStateMachine> cmd, ClientResponseHandler<TetrapodStateMachine> handler) {
+      // if we're the leader we can execute directly
+      if (!raft.executeCommand(cmd, handler)) {
+         // else, send RPC to current leader
+         sendIssueCommand(raft.getLeader(), cmd, handler);
+      }
    }
 
    @Override
-   public String delete(String key) {
-      // TODO Auto-generated method stub
-      return null;
+   public void put(String key, String value) {
+      executeCommand(new PutItemCommand<TetrapodStateMachine>(key, value), null);
+   }
+
+   @Override
+   public void delete(String key) {
+      executeCommand(new RemoveItemCommand<TetrapodStateMachine>(key), null);
    }
 
    @Override
    public String get(String key) {
-      // TODO Auto-generated method stub
+      // Formal read, or dirty read?
+      //executeCommand(new GetItemCommand<TetrapodStateMachine>(key), null);
       return null;
    }
 
    @Override
-   public ILock getLock(String lockKey) {
-      // TODO Auto-generated method stub
-      return null;
+   public DistributedLock getLock(String lockKey) {
+      DistributedLock lock = new DistributedLock(lockKey, this);
+      lock.lock(60000);
+      return lock;
    }
 
    @Override
    public long increment(String key) {
-      // TODO Auto-generated method stub
-      return 0;
+      final Value<Long> val = new Value<Long>();
+      executeCommand(new IncrementCommand<TetrapodStateMachine>(key), new ClientResponseHandler<TetrapodStateMachine>() {
+         @Override
+         public void handleResponse(Command<TetrapodStateMachine> command) {
+            if (command != null) {
+               IncrementCommand<TetrapodStateMachine> cmd = (IncrementCommand<TetrapodStateMachine>) command;
+               val.set(cmd.getResult());
+            } else {
+               val.set(null);
+            }
+         }
+      });
+      return val.waitForValue();
    }
 
    ///////////////////////////////////////////////////////////////////////////////////////////////////////////

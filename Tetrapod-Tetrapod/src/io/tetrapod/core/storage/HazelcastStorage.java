@@ -61,16 +61,34 @@ public class HazelcastStorage extends Storage {
       map.put(key, value);
    }
 
-   public String delete(String key) {
-      return map.remove(key);
+   public void delete(String key) {
+      map.remove(key);
    }
 
    public String get(String key) {
       return map.get(key);
    }
 
-   public ILock getLock(String lockKey) {
-      return hazelcast.getLock(lockKey);
+   // hack
+   public class HzDistributedLock extends DistributedLock {
+      final ILock lock;
+
+      HzDistributedLock(ILock lock) {
+         super(null, null);
+         this.lock = lock;
+      }
+
+      public void lock() {
+         lock.lock();
+      }
+
+      public void unlock() {
+         lock.unlock();
+      }
+   }
+
+   public HzDistributedLock getLock(String lockKey) {
+      return new HzDistributedLock(hazelcast.getLock(lockKey));
    }
 
    public long increment(String key) {

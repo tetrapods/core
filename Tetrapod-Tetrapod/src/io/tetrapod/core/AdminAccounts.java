@@ -54,11 +54,14 @@ public class AdminAccounts {
 
    public Admin addAdmin(String email, String hash, long rights) {
       try {
-         int accountId = (int) storage.increment("admin.accounts");
-         Admin admin = new Admin(accountId, email, hash, 0xFF, new long[Admin.MAX_LOGIN_ATTEMPTS]);
-         storage.put("admin::" + accountId, admin);
-         storage.put("admin.email::" + email, accountId);
-         return admin;
+         int accountId = storage.get("admin.email::" + email, 0);
+         if (accountId == 0) {
+            accountId = (int) storage.increment("admin.accounts");
+            Admin admin = new Admin(accountId, email, hash, rights, new long[Admin.MAX_LOGIN_ATTEMPTS]);
+            storage.put("admin::" + accountId, admin);
+            storage.put("admin.email::" + email, accountId);
+            return admin;
+         }
       } catch (Exception e) {
          logger.error(e.getMessage(), e);
       }
@@ -71,16 +74,14 @@ public class AdminAccounts {
 
    public Admin mutate(Admin presumedCurrent, AdminMutator mutator) {
       try {
-         final String key = "admin::" + presumedCurrent.accountId;
-         storage.getLock(key).lock();
-         try {
+         final String key = "admin::" + presumedCurrent.accountId; 
+         try (DistributedLock lock = storage.getLock(key)) { 
             Admin admin = getAdminByAccountId(presumedCurrent.accountId);
             mutator.mutate(admin);
             storage.put(key, admin);
             logger.debug("Mutated {}", key);
             return admin;
-         } finally {
-            storage.getLock(key).unlock();
+         
          }
       } catch (HazelcastInstanceNotActiveException e) {
          throw Fail.fail(e);
@@ -110,6 +111,10 @@ public class AdminAccounts {
          return ((System.currentTimeMillis() - admin.loginAttempts[admin.loginAttempts.length - 1]) < 5000);
       }
       return true;
+   }
+
+   public boolean verifyPermission(Admin admin, int rightsRequired) {
+      return (admin.rights & rightsRequired) == rightsRequired;
    }
 
 }
