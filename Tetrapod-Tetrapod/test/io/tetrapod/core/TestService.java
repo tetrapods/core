@@ -8,7 +8,7 @@ public class TestService extends DefaultService  {
    public static final Logger logger = LoggerFactory.getLogger(TestService.class);
 
    public TestService() {
-      setMainContract(new TetrapodContract());
+      super(new TetrapodContract());
       addPeerContracts(/* non-core services we talk to: eg:*//* new WalletContract(), new StorageContract() */);
    }
 

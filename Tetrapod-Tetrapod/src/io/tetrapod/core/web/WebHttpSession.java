@@ -297,11 +297,11 @@ public class WebHttpSession extends WebSession {
                      relayRequest(header, request, ses, handler);
                   } else {
                      logger.debug("{} Could not find a relay session for {} {}", this, header.toId, header.contractId);
-                     handler.onResponse(new Error(ERROR_SERVICE_UNAVAILABLE));
+                     handler.fireResponse(new Error(ERROR_SERVICE_UNAVAILABLE), header);
                   }
                } else {
                   logger.debug("{} Could not find a service for {}", this, header.contractId);
-                  handler.onResponse(new Error(ERROR_SERVICE_UNAVAILABLE));
+                  handler.fireResponse(new Error(ERROR_SERVICE_UNAVAILABLE), header);
                }
             } else {
                // @web() specific Request mapping 
@@ -309,7 +309,7 @@ public class WebHttpSession extends WebSession {
                if (request != null) {
                   relayRequest(header, request, handler);
                } else {
-                  handler.onResponse(new Error(ERROR_UNKNOWN_REQUEST));
+                  handler.fireResponse(new Error(ERROR_UNKNOWN_REQUEST), header);
                }
             }
          } finally {
@@ -409,7 +409,7 @@ public class WebHttpSession extends WebSession {
          relayRequest(header, request, ses, handler);
       } else {
          logger.debug("{} Could not find a relay session for {} {}", this, header.toId, header.contractId);
-         handler.onResponse(new Error(ERROR_SERVICE_UNAVAILABLE));
+         handler.fireResponse(new Error(ERROR_SERVICE_UNAVAILABLE), header);
       }
    }
 

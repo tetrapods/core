@@ -62,13 +62,12 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    private final WebRoutes                            webRoutes         = new WebRoutes();
 
    private long                                       lastStatsLog;
-   private ConcurrentMap<String, WebRoot>             webRootDirs       = new ConcurrentHashMap<>();
+   private final ConcurrentMap<String, WebRoot>       webRootDirs       = new ConcurrentHashMap<>();
 
    public TetrapodService() {
+      super(new TetrapodContract());
       registry = new io.tetrapod.core.registry.Registry(this);
       worker = new TetrapodWorker(this);
-      // cluster = new TetrapodCluster(this);
-      setMainContract(new TetrapodContract());
       addContracts(new StorageContract());
       addContracts(new RaftContract());
 

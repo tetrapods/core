@@ -33,7 +33,7 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
 
    protected final Dispatcher              dispatcher;
    protected final Client                  clusterClient;
-   protected Contract                      contract;
+   protected final Contract                contract;
    protected final ServiceCache            services;
    protected boolean                       terminated;
    protected int                           entityId;
@@ -54,6 +54,10 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
    private final MessageHandlers           messageHandlers = new MessageHandlers();
 
    public DefaultService() {
+      this(null);
+   }
+   
+   public DefaultService(Contract mainContract) {
       logBuffer = (LogBuffer) ((LoggerContext) LoggerFactory.getILoggerFactory()).getLogger("ROOT").getAppender("BUFFER");
       String m = getStartLoggingMessage();
       logger.info(m);
@@ -104,6 +108,9 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
       buildNumber = num;
 
       checkHealth();
+      if (mainContract != null)
+         addContracts(mainContract);
+      this.contract = mainContract;
    }
 
    /**
@@ -380,11 +387,6 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
    }
 
    // subclass utils
-
-   protected void setMainContract(Contract c) {
-      addContracts(c);
-      contract = c;
-   }
 
    protected void addContracts(Contract... contracts) {
       for (Contract c : contracts) {
