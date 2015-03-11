@@ -15,6 +15,10 @@ public abstract class PendingResponseHandler {
       originalRequestId = handler.originalRequestId;
    }
 
+   public PendingResponseHandler(int originalRequestId) {
+      this.originalRequestId = originalRequestId;
+   }
+
    abstract public Response onResponse(Response res);
 
 }
