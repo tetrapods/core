@@ -32,6 +32,7 @@ public class TetrapodContract extends Contract {
       , GetEntityInfoRequest.Handler
       , GetServiceBuildInfoRequest.Handler
       , GetSubscriberCountRequest.Handler
+      , IssuePeerIdRequest.Handler
       , KeepAliveRequest.Handler
       , LogRegistryStatsRequest.Handler
       , PublishRequest.Handler
@@ -50,6 +51,7 @@ public class TetrapodContract extends Contract {
    public Structure[] getRequests() {
       return new Structure[] {
          new RegisterRequest(),
+         new IssuePeerIdRequest(),
          new ClusterJoinRequest(),
          new UnregisterRequest(),
          new PublishRequest(),
@@ -81,7 +83,7 @@ public class TetrapodContract extends Contract {
    public Structure[] getResponses() {
       return new Structure[] {
          new RegisterResponse(),
-         new ClusterJoinResponse(),
+         new IssuePeerIdResponse(),
          new PublishResponse(),
          new AdminLoginResponse(),
          new GetSubscriberCountResponse(),

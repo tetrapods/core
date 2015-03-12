@@ -28,8 +28,9 @@ function TP_Tetrapod(server) {
    server.register("struct", "Tetrapod", "Entity", 1, 10171140);
    server.register("request", "Tetrapod", "Register", 1, 10895179);
    server.register("response", "Tetrapod", "Register", 1, 13376201);
+   server.register("request", "Tetrapod", "IssuePeerId", 1, 10809624);
+   server.register("response", "Tetrapod", "IssuePeerId", 1, 14036188);
    server.register("request", "Tetrapod", "ClusterJoin", 1, 8294880);
-   server.register("response", "Tetrapod", "ClusterJoin", 1, 8947508);
    server.register("request", "Tetrapod", "Unregister", 1, 3896262);
    server.register("request", "Tetrapod", "Publish", 1, 3171651);
    server.register("response", "Tetrapod", "Publish", 1, 2698673);

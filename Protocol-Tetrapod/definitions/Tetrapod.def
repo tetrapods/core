@@ -36,15 +36,23 @@ public response Register
    1: int entityId
    2: int parentId
    3: string token
-   
-public request ClusterJoin
+
+public request IssuePeerId
    1: string host
-   2: int servicePort
-   3: int clusterPort
+   2: int clusterPort
    
-public response ClusterJoin
+public response IssuePeerId
    1: int peerId   // our new peerId 
    2: int entityId // of the host we are talking to
+
+
+public request ClusterJoin
+   1: int build
+   2: int status
+   3: string host
+   4: int entityId
+   5: int servicePort
+   6: int clusterPort
    
 public request Unregister
    1: int entityId

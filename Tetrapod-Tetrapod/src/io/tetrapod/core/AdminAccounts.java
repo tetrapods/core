@@ -72,16 +72,20 @@ public class AdminAccounts {
       void mutate(Admin admin);
    }
 
+   // TODO: Lock + Put can be replaced with a conditional put once supported
    public Admin mutate(Admin presumedCurrent, AdminMutator mutator) {
       try {
-         final String key = "admin::" + presumedCurrent.accountId; 
-         try (DistributedLock lock = storage.getLock(key)) { 
+         final String key = "admin::" + presumedCurrent.accountId;
+         final DistributedLock lock = storage.getLock(key);
+         lock.lock(60000, 60000);
+         try {
             Admin admin = getAdminByAccountId(presumedCurrent.accountId);
             mutator.mutate(admin);
             storage.put(key, admin);
             logger.debug("Mutated {}", key);
             return admin;
-         
+         } finally {
+            lock.unlock();
          }
       } catch (HazelcastInstanceNotActiveException e) {
          throw Fail.fail(e);

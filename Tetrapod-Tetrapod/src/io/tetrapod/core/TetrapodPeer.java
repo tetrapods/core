@@ -1,7 +1,7 @@
 package io.tetrapod.core;
 
 import io.netty.channel.socket.SocketChannel;
-import io.tetrapod.core.registry.*;
+import io.tetrapod.core.rpc.*;
 import io.tetrapod.protocol.core.*;
 
 import java.util.concurrent.TimeUnit;
@@ -16,7 +16,6 @@ public class TetrapodPeer implements Session.Listener, SessionFactory {
    public static final Logger   logger = LoggerFactory.getLogger(TetrapodPeer.class);
 
    public final TetrapodService service;
-   public final int             peerId;
    public final int             entityId;
    public final String          host;
    public final int             clusterPort;
@@ -25,27 +24,28 @@ public class TetrapodPeer implements Session.Listener, SessionFactory {
    private Session              session;
    private int                  failures;
    private boolean              pendingConnect;
+   private boolean              joined = false;
 
-   public TetrapodPeer(TetrapodService service, int peerId, String host, int clusterPort) {
+   public TetrapodPeer(TetrapodService service, int entityId, String host, int clusterPort, int servicePort) {
       this.service = service;
-      this.peerId = peerId;
-      this.entityId = peerId << Registry.PARENT_ID_SHIFT;
+      this.entityId = entityId;
       this.host = host;
       this.clusterPort = clusterPort;
+      this.servicePort = servicePort;
    }
 
    public synchronized boolean isConnected() {
       return session != null && session.isConnected();
    }
 
-   private synchronized void setSession(Session ses) {
+   protected synchronized void setSession(Session ses) {
       this.failures = 0;
       this.session = ses;
+      this.session.setMyEntityId(service.getEntityId());
       this.session.setTheirEntityId(entityId);
       this.session.addSessionListener(this);
-      EntityInfo e = service.registry.getEntity(entityId);
-      if (e != null) {
-         e.setSession(ses);
+      if (!joined && entityId != service.getEntityId()) {
+         joinCluster();
       }
    }
 
@@ -115,4 +115,24 @@ public class TetrapodPeer implements Session.Listener, SessionFactory {
    public String toString() {
       return String.format("pod[0x%08X @ %s:%d,%d]", entityId, host, servicePort, clusterPort);
    }
+
+   private synchronized void joinCluster() {
+      joined = true;
+      session.sendRequest(
+            new ClusterJoinRequest(service.buildNumber, service.getStatus(), service.getHostName(), service.getEntityId(),
+                  service.getServicePort(), service.getClusterPort()), Core.DIRECT).handle(new ResponseHandler() {
+         @Override
+         public void onResponse(Response res) {
+            if (res.isError()) {
+               logger.error("ClusterJoinRequest Failed {}", res);
+               synchronized (TetrapodPeer.this) {
+                  joined = false;
+               }
+            } else {
+               logger.info("ClusterJoinRequest Succeeded");
+            }
+         }
+      });
+   }
+
 }

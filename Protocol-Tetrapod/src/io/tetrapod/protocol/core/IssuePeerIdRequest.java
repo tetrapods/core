@@ -12,29 +12,21 @@ import java.util.*;
 import java.util.concurrent.*;
 
 @SuppressWarnings("unused")
-public class ClusterJoinRequest extends Request {
+public class IssuePeerIdRequest extends Request {
 
-   public static final int STRUCT_ID = 8294880;
+   public static final int STRUCT_ID = 10809624;
    public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;
    
-   public ClusterJoinRequest() {
+   public IssuePeerIdRequest() {
       defaults();
    }
 
-   public ClusterJoinRequest(int build, int status, String host, int entityId, int servicePort, int clusterPort) {
-      this.build = build;
-      this.status = status;
+   public IssuePeerIdRequest(String host, int clusterPort) {
       this.host = host;
-      this.entityId = entityId;
-      this.servicePort = servicePort;
       this.clusterPort = clusterPort;
    }   
 
-   public int build;
-   public int status;
    public String host;
-   public int entityId;
-   public int servicePort;
    public int clusterPort;
 
    public final Structure.Security getSecurity() {
@@ -42,22 +34,14 @@ public class ClusterJoinRequest extends Request {
    }
 
    public final void defaults() {
-      build = 0;
-      status = 0;
       host = null;
-      entityId = 0;
-      servicePort = 0;
       clusterPort = 0;
    }
    
    @Override
    public final void write(DataSource data) throws IOException {
-      data.write(1, this.build);
-      data.write(2, this.status);
-      data.write(3, this.host);
-      data.write(4, this.entityId);
-      data.write(5, this.servicePort);
-      data.write(6, this.clusterPort);
+      data.write(1, this.host);
+      data.write(2, this.clusterPort);
       data.writeEndTag();
    }
    
@@ -67,12 +51,8 @@ public class ClusterJoinRequest extends Request {
       while (true) {
          int tag = data.readTag();
          switch (tag) {
-            case 1: this.build = data.read_int(tag); break;
-            case 2: this.status = data.read_int(tag); break;
-            case 3: this.host = data.read_string(tag); break;
-            case 4: this.entityId = data.read_int(tag); break;
-            case 5: this.servicePort = data.read_int(tag); break;
-            case 6: this.clusterPort = data.read_int(tag); break;
+            case 1: this.host = data.read_string(tag); break;
+            case 2: this.clusterPort = data.read_int(tag); break;
             case Codec.END_TAG:
                return;
             default:
@@ -83,40 +63,36 @@ public class ClusterJoinRequest extends Request {
    }
    
    public final int getContractId() {
-      return ClusterJoinRequest.CONTRACT_ID;
+      return IssuePeerIdRequest.CONTRACT_ID;
    }
 
    public final int getStructId() {
-      return ClusterJoinRequest.STRUCT_ID;
+      return IssuePeerIdRequest.STRUCT_ID;
    }
    
    @Override
    public final Response dispatch(ServiceAPI is, RequestContext ctx) {
       if (is instanceof Handler)
-         return ((Handler)is).requestClusterJoin(this, ctx);
+         return ((Handler)is).requestIssuePeerId(this, ctx);
       return is.genericRequest(this, ctx);
    }
    
    public static interface Handler extends ServiceAPI {
-      Response requestClusterJoin(ClusterJoinRequest r, RequestContext ctx);
+      Response requestIssuePeerId(IssuePeerIdRequest r, RequestContext ctx);
    }
    
    public final String[] tagWebNames() {
       // Note do not use this tags in long term serializations (to disk or databases) as 
       // implementors are free to rename them however they wish.  A null means the field
       // is not to participate in web serialization (remaining at default)
-      String[] result = new String[6+1];
-      result[1] = "build";
-      result[2] = "status";
-      result[3] = "host";
-      result[4] = "entityId";
-      result[5] = "servicePort";
-      result[6] = "clusterPort";
+      String[] result = new String[2+1];
+      result[1] = "host";
+      result[2] = "clusterPort";
       return result;
    }
    
    public final Structure make() {
-      return new ClusterJoinRequest();
+      return new IssuePeerIdRequest();
    }
    
    public final StructDescription makeDescription() {
@@ -124,12 +100,8 @@ public class ClusterJoinRequest extends Request {
       desc.tagWebNames = tagWebNames();
       desc.types = new TypeDescriptor[desc.tagWebNames.length];
       desc.types[0] = new TypeDescriptor(TypeDescriptor.T_STRUCT, getContractId(), getStructId());
-      desc.types[1] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
+      desc.types[1] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
       desc.types[2] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
-      desc.types[3] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
-      desc.types[4] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
-      desc.types[5] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
-      desc.types[6] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
       return desc;
    }
 

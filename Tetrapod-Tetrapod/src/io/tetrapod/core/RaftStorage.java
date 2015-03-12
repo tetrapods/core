@@ -1,7 +1,7 @@
 package io.tetrapod.core;
 
 import io.netty.channel.socket.SocketChannel;
-import io.tetrapod.core.registry.Registry;
+import io.tetrapod.core.registry.*;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.storage.Storage;
 import io.tetrapod.core.utils.*;
@@ -20,6 +20,13 @@ import org.slf4j.*;
 
 /**
  * Wraps a RaftEngine in our Tetrapod-RPC and implements the StorageContract via TetrapodStateMachine
+ * 
+ * Cluster Joining Steps:
+ * <ol>
+ * <li>Connect to an existing member
+ * <li>Ask for a tetrapod peerId
+ * <li>For each known member send ClusterJoinRequest to subscribes to that member's registry, discover more peers
+ * </ol>
  */
 public class RaftStorage extends Storage implements RaftRPC<TetrapodStateMachine>, RaftContract.API,
       StateMachine.Listener<TetrapodStateMachine>, SessionFactory {
@@ -59,7 +66,6 @@ public class RaftStorage extends Storage implements RaftRPC<TetrapodStateMachine
       this.raft.getStateMachine().addListener(this);
 
       // FIXME: build initial peer list from loaded state here?
-
    }
 
    public void startListening() throws IOException {
@@ -105,7 +111,13 @@ public class RaftStorage extends Storage implements RaftRPC<TetrapodStateMachine
    private void addPeer(AddPeerCommand<TetrapodStateMachine> command) {
       // TODO: Have a think about safety here when loading old log events...
       if (command.peerId != raft.getPeerId()) {
-         cluster.put(command.peerId << Registry.PARENT_ID_SHIFT, new TetrapodPeer(service, command.peerId, command.host, command.port));
+         //         final int entityId = command.peerId << Registry.PARENT_ID_SHIFT;
+         //         final TetrapodPeer peer = new TetrapodPeer(service, command.peerId, command.host, command.port, Core.DEFAULT_SERVICE_PORT);
+         //         cluster.put(entityId, peer);
+         //         Session ses = getSession(entityId);
+         //         if (ses != null) {
+         //            peer.setSession(ses);
+         //         }
       }
    }
 
@@ -125,12 +137,9 @@ public class RaftStorage extends Storage implements RaftRPC<TetrapodStateMachine
 
    /**
     * Attempts to join the raft cluster by contacting the given node. If we connect, we send a ClusterJoinRequest to obtain a peerId. The
-    * peerId is used to derive our entityId, and we expect the raft leader to connect to us and start giving us the state of the system.
+    * peerId is used to derive our entityId, and we expect the raft leader to start giving us the state of the system.
     */
    public synchronized boolean joinCluster(final ServerAddress address) {
-
-      // service.registerSelf(peerId << Registry.PARENT_ID_SHIFT, random.nextLong());
-      // service.fail("Could not get peerId from " + address);
 
       final Client client = new Client(this);
       try {
@@ -142,36 +151,45 @@ public class RaftStorage extends Storage implements RaftRPC<TetrapodStateMachine
             @Override
             public void onSessionStart(final Session ses) {
 
-               ses.sendRequest(new ClusterJoinRequest(service.getHostName(), service.getServicePort(), service.getClusterPort()),
-                     Core.DIRECT).handle(new ResponseHandler() {
-                  @Override
-                  public void onResponse(Response res) {
-                     if (res.isError()) {
-                        logger.error("Unable to Join cluster @ {} : {}", address, res.errorCode());
-                        ses.close();
-                        service.getDispatcher().dispatch(1, TimeUnit.SECONDS, new Runnable() {
-                           public void run() {
-                              if (!service.isShuttingDown()) {
-                                 try {
-                                    if (!joinCluster(address)) {
-                                       service.fail("Unable to register");
+               ses.sendRequest(new IssuePeerIdRequest(service.getHostName(), service.getClusterPort()), Core.DIRECT).handle(
+                     new ResponseHandler() {
+                        @Override
+                        public void onResponse(Response res) {
+                           if (res.isError()) {
+                              logger.error("Unable to Join cluster @ {} : {}", address, res.errorCode());
+                              ses.close();
+                              service.getDispatcher().dispatch(1, TimeUnit.SECONDS, new Runnable() {
+                                 public void run() {
+                                    if (!service.isShuttingDown()) {
+                                       try {
+                                          if (!joinCluster(address)) {
+                                             service.fail("Unable to register");
+                                          }
+                                       } catch (Exception e) {
+                                          service.fail("Unable to register: {}" + e);
+                                       }
                                     }
-                                 } catch (Exception e) {
-                                    service.fail("Unable to register: {}" + e);
                                  }
-                              }
+                              });
+                           } else {
+                              final IssuePeerIdResponse r = (IssuePeerIdResponse) res;
+                              final int myEntityId = r.peerId << Registry.PARENT_ID_SHIFT;
+                              ses.setMyEntityId(myEntityId);
+                              ses.setTheirEntityId(r.entityId);
+                              // ses.close();
+
+                              service.registerSelf(myEntityId, service.random.nextLong());
+                              raft.start(r.peerId);
+
+                              // HACK: We need to wait for our loopback connection to be established
+                              service.dispatcher.dispatch(1, TimeUnit.SECONDS, new Runnable() {
+                                 public void run() {
+                                    addMember(r.entityId, address.host, Core.DEFAULT_SERVICE_PORT, address.port, ses);
+                                 }
+                              });
                            }
-                        });
-                     } else {
-                        ClusterJoinResponse r = (ClusterJoinResponse) res;
-                        final int myEntityId = r.peerId << Registry.PARENT_ID_SHIFT;
-                        ses.setMyEntityId(myEntityId);
-                        ses.setTheirEntityId(r.entityId);
-                        service.registerSelf(myEntityId, service.random.nextLong());
-                        raft.setPeerId(r.peerId);
-                     }
-                  }
-               });
+                        }
+                     });
             }
          }).sync();
       } catch (Exception e) {
@@ -228,7 +246,7 @@ public class RaftStorage extends Storage implements RaftRPC<TetrapodStateMachine
       if (service.getEntityId() != 0) {
          for (TetrapodPeer pod : cluster.values()) {
             if (pod.entityId != service.getEntityId()) {
-               if (pod.getSession() == null) {
+               if (!pod.isConnected()) {
                   pod.connect();
                }
             }
@@ -246,6 +264,30 @@ public class RaftStorage extends Storage implements RaftRPC<TetrapodStateMachine
          ses.sendMessage(new ClusterMemberMessage(pod.entityId, pod.host, pod.servicePort, pod.clusterPort), MessageHeader.TO_ENTITY,
                toEntityId);
       }
+   }
+
+   public boolean addMember(int entityId, String host, int servicePort, int clusterPort, Session ses) {
+      // ignore ourselves
+      if (entityId == service.getEntityId()) {
+         return false;
+      }
+
+      TetrapodPeer pod = cluster.get(entityId);
+      if (pod != null) {
+         pod.servicePort = servicePort;
+         if (pod.isConnected()) {
+            return false;
+         }
+      } else {
+         pod = new TetrapodPeer(service, entityId, host, clusterPort, servicePort);
+         cluster.put(entityId, pod);
+         logger.info(" * ADDING TETRAPOD CLUSTER MEMBER: {} @ {}", pod, ses);
+      }
+
+      if (ses != null) {
+         pod.setSession(ses);
+      }
+      return true;
    }
 
    /////////////////////////////////////////////// RAFT RPC REQUEST SENDERS //////////////////////////////////////////////
@@ -368,18 +410,18 @@ public class RaftStorage extends Storage implements RaftRPC<TetrapodStateMachine
    ///////////////////////////////////////////////////// REQUEST HANDLERS //////////////////////////////////////////////////////
 
    /**
-    * A tetrapod has contacted us to join the cluster. We execute a AddPeerCommand to add them, and return them their peerId.
+    * A new tetrapod is asking to be issued a unique peerId for the cluster. Find the leader and issue a command to generate the next
+    * available peerId
     */
-   public Response requestClusterJoin(ClusterJoinRequest req, final SessionRequestContext ctx) {
+   public Response requestIssuePeerId(final IssuePeerIdRequest r, final SessionRequestContext ctx) {
       final ClientResponseHandler<TetrapodStateMachine> handler = new ClientResponseHandler<TetrapodStateMachine>() {
          @Override
          public void handleResponse(Command<TetrapodStateMachine> command) {
             Response res = Response.error(CoreContract.ERROR_UNKNOWN);
             try {
                if (command != null) {
-                  int peerId = ((AddPeerCommand<TetrapodStateMachine>) command).peerId;
-                  /// .... FIXME. now what else?
-                  res = new ClusterJoinResponse(peerId, service.getEntityId());
+                  final int peerId = ((AddPeerCommand<TetrapodStateMachine>) command).peerId;
+                  res = new IssuePeerIdResponse(peerId, service.getEntityId());
                }
             } finally {
                // return the pending result
@@ -387,7 +429,7 @@ public class RaftStorage extends Storage implements RaftRPC<TetrapodStateMachine
             }
          }
       };
-      final AddPeerCommand<TetrapodStateMachine> cmd = new AddPeerCommand<>(req.host, req.clusterPort);
+      final AddPeerCommand<TetrapodStateMachine> cmd = new AddPeerCommand<>(r.host, r.clusterPort);
       // if we're the leader we can execute directly
       if (!raft.executeCommand(cmd, handler)) {
          // else, send RPC to current leader
@@ -395,6 +437,38 @@ public class RaftStorage extends Storage implements RaftRPC<TetrapodStateMachine
       }
 
       return Response.PENDING;
+   }
+
+   /**
+    * A tetrapod has contacted us to join the cluster.
+    */
+   public Response requestClusterJoin(final ClusterJoinRequest req, final Topic clusterTopic, final SessionRequestContext ctx) {
+
+      logger.info("**************************** requestClusterJoin {} {}", ctx.session, req.dump());
+
+      ctx.session.setTheirEntityId(req.entityId);
+
+      // register them in our registry
+      EntityInfo entity = service.registry.getEntity(req.entityId);
+      if (entity == null) {
+         entity = new EntityInfo(req.entityId, req.entityId, 0L, req.host, req.status, Core.TYPE_TETRAPOD, "Tetrapod*", req.build,
+               TetrapodContract.VERSION, TetrapodContract.CONTRACT_ID);
+         service.registry.register(entity);
+      }
+      entity.setSession(ctx.session);
+
+      // add them to the cluster list
+      if (addMember(req.entityId, req.host, req.servicePort, req.clusterPort, ctx.session)) {
+         service.broadcast(new ClusterMemberMessage(req.entityId, req.host, req.servicePort, req.clusterPort), clusterTopic);
+      }
+
+      // subscribe them to our cluster and registry views
+      logger.info("**************************** SYNC TO {} {}", ctx.session, req.entityId);
+
+      service.registrySubscribe(ctx.session, req.entityId, true);
+      service.subscribeToCluster(ctx.session, req.entityId);
+
+      return Response.SUCCESS;
    }
 
    @Override
@@ -479,7 +553,7 @@ public class RaftStorage extends Storage implements RaftRPC<TetrapodStateMachine
 
    ///////////////////////////////////// STORAGE API ///////////////////////////////////////
 
-   private void executeCommand(Command<TetrapodStateMachine> cmd, ClientResponseHandler<TetrapodStateMachine> handler) {
+   public void executeCommand(Command<TetrapodStateMachine> cmd, ClientResponseHandler<TetrapodStateMachine> handler) {
       // if we're the leader we can execute directly
       if (!raft.executeCommand(cmd, handler)) {
          // else, send RPC to current leader
@@ -500,15 +574,17 @@ public class RaftStorage extends Storage implements RaftRPC<TetrapodStateMachine
    @Override
    public String get(String key) {
       // Formal read, or dirty read?
-      //executeCommand(new GetItemCommand<TetrapodStateMachine>(key), null);
-      return null;
+      // executeCommand(new GetItemCommand<TetrapodStateMachine>(key), null);
+
+      // FIXME: Dirty local read
+      StorageItem item = ((TetrapodStateMachine) raft.getStateMachine()).getItem(key);
+
+      return item != null ? item.getDataAsString() : null;
    }
 
    @Override
    public DistributedLock getLock(String lockKey) {
-      DistributedLock lock = new DistributedLock(lockKey, this);
-      lock.lock(60000);
-      return lock;
+      return new DistributedLock(lockKey, this);
    }
 
    @Override

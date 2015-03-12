@@ -12,16 +12,16 @@ import java.util.*;
 import java.util.concurrent.*;
 
 @SuppressWarnings("unused")
-public class ClusterJoinResponse extends Response {
+public class IssuePeerIdResponse extends Response {
    
-   public static final int STRUCT_ID = 8947508;
+   public static final int STRUCT_ID = 14036188;
    public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;
     
-   public ClusterJoinResponse() {
+   public IssuePeerIdResponse() {
       defaults();
    }
 
-   public ClusterJoinResponse(int peerId, int entityId) {
+   public IssuePeerIdResponse(int peerId, int entityId) {
       this.peerId = peerId;
       this.entityId = entityId;
    }   
@@ -70,11 +70,11 @@ public class ClusterJoinResponse extends Response {
    }
   
    public final int getContractId() {
-      return ClusterJoinResponse.CONTRACT_ID;
+      return IssuePeerIdResponse.CONTRACT_ID;
    }
 
    public final int getStructId() {
-      return ClusterJoinResponse.STRUCT_ID;
+      return IssuePeerIdResponse.STRUCT_ID;
    }
 
    public final String[] tagWebNames() {
@@ -88,7 +88,7 @@ public class ClusterJoinResponse extends Response {
    }
 
    public final Structure make() {
-      return new ClusterJoinResponse();
+      return new IssuePeerIdResponse();
    }
 
    public final StructDescription makeDescription() {
