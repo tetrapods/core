@@ -25,7 +25,13 @@ define(["knockout", "jquery", "app", "host", "service"], function(ko, $, app, Ho
          }
          return null;
       }
-
+      
+      self.onClearAllErrors = function() {
+         for (var i = 0; i < self.services().length; i++) {
+            self.services()[i].clearErrors();
+         }
+      };
+      
       app.server.addMessageHandler("ServiceAdded", function(msg) {
          var s = self.findService(msg.entity.entityId);
          if (s) {
