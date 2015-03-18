@@ -124,18 +124,6 @@ public class ServiceStats {
             dirty = true;
          }
 
-         double load = Math.round(100 * Metrics.getLoadAverage()) / 100.0;
-         if (message.load != load) {
-            message.load = load;
-            dirty = true;
-         }
-
-         int disk = (int) Math.round(Metrics.getFreeDiskSpace() / (1024 * 1024));
-         if (message.disk != disk) {
-            message.disk = disk;
-            dirty = true;
-         }
-
          int threads = Math.round(Metrics.getThreadCount());
          if (message.threads != threads) {
             message.threads = threads;
@@ -147,4 +135,5 @@ public class ServiceStats {
          }
       }
    }
+
 }

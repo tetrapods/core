@@ -1,15 +1,18 @@
-define(["knockout", "jquery", "app", "service"], function(ko, $, app, Service) {
+define(["knockout", "jquery", "app", "host", "service"], function(ko, $, app, Host, Service) {
    var Core = app.server.consts["Core.Core"];
 
    return new ClusterModel();
-   
+
    function ClusterModel() {
       var self = this;
+
+      self.raft = ko.observableArray([]);
+      self.hosts = ko.observableArray([]);
       self.services = ko.observableArray([]);
-      
+
       // Timer to update charts
       setInterval(function updateCharts() {
-         $.each(self.services(), function(i, s) {           
+         $.each(self.services(), function(i, s) {
             s.update();
          });
       }, 1000);
@@ -26,10 +29,12 @@ define(["knockout", "jquery", "app", "service"], function(ko, $, app, Service) {
       app.server.addMessageHandler("ServiceAdded", function(msg) {
          var s = self.findService(msg.entity.entityId);
          if (s) {
-            self.services.remove(s); 
+            self.services.remove(s);
          }
-         self.services.push(new Service(msg.entity));
+         s = new Service(msg.entity);
+         self.services.push(s);
          self.services.sort(compareServices);
+         self.getHost(s.host).addService(s);
       });
 
       app.server.addMessageHandler("ServiceUpdated", function(msg) {
@@ -42,7 +47,8 @@ define(["knockout", "jquery", "app", "service"], function(ko, $, app, Service) {
       app.server.addMessageHandler("ServiceRemoved", function(msg) {
          var s = self.findService(msg.entityId);
          if (s) {
-            self.services.remove(s); 
+            self.services.remove(s);
+            self.getHost(s.host).removeService(s);
          }
       });
 
@@ -52,10 +58,23 @@ define(["knockout", "jquery", "app", "service"], function(ko, $, app, Service) {
             s.statsUpdate(msg);
          }
       });
-      
+
       function compareServices(a, b) {
          return (a.entityId - b.entityId);
       }
+
+      self.getHost = function(hostname) {
+         for (var i = 0; i < self.hosts().length; i++) {
+            var host = self.hosts()[i];
+            if (host.hostname == hostname) {
+               return host;
+            }
+         }
+         var host = new Host(hostname);
+         self.hosts.push(host);
+         return host;
+      }
+
    }
 
 });

@@ -56,7 +56,7 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
    public DefaultService() {
       this(null);
    }
-   
+
    public DefaultService(Contract mainContract) {
       logBuffer = (LogBuffer) ((LoggerContext) LoggerFactory.getILoggerFactory()).getLogger("ROOT").getAppender("BUFFER");
       String m = getStartLoggingMessage();
@@ -853,6 +853,16 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
    @Override
    public Response requestDummy(DummyRequest r, RequestContext ctx) {
       return Response.SUCCESS;
+   }
+
+   @Override
+   public Response requestHostInfo(HostInfoRequest r, RequestContext ctx) {
+      return new HostInfoResponse(getHostName(), (byte) Metrics.getNumCores(), null);
+   }
+
+   @Override
+   public Response requestHostStats(HostStatsRequest r, RequestContext ctx) {
+      return new HostStatsResponse(Metrics.getLoadAverage(), Metrics.getFreeDiskSpace());
    }
 
 }

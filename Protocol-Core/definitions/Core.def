@@ -134,6 +134,21 @@ internal response ServiceLogs
    
    error NOT_CONFIGURED
 
+
+// returns static information for the host
+internal request HostInfo
+internal response HostInfo
+   1: string hostname
+   2: byte numCores
+   3: string meta    // optional json meta data (can contain os stuff, aws info, etc...)
+   
+// fetches current snapshot of host metrics
+internal request HostStats
+internal response HostStats   
+   1: double load    // system load average
+   2: long disk      // free disks space on working dir, in bytes
+
+
 internal request ServiceErrorLogs
 
 internal response ServiceErrorLogs
@@ -182,9 +197,7 @@ internal message ServiceStats.ServiceStats
    4: long latency   // average time to process each request
    5: long counter   // service-specific counter value
    6: byte memory    // 0..100 the percentage of memory in use
-   7: double load    // system load average
-   8: int disk       // free disks space on working dir, in megabytes
-   9: int threads    // number of active threads
+   7: int threads    // number of active threads
     
 ################################# STRUCTURES #################################
 

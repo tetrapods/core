@@ -21,15 +21,13 @@ public class ServiceStatsMessage extends Message {
       defaults();
    }
 
-   public ServiceStatsMessage(int entityId, int rps, int mps, long latency, long counter, byte memory, double load, int disk, int threads) {
+   public ServiceStatsMessage(int entityId, int rps, int mps, long latency, long counter, byte memory, int threads) {
       this.entityId = entityId;
       this.rps = rps;
       this.mps = mps;
       this.latency = latency;
       this.counter = counter;
       this.memory = memory;
-      this.load = load;
-      this.disk = disk;
       this.threads = threads;
    }   
    
@@ -61,16 +59,6 @@ public class ServiceStatsMessage extends Message {
    public byte memory;
    
    /**
-    * system load average
-    */
-   public double load;
-   
-   /**
-    * free disks space on working dir, in megabytes
-    */
-   public int disk;
-   
-   /**
     * number of active threads
     */
    public int threads;
@@ -86,8 +74,6 @@ public class ServiceStatsMessage extends Message {
       latency = 0;
       counter = 0;
       memory = 0;
-      load = 0;
-      disk = 0;
       threads = 0;
    }
    
@@ -99,9 +85,7 @@ public class ServiceStatsMessage extends Message {
       data.write(4, this.latency);
       data.write(5, this.counter);
       data.write(6, this.memory);
-      data.write(7, this.load);
-      data.write(8, this.disk);
-      data.write(9, this.threads);
+      data.write(7, this.threads);
       data.writeEndTag();
    }
    
@@ -117,9 +101,7 @@ public class ServiceStatsMessage extends Message {
             case 4: this.latency = data.read_long(tag); break;
             case 5: this.counter = data.read_long(tag); break;
             case 6: this.memory = data.read_byte(tag); break;
-            case 7: this.load = data.read_double(tag); break;
-            case 8: this.disk = data.read_int(tag); break;
-            case 9: this.threads = data.read_int(tag); break;
+            case 7: this.threads = data.read_int(tag); break;
             case Codec.END_TAG:
                return;
             default:
@@ -153,16 +135,14 @@ public class ServiceStatsMessage extends Message {
       // Note do not use this tags in long term serializations (to disk or databases) as 
       // implementors are free to rename them however they wish.  A null means the field
       // is not to participate in web serialization (remaining at default)
-      String[] result = new String[9+1];
+      String[] result = new String[7+1];
       result[1] = "entityId";
       result[2] = "rps";
       result[3] = "mps";
       result[4] = "latency";
       result[5] = "counter";
       result[6] = "memory";
-      result[7] = "load";
-      result[8] = "disk";
-      result[9] = "threads";
+      result[7] = "threads";
       return result;
    }
    
@@ -181,9 +161,7 @@ public class ServiceStatsMessage extends Message {
       desc.types[4] = new TypeDescriptor(TypeDescriptor.T_LONG, 0, 0);
       desc.types[5] = new TypeDescriptor(TypeDescriptor.T_LONG, 0, 0);
       desc.types[6] = new TypeDescriptor(TypeDescriptor.T_BYTE, 0, 0);
-      desc.types[7] = new TypeDescriptor(TypeDescriptor.T_DOUBLE, 0, 0);
-      desc.types[8] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
-      desc.types[9] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
+      desc.types[7] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
       return desc;
    }
 }
