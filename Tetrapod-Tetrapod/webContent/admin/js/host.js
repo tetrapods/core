@@ -22,7 +22,7 @@ define(["knockout", "jquery", "bootbox", "app", "build", "chart"], function(ko, 
       self.diskChart = new Chart('host-chart-disk-' + hostname, self.disk);
 
       self.loadChart.series.maxY = 2;
-      self.diskChart.series.maxY = 1024*1024*1024;
+      self.diskChart.series.maxY = 1024 * 1024 * 1024;
 
       // start collecting details
       updateHostDetails();
@@ -106,5 +106,10 @@ define(["knockout", "jquery", "bootbox", "app", "build", "chart"], function(ko, 
          return d.toFixed(1) + " mb";
       });
 
+      self.onClearAllErrors = function() {
+         for (var i = 0; i < self.services().length; i++) {
+            self.services()[i].clearErrors();
+         }
+      };
    }
 });

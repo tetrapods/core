@@ -139,11 +139,6 @@ define(["knockout", "jquery", "bootbox", "toolbox", "protocol/server", "protocol
             }
          });
       };
-      self.onClearAllErrors = function() {
-         for (var i = 0; i < model.services().length; i++) {
-            model.services()[i].clearErrors();
-         }
-      };
 
    }
 });
