@@ -110,4 +110,9 @@ public class Metrics {
    public static int getThreadCount() {
       return ManagementFactory.getThreadMXBean().getThreadCount();
    }
+
+   public static int getNumCores() {
+      return ManagementFactory.getOperatingSystemMXBean().getAvailableProcessors();
+   } 
+ 
 }

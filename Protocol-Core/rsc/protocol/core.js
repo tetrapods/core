@@ -93,6 +93,10 @@ function TP_Core(server) {
    server.register("response", "Core", "ServiceDetails", 1, 12435407);
    server.register("request", "Core", "ServiceLogs", 1, 13816458);
    server.register("response", "Core", "ServiceLogs", 1, 6345878);
+   server.register("request", "Core", "HostInfo", 1, 16426670);
+   server.register("response", "Core", "HostInfo", 1, 7161106);
+   server.register("request", "Core", "HostStats", 1, 4481593);
+   server.register("response", "Core", "HostStats", 1, 15046655);
    server.register("request", "Core", "ServiceErrorLogs", 1, 16327568);
    server.register("response", "Core", "ServiceErrorLogs", 1, 9302372);
    server.register("request", "Core", "ResetServiceErrorLogs", 1, 9359779);

@@ -21,6 +21,8 @@ public class CoreContract extends Contract {
    public static interface API extends APIHandler
       , DirectConnectionRequest.Handler
       , DummyRequest.Handler
+      , HostInfoRequest.Handler
+      , HostStatsRequest.Handler
       , PauseRequest.Handler
       , ResetServiceErrorLogsRequest.Handler
       , RestartRequest.Handler
@@ -46,6 +48,8 @@ public class CoreContract extends Contract {
          new ServiceStatsUnsubscribeRequest(),
          new ServiceDetailsRequest(),
          new ServiceLogsRequest(),
+         new HostInfoRequest(),
+         new HostStatsRequest(),
          new ServiceErrorLogsRequest(),
          new ResetServiceErrorLogsRequest(),
          new SetCommsLogLevelRequest(),
@@ -60,6 +64,8 @@ public class CoreContract extends Contract {
       return new Structure[] {
          new ServiceDetailsResponse(),
          new ServiceLogsResponse(),
+         new HostInfoResponse(),
+         new HostStatsResponse(),
          new ServiceErrorLogsResponse(),
          new WebAPIResponse(),
          new DirectConnectionResponse(),

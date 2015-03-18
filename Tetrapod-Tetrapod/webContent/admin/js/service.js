@@ -1,30 +1,5 @@
-define([ "knockout", "jquery", "bootbox", "app", "build" ], function(ko, $, bootbox, app, builder) {
+define(["knockout", "jquery", "bootbox", "app", "build", "chart"], function(ko, $, bootbox, app, builder, Chart) {
    // static variables
-
-   var chartOptions = {
-      grid : {
-         labelMargin : 0,
-         axisMargin : 0,
-         margin : {
-            top : 0,
-            right : 0,
-            bottom : 0,
-            left : 0
-         },
-         borderWidth : 0,
-         color : "rgba(212, 212, 212, 0.25)"
-      },
-      xaxis : {
-         show : false
-      },
-      yaxis : {
-         show : false,
-         min : 0
-      },
-      legend : {
-         show : false,
-      }
-   };
 
    var Core = app.server.consts["Core.Core"];
 
@@ -47,6 +22,7 @@ define([ "knockout", "jquery", "bootbox", "app", "build" ], function(ko, $, boot
       self.memory = ko.observable();
       self.load = ko.observable();
       self.threads = ko.observable();
+      self.isSelected = ko.observable(false);
 
       self.iconURL = ko.observable("media/gear.gif");
 
@@ -64,12 +40,23 @@ define([ "knockout", "jquery", "bootbox", "app", "build" ], function(ko, $, boot
          }
       });
 
+      // we need to run this after KO is done binding, or jquery can't find the element by id
+      setTimeout(function() {
+         var e = $('#dropdown-' + self.entityId);
+         e.on('show.bs.dropdown', function() {
+            self.isSelected(true);
+         });
+         e.on('hide.bs.dropdown', function() {
+            self.isSelected(false);
+         });
+      }, 1);
+
       self.execute = function(command) {
          if (command.hasArgument) {
             bootbox.prompt("Enter argument value:", function(result) {
                if (result !== null) {
                   app.server.sendRequest(command.contractId, command.structId, {
-                     data : result
+                     data: result
                   }, self.entityId, app.server.logResponse);
                }
             });
@@ -122,7 +109,9 @@ define([ "knockout", "jquery", "bootbox", "app", "build" ], function(ko, $, boot
          return "RUNNING";
       });
 
-      self.row_style = ko.computed(function() {
+      self.row_style = ko.pureComputed(function() {
+         if (self.isSelected())
+            return "selected";
          if (self.isStopping())
             return "stopping";
          if (self.isPaused())
@@ -144,20 +133,18 @@ define([ "knockout", "jquery", "bootbox", "app", "build" ], function(ko, $, boot
          app.server.sendTo("Unpause", {}, self.entityId);
       }
       self.restart = function() {
-         bootbox.confirm("Are you sure you want to restart service: " + self.name + "[" + self.entityId + "]?",
-               function(result) {
-                  if (result) {
-                     app.server.sendTo("Restart", {}, self.entityId);
-                  }
-               });
+         bootbox.confirm("Are you sure you want to restart service: " + self.name + "[" + self.entityId + "]?", function(result) {
+            if (result) {
+               app.server.sendTo("Restart", {}, self.entityId);
+            }
+         });
       }
       self.shutdown = function() {
-         bootbox.confirm("Are you sure you want to shutdown service: " + self.name + "[" + self.entityId + "]?",
-               function(result) {
-                  if (result) {
-                     app.server.sendTo("Shutdown", {}, self.entityId);
-                  }
-               });
+         bootbox.confirm("Are you sure you want to shutdown service: " + self.name + "[" + self.entityId + "]?", function(result) {
+            if (result) {
+               app.server.sendTo("Shutdown", {}, self.entityId);
+            }
+         });
       }
 
       self.clearErrors = function() {
@@ -167,10 +154,10 @@ define([ "knockout", "jquery", "bootbox", "app", "build" ], function(ko, $, boot
       self.showErrors = function() {
          app.server.sendTo("ServiceErrorLogs", {}, self.entityId, function(result) {
             if (!result.isError()) {
-               var messages = []; 
+               var messages = [];
                messages.push('<div class="service-logs" style="height: 100%; min-height: 200px">');
                messages.push('<ul>');
-               
+
                for (var i = 0; i < result.errors.length; i++) {
                   var error = result.errors[i];
                   var levelStyle = self.getLogLevelStyle(error.level);
@@ -182,15 +169,15 @@ define([ "knockout", "jquery", "bootbox", "app", "build" ], function(ko, $, boot
                   messages.push('<span class="service-logs-msg">' + error.msg + '</span>');
                   messages.push('</li>');
                }
-               messages.push('</ul>');										
-               messages.push('</div>');												
-               
+               messages.push('</ul>');
+               messages.push('</div>');
+
                var text = messages.join("");
                bootbox.dialog({
                   message: text
-               }).find("div.modal-dialog").addClass("service-error-logs-dialog"); 	
+               }).find("div.modal-dialog").addClass("service-error-logs-dialog");
             }
-      	});
+         });
       }
 
       self.hasErrors = function() {
@@ -204,25 +191,19 @@ define([ "knockout", "jquery", "bootbox", "app", "build" ], function(ko, $, boot
       self.hasErrorsOrWarnings = function() {
          return (self.status() & Core.STATUS_ERRORS) != 0 || (self.status() & Core.STATUS_WARNINGS) != 0;
       }
-      
+
       self.setCommsLogLevel = function() {
          bootbox.dialog({
-            message: 'Log Level: <select id="level">' +
-                     '<option value="off">Off</option>' +
-                     '<option value="error">Error</option>' +
-                     '<option value="warn">Warning</option>' +
-                     '<option value="info">Info</option>' +
-                     '<option value="debug">Debug</option>' +
-                     '<option value="trace">Trace</option>' +
-                     '<option value="all">All</option>' +
-                     '</select>',
+            message: 'Log Level: <select id="level">' + '<option value="off">Off</option>' + '<option value="error">Error</option>' + '<option value="warn">Warning</option>' + '<option value="info">Info</option>' + '<option value="debug">Debug</option>' + '<option value="trace">Trace</option>' + '<option value="all">All</option>' + '</select>',
             buttons: {
                success: {
                   label: "OK",
                   className: "btn-success",
-                  callback: function () {
+                  callback: function() {
                      var level = $('#level').val();
-                     app.server.sendTo("SetCommsLogLevel", {level : level}, self.entityId);
+                     app.server.sendTo("SetCommsLogLevel", {
+                        level: level
+                     }, self.entityId);
                   }
                },
                cancel: {
@@ -235,7 +216,7 @@ define([ "knockout", "jquery", "bootbox", "app", "build" ], function(ko, $, boot
 
       self.deleteService = function() {
          app.server.sendDirect("Unregister", {
-            entityId : self.entityId
+            entityId: self.entityId
          });
       }
 
@@ -262,75 +243,20 @@ define([ "knockout", "jquery", "bootbox", "app", "build" ], function(ko, $, boot
       }, self);
 
       // ////////////////////////////////////// stats graphs ////////////////////////////////////////
-      self.plots = [];
-      self.getPlot = function(tag) {
-         if (self.plots[tag]) {
-            return self.plots[tag];
-         }
-         var container = $("#service-chart-" + tag + "-" + self.entityId);
-         if (!container)
-            return;
 
-         return $.plot(container, [], chartOptions);
-      }
+      self.latencyChart = new Chart("service-chart-latency-" + self.entityId);
+      self.rpsChart = new Chart("service-chart-rps-" + self.entityId);
+      self.mpsChart = new Chart("service-chart-mps-" + self.entityId);
+      self.counterChart = new Chart("service-chart-counter-" + self.entityId);
 
-      self.updatePlot = function(tag, series, timeRange, value) {
-         series.data.push([ Date.now(), value ]);
-         while (series.data[0][0] < Date.now() - timeRange) {
-            series.data.shift();
-         }
-         if (series.maxY != 0) {
-            chartOptions.yaxis.max = series.maxY;
-         } else {
-            chartOptions.yaxis.max = null;
-         }
-         plot = self.getPlot(tag);
-         if (plot) {
-            plot.setData([ series ]);
-            plot.setupGrid();
-            plot.draw();
-         }
-      }
+      self.latencyChart.series.maxY = 500;
 
-      self.latencySeries = {
-         data : [],
-         maxY : 500,
-         lines : {
-            lineWidth : 1,
-            fill : true
-         },
-         shadowSize : 1
-      };
-      self.rpsSeries = {
-         data : [],
-         lines : {
-            lineWidth : 1,
-            fill : true
-         },
-         shadowSize : 1
-      };
-      self.mpsSeries = {
-         data : [],
-         lines : {
-            lineWidth : 1,
-            fill : true
-         },
-         shadowSize : 1
-      };
-      self.counterSeries = {
-         data : [],
-         lines : {
-            lineWidth : 1,
-            fill : true
-         },
-         shadowSize : 1
-      };
       // updates all charts for this service
       self.chart = function() {
-         self.updatePlot("latency", self.latencySeries, 60000, self.latency());
-         self.updatePlot("rps", self.rpsSeries, 60000, self.rps());
-         self.updatePlot("mps", self.mpsSeries, 60000, self.mps());
-         self.updatePlot("counter", self.counterSeries, 60000, self.counter());
+         self.latencyChart.updatePlot(60000, self.latency());
+         self.rpsChart.updatePlot(60000, self.rps());
+         self.mpsChart.updatePlot(60000, self.mps());
+         self.counterChart.updatePlot(60000, self.counter());
       }
 
       self.popupBuild = function() {
@@ -339,8 +265,7 @@ define([ "knockout", "jquery", "bootbox", "app", "build" ], function(ko, $, boot
 
       var LogConsts = app.server.consts["Core.ServiceLogEntry"];
 
-      var levels = [ LogConsts.LEVEL_ALL, LogConsts.LEVEL_TRACE, LogConsts.LEVEL_DEBUG, LogConsts.LEVEL_INFO,
-            LogConsts.LEVEL_WARN, LogConsts.LEVEL_ERROR, LogConsts.LEVEL_OFF ];
+      var levels = [LogConsts.LEVEL_ALL, LogConsts.LEVEL_TRACE, LogConsts.LEVEL_DEBUG, LogConsts.LEVEL_INFO, LogConsts.LEVEL_WARN, LogConsts.LEVEL_ERROR, LogConsts.LEVEL_OFF];
 
       self.getLogLevelStyle = function(level) {
          switch (level) {
@@ -364,10 +289,9 @@ define([ "knockout", "jquery", "bootbox", "app", "build" ], function(ko, $, boot
 
       self.logLevels = ko.observableArray(levels);
 
-      var months = [ "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" ];
+      var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
       function logtime(d) {
-         return d.getFullYear() + "-" + months[d.getMonth()] + "-" + d.getDate() + " " + d.getHours() + ":"
-               + d.getMinutes() + ":" + d.getSeconds() + ":" + d.getMilliseconds();
+         return d.getFullYear() + "-" + months[d.getMonth()] + "-" + d.getDate() + " " + d.getHours() + ":" + d.getMinutes() + ":" + d.getSeconds() + ":" + d.getMilliseconds();
       }
       self.logLevel = ko.observable(LogConsts.LEVEL_INFO);
       self.logs = ko.observableArray([]);
@@ -379,9 +303,9 @@ define([ "knockout", "jquery", "bootbox", "app", "build" ], function(ko, $, boot
             logRefreshPending = true;
 
             app.server.sendTo("ServiceLogs", {
-               logId : self.lastLogId,
-               level : self.logLevel(),
-               maxItems : 100
+               logId: self.lastLogId,
+               level: self.logLevel(),
+               maxItems: 100
             }, self.entityId, function(res) {
                logRefreshPending = false;
                if (!res.isError()) {

@@ -1,13 +1,19 @@
 #cluster-table {
-	margin: 4px; padding: 12px; background: white;
+	margin: 5px;
+	background: white;
 }
 
 #cluster-table th {
-	background: #000; color: #fff; text-align: center;
+	background: #000;
+	color: #fff;
+	text-align: center;
 }
 
 #cluster-table td {
-	font-size: 90%; padding: 0px 1px; vertical-align: middle; white-space: nowrap;
+	font-size: 90%;
+	padding: 0px 1px;
+	vertical-align: middle;
+	white-space: nowrap;
 }
 
 .righted {
@@ -19,27 +25,37 @@
 }
 
 .running {
-	background: green; color: white;
+	background: green;
+	color: white;
 }
 
 .passive {
-   background: #599; color: white;
+	background: #599;
+	color: white;
 }
 
 .gone {
-	background: red; color: white;
+	background: red;
+	color: white;
 }
 
 .failed {
-	background: orange; color: yellow;
+	background: orange;
+	color: yellow;
 }
 
 .stopping {
-	background: #fdd; color: #a88;
+	background: #fdd;
+	color: #a88;
 }
 
+.selected { 
+   background: #FFFFE0;
+} 
+
 .starting {
-	background: #eee; color: #999;
+	background: #eee;
+	color: #999;
 }
 
 .paused {
@@ -47,31 +63,46 @@
 }
 
 .dropdown-service {
-	right: auto; left: 0;
+	right: auto;
+	left: 0;
 }
 
 .service-icon {
-	width: 16px; height: 16px; margin-left: 3px;
+	width: 16px;
+	height: 16px;
+	margin-left: 3px;
 }
 
 .service-fa {
-   margin-left: 3px;
+	margin-left: 3px;
 }
 
 .service-name {
-	font-weight: bold; margin-left: 3px;
+	font-weight: bold;
+	margin-left: 3px;
 }
 
 .service-chart-wrap {
-	position: relative; width: 80px; padding: 0px; padding-left: 0px; padding-right: 0px;
+	position: relative;
+	width: 80px;
+	padding: 0px;
+	padding-left: 0px;
+	padding-right: 0px;
 }
 
 .service-chart {
-	height: 42px; padding: 0px; margin: -5px;
+	height: 42px;
+	padding: 0px;
+	margin: -7px;
 }
 
 .service-chart-val {
-	text-shadow: 1px 1px 1px rgba(150, 150, 150, .5); text-align: center; position: absolute; top: 8px; left: 0; width: 100%
+	text-shadow: 1px 1px 1px rgba(150, 150, 150, .5);
+	text-align: center;
+	position: absolute;
+	top: 6px;
+	left: 0;
+	width: 100%
 }
 
 .alert {
@@ -83,15 +114,22 @@
 }
 
 #page-wrapper {
-	margin: 10px; padding: 10px;
+	margin: 10px;
+	padding: 10px;
 }
 
 #login-form {
-	width: 320px; padding: 20px; margin: 20px; border-radius: 10px; box-shadow: 0 2px 2px rgba(0, 0, 0, .20); background: white;
+	width: 320px;
+	padding: 20px;
+	margin: 20px;
+	border-radius: 10px;
+	box-shadow: 0 2px 2px rgba(0, 0, 0, .20);
+	background: white;
 }
 
 .service-details {
-	padding: 5px; margin-bottom: 10px;
+	padding: 5px;
+	margin-bottom: 10px;
 }
 
 .service-metrics {
@@ -99,7 +137,8 @@
 }
 
 .service-metrics dt {
-	margin-top: 10px; font-weight: bold;
+	margin-top: 10px;
+	font-weight: bold;
 }
 
 .service-metrics dd {
@@ -111,12 +150,23 @@
 }
 
 .service-logs {
-	border: 1px solid #eee; margin: 10px; padding: 4px; overflow: auto; height: 200px; resize: vertical; font-family: monospace;
-	font-size: 11px; height: 200px;
+	border: 1px solid #eee;
+	margin: 10px;
+	padding: 4px;
+	overflow: auto;
+	height: 200px;
+	resize: vertical;
+	font-family: monospace;
+	font-size: 11px;
+	height: 200px;
 }
 
 .service-logs ul {
-	padding: 0px; margin: 0px; width: 100%; list-style: none; max-width: 800px;
+	padding: 0px;
+	margin: 0px;
+	width: 100%;
+	list-style: none;
+	max-width: 800px;
 }
 
 .service-logs-msg {
@@ -124,15 +174,19 @@
 }
 
 .service-logs-options {
-	padding-left: 20px; padding-right: 20px;
+	padding-left: 20px;
+	padding-right: 20px;
 }
 
 .service-error-logs-dialog {
-    width: 80%;
+	width: 80%;
 }
 
 .tab-content {
-	padding: 10px; border-bottom: 1px solid #eee; border-left: 1px solid #eee; border-right: 1px solid #eee;
+	padding: 10px;
+	border-bottom: 1px solid #eee;
+	border-left: 1px solid #eee;
+	border-right: 1px solid #eee;
 }
 
 .trace {
@@ -156,7 +210,8 @@
 }
 
 .form-table {
-	margin-left: auto; margin-right: auto;
+	margin-left: auto;
+	margin-right: auto;
 }
 
 .form-table td {
@@ -164,10 +219,71 @@
 }
 
 .form-label {
-	font-weight: bold; text-align: right;
+	font-weight: bold;
+	text-align: right;
 }
 
 .prod {
-   background: repeating-linear-gradient( -45deg, yellow, yellow 25%, black 25%, black 50%, yellow 50% ) top left fixed;
-   background-size: 20px 20px;
+	background: repeating-linear-gradient(-45deg, yellow, yellow 25%, black 25%, black
+		50%, yellow 50%) top left fixed;
+	background-size: 20px 20px;
+}
+
+.host {
+	vertical-align: middle;
+	border-radius: 5px;
+	background: #eee;
+	padding: 6px;
+	background: #eee;
+	border-radius: 4px;
+}
+
+.host-header {
+	padding: 5px;
+	display: table;
+}
+
+.host-name {
+	vertical-align: middle;
+	display: table-cell;
+   padding-left: 20px;
+   padding-right: 20px;
+}
+
+.host-info {
+	font-size: 18px;
+	display: table-row;
+	font-weight: bold;
+	padding-right: 10px;
+	padding-left: 10px;
+}
+
+.host-info .metric {
+	display: table-cell;
+	padding-left: 20px;
+	padding-right: 20px;
+	color: #666;
+}
+
+.chart-wrap {
+	display: inline-block;
+	position: relative;
+	width: 200px;
+	padding: 0px;
+	border: 1px solid #ccc;
+}
+
+.chart {
+	height: 52px;
+	padding: 0px;
+	margin: -8px;
+}
+
+.chart-val {
+	text-shadow: 1px 1px 1px rgba(150, 150, 150, .5);
+	text-align: center;
+	position: absolute;
+	top: 8px;
+	left: 0;
+	width: 100%
 }
