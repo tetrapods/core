@@ -1,4 +1,4 @@
-define(["knockout", "jquery", "app", "host", "service"], function(ko, $, app, Host, Service) {
+define(["knockout", "jquery", "app", "host", "service", "raftnode"], function(ko, $, app, Host, Service, RaftNode) {
    var Core = app.server.consts["Core.Core"];
 
    return new ClusterModel();
@@ -6,14 +6,21 @@ define(["knockout", "jquery", "app", "host", "service"], function(ko, $, app, Ho
    function ClusterModel() {
       var self = this;
 
-      self.raft = ko.observableArray([]);
       self.hosts = ko.observableArray([]);
       self.services = ko.observableArray([]);
+      self.rafts = ko.observableArray([]);
+
+      var raftTab = $('#raft-tab');
 
       // Timer to update charts
       setInterval(function updateCharts() {
          $.each(self.services(), function(i, s) {
             s.update();
+            if (raftTab.is(':visible')) {
+               if (s.isRaftNode()) {
+                  updateRaftNode(s);
+               }
+            }
          });
       }, 1000);
 
@@ -25,13 +32,13 @@ define(["knockout", "jquery", "app", "host", "service"], function(ko, $, app, Ho
          }
          return null;
       }
-      
+
       self.onClearAllErrors = function() {
          for (var i = 0; i < self.services().length; i++) {
             self.services()[i].clearErrors();
          }
       };
-      
+
       app.server.addMessageHandler("ServiceAdded", function(msg) {
          var s = self.findService(msg.entity.entityId);
          if (s) {
@@ -79,6 +86,16 @@ define(["knockout", "jquery", "app", "host", "service"], function(ko, $, app, Ho
          var host = new Host(hostname);
          self.hosts.push(host);
          return host;
+      }
+
+      function updateRaftNode(service) {
+         for (var i = 0; i < self.rafts().length; i++) {
+            var raft = self.rafts()[i];
+            if (raft.entityId == service.entityId) {
+               return raft.update();
+            }
+         }
+         self.rafts.push(new RaftNode(service));
       }
 
    }

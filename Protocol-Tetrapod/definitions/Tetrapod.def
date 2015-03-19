@@ -263,4 +263,12 @@ internal request VerifyEntityToken
    1: int entityId
    2: string token
      
-     
+
+internal request RaftStats
+internal response RaftStats 
+   1: byte role
+   2: long curTerm
+   3: long lastTerm
+   4: long lastIndex
+   5: long commitIndex
+   6: int numPeers     

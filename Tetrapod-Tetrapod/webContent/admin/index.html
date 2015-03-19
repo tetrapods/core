@@ -77,227 +77,286 @@
                </div>
 
                <div id="cluster-view">
-                  <div>
-                     <div data-bind="foreach: hosts" class="host">
 
-                        <div class="host-header">
-                           <div class="host-info">
-                              <div class="host-name">
-                                 <i class="fa fa-server"></i>
-                                 <span data-bind="text: hostname"></span>
-                              </div>
-                              <div class="metric">
-                                 <div class="chart-wrap">
-                                    <div class="chart" data-bind="attr: {id: 'host-chart-load-' + hostname}"></div>
-                                    <div class="chart-val">
-                                       <i class="fa fa-fire"></i>
-                                       <span data-bind="text: 'Load: ' + load()"></span>
+
+                  <ul id="cluster-tabs" class="nav nav-tabs">
+                     <li class="active"><a href="#hosts-tab" data-toggle="tab">Services</a></li>
+                     <li><a href="#raft-tab" data-toggle="tab">Raft</a></li>
+                  </ul>
+
+
+                  <div class="tab-content">
+
+                     <div class="tab-pane" id="raft-tab">
+                        <h3>Raft Cluster</h3>
+                        <table id="raft-table" class="table table-bordered table-condensed">
+                           <thead>
+                              <tr>
+                                 <th>Entity</th>
+                                 <th>Role</th>
+                                 <th>Term</th>
+                                 <th>Index</th>
+                                 <th>Log</th>
+                                 <th>Peers</th>
+                              </tr>
+                           </thead>
+                           <tbody data-bind="foreach: rafts" class="raft">
+                              <tr>
+                                 <td>
+                                    <span data-bind="text: entityId"></span>
+                                    &nbsp;@&nbsp;
+                                    <span data-bind="text: host"></span>
+                                 </td>
+                                 <td>
+                                    <i class="fa" data-bind="css: roleIcon"></i>
+                                    <span data-bind="text: roleName"></span>
+                                 </td>
+                                 <td>
+                                    <span data-bind="text: curTerm"></span>
+                                 </td>
+                                 <td>
+                                    <span data-bind="text: commitIndex"></span>
+                                 </td>
+                                 <td>
+                                    <span data-bind="text: lastTerm"></span>
+                                    :
+                                    <span data-bind="text: lastIndex"></span>
+                                 </td>
+                                 <td>
+                                    <span data-bind="text: numPeers"></span>
+                                 </td>
+                              </tr>
+                           </tbody>
+                        </table>
+                     </div>
+
+
+                     <div class="tab-pane active" id="hosts-tab">
+                        <h3>Cluster Hosts &amp; Services</h3>
+
+                        <div data-bind="foreach: hosts" class="host">
+
+                           <div class="host-header">
+                              <div class="host-info">
+                                 <div class="host-name">
+                                    <i class="fa fa-server"></i>
+                                    <span data-bind="text: hostname"></span>
+                                 </div>
+                                 <div class="metric">
+                                    <div class="chart-wrap">
+                                       <div class="chart" data-bind="attr: {id: 'host-chart-load-' + hostname}"></div>
+                                       <div class="chart-val">
+                                          <i class="fa fa-fire"></i>
+                                          <span data-bind="text: 'Load: ' + load()"></span>
+                                       </div>
                                     </div>
                                  </div>
-                              </div>
-                              <div class="metric">
-                                 <div class="chart-wrap">
-                                    <div class="chart" data-bind="attr: {id: 'host-chart-disk-' + hostname}"></div>
-                                    <div class="chart-val">
-                                       <i class="fa fa-database"></i>
-                                       <span data-bind="text: 'Disk: ' + diskLabel()"></span>
+                                 <div class="metric">
+                                    <div class="chart-wrap">
+                                       <div class="chart" data-bind="attr: {id: 'host-chart-disk-' + hostname}"></div>
+                                       <div class="chart-val">
+                                          <i class="fa fa-database"></i>
+                                          <span data-bind="text: 'Disk: ' + diskLabel()"></span>
+                                       </div>
                                     </div>
                                  </div>
+                                 <!--  <i class="fa fa-caret-down"></i> -->
                               </div>
-                              <!--  <i class="fa fa-caret-down"></i> -->
                            </div>
-                        </div>
 
 
-                        <!-- ko if: services().length > 0 -->
-                        <div id="cluster-table">
-                           <table class="table table-bordered table-condensed">
-                              <thead>
-                                 <tr>
-                                    <th>
-                                       <div>
-                                          <div class="dropdown">
-                                             <a class="dropdown-toggle" data-toggle="dropdown" style="color: white" href="#">
+                           <!-- ko if: services().length > 0 -->
+                           <div id="cluster-table">
+                              <table class="table table-bordered table-condensed">
+                                 <thead>
+                                    <tr>
+                                       <th>
+                                          <div>
+                                             <div class="dropdown">
+                                                <a class="dropdown-toggle" data-toggle="dropdown" style="color: white" href="#">
+                                                   <i class="fa fa-gear fa-fw"></i> <i class="fa fa-caret-down"></i>
+                                                </a>
+                                                <ul class="dropdown-menu dropdown-service">
+                                                   <li><a href="#" data-bind="click: onClearAllErrors">Clear All Errors</a></li>
+                                                </ul>
+                                             </div>
+                                          </div>
+                                       </th>
+                                       <th>Name</th>
+                                       <th>Entity</th>
+                                       <th>Build</th>
+                                       <th>Status</th>
+                                       <th>Latency</th>
+                                       <th>RPS</th>
+                                       <th>MPS</th>
+                                       <th>Counter</th>
+                                    </tr>
+                                 </thead>
+                                 <tbody data-bind="foreach: services">
+                                    <tr data-bind='attr: {"class": row_style}'>
+                                       <td width="48" class="centered">
+                                          <div class="dropdown" data-bind="attr: {id: 'dropdown-' + entityId}">
+                                             <a class="dropdown-toggle" data-toggle="dropdown" href="#">
                                                 <i class="fa fa-gear fa-fw"></i> <i class="fa fa-caret-down"></i>
                                              </a>
                                              <ul class="dropdown-menu dropdown-service">
-                                                <li><a href="#" data-bind="click: onClearAllErrors">Clear All Errors</a></li>
+                                                <li class="disabled"><a href="#" data-bind="text: name +' '+entityString()"></a></li>
+
+                                                <!-- ko foreach: commands -->
+                                                <li><a href="#"
+                                                      data-bind="click: function() { $parent.execute($data) }, text: name"></a></li>
+                                                <!-- /ko -->
+
+                                                <li class="divider"></li>
+                                                <li><a href="#"
+                                                      data-bind="click: showErrors, visible: hasErrorsOrWarnings()">Show
+                                                      Errors</a></li>
+                                                <li><a href="#"
+                                                      data-bind="click: clearErrors, visible: hasErrorsOrWarnings()">Clear
+                                                      Errors</a></li>
+                                                <li><a href="#" data-bind="click: setCommsLogLevel">Set Comms Log
+                                                      Level...</a></li>
+
+                                                <li data-bind="visible: name=='Tetrapod'" class="divider"></li>
+                                                <li><a href="#"
+                                                      data-bind="visible: name=='Tetrapod', click: function() { popupBuild(); }">Deploy</a>
+                                                <li class="divider"></li>
+
+                                                <li><a href="#" data-bind="click: pause, visible: canPause()">
+                                                      <i class="fa fa-pause fa-fw"></i>Pause
+                                                   </a></li>
+                                                <li><a href="#" data-bind="click: unpause, visible: canUnpause()">
+                                                      <i class="fa fa-play fa-fw"></i>Resume
+                                                   </a></li>
+
+                                                <li class="divider" data-bind=" visible: !isGone()"></li>
+
+                                                <li><a href="#" data-bind="click: restart, visible: !isGone()">
+                                                      <i class="fa fa-refresh fa-fw"></i>Restart
+                                                   </a></li>
+
+                                                <li><a href="#" data-bind="click: shutdown, visible: !isGone()">
+                                                      <i class="fa fa-power-off fa-fw"></i>Shutdown
+                                                   </a></li>
+                                                <li><a href="#" data-bind="click: deleteService, visible: isGone()">
+                                                      <i class="fa fa-trash-o fa-fw"></i>Delete
+                                                   </a></li>
+
                                              </ul>
                                           </div>
-                                       </div>
-                                    </th>
-                                    <th>Name</th>
-                                    <th>Entity</th>
-                                    <th>Build</th>
-                                    <th>Status</th>
-                                    <th>Latency</th>
-                                    <th>RPS</th>
-                                    <th>MPS</th>
-                                    <th>Counter</th>
-                                 </tr>
-                              </thead>
-                              <tbody data-bind="foreach: services">
-                                 <tr data-bind='attr: {"class": row_style}'>
-                                    <td width="48" class="centered">
-                                       <div class="dropdown" data-bind="attr: {id: 'dropdown-' + entityId}">
-                                          <a class="dropdown-toggle" data-toggle="dropdown" href="#">
-                                             <i class="fa fa-gear fa-fw"></i> <i class="fa fa-caret-down"></i>
-                                          </a>
-                                          <ul class="dropdown-menu dropdown-service">
-                                             <li class="disabled"><a href="#" data-bind="text: name +' '+entityString()"></a></li>
+                                       <td>
+                                          <img
+                                             data-bind="attr:{src: iconURL().indexOf('fa-')==0 ? '/admin/media/lizard.png' : iconURL()}, visible: iconURL().indexOf('fa-') != 0"
+                                             class="service-icon">
+                                          <i class="service-fa fa fa-fw"
+                                             data-bind="css:iconURL, visible: iconURL().indexOf('fa-') == 0"></i>
+                                          <span class="service-name" data-bind="text: name"></span>
+                                       </td>
+                                       <td class="centered">
+                                          <i class="fa fa-warning fa-fw" style="float: left; color: orange"
+                                             data-bind="visible: hasWarningsOnly()"></i> <i
+                                             class="fa fa-exclamation-circle fa-fw" style="float: left; color: red"
+                                             data-bind="visible: hasErrors()"></i> <i class="fa fa-exclamation-circle fa-fw"
+                                             style="float: left; visibility: hidden" data-bind="visible: !hasErrorsOrWarnings()"></i>
+                                          <a data-bind="text: entityString, click: showLogs"></a>
+                                       </td>
+                                       <td class="centered">
+                                          <span data-bind="text: build"></span>
+                                       </td>
+                                       <td data-bind="attr: {'class':status_style}">
+                                          <span data-bind="text: statusName()"></span>
+                                       </td>
+                                       <td class="service-chart-wrap">
+                                          <div class="service-chart" data-bind="attr: {id: 'service-chart-latency-' + entityId}"></div>
+                                          <span class="service-chart-val" data-bind="text: latency"></span>
+                                       </td>
+                                       <td class="service-chart-wrap">
+                                          <div class="service-chart" data-bind="attr: {id: 'service-chart-rps-' + entityId}"></div>
+                                          <span class="service-chart-val" data-bind="text: rps"></span>
+                                       </td>
+                                       <td class="service-chart-wrap">
+                                          <div class="service-chart" data-bind="attr: {id: 'service-chart-mps-' + entityId}"></div>
+                                          <span class="service-chart-val" data-bind="text: mps"></span>
+                                       </td>
+                                       <td class="service-chart-wrap">
+                                          <div class="service-chart" data-bind="attr: {id: 'service-chart-counter-' + entityId}"></div>
+                                          <span class="service-chart-val" data-bind="text: counter"></span>
+                                       </td>
+                                    </tr>
 
-                                             <!-- ko foreach: commands -->
-                                             <li><a href="#"
-                                                   data-bind="click: function() { $parent.execute($data) }, text: name"></a></li>
-                                             <!-- /ko -->
+                                    <tr data-bind='visible: expanded'>
+                                       <td></td>
+                                       <td colspan="9" data-bind="attr: {id: 'service-details-' + entityId}">
+                                          <div class="service-details">
 
-                                             <li class="divider"></li>
-                                             <li><a href="#" data-bind="click: showErrors, visible: hasErrorsOrWarnings()">Show
-                                                   Errors</a></li>
-                                             <li><a href="#" data-bind="click: clearErrors, visible: hasErrorsOrWarnings()">Clear
-                                                   Errors</a></li>
-                                             <li><a href="#" data-bind="click: setCommsLogLevel">Set Comms Log Level...</a></li>
+                                             <ul class="nav nav-tabs">
+                                                <li class="active"><a data-bind="attr: {href: '#metrics-' + entityId}"
+                                                      data-toggle="tab">Metrics</a></li>
+                                                <li><a data-bind="attr: {href: '#logs-' + entityId}" data-toggle="tab">Logs</a></li>
+                                             </ul>
 
-                                             <li data-bind="visible: name=='Tetrapod'" class="divider"></li>
-                                             <li><a href="#"
-                                                   data-bind="visible: name=='Tetrapod', click: function() { popupBuild(); }">Deploy</a>
-                                             <li class="divider"></li>
+                                             <div class="tab-content">
+                                                <div class="tab-pane active" data-bind="attr: {id: 'metrics-' + entityId}">
+                                                   <div class="service-metrics">
 
-                                             <li><a href="#" data-bind="click: pause, visible: canPause()">
-                                                   <i class="fa fa-pause fa-fw"></i>Pause
-                                                </a></li>
-                                             <li><a href="#" data-bind="click: unpause, visible: canUnpause()">
-                                                   <i class="fa fa-play fa-fw"></i>Resume
-                                                </a></li>
+                                                      <dl>
+                                                         <dt>Memory Usage:</dt>
+                                                         <dd>
+                                                            <span data-bind="text: memory"></span>
+                                                            %
+                                                         </dd>
 
-                                             <li class="divider" data-bind=" visible: !isGone()"></li>
+                                                         <dt>Thread Count:</dt>
+                                                         <dd>
+                                                            <span data-bind="text: threads"></span>
+                                                         </dd>
+                                                      </dl>
 
-                                             <li><a href="#" data-bind="click: restart, visible: !isGone()">
-                                                   <i class="fa fa-refresh fa-fw"></i>Restart
-                                                </a></li>
-
-                                             <li><a href="#" data-bind="click: shutdown, visible: !isGone()">
-                                                   <i class="fa fa-power-off fa-fw"></i>Shutdown
-                                                </a></li>
-                                             <li><a href="#" data-bind="click: deleteService, visible: isGone()">
-                                                   <i class="fa fa-trash-o fa-fw"></i>Delete
-                                                </a></li>
-
-                                          </ul>
-                                       </div>
-                                    <td>
-                                       <img
-                                          data-bind="attr:{src: iconURL().indexOf('fa-')==0 ? '/admin/media/lizard.png' : iconURL()}, visible: iconURL().indexOf('fa-') != 0"
-                                          class="service-icon">
-                                       <i class="service-fa fa fa-fw"
-                                          data-bind="css:iconURL, visible: iconURL().indexOf('fa-') == 0"></i>
-                                       <span class="service-name" data-bind="text: name"></span>
-                                    </td>
-                                    <td class="centered">
-                                       <i class="fa fa-warning fa-fw" style="float: left; color: orange"
-                                          data-bind="visible: hasWarningsOnly()"></i> <i class="fa fa-exclamation-circle fa-fw"
-                                          style="float: left; color: red" data-bind="visible: hasErrors()"></i> <i
-                                          class="fa fa-exclamation-circle fa-fw" style="float: left; visibility: hidden"
-                                          data-bind="visible: !hasErrorsOrWarnings()"></i>
-                                       <a data-bind="text: entityString, click: showLogs"></a>
-                                    </td>
-                                    <td class="centered">
-                                       <span data-bind="text: build"></span>
-                                    </td>
-                                    <td data-bind="attr: {'class':status_style}">
-                                       <span data-bind="text: statusName()"></span>
-                                    </td>
-                                    <td class="service-chart-wrap">
-                                       <div class="service-chart" data-bind="attr: {id: 'service-chart-latency-' + entityId}"></div>
-                                       <span class="service-chart-val" data-bind="text: latency"></span>
-                                    </td>
-                                    <td class="service-chart-wrap">
-                                       <div class="service-chart" data-bind="attr: {id: 'service-chart-rps-' + entityId}"></div>
-                                       <span class="service-chart-val" data-bind="text: rps"></span>
-                                    </td>
-                                    <td class="service-chart-wrap">
-                                       <div class="service-chart" data-bind="attr: {id: 'service-chart-mps-' + entityId}"></div>
-                                       <span class="service-chart-val" data-bind="text: mps"></span>
-                                    </td>
-                                    <td class="service-chart-wrap">
-                                       <div class="service-chart" data-bind="attr: {id: 'service-chart-counter-' + entityId}"></div>
-                                       <span class="service-chart-val" data-bind="text: counter"></span>
-                                    </td>
-                                 </tr>
-
-                                 <tr data-bind='visible: expanded'>
-                                    <td></td>
-                                    <td colspan="9" data-bind="attr: {id: 'service-details-' + entityId}">
-                                       <div class="service-details">
-
-                                          <ul class="nav nav-tabs">
-                                             <li class="active"><a data-bind="attr: {href: '#metrics-' + entityId}"
-                                                   data-toggle="tab">Metrics</a></li>
-                                             <li><a data-bind="attr: {href: '#logs-' + entityId}" data-toggle="tab">Logs</a></li>
-                                          </ul>
-
-                                          <div class="tab-content">
-                                             <div class="tab-pane active" data-bind="attr: {id: 'metrics-' + entityId}">
-                                                <div class="service-metrics">
-
-                                                   <dl>
-                                                      <dt>Memory Usage:</dt>
-                                                      <dd>
-                                                         <span data-bind="text: memory"></span>
-                                                         %
-                                                      </dd>
-
-                                                      <dt>Thread Count:</dt>
-                                                      <dd>
-                                                         <span data-bind="text: threads"></span>
-                                                      </dd>
-                                                   </dl>
-
+                                                   </div>
                                                 </div>
-                                             </div>
 
-                                             <div class="tab-pane" data-bind="attr: {id: 'logs-' + entityId}">
-                                                <div class="service-logs" data-bind="attr: {id: 'service-logs-' + entityId}">
-                                                   <ul data-bind="foreach: logs">
-                                                      <li data-bind="attr: {'class':levelStyle}"><span
-                                                            data-bind="text: timestamp"></span> <span data-bind="text: thread"></span>
-                                                         <span data-bind="text: logger"></span> <span class="service-logs-msg"
-                                                            data-bind="text: msg"></span></li>
-                                                   </ul>
-                                                </div>
-                                                <div class="service-logs-options" align="right">
+                                                <div class="tab-pane" data-bind="attr: {id: 'logs-' + entityId}">
+                                                   <div class="service-logs" data-bind="attr: {id: 'service-logs-' + entityId}">
+                                                      <ul data-bind="foreach: logs">
+                                                         <li data-bind="attr: {'class':levelStyle}"><span
+                                                               data-bind="text: timestamp"></span> <span
+                                                               data-bind="text: thread"></span> <span data-bind="text: logger"></span>
+                                                            <span class="service-logs-msg" data-bind="text: msg"></span></li>
+                                                      </ul>
+                                                   </div>
+                                                   <div class="service-logs-options" align="right">
 
-                                                   <span>
-                                                      Log Level:
-                                                      <select
-                                                         data-bind="options:     logLevels,
+                                                      <span>
+                                                         Log Level:
+                                                         <select
+                                                            data-bind="options:     logLevels,
                                               optionsText: function(item) { return getLogLevelStyle(item);  },
                                                    value: logLevel,"></select>
-                                                   </span>
-                                                   <span>
-                                                      <label>
-                                                         <input type="checkbox" data-bind="checked: autoScrollLogs"
-                                                            name="Auto Scroll" />
-                                                         Auto Scroll
-                                                      </label>
-                                                   </span>
+                                                      </span>
+                                                      <span>
+                                                         <label>
+                                                            <input type="checkbox" data-bind="checked: autoScrollLogs"
+                                                               name="Auto Scroll" />
+                                                            Auto Scroll
+                                                         </label>
+                                                      </span>
+                                                   </div>
+
                                                 </div>
-
                                              </div>
+
+
                                           </div>
+                                       </td>
+                                    </tr>
 
+                                 </tbody>
+                              </table>
+                           </div>
+                           <!-- /ko -->
 
-                                       </div>
-                                    </td>
-                                 </tr>
-
-                              </tbody>
-                           </table>
                         </div>
-                        <!-- /ko -->
-
                      </div>
-                     <hr>
                   </div>
 
                </div>

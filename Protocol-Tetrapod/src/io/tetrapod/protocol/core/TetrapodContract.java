@@ -36,6 +36,7 @@ public class TetrapodContract extends Contract {
       , KeepAliveRequest.Handler
       , LogRegistryStatsRequest.Handler
       , PublishRequest.Handler
+      , RaftStatsRequest.Handler
       , RegisterRequest.Handler
       , RegistrySubscribeRequest.Handler
       , RegistryUnsubscribeRequest.Handler
@@ -77,6 +78,7 @@ public class TetrapodContract extends Contract {
          new GetServiceBuildInfoRequest(),
          new ExecuteBuildCommandRequest(),
          new VerifyEntityTokenRequest(),
+         new RaftStatsRequest(),
       };
    }
    
@@ -89,6 +91,7 @@ public class TetrapodContract extends Contract {
          new GetSubscriberCountResponse(),
          new GetEntityInfoResponse(),
          new GetServiceBuildInfoResponse(),
+         new RaftStatsResponse(),
       };
    }
    

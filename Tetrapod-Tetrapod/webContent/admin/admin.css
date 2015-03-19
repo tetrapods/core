@@ -4,7 +4,7 @@
 }
 
 #cluster-table th {
-	background: #000;
+	background: #666;
 	color: #fff;
 	text-align: center;
 }
@@ -286,4 +286,23 @@
 	top: 8px;
 	left: 0;
 	width: 100%
+}
+
+
+#raft-table {	 
+   font-size: 90%;
+   padding: 5px;
+   background: white;
+}
+
+#raft-table th {
+   background: #666;
+   color: #fff;
+   text-align: center;
+}
+
+#raft-table td { 
+   padding: 2px 3px;
+   vertical-align: middle;
+   white-space: nowrap;
 }

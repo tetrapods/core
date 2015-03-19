@@ -1144,4 +1144,12 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       return Response.error(ERROR_NOT_CONFIGURED);
    }
 
+   @Override
+   public Response requestRaftStats(RaftStatsRequest r, RequestContext ctx) {
+      if (raftStorage != null) {
+         return raftStorage.requestRaftStats(r, ctx);
+      }
+      return Response.error(ERROR_NOT_CONFIGURED);
+   }
+
 }

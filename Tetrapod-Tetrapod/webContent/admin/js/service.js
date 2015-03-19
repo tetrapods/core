@@ -180,17 +180,17 @@ define(["knockout", "jquery", "bootbox", "app", "build", "chart"], function(ko, 
          });
       }
 
-      self.hasErrors = function() {
+      self.hasErrors = ko.pureComputed(function() {
          return (self.status() & Core.STATUS_ERRORS) != 0;
-      }
+      });
 
-      self.hasWarningsOnly = function() {
+      self.hasWarningsOnly = ko.pureComputed(function() {
          return (self.status() & Core.STATUS_WARNINGS) != 0 && (self.status() & Core.STATUS_ERRORS) == 0;
-      }
+      });
 
-      self.hasErrorsOrWarnings = function() {
+      self.hasErrorsOrWarnings = ko.pureComputed(function() {
          return (self.status() & Core.STATUS_ERRORS) != 0 || (self.status() & Core.STATUS_WARNINGS) != 0;
-      }
+      });
 
       self.setCommsLogLevel = function() {
          bootbox.dialog({
@@ -220,13 +220,13 @@ define(["knockout", "jquery", "bootbox", "app", "build", "chart"], function(ko, 
          });
       }
 
-      self.canPause = function() {
+      self.canPause = ko.pureComputed(function() {
          return !self.isGone() && !self.isPaused();
-      }
+      });
 
-      self.canUnpause = function() {
+      self.canUnpause = ko.pureComputed(function() {
          return !self.isGone() && self.isPaused();
-      }
+      });
 
       self.statsUpdate = function(msg) {
          self.latency(msg.latency);
@@ -238,9 +238,10 @@ define(["knockout", "jquery", "bootbox", "app", "build", "chart"], function(ko, 
          self.disk(msg.disk);
          self.threads(msg.threads);
       }
-      self.memoryWidth = ko.computed(function() {
-         return self.memory() + '%';
-      }, self);
+
+      self.isRaftNode = ko.pureComputed(function() {
+         return entity.type == Core.TYPE_TETRAPOD;
+      });
 
       // ////////////////////////////////////// stats graphs ////////////////////////////////////////
 
