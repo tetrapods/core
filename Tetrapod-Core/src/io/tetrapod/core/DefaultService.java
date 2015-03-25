@@ -188,7 +188,6 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
                      serviceConnector.shutdown();
                   }
                   serviceConnector = new ServiceConnector(this, sslContext);
-
                }
             } catch (Throwable t) {
                fail(t);
@@ -196,7 +195,6 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
             // ok, we're good to go
             updateStatus(getStatus() & ~Core.STATUS_STARTING);
             onStarted();
-            setWebRoot();
             if (startPaused) {
                onPaused();
             }
@@ -255,7 +253,37 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
 
    public void onUnpaused() {}
 
-   public void onStarted() {}
+   public void onStarted() {
+      if (Launcher.getOpt("webOnly") != null) {
+         doWebOnlyService();
+      }
+   }
+
+   /**
+    * Runs a web only service.  This should probably be a separate service class
+    * instead of bolted into default service
+    */
+   private void doWebOnlyService() {
+      String name = Launcher.getOpt("webOnly");
+      try {
+         recursiveAddWebFiles(name, new File("webContent"), true);
+         if (Util.isLocal()) {
+            // adds all protocol files, which is also what happens on dev and prod--though there 
+            // the deployment scripts make sure the previous call contains all protocol files
+            for (File f : new File("..").listFiles()) {
+               if (f.isDirectory() && f.getName().startsWith("Protocol")) {
+                  File dir = new File(f, "rsc");
+                  if (dir.exists()) {
+                     recursiveAddWebFiles(name, dir, false);
+                  }
+               }
+            }
+         }
+      } catch (IOException e) {
+         logger.error(e.getMessage(), e);
+      }
+      shutdown(false);
+   }
 
    public void shutdown(boolean restarting) {
       updateStatus(getStatus() | Core.STATUS_STOPPING);
@@ -709,31 +737,10 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
       return Response.SUCCESS;
    }
 
-   private void setWebRoot() {
-      String name = Launcher.getOpt("webOnly");
-      if (name == null) {
-         name = getShortName();
-      }
-      try {
-         recursiveAddWebFiles(name, new File("webContent"), true);
-         if (Util.isLocal()) {
-            for (File f : getDevProtocolWebRoots())
-               recursiveAddWebFiles(name, f, false);
-         }
-         if (Launcher.getOpt("webOnly") != null) {
-            shutdown(false);
-         }
-      } catch (IOException e) {
-         logger.error("bad web root path", e);
-      }
-   }
-
    private static final Set<String> VALID_EXTENSIONS = new HashSet<>(Arrays.asList(new String[] { "html", "htm", "js", "css", "jpg", "png",
          "gif", "wav", "woff", "svg", "ttf", "swf"  }));
 
-   private void recursiveAddWebFiles(String webRootName, File dir, boolean first) throws IOException {
-      if (!dir.exists())
-         return;
+   protected void recursiveAddWebFiles(String webRootName, File dir, boolean first) throws IOException {
       if (Util.isLocal()) {
          sendDirectRequest(new AddWebFileRequest(dir.getCanonicalPath(), webRootName, null, first));
          return;
