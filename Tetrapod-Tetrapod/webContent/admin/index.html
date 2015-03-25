@@ -103,6 +103,15 @@
                            <tbody data-bind="foreach: rafts" class="raft">
                               <tr>
                                  <td>
+                                    <div class="dropdown" style="display: inline-block;">
+                                       <a class="dropdown-toggle" data-toggle="dropdown" href="#">
+                                          <i class="fa fa-gear fa-fw"></i> <i class="fa fa-caret-down"></i>
+                                       </a>
+                                       <ul class="dropdown-menu dropdown-service">
+                                          <li><a href="#" data-bind="click: leaveCluster }">Leave Cluster</a></li>
+                                       </ul>
+                                    </div>
+
                                     <span data-bind="text: entityId"></span>
                                     &nbsp;@&nbsp;
                                     <span data-bind="text: host"></span>

@@ -21,6 +21,7 @@ define(["knockout", "jquery", "bootbox", "app", "build", "chart"], function(ko, 
       self.lastContact = ko.observable(0);
 
       self.update = update;
+      self.leaveCluster = leaveCluster;
 
       self.update();
 
@@ -79,5 +80,10 @@ define(["knockout", "jquery", "bootbox", "app", "build", "chart"], function(ko, 
          }
          return 'fa-question';
       });
+
+      function leaveCluster() {
+
+      }
+
    }
 });
