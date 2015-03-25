@@ -27,7 +27,7 @@ public class Util {
    /**
     * Sleeps the current thread for a number of milliseconds, ignores interrupts.
     */
-   public static void sleep(int millis) {
+   public static void sleep(long millis) {
       try {
          Thread.sleep(millis);
       } catch (InterruptedException e) {}

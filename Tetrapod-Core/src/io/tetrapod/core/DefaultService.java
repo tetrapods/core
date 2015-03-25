@@ -319,6 +319,21 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
             }
          });
       }
+
+      // If JVM doesn't gracefully terminate after 1 minute, explicitly kill the process
+      final Thread hitman = new Thread(new Runnable() {
+         public void run() {
+            Util.sleep(Util.ONE_MINUTE);
+            logger.warn("Service did not complete graceful termination. Force Killing JVM.");
+            final Map<Thread, StackTraceElement[]> map = Thread.getAllStackTraces();
+            for (Thread t : map.keySet()) {
+               logger.warn("{}", t);
+            }
+            System.exit(1);
+         }
+      }, "Hitman");
+      hitman.setDaemon(true);
+      hitman.start();
    }
 
    protected String getRelaunchToken() {
