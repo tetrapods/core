@@ -1027,10 +1027,6 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       return Response.SUCCESS;
    }
 
-   protected File[] getDevProtocolWebRoots() {
-      return new File[] { new File("../Protocol-Tetrapod/rsc"), new File("../Protocol-Core/rsc") };
-   }
-
    //------------ building
 
    @Override
@@ -1100,6 +1096,19 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       }
 
       return Response.error(ERROR_UNKNOWN_ENTITY_ID);
+   }
+   
+   @Override
+   public void onStarted() {
+      try {
+         recursiveAddWebFiles(getShortName(), new File("webContent"), true);
+         if (Util.isLocal()) {
+            recursiveAddWebFiles(getShortName(), new File("../Protocol-Tetrapod/rsc"), false);
+            recursiveAddWebFiles(getShortName(), new File("../Protocol-Core/rsc"), false);
+         }
+      } catch (IOException e) {
+         logger.error(e.getMessage(), e);
+      }
    }
 
    /////////////// RAFT ///////////////
