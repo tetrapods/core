@@ -12,17 +12,16 @@ abstract public class Response extends Structure {
    public boolean isError() {
       return false;
    }
+   
+   final public boolean isSuccess() {
+      return !isError(); // don't return true, subclasses don't override this one
+   }
 
    public int errorCode() {
       if (isError()) {
          return ((Error) this).code;
       }
       return 0;
-   }
-
-   public boolean isGenericSuccess() {
-      Response s = Response.SUCCESS;
-      return s.getContractId() == getContractId() && s.getStructId() == getStructId();
    }
 
 }
