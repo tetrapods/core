@@ -335,7 +335,7 @@ public class WebHttpSession extends WebSession {
                jo.put("message", Contract.getErrorCode(res.errorCode(), res.getContractId()));
                cf = ctx.writeAndFlush(makeFrame(jo, keepAlive));
             }
-         } else if (res.isGenericSuccess()) {
+         } else if (isGenericSuccess(res)) {
             // bad form to allow two types of non-error response but most calls will just want to return SUCCESS
             JSONObject jo = new JSONObject();
             jo.put("result", "SUCCESS");
@@ -569,6 +569,11 @@ public class WebHttpSession extends WebSession {
          return true;
       }
       return false;
+   }
+   
+   private boolean isGenericSuccess(Response r) {
+      Response s = Response.SUCCESS;
+      return s.getContractId() == r.getContractId() && s.getStructId() == r.getStructId();
    }
 
 }
