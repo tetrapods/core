@@ -30,7 +30,7 @@ public class IssuePeerIdRequest extends Request {
    public int clusterPort;
 
    public final Structure.Security getSecurity() {
-      return Security.PUBLIC;
+      return Security.INTERNAL;
    }
 
    public final void defaults() {

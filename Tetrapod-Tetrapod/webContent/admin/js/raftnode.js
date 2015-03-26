@@ -82,7 +82,11 @@ define(["knockout", "jquery", "bootbox", "app", "build", "chart"], function(ko, 
       });
 
       function leaveCluster() {
-
+         app.server.sendTo("ClusterLeave", {}, service.entityId, function(info) {
+            if (info.isError()) {
+               console.error("Cluster Leave Failed");
+            }
+         });
       }
 
    }

@@ -471,6 +471,25 @@ public class RaftStorage extends Storage implements RaftRPC<TetrapodStateMachine
       return Response.SUCCESS;
    }
 
+   /**
+    * Asks this tetrapod to try and leave the cluster.
+    */
+   public Response requestClusterLeave(final ClusterLeaveRequest req, final SessionRequestContext ctx) {
+      if (raft.getPeerId() != 0) {
+         // FIXME -- use proper Pending responses
+         executeCommand(new DelPeerCommand<TetrapodStateMachine>(raft.getPeerId()), new ClientResponseHandler<TetrapodStateMachine>() {
+            @Override
+            public void handleResponse(Command<TetrapodStateMachine> command) {
+               if (command != null) {
+                  // on success we can shutdown
+                  // service.shutdown(false);
+               }
+            }
+         });
+      }
+      return Response.SUCCESS;
+   }
+
    @Override
    public Response requestVote(VoteRequest r, RequestContext ctx) {
       final VoteResponse res = new VoteResponse();

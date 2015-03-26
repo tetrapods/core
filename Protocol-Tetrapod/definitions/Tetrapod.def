@@ -37,16 +37,15 @@ public response Register
    2: int parentId
    3: string token
 
-public request IssuePeerId
+internal request IssuePeerId
    1: string host
    2: int clusterPort
    
-public response IssuePeerId
+internal response IssuePeerId
    1: int peerId   // our new peerId 
    2: int entityId // of the host we are talking to
 
-
-public request ClusterJoin
+internal request ClusterJoin
    1: int build
    2: int status
    3: string host
@@ -54,7 +53,9 @@ public request ClusterJoin
    5: int servicePort
    6: int clusterPort
    
-public request Unregister
+internal request ClusterLeave         
+   
+internal request Unregister
    1: int entityId
 
 internal request Publish 
@@ -92,26 +93,26 @@ public response AdminLogin
 public request AdminAuthorize
    1: string token @sensitive
 
-public request AdminCreate
+internal request AdminCreate
    1: string token @sensitive
    2: string email @sensitive
    3: string password @sensitive
    4: long rights
    
-public request AdminDelete
+internal request AdminDelete
    1: string token @sensitive
    2: int accountId;
    
-public request AdminChangePassword
+internal request AdminChangePassword
    1: string token @sensitive
    2: string oldPassword @sensitive
    3: string newPassword @sensitive
    
-public request AdminChangeRights
+internal request AdminChangeRights
    1: string token @sensitive
    2: int accountId
    3: long rights
-   
+
 public struct Admin
    1: int accountId
    2: string email @sensitive

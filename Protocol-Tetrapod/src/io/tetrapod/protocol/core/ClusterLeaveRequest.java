@@ -12,36 +12,26 @@ import java.util.*;
 import java.util.concurrent.*;
 
 @SuppressWarnings("unused")
-public class AdminDeleteRequest extends Request {
+public class ClusterLeaveRequest extends Request {
 
-   public static final int STRUCT_ID = 7421322;
+   public static final int STRUCT_ID = 12863875;
    public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;
    
-   public AdminDeleteRequest() {
+   public ClusterLeaveRequest() {
       defaults();
    }
-
-   public AdminDeleteRequest(String token, int accountId) {
-      this.token = token;
-      this.accountId = accountId;
-   }   
-
-   public String token;
-   public int accountId;
 
    public final Structure.Security getSecurity() {
       return Security.INTERNAL;
    }
 
    public final void defaults() {
-      token = null;
-      accountId = 0;
+      
    }
    
    @Override
    public final void write(DataSource data) throws IOException {
-      data.write(1, this.token);
-      data.write(2, this.accountId);
+      
       data.writeEndTag();
    }
    
@@ -51,8 +41,7 @@ public class AdminDeleteRequest extends Request {
       while (true) {
          int tag = data.readTag();
          switch (tag) {
-            case 1: this.token = data.read_string(tag); break;
-            case 2: this.accountId = data.read_int(tag); break;
+            
             case Codec.END_TAG:
                return;
             default:
@@ -63,36 +52,35 @@ public class AdminDeleteRequest extends Request {
    }
    
    public final int getContractId() {
-      return AdminDeleteRequest.CONTRACT_ID;
+      return ClusterLeaveRequest.CONTRACT_ID;
    }
 
    public final int getStructId() {
-      return AdminDeleteRequest.STRUCT_ID;
+      return ClusterLeaveRequest.STRUCT_ID;
    }
    
    @Override
    public final Response dispatch(ServiceAPI is, RequestContext ctx) {
       if (is instanceof Handler)
-         return ((Handler)is).requestAdminDelete(this, ctx);
+         return ((Handler)is).requestClusterLeave(this, ctx);
       return is.genericRequest(this, ctx);
    }
    
    public static interface Handler extends ServiceAPI {
-      Response requestAdminDelete(AdminDeleteRequest r, RequestContext ctx);
+      Response requestClusterLeave(ClusterLeaveRequest r, RequestContext ctx);
    }
    
    public final String[] tagWebNames() {
       // Note do not use this tags in long term serializations (to disk or databases) as 
       // implementors are free to rename them however they wish.  A null means the field
       // is not to participate in web serialization (remaining at default)
-      String[] result = new String[2+1];
-      result[1] = "token";
-      result[2] = "accountId";
+      String[] result = new String[0+1];
+      
       return result;
    }
    
    public final Structure make() {
-      return new AdminDeleteRequest();
+      return new ClusterLeaveRequest();
    }
    
    public final StructDescription makeDescription() {
@@ -100,13 +88,8 @@ public class AdminDeleteRequest extends Request {
       desc.tagWebNames = tagWebNames();
       desc.types = new TypeDescriptor[desc.tagWebNames.length];
       desc.types[0] = new TypeDescriptor(TypeDescriptor.T_STRUCT, getContractId(), getStructId());
-      desc.types[1] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
-      desc.types[2] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
+      
       return desc;
    }
 
-   protected boolean isSensitive(String fieldName) {
-      if (fieldName.equals("token")) return true;
-      return false;
-   }
 }

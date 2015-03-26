@@ -28,6 +28,7 @@ public class TetrapodContract extends Contract {
       , AdminDeleteRequest.Handler
       , AdminLoginRequest.Handler
       , ClusterJoinRequest.Handler
+      , ClusterLeaveRequest.Handler
       , ExecuteBuildCommandRequest.Handler
       , GetEntityInfoRequest.Handler
       , GetServiceBuildInfoRequest.Handler
@@ -54,6 +55,7 @@ public class TetrapodContract extends Contract {
          new RegisterRequest(),
          new IssuePeerIdRequest(),
          new ClusterJoinRequest(),
+         new ClusterLeaveRequest(),
          new UnregisterRequest(),
          new PublishRequest(),
          new RegistrySubscribeRequest(),

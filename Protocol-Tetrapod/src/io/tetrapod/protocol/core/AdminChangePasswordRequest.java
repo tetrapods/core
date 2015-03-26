@@ -32,7 +32,7 @@ public class AdminChangePasswordRequest extends Request {
    public String newPassword;
 
    public final Structure.Security getSecurity() {
-      return Security.PUBLIC;
+      return Security.INTERNAL;
    }
 
    public final void defaults() {

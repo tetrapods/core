@@ -32,7 +32,7 @@ public class AdminChangeRightsRequest extends Request {
    public long rights;
 
    public final Structure.Security getSecurity() {
-      return Security.PUBLIC;
+      return Security.INTERNAL;
    }
 
    public final void defaults() {

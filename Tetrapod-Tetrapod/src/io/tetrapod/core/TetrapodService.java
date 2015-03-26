@@ -835,15 +835,6 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    }
 
    @Override
-   public Response requestClusterJoin(ClusterJoinRequest r, RequestContext ctxA) {
-      SessionRequestContext ctx = (SessionRequestContext) ctxA;
-      if (ctx.session.getTheirEntityType() != Core.TYPE_TETRAPOD) {
-         return new Error(ERROR_INVALID_RIGHTS);
-      }
-      return raftStorage.requestClusterJoin(r, clusterTopic, ctx);
-   }
-
-   @Override
    public Response requestLogRegistryStats(LogRegistryStatsRequest r, RequestContext ctx) {
       registry.logStats();
       return Response.SUCCESS;
@@ -1097,7 +1088,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
       return Response.error(ERROR_UNKNOWN_ENTITY_ID);
    }
-   
+
    @Override
    public void onStarted() {
       try {
@@ -1114,51 +1105,47 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    /////////////// RAFT ///////////////
 
    @Override
-   public Response requestAppendEntries(AppendEntriesRequest r, RequestContext ctx) {
-      if (raftStorage != null) {
-         return raftStorage.requestAppendEntries(r, ctx);
+   public Response requestClusterJoin(ClusterJoinRequest r, RequestContext ctxA) {
+      SessionRequestContext ctx = (SessionRequestContext) ctxA;
+      if (ctx.session.getTheirEntityType() != Core.TYPE_TETRAPOD) {
+         return new Error(ERROR_INVALID_RIGHTS);
       }
-      return Response.error(ERROR_NOT_CONFIGURED);
+      return raftStorage.requestClusterJoin(r, clusterTopic, ctx);
+   }
+
+   @Override
+   public Response requestClusterLeave(ClusterLeaveRequest r, RequestContext ctx) {
+      return raftStorage.requestClusterLeave(r, (SessionRequestContext) ctx);
+   }
+
+   @Override
+   public Response requestAppendEntries(AppendEntriesRequest r, RequestContext ctx) {
+      return raftStorage.requestAppendEntries(r, ctx);
    }
 
    @Override
    public Response requestVote(VoteRequest r, RequestContext ctx) {
-      if (raftStorage != null) {
-         return raftStorage.requestVote(r, ctx);
-      }
-      return Response.error(ERROR_NOT_CONFIGURED);
+      return raftStorage.requestVote(r, ctx);
    }
 
    @Override
    public Response requestInstallSnapshot(InstallSnapshotRequest r, RequestContext ctx) {
-      if (raftStorage != null) {
-         return raftStorage.requestInstallSnapshot(r, ctx);
-      }
-      return Response.error(ERROR_NOT_CONFIGURED);
+      return raftStorage.requestInstallSnapshot(r, ctx);
    }
 
    @Override
    public Response requestIssueCommand(IssueCommandRequest r, RequestContext ctx) {
-      if (raftStorage != null) {
-         return raftStorage.requestIssueCommand(r, ctx);
-      }
-      return Response.error(ERROR_NOT_CONFIGURED);
+      return raftStorage.requestIssueCommand(r, ctx);
    }
 
    @Override
    public Response requestIssuePeerId(IssuePeerIdRequest r, RequestContext ctx) {
-      if (raftStorage != null) {
-         return raftStorage.requestIssuePeerId(r, (SessionRequestContext) ctx);
-      }
-      return Response.error(ERROR_NOT_CONFIGURED);
+      return raftStorage.requestIssuePeerId(r, (SessionRequestContext) ctx);
    }
 
    @Override
    public Response requestRaftStats(RaftStatsRequest r, RequestContext ctx) {
-      if (raftStorage != null) {
-         return raftStorage.requestRaftStats(r, ctx);
-      }
-      return Response.error(ERROR_NOT_CONFIGURED);
+      return raftStorage.requestRaftStats(r, ctx);
    }
 
 }
