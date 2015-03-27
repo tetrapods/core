@@ -996,7 +996,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          for (WebRoot roo : webRootDirs.values()) {
             size += roo.getMemoryFootprint();
          }
-         logger.debug("Total web footprint is {} MBs", ((double) size / (double) (1024 * 1024)));
+         logger.debug("Total web footprint is {} MBs, added path {}", ((double) size / (double) (1024 * 1024)), r.path);
       }
       return Response.SUCCESS;
    }
