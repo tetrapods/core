@@ -5,6 +5,7 @@ import static io.tetrapod.protocol.core.CoreContract.*;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.*;
 import io.netty.channel.socket.SocketChannel;
+import io.netty.handler.codec.DecoderException;
 import io.netty.util.ReferenceCountUtil;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.rpc.Error;
@@ -404,7 +405,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
    @Override
    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
       ctx.close();
-      // quieter logging for certain exceptions
+      // quieter logging for certain exceptions      
       if (cause instanceof IOException) {
          if (cause instanceof SSLException) {
             logger.warn("{} {}", this, cause.getMessage());
@@ -415,6 +416,9 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
                return;
             }
          }
+      } else if (cause instanceof DecoderException) {
+         logger.info("{} {}", this, cause.getMessage());
+         return;
       }
 
       logger.error("{} : {} : {}", this, cause.getClass().getSimpleName(), cause.getMessage());
