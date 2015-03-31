@@ -8,6 +8,7 @@ import io.tetrapod.core.utils.*;
 import io.tetrapod.protocol.core.*;
 import io.tetrapod.protocol.raft.*;
 import io.tetrapod.raft.*;
+import io.tetrapod.raft.RaftEngine.Peer;
 import io.tetrapod.raft.RaftEngine.Role;
 import io.tetrapod.raft.storage.*;
 
@@ -476,18 +477,20 @@ public class RaftStorage extends Storage implements RaftRPC<TetrapodStateMachine
     */
    public Response requestClusterLeave(final ClusterLeaveRequest req, final SessionRequestContext ctx) {
       if (raft.getPeerId() != 0) {
-         // FIXME -- use proper Pending responses
          executeCommand(new DelPeerCommand<TetrapodStateMachine>(raft.getPeerId()), new ClientResponseHandler<TetrapodStateMachine>() {
             @Override
             public void handleResponse(Command<TetrapodStateMachine> command) {
                if (command != null) {
                   // on success we can shutdown
-                  // service.shutdown(false);
+                  ctx.session.sendResponse(Response.SUCCESS, ctx.header.requestId);
+                  service.shutdown(false);
+               } else {
+                  ctx.session.sendResponse(Response.error(CoreContract.ERROR_UNKNOWN), ctx.header.requestId);
                }
             }
          });
       }
-      return Response.SUCCESS;
+      return Response.PENDING;
    }
 
    @Override
@@ -546,23 +549,26 @@ public class RaftStorage extends Storage implements RaftRPC<TetrapodStateMachine
    }
 
    @Override
-   public Response requestIssueCommand(IssueCommandRequest r, RequestContext ctx) {
-      final IssueCommandResponse res = new IssueCommandResponse();
+   public Response requestIssueCommand(IssueCommandRequest r, final RequestContext ctx) {
       try {
          raft.handleClientRequest(bytesToCommand(r.command, r.type), new ClientResponseHandler<TetrapodStateMachine>() {
             @Override
             public void handleResponse(Command<TetrapodStateMachine> command) {
+               final Session ses = ((SessionRequestContext) ctx).session;
+               Response res = Response.error(CoreContract.ERROR_UNKNOWN);
                try {
-                  res.command = commandToBytes(command);
+                  res = new IssueCommandResponse(commandToBytes(command));
                } catch (IOException e) {
                   logger.error(e.getMessage(), e);
+               } finally {
+                  ses.sendResponse(res, ctx.header.requestId);
                }
             }
          });
+         return Response.PENDING;
       } catch (IOException e) {
          throw new RuntimeException(e);
       }
-      return res;
    }
 
    @Override
@@ -573,10 +579,20 @@ public class RaftStorage extends Storage implements RaftRPC<TetrapodStateMachine
    ///////////////////////////////////// STORAGE API ///////////////////////////////////////
 
    public void executeCommand(Command<TetrapodStateMachine> cmd, ClientResponseHandler<TetrapodStateMachine> handler) {
-      // if we're the leader we can execute directly
-      if (!raft.executeCommand(cmd, handler)) {
-         // else, send RPC to current leader
-         sendIssueCommand(raft.getLeader(), cmd, handler);
+      boolean sent = false;
+      while (!sent) {
+         // if we're the leader we can execute directly
+         if (!raft.executeCommand(cmd, handler)) {
+            // else, send RPC to current leader
+            if (raft.getLeader() != 0) {
+               sendIssueCommand(raft.getLeader(), cmd, handler);
+               sent = true; // FIXME
+            } else {
+               Util.sleep(10);
+            }
+         } else {
+            sent = true;
+         }
       }
    }
 
@@ -626,9 +642,9 @@ public class RaftStorage extends Storage implements RaftRPC<TetrapodStateMachine
    ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
    public void logStatus() {
-      logger.info(String.format("#%d: %9s term=%d, lastIndex=%d, lastTerm=%d commitIndex=%d, %s, peers=%d", raft.getPeerId(), raft
-            .getRole(), raft.getCurrentTerm(), raft.getLog().getLastIndex(), raft.getLog().getLastTerm(), raft.getLog().getCommitIndex(),
-            raft.getStateMachine(), raft.getClusterSize()));
+      logger.info(String.format("#%d: %9s term=%d, lastIndex=%d, lastTerm=%d commitIndex=%d, %s, peers=%d, leader=%d", raft.getPeerId(),
+            raft.getRole(), raft.getCurrentTerm(), raft.getLog().getLastIndex(), raft.getLog().getLastTerm(), raft.getLog()
+                  .getCommitIndex(), raft.getStateMachine(), raft.getClusterSize(), raft.getLeader()));
 
       if (raft.getRole() == Role.Leader) {
          // HACK: generate some command activity for testing
@@ -637,10 +653,18 @@ public class RaftStorage extends Storage implements RaftRPC<TetrapodStateMachine
    }
 
    public Response requestRaftStats(RaftStatsRequest r, RequestContext ctx) {
-      return new RaftStatsResponse((byte) raft.getRole().ordinal(), raft.getCurrentTerm(), raft.getLog().getLastTerm(), raft.getLog()
-            .getLastIndex(), raft.getLog().getCommitIndex(), raft.getClusterSize());
-   }
+      synchronized (raft) {
 
+         int i = 0;
+         int[] peers = new int[raft.getClusterSize() - 1];
+         for (Peer p : raft.getPeers()) {
+            peers[i++] = p.peerId << Registry.PARENT_ID_SHIFT;
+         }
+
+         return new RaftStatsResponse((byte) raft.getRole().ordinal(), raft.getCurrentTerm(), raft.getLog().getLastTerm(), raft.getLog()
+               .getLastIndex(), raft.getLog().getCommitIndex(), peers);
+      }
+   }
    ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 }

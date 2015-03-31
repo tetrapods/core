@@ -21,13 +21,13 @@ public class RaftStatsResponse extends Response {
       defaults();
    }
 
-   public RaftStatsResponse(byte role, long curTerm, long lastTerm, long lastIndex, long commitIndex, int numPeers) {
+   public RaftStatsResponse(byte role, long curTerm, long lastTerm, long lastIndex, long commitIndex, int[] peers) {
       this.role = role;
       this.curTerm = curTerm;
       this.lastTerm = lastTerm;
       this.lastIndex = lastIndex;
       this.commitIndex = commitIndex;
-      this.numPeers = numPeers;
+      this.peers = peers;
    }   
    
    public byte role;
@@ -35,7 +35,7 @@ public class RaftStatsResponse extends Response {
    public long lastTerm;
    public long lastIndex;
    public long commitIndex;
-   public int numPeers;
+   public int[] peers;
 
    public final Structure.Security getSecurity() {
       return Security.INTERNAL;
@@ -47,7 +47,7 @@ public class RaftStatsResponse extends Response {
       lastTerm = 0;
       lastIndex = 0;
       commitIndex = 0;
-      numPeers = 0;
+      peers = null;
    }
    
    @Override
@@ -57,7 +57,7 @@ public class RaftStatsResponse extends Response {
       data.write(3, this.lastTerm);
       data.write(4, this.lastIndex);
       data.write(5, this.commitIndex);
-      data.write(6, this.numPeers);
+      if (this.peers != null) data.write(6, this.peers);
       data.writeEndTag();
    }
    
@@ -72,7 +72,7 @@ public class RaftStatsResponse extends Response {
             case 3: this.lastTerm = data.read_long(tag); break;
             case 4: this.lastIndex = data.read_long(tag); break;
             case 5: this.commitIndex = data.read_long(tag); break;
-            case 6: this.numPeers = data.read_int(tag); break;
+            case 6: this.peers = data.read_int_array(tag); break;
             case Codec.END_TAG:
                return;
             default:
@@ -100,7 +100,7 @@ public class RaftStatsResponse extends Response {
       result[3] = "lastTerm";
       result[4] = "lastIndex";
       result[5] = "commitIndex";
-      result[6] = "numPeers";
+      result[6] = "peers";
       return result;
    }
 
@@ -118,7 +118,7 @@ public class RaftStatsResponse extends Response {
       desc.types[3] = new TypeDescriptor(TypeDescriptor.T_LONG, 0, 0);
       desc.types[4] = new TypeDescriptor(TypeDescriptor.T_LONG, 0, 0);
       desc.types[5] = new TypeDescriptor(TypeDescriptor.T_LONG, 0, 0);
-      desc.types[6] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
+      desc.types[6] = new TypeDescriptor(TypeDescriptor.T_INT_LIST, 0, 0);
       return desc;
    }
  }

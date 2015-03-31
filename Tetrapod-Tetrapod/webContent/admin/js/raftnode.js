@@ -33,7 +33,7 @@ define(["knockout", "jquery", "bootbox", "app", "build", "chart"], function(ko, 
                self.lastTerm(info.lastTerm);
                self.lastIndex(info.lastIndex);
                self.commitIndex(info.commitIndex);
-               self.numPeers(info.numPeers);
+               self.numPeers(info.peers.length);
                self.lastContact(new Date());
             } else {
                self.role(-1);

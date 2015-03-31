@@ -272,4 +272,4 @@ internal response RaftStats
    3: long lastTerm
    4: long lastIndex
    5: long commitIndex
-   6: int numPeers     
+   6: int[] peers     
