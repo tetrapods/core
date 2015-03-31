@@ -202,6 +202,7 @@ class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRequest> 
    
    
    private String userAgentRedirect(String userAgent, String uri) {
+      logger.debug("{} - {}", uri, userAgent);
       if (userAgent == null) {
          return null;
       }
