@@ -39,11 +39,11 @@ define(["knockout", "jquery", "bootbox", "app", "build"], function(ko, $, bootbo
 
       self.plot = null;
       self.series = {
-         data: [], 
+         data: [],
          lines: {
             lineWidth: 1,
             fill: true
-         }, 
+         },
          color: "rgba(112, 212, 212, 0.25)",
          shadowSize: 1
       };
@@ -56,16 +56,20 @@ define(["knockout", "jquery", "bootbox", "app", "build"], function(ko, $, bootbo
          if (self.series.maxY) {
             if (value > self.series.maxY) {
                self.series.maxY = value;
-            } 
+            }
             chartOptions.yaxis.max = self.series.maxY;
          } else {
             chartOptions.yaxis.max = null;
          }
-         var plot = self.getPlot();
-         if (plot) {
-            plot.setData([self.series]);
-            plot.setupGrid();
-            plot.draw();
+         try {
+            var plot = self.getPlot();
+            if (plot) {
+               plot.setData([self.series]);
+               plot.setupGrid();
+               plot.draw();
+            }
+         } catch (e) {
+            console.error(e.message);
          }
       }
 
@@ -78,7 +82,11 @@ define(["knockout", "jquery", "bootbox", "app", "build"], function(ko, $, bootbo
          if (!container)
             return;
 
+         if (container.clientWidth == 0)
+            return;
+
          self.plot = $.plot(container, [], chartOptions);
+
          return self.plot;
       }
 
