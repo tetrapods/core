@@ -662,7 +662,7 @@ public class RaftStorage extends Storage implements RaftRPC<TetrapodStateMachine
          }
 
          return new RaftStatsResponse((byte) raft.getRole().ordinal(), raft.getCurrentTerm(), raft.getLog().getLastTerm(), raft.getLog()
-               .getLastIndex(), raft.getLog().getCommitIndex(), peers);
+               .getLastIndex(), raft.getLog().getCommitIndex(), raft.getLeader(), peers);
       }
    }
    ///////////////////////////////////////////////////////////////////////////////////////////////////////////

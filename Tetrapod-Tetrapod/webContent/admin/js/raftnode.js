@@ -19,6 +19,7 @@ define(["knockout", "jquery", "bootbox", "app", "build", "chart"], function(ko, 
       self.commitIndex = ko.observable(0);
       self.numPeers = ko.observable(0);
       self.lastContact = ko.observable(0);
+      self.leaderId = ko.observable(0);
 
       self.update = update;
       self.leaveCluster = leaveCluster;
@@ -82,7 +83,10 @@ define(["knockout", "jquery", "bootbox", "app", "build", "chart"], function(ko, 
       });
 
       function leaveCluster() {
-         app.server.sendTo("ClusterLeave", {}, service.entityId, function(info) {
+         var leaderId = service.entityId;
+         app.server.sendTo("ClusterLeave", {
+            entityId: service.entityId
+         }, leaderId, function(info) {
             if (info.isError()) {
                console.error("Cluster Leave Failed");
             }

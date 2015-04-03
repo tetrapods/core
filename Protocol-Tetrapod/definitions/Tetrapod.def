@@ -53,7 +53,8 @@ internal request ClusterJoin
    5: int servicePort
    6: int clusterPort
    
-internal request ClusterLeave         
+internal request ClusterLeave
+   1: int entityId      
    
 internal request Unregister
    1: int entityId
@@ -272,4 +273,5 @@ internal response RaftStats
    3: long lastTerm
    4: long lastIndex
    5: long commitIndex
-   6: int[] peers     
+   6: int leaderId
+   7: int[] peers
