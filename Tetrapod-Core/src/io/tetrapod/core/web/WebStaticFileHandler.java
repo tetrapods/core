@@ -75,7 +75,8 @@ class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRequest> 
          return;
       }
       String host = request.headers().get(HOST);
-      String userAgentRedirect = userAgentRedirect(request.headers().get(USER_AGENT), request.getUri());
+      String userAgent = request.headers().get(USER_AGENT);
+      String userAgentRedirect = userAgentRedirect(userAgent, request.getUri());
       if (userAgentRedirect != null) {
          String protocol = ctx.pipeline().get("ssl") != null ? "https" : "http";
          String newLoc = String.format("%s://%s%s", protocol, host, userAgentRedirect);
@@ -95,11 +96,41 @@ class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRequest> 
          ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
          return;
       }
-      
-      FileResult result = getURI(request.getUri());
+
+      String uri = request.getUri();
+
+      //if this is / then maybe they are
+      outer:
+      if(uri.isEmpty() || uri.equals("/")) {
+         Set<Cookie> cookies = CookieDecoder.decode(request.headers().get(COOKIE));
+
+         for (Cookie c : cookies) {
+            if (c.getName().equals("auth") || c.getName().equals("zdauth")) {
+               break outer;
+            }
+         }
+
+         String protocol = ctx.pipeline().get("ssl") != null ? "https" : "http";
+         String newLoc = String.format("%s://%s/home/", protocol, host);
+         HttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, MOVED_PERMANENTLY);
+         response.headers().set(LOCATION, newLoc);
+         response.headers().set(CONNECTION, "close");
+         ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
+         return;
+      }
+
+      FileResult result = getURI(uri);
 
       if (result == null) {
          sendError(ctx, NOT_FOUND);
+         return;
+      }
+
+      if(result.isDirectory) {
+         HttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, MOVED_PERMANENTLY);
+         response.headers().set(LOCATION, uri+"/");
+         response.headers().set(CONNECTION, "close");
+         ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
          return;
       }
 

@@ -10,6 +10,7 @@ public interface WebRoot {
       public long modificationTime;
       public byte[] contents;
       public boolean isIndex;
+      public boolean isDirectory;
    }
 
    public void clear();
