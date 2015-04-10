@@ -105,7 +105,8 @@ class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRequest> 
          Set<Cookie> cookies = CookieDecoder.decode(request.headers().get(COOKIE));
 
          for (Cookie c : cookies) {
-            if (c.getName().equals("auth") || c.getName().equals("zdauth")) {
+            if ((c.getName().equals("auth") && !Util.isEmpty(c.getValue())) || (c.getName().equals("zdauth") && !Util.isEmpty(c.getValue()))) {
+               if (logger.isDebugEnabled()) logger.debug("Login Cookie Detected: {}:{}", c.getName(), c.getValue());
                break outer;
             }
          }
