@@ -102,12 +102,16 @@ class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRequest> 
       //if this is / then maybe they are
       outer:
       if(uri.isEmpty() || uri.equals("/")) {
-         Set<Cookie> cookies = CookieDecoder.decode(request.headers().get(COOKIE));
+         String cookieString = request.headers().get(COOKIE);
 
-         for (Cookie c : cookies) {
-            if ((c.getName().equals("auth") && !Util.isEmpty(c.getValue())) || (c.getName().equals("zdauth") && !Util.isEmpty(c.getValue()))) {
-               if (logger.isDebugEnabled()) logger.debug("Login Cookie Detected: {}:{}", c.getName(), c.getValue());
-               break outer;
+         if (!Util.isEmpty(cookieString)) {
+            Set<Cookie> cookies = CookieDecoder.decode(cookieString);
+
+            for (Cookie c : cookies) {
+               if ((c.getName().equals("auth") && !Util.isEmpty(c.getValue())) || (c.getName().equals("zdauth") && !Util.isEmpty(c.getValue()))) {
+                  if (logger.isDebugEnabled()) logger.debug("Login Cookie Detected: {}:{}", c.getName(), c.getValue());
+                  break outer;
+               }
             }
          }
 
