@@ -9,7 +9,7 @@ public interface WebRoot {
       public String path;
       public long modificationTime;
       public byte[] contents;
-      public boolean isIndex;
+      public boolean doNotCache;
       public boolean isDirectory;
    }
 

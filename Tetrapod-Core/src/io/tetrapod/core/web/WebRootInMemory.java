@@ -37,7 +37,7 @@ public class WebRootInMemory implements WebRoot {
          r.contents = content;
          r.modificationTime = this.modificationTime;
          r.path = path;
-         r.isIndex = path.endsWith("index.html");
+         r.doNotCache = path.endsWith(".html");
          return r;
       }
 
