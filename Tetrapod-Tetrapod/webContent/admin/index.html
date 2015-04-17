@@ -89,6 +89,9 @@
 
                      <div class="tab-pane" id="raft-tab">
                         <h3>Raft Cluster</h3>
+                        <h4 data-bind="text: 'Leader: ' + leaderEntityId()"></h4>
+                        <h4 data-bind="text: 'Fault Tolerance: ' + tolerance()"></h4>
+
                         <table id="raft-table" class="table table-bordered table-condensed">
                            <thead>
                               <tr>
@@ -101,7 +104,7 @@
                               </tr>
                            </thead>
                            <tbody data-bind="foreach: rafts" class="raft">
-                              <tr>
+                              <tr data-bind="css: inCluster() ? 'active' : 'gone'">
                                  <td>
                                     <div class="dropdown" style="display: inline-block;">
                                        <a class="dropdown-toggle" data-toggle="dropdown" href="#">

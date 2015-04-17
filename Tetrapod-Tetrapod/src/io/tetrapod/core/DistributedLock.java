@@ -33,9 +33,9 @@ public class DistributedLock implements Closeable {
       while (!acquired.get() && started + waitForMillis > System.currentTimeMillis()) {
          raft.executeCommand(new LockCommand<TetrapodStateMachine>(key, leaseForMillis), new ClientResponseHandler<TetrapodStateMachine>() {
             @Override
-            public void handleResponse(Command<TetrapodStateMachine> c) {
-               if (c != null) {
-                  final LockCommand<TetrapodStateMachine> command = (LockCommand<TetrapodStateMachine>) c;
+            public void handleResponse(Entry<TetrapodStateMachine> e) {
+               if (e != null) {
+                  final LockCommand<TetrapodStateMachine> command = (LockCommand<TetrapodStateMachine>) e.getCommand();
                   acquired.set(command.wasAcquired());
                } else {
                   acquired.set(false);
@@ -54,8 +54,8 @@ public class DistributedLock implements Closeable {
       logger.info("UNLOCKING {} ", key);
       raft.executeCommand(new UnlockCommand<TetrapodStateMachine>(key), new ClientResponseHandler<TetrapodStateMachine>() {
          @Override
-         public void handleResponse(Command<TetrapodStateMachine> c) {
-            if (c != null) {
+         public void handleResponse(Entry<TetrapodStateMachine> e) {
+            if (e != null) {
                logger.info("UNLOCKED {} ", key);
             }
          }

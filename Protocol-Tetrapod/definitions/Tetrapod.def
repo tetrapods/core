@@ -44,6 +44,8 @@ internal request IssuePeerId
 internal response IssuePeerId
    1: int peerId   // our new peerId 
    2: int entityId // of the host we are talking to
+   3: long term    // term of command that issued the peerId
+   4: long index   // index of command that issued the peerId
 
 internal request ClusterJoin
    1: int build

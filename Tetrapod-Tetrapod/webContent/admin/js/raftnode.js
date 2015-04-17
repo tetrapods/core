@@ -6,11 +6,11 @@ define(["knockout", "jquery", "bootbox", "app", "build", "chart"], function(ko, 
    return RaftNode; // not using new means this returns a constructor function (ie class)
 
    // RaftNode Model
-   function RaftNode(service) {
+   function RaftNode(entityId, host, cluster) {
       var self = this;
 
-      self.entityId = service.entityId;
-      self.host = service.host;
+      self.entityId = entityId;
+      self.host = host;
 
       self.role = ko.observable();
       self.curTerm = ko.observable(0);
@@ -20,14 +20,23 @@ define(["knockout", "jquery", "bootbox", "app", "build", "chart"], function(ko, 
       self.numPeers = ko.observable(0);
       self.lastContact = ko.observable(0);
       self.leaderId = ko.observable(0);
+      self.peers = ko.observableArray([]);
+      self.leaderEntityId = ko.pureComputed(function() {
+         return self.leaderId() << 20; /* Registry.PARENT_ID_SHIFT */
+      });
+      self.inCluster = ko.pureComputed(function() {
+         return cluster.isNodeInCluster(self.entityId);
+      });
 
       self.update = update;
       self.leaveCluster = leaveCluster;
+      self.isHealthy = isHealthy;
+      self.hasPeer = hasPeer;
 
       self.update();
 
       function update() {
-         app.server.sendTo("RaftStats", {}, service.entityId, function(info) {
+         app.server.sendTo("RaftStats", {}, self.entityId, function(info) {
             if (!info.isError()) {
                self.role(info.role);
                self.curTerm(info.curTerm);
@@ -35,7 +44,14 @@ define(["knockout", "jquery", "bootbox", "app", "build", "chart"], function(ko, 
                self.lastIndex(info.lastIndex);
                self.commitIndex(info.commitIndex);
                self.numPeers(info.peers.length);
+               self.peers(info.peers);
                self.lastContact(new Date());
+               self.leaderId(info.leaderId);
+
+               for (var i = 0; i < info.peers.length; i++) {
+                  cluster.ensurePeer(info.peers[i]);
+               }
+
             } else {
                self.role(-1);
             }
@@ -83,14 +99,28 @@ define(["knockout", "jquery", "bootbox", "app", "build", "chart"], function(ko, 
       });
 
       function leaveCluster() {
-         var leaderId = service.entityId;
          app.server.sendTo("ClusterLeave", {
-            entityId: service.entityId
-         }, leaderId, function(info) {
+            entityId: self.entityId
+         }, cluster.leaderEntityId(), function(info) {
             if (info.isError()) {
                console.error("Cluster Leave Failed");
             }
          });
+      }
+
+      // return true if this node is part of the cluster. 
+      // FIXME: this should probably have better logic
+      function isHealthy() {
+         return self.role() == 2 || self.role() == 3 || self.role() == 4;
+      }
+
+      function hasPeer(entityId) {
+         for (var i = 0; i < self.peers().length; i++) {
+            if (self.peers()[i] == entityId) {
+               return true;
+            }
+         }
+         return false;
       }
 
    }

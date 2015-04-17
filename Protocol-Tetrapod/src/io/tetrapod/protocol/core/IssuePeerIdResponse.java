@@ -21,9 +21,11 @@ public class IssuePeerIdResponse extends Response {
       defaults();
    }
 
-   public IssuePeerIdResponse(int peerId, int entityId) {
+   public IssuePeerIdResponse(int peerId, int entityId, long term, long index) {
       this.peerId = peerId;
       this.entityId = entityId;
+      this.term = term;
+      this.index = index;
    }   
    
    /**
@@ -35,6 +37,16 @@ public class IssuePeerIdResponse extends Response {
     * of the host we are talking to
     */
    public int entityId;
+   
+   /**
+    * term of command that issued the peerId
+    */
+   public long term;
+   
+   /**
+    * index of command that issued the peerId
+    */
+   public long index;
 
    public final Structure.Security getSecurity() {
       return Security.INTERNAL;
@@ -43,12 +55,16 @@ public class IssuePeerIdResponse extends Response {
    public final void defaults() {
       peerId = 0;
       entityId = 0;
+      term = 0;
+      index = 0;
    }
    
    @Override
    public final void write(DataSource data) throws IOException {
       data.write(1, this.peerId);
       data.write(2, this.entityId);
+      data.write(3, this.term);
+      data.write(4, this.index);
       data.writeEndTag();
    }
    
@@ -60,6 +76,8 @@ public class IssuePeerIdResponse extends Response {
          switch (tag) {
             case 1: this.peerId = data.read_int(tag); break;
             case 2: this.entityId = data.read_int(tag); break;
+            case 3: this.term = data.read_long(tag); break;
+            case 4: this.index = data.read_long(tag); break;
             case Codec.END_TAG:
                return;
             default:
@@ -81,9 +99,11 @@ public class IssuePeerIdResponse extends Response {
       // Note do not use this tags in long term serializations (to disk or databases) as 
       // implementors are free to rename them however they wish.  A null means the field
       // is not to participate in web serialization (remaining at default)
-      String[] result = new String[2+1];
+      String[] result = new String[4+1];
       result[1] = "peerId";
       result[2] = "entityId";
+      result[3] = "term";
+      result[4] = "index";
       return result;
    }
 
@@ -98,6 +118,8 @@ public class IssuePeerIdResponse extends Response {
       desc.types[0] = new TypeDescriptor(TypeDescriptor.T_STRUCT, getContractId(), getStructId());
       desc.types[1] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
       desc.types[2] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
+      desc.types[3] = new TypeDescriptor(TypeDescriptor.T_LONG, 0, 0);
+      desc.types[4] = new TypeDescriptor(TypeDescriptor.T_LONG, 0, 0);
       return desc;
    }
  }

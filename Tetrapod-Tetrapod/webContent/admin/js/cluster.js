@@ -10,6 +10,11 @@ define(["knockout", "jquery", "app", "host", "service", "raftnode"], function(ko
       self.services = ko.observableArray([]);
       self.rafts = ko.observableArray([]);
 
+      self.leaderEntityId = ko.pureComputed(leaderEntityId);
+      self.tolerance = ko.pureComputed(tolerance);
+      self.ensurePeer = ensurePeer;
+      self.isNodeInCluster = isNodeInCluster;
+
       var raftTab = $('#raft-tab');
 
       // Timer to update charts
@@ -88,14 +93,75 @@ define(["knockout", "jquery", "app", "host", "service", "raftnode"], function(ko
          return host;
       }
 
+      // we received up to date stats for a raft node -- update or add a RaftNode object to the clusster details
       function updateRaftNode(service) {
          for (var i = 0; i < self.rafts().length; i++) {
             var raft = self.rafts()[i];
             if (raft.entityId == service.entityId) {
+               raft.host = service.host;
                return raft.update();
             }
          }
-         self.rafts.push(new RaftNode(service));
+         self.rafts.push(new RaftNode(service.entityId, service.host, self));
+      }
+
+      // if a node is reporting existence of a peer, make sure our list contains it
+      function ensurePeer(peerEntityId) {
+         for (var i = 0; i < self.rafts().length; i++) {
+            var raft = self.rafts()[i];
+            if (raft.entityId == peerEntityId) {
+               return;
+            }
+         }
+         self.rafts.push(new RaftNode(peerEntityId, null, self));
+      }
+
+      // looks at all healthy nodes and determine the consensus for leaderId
+      function leaderEntityId() {
+         var leaders = {};
+         var votes = 0;
+         for (var i = 0; i < self.rafts().length; i++) {
+            var raft = self.rafts()[i];
+            if (raft.isHealthy()) {
+               var v = leaders[raft.leaderEntityId()];
+               if (!v)
+                  v = 0;
+               leaders[raft.leaderEntityId()] = v + 1;
+               votes++;
+               if (v + 1 > votes / 2) {
+                  return raft.leaderEntityId();
+               }
+            }
+         }
+         return 0; // no leader found?
+      }
+
+      // returns the consensus that a given node is in the cluster
+      function isNodeInCluster(entityId) {
+         var votes = 0;
+         var nodes = 0;
+         for (var i = 0; i < self.rafts().length; i++) {
+            var raft = self.rafts()[i];
+            if (raft.isHealthy()) {
+               nodes++;
+               if (raft.hasPeer(entityId)) {
+                  votes++;
+               }
+            }
+         }
+         return votes + 1 > nodes / 2;
+      }
+
+      // returns the number of node failures this cluster should be able to safely tolerate.
+      function tolerance() {
+         var nodes = 0;
+         for (var i = 0; i < self.rafts().length; i++) {
+            var raft = self.rafts()[i];
+            if (raft.isHealthy()) {
+               nodes++;
+            }
+         }
+         return Math.floor(nodes / 2);
       }
 
    }

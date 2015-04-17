@@ -49,6 +49,11 @@ public class RaftStorage extends Storage implements RaftRPC<TetrapodStateMachine
 
    private final Config                           cfg;
 
+   /**
+    * The index of the command we joined the cluster
+    */
+   private long                                   joinIndex;
+
    public RaftStorage(TetrapodService service) {
       this.service = service;
 
@@ -98,7 +103,7 @@ public class RaftStorage extends Storage implements RaftRPC<TetrapodStateMachine
             addPeer((AddPeerCommand<TetrapodStateMachine>) command);
             break;
          case StateMachine.COMMAND_ID_DEL_PEER:
-            // TODO
+            delPeer((DelPeerCommand<TetrapodStateMachine>) command, entry);
             break;
       }
    }
@@ -110,7 +115,7 @@ public class RaftStorage extends Storage implements RaftRPC<TetrapodStateMachine
    }
 
    private void addPeer(AddPeerCommand<TetrapodStateMachine> command) {
-      // TODO: Have a think about safety here when loading old log events...
+      // TODO: Have a think about safety here when loading old log events... check against term we joined?
       if (command.peerId != raft.getPeerId()) {
          //         final int entityId = command.peerId << Registry.PARENT_ID_SHIFT;
          //         final TetrapodPeer peer = new TetrapodPeer(service, command.peerId, command.host, command.port, Core.DEFAULT_SERVICE_PORT);
@@ -122,7 +127,16 @@ public class RaftStorage extends Storage implements RaftRPC<TetrapodStateMachine
       }
    }
 
+   private void delPeer(DelPeerCommand<TetrapodStateMachine> command, Entry<TetrapodStateMachine> entry) {
+      if (command.peerId == raft.getPeerId() && entry.getIndex() > joinIndex) {
+         service.shutdown(false);
+      }
+   }
+
    public void stop() {
+//      if (raft.getRole() != Role.Leaving) {
+//         executeCommand(new DelPeerCommand<TetrapodStateMachine>(raft.getPeerId()), null);
+//      }
       raft.stop();
    }
 
@@ -179,6 +193,7 @@ public class RaftStorage extends Storage implements RaftRPC<TetrapodStateMachine
                               ses.setTheirEntityId(r.entityId);
                               // ses.close();
 
+                              joinIndex = r.index;
                               service.registerSelf(myEntityId, service.random.nextLong());
                               raft.start(r.peerId);
 
@@ -373,7 +388,8 @@ public class RaftStorage extends Storage implements RaftRPC<TetrapodStateMachine
                } else {
                   IssueCommandResponse r = (IssueCommandResponse) res;
                   try {
-                     handler.handleResponse(bytesToCommand(r.command, command.getCommandType()));
+                     handler.handleResponse(new Entry<TetrapodStateMachine>(r.term, r.index, bytesToCommand(r.command,
+                           command.getCommandType())));
                   } catch (IOException e) {
                      logger.error(e.getMessage(), e);
                   }
@@ -417,12 +433,12 @@ public class RaftStorage extends Storage implements RaftRPC<TetrapodStateMachine
    public Response requestIssuePeerId(final IssuePeerIdRequest r, final SessionRequestContext ctx) {
       final ClientResponseHandler<TetrapodStateMachine> handler = new ClientResponseHandler<TetrapodStateMachine>() {
          @Override
-         public void handleResponse(Command<TetrapodStateMachine> command) {
+         public void handleResponse(Entry<TetrapodStateMachine> e) {
             Response res = Response.error(CoreContract.ERROR_UNKNOWN);
             try {
-               if (command != null) {
-                  final int peerId = ((AddPeerCommand<TetrapodStateMachine>) command).peerId;
-                  res = new IssuePeerIdResponse(peerId, service.getEntityId());
+               if (e != null) {
+                  final int peerId = ((AddPeerCommand<TetrapodStateMachine>) e.getCommand()).peerId;
+                  res = new IssuePeerIdResponse(peerId, service.getEntityId(), e.getTerm(), e.getIndex());
                }
             } finally {
                // return the pending result
@@ -477,13 +493,13 @@ public class RaftStorage extends Storage implements RaftRPC<TetrapodStateMachine
     */
    public Response requestClusterLeave(final ClusterLeaveRequest req, final SessionRequestContext ctx) {
       if (raft.getPeerId() != 0) {
-         executeCommand(new DelPeerCommand<TetrapodStateMachine>(raft.getPeerId()), new ClientResponseHandler<TetrapodStateMachine>() {
+         int peerId = req.entityId >> Registry.PARENT_ID_SHIFT;
+         executeCommand(new DelPeerCommand<TetrapodStateMachine>(peerId), new ClientResponseHandler<TetrapodStateMachine>() {
             @Override
-            public void handleResponse(Command<TetrapodStateMachine> command) {
-               if (command != null) {
+            public void handleResponse(Entry<TetrapodStateMachine> e) {
+               if (e != null) {
                   // on success we can shutdown
                   ctx.session.sendResponse(Response.SUCCESS, ctx.header.requestId);
-                  service.shutdown(false);
                } else {
                   ctx.session.sendResponse(Response.error(CoreContract.ERROR_UNKNOWN), ctx.header.requestId);
                }
@@ -553,13 +569,13 @@ public class RaftStorage extends Storage implements RaftRPC<TetrapodStateMachine
       try {
          raft.handleClientRequest(bytesToCommand(r.command, r.type), new ClientResponseHandler<TetrapodStateMachine>() {
             @Override
-            public void handleResponse(Command<TetrapodStateMachine> command) {
+            public void handleResponse(Entry<TetrapodStateMachine> e) {
                final Session ses = ((SessionRequestContext) ctx).session;
                Response res = Response.error(CoreContract.ERROR_UNKNOWN);
                try {
-                  res = new IssueCommandResponse(commandToBytes(command));
-               } catch (IOException e) {
-                  logger.error(e.getMessage(), e);
+                  res = new IssueCommandResponse(e.getTerm(), e.getIndex(), commandToBytes(e.getCommand()));
+               } catch (IOException ex) {
+                  logger.error(ex.getMessage(), ex);
                } finally {
                   ses.sendResponse(res, ctx.header.requestId);
                }
@@ -627,9 +643,9 @@ public class RaftStorage extends Storage implements RaftRPC<TetrapodStateMachine
       final Value<Long> val = new Value<Long>();
       executeCommand(new IncrementCommand<TetrapodStateMachine>(key), new ClientResponseHandler<TetrapodStateMachine>() {
          @Override
-         public void handleResponse(Command<TetrapodStateMachine> command) {
-            if (command != null) {
-               IncrementCommand<TetrapodStateMachine> cmd = (IncrementCommand<TetrapodStateMachine>) command;
+         public void handleResponse(Entry<TetrapodStateMachine> e) {
+            if (e != null) {
+               IncrementCommand<TetrapodStateMachine> cmd = (IncrementCommand<TetrapodStateMachine>) e.getCommand();
                val.set(cmd.getResult());
             } else {
                val.set(null);

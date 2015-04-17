@@ -8,9 +8,9 @@ service Raft @version(1) @id(16)
 
 internal struct LogEntry 
    1: long   term
-   2: long   index;
-   3: int    type;
-   4: byte[] command;
+   2: long   index
+   3: int    type
+   4: byte[] command
 
 ################################# REQUESTS #################################
 
@@ -50,11 +50,13 @@ internal response InstallSnapshot
    1: boolean success
   
 internal request IssueCommand
-   1: int    type;
-   2: byte[] command;
+   1: int    type
+   2: byte[] command
    
 internal response IssueCommand
-   1: byte[] command;
+   1: long     term
+   2: long     index
+   3: byte[]   command
  
 ################################# MESSAGES #################################
  
