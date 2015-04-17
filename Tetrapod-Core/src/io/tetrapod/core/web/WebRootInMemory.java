@@ -31,14 +31,23 @@ public class WebRootInMemory implements WebRoot {
          path += "index.html";
       }
       byte[] content = files.get(path);
+
       if (content != null) {
          FileResult r = new FileResult();
          r.contents = content;
          r.modificationTime = this.modificationTime;
          r.path = path;
-         r.isIndex = path.endsWith("index.html");
+         r.doNotCache = path.endsWith(".html");
          return r;
       }
+
+      // a bit weird but if we don't have the file in memory lets just make extra special sure the user didn't forget a trailing slash
+      if (files.containsKey(path+"/index.html")) {
+         FileResult r = new FileResult();
+         r.isDirectory = true;
+         return r;
+      }
+
       return null;
    }
    

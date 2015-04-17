@@ -75,7 +75,8 @@ class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRequest> 
          return;
       }
       String host = request.headers().get(HOST);
-      String userAgentRedirect = userAgentRedirect(request.headers().get(USER_AGENT), request.getUri());
+      String userAgent = request.headers().get(USER_AGENT);
+      String userAgentRedirect = userAgentRedirect(userAgent, request.getUri());
       if (userAgentRedirect != null) {
          String protocol = ctx.pipeline().get("ssl") != null ? "https" : "http";
          String newLoc = String.format("%s://%s%s", protocol, host, userAgentRedirect);
@@ -95,11 +96,46 @@ class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRequest> 
          ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
          return;
       }
-      
-      FileResult result = getURI(request.getUri());
+
+      String uri = request.getUri();
+
+      //if this is / then maybe they are
+      outer:
+      if(uri.isEmpty() || uri.equals("/")) {
+         String cookieString = request.headers().get(COOKIE);
+
+         if (!Util.isEmpty(cookieString)) {
+            Set<Cookie> cookies = CookieDecoder.decode(cookieString);
+
+            for (Cookie c : cookies) {
+               if ((c.getName().equals("auth") && !Util.isEmpty(c.getValue())) || (c.getName().equals("zdauth") && !Util.isEmpty(c.getValue()))) {
+                  if (logger.isDebugEnabled()) logger.debug("Login Cookie Detected: {}:{}", c.getName(), c.getValue());
+                  break outer;
+               }
+            }
+         }
+
+         String protocol = ctx.pipeline().get("ssl") != null ? "https" : "http";
+         String newLoc = String.format("%s://%s/home/", protocol, host);
+         HttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, MOVED_PERMANENTLY);
+         response.headers().set(LOCATION, newLoc);
+         response.headers().set(CONNECTION, "close");
+         ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
+         return;
+      }
+
+      FileResult result = getURI(uri);
 
       if (result == null) {
          sendError(ctx, NOT_FOUND);
+         return;
+      }
+
+      if(result.isDirectory) {
+         HttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, MOVED_PERMANENTLY);
+         response.headers().set(LOCATION, uri+"/");
+         response.headers().set(CONNECTION, "close");
+         ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
          return;
       }
 
@@ -126,7 +162,7 @@ class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRequest> 
       if (isKeepAlive(request)) {
          response.headers().set(CONNECTION, HttpHeaders.Values.KEEP_ALIVE);
       }
-      if (result.isIndex || noCaching) {
+      if (result.doNotCache || noCaching) {
          // see http://stackoverflow.com/questions/49547/making-sure-a-web-page-is-not-cached-across-all-browsers
          response.headers().set(CACHE_CONTROL, new String[] { NO_CACHE, NO_STORE, MUST_REVALIDATE });
          response.headers().add(PRAGMA, NO_CACHE);
@@ -202,6 +238,7 @@ class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRequest> 
    
    
    private String userAgentRedirect(String userAgent, String uri) {
+      logger.debug("{} - {}", uri, userAgent);
       if (userAgent == null) {
          return null;
       }

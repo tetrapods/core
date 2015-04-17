@@ -38,10 +38,14 @@ public class WebRootLocalFilesystem implements WebRoot {
             Path p = rr.resolve(path);
             if (Files.exists(p)) {
                FileResult r = new FileResult();
-               r.isIndex = path.endsWith("index.html");
+               r.doNotCache = path.endsWith(".html");
                r.modificationTime = Files.getLastModifiedTime(p).toMillis();
                r.path = "/" + path;
-               r.contents = Files.readAllBytes(p);
+               if(Files.isDirectory(p)){
+                  r.isDirectory = true;
+               } else {
+                  r.contents = Files.readAllBytes(p);
+               }
                return r;
             }
          }
