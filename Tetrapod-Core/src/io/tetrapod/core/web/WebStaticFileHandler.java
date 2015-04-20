@@ -117,7 +117,7 @@ class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRequest> 
 
          String protocol = ctx.pipeline().get("ssl") != null ? "https" : "http";
          String newLoc = String.format("%s://%s/home/", protocol, host);
-         HttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, MOVED_PERMANENTLY);
+         HttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, FOUND);
          response.headers().set(LOCATION, newLoc);
          response.headers().set(CONNECTION, "close");
          ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
