@@ -247,6 +247,11 @@ public class WireSession extends Session {
          header.write(data);
          payload.write(data);
          buffer.setInt(0, buffer.writerIndex() - 4); // go back and write message length, now that we know it
+
+         if (buffer.writerIndex() > 1024 * 1024) {
+            throw new RuntimeException("Attempting to write a message > 1mb");
+         }
+
          return buffer;
       } catch (IOException e) {
          ReferenceCountUtil.release(buffer);
