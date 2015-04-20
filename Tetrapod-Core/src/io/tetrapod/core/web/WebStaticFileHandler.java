@@ -97,24 +97,7 @@ class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRequest> 
          return;
       }
 
-      String uri = request.getUri();
-
-      //if this is / then maybe they are
-      outer:
-      if(uri.isEmpty() || uri.equals("/")) {
-         String cookieString = request.headers().get(COOKIE);
-
-         if (!Util.isEmpty(cookieString)) {
-            Set<Cookie> cookies = CookieDecoder.decode(cookieString);
-
-            for (Cookie c : cookies) {
-               if ((c.getName().equals("auth") && !Util.isEmpty(c.getValue())) || (c.getName().equals("zdauth") && !Util.isEmpty(c.getValue()))) {
-                  if (logger.isDebugEnabled()) logger.debug("Login Cookie Detected: {}:{}", c.getName(), c.getValue());
-                  break outer;
-               }
-            }
-         }
-
+      if (autoRedirectToHome(request)) {
          String protocol = ctx.pipeline().get("ssl") != null ? "https" : "http";
          String newLoc = String.format("%s://%s/home/", protocol, host);
          HttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, FOUND);
@@ -124,6 +107,7 @@ class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRequest> 
          return;
       }
 
+      String uri = request.getUri();
       FileResult result = getURI(uri);
 
       if (result == null) {
@@ -131,7 +115,7 @@ class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRequest> 
          return;
       }
 
-      if(result.isDirectory) {
+      if (result.isDirectory) {
          HttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, MOVED_PERMANENTLY);
          response.headers().set(LOCATION, uri+"/");
          response.headers().set(CONNECTION, "close");
@@ -177,6 +161,28 @@ class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRequest> 
       if (!isKeepAlive(request)) {
          f.addListener(ChannelFutureListener.CLOSE);
       }
+   }
+   
+   private boolean autoRedirectToHome(FullHttpRequest request) {
+//      String uri = request.getUri();
+//
+//      outer:
+//      if (uri.isEmpty() || uri.equals("/")) {
+//         String cookieString = request.headers().get(COOKIE);
+//
+//         if (!Util.isEmpty(cookieString)) {
+//            Set<Cookie> cookies = CookieDecoder.decode(cookieString);
+//
+//            for (Cookie c : cookies) {
+//               if ((c.getName().equals("auth") && !Util.isEmpty(c.getValue())) || (c.getName().equals("zdauth") && !Util.isEmpty(c.getValue()))) {
+//                  if (logger.isDebugEnabled()) logger.debug("Login Cookie Detected: {}:{}", c.getName(), c.getValue());
+//                  break outer;
+//               }
+//            }
+//         }
+//         return true;
+//      }
+      return false;
    }
 
    @Override
