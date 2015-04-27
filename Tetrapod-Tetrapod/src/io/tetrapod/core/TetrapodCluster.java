@@ -55,8 +55,8 @@ public class TetrapodCluster implements SessionFactory {
          @Override
          public void onSessionStart(final Session ses) {
             ses.sendRequest(
-                  new RegisterRequest(service.buildNumber, service.token, service.getContractId(), service.getShortName(), service.getStatus(),
-                        Util.getHostName()), Core.DIRECT).handle(new ResponseHandler() {
+                  new RegisterRequest(service.buildNumber, service.token, service.getContractId(), service.getShortName(), service
+                        .getStatus(), Util.getHostName()), Core.DIRECT).handle(new ResponseHandler() {
                @Override
                public void onResponse(Response res) {
                   if (res.isError()) {
@@ -278,6 +278,10 @@ public class TetrapodCluster implements SessionFactory {
       public String toString() {
          return String.format("pod[0x%08X @ %s:%d,%d]", entityId, host, servicePort, clusterPort);
       }
+
+      public void disconnect() {
+         session.channel.close();
+      }
    }
 
    protected void broadcast(Message msg) {
@@ -304,6 +308,12 @@ public class TetrapodCluster implements SessionFactory {
 
    public int getNumSessions() {
       return server.getNumSessions();
+   }
+
+   public void testDisconnection() {
+      for (Tetrapod pod : cluster.values()) {
+         pod.disconnect();
+      }
    }
 
 }

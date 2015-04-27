@@ -111,7 +111,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
          final long now = System.currentTimeMillis();
          if (now - lastHeardFrom.get() > 5000 || now - lastSentTo.get() > 5000) {
             if (theirType == TYPE_SERVICE || theirType == TYPE_TETRAPOD)
-               logger.debug("{} Sending PING ({}/{} ms)", this, now - lastHeardFrom.get(), now - lastSentTo.get());
+               logger.trace("{} Sending PING ({}/{} ms)", this, now - lastHeardFrom.get(), now - lastSentTo.get());
             sendPing();
          }
          if (now - lastHeardFrom.get() > 10000) {
