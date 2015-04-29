@@ -270,7 +270,7 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
          if (Util.isLocal()) {
             // adds all protocol files, which is also what happens on dev and prod--though there 
             // the deployment scripts make sure the previous call contains all protocol files
-            for (File f : new File("..").listFiles()) {
+            for (File f : new File("../private/services").listFiles()) {
                if (f.isDirectory() && f.getName().startsWith("Protocol")) {
                   File dir = new File(f, "rsc");
                   if (dir.exists()) {
