@@ -52,7 +52,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    private final TetrapodCluster                      cluster;
    private final TetrapodWorker                       worker;
 
-   private Storage                                    storage;
+   private final Storage                              storage;
    private AdminAccounts                              adminAccounts;
 
    private final List<Server>                         servers           = new ArrayList<Server>();
@@ -61,16 +61,21 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    private long                                       lastStatsLog;
    private final ConcurrentMap<String, WebRoot>       webRootDirs       = new ConcurrentHashMap<>();
 
-   public TetrapodService() {
+   public TetrapodService() throws IOException {
       super(new TetrapodContract());
+
+      storage = new Storage();
       registry = new io.tetrapod.core.registry.Registry(this);
+      registry.setStorage(storage);
+
       worker = new TetrapodWorker(this);
       cluster = new TetrapodCluster(this);
       addContracts(new StorageContract());
 
       // add tetrapod web routes
-      for (WebRoute r : contract.getWebRoutes())
+      for (WebRoute r : contract.getWebRoutes()) {
          webRoutes.setRoute(r.path, r.contractId, r.structId);
+      }
 
       addSubscriptionHandler(new TetrapodContract.Registry(), registry);
    }
@@ -272,8 +277,6 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          logger.info(" ***** READY TO SERVE ***** ");
 
          try {
-            storage = new Storage();
-            registry.setStorage(storage);
             AuthToken.setSecret(storage.getSharedSecret());
             adminAccounts = new AdminAccounts(storage);
 
@@ -552,19 +555,22 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
    private void scheduleHealthCheck() {
-      dispatcher.dispatch(1, TimeUnit.SECONDS, new Runnable() {
-         public void run() {
-            if (dispatcher.isRunning()) {
-               try {
-                  healthCheck();
-                  cluster.service();
-               } catch (Throwable e) {
-                  logger.error(e.getMessage(), e);
+      if (!isShuttingDown()) {
+         dispatcher.dispatch(1, TimeUnit.SECONDS, new Runnable() {
+            public void run() {
+               if (dispatcher.isRunning()) {
+                  try {
+                     healthCheck();
+                     cluster.service();
+                  } catch (Throwable e) {
+                     logger.error(e.getMessage(), e);
+                  } finally {
+                     scheduleHealthCheck();
+                  }
                }
-               scheduleHealthCheck();
             }
-         }
-      });
+         });
+      }
    }
 
    private void healthCheck() {
@@ -622,8 +628,8 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    @Override
    public void messageClusterMember(ClusterMemberMessage m, MessageContext ctx) {
       synchronized (cluster) {
-         if (cluster.addMember(m.entityId, m.host, m.servicePort, m.clusterPort, null)) {
-            broadcast(new ClusterMemberMessage(m.entityId, m.host, m.servicePort, m.clusterPort), clusterTopic);
+         if (cluster.addMember(m.entityId, m.host, m.servicePort, m.clusterPort, m.uuid, null)) {
+            broadcast(new ClusterMemberMessage(m.entityId, m.host, m.servicePort, m.clusterPort, m.uuid), clusterTopic);
          }
       }
    }
@@ -831,13 +837,22 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       if (ctx.session.getTheirEntityType() != Core.TYPE_TETRAPOD) {
          return new Error(ERROR_INVALID_RIGHTS);
       }
+
+      if (r.uuid.equals(cluster.uuid)) {
+         return new Error(ERROR_INVALID_UUID);
+      }
+
+      if (r.expectedEntityId != getEntityId()) {
+         return new Error(ERROR_INVALID_ENTITY);
+      }
+
       ctx.session.setTheirEntityId(r.entityId);
 
-      logger.info("JOINING TETRAPOD {} {}", ctx.session);
+      logger.info("JOINING TETRAPOD {} {}", ctx.session, r.dump());
 
       synchronized (cluster) {
-         if (cluster.addMember(r.entityId, r.host, r.servicePort, r.clusterPort, ctx.session)) {
-            broadcast(new ClusterMemberMessage(r.entityId, r.host, r.servicePort, r.clusterPort), clusterTopic);
+         if (cluster.addMember(r.entityId, r.host, r.servicePort, r.clusterPort, r.uuid, ctx.session)) {
+            broadcast(new ClusterMemberMessage(r.entityId, r.host, r.servicePort, r.clusterPort, r.uuid), clusterTopic);
          }
       }
 

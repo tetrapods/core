@@ -7,6 +7,7 @@ service Tetrapod @version(1) @id(1)
 
 error HOSTNAME_MISMATCH
 error INVALID_CREDENTIALS
+error INVALID_UUID
 
 ################################# STRUCTURES #################################
 
@@ -42,6 +43,8 @@ public request ClusterJoin
    2: string host
    3: int servicePort
    4: int clusterPort
+   5: string uuid    
+   6: int expectedEntityId
    
 public response ClusterJoin
    1: int entityId
@@ -160,6 +163,7 @@ internal message ClusterMember
    2: string host
    3: int servicePort
    4: int clusterPort
+   5: string uuid
     
 ##### Registry Topic Messages ##### 
 

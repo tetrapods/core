@@ -33,6 +33,11 @@ public class TetrapodCluster implements SessionFactory {
 
    private Session                      pendingSession;
 
+   /**
+    * Ensures a unique ID for this cluster node to assist in preventing edge cases like accidentally joining self
+    */
+   public final String                  uuid    = UUID.randomUUID().toString();
+
    public TetrapodCluster(TetrapodService service) {
       this.service = service;
       server = new Server(service.getClusterPort(), this, service.getDispatcher());
@@ -159,7 +164,7 @@ public class TetrapodCluster implements SessionFactory {
       }
    }
 
-   public boolean addMember(int entityId, String host, int servicePort, int clusterPort, Session ses) {
+   public boolean addMember(int entityId, String host, int servicePort, int clusterPort, String uuid, Session ses) {
 
       // ignore ourselves
       if (entityId == service.getEntityId()) {
@@ -177,7 +182,7 @@ public class TetrapodCluster implements SessionFactory {
             return false;
          }
       } else {
-         pod = new Tetrapod(entityId, host, servicePort, clusterPort);
+         pod = new Tetrapod(entityId, host, servicePort, clusterPort, uuid);
          cluster.put(entityId, pod);
          logger.info(" * ADDING TETRAPOD CLUSTER MEMBER: {} @ {}", pod, ses);
       }
@@ -191,19 +196,21 @@ public class TetrapodCluster implements SessionFactory {
    public class Tetrapod implements Session.Listener {
       public final int    entityId;
       public final String host;
+      public final String uuid;
       public final int    servicePort;
       public final int    clusterPort;
       private Session     session;
-      private int         failures;
       private boolean     pendingConnect;
+      private int         failures = 0;
+      private long        lastAttempt;
+      private boolean     dead     = false;
 
-      //private boolean     synced = false;
-
-      public Tetrapod(int entityId, String host, int servicePort, int clusterPort) {
+      public Tetrapod(int entityId, String host, int servicePort, int clusterPort, String uuid) {
          this.entityId = entityId;
          this.host = host;
          this.servicePort = servicePort;
          this.clusterPort = clusterPort;
+         this.uuid = uuid;
       }
 
       public synchronized boolean isConnected() {
@@ -211,18 +218,30 @@ public class TetrapodCluster implements SessionFactory {
       }
 
       private synchronized void setSession(Session ses) {
-         // this.synced = false;
          this.failures = 0;
          this.session = ses;
          this.session.setTheirEntityId(entityId);
-         this.session.sendRequest(
-               new ClusterJoinRequest(service.getEntityId(), service.getHostName(), service.getServicePort(), getClusterPort()),
-               Core.DIRECT).log();
          this.session.addSessionListener(this);
-         EntityInfo e = service.registry.getEntity(entityId);
+         final EntityInfo e = service.registry.getEntity(entityId);
          if (e != null) {
             e.setSession(ses);
          }
+         // join the cluster node
+         this.session.sendRequest(
+               new ClusterJoinRequest(service.getEntityId(), service.getHostName(), service.getServicePort(), getClusterPort(),
+                     TetrapodCluster.this.uuid, entityId), Core.DIRECT).handle(new ResponseHandler() {
+            @Override
+            public void onResponse(Response res) {
+               if (res.isError()) {
+                  logger.error("Error Joining {} : {}", Tetrapod.this, res);
+                  if (res.errorCode() == CoreContract.ERROR_INVALID_ENTITY || res.errorCode() == TetrapodContract.ERROR_INVALID_UUID) {
+                     synchronized (Tetrapod.this) {
+                        dead = true; // mark this tetrapod entry as dead since it's an old version of us....
+                     }
+                  }
+               }
+            }
+         });
       }
 
       public synchronized Session getSession() {
@@ -230,6 +249,11 @@ public class TetrapodCluster implements SessionFactory {
       }
 
       private void connect() {
+         if (!dead && System.currentTimeMillis() < lastAttempt + (failures * Util.ONE_SECOND))
+            return;
+
+         lastAttempt = System.currentTimeMillis();
+
          try {
             // note: we briefly sync to make sure we don't try at the same time as another thread,  
             // but we can't hold the lock while calling sync() on the connect() call below
@@ -247,7 +271,9 @@ public class TetrapodCluster implements SessionFactory {
             }
          } catch (Throwable e) {
             logger.error(e.getMessage());
-            scheduleReconnect(++failures);
+            synchronized (this) {
+               failures++;
+            }
          } finally {
             synchronized (this) {
                pendingConnect = false;
@@ -255,20 +281,10 @@ public class TetrapodCluster implements SessionFactory {
          }
       }
 
-      private synchronized void scheduleReconnect(int delayInSeconds) {
-         if (!service.isShuttingDown()) {
-            service.getDispatcher().dispatch(delayInSeconds, TimeUnit.SECONDS, new Runnable() {
-               public void run() {
-                  connect();
-               }
-            });
-         }
-      }
-
       @Override
       public synchronized void onSessionStop(Session ses) {
          service.onEntityDisconnected(ses);
-         scheduleReconnect(1);
+         session = null;
       }
 
       @Override
@@ -276,11 +292,13 @@ public class TetrapodCluster implements SessionFactory {
 
       @Override
       public String toString() {
-         return String.format("pod[0x%08X @ %s:%d,%d]", entityId, host, servicePort, clusterPort);
+         return String.format("pod[0x%08X @ %s:%d,%d %s]", entityId, host, servicePort, clusterPort, uuid);
       }
 
       public void disconnect() {
-         session.channel.close();
+         if (session != null) {
+            session.channel.close();
+         }
       }
    }
 
@@ -297,12 +315,14 @@ public class TetrapodCluster implements SessionFactory {
 
    protected void sendClusterDetails(Session ses, int toEntityId, int topicId) {
       // send ourselves
-      ses.sendMessage(new ClusterMemberMessage(service.getEntityId(), service.getHostName(), service.getServicePort(), getClusterPort()),
-            MessageHeader.TO_ENTITY, toEntityId);
+      ses.sendMessage(new ClusterMemberMessage(service.getEntityId(), service.getHostName(), service.getServicePort(), getClusterPort(),
+            uuid), MessageHeader.TO_ENTITY, toEntityId);
       // send all current members
       for (Tetrapod pod : cluster.values()) {
-         ses.sendMessage(new ClusterMemberMessage(pod.entityId, pod.host, pod.servicePort, pod.clusterPort), MessageHeader.TO_ENTITY,
-               toEntityId);
+         if (!pod.dead) {
+            ses.sendMessage(new ClusterMemberMessage(pod.entityId, pod.host, pod.servicePort, pod.clusterPort, pod.uuid),
+                  MessageHeader.TO_ENTITY, toEntityId);
+         }
       }
    }
 

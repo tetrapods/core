@@ -21,17 +21,21 @@ public class ClusterJoinRequest extends Request {
       defaults();
    }
 
-   public ClusterJoinRequest(int entityId, String host, int servicePort, int clusterPort) {
+   public ClusterJoinRequest(int entityId, String host, int servicePort, int clusterPort, String uuid, int expectedEntityId) {
       this.entityId = entityId;
       this.host = host;
       this.servicePort = servicePort;
       this.clusterPort = clusterPort;
+      this.uuid = uuid;
+      this.expectedEntityId = expectedEntityId;
    }   
 
    public int entityId;
    public String host;
    public int servicePort;
    public int clusterPort;
+   public String uuid;
+   public int expectedEntityId;
 
    public final Structure.Security getSecurity() {
       return Security.PUBLIC;
@@ -42,6 +46,8 @@ public class ClusterJoinRequest extends Request {
       host = null;
       servicePort = 0;
       clusterPort = 0;
+      uuid = null;
+      expectedEntityId = 0;
    }
    
    @Override
@@ -50,6 +56,8 @@ public class ClusterJoinRequest extends Request {
       data.write(2, this.host);
       data.write(3, this.servicePort);
       data.write(4, this.clusterPort);
+      data.write(5, this.uuid);
+      data.write(6, this.expectedEntityId);
       data.writeEndTag();
    }
    
@@ -63,6 +71,8 @@ public class ClusterJoinRequest extends Request {
             case 2: this.host = data.read_string(tag); break;
             case 3: this.servicePort = data.read_int(tag); break;
             case 4: this.clusterPort = data.read_int(tag); break;
+            case 5: this.uuid = data.read_string(tag); break;
+            case 6: this.expectedEntityId = data.read_int(tag); break;
             case Codec.END_TAG:
                return;
             default:
@@ -95,11 +105,13 @@ public class ClusterJoinRequest extends Request {
       // Note do not use this tags in long term serializations (to disk or databases) as 
       // implementors are free to rename them however they wish.  A null means the field
       // is not to participate in web serialization (remaining at default)
-      String[] result = new String[4+1];
+      String[] result = new String[6+1];
       result[1] = "entityId";
       result[2] = "host";
       result[3] = "servicePort";
       result[4] = "clusterPort";
+      result[5] = "uuid";
+      result[6] = "expectedEntityId";
       return result;
    }
    
@@ -116,6 +128,8 @@ public class ClusterJoinRequest extends Request {
       desc.types[2] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
       desc.types[3] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
       desc.types[4] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
+      desc.types[5] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
+      desc.types[6] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
       return desc;
    }
 

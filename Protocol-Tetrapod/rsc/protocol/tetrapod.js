@@ -21,6 +21,7 @@ function TP_Tetrapod(server) {
    server.registerConst("Tetrapod", "null", "HOSTNAME_MISMATCH", 12239905);
    server.registerConst("Tetrapod", "null", "INVALID_ACCOUNT", 14623816);
    server.registerConst("Tetrapod", "null", "INVALID_CREDENTIALS", 8845805);
+   server.registerConst("Tetrapod", "null", "INVALID_UUID", 398174);
    server.registerConst("Tetrapod", "null", "NOT_PARENT", 2219555);
    server.registerConst("Tetrapod", "null", "NOT_READY", 12438466);
    server.registerConst("Tetrapod", "null", "UNKNOWN_ENTITY_ID", 15576171);

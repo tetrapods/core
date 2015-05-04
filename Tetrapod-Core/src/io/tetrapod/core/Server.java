@@ -73,7 +73,9 @@ public class Server extends ChannelInitializer<SocketChannel> implements Session
    public void stop() {
       logger.debug("Stopping server on port {}...", port);
       try {
-         bossGroup.shutdownGracefully().sync();
+         if (bossGroup != null) {
+            bossGroup.shutdownGracefully().sync();
+         }
       } catch (Exception e) {
          logger.error(e.getMessage(), e);
       }
