@@ -597,7 +597,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
             // push through a dummy request to help keep dispatch pool metrics fresh
             if (e.isService()) {
                final Session ses = e.getSession();
-               if (ses != null && now - ses.getLastHeardFrom() > 500) {
+               if (ses != null && now - ses.getLastHeardFrom() > 1153) {
                   final long t0 = System.currentTimeMillis();
                   sendRequest(new DummyRequest(), e.entityId).handle(new ResponseHandler() {
                      @Override
@@ -1108,7 +1108,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
       return Response.error(ERROR_UNKNOWN_ENTITY_ID);
    }
-   
+
    @Override
    public void onStarted() {
       try {

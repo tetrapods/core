@@ -114,12 +114,13 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
                logger.trace("{} Sending PING ({}/{} ms)", this, now - lastHeardFrom.get(), now - lastSentTo.get());
             sendPing();
          }
-         if (now - lastHeardFrom.get() > 10000) {
+         if (now - lastHeardFrom.get() > 20000) {
             logger.warn("{} Timeout ({} ms)", this, now - lastHeardFrom.get());
             if (theirId == myId && myId != 0) {
-               logger.warn("{} Timeout on LOOPBACK!", this);
+               logger.error("{} Timeout on LOOPBACK!", this);
+            } else {
+               close();
             }
-            close();
          }
       }
       timeoutPendingRequests();
