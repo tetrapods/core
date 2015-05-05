@@ -42,16 +42,6 @@ public class Util {
       } catch (UnknownHostException e) {}
       return null;
    }
-   
-   /**
-    * Get the host address for this system
-    */
-   public static String getHostAddress() {
-      try {
-         return InetAddress.getLocalHost().getCanonicalHostName();
-      } catch (UnknownHostException e) {}
-      return null;
-   }
 
    /**
     * Takes a keystore input stream and a keystore password and return an SSLContext for TLS

@@ -258,7 +258,7 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
       final DirectServiceInfo s = getDirectServiceInfo(ctx.header.fromId);
       synchronized (s) {
          s.theirToken = r.token;
-         return new DirectConnectionResponse(new ServerAddress(Util.getHostAddress(), server.getPort()), s.token);
+         return new DirectConnectionResponse(new ServerAddress(Util.getHostName(), server.getPort()), s.token);
       }
    }
 
