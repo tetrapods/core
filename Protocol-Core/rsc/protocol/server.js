@@ -31,6 +31,7 @@ function TP_Server() {
    self.register = register;
    self.registerConst = registerConst;
    self.addMessageHandler = addMessageHandler;
+   self.removeMessageHandler = removeMessageHandler;
    self.send = send; // to any
    self.sendTo = sendTo;
    self.sendDirect = sendDirect;
@@ -41,6 +42,7 @@ function TP_Server() {
    self.consts = protocol.consts;
    self.connected = false;
    self.polling = false;
+   self.getRequestContract = getRequestContract;
    self.setSimulator = function(s) {
       simulator = s;
    };
@@ -109,6 +111,24 @@ function TP_Server() {
       }
       list.push(handler);
    }
+   
+   function removeMessageHandler(message, handler) {
+      var val = protocol.message[message];
+      if (!val) {
+         console.log("unknown message: " + message);
+         return;
+      }
+      if (val === 0) {
+         console.log("ambiguous message: " + message);
+         return;
+      }
+      var list = messageHandlers[val.contractId + "." + val.structId];
+      if (list) {
+         var ix = list.indexOf(handler);
+         if (ix >= 0)
+            list.splice(ix, 1);
+      }
+   }
 
    // sends to any available service for this request's contract
    function send(request, args, requestHandler) {
@@ -132,6 +152,21 @@ function TP_Server() {
          return;
       }
       return sendRequest(val.contractId, val.structId, args, toId, requestHandler);
+   }
+   
+   function getRequestContract(request) {
+      var val = protocol.request[request];
+      if (!val) {
+         console.log("unknown request: " + request);
+         return;
+      }
+      if (val === 0) {
+         console.log("ambiguous request: " + request);
+         return;
+      }
+      var name = nameOf(val.contractId, val.structId);
+      var ix = name.indexOf('.');
+      return name.substring(0, ix);
    }
 
    // dispatch a request
