@@ -197,6 +197,7 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
             onStarted();
             if (startPaused) {
                onPaused();
+               startPaused = false; // only start paused once
             }
          } else {
             dispatcher.dispatch(1, TimeUnit.SECONDS, new Runnable() {
