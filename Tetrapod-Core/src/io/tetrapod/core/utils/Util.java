@@ -48,7 +48,7 @@ public class Util {
     */
    public static String getHostAddress() {
       try {
-         return InetAddress.getLocalHost().getHostAddress();
+         return InetAddress.getLocalHost().getCanonicalHostName();
       } catch (UnknownHostException e) {}
       return null;
    }
