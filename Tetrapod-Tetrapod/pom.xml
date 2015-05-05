@@ -22,13 +22,7 @@
 			<groupId>${project.groupId}</groupId>
 			<version>${project.version}</version>
 		</dependency>
-
-		<dependency>
-			<groupId>com.hazelcast</groupId>
-			<artifactId>hazelcast-cloud</artifactId>
-			<version>3.3.3</version>
-		</dependency>
-
+ 
 		<dependency>
 			<groupId>mysql</groupId>
 			<artifactId>mysql-connector-java</artifactId>

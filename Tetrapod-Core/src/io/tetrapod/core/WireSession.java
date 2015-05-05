@@ -78,12 +78,12 @@ public class WireSession extends Session {
             break;
          case ENVELOPE_PING:
             if (theirType == TYPE_SERVICE || theirType == TYPE_TETRAPOD)
-               logger.debug("{} GOT PING, SENDING PONG", this);
+               logger.trace("{} GOT PING, SENDING PONG", this);
             sendPong();
             break;
          case ENVELOPE_PONG:
             if (theirType == TYPE_SERVICE || theirType == TYPE_TETRAPOD)
-               logger.debug("{} GOT PONG", this);
+               logger.trace("{} GOT PONG", this);
             break;
          default:
             logger.error("{} Unexpected Envelope Type {}", this, envelope);
@@ -327,7 +327,7 @@ public class WireSession extends Session {
       if (ses != null) {
          ses.sendRelayedRequest(header, in, this, null);
       } else {
-         logger.warn("Could not find a relay session for {}", header.toId);
+         logger.warn("Could not find a relay session for {}", header.dump());
          sendResponse(new Error(ERROR_SERVICE_UNAVAILABLE), header.requestId);
       }
    }

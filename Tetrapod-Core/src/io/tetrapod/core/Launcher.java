@@ -176,6 +176,7 @@ public class Launcher {
       String name = System.getProperty("user.name");
       String[] locs = {
             "cluster.properties", // in prod, gets symlinked in
+            "../core/Tetrapod-Core/rsc/cluster/%s.cluster.properties",
             "../../core/Tetrapod-Core/rsc/cluster/%s.cluster.properties",
             "../../../core/Tetrapod-Core/rsc/cluster/%s.cluster.properties", // in case services are one level deeper
       };
