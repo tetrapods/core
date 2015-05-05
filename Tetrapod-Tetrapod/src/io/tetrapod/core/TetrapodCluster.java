@@ -39,7 +39,7 @@ public class TetrapodCluster implements SessionFactory {
    }
 
    public ServerAddress getServerAddress() {
-      return new ServerAddress(Util.getHostName(), getClusterPort());
+      return new ServerAddress(Util.getHostAddress(), getClusterPort());
    }
 
    /**
@@ -216,7 +216,7 @@ public class TetrapodCluster implements SessionFactory {
          this.session = ses;
          this.session.setTheirEntityId(entityId);
          this.session.sendRequest(
-               new ClusterJoinRequest(service.getEntityId(), service.getHostName(), service.getServicePort(), getClusterPort()),
+               new ClusterJoinRequest(service.getEntityId(), Util.getHostAddress(), service.getServicePort(), getClusterPort()),
                Core.DIRECT).log();
          this.session.addSessionListener(this);
          EntityInfo e = service.registry.getEntity(entityId);
@@ -297,7 +297,7 @@ public class TetrapodCluster implements SessionFactory {
 
    protected void sendClusterDetails(Session ses, int toEntityId, int topicId) {
       // send ourselves
-      ses.sendMessage(new ClusterMemberMessage(service.getEntityId(), service.getHostName(), service.getServicePort(), getClusterPort()),
+      ses.sendMessage(new ClusterMemberMessage(service.getEntityId(), Util.getHostAddress(), service.getServicePort(), getClusterPort()),
             MessageHeader.TO_ENTITY, toEntityId);
       // send all current members
       for (Tetrapod pod : cluster.values()) {
