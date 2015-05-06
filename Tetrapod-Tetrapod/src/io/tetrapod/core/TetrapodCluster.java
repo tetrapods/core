@@ -249,8 +249,10 @@ public class TetrapodCluster implements SessionFactory {
       }
 
       private void connect() {
-         if (!dead && System.currentTimeMillis() < lastAttempt + (failures * Util.ONE_SECOND))
-            return;
+         synchronized (this) {
+            if (!dead && System.currentTimeMillis() < lastAttempt + (failures * Util.ONE_SECOND))
+               return;
+         }
 
          lastAttempt = System.currentTimeMillis();
 
@@ -300,6 +302,10 @@ public class TetrapodCluster implements SessionFactory {
             session.channel.close();
          }
       }
+
+      public synchronized boolean isDead() {
+         return dead;
+      }
    }
 
    protected void broadcast(Message msg) {
@@ -320,7 +326,7 @@ public class TetrapodCluster implements SessionFactory {
             MessageHeader.TO_ENTITY, toEntityId);
       // send all current members
       for (Tetrapod pod : cluster.values()) {
-         if (!pod.dead) {
+         if (!pod.isDead()) {
             ses.sendMessage(new ClusterMemberMessage(pod.entityId, pod.host, pod.servicePort, pod.clusterPort, pod.uuid),
                   MessageHeader.TO_ENTITY, toEntityId);
          }
