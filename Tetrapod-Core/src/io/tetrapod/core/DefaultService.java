@@ -197,6 +197,7 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
             onStarted();
             if (startPaused) {
                onPaused();
+               startPaused = false; // only start paused once
             }
          } else {
             dispatcher.dispatch(1, TimeUnit.SECONDS, new Runnable() {
@@ -260,8 +261,7 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
    }
 
    /**
-    * Runs a web only service.  This should probably be a separate service class
-    * instead of bolted into default service
+    * Runs a web only service. This should probably be a separate service class instead of bolted into default service
     */
    private void doWebOnlyService() {
       String name = Launcher.getOpt("webOnly");
@@ -270,7 +270,7 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
          if (Util.isLocal()) {
             // adds all protocol files, which is also what happens on dev and prod--though there 
             // the deployment scripts make sure the previous call contains all protocol files
-            for (File f : new File("..").listFiles()) {
+            for (File f : new File("../private/services").listFiles()) {
                if (f.isDirectory() && f.getName().startsWith("Protocol")) {
                   File dir = new File(f, "rsc");
                   if (dir.exists()) {
@@ -534,10 +534,6 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
       }
       String s = contract.getClass().getCanonicalName();
       return s.substring(0, s.length() - "Contract".length());
-   }
-
-   public String getHostName() {
-      return Util.getHostName();
    }
 
    public long getAverageResponseTime() {
@@ -882,7 +878,7 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
 
    @Override
    public Response requestHostInfo(HostInfoRequest r, RequestContext ctx) {
-      return new HostInfoResponse(getHostName(), (byte) Metrics.getNumCores(), null);
+      return new HostInfoResponse(Util.getHostName(), (byte) Metrics.getNumCores(), null);
    }
 
    @Override

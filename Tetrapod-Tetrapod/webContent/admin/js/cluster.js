@@ -89,7 +89,12 @@ define(["knockout", "jquery", "app", "host", "service", "raftnode"], function(ko
             }
          }
          var host = new Host(hostname);
-         self.hosts.push(host);
+         var array = self.hosts();
+         array.push(host);
+         array.sort(function(a,b) {
+            return a.hostname == b.hostname ? 0 : (a.hostname < b.hostname ? -1 : 1);
+         });
+         self.hosts(array);
          return host;
       }
 

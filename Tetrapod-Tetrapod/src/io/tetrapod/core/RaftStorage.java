@@ -134,9 +134,9 @@ public class RaftStorage extends Storage implements RaftRPC<TetrapodStateMachine
    }
 
    public void stop() {
-//      if (raft.getRole() != Role.Leaving) {
-//         executeCommand(new DelPeerCommand<TetrapodStateMachine>(raft.getPeerId()), null);
-//      }
+      //      if (raft.getRole() != Role.Leaving) {
+      //         executeCommand(new DelPeerCommand<TetrapodStateMachine>(raft.getPeerId()), null);
+      //      }
       raft.stop();
    }
 
@@ -166,7 +166,7 @@ public class RaftStorage extends Storage implements RaftRPC<TetrapodStateMachine
             @Override
             public void onSessionStart(final Session ses) {
 
-               ses.sendRequest(new IssuePeerIdRequest(service.getHostName(), service.getClusterPort()), Core.DIRECT).handle(
+               ses.sendRequest(new IssuePeerIdRequest(Util.getHostName(), service.getClusterPort()), Core.DIRECT).handle(
                      new ResponseHandler() {
                         @Override
                         public void onResponse(Response res) {
@@ -273,12 +273,12 @@ public class RaftStorage extends Storage implements RaftRPC<TetrapodStateMachine
    protected void sendClusterDetails(Session ses, int toEntityId, int topicId) {
       // send ourselves
       ses.sendMessage(
-            new ClusterMemberMessage(service.getEntityId(), service.getHostName(), service.getServicePort(), service.getClusterPort()),
+            new ClusterMemberMessage(service.getEntityId(), Util.getHostName(), service.getServicePort(), service.getClusterPort(), null),
             MessageHeader.TO_ENTITY, toEntityId);
       // send all current members
       for (TetrapodPeer pod : cluster.values()) {
-         ses.sendMessage(new ClusterMemberMessage(pod.entityId, pod.host, pod.servicePort, pod.clusterPort), MessageHeader.TO_ENTITY,
-               toEntityId);
+         ses.sendMessage(new ClusterMemberMessage(pod.entityId, pod.host, pod.servicePort, pod.clusterPort, pod.uuid),
+               MessageHeader.TO_ENTITY, toEntityId);
       }
    }
 
@@ -476,7 +476,7 @@ public class RaftStorage extends Storage implements RaftRPC<TetrapodStateMachine
 
       // add them to the cluster list
       if (addMember(req.entityId, req.host, req.servicePort, req.clusterPort, ctx.session)) {
-         service.broadcast(new ClusterMemberMessage(req.entityId, req.host, req.servicePort, req.clusterPort), clusterTopic);
+         service.broadcast(new ClusterMemberMessage(req.entityId, req.host, req.servicePort, req.clusterPort, null), clusterTopic);
       }
 
       // subscribe them to our cluster and registry views

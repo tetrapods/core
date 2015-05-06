@@ -61,10 +61,12 @@ define(["knockout", "jquery", "bootbox", "app", "build", "chart"], function(ko, 
          }
       }
 
+      var iter = 0;
       // returns any available service running on this host 
       function getAvailableService() {
-         for (var i = 0; i < self.services().length; i++) {
-            var s = self.services()[i];
+         var arr = self.services();
+         for (var i = 0; i < arr.length; i++) {
+            var s = arr[(i + iter++) % arr.length];
             if (!s.isGone()) {
                return s;
             }

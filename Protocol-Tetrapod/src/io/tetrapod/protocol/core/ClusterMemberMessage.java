@@ -25,17 +25,19 @@ public class ClusterMemberMessage extends Message {
       defaults();
    }
 
-   public ClusterMemberMessage(int entityId, String host, int servicePort, int clusterPort) {
+   public ClusterMemberMessage(int entityId, String host, int servicePort, int clusterPort, String uuid) {
       this.entityId = entityId;
       this.host = host;
       this.servicePort = servicePort;
       this.clusterPort = clusterPort;
+      this.uuid = uuid;
    }   
    
    public int entityId;
    public String host;
    public int servicePort;
    public int clusterPort;
+   public String uuid;
 
    public final Structure.Security getSecurity() {
       return Security.INTERNAL;
@@ -46,6 +48,7 @@ public class ClusterMemberMessage extends Message {
       host = null;
       servicePort = 0;
       clusterPort = 0;
+      uuid = null;
    }
    
    @Override
@@ -54,6 +57,7 @@ public class ClusterMemberMessage extends Message {
       data.write(2, this.host);
       data.write(3, this.servicePort);
       data.write(4, this.clusterPort);
+      data.write(5, this.uuid);
       data.writeEndTag();
    }
    
@@ -67,6 +71,7 @@ public class ClusterMemberMessage extends Message {
             case 2: this.host = data.read_string(tag); break;
             case 3: this.servicePort = data.read_int(tag); break;
             case 4: this.clusterPort = data.read_int(tag); break;
+            case 5: this.uuid = data.read_string(tag); break;
             case Codec.END_TAG:
                return;
             default:
@@ -100,11 +105,12 @@ public class ClusterMemberMessage extends Message {
       // Note do not use this tags in long term serializations (to disk or databases) as 
       // implementors are free to rename them however they wish.  A null means the field
       // is not to participate in web serialization (remaining at default)
-      String[] result = new String[4+1];
+      String[] result = new String[5+1];
       result[1] = "entityId";
       result[2] = "host";
       result[3] = "servicePort";
       result[4] = "clusterPort";
+      result[5] = "uuid";
       return result;
    }
    
@@ -121,6 +127,7 @@ public class ClusterMemberMessage extends Message {
       desc.types[2] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
       desc.types[3] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
       desc.types[4] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
+      desc.types[5] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
       return desc;
    }
 }

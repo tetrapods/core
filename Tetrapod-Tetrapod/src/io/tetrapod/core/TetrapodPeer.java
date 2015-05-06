@@ -2,6 +2,7 @@ package io.tetrapod.core;
 
 import io.netty.channel.socket.SocketChannel;
 import io.tetrapod.core.rpc.*;
+import io.tetrapod.core.utils.Util;
 import io.tetrapod.protocol.core.*;
 
 import java.util.concurrent.TimeUnit;
@@ -25,6 +26,8 @@ public class TetrapodPeer implements Session.Listener, SessionFactory {
    private int                  failures;
    private boolean              pendingConnect;
    private boolean              joined = false;
+
+   public String                uuid   = null;
 
    public TetrapodPeer(TetrapodService service, int entityId, String host, int clusterPort, int servicePort) {
       this.service = service;
@@ -119,7 +122,7 @@ public class TetrapodPeer implements Session.Listener, SessionFactory {
    private synchronized void joinCluster() {
       joined = true;
       session.sendRequest(
-            new ClusterJoinRequest(service.buildNumber, service.getStatus(), service.getHostName(), service.getEntityId(),
+            new ClusterJoinRequest(service.buildNumber, service.getStatus(), Util.getHostName(), service.getEntityId(),
                   service.getServicePort(), service.getClusterPort()), Core.DIRECT).handle(new ResponseHandler() {
          @Override
          public void onResponse(Response res) {

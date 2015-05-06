@@ -334,4 +334,12 @@ public class Util {
       return new JSONObject().put("status", responseCode).put("body", response.toString());
    }
 
+   public static <T extends Object> boolean isEmpty(T[] array) {
+      return array == null || array.length == 0;
+   }
+
+   public static boolean equals(String a, String b) {
+      return (a == null) ? (b == null) : a.equals(b);
+   }
+
 }

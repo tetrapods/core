@@ -150,7 +150,6 @@ public class Registry implements TetrapodContract.Registry.API {
          if (entity.entityId <= 0) {
             if (entity.isTetrapod()) {
                throw new RuntimeException("Tetrapod needs an assigned entityId");
-               //entity.entityId = issueTetrapodId();
             } else {
                entity.entityId = issueId();
             }

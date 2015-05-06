@@ -6,3 +6,4 @@ build/assembly/target
 sfortin.cluster.properties
 jspencer.cluster.properties
 *.iml
+adavidson.hazelcast.xml

@@ -64,16 +64,19 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    private long                                       lastStatsLog;
    private final ConcurrentMap<String, WebRoot>       webRootDirs       = new ConcurrentHashMap<>();
 
-   public TetrapodService() {
+   public TetrapodService() throws IOException {
       super(new TetrapodContract());
+
       registry = new io.tetrapod.core.registry.Registry(this);
+
       worker = new TetrapodWorker(this);
       addContracts(new StorageContract());
       addContracts(new RaftContract());
 
       // add tetrapod web routes
-      for (WebRoute r : contract.getWebRoutes())
+      for (WebRoute r : contract.getWebRoutes()) {
          webRoutes.setRoute(r.path, r.contractId, r.structId);
+      }
 
       addSubscriptionHandler(new TetrapodContract.Registry(), registry);
    }
@@ -258,9 +261,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          logger.info(" ***** READY TO SERVE ***** ");
 
          try {
-
             AuthToken.setSecret(getSharedSecret());
-
             adminAccounts = new AdminAccounts(raftStorage);
 
             // create servers
@@ -556,18 +557,21 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
    private void scheduleHealthCheck() {
-      dispatcher.dispatch(1, TimeUnit.SECONDS, new Runnable() {
-         public void run() {
-            if (dispatcher.isRunning()) {
-               try {
-                  healthCheck();
-               } catch (Throwable e) {
-                  logger.error(e.getMessage(), e);
+      if (!isShuttingDown()) {
+         dispatcher.dispatch(1, TimeUnit.SECONDS, new Runnable() {
+            public void run() {
+               if (dispatcher.isRunning()) {
+                  try {
+                     healthCheck();
+                  } catch (Throwable e) {
+                     logger.error(e.getMessage(), e);
+                  } finally {
+                     scheduleHealthCheck();
+                  }
                }
-               scheduleHealthCheck();
             }
-         }
-      });
+         });
+      }
    }
 
    private void healthCheck() {
@@ -596,7 +600,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
             // push through a dummy request to help keep dispatch pool metrics fresh
             if (e.isService()) {
                final Session ses = e.getSession();
-               if (ses != null && now - ses.getLastHeardFrom() > 500) {
+               if (ses != null && now - ses.getLastHeardFrom() > 1153) {
                   final long t0 = System.currentTimeMillis();
                   sendRequest(new DummyRequest(), e.entityId).handle(new ResponseHandler() {
                      @Override
@@ -628,7 +632,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    public void messageClusterMember(ClusterMemberMessage m, MessageContext ctx) {
       synchronized (raftStorage) {
          if (raftStorage.addMember(m.entityId, m.host, m.servicePort, m.clusterPort, null)) {
-            broadcast(new ClusterMemberMessage(m.entityId, m.host, m.servicePort, m.clusterPort), clusterTopic);
+            broadcast(new ClusterMemberMessage(m.entityId, m.host, m.servicePort, m.clusterPort, m.uuid), clusterTopic);
          }
       }
    }
