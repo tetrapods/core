@@ -261,8 +261,7 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
    }
 
    /**
-    * Runs a web only service.  This should probably be a separate service class
-    * instead of bolted into default service
+    * Runs a web only service. This should probably be a separate service class instead of bolted into default service
     */
    private void doWebOnlyService() {
       String name = Launcher.getOpt("webOnly");
@@ -535,10 +534,6 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
       }
       String s = contract.getClass().getCanonicalName();
       return s.substring(0, s.length() - "Contract".length());
-   }
-
-   public String getHostName() {
-      return Util.getHostName();
    }
 
    public long getAverageResponseTime() {
@@ -879,7 +874,7 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
 
    @Override
    public Response requestHostInfo(HostInfoRequest r, RequestContext ctx) {
-      return new HostInfoResponse(getHostName(), (byte) Metrics.getNumCores(), null);
+      return new HostInfoResponse(Util.getHostName(), (byte) Metrics.getNumCores(), null);
    }
 
    @Override

@@ -44,7 +44,7 @@ public class TetrapodCluster implements SessionFactory {
    }
 
    public ServerAddress getServerAddress() {
-      return new ServerAddress(Util.getHostAddress(), getClusterPort());
+      return new ServerAddress(Util.getHostName(), getClusterPort());
    }
 
    /**
@@ -61,7 +61,7 @@ public class TetrapodCluster implements SessionFactory {
          public void onSessionStart(final Session ses) {
             ses.sendRequest(
                   new RegisterRequest(service.buildNumber, service.token, service.getContractId(), service.getShortName(), service
-                        .getStatus(), Util.getHostAddress()), Core.DIRECT).handle(new ResponseHandler() {
+                        .getStatus(), Util.getHostName()), Core.DIRECT).handle(new ResponseHandler() {
                @Override
                public void onResponse(Response res) {
                   if (res.isError()) {
@@ -228,7 +228,7 @@ public class TetrapodCluster implements SessionFactory {
          }
          // join the cluster node
          this.session.sendRequest(
-               new ClusterJoinRequest(service.getEntityId(), Util.getHostAddress(), service.getServicePort(), getClusterPort(),
+               new ClusterJoinRequest(service.getEntityId(), Util.getHostName(), service.getServicePort(), getClusterPort(),
                      TetrapodCluster.this.uuid, entityId), Core.DIRECT).handle(new ResponseHandler() {
             @Override
             public void onResponse(Response res) {
@@ -315,8 +315,9 @@ public class TetrapodCluster implements SessionFactory {
 
    protected void sendClusterDetails(Session ses, int toEntityId, int topicId) {
       // send ourselves
-      ses.sendMessage(new ClusterMemberMessage(service.getEntityId(), Util.getHostAddress(), service.getServicePort(), getClusterPort(),
-            uuid), MessageHeader.TO_ENTITY, toEntityId);
+      ses.sendMessage(
+            new ClusterMemberMessage(service.getEntityId(), Util.getHostName(), service.getServicePort(), getClusterPort(), uuid),
+            MessageHeader.TO_ENTITY, toEntityId);
       // send all current members
       for (Tetrapod pod : cluster.values()) {
          if (!pod.dead) {
