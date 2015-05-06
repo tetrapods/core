@@ -1036,23 +1036,8 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       return Response.SUCCESS;
    }
 
-   private Set<String> getAllVPCMembers() {
-      // assume /etc/hosts has all members listed as services##
-      Set<String> res = new HashSet<>();
-      try {
-         for (String line : Files.readAllLines(new File("/etc/hosts").toPath(), Charset.forName("UTF-8"))) {
-            Matcher m = Pattern.compile(".*(services\\d\\d).*").matcher(line);
-            if (m.matches()) {
-               res.add(m.group(1));
-            }
-         }
-      } catch (IOException e) {
-         logger.error("could not read /etc/hosts", e);
-      }
-      if (res.isEmpty() && Util.getProperty("dev.mode", "local").equals("local")) {
-         res.add("localhost");
-      }
-      return res;
+   private String[] getAllVPCMembers() {
+      return Util.getProperty("tetrapod.hosts", "localhost").split(";");
    }
 
    @Override
