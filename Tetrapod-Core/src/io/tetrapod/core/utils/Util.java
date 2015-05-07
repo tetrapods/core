@@ -3,6 +3,7 @@ package io.tetrapod.core.utils;
 import io.tetrapod.core.json.*;
 
 import java.io.*;
+import java.lang.reflect.Field;
 import java.net.*;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
@@ -340,6 +341,23 @@ public class Util {
 
    public static boolean equals(String a, String b) {
       return (a == null) ? (b == null) : a.equals(b);
+   }
+
+   /**
+    * Checks if Object o has the flag set
+    * @param o object to check, must have a "flags" field
+    * @param flag to check for
+    * @return true if that flag is set
+    */
+   public static boolean hasFlag(Object o, int flag) {
+      int flags = 0;
+      try {
+         Field flagsField = o.getClass().getField("flags");
+         flags = (Integer) flagsField.get(o);
+      } catch (Exception e) {
+         e.printStackTrace();
+      }
+      return (flags & flag) != 0;
    }
 
 }
