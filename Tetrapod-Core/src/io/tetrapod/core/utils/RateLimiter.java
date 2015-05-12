@@ -9,10 +9,14 @@ public class RateLimiter {
    protected int          cur = -1;
    protected int          len;
    protected int          perMillis;
+   
+   // If we're currently limiting, how many have been ignored during this period of limiting.
+   protected int          ignoredCount;
 
    public RateLimiter(int max, int perMillis) {
       this.samples = new long[max];
       this.perMillis = perMillis;
+      this.ignoredCount = 0;
    }
 
    public synchronized void mark() {
@@ -47,10 +51,21 @@ public class RateLimiter {
 
    public synchronized boolean shouldLimit() {
       if (len >= samples.length) {
-         return (getLastValue() - getOldestValue()) < perMillis;
+         if ((getLastValue() - getOldestValue()) < perMillis) {
+            ignoredCount++;
+            return true;
+         } else {
+            ignoredCount = 0;
+            return false;            
+         }
       } else {
+         ignoredCount = 0;
          return false;
       }
+   }
+   
+   public synchronized int getIgnoreCount() {
+      return ignoredCount;
    }
 
 }
