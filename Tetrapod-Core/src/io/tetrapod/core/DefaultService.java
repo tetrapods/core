@@ -31,7 +31,7 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
 
    protected final Set<Integer>            dependencies    = new HashSet<>();
 
-   protected final Dispatcher              dispatcher;
+   public final Dispatcher                 dispatcher;
    protected final Client                  clusterClient;
    protected final Contract                contract;
    protected final ServiceCache            services;
@@ -40,7 +40,7 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
    protected int                           parentId;
    protected String                        token;
    private int                             status;
-   protected final int                     buildNumber;
+   public final int                        buildNumber;
    protected final LogBuffer               logBuffer;
    protected SSLContext                    sslContext;
 

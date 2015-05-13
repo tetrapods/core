@@ -169,7 +169,7 @@ public message Entity
    1: int entityId
    
 // notification of an existing tetrapod cluster member    
-internal message ClusterMember
+internal message Cluster.ClusterMember
    1: int entityId
    2: string host
    3: int servicePort
@@ -279,3 +279,27 @@ internal response RaftStats
    5: long commitIndex
    6: int leaderId
    7: int[] peers
+      
+## Cluster Properties
+      
+internal struct ClusterProperty
+   1: string key
+   2: boolean secret
+   3: string val
+        
+internal message  Cluster.ClusterPropertyAdded        
+   1: ClusterProperty property
+
+internal message Cluster.ClusterPropertyRemoved        
+   1: string key
+   
+internal request ClusterSubscribe
+   1: string adminToken @sensitive
+   
+internal request SetClusterProperty
+   1: string adminToken @sensitive
+   2: ClusterProperty property
+
+internal request DelClusterProperty
+   1: string adminToken @sensitive
+   2: string key

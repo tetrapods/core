@@ -12,6 +12,7 @@ import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.rpc.Error;
 import io.tetrapod.core.serialize.StructureAdapter;
 import io.tetrapod.core.serialize.datasources.ByteBufDataSource;
+import io.tetrapod.core.storage.RaftStorage;
 import io.tetrapod.core.utils.*;
 import io.tetrapod.core.web.*;
 import io.tetrapod.core.web.WebRoot.FileResult;
@@ -37,32 +38,32 @@ import com.hazelcast.util.Base64;
 public class TetrapodService extends DefaultService implements TetrapodContract.API, StorageContract.API, RaftContract.API, RelayHandler,
       io.tetrapod.core.registry.Registry.RegistryBroadcaster {
 
-   public static final Logger                         logger            = LoggerFactory.getLogger(TetrapodService.class);
+   public static final Logger                      logger            = LoggerFactory.getLogger(TetrapodService.class);
 
-   private static final String                        SHARED_SECRET_KEY = "tetrapod.shared.secret";
+   private static final String                     SHARED_SECRET_KEY = "tetrapod.shared.secret";
 
-   protected final SecureRandom                       random            = new SecureRandom();
+   public final SecureRandom                       random            = new SecureRandom();
 
-   protected final io.tetrapod.core.registry.Registry registry;
+   public final io.tetrapod.core.registry.Registry registry;
 
-   private Topic                                      clusterTopic;
-   private Topic                                      registryTopic;
-   private Topic                                      servicesTopic;
+   private Topic                                   clusterTopic;
+   private Topic                                   registryTopic;
+   private Topic                                   servicesTopic;
 
-   private final Object                               registryTopicLock = new Object();
+   private final Object                            registryTopicLock = new Object();
 
    //private final TetrapodCluster                      cluster;
-   private final TetrapodWorker                       worker;
+   private final TetrapodWorker                    worker;
 
-   final protected RaftStorage                        raftStorage       = new RaftStorage(this);
+   final protected RaftStorage                     raftStorage       = new RaftStorage(this);
 
-   private AdminAccounts                              adminAccounts;
+   private AdminAccounts                           adminAccounts;
 
-   private final List<Server>                         servers           = new ArrayList<Server>();
-   private final WebRoutes                            webRoutes         = new WebRoutes();
+   private final List<Server>                      servers           = new ArrayList<Server>();
+   private final WebRoutes                         webRoutes         = new WebRoutes();
 
-   private long                                       lastStatsLog;
-   private final ConcurrentMap<String, WebRoot>       webRootDirs       = new ConcurrentHashMap<>();
+   private long                                    lastStatsLog;
+   private final ConcurrentMap<String, WebRoot>    webRootDirs       = new ConcurrentHashMap<>();
 
    public TetrapodService() throws IOException {
       super(new TetrapodContract());
@@ -98,7 +99,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    /**
     * Bootstrap a new cluster by claiming the first id and self-registering
     */
-   protected void registerSelf(int myEntityId, long reclaimToken) {
+   public void registerSelf(int myEntityId, long reclaimToken) {
       registry.setParentId(myEntityId);
 
       this.parentId = this.entityId = myEntityId;
@@ -241,7 +242,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       }
    }
 
-   protected void onEntityDisconnected(Session ses) {
+   public void onEntityDisconnected(Session ses) {
       if (ses.getTheirEntityId() != 0) {
          final EntityInfo e = registry.getEntity(ses.getTheirEntityId());
          if (e != null) {
@@ -620,7 +621,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-   protected void subscribeToCluster(Session ses, int toEntityId) {
+   public void subscribeToCluster(Session ses, int toEntityId) {
       assert (clusterTopic != null);
       synchronized (raftStorage) {
          subscribe(clusterTopic.topicId, toEntityId);
@@ -752,7 +753,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    /**
     * Lock registryTopic and send our current registry state to the subscriber
     */
-   protected void registrySubscribe(final Session session, final int toEntityId, boolean clusterMode) {
+   public void registrySubscribe(final Session session, final int toEntityId, boolean clusterMode) {
       if (registryTopic != null) {
          synchronized (registryTopicLock) {
             // cluster members are not subscribed through this subscription, due to chicken-and-egg issues
@@ -1150,6 +1151,37 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    @Override
    public Response requestRaftStats(RaftStatsRequest r, RequestContext ctx) {
       return raftStorage.requestRaftStats(r, ctx);
+   }
+
+   @Override
+   public Response requestDelClusterProperty(DelClusterPropertyRequest r, RequestContext ctx) {
+      if (!adminAccounts.isValidAdminRequest(ctx, r.adminToken)) {
+         return new Error(ERROR_INVALID_RIGHTS);
+      }
+      raftStorage.delClusterProperty(r.key);
+      // FIXME: Add command listener for this:
+      //broadcast(new ClusterPropertyRemovedMessage(r.key), clusterTopic);
+      return Response.SUCCESS;
+   }
+
+   @Override
+   public Response requestSetClusterProperty(SetClusterPropertyRequest r, RequestContext ctx) {
+      if (!adminAccounts.isValidAdminRequest(ctx, r.adminToken)) {
+         return new Error(ERROR_INVALID_RIGHTS);
+      }
+      raftStorage.setClusterProperty(r.property);
+      // FIXME: Add command listener for this:
+      //broadcast(new ClusterPropertyAddedMessage(r.property), clusterTopic);
+      return Response.SUCCESS;
+   }
+
+   @Override
+   public Response requestClusterSubscribe(ClusterSubscribeRequest r, RequestContext ctx) {
+      if (!adminAccounts.isValidAdminRequest(ctx, r.adminToken)) {
+         return new Error(ERROR_INVALID_RIGHTS);
+      }
+      subscribeToCluster(((SessionRequestContext) ctx).session, ctx.header.fromId);
+      return Response.SUCCESS;
    }
 
 }

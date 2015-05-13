@@ -1,6 +1,5 @@
 package io.tetrapod.core.storage;
 
-import io.tetrapod.core.DistributedLock;
 import io.tetrapod.core.rpc.Structure;
 import io.tetrapod.core.serialize.datasources.JSONDataSource;
 

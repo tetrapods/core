@@ -1,6 +1,8 @@
 package io.tetrapod.core;
 
-import io.tetrapod.core.storage.Storage;
+import static io.tetrapod.protocol.core.Core.TYPE_ADMIN;
+import io.tetrapod.core.rpc.*;
+import io.tetrapod.core.storage.*;
 import io.tetrapod.core.utils.*;
 import io.tetrapod.protocol.core.Admin;
 
@@ -119,6 +121,19 @@ public class AdminAccounts {
 
    public boolean verifyPermission(Admin admin, int rightsRequired) {
       return (admin.rights & rightsRequired) == rightsRequired;
+   }
+
+   public boolean isValidAdminRequest(RequestContext ctx, String adminToken) {
+      if (ctx.header.fromType == TYPE_ADMIN) {
+         AuthToken.Decoded d = AuthToken.decodeAuthToken1(adminToken);
+         if (d != null) {
+            Admin admin = getAdminByAccountId(d.accountId);
+            if (admin != null) {
+               return true;
+            }
+         }
+      }
+      return false;
    }
 
 }

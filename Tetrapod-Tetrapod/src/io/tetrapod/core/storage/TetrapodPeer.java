@@ -1,6 +1,7 @@
-package io.tetrapod.core;
+package io.tetrapod.core.storage;
 
 import io.netty.channel.socket.SocketChannel;
+import io.tetrapod.core.*;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.utils.Util;
 import io.tetrapod.protocol.core.*;
@@ -69,7 +70,7 @@ public class TetrapodPeer implements Session.Listener, SessionFactory {
       return ses;
    }
 
-   protected void connect() {
+   public void connect() {
       try {
          // note: we briefly sync to make sure we don't try at the same time as another thread,  
          // but we can't hold the lock while calling sync() on the connect() call below

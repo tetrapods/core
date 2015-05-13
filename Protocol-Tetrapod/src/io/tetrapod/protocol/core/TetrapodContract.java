@@ -29,6 +29,8 @@ public class TetrapodContract extends Contract {
       , AdminLoginRequest.Handler
       , ClusterJoinRequest.Handler
       , ClusterLeaveRequest.Handler
+      , ClusterSubscribeRequest.Handler
+      , DelClusterPropertyRequest.Handler
       , ExecuteBuildCommandRequest.Handler
       , GetEntityInfoRequest.Handler
       , GetServiceBuildInfoRequest.Handler
@@ -46,6 +48,7 @@ public class TetrapodContract extends Contract {
       , ServicesSubscribeRequest.Handler
       , ServicesUnsubscribeRequest.Handler
       , SetAlternateIdRequest.Handler
+      , SetClusterPropertyRequest.Handler
       , UnregisterRequest.Handler
       , VerifyEntityTokenRequest.Handler
       {}
@@ -81,6 +84,9 @@ public class TetrapodContract extends Contract {
          new ExecuteBuildCommandRequest(),
          new VerifyEntityTokenRequest(),
          new RaftStatsRequest(),
+         new ClusterSubscribeRequest(),
+         new SetClusterPropertyRequest(),
+         new DelClusterPropertyRequest(),
       };
    }
    
@@ -113,6 +119,8 @@ public class TetrapodContract extends Contract {
          new ServiceAddedMessage(),
          new ServiceRemovedMessage(),
          new ServiceUpdatedMessage(),
+         new ClusterPropertyAddedMessage(),
+         new ClusterPropertyRemovedMessage(),
       };
    }
    
@@ -122,6 +130,7 @@ public class TetrapodContract extends Contract {
          new Admin(),
          new BuildInfo(),
          new BuildCommand(),
+         new ClusterProperty(),
       };
    }
    
@@ -139,6 +148,31 @@ public class TetrapodContract extends Contract {
       };
    }
 
+   public static class Cluster extends Contract {
+      public static interface API extends
+         ClusterMemberMessage.Handler,
+         ClusterPropertyAddedMessage.Handler,
+         ClusterPropertyRemovedMessage.Handler
+         {}
+         
+      public Structure[] getMessages() {
+         return new Structure[] {
+            new ClusterMemberMessage(),
+            new ClusterPropertyAddedMessage(),
+            new ClusterPropertyRemovedMessage(),
+         };
+      }
+      
+      public String getName() {
+         return TetrapodContract.NAME;
+      }
+      
+      public int getContractId() {
+         return TetrapodContract.CONTRACT_ID;
+      } 
+       
+   }
+      
    public static class Registry extends Contract {
       public static interface API extends
          EntityListCompleteMessage.Handler,

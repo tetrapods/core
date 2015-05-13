@@ -1,4 +1,4 @@
-package io.tetrapod.core;
+package io.tetrapod.core.storage;
 
 import io.tetrapod.core.utils.Value;
 import io.tetrapod.raft.*;

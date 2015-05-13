@@ -92,6 +92,7 @@ define(["knockout", "jquery", "bootbox", "toolbox", "protocol/server", "protocol
             $('#login-wrapper').hide();
             $('#app-wrapper').show();
             server.sendDirect("ServicesSubscribe", {}, server.logResponse);
+            server.sendDirect("ClusterSubscribe", {}, server.logResponse);
          } else {
             onLogout();
          }
@@ -112,7 +113,6 @@ define(["knockout", "jquery", "bootbox", "toolbox", "protocol/server", "protocol
       }
       self.manageAdminUsers = function() {
       }
-
       //////////
 
       self.modalOldPassword = ko.observable();

@@ -1,9 +1,9 @@
-package io.tetrapod.core;
+package io.tetrapod.core.storage;
 
 import io.netty.channel.socket.SocketChannel;
+import io.tetrapod.core.*;
 import io.tetrapod.core.registry.*;
 import io.tetrapod.core.rpc.*;
-import io.tetrapod.core.storage.Storage;
 import io.tetrapod.core.utils.*;
 import io.tetrapod.protocol.core.*;
 import io.tetrapod.protocol.raft.*;
@@ -214,7 +214,7 @@ public class RaftStorage extends Storage implements RaftRPC<TetrapodStateMachine
       return client.isConnected();
    }
 
-   protected Session getSession(int entityId) {
+   public Session getSession(int entityId) {
       final TetrapodPeer pod = cluster.get(entityId);
       if (pod != null) {
          return pod.getSession();
@@ -244,7 +244,7 @@ public class RaftStorage extends Storage implements RaftRPC<TetrapodStateMachine
       return cluster.values();
    }
 
-   protected void broadcast(Message msg) {
+   public void broadcast(Message msg) {
       for (TetrapodPeer pod : getMembers()) {
          if (pod.entityId != service.getEntityId()) {
             if (pod.isConnected()) {
@@ -270,7 +270,7 @@ public class RaftStorage extends Storage implements RaftRPC<TetrapodStateMachine
       }
    }
 
-   protected void sendClusterDetails(Session ses, int toEntityId, int topicId) {
+   public void sendClusterDetails(Session ses, int toEntityId, int topicId) {
       // send ourselves
       ses.sendMessage(
             new ClusterMemberMessage(service.getEntityId(), Util.getHostName(), service.getServicePort(), service.getClusterPort(), null),
@@ -279,6 +279,12 @@ public class RaftStorage extends Storage implements RaftRPC<TetrapodStateMachine
       for (TetrapodPeer pod : cluster.values()) {
          ses.sendMessage(new ClusterMemberMessage(pod.entityId, pod.host, pod.servicePort, pod.clusterPort, pod.uuid),
                MessageHeader.TO_ENTITY, toEntityId);
+      }
+      // send properties
+      synchronized (raft) {
+         for (ClusterProperty prop : raft.getStateMachine().props.values()) {
+            ses.sendMessage(new ClusterPropertyAddedMessage(prop), MessageHeader.TO_ENTITY, toEntityId);
+         }
       }
    }
 
@@ -622,15 +628,41 @@ public class RaftStorage extends Storage implements RaftRPC<TetrapodStateMachine
       executeCommand(new RemoveItemCommand<TetrapodStateMachine>(key), null);
    }
 
+   public enum ReadType {
+      /**
+       * Read from local state (Eventually Consistent read)
+       */
+      Local,
+
+      /**
+       * Read from leader via RPC (Optimistic read)
+       */
+      Leader,
+
+      /**
+       * Read via command (Strongly consistent read)
+       */
+      Command
+   }
+
+   public String get(String key, ReadType readType) {
+      switch (readType) {
+         case Command:
+            // TODO / FIXME / IMPLEMENT
+            //executeCommand(new GetItemCommand<TetrapodStateMachine>(key), null);
+         case Leader:
+            // TODO / FIXME / IMPLEMENT
+            // send RPC to read from leader
+         case Local:
+            StorageItem item = ((TetrapodStateMachine) raft.getStateMachine()).getItem(key);
+            return item != null ? item.getDataAsString() : null;
+      }
+      return null;
+   }
+
    @Override
    public String get(String key) {
-      // Formal read, or dirty read?
-      // executeCommand(new GetItemCommand<TetrapodStateMachine>(key), null);
-
-      // FIXME: Dirty local read
-      StorageItem item = ((TetrapodStateMachine) raft.getStateMachine()).getItem(key);
-
-      return item != null ? item.getDataAsString() : null;
+      return get(key, ReadType.Leader);
    }
 
    @Override
@@ -681,6 +713,16 @@ public class RaftStorage extends Storage implements RaftRPC<TetrapodStateMachine
                .getLastIndex(), raft.getLog().getCommitIndex(), raft.getLeader(), peers);
       }
    }
+
    ///////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+   public void setClusterProperty(ClusterProperty property) {
+      raft.executeCommand(new SetClusterPropertyCommand(property), new ClientResponseHandler<TetrapodStateMachine>() {});
+   }
+
+   public void delClusterProperty(String key) {
+      // TODO Auto-generated method stub
+
+   }
 
 }
