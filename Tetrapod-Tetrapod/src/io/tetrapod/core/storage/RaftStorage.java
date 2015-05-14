@@ -717,12 +717,11 @@ public class RaftStorage extends Storage implements RaftRPC<TetrapodStateMachine
    ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
    public void setClusterProperty(ClusterProperty property) {
-      raft.executeCommand(new SetClusterPropertyCommand(property), new ClientResponseHandler<TetrapodStateMachine>() {});
+      raft.executeCommand(new SetClusterPropertyCommand(property), null);
    }
 
    public void delClusterProperty(String key) {
-      // TODO Auto-generated method stub
-
+      //raft.executeCommand(new DelClusterPropertyCommand(key), null);
    }
 
 }

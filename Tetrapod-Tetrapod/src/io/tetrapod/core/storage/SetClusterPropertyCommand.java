@@ -19,7 +19,7 @@ public class SetClusterPropertyCommand implements Command<TetrapodStateMachine> 
 
    @Override
    public void applyTo(TetrapodStateMachine state) {
-      // state.setProperty(prop);
+       state.setProperty(prop);
    }
 
    @Override

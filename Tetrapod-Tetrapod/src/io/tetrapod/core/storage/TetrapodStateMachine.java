@@ -27,4 +27,8 @@ public class TetrapodStateMachine extends StorageStateMachine<TetrapodStateMachi
       super();
    }
 
+   public void setProperty(ClusterProperty prop) {
+      props.put(prop.key, prop);
+   }
+
 }
