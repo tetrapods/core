@@ -51,7 +51,7 @@ public class RateLimiter {
 
    public synchronized boolean shouldLimit() {
       if (len >= samples.length) {
-         if ((getLastValue() - getOldestValue()) < perMillis) {
+         if ((System.currentTimeMillis() - getOldestValue()) < perMillis) {
             ignoredCount++;
             return true;
          } else {
