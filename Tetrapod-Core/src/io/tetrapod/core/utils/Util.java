@@ -344,20 +344,51 @@ public class Util {
    }
 
    /**
-    * Checks if Object o has the flag set
+    * Checks if Object o has any of the bits of the flag set
     * @param o object to check, must have a "flags" field
     * @param flag to check for
     * @return true if that flag is set
     */
    public static boolean hasFlag(Object o, int flag) {
-      int flags = 0;
+      int source = 0;
       try {
          Field flagsField = o.getClass().getField("flags");
-         flags = (Integer) flagsField.get(o);
+         source = (Integer) flagsField.get(o);
       } catch (Exception e) {
          e.printStackTrace();
       }
-      return (flags & flag) != 0;
+      return (source & flag) != 0;
+   }
+   
+   /**
+    * Checks if Object o has ALL of the bits of the flag set
+    * @param o object to check, must have a "flags" field
+    * @param flag to check for
+    * @return true if that flag is set
+    */
+   public static boolean hasAllFlags(Object o, int flags) {
+      int source = 0;
+      try {
+         Field flagsField = o.getClass().getField("flags");
+         source = (Integer) flagsField.get(o);
+      } catch (Exception e) {
+         e.printStackTrace();
+      }
+      return (source & flags) == flags;
+   }
+   
+   /**
+    * Checks if source has any of flag bits set
+    */
+   public static boolean hasFlag(int source, int flag) {
+      return (source & flag) != 0;
+   }
+
+   /**
+    * Checks if source has ALL of flag bits set
+    */
+   public static boolean hasAllFlags(int source, int flags) {
+      return (source & flags) == flags;
    }
 
 }
