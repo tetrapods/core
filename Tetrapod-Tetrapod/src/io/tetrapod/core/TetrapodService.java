@@ -51,8 +51,8 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    private Topic                                   servicesTopic;
 
    private final Object                            registryTopicLock = new Object();
+   private final Object                            servicesTopicLock = new Object();
 
-   //private final TetrapodCluster                      cluster;
    private final TetrapodWorker                    worker;
 
    final protected RaftStorage                     raftStorage       = new RaftStorage(this);
@@ -792,7 +792,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       if (servicesTopic == null) {
          return new Error(ERROR_UNKNOWN);
       }
-      synchronized (servicesTopic) {
+      synchronized (servicesTopicLock) {
          subscribe(servicesTopic.topicId, ctx.header.fromId);
          // send all current entities
          for (EntityInfo e : registry.getServices()) {
@@ -805,7 +805,9 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    @Override
    public Response requestServicesUnsubscribe(ServicesUnsubscribeRequest r, RequestContext ctx) {
       // TODO: validate 
-      unsubscribe(servicesTopic.topicId, ctx.header.fromId);
+      synchronized (servicesTopicLock) {
+         unsubscribe(servicesTopic.topicId, ctx.header.fromId);
+      }
       return Response.SUCCESS;
    }
 
