@@ -252,6 +252,8 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
 
    public void onPaused() {}
 
+   public void onPurged() {}
+
    public void onUnpaused() {}
 
    public void onStarted() {
@@ -701,6 +703,12 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
    public Response requestPause(PauseRequest r, RequestContext ctx) {
       updateStatus(getStatus() | Core.STATUS_PAUSED);
       onPaused();
+      return Response.SUCCESS;
+   }
+
+   @Override
+   public Response requestPurge(PurgeRequest r, RequestContext ctx) {
+      onPurged();
       return Response.SUCCESS;
    }
 

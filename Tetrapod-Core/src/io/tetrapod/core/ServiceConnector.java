@@ -188,8 +188,8 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
       }
    }
 
-   private Session getSession(Request req, int entityId) {
-      if (entityId == Core.DIRECT) {
+   private Session getSession(Request req, int entityId) {      
+      if (entityId != Core.DIRECT && false) {
          if (entityId == Core.UNADDRESSED) {
             Entity e = service.services.getRandomAvailableService(req.getContractId());
             if (e != null) {

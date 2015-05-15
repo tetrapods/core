@@ -20,13 +20,10 @@ import io.tetrapod.protocol.storage.*;
 
 import java.io.*;
 import java.net.ConnectException;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
 import java.security.*;
 import java.security.spec.InvalidKeySpecException;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.regex.*;
 
 import org.slf4j.*;
 
@@ -57,6 +54,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    private AdminAccounts                              adminAccounts;
 
    private final List<Server>                         servers           = new ArrayList<Server>();
+   private final List<Server>                         httpServers       = new ArrayList<Server>();
    private final WebRoutes                            webRoutes         = new WebRoutes();
 
    private long                                       lastStatsLog;
@@ -282,11 +280,16 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
             adminAccounts = new AdminAccounts(storage);
 
             // create servers
-            servers.add(new Server(getHTTPPort(), new WebSessionFactory(webRootDirs, "/sockets"), dispatcher));
+            Server httpServer = (new Server(getHTTPPort(), new WebSessionFactory(webRootDirs, "/sockets"), dispatcher));
+            servers.add((httpServer));
+            httpServers.add(httpServer);
+
 
             // create secure port servers, if configured
             if (sslContext != null) {
-               servers.add(new Server(getHTTPSPort(), new WebSessionFactory(webRootDirs, "/sockets"), dispatcher, sslContext, false));
+               httpServer = new Server(getHTTPSPort(), new WebSessionFactory(webRootDirs, "/sockets"), dispatcher, sslContext, false);
+               servers.add((httpServer));
+               httpServers.add(httpServer);
             }
             servers.add(new Server(getPublicPort(), new TypedSessionFactory(Core.TYPE_ANONYMOUS), dispatcher, sslContext, false));
             servers.add(new Server(getServicePort(), new TypedSessionFactory(Core.TYPE_SERVICE), dispatcher, sslContext, false));
@@ -300,6 +303,34 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          }
 
          scheduleHealthCheck();
+      }
+   }
+
+   // Pause will close the HTTP and HTTPS ports on the tetrapod service
+   @Override
+   public void onPaused() {
+      for (Server httpServer : httpServers) {
+         httpServer.close();
+      }
+   }
+
+   // Purge will boot all non-admin sessions from the tetrapod service
+   @Override
+   public void onPurged() {
+      for (Server httpServer : httpServers) {
+         httpServer.purge();
+      }
+   }
+
+   // UnPause will restart the HTTP listeners on the tetrapod service.
+   @Override
+   public void onUnpaused() {
+      for (Server httpServer : httpServers) {
+         try {
+            httpServer.start().sync();
+         } catch (Exception e) {
+            fail(e);
+         }
       }
    }
 
