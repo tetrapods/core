@@ -14,6 +14,7 @@ define(["knockout", "jquery", "app", "host", "service", "raftnode"], function(ko
       self.tolerance = ko.pureComputed(tolerance);
       self.ensurePeer = ensurePeer;
       self.isNodeInCluster = isNodeInCluster;
+      self.addPref = addPref;
 
       var raftTab = $('#raft-tab');
 
@@ -91,7 +92,7 @@ define(["knockout", "jquery", "app", "host", "service", "raftnode"], function(ko
          var host = new Host(hostname);
          var array = self.hosts();
          array.push(host);
-         array.sort(function(a,b) {
+         array.sort(function(a, b) {
             return a.hostname == b.hostname ? 0 : (a.hostname < b.hostname ? -1 : 1);
          });
          self.hosts(array);
@@ -167,6 +168,17 @@ define(["knockout", "jquery", "app", "host", "service", "raftnode"], function(ko
             }
          }
          return Math.floor(nodes / 2);
+      }
+
+      function addPref() { 
+         app.server.sendDirect("SetClusterProperty", {
+            adminToken: app.authtoken,
+            property: {
+               key: 'foo',
+               val: 'bar',
+               secret: false
+            }
+         }, app.server.logResponse);
       }
 
    }

@@ -6,7 +6,6 @@ define(["knockout", "jquery", "bootbox", "toolbox", "protocol/server", "protocol
       var server = new Server(Tetrapod, CoreProt);
       var Core = server.consts["Core.Core"];
       var token = null;
-      var authtoken;
       var model;
 
       self.server = server;
@@ -27,7 +26,7 @@ define(["knockout", "jquery", "bootbox", "toolbox", "protocol/server", "protocol
          };
          model = clusterModel;
          server.commsLog = true;
-         authtoken = toolbox.getCookie("auth-token");
+         self.authtoken = toolbox.getCookie("auth-token");
          ko.applyBindings(model, $("#cluster-view")[0]);
          var array = $(".app-bind");
          for (var i = 0; i < array.length; i++) {
@@ -61,9 +60,9 @@ define(["knockout", "jquery", "bootbox", "toolbox", "protocol/server", "protocol
       function onRegistered(result) {
          if (!result.isError()) {
             token = result.token;
-            if (authtoken != null && authtoken != "") {
+            if (self.authtoken != null && self.authtoken != "") {
                server.sendDirect("AdminAuthorize", {
-                  token: authtoken
+                  token: self.authtoken
                }, onLogin);
             } else {
                onLogout();
@@ -86,20 +85,22 @@ define(["knockout", "jquery", "bootbox", "toolbox", "protocol/server", "protocol
       function onLogin(result) {
          if (!result.isError()) {
             if (result.token) {
-               authtoken = result.token;
-               toolbox.setCookie("auth-token", authtoken);
+               self.authtoken = result.token;
+               toolbox.setCookie("auth-token", self.authtoken);
             }
             $('#login-wrapper').hide();
             $('#app-wrapper').show();
             server.sendDirect("ServicesSubscribe", {}, server.logResponse);
-            server.sendDirect("ClusterSubscribe", {}, server.logResponse);
+            server.sendDirect("ClusterSubscribe", {
+               adminToken: self.authtoken
+            }, server.logResponse);
          } else {
             onLogout();
          }
       }
 
       function onLogout() {
-         authtoken = null;
+         self.authtoken = null;
          toolbox.deleteCookie("auth-token");
          $('#login-wrapper').show();
          $('#app-wrapper').hide();
@@ -124,7 +125,7 @@ define(["knockout", "jquery", "bootbox", "toolbox", "protocol/server", "protocol
       };
       self.onEditPassword = function() {
          server.sendDirect("AdminChangePassword", {
-            token: authtoken,
+            token: self.authtoken,
             oldPassword: self.modalOldPassword(),
             newPassword: self.modalNewPassword()
          }, function(res) {

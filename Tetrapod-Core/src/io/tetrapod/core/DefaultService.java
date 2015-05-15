@@ -23,7 +23,7 @@ import org.slf4j.*;
 import ch.qos.logback.classic.LoggerContext;
 
 public class DefaultService implements Service, Fail.FailHandler, CoreContract.API, SessionFactory, EntityMessage.Handler,
-      ClusterMemberMessage.Handler {
+      TetrapodContract.Cluster.API {
 
    private static final Logger             logger          = LoggerFactory.getLogger(DefaultService.class);
 
@@ -49,7 +49,7 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
    protected final ServiceStats            stats;
    protected boolean                       startPaused;
 
-   private final LinkedList<ServerAddress> clusterMembers  = new LinkedList<ServerAddress>();
+   private final LinkedList<ServerAddress> clusterMembers  = new LinkedList<>();
 
    private final MessageHandlers           messageHandlers = new MessageHandlers();
 
@@ -73,7 +73,7 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
       addContracts(new CoreContract());
       addPeerContracts(new TetrapodContract());
       addMessageHandler(new EntityMessage(), this);
-      addMessageHandler(new ClusterMemberMessage(), this);
+      addSubscriptionHandler(new TetrapodContract.Cluster(), this);
 
       try {
          if (Util.getProperty("tetrapod.tls", true)) {
@@ -670,6 +670,16 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
    @Override
    public void messageClusterMember(ClusterMemberMessage m, MessageContext ctx) {
       clusterMembers.add(new ServerAddress(m.host, m.servicePort));
+   }
+
+   @Override
+   public void messageClusterPropertyAdded(ClusterPropertyAddedMessage m, MessageContext ctx) {
+      logger.info("******** {}", m.dump());
+   }
+
+   @Override
+   public void messageClusterPropertyRemoved(ClusterPropertyRemovedMessage m, MessageContext ctx) {
+      logger.info("******** {}", m.dump());
    }
 
    // private methods

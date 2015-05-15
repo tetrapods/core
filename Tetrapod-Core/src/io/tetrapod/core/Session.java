@@ -29,7 +29,7 @@ import org.slf4j.LoggerFactory;
 import com.codahale.metrics.Timer.Context;
 
 /**
- * Manages a session between two tetrapods
+ * Manages a tetrapod session 
  */
 abstract public class Session extends ChannelInboundHandlerAdapter {
 
