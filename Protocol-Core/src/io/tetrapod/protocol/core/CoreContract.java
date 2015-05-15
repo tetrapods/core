@@ -24,6 +24,7 @@ public class CoreContract extends Contract {
       , HostInfoRequest.Handler
       , HostStatsRequest.Handler
       , PauseRequest.Handler
+      , PurgeRequest.Handler
       , ResetServiceErrorLogsRequest.Handler
       , RestartRequest.Handler
       , ServiceDetailsRequest.Handler
@@ -42,6 +43,7 @@ public class CoreContract extends Contract {
       return new Structure[] {
          new PauseRequest(),
          new UnpauseRequest(),
+         new PurgeRequest(),
          new ShutdownRequest(),
          new RestartRequest(),
          new ServiceStatsSubscribeRequest(),
