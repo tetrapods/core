@@ -129,6 +129,10 @@ define(["knockout", "jquery", "bootbox", "app", "build", "chart"], function(ko, 
          app.server.sendTo("Pause", {}, self.entityId);
       }
 
+      self.purge = function() {
+         app.server.sendTo("Purge", {}, self.entityId);
+      }
+
       self.unpause = function() {
          app.server.sendTo("Unpause", {}, self.entityId);
       }
@@ -218,6 +222,10 @@ define(["knockout", "jquery", "bootbox", "app", "build", "chart"], function(ko, 
          app.server.sendDirect("Unregister", {
             entityId: self.entityId
          });
+      }
+
+      self.canPurge = ko.pureComputed(function() {
+         return self.isPaused();
       }
 
       self.canPause = ko.pureComputed(function() {

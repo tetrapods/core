@@ -108,6 +108,8 @@ internal request Pause
 
 internal request Unpause
 
+internal request Purge
+
 internal request Shutdown
 
 internal request Restart

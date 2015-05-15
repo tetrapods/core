@@ -11,6 +11,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import javax.net.ssl.*;
 
+import io.tetrapod.protocol.core.Core;
 import org.slf4j.*;
 
 /**
@@ -18,17 +19,18 @@ import org.slf4j.*;
  */
 public class Server extends ChannelInitializer<SocketChannel> implements Session.Listener {
 
-   public static final Logger    logger   = LoggerFactory.getLogger(Server.class);
+   public static final Logger logger = LoggerFactory.getLogger(Server.class);
 
    private Map<Integer, Session> sessions = new ConcurrentHashMap<>();
 
-   private EventLoopGroup        bossGroup;
+   private EventLoopGroup bossGroup;
 
-   private int                   port;
-   private final Dispatcher      dispatcher;
-   private final SessionFactory  sessionFactory;
-   private SSLContext            sslContext;
-   private boolean               clientAuth;
+   private       int            port;
+   private final Dispatcher     dispatcher;
+   private final SessionFactory sessionFactory;
+   private       SSLContext     sslContext;
+   private       boolean        clientAuth;
+   private       ChannelFuture  channel;
 
    public Server(int port, SessionFactory sessionFactory, Dispatcher dispatcher) {
       this.sessionFactory = sessionFactory;
@@ -58,7 +60,8 @@ public class Server extends ChannelInitializer<SocketChannel> implements Session
       b.childHandler(this);
       setOptions(b);
       logger.info("Starting Server Listening on Port {}", port);
-      return b.bind(port);
+      channel = b.bind(port);
+      return channel;
    }
 
    public void initChannel(SocketChannel ch) throws Exception {
@@ -68,6 +71,18 @@ public class Server extends ChannelInitializer<SocketChannel> implements Session
    protected void setOptions(ServerBootstrap sb) {
       sb.option(ChannelOption.SO_BACKLOG, 128);
       sb.childOption(ChannelOption.SO_KEEPALIVE, true);
+   }
+
+   public void close() {
+      if (channel != null) {
+         Channel c = channel.channel();
+         try {
+            c.close();
+         } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+         }
+         logger.debug("Stopped server on port {}", port);
+      }
    }
 
    public void stop() {
@@ -82,6 +97,14 @@ public class Server extends ChannelInitializer<SocketChannel> implements Session
       logger.debug("Stopped server on port {}", port);
    }
 
+   public void purge() {
+      for (Session session : sessions.values()) {
+         if (session.getTheirEntityType() != Core.TYPE_ADMIN) {
+            session.close();
+         }
+      }
+   }
+
    private static final Set<String> WEAK_CIPHERS = new HashSet<>();
    static {
       WEAK_CIPHERS.add("SSL_RSA_WITH_RC4_128_MD5");
@@ -92,7 +115,9 @@ public class Server extends ChannelInitializer<SocketChannel> implements Session
       WEAK_CIPHERS.add("TLS_DHE_RSA_WITH_AES_128_CBC_SHA256");
       WEAK_CIPHERS.add("TLS_DHE_RSA_WITH_AES_256_CBC_SHA");
       WEAK_CIPHERS.add("TLS_DHE_RSA_WITH_AES_256_CBC_SHA256");
-   };
+   }
+
+   ;
 
    private void startSession(final SocketChannel ch) throws Exception {
       logger.info("Connection from {}", ch);
@@ -128,13 +153,11 @@ public class Server extends ChannelInitializer<SocketChannel> implements Session
       session.addSessionListener(this);
    }
 
-   @Override
-   public void onSessionStart(Session ses) {
+   @Override public void onSessionStart(Session ses) {
       sessions.put(ses.getSessionNum(), ses);
    }
 
-   @Override
-   public void onSessionStop(Session ses) {
+   @Override public void onSessionStop(Session ses) {
       sessions.remove(ses.getSessionNum());
    }
 
@@ -145,4 +168,6 @@ public class Server extends ChannelInitializer<SocketChannel> implements Session
    public int getNumSessions() {
       return sessions.size();
    }
+
+
 }
