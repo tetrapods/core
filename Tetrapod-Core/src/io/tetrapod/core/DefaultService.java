@@ -1,6 +1,7 @@
 package io.tetrapod.core;
 
 import static io.tetrapod.protocol.core.Core.UNADDRESSED;
+import static io.tetrapod.protocol.core.CoreContract.*;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
@@ -19,6 +20,8 @@ import java.util.concurrent.TimeUnit;
 import javax.net.ssl.SSLContext;
 
 import org.slf4j.*;
+
+import com.codahale.metrics.Timer.Context;
 
 import ch.qos.logback.classic.LoggerContext;
 
@@ -556,6 +559,52 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
 
    public long getNumMessagesSent() {
       return dispatcher.messagesSentCounter.getCount();
+   }
+
+   /**
+    * Dispatches a request to ourselves
+    */
+   protected Async dispatchRequest(final RequestHeader header, final Request req, final Session fromSession) {
+      final Async async = new Async(req, header, fromSession);
+      final ServiceAPI svc = getServiceHandler(header.contractId);
+      if (svc != null) {
+         final long start = System.nanoTime();
+         final Context context = dispatcher.requestTimes.time();
+         if (!dispatcher.dispatch(new Runnable() {
+            public void run() {
+               try {
+                  RequestContext ctx = new SessionRequestContext(header, fromSession);
+                  Response res = req.securityCheck(ctx);
+                  if (res == null) {
+                     res = req.dispatch(svc, ctx);
+                  }
+                  if (res != null) {
+                     async.setResponse(res);
+                  } else {
+                     async.setResponse(new Error(ERROR_UNKNOWN));
+                  }
+               } catch (ErrorResponseException e) {
+                  async.setResponse(new Error(e.errorCode));
+               } catch (Throwable e) {
+                  logger.error(e.getMessage(), e);
+                  async.setResponse(new Error(ERROR_UNKNOWN));
+               }
+               context.stop();
+
+               final long elapsed = System.nanoTime() - start;
+               dispatcher.requestsHandledCounter.mark();
+               if (Util.nanosToMillis(elapsed) > 1000) {
+                  logger.warn("Request took {} {} millis", req, Util.nanosToMillis(elapsed));
+               }
+            }
+         }, Session.DEFAULT_OVERLOAD_THRESHOLD)) {
+            async.setResponse(new Error(ERROR_SERVICE_OVERLOADED));
+         }
+      } else {
+         logger.warn("{} No handler found for {}", this, header.dump());
+         async.setResponse(new Error(ERROR_UNKNOWN_REQUEST));
+      }
+      return async;
    }
 
    public Response sendPendingRequest(Request req, int toEntityId, PendingResponseHandler handler) {
