@@ -190,12 +190,7 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
 
    private Session getSession(Request req, int entityId) {
       if (entityId != Core.DIRECT) {
-         if (entityId == Core.UNADDRESSED) {
-            Entity e = service.services.getRandomAvailableService(req.getContractId());
-            if (e != null) {
-               entityId = e.entityId;
-            }
-         }
+
          if (entityId != Core.UNADDRESSED) {
             if (entityId == service.getEntityId()) {
                logger.warn("For some reason we're sending {} to ourselves", req);
@@ -225,11 +220,15 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
    }
 
    public Response sendPendingRequest(Request req, int toEntityId, final PendingResponseHandler handler) {
+      if (toEntityId == Core.UNADDRESSED) {
+         Entity e = service.services.getRandomAvailableService(req.getContractId());
+         if (e != null) {
+            toEntityId = e.entityId;
+         }
+      }
 
       final Session ses = getSession(req, toEntityId);
-      if (ses != service.clusterClient.getSession() && toEntityId == Core.UNADDRESSED) {
-         toEntityId = Core.DIRECT;
-      }
+
       if (ses != service.clusterClient.getSession()) {
          logger.debug("Dispatching Pending {} to {}", req, ses);
          final Async async = ses.sendRequest(req, toEntityId, (byte) 30);
@@ -260,6 +259,13 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
    }
 
    public Async sendRequest(Request req, int toEntityId) {
+      if (toEntityId == Core.UNADDRESSED) {
+         Entity e = service.services.getRandomAvailableService(req.getContractId());
+         if (e != null) {
+            toEntityId = e.entityId;
+         }
+      }
+
       if (toEntityId == service.getEntityId()) {
          logger.debug("Self-dispatching {}", req);
          final RequestHeader header = new RequestHeader();
@@ -273,9 +279,6 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
       }
 
       final Session ses = getSession(req, toEntityId);
-      if (ses != service.clusterClient.getSession() && toEntityId == Core.UNADDRESSED) {
-         toEntityId = Core.DIRECT;
-      }
       return ses.sendRequest(req, toEntityId, (byte) 30);
    }
 
