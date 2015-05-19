@@ -564,7 +564,8 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
    /**
     * Dispatches a request to ourselves
     */
-   protected Async dispatchRequest(final RequestHeader header, final Request req, final Session fromSession) {
+   @Override
+   public Async dispatchRequest(final RequestHeader header, final Request req, final Session fromSession) {
       final Async async = new Async(req, header, fromSession);
       final ServiceAPI svc = getServiceHandler(header.contractId);
       if (svc != null) {
@@ -694,7 +695,6 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
       return dispatcher;
    }
 
-   @Override
    public ServiceAPI getServiceHandler(int contractId) {
       // this method allows us to have delegate objects that directly handle some contracts
       return this;
