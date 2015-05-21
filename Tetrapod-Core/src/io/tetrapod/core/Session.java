@@ -9,24 +9,18 @@ import io.netty.handler.codec.DecoderException;
 import io.netty.util.ReferenceCountUtil;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.rpc.Error;
-import io.tetrapod.core.utils.Util;
 import io.tetrapod.core.web.WebRoutes;
 import io.tetrapod.protocol.core.*;
 
 import java.io.IOException;
 import java.util.*;
 import java.util.Map.Entry;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.*;
 
 import javax.net.ssl.SSLException;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.codahale.metrics.Timer.Context;
+import org.slf4j.*;
 
 /**
  * Manages a tetrapod session 
@@ -47,7 +41,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
 
       public Dispatcher getDispatcher();
 
-      public ServiceAPI getServiceHandler(int contractId);
+      public Async dispatchRequest(RequestHeader header, Request req, Session fromSession); 
 
       public List<SubscriptionAPI> getMessageHandlers(int contractId, int structId);
 
@@ -181,49 +175,12 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
    }
 
    protected void dispatchRequest(final RequestHeader header, final Request req) {
-      final ServiceAPI svc = helper.getServiceHandler(header.contractId);
-      if (svc != null) {
-         final long start = System.nanoTime();
-         final Context context = getDispatcher().requestTimes.time();
-         if (!getDispatcher().dispatch(new Runnable() {
-            public void run() {
-               try {
-                  dispatchRequest(svc, header, req);
-               } catch (ErrorResponseException e) {
-                  sendResponse(new Error(e.errorCode), header.requestId);
-               } catch (Throwable e) {
-                  logger.error(e.getMessage(), e);
-                  sendResponse(new Error(ERROR_UNKNOWN), header.requestId);
-               }
-               context.stop(); //sample(elapsed);
-
-               final long elapsed = System.nanoTime() - start;
-               getDispatcher().requestsHandledCounter.mark();
-               //getDispatcher().requestTimes.sample(elapsed);
-               if (Util.nanosToMillis(elapsed) > 1000) {
-                  logger.warn("Request took {} {} millis", req, Util.nanosToMillis(elapsed));
-               }
-            }
-         }, DEFAULT_OVERLOAD_THRESHOLD)) {
-            sendResponse(new Error(ERROR_SERVICE_OVERLOADED), header.requestId);
+      helper.dispatchRequest(header, req, this).handle(new ResponseHandler() {
+         @Override
+         public void onResponse(Response res) {
+            sendResponse(res, header.requestId);
          }
-      } else {
-         logger.warn("{} No handler found for {}", this, header.dump());
-         sendResponse(new Error(ERROR_UNKNOWN_REQUEST), header.requestId);
-      }
-   }
-
-   private void dispatchRequest(final ServiceAPI svc, final RequestHeader header, final Request req) {
-      RequestContext ctx = new SessionRequestContext(header, this);
-      Response res = req.securityCheck(ctx);
-      if (res == null) {
-         res = req.dispatch(svc, ctx);
-      }
-      if (res != null) {
-         sendResponse(res, header.requestId);
-      } else {
-         sendResponse(new Error(ERROR_UNKNOWN), header.requestId);
-      }
+      });
    }
 
    protected void dispatchMessage(final MessageHeader header, final Message msg) {

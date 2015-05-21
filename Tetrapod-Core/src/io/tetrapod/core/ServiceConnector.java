@@ -1,6 +1,7 @@
 package io.tetrapod.core;
 
 import static io.tetrapod.protocol.core.Core.DEFAULT_DIRECT_PORT;
+import static io.tetrapod.protocol.core.CoreContract.ERROR_UNKNOWN;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.rpc.Error;
 import io.tetrapod.core.utils.Util;
@@ -11,8 +12,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import javax.net.ssl.SSLContext;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.slf4j.*;
 
 /**
  * Allows a service to spawn direct connections with one another for faster RPC
@@ -190,12 +190,7 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
 
    private Session getSession(Request req, int entityId) {
       if (entityId != Core.DIRECT) {
-         if (entityId == Core.UNADDRESSED) {
-            Entity e = service.services.getRandomAvailableService(req.getContractId());
-            if (e != null) {
-               entityId = e.entityId;
-            }
-         }
+
          if (entityId != Core.UNADDRESSED) {
             if (entityId == service.getEntityId()) {
                logger.warn("For some reason we're sending {} to ourselves", req);
@@ -224,12 +219,67 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
       return service.clusterClient.getSession();
    }
 
-   public Response sendPendingRequest(Request req, int toEntityId, PendingResponseHandler handler) {
-      return getSession(req, toEntityId).sendPendingRequest(req, toEntityId, (byte) 30, handler);
+   public Response sendPendingRequest(Request req, int toEntityId, final PendingResponseHandler handler) {
+      if (toEntityId == Core.UNADDRESSED) {
+         Entity e = service.services.getRandomAvailableService(req.getContractId());
+         if (e != null) {
+            toEntityId = e.entityId;
+         }
+      }
+
+      final Session ses = getSession(req, toEntityId);
+
+      if (ses != service.clusterClient.getSession()) {
+         logger.debug("Dispatching Pending {} to {}", req, ses);
+         final Async async = ses.sendRequest(req, toEntityId, (byte) 30);
+         async.handle(new ResponseHandler() {
+            @Override
+            public void onResponse(Response res) {
+               Response pendingRes = null;
+               try {
+                  pendingRes = handler.onResponse(res);
+               } catch (Throwable e) {
+                  logger.error(e.getMessage(), e);
+               } finally {
+                  // finally return the pending response we were waiting on
+                  if (pendingRes == null) {
+                     pendingRes = new Error(ERROR_UNKNOWN);
+                  }
+                  if (handler.session != null) {
+                     handler.session.sendResponse(pendingRes, handler.originalRequestId);
+                  } else {
+                     logger.error("I literally can't even");
+                  }
+               }
+            }
+         });
+         return Response.PENDING;
+      }
+      return ses.sendPendingRequest(req, toEntityId, (byte) 30, handler);
    }
 
    public Async sendRequest(Request req, int toEntityId) {
-      return getSession(req, toEntityId).sendRequest(req, toEntityId, (byte) 30);
+      if (toEntityId == Core.UNADDRESSED) {
+         Entity e = service.services.getRandomAvailableService(req.getContractId());
+         if (e != null) {
+            toEntityId = e.entityId;
+         }
+      }
+
+      if (toEntityId == service.getEntityId()) {
+         logger.debug("Self-dispatching {}", req);
+         final RequestHeader header = new RequestHeader();
+         header.contractId = req.getContractId();
+         header.structId = req.getStructId();
+         header.toId = toEntityId;
+         header.fromId = service.getEntityId();
+         header.fromType = service.getEntityType();
+         header.timeout = 30;
+         return service.dispatchRequest(header, req, null);
+      }
+
+      final Session ses = getSession(req, toEntityId);
+      return ses.sendRequest(req, toEntityId, (byte) 30);
    }
 
    @Override
