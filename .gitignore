@@ -7,3 +7,4 @@ sfortin.cluster.properties
 jspencer.cluster.properties
 *.iml
 adavidson.hazelcast.xml
+adavidson.orig.cluster.properties

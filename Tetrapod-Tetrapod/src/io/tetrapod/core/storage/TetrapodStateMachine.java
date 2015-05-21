@@ -1,7 +1,7 @@
 package io.tetrapod.core.storage;
 
 import io.tetrapod.protocol.core.ClusterProperty;
-import io.tetrapod.raft.StateMachine;
+import io.tetrapod.raft.*;
 import io.tetrapod.raft.storage.StorageStateMachine;
 
 import java.util.*;
@@ -25,10 +25,22 @@ public class TetrapodStateMachine extends StorageStateMachine<TetrapodStateMachi
 
    public TetrapodStateMachine() {
       super();
+      registerCommand(SetClusterPropertyCommand.COMMAND_ID, new CommandFactory<TetrapodStateMachine>() {
+         @Override
+         public Command<TetrapodStateMachine> makeCommand() {
+            return new SetClusterPropertyCommand();
+         }
+      });
+
+      for (ClusterProperty prop : props.values()) {
+         System.setProperty(prop.key, prop.val);
+      }
+
    }
 
    public void setProperty(ClusterProperty prop) {
       props.put(prop.key, prop);
+      System.setProperty(prop.key, prop.val);
    }
 
 }

@@ -70,8 +70,6 @@ public class RaftStorage extends Storage implements RaftRPC<TetrapodStateMachine
       }
       this.raft = raftEngine;
       this.raft.getStateMachine().addListener(this);
-
-      // FIXME: build initial peer list from loaded state here?
    }
 
    public void startListening() throws IOException {
@@ -114,18 +112,7 @@ public class RaftStorage extends Storage implements RaftRPC<TetrapodStateMachine
       service.registerSelf(io.tetrapod.core.registry.Registry.BOOTSTRAP_ID, random.nextLong());
    }
 
-   private void addPeer(AddPeerCommand<TetrapodStateMachine> command) {
-      // TODO: Have a think about safety here when loading old log events... check against term we joined?
-      if (command.peerId != raft.getPeerId()) {
-         //         final int entityId = command.peerId << Registry.PARENT_ID_SHIFT;
-         //         final TetrapodPeer peer = new TetrapodPeer(service, command.peerId, command.host, command.port, Core.DEFAULT_SERVICE_PORT);
-         //         cluster.put(entityId, peer);
-         //         Session ses = getSession(entityId);
-         //         if (ses != null) {
-         //            peer.setSession(ses);
-         //         }
-      }
-   }
+   private void addPeer(AddPeerCommand<TetrapodStateMachine> command) {}
 
    private void delPeer(DelPeerCommand<TetrapodStateMachine> command, Entry<TetrapodStateMachine> entry) {
       if (command.peerId == raft.getPeerId() && entry.getIndex() > joinIndex) {
@@ -197,7 +184,7 @@ public class RaftStorage extends Storage implements RaftRPC<TetrapodStateMachine
                               service.registerSelf(myEntityId, service.random.nextLong());
                               raft.start(r.peerId);
 
-                              // HACK: We need to wait for our loopback connection to be established
+                              // HACK: We need to wait for our loop-back connection to be established
                               service.dispatcher.dispatch(1, TimeUnit.SECONDS, new Runnable() {
                                  public void run() {
                                     addMember(r.entityId, address.host, Core.DEFAULT_SERVICE_PORT, address.port, ses);
@@ -283,9 +270,14 @@ public class RaftStorage extends Storage implements RaftRPC<TetrapodStateMachine
       // send properties
       synchronized (raft) {
          for (ClusterProperty prop : raft.getStateMachine().props.values()) {
+            if (ses.getTheirEntityType() == Core.TYPE_ADMIN) {
+               prop = new ClusterProperty(prop.key, prop.secret, prop.secret ? "" : prop.val);
+            }
             ses.sendMessage(new ClusterPropertyAddedMessage(prop), MessageHeader.TO_ENTITY, toEntityId);
          }
       }
+      // tell them they are up to date
+      ses.sendMessage(new ClusterSyncedMessage(), MessageHeader.TO_ENTITY, toEntityId);
    }
 
    public boolean addMember(int entityId, String host, int servicePort, int clusterPort, Session ses) {
@@ -696,7 +688,7 @@ public class RaftStorage extends Storage implements RaftRPC<TetrapodStateMachine
 
       if (raft.getRole() == Role.Leader) {
          // HACK: generate some command activity for testing
-         raft.executeCommand(new PutItemCommand<TetrapodStateMachine>("foo", ("bar-" + raft.getLog().getCommitIndex()).getBytes()), null);
+         // raft.executeCommand(new PutItemCommand<TetrapodStateMachine>("foo", ("bar-" + raft.getLog().getCommitIndex()).getBytes()), null);
       }
    }
 

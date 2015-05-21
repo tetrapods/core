@@ -25,6 +25,7 @@ import java.nio.charset.Charset;
 import java.security.*;
 import java.security.spec.InvalidKeySpecException;
 import java.util.*;
+import java.util.Properties;
 import java.util.concurrent.*;
 
 import org.slf4j.*;
@@ -101,25 +102,29 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
     * Bootstrap a new cluster by claiming the first id and self-registering
     */
    public void registerSelf(int myEntityId, long reclaimToken) {
-      registry.setParentId(myEntityId);
-
-      this.parentId = this.entityId = myEntityId;
-      this.token = EntityToken.encode(entityId, reclaimToken);
-
-      final EntityInfo e = new EntityInfo(entityId, 0, reclaimToken, Util.getHostName(), 0, Core.TYPE_TETRAPOD, getShortName(),
-            buildNumber, 0, getContractId());
-      registry.register(e);
-      logger.info(String.format("SELF-REGISTERED: 0x%08X %s", entityId, e));
-
-      clusterTopic = registry.publish(entityId);
-      registryTopic = registry.publish(entityId);
-      servicesTopic = registry.publish(entityId);
-
       try {
+         registry.setParentId(myEntityId);
+
+         this.parentId = this.entityId = myEntityId;
+         this.token = EntityToken.encode(entityId, reclaimToken);
+
+         final EntityInfo e = new EntityInfo(entityId, 0, reclaimToken, Util.getHostName(), 0, Core.TYPE_TETRAPOD, getShortName(),
+               buildNumber, 0, getContractId());
+         registry.register(e);
+         logger.info(String.format("SELF-REGISTERED: 0x%08X %s", entityId, e));
+
+         clusterTopic = registry.publish(entityId);
+         registryTopic = registry.publish(entityId);
+         servicesTopic = registry.publish(entityId);
+
          //   cluster.startListening();
          // Establish a special loopback connection to ourselves
          // connects to self on localhost on our clusterport
          clusterClient.connect("localhost", getClusterPort(), dispatcher).sync();
+
+         if (myEntityId == io.tetrapod.core.registry.Registry.BOOTSTRAP_ID) {
+            checkDependencies();
+         }
       } catch (Exception ex) {
          fail(ex);
       }
@@ -252,16 +257,33 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       }
    }
 
+   private void loadClusterPropertiesIntoRaft() {
+      if (!Util.getProperty("props.init", false)) {
+         Properties props = new Properties();
+         Launcher.loadClusterProperties(props);
+         for (Object key : props.keySet()) {
+            raftStorage.setClusterProperty(new ClusterProperty(key.toString(), false, props.getProperty(key.toString())));
+         }
+
+         props = new Properties();
+         Launcher.loadSecretProperties(props);
+         for (Object key : props.keySet()) {
+            raftStorage.setClusterProperty(new ClusterProperty(key.toString(), true, props.getProperty(key.toString())));
+         }
+
+         raftStorage.setClusterProperty(new ClusterProperty("props.init", false, "true"));
+      }
+   }
+
    /**
     * As a Tetrapod service, we can't start serving as one until we've registered & fully sync'ed with the cluster, or self-registered if we
     * are the first one. We call this once this criteria has been reached
     */
    @Override
    public void onReadyToServe() {
+      logger.info(" ***** READY TO SERVE ***** ");
       if (isStartingUp()) {
-         // TODO: wait for confirmed cluster registry sync before calling onReadyToServe
-         logger.info(" ***** READY TO SERVE ***** ");
-
+         loadClusterPropertiesIntoRaft();
          try {
             AuthToken.setSecret(getSharedSecret());
             adminAccounts = new AdminAccounts(raftStorage);

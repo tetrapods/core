@@ -49,9 +49,9 @@
 	color: #a88;
 }
 
-.selected { 
-   background: #FFFFE0;
-} 
+.selected {
+	background: #FFFFE0;
+}
 
 .starting {
 	background: #eee;
@@ -246,8 +246,8 @@
 .host-name {
 	vertical-align: middle;
 	display: table-cell;
-   padding-left: 20px;
-   padding-right: 20px;
+	padding-left: 20px;
+	padding-right: 20px;
 }
 
 .host-info {
@@ -288,21 +288,41 @@
 	width: 100%
 }
 
-
-#raft-table {	 
-   font-size: 90%;
-   padding: 5px;
-   background: white;
+#raft-table {
+	font-size: 90%;
+	padding: 5px;
+	background: white;
 }
 
 #raft-table th {
-   background: #666;
-   color: #fff;
-   text-align: center;
+	background: #666;
+	color: #fff;
+	text-align: center;
 }
 
-#raft-table td { 
-   padding: 2px 3px;
-   vertical-align: middle;
-   white-space: nowrap;
+#raft-table td {
+	padding: 2px 3px;
+	vertical-align: middle;
+	white-space: nowrap;
+}
+
+#props-table {
+	margin: 5px;
+	background: white;
+}
+
+#props-table th {
+	background: #666;
+	color: #fff;
+	text-align: center;
+}
+
+#props-table td {
+	padding: 0px 1px;
+	vertical-align: middle;
+	white-space: nowrap;
+}
+
+.property {
+	font-family: monospace;
 }

@@ -82,6 +82,7 @@
                   <ul id="cluster-tabs" class="nav nav-tabs">
                      <li class="active"><a href="#hosts-tab" data-toggle="tab">Services</a></li>
                      <li><a href="#raft-tab" data-toggle="tab">Raft</a></li>
+                     <li><a href="#props-tab" data-toggle="tab">Properties</a></li>
                   </ul>
 
 
@@ -108,7 +109,7 @@
                                  <td>
                                     <div class="dropdown" style="display: inline-block;">
                                        <a class="dropdown-toggle" data-toggle="dropdown" href="#">
-                                          <i class="fa fa-gear fa-fw"></i> <i class="fa fa-caret-down"></i>
+                                          <i class="fa fa-gear fa-fw"></i><i class="fa fa-caret-down"></i>
                                        </a>
                                        <ul class="dropdown-menu dropdown-service">
                                           <li><a href="#" data-bind="click: leaveCluster">Leave Cluster</a></li>
@@ -140,9 +141,46 @@
                               </tr>
                            </tbody>
                         </table>
+                     </div>
 
-                        <button data-bind="click: addPref">Add Pref</button>
+                     <div class="tab-pane" id="props-tab">
+                        <button data-bind="click: addPref">
+                           <i class="fa fa-fw fa-plus"></i> Add Property
+                        </button>
 
+                        <table id="props-table" class="table table-bordered table-condensed">
+                           <thead>
+                              <tr>
+                                 <th><i class="fa fa-gear fa-fw"></i></th>
+                                 <th>Key</th>
+                                 <th>Value</th>
+                              </tr>
+                           </thead>
+                           <tbody data-bind="foreach: props" class="props">
+                              <tr>
+                                 <td class="centered"> 
+                                    <div class="dropdown btn btn-sm" style="display: inline-block;">
+                                       <a class="dropdown-toggle" data-toggle="dropdown" href="#">
+                                          <i class="fa fa-gear fa-fw"></i><i class="fa fa-caret-down"></i>
+                                       </a>
+                                       <ul class="dropdown-menu">
+                                          <li><a href="#" data-bind="click: editValue">Edit Value...</a></li>
+                                          <li><a href="#" data-bind="click: makeSecret">Make Secret...</a></li>
+                                          <li><a href="#" data-bind="click: deleteProp">Delete Property...</a></li>
+                                       </ul>
+                                    </div>
+                                 </td>
+                                 <td>
+                                    <span data-bind="text: key" class="property"></span>
+                                 </td>
+                                 <td>
+                                    <i data-bind="visible: secret" class="fa fa-fw fa-lock"></i>
+                                    <span data-bind="text: val" class="property"></span>
+                                    &nbsp;
+                                 </td>
+                              </tr>
+                           </tbody>
+                        </table>
 
                      </div>
 

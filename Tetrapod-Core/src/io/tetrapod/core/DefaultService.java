@@ -2,8 +2,6 @@ package io.tetrapod.core;
 
 import static io.tetrapod.protocol.core.Core.UNADDRESSED;
 import static io.tetrapod.protocol.core.CoreContract.*;
-import io.netty.channel.EventLoopGroup;
-import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.rpc.Error;
@@ -21,16 +19,14 @@ import javax.net.ssl.SSLContext;
 
 import org.slf4j.*;
 
-import com.codahale.metrics.Timer.Context;
-
 import ch.qos.logback.classic.LoggerContext;
+
+import com.codahale.metrics.Timer.Context;
 
 public class DefaultService implements Service, Fail.FailHandler, CoreContract.API, SessionFactory, EntityMessage.Handler,
       TetrapodContract.Cluster.API {
 
    private static final Logger             logger          = LoggerFactory.getLogger(DefaultService.class);
-
-   protected final EventLoopGroup          bossGroup       = new NioEventLoopGroup();
 
    protected final Set<Integer>            dependencies    = new HashSet<>();
 
@@ -163,7 +159,7 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
     * Called after registration is complete and this service has a valid entityId and is free to make requests into the cluster. Default
     * implementation is to do nothing.
     */
-   public void onRegistered() {}
+   //public void onRegistered() {}
 
    /**
     * Called after we've registered and dependencies are all available
@@ -174,11 +170,9 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
       registerServiceInformation();
       stats.publishTopic();
       sendDirectRequest(new ServicesSubscribeRequest());
-      onRegistered();
-      checkDependencies();
    }
 
-   private void checkDependencies() {
+   protected void checkDependencies() {
       if (!isShuttingDown()) {
          if (getEntityType() == Core.TYPE_TETRAPOD || services.checkDependencies(dependencies)) {
             try {
@@ -294,13 +288,6 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
       updateStatus(getStatus() | Core.STATUS_STOPPING);
       try {
          onShutdown(restarting);
-      } catch (Exception e) {
-         logger.error(e.getMessage(), e);
-      }
-
-      try {
-         // we have one boss group for all our servers
-         bossGroup.shutdownGracefully().sync();
       } catch (Exception e) {
          logger.error(e.getMessage(), e);
       }
@@ -726,11 +713,18 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
    @Override
    public void messageClusterPropertyAdded(ClusterPropertyAddedMessage m, MessageContext ctx) {
       logger.info("******** {}", m.dump());
+      System.setProperty(m.property.key, m.property.val);
    }
 
    @Override
    public void messageClusterPropertyRemoved(ClusterPropertyRemovedMessage m, MessageContext ctx) {
       logger.info("******** {}", m.dump());
+      System.clearProperty(m.key);
+   }
+
+   @Override
+   public void messageClusterSynced(ClusterSyncedMessage m, MessageContext ctx) {
+      checkDependencies();
    }
 
    // private methods
@@ -952,5 +946,4 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
    public Response requestHostStats(HostStatsRequest r, RequestContext ctx) {
       return new HostStatsResponse(Metrics.getLoadAverage(), Metrics.getFreeDiskSpace());
    }
-
 }

@@ -19,7 +19,7 @@ public class SetClusterPropertyCommand implements Command<TetrapodStateMachine> 
 
    @Override
    public void applyTo(TetrapodStateMachine state) {
-       state.setProperty(prop);
+      state.setProperty(prop);
    }
 
    @Override
@@ -29,6 +29,7 @@ public class SetClusterPropertyCommand implements Command<TetrapodStateMachine> 
 
    @Override
    public void read(DataInputStream in) throws IOException {
+      prop = new ClusterProperty();
       prop.read(IOStreamDataSource.forReading(in));
    }
 

@@ -285,13 +285,15 @@ internal response RaftStats
 internal struct ClusterProperty
    1: string key
    2: boolean secret
-   3: string val
+   3: string val @sensitive
         
 internal message  Cluster.ClusterPropertyAdded        
    1: ClusterProperty property
 
 internal message Cluster.ClusterPropertyRemoved        
    1: string key
+   
+internal message Cluster.ClusterSynced      
    
 internal request ClusterSubscribe
    1: string adminToken @sensitive

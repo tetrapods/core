@@ -1,4 +1,4 @@
-define(["knockout", "jquery", "app", "host", "service", "raftnode"], function(ko, $, app, Host, Service, RaftNode) {
+define(["knockout", "jquery", "app", "alert", "host", "service", "raftnode", "property"], function(ko, $, app, Alert, Host, Service, RaftNode, Property) {
    var Core = app.server.consts["Core.Core"];
 
    return new ClusterModel();
@@ -9,6 +9,7 @@ define(["knockout", "jquery", "app", "host", "service", "raftnode"], function(ko
       self.hosts = ko.observableArray([]);
       self.services = ko.observableArray([]);
       self.rafts = ko.observableArray([]);
+      self.props = ko.observableArray([]);
 
       self.leaderEntityId = ko.pureComputed(leaderEntityId);
       self.tolerance = ko.pureComputed(tolerance);
@@ -34,6 +35,15 @@ define(["knockout", "jquery", "app", "host", "service", "raftnode"], function(ko
          for (var i = 0; i < self.services().length; i++) {
             if (self.services()[i].entityId == entityId) {
                return self.services()[i];
+            }
+         }
+         return null;
+      }
+
+      self.findProperty = function(key) {
+         for (var i = 0; i < self.props().length; i++) {
+            if (self.props()[i].key == key) {
+               return self.props()[i];
             }
          }
          return null;
@@ -77,6 +87,20 @@ define(["knockout", "jquery", "app", "host", "service", "raftnode"], function(ko
             s.statsUpdate(msg);
          }
       });
+
+      app.server.addMessageHandler("ClusterPropertyAdded", function(msg) {
+         var p = self.findProperty(msg.property.jey);
+         if (p) {
+            self.props.remove(p);
+         }
+         p = new Property(msg.property);
+         self.props.push(p);
+         self.props.sort(compareProperties);
+      });
+
+      function compareProperties(a, b) {
+         return a.key.localeCompare(b.key);
+      }
 
       function compareServices(a, b) {
          return (a.entityId - b.entityId);
@@ -170,15 +194,19 @@ define(["knockout", "jquery", "app", "host", "service", "raftnode"], function(ko
          return Math.floor(nodes / 2);
       }
 
-      function addPref() { 
-         app.server.sendDirect("SetClusterProperty", {
-            adminToken: app.authtoken,
-            property: {
-               key: 'foo',
-               val: 'bar',
-               secret: false
+      function addPref() {
+         Alert.prompt("Enter a new key name", function(key) {
+            if (key && key.trim().length > 0) {
+               app.server.sendDirect("SetClusterProperty", {
+                  adminToken: app.authtoken,
+                  property: {
+                     key: key,
+                     val: '',
+                     secret: false
+                  }
+               }, app.server.logResponse);
             }
-         }, app.server.logResponse);
+         });
       }
 
    }
