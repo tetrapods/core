@@ -97,7 +97,7 @@ public class Util {
       return res;
    }
 
-   public static long[] toLongArray(List<Long> list) {
+   public static long[] toLongArray(Collection<Long> list) {
       long[] res = new long[list.size()];
       int i = 0;
       for (Iterator<Long> iterator = list.iterator(); iterator.hasNext();) {
@@ -106,7 +106,7 @@ public class Util {
       return res;
    }
 
-   public static boolean[] toBooleanArray(List<Boolean> list) {
+   public static boolean[] toBooleanArray(Collection<Boolean> list) {
       boolean[] res = new boolean[list.size()];
       int i = 0;
       for (Iterator<Boolean> iterator = list.iterator(); iterator.hasNext();) {
