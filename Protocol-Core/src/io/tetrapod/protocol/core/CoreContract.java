@@ -92,6 +92,7 @@ public class CoreContract extends Contract {
          new Subscriber(),
          new WebRoute(),
          new TypeDescriptor(),
+         new ContractDescription(),
          new StructDescription(),
          new ServiceLogEntry(),
       };
@@ -103,6 +104,10 @@ public class CoreContract extends Contract {
    
    public int getContractId() {
       return CoreContract.CONTRACT_ID;
+   }
+   
+   public int getContractVersion() {
+      return CoreContract.VERSION;
    }
    
    public WebRoute[] getWebRoutes() {
@@ -128,6 +133,10 @@ public class CoreContract extends Contract {
       
       public int getContractId() {
          return CoreContract.CONTRACT_ID;
+      } 
+       
+      public int getContractVersion() {
+         return CoreContract.VERSION;
       } 
        
    }

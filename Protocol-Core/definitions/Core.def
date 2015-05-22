@@ -231,6 +231,11 @@ internal struct TypeDescriptor
    const byte T_STRING_LIST   = 13
    const byte T_STRUCT_LIST   = 14
    
+internal struct ContractDescription
+   1: int contractId
+   2: int version
+   3: StructDescription<list> structs
+   
 internal struct StructDescription
    1: TypeDescriptor[] types
    2: string[] tagWebNames
