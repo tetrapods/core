@@ -195,6 +195,10 @@ public class Launcher {
       System.exit(0);
    }
 
+   public static void loadSecretProperties() {
+      loadSecretProperties(System.getProperties());
+   }
+   
    public static void loadSecretProperties(Properties properties) {
       String file = properties.getProperty("secrets");
       if (file != null && !file.isEmpty())

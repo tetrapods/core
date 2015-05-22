@@ -43,4 +43,9 @@ public class TetrapodStateMachine extends StorageStateMachine<TetrapodStateMachi
       System.setProperty(prop.key, prop.val);
    }
 
+   public void delProperty(String key) {
+      props.remove(key);
+      System.clearProperty(key);
+   }
+
 }

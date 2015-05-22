@@ -38,4 +38,7 @@ public class SetClusterPropertyCommand implements Command<TetrapodStateMachine> 
       return COMMAND_ID;
    }
 
+   public ClusterProperty getProperty() {
+      return prop;
+   }
 }

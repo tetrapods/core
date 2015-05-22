@@ -15,7 +15,7 @@ define(["knockout", "jquery", "app", "alert", "host", "service", "raftnode", "pr
       self.tolerance = ko.pureComputed(tolerance);
       self.ensurePeer = ensurePeer;
       self.isNodeInCluster = isNodeInCluster;
-      self.addPref = addPref;
+      self.addClusterProperty = addClusterProperty;
 
       var raftTab = $('#raft-tab');
 
@@ -89,13 +89,20 @@ define(["knockout", "jquery", "app", "alert", "host", "service", "raftnode", "pr
       });
 
       app.server.addMessageHandler("ClusterPropertyAdded", function(msg) {
-         var p = self.findProperty(msg.property.jey);
+         var p = self.findProperty(msg.property.key);
          if (p) {
             self.props.remove(p);
          }
          p = new Property(msg.property);
          self.props.push(p);
          self.props.sort(compareProperties);
+      });
+
+      app.server.addMessageHandler("ClusterPropertyRemoved", function(msg) {
+         var p = self.findProperty(msg.key);
+         if (p) {
+            self.props.remove(p);
+         }
       });
 
       function compareProperties(a, b) {
@@ -194,7 +201,7 @@ define(["knockout", "jquery", "app", "alert", "host", "service", "raftnode", "pr
          return Math.floor(nodes / 2);
       }
 
-      function addPref() {
+      function addClusterProperty(secret) {
          Alert.prompt("Enter a new key name", function(key) {
             if (key && key.trim().length > 0) {
                app.server.sendDirect("SetClusterProperty", {
@@ -202,7 +209,7 @@ define(["knockout", "jquery", "app", "alert", "host", "service", "raftnode", "pr
                   property: {
                      key: key,
                      val: '',
-                     secret: false
+                     secret: secret
                   }
                }, app.server.logResponse);
             }

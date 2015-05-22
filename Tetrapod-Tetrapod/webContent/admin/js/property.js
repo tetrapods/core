@@ -14,7 +14,6 @@ define(["knockout", "jquery", "bootbox", "app", "alert"], function(ko, $, bootbo
       self.val = ko.observable(prop.val);
 
       self.editValue = editValue;
-      self.makeSecret = makeSecret;
       self.deleteProp = deleteProp;
 
       function editValue() {
@@ -32,18 +31,13 @@ define(["knockout", "jquery", "bootbox", "app", "alert"], function(ko, $, bootbo
          });
       }
 
-      function makeSecret() {
-         app.server.sendDirect("SetClusterProperty", {
-            adminToken: app.authtoken,
-            property: {
-               key: self.key,
-               val: self.val,
-               secret: true
-            }
-         }, app.server.logResponse);
-      }
-
       function deleteProp() {
+         Alert.confirm("Are you sure you want to delete '" + self.key + "'?", function() {
+            app.server.sendDirect("DelClusterProperty", {
+               adminToken: app.authtoken,
+               key: self.key
+            }, app.server.logResponse);
+         });
       }
    }
 });

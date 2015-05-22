@@ -103,6 +103,12 @@ public class RaftStorage extends Storage implements RaftRPC<TetrapodStateMachine
          case StateMachine.COMMAND_ID_DEL_PEER:
             delPeer((DelPeerCommand<TetrapodStateMachine>) command, entry);
             break;
+         case SetClusterPropertyCommand.COMMAND_ID:
+            onSetClusterPropertyCommand((SetClusterPropertyCommand) command);
+            break;
+         case DelClusterPropertyCommand.COMMAND_ID:
+            onDelClusterPropertyCommand((DelClusterPropertyCommand) command);
+            break;
       }
    }
 
@@ -694,7 +700,6 @@ public class RaftStorage extends Storage implements RaftRPC<TetrapodStateMachine
 
    public Response requestRaftStats(RaftStatsRequest r, RequestContext ctx) {
       synchronized (raft) {
-
          int i = 0;
          int[] peers = new int[raft.getClusterSize() - 1];
          for (Peer p : raft.getPeers()) {
@@ -709,11 +714,19 @@ public class RaftStorage extends Storage implements RaftRPC<TetrapodStateMachine
    ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
    public void setClusterProperty(ClusterProperty property) {
-      raft.executeCommand(new SetClusterPropertyCommand(property), null);
+      executeCommand(new SetClusterPropertyCommand(property), null);
    }
 
    public void delClusterProperty(String key) {
-      //raft.executeCommand(new DelClusterPropertyCommand(key), null);
+      executeCommand(new DelClusterPropertyCommand(key), null);
+   }
+
+   private void onSetClusterPropertyCommand(SetClusterPropertyCommand command) {
+      service.broadcastClusterMessage(new ClusterPropertyAddedMessage(command.getProperty()));
+   }
+
+   private void onDelClusterPropertyCommand(DelClusterPropertyCommand command) {
+      service.broadcastClusterMessage(new ClusterPropertyRemovedMessage(command.getProperty()));
    }
 
 }

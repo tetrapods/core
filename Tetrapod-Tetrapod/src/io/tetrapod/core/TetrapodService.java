@@ -583,6 +583,10 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       broadcast(msg, servicesTopic);
    }
 
+   public void broadcastClusterMessage(Message msg) {
+      broadcast(msg, clusterTopic);
+   }
+
    public void broadcast(Message msg, Topic topic) {
       logger.trace("BROADCASTING {} {}", topic, msg.dump());
       if (topic != null) {
@@ -1216,8 +1220,6 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          return new Error(ERROR_INVALID_RIGHTS);
       }
       raftStorage.delClusterProperty(r.key);
-      // FIXME: Add command listener for this:
-      //broadcast(new ClusterPropertyRemovedMessage(r.key), clusterTopic);
       return Response.SUCCESS;
    }
 
@@ -1227,8 +1229,6 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          return new Error(ERROR_INVALID_RIGHTS);
       }
       raftStorage.setClusterProperty(r.property);
-      // FIXME: Add command listener for this:
-      //broadcast(new ClusterPropertyAddedMessage(r.property), clusterTopic);
       return Response.SUCCESS;
    }
 

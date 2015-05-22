@@ -144,8 +144,11 @@
                      </div>
 
                      <div class="tab-pane" id="props-tab">
-                        <button data-bind="click: addPref">
+                        <button data-bind="click: function() { addClusterProperty(false); }">
                            <i class="fa fa-fw fa-plus"></i> Add Property
+                        </button>
+                        <button data-bind="click: function() { addClusterProperty(true); }">
+                           <i class="fa fa-fw fa-lock"></i> Add Secret Property
                         </button>
 
                         <table id="props-table" class="table table-bordered table-condensed">
@@ -165,7 +168,6 @@
                                        </a>
                                        <ul class="dropdown-menu">
                                           <li><a href="#" data-bind="click: editValue">Edit Value...</a></li>
-                                          <li><a href="#" data-bind="click: makeSecret">Make Secret...</a></li>
                                           <li><a href="#" data-bind="click: deleteProp">Delete Property...</a></li>
                                        </ul>
                                     </div>

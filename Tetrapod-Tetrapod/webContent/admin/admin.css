@@ -318,7 +318,7 @@
 }
 
 #props-table td {
-	padding: 0px 1px;
+	padding: 1px 4px;
 	vertical-align: middle;
 	white-space: nowrap;
 }
