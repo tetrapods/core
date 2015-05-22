@@ -59,6 +59,10 @@ public class RaftContract extends Contract {
       return RaftContract.CONTRACT_ID;
    }
    
+   public int getContractVersion() {
+      return RaftContract.VERSION;
+   }
+   
    public WebRoute[] getWebRoutes() {
       return new WebRoute[] {
          

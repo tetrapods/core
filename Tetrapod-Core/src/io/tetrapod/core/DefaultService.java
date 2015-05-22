@@ -732,6 +732,8 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
    protected void registerServiceInformation() {
       if (contract != null) {
          AddServiceInformationRequest asi = new AddServiceInformationRequest();
+         asi.contractId = contract.getContractId();
+         asi.version = contract.getContractVersion();
          asi.routes = contract.getWebRoutes();
          asi.structs = new ArrayList<>();
          for (Structure s : contract.getRequests()) {

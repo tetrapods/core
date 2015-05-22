@@ -80,8 +80,10 @@ internal request ServiceStatusUpdate
 
 # perhaps this should be merged into a new RegisterService   
 internal request AddServiceInformation
-   1: WebRoute[] routes
-   2: StructDescription<list> structs // structs that could possibly be used in end user comms
+   1: int contractId
+   2: int version
+   3: WebRoute[] routes
+   4: StructDescription<list> structs // structs that could possibly be used in end user comms
    
 internal request LogRegistryStats 
 

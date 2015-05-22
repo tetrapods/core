@@ -10,7 +10,6 @@ import io.tetrapod.core.Session.RelayHandler;
 import io.tetrapod.core.registry.*;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.rpc.Error;
-import io.tetrapod.core.serialize.StructureAdapter;
 import io.tetrapod.core.serialize.datasources.ByteBufDataSource;
 import io.tetrapod.core.storage.RaftStorage;
 import io.tetrapod.core.utils.*;
@@ -890,8 +889,12 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          webRoutes.setRoute(r.path, r.contractId, r.structId);
          logger.debug("Setting Web route [{}] for {}", r.path, r.contractId);
       }
-      for (StructDescription sd : req.structs)
-         StructureFactory.add(new StructureAdapter(sd));
+
+      //      for (StructDescription sd : req.structs)
+      //StructureFactory.add(new StructureAdapter(sd));
+
+      raftStorage.registerContract(req.contractId, req.version, req.structs);
+
       return Response.SUCCESS;
    }
 

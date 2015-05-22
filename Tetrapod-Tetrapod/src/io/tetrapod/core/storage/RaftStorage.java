@@ -721,6 +721,13 @@ public class RaftStorage extends Storage implements RaftRPC<TetrapodStateMachine
       executeCommand(new DelClusterPropertyCommand(key), null);
    }
 
+   public void registerContract(int contractId, int version, List<StructDescription> structs) {
+      // FIXME: version isn't updated for minor changes, so we should also include a hash or timestampt for minor updates 
+      if (raft.getStateMachine().hasContract(contractId, version)) {
+         executeCommand(new RegisterContractCommand(new ContractDescription(contractId, version, structs)), null);
+      }
+   }
+
    private void onSetClusterPropertyCommand(SetClusterPropertyCommand command) {
       service.broadcastClusterMessage(new ClusterPropertyAddedMessage(command.getProperty()));
    }

@@ -143,6 +143,10 @@ public class TetrapodContract extends Contract {
       return TetrapodContract.CONTRACT_ID;
    }
    
+   public int getContractVersion() {
+      return TetrapodContract.VERSION;
+   }
+   
    public WebRoute[] getWebRoutes() {
       return new WebRoute[] {
          
@@ -172,6 +176,10 @@ public class TetrapodContract extends Contract {
       
       public int getContractId() {
          return TetrapodContract.CONTRACT_ID;
+      } 
+       
+      public int getContractVersion() {
+         return TetrapodContract.VERSION;
       } 
        
    }
@@ -209,6 +217,10 @@ public class TetrapodContract extends Contract {
          return TetrapodContract.CONTRACT_ID;
       } 
        
+      public int getContractVersion() {
+         return TetrapodContract.VERSION;
+      } 
+       
    }
       
    public static class Services extends Contract {
@@ -232,6 +244,10 @@ public class TetrapodContract extends Contract {
       
       public int getContractId() {
          return TetrapodContract.CONTRACT_ID;
+      } 
+       
+      public int getContractVersion() {
+         return TetrapodContract.VERSION;
       } 
        
    }
