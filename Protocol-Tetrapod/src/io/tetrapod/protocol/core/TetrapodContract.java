@@ -20,7 +20,6 @@ public class TetrapodContract extends Contract {
    
    public static interface API extends APIHandler
       , AddServiceInformationRequest.Handler
-      , AddWebFileRequest.Handler
       , AdminAuthorizeRequest.Handler
       , AdminChangePasswordRequest.Handler
       , AdminChangeRightsRequest.Handler
@@ -43,7 +42,6 @@ public class TetrapodContract extends Contract {
       , RegisterRequest.Handler
       , RegistrySubscribeRequest.Handler
       , RegistryUnsubscribeRequest.Handler
-      , SendWebRootRequest.Handler
       , ServiceStatusUpdateRequest.Handler
       , ServicesSubscribeRequest.Handler
       , ServicesUnsubscribeRequest.Handler
@@ -75,8 +73,6 @@ public class TetrapodContract extends Contract {
          new AdminChangePasswordRequest(),
          new AdminChangeRightsRequest(),
          new KeepAliveRequest(),
-         new AddWebFileRequest(),
-         new SendWebRootRequest(),
          new SetAlternateIdRequest(),
          new GetSubscriberCountRequest(),
          new GetEntityInfoRequest(),

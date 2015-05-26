@@ -1,17 +1,14 @@
 package io.tetrapod.core.storage;
 
 import io.tetrapod.core.StructureFactory;
-import io.tetrapod.core.rpc.Async;
 import io.tetrapod.core.serialize.StructureAdapter;
 import io.tetrapod.core.serialize.datasources.TempBufferDataSource;
-import io.tetrapod.core.utils.Util;
 import io.tetrapod.core.web.*;
 import io.tetrapod.protocol.core.*;
 import io.tetrapod.raft.*;
 import io.tetrapod.raft.storage.*;
 
 import java.io.*;
-import java.nio.file.Files;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -139,10 +136,9 @@ public class TetrapodStateMachine extends StorageStateMachine<TetrapodStateMachi
       System.clearProperty(key);
    }
 
-   public void setWebRoot(WebRootDef def) {      
+   public void setWebRoot(WebRootDef def) {
       WebRoot wr = new WebRootLocalFilesystem();
       webRootDirs.put(def.name, wr);
    }
- 
 
 }

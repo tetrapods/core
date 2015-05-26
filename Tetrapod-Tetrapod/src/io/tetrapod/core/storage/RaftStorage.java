@@ -5,7 +5,7 @@ import io.tetrapod.core.*;
 import io.tetrapod.core.registry.*;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.utils.*;
-import io.tetrapod.core.web.WebRoutes;
+import io.tetrapod.core.web.*;
 import io.tetrapod.protocol.core.*;
 import io.tetrapod.protocol.raft.*;
 import io.tetrapod.raft.*;
@@ -739,6 +739,10 @@ public class RaftStorage extends Storage implements RaftRPC<TetrapodStateMachine
 
    public WebRoutes getWebRoutes() {
       return raft.getStateMachine().webRoutes;
+   }
+
+   public Map<String, WebRoot> getWebRootDirs() {
+      return raft.getStateMachine().webRootDirs;
    }
 
 }

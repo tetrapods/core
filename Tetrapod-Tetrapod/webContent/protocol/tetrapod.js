@@ -52,8 +52,6 @@ function TP_Tetrapod(server) {
    server.register("request", "Tetrapod", "AdminChangeRights", 1, 16102706);
    server.register("struct", "Tetrapod", "Admin", 1, 16753598);
    server.register("request", "Tetrapod", "KeepAlive", 1, 5512920);
-   server.register("request", "Tetrapod", "AddWebFile", 1, 5158759);
-   server.register("request", "Tetrapod", "SendWebRoot", 1, 16081718);
    server.register("struct", "Tetrapod", "WebRootDef", 1, 943242);
    server.register("request", "Tetrapod", "SetAlternateId", 1, 10499521);
    server.register("request", "Tetrapod", "GetSubscriberCount", 1, 9966915);

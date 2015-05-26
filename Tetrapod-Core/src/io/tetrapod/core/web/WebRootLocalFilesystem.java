@@ -1,23 +1,24 @@
 package io.tetrapod.core.web;
 
-import io.tetrapod.core.rpc.Async;
-import io.tetrapod.protocol.core.AddWebFileRequest;
-
 import java.io.*;
 import java.nio.file.*;
 import java.util.*;
+
+import org.slf4j.*;
 
 /**
  * A web root that pull files from the local filesystem
  */
 public class WebRootLocalFilesystem implements WebRoot {
 
-   private final List<Path> roots = new ArrayList<>();
+   public static final Logger logger = LoggerFactory.getLogger(WebRootLocalFilesystem.class);
+
+   private final List<Path>   roots  = new ArrayList<>();
 
    public WebRootLocalFilesystem() {}
 
    public WebRootLocalFilesystem(File dir) {
-      addAllFiles(dir);
+      addFile(dir.getAbsolutePath(), null);
    }
 
    @Override
@@ -32,6 +33,7 @@ public class WebRootLocalFilesystem implements WebRoot {
       assert f != null;
       assert f.toPath() != null;
       roots.add(f.toPath());
+      logger.info("Added web root {}", path);
    }
 
    @Override
@@ -42,52 +44,44 @@ public class WebRootLocalFilesystem implements WebRoot {
       if (path.startsWith("/")) {
          path = path.substring(1);
       }
-      for (Path rr : roots) {
-         if (rr != null) {
-            Path p = rr.resolve(path);
-            if (Files.exists(p)) {
-               // OPTIMIZE: Add an in memory cache
-               FileResult r = new FileResult();
-               r.doNotCache = path.endsWith(".html");
-               r.modificationTime = Files.getLastModifiedTime(p).toMillis();
-               r.path = "/" + path;
-               if (Files.isDirectory(p)) {
-                  r.isDirectory = true;
-               } else {
-                  r.contents = Files.readAllBytes(p);
+
+      int ix = path.lastIndexOf(".");
+      String ext = ix < 0 ? "" : path.substring(ix + 1).toLowerCase();
+      if (VALID_EXTENSIONS.contains(ext)) {
+         for (Path rr : roots) {
+            if (rr != null) {
+               Path p = rr.resolve(path);
+               if (Files.exists(p)) {
+                  FileResult r = new FileResult();
+                  r.doNotCache = path.endsWith(".html");
+                  r.modificationTime = Files.getLastModifiedTime(p).toMillis();
+                  r.path = "/" + path;
+                  if (Files.isDirectory(p)) {
+                     r.isDirectory = true;
+                  } else {
+                     r.contents = Files.readAllBytes(p);
+                  }
+                  return r;
                }
-               return r;
             }
          }
       }
       return null;
    }
 
-   @Override
-   public Collection<String> getAllPaths() {
-      // TODO implement
-      return null;
-   }
-
-   @Override
-   public int getMemoryFootprint() {
-      return 0;
-   }
-
-   private void addAllFiles(File dir) {
-      for (File f : dir.listFiles()) {
-         if (f.isDirectory()) {
-            addAllFiles(f);
-         } else {
-            int ix = f.getName().lastIndexOf(".");
-            String ext = ix < 0 ? "" : f.getName().substring(ix + 1).toLowerCase();
-            if (VALID_EXTENSIONS.contains(ext)) {
-               String path = "/" + dir.toPath().relativize(f.toPath()).toString();
-               addFile(path, null);
-            }
-         }
-      }
-
-   }
+   //   private void addAllFiles(File dir, File root) {
+   //      for (File f : dir.listFiles()) {
+   //         if (f.isDirectory()) {
+   //            addAllFiles(f, dir);
+   //         } else {
+   //            int ix = f.getName().lastIndexOf(".");
+   //            String ext = ix < 0 ? "" : f.getName().substring(ix + 1).toLowerCase();
+   //            if (VALID_EXTENSIONS.contains(ext)) {
+   //               String path = "/" + root.toPath().relativize(f.toPath()).toString();
+   //               //addFile(path, null);
+   //            }
+   //         }
+   //      } 
+   //   }
 
 }

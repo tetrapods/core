@@ -22,8 +22,4 @@ public interface WebRoot {
 
    public FileResult getFile(String path) throws IOException;
 
-   public Collection<String> getAllPaths();
-
-   public int getMemoryFootprint();
-
 }

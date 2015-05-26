@@ -14,7 +14,6 @@ import io.tetrapod.core.serialize.datasources.ByteBufDataSource;
 import io.tetrapod.core.storage.RaftStorage;
 import io.tetrapod.core.utils.*;
 import io.tetrapod.core.web.*;
-import io.tetrapod.core.web.WebRoot.FileResult;
 import io.tetrapod.protocol.core.*;
 import io.tetrapod.protocol.raft.*;
 import io.tetrapod.protocol.storage.*;
@@ -25,7 +24,7 @@ import java.security.*;
 import java.security.spec.InvalidKeySpecException;
 import java.util.*;
 import java.util.Properties;
-import java.util.concurrent.*;
+import java.util.concurrent.TimeUnit;
 
 import org.slf4j.*;
 
@@ -63,8 +62,6 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    private final List<Server>                      httpServers       = new ArrayList<Server>();
 
    private long                                    lastStatsLog;
-   @Deprecated
-   private final ConcurrentMap<String, WebRoot>    webRootDirs       = new ConcurrentHashMap<>();
 
    public TetrapodService() throws IOException {
       super(new TetrapodContract());
@@ -79,6 +76,10 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       for (WebRoute r : contract.getWebRoutes()) {
          getWebRoutes().setRoute(r.path, r.contractId, r.structId);
       }
+      raftStorage.getWebRootDirs().put("tetrapod", new WebRootLocalFilesystem(new File("webContent")));
+      // HACK FOR TESTING:
+      raftStorage.getWebRootDirs().put("chatbox",
+            new WebRootLocalFilesystem(new File("/Users/adavidson/workspace/tetrapod/website/webContent")));
 
       addSubscriptionHandler(new TetrapodContract.Registry(), registry);
    }
@@ -289,13 +290,14 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
             adminAccounts = new AdminAccounts(raftStorage);
 
             // create servers
-            Server httpServer = (new Server(getHTTPPort(), new WebSessionFactory(webRootDirs, "/sockets"), dispatcher));
+            Server httpServer = (new Server(getHTTPPort(), new WebSessionFactory(raftStorage.getWebRootDirs(), "/sockets"), dispatcher));
             servers.add((httpServer));
             httpServers.add(httpServer);
 
             // create secure port servers, if configured
             if (sslContext != null) {
-               httpServer = new Server(getHTTPSPort(), new WebSessionFactory(webRootDirs, "/sockets"), dispatcher, sslContext, false);
+               httpServer = new Server(getHTTPSPort(), new WebSessionFactory(raftStorage.getWebRootDirs(), "/sockets"), dispatcher,
+                     sslContext, false);
                servers.add((httpServer));
                httpServers.add(httpServer);
             }
@@ -1047,46 +1049,6 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       return new Error(ERROR_UNKNOWN);
    }
 
-   @Override
-   @Deprecated
-   public Response requestAddWebFile(AddWebFileRequest r, RequestContext ctx) {
-      WebRoot root = null;
-      root = webRootDirs.get(r.webRootName);
-      if (root == null) {
-         webRootDirs.putIfAbsent(r.webRootName, r.contents == null ? new WebRootLocalFilesystem() : new WebRootInMemory());
-         root = webRootDirs.get(r.webRootName);
-      }
-      if (r.clearBeforAdding)
-         root.clear();
-      root.addFile(r.path, r.contents);
-      if (logger.isDebugEnabled()) {
-         int size = 0;
-         for (WebRoot roo : webRootDirs.values()) {
-            size += roo.getMemoryFootprint();
-         }
-         logger.debug("Total web footprint is {} MBs, added path {}", ((double) size / (double) (1024 * 1024)), r.path);
-      }
-      return Response.SUCCESS;
-   }
-
-   @Override
-   @Deprecated
-   public Response requestSendWebRoot(SendWebRootRequest r, RequestContext ctx) {
-      WebRoot root = webRootDirs.get(r.webRootName);
-      boolean first = true;
-      for (String path : root.getAllPaths()) {
-         try {
-            FileResult res;
-            res = root.getFile(path);
-            sendRequest(new AddWebFileRequest(path, r.webRootName, res.contents, first), ctx.header.fromId);
-            first = false;
-         } catch (IOException e) {
-            logger.error("trouble sending root", e);
-         }
-      }
-      return Response.SUCCESS;
-   }
-
    //------------ building
 
    @Override
@@ -1156,19 +1118,6 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       }
 
       return Response.error(ERROR_UNKNOWN_ENTITY_ID);
-   }
-
-   @Override
-   public void onStarted() {
-      try {
-         recursiveAddWebFiles(getShortName(), new File("webContent"), true);
-         if (Util.isLocal()) {
-           // recursiveAddWebFiles(getShortName(), new File("../Protocol-Tetrapod/rsc"), false);
-           // recursiveAddWebFiles(getShortName(), new File("../Protocol-Core/rsc"), false);
-         }
-      } catch (IOException e) {
-         logger.error(e.getMessage(), e);
-      }
    }
 
    /////////////// RAFT ///////////////

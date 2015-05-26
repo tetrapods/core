@@ -11,7 +11,6 @@ import io.tetrapod.protocol.core.*;
 import java.io.*;
 import java.lang.management.ManagementFactory;
 import java.net.ConnectException;
-import java.nio.file.Files;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -253,37 +252,7 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
 
    public void onUnpaused() {}
 
-   public void onStarted() {
-      if (Launcher.getOpt("webOnly") != null) {
-         doWebOnlyService();
-      }
-   }
-
-   /**
-    * Runs a web only service. This should probably be a separate service class instead of bolted into default service
-    */
-   @Deprecated
-   private void doWebOnlyService() {
-      String name = Launcher.getOpt("webOnly");
-      try {
-         recursiveAddWebFiles(name, new File("webContent"), true);
-         if (Util.isLocal()) {
-            // adds all protocol files, which is also what happens on dev and prod--though there 
-            // the deployment scripts make sure the previous call contains all protocol files
-            for (File f : new File("../private/services").listFiles()) {
-               if (f.isDirectory() && f.getName().startsWith("Protocol")) {
-                  File dir = new File(f, "rsc");
-                  if (dir.exists()) {
-                     recursiveAddWebFiles(name, dir, false);
-                  }
-               }
-            }
-         }
-      } catch (IOException e) {
-         logger.error(e.getMessage(), e);
-      }
-      shutdown(false);
-   }
+   public void onStarted() {}
 
    public void shutdown(boolean restarting) {
       updateStatus(getStatus() | Core.STATUS_STOPPING);
@@ -815,41 +784,6 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
    public Response requestServiceStatsUnsubscribe(ServiceStatsUnsubscribeRequest r, RequestContext ctx) {
       stats.unsubscribe(ctx.header.fromId);
       return Response.SUCCESS;
-   }
-
-   private static final Set<String> VALID_EXTENSIONS = new HashSet<>(Arrays.asList(new String[] { "html", "htm", "js", "css", "jpg", "png",
-         "gif", "wav", "woff", "svg", "ttf", "swf"  }));
-
-   @Deprecated
-   protected void recursiveAddWebFiles(String webRootName, File dir, boolean first) throws IOException {
-      if (Util.isLocal()) {
-         Async a = sendDirectRequest(new AddWebFileRequest(dir.getCanonicalPath(), webRootName, null, first));
-         if (first) {
-            a.waitForResponse();
-         }
-         return;
-      }
-      ArrayList<File> files = new ArrayList<>(Arrays.asList(dir.listFiles()));
-      while (!files.isEmpty()) {
-         File f = files.remove(0);
-         if (f.isDirectory()) {
-            files.addAll(Arrays.asList(f.listFiles()));
-            continue;
-         }
-         int ix = f.getName().lastIndexOf(".");
-         String ext = ix < 0 ? "" : f.getName().substring(ix + 1).toLowerCase();
-         if (VALID_EXTENSIONS.contains(ext)) {
-            byte[] contents = Files.readAllBytes(f.toPath());
-            String path = "/" + dir.toPath().relativize(f.toPath()).toString();
-            Async a = sendDirectRequest(new AddWebFileRequest(path, webRootName, contents, first));
-            if (first) {
-               // have to wait for the first one to finish so the first flag is really 
-               // the first one that is processed
-               a.waitForResponse();
-            }
-            first = false;
-         }
-      }
    }
 
    @Override
