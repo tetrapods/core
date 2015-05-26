@@ -219,7 +219,7 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
       return service.clusterClient.getSession();
    }
 
-   public Response sendPendingRequest(Request req, int toEntityId, final PendingResponseHandler handler) {
+   public Response sendPendingRequest(final Request req, int toEntityId, final PendingResponseHandler handler) {
       if (toEntityId == Core.UNADDRESSED) {
          Entity e = service.services.getRandomAvailableService(req.getContractId());
          if (e != null) {
@@ -227,8 +227,7 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
          }
       }
 
-      final Session ses = getSession(req, toEntityId);
-
+      final Session ses = handler.session != null ? getSession(req, toEntityId) : service.clusterClient.getSession();
       if (ses != service.clusterClient.getSession()) {
          logger.debug("Dispatching Pending {} to {}", req, ses);
          final Async async = ses.sendRequest(req, toEntityId, (byte) 30);
@@ -248,13 +247,14 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
                   if (handler.session != null) {
                      handler.session.sendResponse(pendingRes, handler.originalRequestId);
                   } else {
-                     logger.error("I literally can't even");
+                     logger.error("I literally can't even ({})", req);
                   }
                }
             }
          });
          return Response.PENDING;
       }
+
       return ses.sendPendingRequest(req, toEntityId, (byte) 30, handler);
    }
 
