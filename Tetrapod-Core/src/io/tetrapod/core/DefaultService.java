@@ -262,6 +262,7 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
    /**
     * Runs a web only service. This should probably be a separate service class instead of bolted into default service
     */
+   @Deprecated
    private void doWebOnlyService() {
       String name = Launcher.getOpt("webOnly");
       try {
@@ -732,21 +733,22 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
    protected void registerServiceInformation() {
       if (contract != null) {
          AddServiceInformationRequest asi = new AddServiceInformationRequest();
-         asi.contractId = contract.getContractId();
-         asi.version = contract.getContractVersion();
-         asi.routes = contract.getWebRoutes();
-         asi.structs = new ArrayList<>();
+         asi.info = new ContractDescription();
+         asi.info.contractId = contract.getContractId();
+         asi.info.version = contract.getContractVersion();
+         asi.info.routes = contract.getWebRoutes();
+         asi.info.structs = new ArrayList<>();
          for (Structure s : contract.getRequests()) {
-            asi.structs.add(s.makeDescription());
+            asi.info.structs.add(s.makeDescription());
          }
          for (Structure s : contract.getResponses()) {
-            asi.structs.add(s.makeDescription());
+            asi.info.structs.add(s.makeDescription());
          }
          for (Structure s : contract.getMessages()) {
-            asi.structs.add(s.makeDescription());
+            asi.info.structs.add(s.makeDescription());
          }
          for (Structure s : contract.getStructs()) {
-            asi.structs.add(s.makeDescription());
+            asi.info.structs.add(s.makeDescription());
          }
          sendDirectRequest(asi).handle(ResponseHandler.LOGGER);
       }
@@ -818,6 +820,7 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
    private static final Set<String> VALID_EXTENSIONS = new HashSet<>(Arrays.asList(new String[] { "html", "htm", "js", "css", "jpg", "png",
          "gif", "wav", "woff", "svg", "ttf", "swf"  }));
 
+   @Deprecated
    protected void recursiveAddWebFiles(String webRootName, File dir, boolean first) throws IOException {
       if (Util.isLocal()) {
          Async a = sendDirectRequest(new AddWebFileRequest(dir.getCanonicalPath(), webRootName, null, first));
@@ -847,13 +850,6 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
             first = false;
          }
       }
-   }
-
-   protected File[] getDevProtocolWebRoots() {
-      if (getShortName() == null) {
-         return new File[] {};
-      }
-      return new File[] { new File("../Protocol-" + getShortName() + "/rsc") };
    }
 
    @Override

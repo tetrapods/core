@@ -5,6 +5,7 @@ import io.tetrapod.core.*;
 import io.tetrapod.core.registry.*;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.utils.*;
+import io.tetrapod.core.web.WebRoutes;
 import io.tetrapod.protocol.core.*;
 import io.tetrapod.protocol.raft.*;
 import io.tetrapod.raft.*;
@@ -721,10 +722,10 @@ public class RaftStorage extends Storage implements RaftRPC<TetrapodStateMachine
       executeCommand(new DelClusterPropertyCommand(key), null);
    }
 
-   public void registerContract(int contractId, int version, List<StructDescription> structs) {
+   public void registerContract(ContractDescription info) {
       // FIXME: version isn't updated for minor changes, so we should also include a hash or timestampt for minor updates 
-      if (raft.getStateMachine().hasContract(contractId, version)) {
-         executeCommand(new RegisterContractCommand(new ContractDescription(contractId, version, structs)), null);
+      if (raft.getStateMachine().hasContract(info.contractId, info.version)) {
+         executeCommand(new RegisterContractCommand(info), null);
       }
    }
 
@@ -734,6 +735,10 @@ public class RaftStorage extends Storage implements RaftRPC<TetrapodStateMachine
 
    private void onDelClusterPropertyCommand(DelClusterPropertyCommand command) {
       service.broadcastClusterMessage(new ClusterPropertyRemovedMessage(command.getProperty()));
+   }
+
+   public WebRoutes getWebRoutes() {
+      return raft.getStateMachine().webRoutes;
    }
 
 }

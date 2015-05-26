@@ -5,7 +5,7 @@ import io.tetrapod.raft.Command;
 import java.io.*;
 
 public class DelClusterPropertyCommand implements Command<TetrapodStateMachine> {
-   public static final int COMMAND_ID = 401;
+   public static final int COMMAND_ID = TetrapodStateMachine.DEL_CLUSTER_PROPERTY_COMMAND_ID;
 
    private String          key;
 

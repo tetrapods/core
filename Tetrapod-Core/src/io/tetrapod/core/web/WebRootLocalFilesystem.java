@@ -1,5 +1,8 @@
 package io.tetrapod.core.web;
 
+import io.tetrapod.core.rpc.Async;
+import io.tetrapod.protocol.core.AddWebFileRequest;
+
 import java.io.*;
 import java.nio.file.*;
 import java.util.*;
@@ -10,6 +13,12 @@ import java.util.*;
 public class WebRootLocalFilesystem implements WebRoot {
 
    private final List<Path> roots = new ArrayList<>();
+
+   public WebRootLocalFilesystem() {}
+
+   public WebRootLocalFilesystem(File dir) {
+      addAllFiles(dir);
+   }
 
    @Override
    public synchronized void clear() {
@@ -37,11 +46,12 @@ public class WebRootLocalFilesystem implements WebRoot {
          if (rr != null) {
             Path p = rr.resolve(path);
             if (Files.exists(p)) {
+               // OPTIMIZE: Add an in memory cache
                FileResult r = new FileResult();
                r.doNotCache = path.endsWith(".html");
                r.modificationTime = Files.getLastModifiedTime(p).toMillis();
                r.path = "/" + path;
-               if(Files.isDirectory(p)){
+               if (Files.isDirectory(p)) {
                   r.isDirectory = true;
                } else {
                   r.contents = Files.readAllBytes(p);
@@ -62,6 +72,22 @@ public class WebRootLocalFilesystem implements WebRoot {
    @Override
    public int getMemoryFootprint() {
       return 0;
+   }
+
+   private void addAllFiles(File dir) {
+      for (File f : dir.listFiles()) {
+         if (f.isDirectory()) {
+            addAllFiles(f);
+         } else {
+            int ix = f.getName().lastIndexOf(".");
+            String ext = ix < 0 ? "" : f.getName().substring(ix + 1).toLowerCase();
+            if (VALID_EXTENSIONS.contains(ext)) {
+               String path = "/" + dir.toPath().relativize(f.toPath()).toString();
+               addFile(path, null);
+            }
+         }
+      }
+
    }
 
 }

@@ -7,7 +7,7 @@ import io.tetrapod.raft.Command;
 import java.io.*;
 
 public class RegisterContractCommand implements Command<TetrapodStateMachine> {
-   public static final int     COMMAND_ID = 402;
+   public static final int     COMMAND_ID = TetrapodStateMachine.REGISTER_CONTRACT_COMMAND_ID;
 
    private ContractDescription info;
 

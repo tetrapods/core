@@ -57,7 +57,7 @@ class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRequest> 
    }
 
    private final Map<String, WebRoot>  roots;
-   private final boolean noCaching;
+   private final boolean               noCaching;
 
    public WebStaticFileHandler(Map<String, WebRoot> roots) {
       this.roots = roots;
@@ -117,7 +117,7 @@ class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRequest> 
 
       if (result.isDirectory) {
          HttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, MOVED_PERMANENTLY);
-         response.headers().set(LOCATION, uri+"/");
+         response.headers().set(LOCATION, uri + "/");
          response.headers().set(CONNECTION, "close");
          ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
          return;
@@ -157,31 +157,31 @@ class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRequest> 
          response.headers().add(EXPIRES, new Date(System.currentTimeMillis() + ONE_YEAR));
       }
 
-      ChannelFuture f = ctx.writeAndFlush(response); 
+      ChannelFuture f = ctx.writeAndFlush(response);
       if (!isKeepAlive(request)) {
          f.addListener(ChannelFutureListener.CLOSE);
       }
    }
-   
+
    private boolean autoRedirectToHome(FullHttpRequest request) {
-//      String uri = request.getUri();
-//
-//      outer:
-//      if (uri.isEmpty() || uri.equals("/")) {
-//         String cookieString = request.headers().get(COOKIE);
-//
-//         if (!Util.isEmpty(cookieString)) {
-//            Set<Cookie> cookies = CookieDecoder.decode(cookieString);
-//
-//            for (Cookie c : cookies) {
-//               if ((c.getName().equals("auth") && !Util.isEmpty(c.getValue())) || (c.getName().equals("zdauth") && !Util.isEmpty(c.getValue()))) {
-//                  if (logger.isDebugEnabled()) logger.debug("Login Cookie Detected: {}:{}", c.getName(), c.getValue());
-//                  break outer;
-//               }
-//            }
-//         }
-//         return true;
-//      }
+      //      String uri = request.getUri();
+      //
+      //      outer:
+      //      if (uri.isEmpty() || uri.equals("/")) {
+      //         String cookieString = request.headers().get(COOKIE);
+      //
+      //         if (!Util.isEmpty(cookieString)) {
+      //            Set<Cookie> cookies = CookieDecoder.decode(cookieString);
+      //
+      //            for (Cookie c : cookies) {
+      //               if ((c.getName().equals("auth") && !Util.isEmpty(c.getValue())) || (c.getName().equals("zdauth") && !Util.isEmpty(c.getValue()))) {
+      //                  if (logger.isDebugEnabled()) logger.debug("Login Cookie Detected: {}:{}", c.getName(), c.getValue());
+      //                  break outer;
+      //               }
+      //            }
+      //         }
+      //         return true;
+      //      }
       return false;
    }
 
@@ -241,8 +241,7 @@ class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRequest> 
       }
       return uri;
    }
-   
-   
+
    private String userAgentRedirect(String userAgent, String uri) {
       logger.debug("{} - {}", uri, userAgent);
       if (userAgent == null) {
@@ -256,7 +255,7 @@ class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRequest> 
       String redirect = detectStockAndroid(userAgent);
       return redirect;
    }
-   
+
    private String detectStockAndroid(String userAgent) {
       // detecting stock android is frustratingly difficult.  browsers lie
       Matcher m = Pattern.compile(".*Android (\\d)[.](\\d).*").matcher(userAgent);
@@ -265,18 +264,18 @@ class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRequest> 
       }
       int major = Integer.parseInt(m.group(1));
       int minor = Integer.parseInt(m.group(2));
-      if (major > 4 || (major == 4 && minor >= 4)) { 
+      if (major > 4 || (major == 4 && minor >= 4)) {
          return null;
       }
-       
+
       if (!userAgent.contains("AppleWebKit")) {
          return null;
       }
-      
+
       if (userAgent.contains("Chrome")) {
          return null;
       }
-      
+
       // so that should do it, but a couple more for paranoia sake
       if (userAgent.contains("Firefox")) {
          return null;
@@ -284,9 +283,7 @@ class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRequest> 
       if (userAgent.contains("Opera")) {
          return null;
       }
-// TEMP HACK TO TEST ANDROID WITH LONG POLLING ON DEV
-      return null;//"/android.html";
+      return null;
    }
-
 
 }

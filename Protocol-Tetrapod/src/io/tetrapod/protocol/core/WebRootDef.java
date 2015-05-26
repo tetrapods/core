@@ -12,32 +12,40 @@ import java.util.*;
 import java.util.concurrent.*;
 
 @SuppressWarnings("unused")
-public class AddServiceInformationRequest extends Request {
-
-   public static final int STRUCT_ID = 14381454;
-   public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;
+public class WebRootDef extends Structure {
    
-   public AddServiceInformationRequest() {
+   public static final int STRUCT_ID = 943242;
+   public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;
+    
+   public WebRootDef() {
       defaults();
    }
 
-   public AddServiceInformationRequest(ContractDescription info) {
-      this.info = info;
+   public WebRootDef(String name, String path, String archive) {
+      this.name = name;
+      this.path = path;
+      this.archive = archive;
    }   
-
-   public ContractDescription info;
+   
+   public String name;
+   public String path;
+   public String archive;
 
    public final Structure.Security getSecurity() {
       return Security.INTERNAL;
    }
 
    public final void defaults() {
-      info = null;
+      name = null;
+      path = null;
+      archive = null;
    }
    
    @Override
    public final void write(DataSource data) throws IOException {
-      if (this.info != null) data.write(1, this.info);
+      data.write(1, this.name);
+      data.write(2, this.path);
+      data.write(3, this.archive);
       data.writeEndTag();
    }
    
@@ -47,7 +55,9 @@ public class AddServiceInformationRequest extends Request {
       while (true) {
          int tag = data.readTag();
          switch (tag) {
-            case 1: this.info = data.read_struct(tag, new ContractDescription()); break;
+            case 1: this.name = data.read_string(tag); break;
+            case 2: this.path = data.read_string(tag); break;
+            case 3: this.archive = data.read_string(tag); break;
             case Codec.END_TAG:
                return;
             default:
@@ -58,44 +68,36 @@ public class AddServiceInformationRequest extends Request {
    }
    
    public final int getContractId() {
-      return AddServiceInformationRequest.CONTRACT_ID;
+      return WebRootDef.CONTRACT_ID;
    }
 
    public final int getStructId() {
-      return AddServiceInformationRequest.STRUCT_ID;
+      return WebRootDef.STRUCT_ID;
    }
-   
-   @Override
-   public final Response dispatch(ServiceAPI is, RequestContext ctx) {
-      if (is instanceof Handler)
-         return ((Handler)is).requestAddServiceInformation(this, ctx);
-      return is.genericRequest(this, ctx);
-   }
-   
-   public static interface Handler extends ServiceAPI {
-      Response requestAddServiceInformation(AddServiceInformationRequest r, RequestContext ctx);
-   }
-   
+
    public final String[] tagWebNames() {
       // Note do not use this tags in long term serializations (to disk or databases) as 
       // implementors are free to rename them however they wish.  A null means the field
       // is not to participate in web serialization (remaining at default)
-      String[] result = new String[1+1];
-      result[1] = "info";
+      String[] result = new String[3+1];
+      result[1] = "name";
+      result[2] = "path";
+      result[3] = "archive";
       return result;
    }
-   
+
    public final Structure make() {
-      return new AddServiceInformationRequest();
+      return new WebRootDef();
    }
-   
+
    public final StructDescription makeDescription() {
       StructDescription desc = new StructDescription();
       desc.tagWebNames = tagWebNames();
       desc.types = new TypeDescriptor[desc.tagWebNames.length];
       desc.types[0] = new TypeDescriptor(TypeDescriptor.T_STRUCT, getContractId(), getStructId());
-      desc.types[1] = new TypeDescriptor(TypeDescriptor.T_STRUCT, ContractDescription.CONTRACT_ID, ContractDescription.STRUCT_ID);
+      desc.types[1] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
+      desc.types[2] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
+      desc.types[3] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
       return desc;
    }
-
 }

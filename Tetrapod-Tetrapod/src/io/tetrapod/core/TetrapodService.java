@@ -61,9 +61,9 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
    private final List<Server>                      servers           = new ArrayList<Server>();
    private final List<Server>                      httpServers       = new ArrayList<Server>();
-   private final WebRoutes                         webRoutes         = new WebRoutes();
 
    private long                                    lastStatsLog;
+   @Deprecated
    private final ConcurrentMap<String, WebRoot>    webRootDirs       = new ConcurrentHashMap<>();
 
    public TetrapodService() throws IOException {
@@ -77,7 +77,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
       // add tetrapod web routes
       for (WebRoute r : contract.getWebRoutes()) {
-         webRoutes.setRoute(r.path, r.contractId, r.structId);
+         getWebRoutes().setRoute(r.path, r.contractId, r.structId);
       }
 
       addSubscriptionHandler(new TetrapodContract.Registry(), registry);
@@ -258,6 +258,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
    private void loadClusterPropertiesIntoRaft() {
       if (!Util.getProperty("props.init", false)) {
+         logger.warn("###### LOADING CLUSTER PROPERTIES INTO RAFT STATE MACHINE ######");
          Properties props = new Properties();
          Launcher.loadClusterProperties(props);
          for (Object key : props.keySet()) {
@@ -564,7 +565,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
    @Override
    public WebRoutes getWebRoutes() {
-      return webRoutes;
+      return raftStorage.getWebRoutes();
    }
 
    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -885,15 +886,12 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
    @Override
    public Response requestAddServiceInformation(AddServiceInformationRequest req, RequestContext ctx) {
-      for (WebRoute r : req.routes) {
-         webRoutes.setRoute(r.path, r.contractId, r.structId);
-         logger.debug("Setting Web route [{}] for {}", r.path, r.contractId);
-      }
+      //      for (WebRoute r : req.routes) {
+      //         webRoutes.setRoute(r.path, r.contractId, r.structId);
+      //         logger.debug("Setting Web route [{}] for {}", r.path, r.contractId);
+      //      } 
 
-      //      for (StructDescription sd : req.structs)
-      //StructureFactory.add(new StructureAdapter(sd));
-
-      raftStorage.registerContract(req.contractId, req.version, req.structs);
+      raftStorage.registerContract(req.info);
 
       return Response.SUCCESS;
    }
@@ -1050,6 +1048,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    }
 
    @Override
+   @Deprecated
    public Response requestAddWebFile(AddWebFileRequest r, RequestContext ctx) {
       WebRoot root = null;
       root = webRootDirs.get(r.webRootName);
@@ -1071,6 +1070,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    }
 
    @Override
+   @Deprecated
    public Response requestSendWebRoot(SendWebRootRequest r, RequestContext ctx) {
       WebRoot root = webRootDirs.get(r.webRootName);
       boolean first = true;
@@ -1081,7 +1081,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
             sendRequest(new AddWebFileRequest(path, r.webRootName, res.contents, first), ctx.header.fromId);
             first = false;
          } catch (IOException e) {
-            logger.error("trouble sedning root", e);
+            logger.error("trouble sending root", e);
          }
       }
       return Response.SUCCESS;
@@ -1163,8 +1163,8 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       try {
          recursiveAddWebFiles(getShortName(), new File("webContent"), true);
          if (Util.isLocal()) {
-            recursiveAddWebFiles(getShortName(), new File("../Protocol-Tetrapod/rsc"), false);
-            recursiveAddWebFiles(getShortName(), new File("../Protocol-Core/rsc"), false);
+           // recursiveAddWebFiles(getShortName(), new File("../Protocol-Tetrapod/rsc"), false);
+           // recursiveAddWebFiles(getShortName(), new File("../Protocol-Core/rsc"), false);
          }
       } catch (IOException e) {
          logger.error(e.getMessage(), e);

@@ -129,6 +129,7 @@ public class TetrapodContract extends Contract {
       return new Structure[] {
          new Entity(),
          new Admin(),
+         new WebRootDef(),
          new BuildInfo(),
          new BuildCommand(),
          new ClusterProperty(),

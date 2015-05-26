@@ -6,9 +6,9 @@ import io.tetrapod.raft.Command;
 
 import java.io.*;
 
-public class SetClusterPropertyCommand implements Command<TetrapodStateMachine> {
-   public static final int COMMAND_ID = 400;
-
+public class SetClusterPropertyCommand implements Command<TetrapodStateMachine> { 
+   public static final int COMMAND_ID = TetrapodStateMachine.SET_CLUSTER_PROPERTY_COMMAND_ID;
+   
    private ClusterProperty prop;
 
    public SetClusterPropertyCommand() {}

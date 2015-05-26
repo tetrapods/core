@@ -21,15 +21,17 @@ public class ContractDescription extends Structure {
       defaults();
    }
 
-   public ContractDescription(int contractId, int version, List<StructDescription> structs) {
+   public ContractDescription(int contractId, int version, List<StructDescription> structs, WebRoute[] routes) {
       this.contractId = contractId;
       this.version = version;
       this.structs = structs;
+      this.routes = routes;
    }   
    
    public int contractId;
    public int version;
    public List<StructDescription> structs;
+   public WebRoute[] routes;
 
    public final Structure.Security getSecurity() {
       return Security.INTERNAL;
@@ -39,6 +41,7 @@ public class ContractDescription extends Structure {
       contractId = 0;
       version = 0;
       structs = null;
+      routes = null;
    }
    
    @Override
@@ -46,6 +49,7 @@ public class ContractDescription extends Structure {
       data.write(1, this.contractId);
       data.write(2, this.version);
       if (this.structs != null) data.write_struct(3, this.structs);
+      if (this.routes != null) data.write(4, this.routes);
       data.writeEndTag();
    }
    
@@ -58,6 +62,7 @@ public class ContractDescription extends Structure {
             case 1: this.contractId = data.read_int(tag); break;
             case 2: this.version = data.read_int(tag); break;
             case 3: this.structs = data.read_struct_list(tag, new StructDescription()); break;
+            case 4: this.routes = data.read_struct_array(tag, new WebRoute()); break;
             case Codec.END_TAG:
                return;
             default:
@@ -79,10 +84,11 @@ public class ContractDescription extends Structure {
       // Note do not use this tags in long term serializations (to disk or databases) as 
       // implementors are free to rename them however they wish.  A null means the field
       // is not to participate in web serialization (remaining at default)
-      String[] result = new String[3+1];
+      String[] result = new String[4+1];
       result[1] = "contractId";
       result[2] = "version";
       result[3] = "structs";
+      result[4] = "routes";
       return result;
    }
 
@@ -98,6 +104,7 @@ public class ContractDescription extends Structure {
       desc.types[1] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
       desc.types[2] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
       desc.types[3] = new TypeDescriptor(TypeDescriptor.T_STRUCT_LIST, StructDescription.CONTRACT_ID, StructDescription.STRUCT_ID);
+      desc.types[4] = new TypeDescriptor(TypeDescriptor.T_STRUCT_LIST, WebRoute.CONTRACT_ID, WebRoute.STRUCT_ID);
       return desc;
    }
 }

@@ -1,6 +1,7 @@
 java package io.tetrapod.protocol.core
 java outdir "../src"
-javascript out "../rsc/protocol/tetrapod.js"
+javascript out "../../Tetrapod-Tetrapod/webContent/protocol/tetrapod.js"
+#javascript out "../rsc/protocol/tetrapod.js"
 
 // The core tetrapod service
 service Tetrapod @version(1) @id(1)
@@ -80,10 +81,7 @@ internal request ServiceStatusUpdate
 
 # perhaps this should be merged into a new RegisterService   
 internal request AddServiceInformation
-   1: int contractId
-   2: int version
-   3: WebRoute[] routes
-   4: StructDescription<list> structs // structs that could possibly be used in end user comms
+   1: ContractDescription info
    
 internal request LogRegistryStats 
 
@@ -143,6 +141,12 @@ internal request AddWebFile
 
 private request SendWebRoot
    1: string webRootName
+
+# defines an archive to be served as a a web root    
+internal struct WebRootDef
+   1: string name
+   2: string path
+   3: string archive
     
 internal request SetAlternateId
    1: int entityId

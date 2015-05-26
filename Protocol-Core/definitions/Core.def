@@ -1,6 +1,7 @@
 java package io.tetrapod.protocol.core
 java outdir "../src"
-javascript out "../rsc/protocol/core.js"
+javascript out "../../Tetrapod-Tetrapod/webContent/protocol/core.js"
+#javascript out "../rsc/protocol/core.js"
 
 // The core tetrapod service
 service Core @version(1) @id(1)
@@ -235,6 +236,7 @@ internal struct ContractDescription
    1: int contractId
    2: int version
    3: StructDescription<list> structs
+   4: WebRoute[] routes
    
 internal struct StructDescription
    1: TypeDescriptor[] types

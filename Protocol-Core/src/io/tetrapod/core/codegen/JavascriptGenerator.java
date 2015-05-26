@@ -35,6 +35,7 @@ class JavascriptGenerator implements LanguageGenerator {
       for (String outFile : outFiles) {
          Template t = template("protocol.js");
          File file = new File(outFile);
+         System.out.println("Writing " + file.getAbsolutePath());
          String outName = file.getName();
          int ix = outName.indexOf('.');
          outName = outName.substring(0, 1).toUpperCase() + outName.substring(1, ix);
