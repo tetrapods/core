@@ -257,6 +257,10 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
 
    public void onPurged() {}
 
+   public void onReleaseExcess() {}
+
+   public void onRebalance() {}
+
    public void onUnpaused() {}
 
    public void onStarted() {
@@ -758,6 +762,18 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
    @Override
    public Response requestPurge(PurgeRequest r, RequestContext ctx) {
       onPurged();
+      return Response.SUCCESS;
+   }
+
+   @Override
+   public Response requestRebalance(RebalanceRequest r, RequestContext ctx) {
+      onRebalance();
+      return Response.SUCCESS;
+   }
+
+   @Override
+   public Response requestReleaseExcess(ReleaseExcessRequest r, RequestContext ctx) {
+      onReleaseExcess();
       return Response.SUCCESS;
    }
 

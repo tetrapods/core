@@ -108,6 +108,10 @@ internal request Pause
 
 internal request Unpause
 
+internal request Rebalance
+
+internal request ReleaseExcess
+
 internal request Purge
 
 internal request Shutdown
