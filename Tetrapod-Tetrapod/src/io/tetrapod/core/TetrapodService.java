@@ -76,10 +76,8 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       for (WebRoute r : contract.getWebRoutes()) {
          getWebRoutes().setRoute(r.path, r.contractId, r.structId);
       }
-      raftStorage.getWebRootDirs().put("tetrapod", new WebRootLocalFilesystem(new File("webContent")));
-      // HACK FOR TESTING:
-      raftStorage.getWebRootDirs().put("chatbox",
-            new WebRootLocalFilesystem(new File("/Users/adavidson/workspace/tetrapod/website/webContent")));
+      // add the tetrapod admin web root
+      raftStorage.getWebRootDirs().put("tetrapod", new WebRootLocalFilesystem("/", new File("webContent")));
 
       addSubscriptionHandler(new TetrapodContract.Registry(), registry);
    }
@@ -288,6 +286,9 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          try {
             AuthToken.setSecret(getSharedSecret());
             adminAccounts = new AdminAccounts(raftStorage);
+
+            // FIXME:
+            // Ensure we have all of the needed WebRootDir files installed before we open http ports
 
             // create servers
             Server httpServer = (new Server(getHTTPPort(), new WebSessionFactory(raftStorage.getWebRootDirs(), "/sockets"), dispatcher));
@@ -1193,4 +1194,27 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       return Response.SUCCESS;
    }
 
+   @Override
+   public Response requestSetWebRoot(SetWebRootRequest r, RequestContext ctx) {
+      if (!adminAccounts.isValidAdminRequest(ctx, r.adminToken)) {
+         return new Error(ERROR_INVALID_RIGHTS);
+      }
+      if (r.def != null) {
+         raftStorage.setWebRoot(r.def);
+         return Response.SUCCESS;
+      }
+      return new Error(ERROR_INVALID_DATA);
+   }
+
+   @Override
+   public Response requestDelWebRoot(DelWebRootRequest r, RequestContext ctx) {
+      if (!adminAccounts.isValidAdminRequest(ctx, r.adminToken)) {
+         return new Error(ERROR_INVALID_RIGHTS);
+      }
+      if (r.name != null) {
+         raftStorage.delWebRoot(r.name);
+         return Response.SUCCESS;
+      }
+      return new Error(ERROR_INVALID_DATA);
+   }
 }

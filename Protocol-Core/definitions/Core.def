@@ -51,6 +51,7 @@ struct Core
    error FLOOD                = 12 // client has sent too many requests recently
    error INVALID_TOKEN        = 13 // for any sort of invalid token
    error UNSUPPORTED          = 14 // request is currently unsupported
+   error INVALID_DATA         = 15 // for any sort of invalid data 
 
    const byte  ENVELOPE_HANDSHAKE      = 1 
    const byte  ENVELOPE_REQUEST        = 2

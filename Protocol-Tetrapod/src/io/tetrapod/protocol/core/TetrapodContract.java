@@ -30,6 +30,7 @@ public class TetrapodContract extends Contract {
       , ClusterLeaveRequest.Handler
       , ClusterSubscribeRequest.Handler
       , DelClusterPropertyRequest.Handler
+      , DelWebRootRequest.Handler
       , ExecuteBuildCommandRequest.Handler
       , GetEntityInfoRequest.Handler
       , GetServiceBuildInfoRequest.Handler
@@ -47,6 +48,7 @@ public class TetrapodContract extends Contract {
       , ServicesUnsubscribeRequest.Handler
       , SetAlternateIdRequest.Handler
       , SetClusterPropertyRequest.Handler
+      , SetWebRootRequest.Handler
       , UnregisterRequest.Handler
       , VerifyEntityTokenRequest.Handler
       {}
@@ -83,6 +85,8 @@ public class TetrapodContract extends Contract {
          new ClusterSubscribeRequest(),
          new SetClusterPropertyRequest(),
          new DelClusterPropertyRequest(),
+         new SetWebRootRequest(),
+         new DelWebRootRequest(),
       };
    }
    
@@ -102,7 +106,6 @@ public class TetrapodContract extends Contract {
    public Structure[] getMessages() {
       return new Structure[] {
          new EntityMessage(),
-         new ClusterMemberMessage(),
          new EntityRegisteredMessage(),
          new EntityUnregisteredMessage(),
          new EntityUpdatedMessage(),
@@ -118,6 +121,9 @@ public class TetrapodContract extends Contract {
          new ClusterPropertyAddedMessage(),
          new ClusterPropertyRemovedMessage(),
          new ClusterSyncedMessage(),
+         new ClusterMemberMessage(),
+         new WebRootAddedMessage(),
+         new WebRootRemovedMessage(),
       };
    }
    
@@ -125,10 +131,10 @@ public class TetrapodContract extends Contract {
       return new Structure[] {
          new Entity(),
          new Admin(),
-         new WebRootDef(),
          new BuildInfo(),
          new BuildCommand(),
          new ClusterProperty(),
+         new WebRootDef(),
       };
    }
    

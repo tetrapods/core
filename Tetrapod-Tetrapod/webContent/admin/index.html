@@ -83,6 +83,7 @@
                      <li class="active"><a href="#hosts-tab" data-toggle="tab">Services</a></li>
                      <li><a href="#raft-tab" data-toggle="tab">Raft</a></li>
                      <li><a href="#props-tab" data-toggle="tab">Properties</a></li>
+                     <li><a href="#web-tab" data-toggle="tab">Web Roots</a></li>
                   </ul>
 
 
@@ -161,7 +162,7 @@
                            </thead>
                            <tbody data-bind="foreach: props" class="props">
                               <tr>
-                                 <td class="centered"> 
+                                 <td class="centered">
                                     <div class="dropdown btn btn-sm" style="display: inline-block;">
                                        <a class="dropdown-toggle" data-toggle="dropdown" href="#">
                                           <i class="fa fa-gear fa-fw"></i><i class="fa fa-caret-down"></i>
@@ -185,6 +186,52 @@
                         </table>
 
                      </div>
+
+
+                     <div class="tab-pane" id="web-tab">
+                        <button data-bind="click: addWebRoot">
+                           <i class="fa fa-fw fa-plus"></i> Add Web Root
+                        </button>
+
+                        <table id="props-table" class="table table-bordered table-condensed">
+                           <thead>
+                              <tr>
+                                 <th><i class="fa fa-gear fa-fw"></i></th>
+                                 <th>Name</th>
+                                 <th>Path</th>
+                                 <th>Location</th>
+                              </tr>
+                           </thead>
+                           <tbody data-bind="foreach: webroots" class="props">
+                              <tr>
+                                 <td class="centered">
+                                    <div class="dropdown btn btn-sm" style="display: inline-block;">
+                                       <a class="dropdown-toggle" data-toggle="dropdown" href="#">
+                                          <i class="fa fa-gear fa-fw"></i><i class="fa fa-caret-down"></i>
+                                       </a>
+                                       <ul class="dropdown-menu">
+                                          <li><a href="#" data-bind="click: editPath">Edit Path...</a></li>
+                                          <li><a href="#" data-bind="click: editLocation">Edit Location...</a></li>
+                                          <li><a href="#" data-bind="click: deleteWebRoot">Delete Web Root...</a></li>
+                                       </ul>
+                                    </div>
+                                 </td>
+                                 <td>
+                                    <span data-bind="text: name" class="property"></span>
+                                 </td>
+                                 <td>
+                                    <span data-bind="text: path" class="property"></span>
+                                 </td>
+                                 <td>
+                                    <span data-bind="text: file" class="property"></span>
+                                 </td>
+                              </tr>
+                           </tbody>
+                        </table>
+
+                     </div>
+
+
 
 
                      <div class="tab-pane active" id="hosts-tab">

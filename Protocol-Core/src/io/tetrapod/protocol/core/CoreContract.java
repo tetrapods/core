@@ -152,6 +152,11 @@ public class CoreContract extends Contract {
    public static final int ERROR_FLOOD = 12; 
    
    /**
+    * for any sort of invalid data
+    */
+   public static final int ERROR_INVALID_DATA = 15; 
+   
+   /**
     * An addressed entityId was invalid
     */
    public static final int ERROR_INVALID_ENTITY = 9; 

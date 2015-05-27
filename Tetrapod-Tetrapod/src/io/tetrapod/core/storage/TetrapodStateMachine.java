@@ -17,16 +17,20 @@ import java.util.concurrent.*;
  */
 public class TetrapodStateMachine extends StorageStateMachine<TetrapodStateMachine> {
 
-   private static final String                    TETRAPOD_PREF_PREFIX            = "tetrapod.prefs::";        ;
-   private static final String                    TETRAPOD_CONTRACT_PREFIX        = "tetrapod.contract::";     ;
+   private static final String                    TETRAPOD_PREF_PREFIX            = "tetrapod.prefs::";
+   private static final String                    TETRAPOD_CONTRACT_PREFIX        = "tetrapod.contract::";
+   private static final String                    TETRAPOD_WEBROOT_PREFIX         = "tetrapod.webroot::";
 
    public static final int                        SET_CLUSTER_PROPERTY_COMMAND_ID = 400;
    public static final int                        DEL_CLUSTER_PROPERTY_COMMAND_ID = 401;
    public static final int                        REGISTER_CONTRACT_COMMAND_ID    = 402;
    public static final int                        SET_WEB_ROUTE_COMMAND_ID        = 403;
+   public static final int                        DEL_WEB_ROUTE_COMMAND_ID        = 404;
 
    public final Map<String, ClusterProperty>      props                           = new HashMap<>();
    public final Map<Integer, ContractDescription> contracts                       = new HashMap<>();
+   public final Map<String, WebRootDef>           webRootDefs                     = new HashMap<>();
+
    public final WebRoutes                         webRoutes                       = new WebRoutes();
    public final ConcurrentMap<String, WebRoot>    webRootDirs                     = new ConcurrentHashMap<>();
 
@@ -62,6 +66,12 @@ public class TetrapodStateMachine extends StorageStateMachine<TetrapodStateMachi
             return new SetWebRouteCommand();
          }
       });
+      registerCommand(DelWebRouteCommand.COMMAND_ID, new CommandFactory<TetrapodStateMachine>() {
+         @Override
+         public Command<TetrapodStateMachine> makeCommand() {
+            return new DelWebRouteCommand();
+         }
+      });
    }
 
    @Override
@@ -73,27 +83,29 @@ public class TetrapodStateMachine extends StorageStateMachine<TetrapodStateMachi
    public void loadState(DataInputStream in) throws IOException {
       super.loadState(in);
 
-      // iterate over storage items and extract properties
+      // iterate over the storage items and extract objects (properties, web roots, contracts)
       for (StorageItem item : items.values()) {
          if (item.key.startsWith(TETRAPOD_PREF_PREFIX)) {
             ClusterProperty prop = new ClusterProperty();
             prop.read(TempBufferDataSource.forReading(item.getData()));
-            props.put(prop.key, prop);
-            System.setProperty(prop.key, prop.val);
+            setProperty(prop, false);
          } else if (item.key.startsWith(TETRAPOD_CONTRACT_PREFIX)) {
             ContractDescription info = new ContractDescription();
             info.read(TempBufferDataSource.forReading(item.getData()));
-            logger.info(" Loaded ContractDescription = {}", info.dump());
-            for (StructDescription sd : info.structs)
-               StructureFactory.add(new StructureAdapter(sd));
-            contracts.put(info.contractId, info);
+            registerContract(info, false);
+         } else if (item.key.startsWith(TETRAPOD_WEBROOT_PREFIX)) {
+            WebRootDef info = new WebRootDef();
+            info.read(TempBufferDataSource.forReading(item.getData()));
+            setWebRoot(info, false);
          }
       }
    }
 
-   public void registerContract(ContractDescription info) {
-      // Write as storage item
-      putItem(TETRAPOD_CONTRACT_PREFIX + info.contractId, (byte[]) info.toRawForm(TempBufferDataSource.forWriting()));
+   public void registerContract(ContractDescription info, boolean write) {
+      if (write) {
+         // Write as storage item      
+         putItem(TETRAPOD_CONTRACT_PREFIX + info.contractId, (byte[]) info.toRawForm(TempBufferDataSource.forWriting()));
+      }
       logger.info(" ContractDescription = {}", info.dump());
       // reg the structs
       if (info.structs != null) {
@@ -120,9 +132,11 @@ public class TetrapodStateMachine extends StorageStateMachine<TetrapodStateMachi
       return false;
    }
 
-   public void setProperty(ClusterProperty prop) {
-      // store in state machine as a StorageItem
-      putItem(TETRAPOD_PREF_PREFIX + prop.key, (byte[]) prop.toRawForm(TempBufferDataSource.forWriting()));
+   public void setProperty(ClusterProperty prop, boolean write) {
+      if (write) {
+         // store in state machine as a StorageItem
+         putItem(TETRAPOD_PREF_PREFIX + prop.key, (byte[]) prop.toRawForm(TempBufferDataSource.forWriting()));
+      }
       // keep local caches
       props.put(prop.key, prop);
       System.setProperty(prop.key, prop.val);
@@ -136,9 +150,25 @@ public class TetrapodStateMachine extends StorageStateMachine<TetrapodStateMachi
       System.clearProperty(key);
    }
 
-   public void setWebRoot(WebRootDef def) {
-      WebRoot wr = new WebRootLocalFilesystem();
-      webRootDirs.put(def.name, wr);
+   public void setWebRoot(WebRootDef def, boolean write) {
+      logger.info(" Loaded WebRootDef = {}", def.dump());
+      if (write) {
+         // store in state machine as a StorageItem
+         putItem(TETRAPOD_WEBROOT_PREFIX + def.name, (byte[]) def.toRawForm(TempBufferDataSource.forWriting()));
+      }
+      webRootDefs.put(def.name, def);
+      if (def.file != null) {
+         WebRoot wr = new WebRootLocalFilesystem(def.path, new File(def.file));
+         webRootDirs.put(def.name, wr);
+      }
+   }
+
+   public void delWebRoot(String name) {
+      // remove from backing store
+      removeItem(TETRAPOD_WEBROOT_PREFIX + name);
+      // remove from local caches
+      webRootDefs.remove(name);
+      webRootDirs.remove(name);
    }
 
 }

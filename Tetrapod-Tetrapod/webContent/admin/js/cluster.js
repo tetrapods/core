@@ -1,4 +1,4 @@
-define(["knockout", "jquery", "app", "alert", "host", "service", "raftnode", "property"], function(ko, $, app, Alert, Host, Service, RaftNode, Property) {
+define(["knockout", "jquery", "app", "alert", "host", "service", "raftnode", "property", "webroot"], function(ko, $, app, Alert, Host, Service, RaftNode, Property, WebRoot) {
    var Core = app.server.consts["Core.Core"];
 
    return new ClusterModel();
@@ -10,12 +10,14 @@ define(["knockout", "jquery", "app", "alert", "host", "service", "raftnode", "pr
       self.services = ko.observableArray([]);
       self.rafts = ko.observableArray([]);
       self.props = ko.observableArray([]);
+      self.webroots = ko.observableArray([]);
 
       self.leaderEntityId = ko.pureComputed(leaderEntityId);
       self.tolerance = ko.pureComputed(tolerance);
       self.ensurePeer = ensurePeer;
       self.isNodeInCluster = isNodeInCluster;
       self.addClusterProperty = addClusterProperty;
+      self.addWebRoot = addWebRoot;
 
       var raftTab = $('#raft-tab');
 
@@ -32,18 +34,30 @@ define(["knockout", "jquery", "app", "alert", "host", "service", "raftnode", "pr
       }, 1000);
 
       self.findService = function(entityId) {
-         for (var i = 0; i < self.services().length; i++) {
-            if (self.services()[i].entityId == entityId) {
-               return self.services()[i];
+         var arr = self.services();
+         for (var i = 0; i < arr.length; i++) {
+            if (arr[i].entityId == entityId) {
+               return arr[i];
             }
          }
          return null;
       }
 
       self.findProperty = function(key) {
-         for (var i = 0; i < self.props().length; i++) {
-            if (self.props()[i].key == key) {
-               return self.props()[i];
+         var arr = self.props();
+         for (var i = 0; i < arr.length; i++) {
+            if (arr[i].key == key) {
+               return arr[i];
+            }
+         }
+         return null;
+      }
+
+      self.findWebRoot = function(name) {
+         var arr = self.webroots();
+         for (var i = 0; i < arr.length; i++) {
+            if (arr[i].name == name) {
+               return arr[i];
             }
          }
          return null;
@@ -102,6 +116,23 @@ define(["knockout", "jquery", "app", "alert", "host", "service", "raftnode", "pr
          var p = self.findProperty(msg.key);
          if (p) {
             self.props.remove(p);
+         }
+      });
+
+      app.server.addMessageHandler("WebRootAdded", function(msg) {
+         var wr = self.findWebRoot(msg.def.name);
+         if (wr) {
+            self.webroots.remove(wr);
+         }
+         wr = new WebRoot(msg.def);
+         self.webroots.push(wr);
+         //self.webroots.sort(compareWebRoots);
+      });
+
+      app.server.addMessageHandler("WebRootRemoved", function(msg) {
+         var wr = self.findWebRoot(msg.name);
+         if (wr) {
+            self.webroots.remove(wr);
          }
       });
 
@@ -201,6 +232,22 @@ define(["knockout", "jquery", "app", "alert", "host", "service", "raftnode", "pr
          return Math.floor(nodes / 2);
       }
 
+
+      function addWebRoot() {
+         Alert.prompt("Enter a new web root name", function(name) {
+            if (name && name.trim().length > 0) {
+               app.server.sendDirect("SetWebRoot", {
+                  adminToken: app.authtoken,
+                  def: {
+                     name: name,
+                     path: '',
+                     location: '',
+                  }
+               }, app.server.logResponse);
+            }
+         });
+      }
+      
       function addClusterProperty(secret) {
          Alert.prompt("Enter a new key name", function(key) {
             if (key && key.trim().length > 0) {

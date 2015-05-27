@@ -110,6 +110,12 @@ public class RaftStorage extends Storage implements RaftRPC<TetrapodStateMachine
          case DelClusterPropertyCommand.COMMAND_ID:
             onDelClusterPropertyCommand((DelClusterPropertyCommand) command);
             break;
+         case SetWebRouteCommand.COMMAND_ID:
+            onSetWebRouteCommand((SetWebRouteCommand) command);
+            break;
+         case DelWebRouteCommand.COMMAND_ID:
+            onDelWebRouteCommand((DelWebRouteCommand) command);
+            break;
       }
    }
 
@@ -274,13 +280,23 @@ public class RaftStorage extends Storage implements RaftRPC<TetrapodStateMachine
          ses.sendMessage(new ClusterMemberMessage(pod.entityId, pod.host, pod.servicePort, pod.clusterPort, pod.uuid),
                MessageHeader.TO_ENTITY, toEntityId);
       }
-      // send properties
-      synchronized (raft) {
-         for (ClusterProperty prop : raft.getStateMachine().props.values()) {
-            if (ses.getTheirEntityType() == Core.TYPE_ADMIN) {
-               prop = new ClusterProperty(prop.key, prop.secret, prop.secret ? "" : prop.val);
+      // non-tetrapods need to get some cluster details sent
+      if (ses.getTheirEntityType() != Core.TYPE_TETRAPOD) {
+         synchronized (raft) {
+            // send properties
+            for (ClusterProperty prop : raft.getStateMachine().props.values()) {
+               if (ses.getTheirEntityType() == Core.TYPE_ADMIN) {
+                  // blank out values for protected properties sent to admins
+                  prop = new ClusterProperty(prop.key, prop.secret, prop.secret ? "" : prop.val);
+               }
+               ses.sendMessage(new ClusterPropertyAddedMessage(prop), MessageHeader.TO_ENTITY, toEntityId);
             }
-            ses.sendMessage(new ClusterPropertyAddedMessage(prop), MessageHeader.TO_ENTITY, toEntityId);
+            // admin app needs web roots
+            if (ses.getTheirEntityType() == Core.TYPE_ADMIN) {
+               for (WebRootDef def : raft.getStateMachine().webRootDefs.values()) {
+                  ses.sendMessage(new WebRootAddedMessage(def), MessageHeader.TO_ENTITY, toEntityId);
+               }
+            }
          }
       }
       // tell them they are up to date
@@ -723,13 +739,15 @@ public class RaftStorage extends Storage implements RaftRPC<TetrapodStateMachine
    }
 
    public void registerContract(ContractDescription info) {
-      // FIXME: version isn't updated for minor changes, so we should also include a hash or timestampt for minor updates 
+      // FIXME: version isn't updated for minor changes, so we should also include a hash or timestamp for minor updates 
       if (raft.getStateMachine().hasContract(info.contractId, info.version)) {
          executeCommand(new RegisterContractCommand(info), null);
       }
    }
 
    private void onSetClusterPropertyCommand(SetClusterPropertyCommand command) {
+      // FIXME: Security hole here, when a secret property is sent to all subscribers here,
+      // we don't want to send the value to admin connections, just service connections
       service.broadcastClusterMessage(new ClusterPropertyAddedMessage(command.getProperty()));
    }
 
@@ -743,6 +761,22 @@ public class RaftStorage extends Storage implements RaftRPC<TetrapodStateMachine
 
    public Map<String, WebRoot> getWebRootDirs() {
       return raft.getStateMachine().webRootDirs;
+   }
+
+   public void setWebRoot(WebRootDef def) {
+      executeCommand(new SetWebRouteCommand(def), null);
+   }
+
+   public void delWebRoot(String name) {
+      executeCommand(new DelWebRouteCommand(name), null);
+   }
+
+   private void onSetWebRouteCommand(SetWebRouteCommand command) {
+      service.broadcastClusterMessage(new WebRootAddedMessage(command.getWebRouteDef()));
+   }
+
+   private void onDelWebRouteCommand(DelWebRouteCommand command) {
+      service.broadcastClusterMessage(new WebRootRemovedMessage(command.getWebRouteName()));
    }
 
 }

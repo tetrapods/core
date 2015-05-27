@@ -19,7 +19,7 @@ public class SetWebRouteCommand implements Command<TetrapodStateMachine> {
 
    @Override
    public void applyTo(TetrapodStateMachine state) {
-      state.setWebRoot(def);
+      state.setWebRoot(def, true);
    }
 
    @Override

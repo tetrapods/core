@@ -878,4 +878,5 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
    public Response requestHostStats(HostStatsRequest r, RequestContext ctx) {
       return new HostStatsResponse(Metrics.getLoadAverage(), Metrics.getFreeDiskSpace());
    }
+
 }

@@ -133,12 +133,6 @@ public struct Admin
 
 public request KeepAlive
 
-# defines an archive or location to be served as a a web root    
-internal struct WebRootDef
-   1: string name
-   2: string path
-   3: string archive
-    
 internal request SetAlternateId
    1: int entityId
    2: int alternateId
@@ -164,14 +158,6 @@ internal response GetEntityInfo
 // a special message to avoid race conditions on the Register response
 public message Entity 
    1: int entityId
-   
-// notification of an existing tetrapod cluster member    
-internal message Cluster.ClusterMember
-   1: int entityId
-   2: string host
-   3: int servicePort
-   4: int clusterPort
-   5: string uuid
     
 ##### Registry Topic Messages ##### 
 
@@ -277,13 +263,13 @@ internal response RaftStats
    6: int leaderId
    7: int[] peers
       
-## Cluster Properties
-      
+## Cluster Messages
+
 internal struct ClusterProperty
    1: string key
    2: boolean secret
    3: string val @sensitive
-        
+
 internal message  Cluster.ClusterPropertyAdded        
    1: ClusterProperty property
 
@@ -302,3 +288,33 @@ internal request SetClusterProperty
 internal request DelClusterProperty
    1: string adminToken @sensitive
    2: string key
+   
+      
+// notification of an existing tetrapod cluster member    
+internal message Cluster.ClusterMember
+   1: int entityId
+   2: string host
+   3: int servicePort
+   4: int clusterPort
+   5: string uuid
+
+# defines an archive or location to be served as a a web root    
+internal struct WebRootDef
+   1: string name // semantic name/key of the web root
+   2: string path // resource root path name 
+   3: string file // location of static files to serve
+
+internal message WebRootAdded  
+   1: WebRootDef def
+   
+internal message WebRootRemoved       
+   1: string name
+    
+internal request SetWebRoot
+   1: string adminToken @sensitive
+   2: WebRootDef def
+   
+internal request DelWebRoot
+   1: string adminToken @sensitive
+   2: string name
+        

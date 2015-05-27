@@ -63,6 +63,7 @@ function TP_Core(server) {
    
    server.registerConst("Core", "null", "CONNECTION_CLOSED", 7);
    server.registerConst("Core", "null", "FLOOD", 12);
+   server.registerConst("Core", "null", "INVALID_DATA", 15);
    server.registerConst("Core", "null", "INVALID_ENTITY", 9);
    server.registerConst("Core", "null", "INVALID_RIGHTS", 8);
    server.registerConst("Core", "null", "INVALID_TOKEN", 13);

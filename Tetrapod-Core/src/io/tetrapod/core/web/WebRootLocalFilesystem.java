@@ -7,17 +7,20 @@ import java.util.*;
 import org.slf4j.*;
 
 /**
- * A web root that pull files from the local filesystem
+ * A web root that pull files from the local file system
  */
 public class WebRootLocalFilesystem implements WebRoot {
 
-   public static final Logger logger = LoggerFactory.getLogger(WebRootLocalFilesystem.class);
+   public static final Logger logger   = LoggerFactory.getLogger(WebRootLocalFilesystem.class);
 
-   private final List<Path>   roots  = new ArrayList<>();
+   private final List<Path>   roots    = new ArrayList<>();
+
+   private String             rootPath = "/";
 
    public WebRootLocalFilesystem() {}
 
-   public WebRootLocalFilesystem(File dir) {
+   public WebRootLocalFilesystem(String path, File dir) {
+      this.rootPath = path;
       addFile(dir.getAbsolutePath(), null);
    }
 
@@ -41,8 +44,10 @@ public class WebRootLocalFilesystem implements WebRoot {
       if (path.endsWith("/")) {
          path += "index.html";
       }
-      if (path.startsWith("/")) {
-         path = path.substring(1);
+      if (path.startsWith(rootPath)) {
+         path = path.substring(rootPath.length());
+      } else {
+         return null;
       }
 
       int ix = path.lastIndexOf(".");

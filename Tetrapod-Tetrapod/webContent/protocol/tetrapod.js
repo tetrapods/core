@@ -52,14 +52,12 @@ function TP_Tetrapod(server) {
    server.register("request", "Tetrapod", "AdminChangeRights", 1, 16102706);
    server.register("struct", "Tetrapod", "Admin", 1, 16753598);
    server.register("request", "Tetrapod", "KeepAlive", 1, 5512920);
-   server.register("struct", "Tetrapod", "WebRootDef", 1, 943242);
    server.register("request", "Tetrapod", "SetAlternateId", 1, 10499521);
    server.register("request", "Tetrapod", "GetSubscriberCount", 1, 9966915);
    server.register("response", "Tetrapod", "GetSubscriberCount", 1, 6503857);
    server.register("request", "Tetrapod", "GetEntityInfo", 1, 14891231);
    server.register("response", "Tetrapod", "GetEntityInfo", 1, 11007413);
    server.register("message", "Tetrapod", "Entity", 1, 10913291);
-   server.register("message", "Tetrapod", "ClusterMember", 1, 1076508);
    server.register("message", "Tetrapod", "EntityRegistered", 1, 1454035);
    server.register("message", "Tetrapod", "EntityUnregistered", 1, 14101566);
    server.register("message", "Tetrapod", "EntityUpdated", 1, 3775838);
@@ -87,5 +85,11 @@ function TP_Tetrapod(server) {
    server.register("request", "Tetrapod", "ClusterSubscribe", 1, 12719262);
    server.register("request", "Tetrapod", "SetClusterProperty", 1, 11003897);
    server.register("request", "Tetrapod", "DelClusterProperty", 1, 15970020);
+   server.register("message", "Tetrapod", "ClusterMember", 1, 1076508);
+   server.register("struct", "Tetrapod", "WebRootDef", 1, 943242);
+   server.register("message", "Tetrapod", "WebRootAdded", 1, 270402);
+   server.register("message", "Tetrapod", "WebRootRemoved", 1, 13146496);
+   server.register("request", "Tetrapod", "SetWebRoot", 1, 4029010);
+   server.register("request", "Tetrapod", "DelWebRoot", 1, 11212431);
 
 }

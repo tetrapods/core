@@ -19,7 +19,7 @@ public class RegisterContractCommand implements Command<TetrapodStateMachine> {
 
    @Override
    public void applyTo(TetrapodStateMachine state) {
-      state.registerContract(info);
+      state.registerContract(info, true);
    }
 
    @Override
