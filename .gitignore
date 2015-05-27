@@ -5,6 +5,7 @@ Tetrapod-Core/webContent/sample/
 build/assembly/target
 sfortin.cluster.properties
 jspencer.cluster.properties
+jeremy.cluster.properties
 *.iml
 adavidson.hazelcast.xml
 adavidson.orig.cluster.properties
