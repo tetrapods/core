@@ -353,25 +353,10 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    }
 
    /**
-    * This needs to be properly managed by RaftStorage
+    * Extract a shared secret key for seeding server HMACs
     */
    public byte[] getSharedSecret() {
-      String str = Util.getProperty(SHARED_SECRET_KEY);
-      return Base64.decode(str.getBytes(Charset.forName("UTF-8")));
-      //      
-      //      // FIXME: Move to secret.properties?
-      //      String str = storage.get(SHARED_SECRET_KEY);
-      //      if (str != null) {
-      //         logger.info("SHARED SECRET = {}", str);
-      //         return Base64.decode(str.getBytes(Charset.forName("UTF-8")));
-      //      } else {
-      //         byte[] b = new byte[64];
-      //         Random r = new SecureRandom();
-      //         r.nextBytes(b);
-      //         String secret = new String(Base64.encode(b), Charset.forName("UTF-8"));
-      //         storage.put(SHARED_SECRET_KEY, secret);
-      //         return b;
-      //      }
+      return Base64.decode(Util.getProperty(SHARED_SECRET_KEY).getBytes(Charset.forName("UTF-8")));
    }
 
    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
