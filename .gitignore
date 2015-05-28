@@ -8,3 +8,5 @@ jspencer.cluster.properties
 jeremy.cluster.properties
 *.iml
 adavidson.hazelcast.xml
+Tetrapod-Tetrapod/cache
+adavidson.orig.cluster.properties
