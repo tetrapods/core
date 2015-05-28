@@ -5,10 +5,7 @@ import io.tetrapod.core.utils.Util;
 import java.io.*;
 import java.net.URL;
 import java.nio.file.*;
-import java.security.MessageDigest;
 import java.util.*;
-
-import javax.xml.bind.DatatypeConverter;
 
 import org.slf4j.*;
 
@@ -28,7 +25,7 @@ public class WebRootLocalFilesystem implements WebRoot {
    public WebRootLocalFilesystem(String path, URL url) throws IOException {
       this.rootPath = path;
       final File cacheDir = new File(Util.getProperty("tetrapod.cache", "cache"));
-      final String name = digest(url.toString());
+      final String name = Util.digest(url.toString());
       final File webDir = new File(cacheDir, name);
       final File zipFile = new File(cacheDir, name + ".zip");
       webDir.mkdirs();
@@ -42,7 +39,7 @@ public class WebRootLocalFilesystem implements WebRoot {
             zipFile.delete();
             throw e;
          }
-      } 
+      }
 
       addFile(webDir.getAbsolutePath(), null);
    }
