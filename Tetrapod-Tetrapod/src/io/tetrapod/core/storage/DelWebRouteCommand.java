@@ -1,7 +1,5 @@
 package io.tetrapod.core.storage;
 
-import io.tetrapod.core.serialize.datasources.IOStreamDataSource;
-import io.tetrapod.protocol.core.*;
 import io.tetrapod.raft.Command;
 
 import java.io.*;

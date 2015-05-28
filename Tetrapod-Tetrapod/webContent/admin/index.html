@@ -196,42 +196,35 @@
                         <table id="props-table" class="table table-bordered table-condensed">
                            <thead>
                               <tr>
-                                 <th><i class="fa fa-gear fa-fw"></i></th>
                                  <th>Name</th>
                                  <th>Path</th>
                                  <th>Location</th>
                               </tr>
                            </thead>
-                           <tbody data-bind="foreach: webroots" class="props">
+                           <tbody data-bind="foreach: webroots" class="webroots">
                               <tr>
-                                 <td class="centered">
-                                    <div class="dropdown btn btn-sm" style="display: inline-block;">
-                                       <a class="dropdown-toggle" data-toggle="dropdown" href="#">
-                                          <i class="fa fa-gear fa-fw"></i><i class="fa fa-caret-down"></i>
-                                       </a>
-                                       <ul class="dropdown-menu">
-                                          <li><a href="#" data-bind="click: editPath">Edit Path...</a></li>
-                                          <li><a href="#" data-bind="click: editLocation">Edit Location...</a></li>
-                                          <li><a href="#" data-bind="click: deleteWebRoot">Delete Web Root...</a></li>
-                                       </ul>
-                                    </div>
-                                 </td>
                                  <td>
+                                    <div data-bind="click: deleteWebRoot" class="btn btn-sm">
+                                       <span class="fa fa-fw fa-trash"></span>
+                                    </div>
                                     <span data-bind="text: name" class="property"></span>
                                  </td>
                                  <td>
+                                    <div data-bind="click: editPath" class="btn btn-sm">
+                                       <span class="fa fa-fw fa-edit"></span>
+                                    </div>
                                     <span data-bind="text: path" class="property"></span>
                                  </td>
                                  <td>
+                                    <div data-bind="click: editLocation" class="btn btn-sm">
+                                       <span class="fa fa-fw fa-edit"></span>
+                                    </div>
                                     <span data-bind="text: file" class="property"></span>
                                  </td>
                               </tr>
                            </tbody>
                         </table>
-
                      </div>
-
-
 
 
                      <div class="tab-pane active" id="hosts-tab">
@@ -306,8 +299,7 @@
                                                 <li class="disabled"><a href="#" data-bind="text: name +' '+entityString()"></a></li>
 
                                                 <!-- ko foreach: commands -->
-                                                <li><a href="#"
-                                                      data-bind="click: function() { $parent.execute($data) }, text: name"></a></li>
+
                                                 <!-- /ko -->
 
                                                 <li class="divider"></li>
@@ -318,7 +310,9 @@
                                                       data-bind="click: clearErrors, visible: hasErrorsOrWarnings()">Clear
                                                       Errors</a></li>
                                                 <li><a href="#" data-bind="click: setCommsLogLevel">Set Comms Log
-                                                      Level...</a></li>
+                                                      Level...</a>
+                                                   <li><a href="#"
+                                                         data-bind="click: function() { $parent.execute($data) }, text: name"></a></li></li>
 
                                                 <li data-bind="visible: name=='Tetrapod'" class="divider"></li>
                                                 <li><a href="#"

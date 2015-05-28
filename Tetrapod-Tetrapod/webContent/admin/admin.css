@@ -326,3 +326,13 @@
 .property {
 	font-family: monospace;
 }
+
+.webroots .btn {
+   color: #aaa;
+}
+
+.webroots .btn:HOVER {
+   color: #000;
+}
+	
+}

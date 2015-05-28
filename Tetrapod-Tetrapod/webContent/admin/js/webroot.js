@@ -24,7 +24,7 @@ define(["knockout", "jquery", "bootbox", "app", "alert"], function(ko, $, bootbo
                   def: {
                      name: self.name,
                      path: val.trim(),
-                     file: self.file
+                     file: self.file()
                   }
                }, app.server.logResponse);
             }

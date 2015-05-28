@@ -3,12 +3,14 @@ package io.tetrapod.core.storage;
 import io.tetrapod.core.StructureFactory;
 import io.tetrapod.core.serialize.StructureAdapter;
 import io.tetrapod.core.serialize.datasources.TempBufferDataSource;
+import io.tetrapod.core.utils.Util;
 import io.tetrapod.core.web.*;
 import io.tetrapod.protocol.core.*;
 import io.tetrapod.raft.*;
 import io.tetrapod.raft.storage.*;
 
 import java.io.*;
+import java.net.URL;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -150,7 +152,7 @@ public class TetrapodStateMachine extends StorageStateMachine<TetrapodStateMachi
       System.clearProperty(key);
    }
 
-   public void setWebRoot(WebRootDef def, boolean write) {
+   public void setWebRoot(final WebRootDef def, boolean write) {
       logger.info(" Loaded WebRootDef = {}", def.dump());
       if (write) {
          // store in state machine as a StorageItem
@@ -158,17 +160,35 @@ public class TetrapodStateMachine extends StorageStateMachine<TetrapodStateMachi
       }
       webRootDefs.put(def.name, def);
       if (def.file != null) {
-         WebRoot wr = new WebRootLocalFilesystem(def.path, new File(def.file));
-         webRootDirs.put(def.name, wr);
+         Util.runThread("Installing WebRoot" + def.name, new Runnable() {
+            public void run() {
+               install(def);
+            }
+         });
       }
    }
 
    public void delWebRoot(String name) {
+      logger.info(" Deleting WebRootDef = {}", name);
       // remove from backing store
       removeItem(TETRAPOD_WEBROOT_PREFIX + name);
       // remove from local caches
       webRootDefs.remove(name);
       webRootDirs.remove(name);
+   }
+
+   private void install(WebRootDef def) {
+      try {
+         WebRoot wr = null;
+         if (def.file.startsWith("http")) {
+            wr = new WebRootLocalFilesystem(def.path, new URL(def.file));
+         } else {
+            wr = new WebRootLocalFilesystem(def.path, new File(def.file));
+         }
+         webRootDirs.put(def.name, wr);
+      } catch (IOException e) {
+         logger.error(e.getMessage(), e);
+      }
    }
 
 }

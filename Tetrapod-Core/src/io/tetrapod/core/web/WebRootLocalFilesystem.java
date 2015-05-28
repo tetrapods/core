@@ -1,8 +1,14 @@
 package io.tetrapod.core.web;
 
+import io.tetrapod.core.utils.Util;
+
 import java.io.*;
+import java.net.URL;
 import java.nio.file.*;
+import java.security.MessageDigest;
 import java.util.*;
+
+import javax.xml.bind.DatatypeConverter;
 
 import org.slf4j.*;
 
@@ -18,6 +24,32 @@ public class WebRootLocalFilesystem implements WebRoot {
    private String             rootPath = "/";
 
    public WebRootLocalFilesystem() {}
+
+   public WebRootLocalFilesystem(String path, URL url) throws IOException {
+      this.rootPath = path;
+      final File cacheDir = new File(Util.getProperty("tetrapod.cache", "cache"));
+      final String name = digest(url.toString());
+      final File webDir = new File(cacheDir, name);
+      final File zipFile = new File(cacheDir, name + ".zip");
+      webDir.mkdirs();
+      if (!zipFile.exists()) {
+         try {
+            logger.info("Downloading {} to {}", url, zipFile);
+            Util.downloadFile(url, zipFile);
+            logger.info("Extracting to {}", webDir);
+            unzip(zipFile, webDir);
+         } catch (Exception e) {
+            zipFile.delete();
+            throw e;
+         }
+      } 
+
+      addFile(webDir.getAbsolutePath(), null);
+   }
+
+   private void unzip(File zipFile, File webDir) throws IOException {
+      Runtime.getRuntime().exec(String.format("unzip %s -d %s", zipFile.getAbsolutePath(), webDir.getAbsolutePath()));
+   }
 
    public WebRootLocalFilesystem(String path, File dir) {
       this.rootPath = path;
@@ -73,20 +105,5 @@ public class WebRootLocalFilesystem implements WebRoot {
       }
       return null;
    }
-
-   //   private void addAllFiles(File dir, File root) {
-   //      for (File f : dir.listFiles()) {
-   //         if (f.isDirectory()) {
-   //            addAllFiles(f, dir);
-   //         } else {
-   //            int ix = f.getName().lastIndexOf(".");
-   //            String ext = ix < 0 ? "" : f.getName().substring(ix + 1).toLowerCase();
-   //            if (VALID_EXTENSIONS.contains(ext)) {
-   //               String path = "/" + root.toPath().relativize(f.toPath()).toString();
-   //               //addFile(path, null);
-   //            }
-   //         }
-   //      } 
-   //   }
 
 }
