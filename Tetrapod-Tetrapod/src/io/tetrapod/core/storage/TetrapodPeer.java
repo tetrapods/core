@@ -6,6 +6,7 @@ import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.utils.Util;
 import io.tetrapod.protocol.core.*;
 
+import java.net.ConnectException;
 import java.util.concurrent.TimeUnit;
 
 import org.slf4j.*;
@@ -87,7 +88,9 @@ public class TetrapodPeer implements Session.Listener, SessionFactory {
             setSession(client.getSession());
          }
       } catch (Throwable e) {
-         logger.error(e.getMessage());
+         if (!(e instanceof ConnectException)) {
+            logger.error(e.getMessage(), e);
+         }
          scheduleReconnect(++failures);
       } finally {
          synchronized (this) {

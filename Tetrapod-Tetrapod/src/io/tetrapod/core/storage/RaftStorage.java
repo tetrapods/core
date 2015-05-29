@@ -33,16 +33,16 @@ import org.slf4j.*;
 public class RaftStorage extends Storage implements RaftRPC<TetrapodStateMachine>, RaftContract.API,
       StateMachine.Listener<TetrapodStateMachine>, SessionFactory {
 
-   private static final Logger                    logger  = LoggerFactory.getLogger(RaftStorage.class);
+   private static final Logger                    logger    = LoggerFactory.getLogger(RaftStorage.class);
 
-   private final SecureRandom                     random  = new SecureRandom();
+   private final SecureRandom                     random    = new SecureRandom();
 
    private final Server                           server;
 
    /**
     * Maps EntityId to TetrapodPeer
     */
-   private final Map<Integer, TetrapodPeer>       cluster = new ConcurrentHashMap<>();
+   private final Map<Integer, TetrapodPeer>       cluster   = new ConcurrentHashMap<>();
 
    private final TetrapodService                  service;
 
@@ -53,7 +53,7 @@ public class RaftStorage extends Storage implements RaftRPC<TetrapodStateMachine
    /**
     * The index of the command we joined the cluster
     */
-   private long                                   joinIndex;
+   private long                                   joinIndex = -1;
 
    public RaftStorage(TetrapodService service) {
       this.service = service;
@@ -123,6 +123,7 @@ public class RaftStorage extends Storage implements RaftRPC<TetrapodStateMachine
       logger.info("Bootstrapping new cluster");
       raft.bootstrap(Util.getHostName(), service.getClusterPort());
       service.registerSelf(io.tetrapod.core.registry.Registry.BOOTSTRAP_ID, random.nextLong());
+      joinIndex = raft.getLog().getLastIndex();
    }
 
    private void addPeer(AddPeerCommand<TetrapodStateMachine> command) {}
@@ -194,6 +195,7 @@ public class RaftStorage extends Storage implements RaftRPC<TetrapodStateMachine
                               // ses.close();
 
                               joinIndex = r.index;
+                              logger.info("Join Index = {}", joinIndex);
                               service.registerSelf(myEntityId, service.random.nextLong());
                               raft.start(r.peerId);
 
@@ -594,7 +596,9 @@ public class RaftStorage extends Storage implements RaftRPC<TetrapodStateMachine
                final Session ses = ((SessionRequestContext) ctx).session;
                Response res = Response.error(CoreContract.ERROR_UNKNOWN);
                try {
-                  res = new IssueCommandResponse(e.getTerm(), e.getIndex(), commandToBytes(e.getCommand()));
+                  if (e != null) {
+                     res = new IssueCommandResponse(e.getTerm(), e.getIndex(), commandToBytes(e.getCommand()));
+                  }
                } catch (IOException ex) {
                   logger.error(ex.getMessage(), ex);
                } finally {
@@ -777,6 +781,10 @@ public class RaftStorage extends Storage implements RaftRPC<TetrapodStateMachine
 
    private void onDelWebRouteCommand(DelWebRouteCommand command) {
       service.broadcastClusterMessage(new WebRootRemovedMessage(command.getWebRouteName()));
+   }
+
+   public boolean isReady() {
+      return joinIndex >= 0 && raft.getLog().getLastIndex() >= joinIndex;
    }
 
 }

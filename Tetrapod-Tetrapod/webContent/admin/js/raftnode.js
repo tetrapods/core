@@ -111,6 +111,8 @@ define(["knockout", "jquery", "bootbox", "app", "build", "chart"], function(ko, 
       // return true if this node is part of the cluster. 
       // FIXME: this should probably have better logic
       function isHealthy() {
+         if (self.curTerm() < cluster.maxTerm)
+            return false;
          return self.role() == 2 || self.role() == 3 || self.role() == 4;
       }
 

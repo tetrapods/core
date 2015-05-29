@@ -171,9 +171,14 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
       sendDirectRequest(new ServicesSubscribeRequest());
    }
 
-   protected void checkDependencies() {
+   
+   public boolean dependenciesReady() {
+      return services.checkDependencies(dependencies);
+   }
+   
+   public void checkDependencies() {
       if (!isShuttingDown()) {
-         if (getEntityType() == Core.TYPE_TETRAPOD || services.checkDependencies(dependencies)) {
+         if (dependenciesReady()) {
             try {
                if (startPaused) {
                   updateStatus(getStatus() | Core.STATUS_PAUSED);

@@ -128,6 +128,11 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       }
    }
 
+   @Override
+   public boolean dependenciesReady() {
+      return raftStorage.isReady();
+   }
+   
    /**
     * We need to override the connectToCluster in superclass because that one tries to reconnect to other tetrapods, but the clusterClient
     * connection is a special loopback connection in the tetrapod, so we should only ever reconnect back to ourselves.
@@ -356,7 +361,8 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
     * Extract a shared secret key for seeding server HMACs
     */
    public byte[] getSharedSecret() {
-      return Base64.decode(Util.getProperty(SHARED_SECRET_KEY).getBytes(Charset.forName("UTF-8")));
+      return Base64.decode(Util.getProperty(SHARED_SECRET_KEY, "!! Set me to AuthToken.generateSharedSecret() !!").getBytes(
+            Charset.forName("UTF-8")));
    }
 
    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

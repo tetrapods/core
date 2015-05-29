@@ -14,6 +14,7 @@ define(["knockout", "jquery", "app", "alert", "host", "service", "raftnode", "pr
 
       self.leaderEntityId = ko.pureComputed(leaderEntityId);
       self.tolerance = ko.pureComputed(tolerance);
+      self.maxTerm = 0;
       self.ensurePeer = ensurePeer;
       self.isNodeInCluster = isNodeInCluster;
       self.addClusterProperty = addClusterProperty;
@@ -225,13 +226,18 @@ define(["knockout", "jquery", "app", "alert", "host", "service", "raftnode", "pr
          var nodes = 0;
          for (var i = 0; i < self.rafts().length; i++) {
             var raft = self.rafts()[i];
+            if (raft.curTerm() > self.maxTerm) {
+               self.maxTerm = raft.curTerm();
+            }
+         }
+         for (var i = 0; i < self.rafts().length; i++) {
+            var raft = self.rafts()[i];
             if (raft.isHealthy()) {
                nodes++;
             }
          }
-         return Math.floor(nodes / 2);
+         return Math.floor((nodes - 1) / 2);
       }
-
 
       function addWebRoot() {
          Alert.prompt("Enter a new web root name", function(name) {
@@ -247,7 +253,7 @@ define(["knockout", "jquery", "app", "alert", "host", "service", "raftnode", "pr
             }
          });
       }
-      
+
       function addClusterProperty(secret) {
          Alert.prompt("Enter a new key name", function(key) {
             if (key && key.trim().length > 0) {
