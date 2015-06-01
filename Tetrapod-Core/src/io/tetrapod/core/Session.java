@@ -23,7 +23,7 @@ import javax.net.ssl.SSLException;
 import org.slf4j.*;
 
 /**
- * Manages a tetrapod session 
+ * Manages a tetrapod session
  */
 abstract public class Session extends ChannelInboundHandlerAdapter {
 
@@ -41,7 +41,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
 
       public Dispatcher getDispatcher();
 
-      public Async dispatchRequest(RequestHeader header, Request req, Session fromSession); 
+      public Async dispatchRequest(RequestHeader header, Request req, Session fromSession);
 
       public List<SubscriptionAPI> getMessageHandlers(int contractId, int structId);
 
@@ -218,7 +218,11 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
                if (pendingRes == null) {
                   pendingRes = new Error(ERROR_UNKNOWN);
                }
-               sendResponse(pendingRes, pendingHandler.originalRequestId);
+               if (pendingHandler.session != null) {
+                  pendingHandler.session.sendResponse(pendingRes, pendingHandler.originalRequestId);
+               } else {
+                  sendResponse(pendingRes, pendingHandler.originalRequestId);
+               }
             }
          }
       });
