@@ -232,10 +232,6 @@ define(["knockout", "jquery", "bootbox", "app", "build", "chart"], function(ko, 
          });
       }
 
-      self.canPurge = function() {
-         return self.isPaused();
-      }
-
       self.canPause = function() {
          return !self.isGone() && !self.isPaused();
       }
