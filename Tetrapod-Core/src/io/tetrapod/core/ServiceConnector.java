@@ -220,6 +220,11 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
    }
 
    public Response sendPendingRequest(final Request req, int toEntityId, final PendingResponseHandler handler) {
+      // TEMP logging for service connector issue
+      if (req.getStructId() != 14709500) {
+         logger.info("sendPendingRequest {} to {} returning on {}", req, toEntityId, handler.session);
+      }
+
       if (toEntityId == Core.UNADDRESSED) {
          Entity e = service.services.getRandomAvailableService(req.getContractId());
          if (e != null) {
@@ -229,7 +234,7 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
 
       final Session ses = handler.session != null ? getSession(req, toEntityId) : service.clusterClient.getSession();
       if (ses != service.clusterClient.getSession()) {
-         logger.debug("Dispatching Pending {} to {}", req, ses);
+         logger.info("Dispatching pending {} to {} returning on {}", req, ses, handler.session);
          final Async async = ses.sendRequest(req, toEntityId, (byte) 30);
          async.handle(new ResponseHandler() {
             @Override
@@ -253,9 +258,10 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
             }
          });
          return Response.PENDING;
+      } else {
+         // send via tetrapod routing
+         return ses.sendPendingRequest(req, toEntityId, (byte) 30, handler);
       }
-
-      return ses.sendPendingRequest(req, toEntityId, (byte) 30, handler);
    }
 
    public Async sendRequest(Request req, int toEntityId) {
