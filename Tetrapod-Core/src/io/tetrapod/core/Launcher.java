@@ -164,7 +164,10 @@ public class Launcher {
    }
 
    public static boolean loadProperties(String fileName, Properties properties) {
-      final File file = new File(fileName);
+      return loadProperties(new File(fileName), properties);
+   }
+
+   public static boolean loadProperties(File file, Properties properties) {
       if (file.exists()) {
          try (Reader reader = new FileReader(file)) {
             properties.load(reader);
@@ -198,7 +201,7 @@ public class Launcher {
    public static void loadSecretProperties() {
       loadSecretProperties(System.getProperties());
    }
-   
+
    public static void loadSecretProperties(Properties properties) {
       String file = properties.getProperty("secrets");
       if (file != null && !file.isEmpty())

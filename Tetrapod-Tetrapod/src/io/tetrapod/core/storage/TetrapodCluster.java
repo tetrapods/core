@@ -9,8 +9,8 @@ import io.tetrapod.core.web.*;
 import io.tetrapod.protocol.core.*;
 import io.tetrapod.protocol.raft.*;
 import io.tetrapod.raft.*;
-import io.tetrapod.raft.RaftEngine.Peer;
 import io.tetrapod.raft.RaftEngine.Role;
+import io.tetrapod.raft.StateMachine.Peer;
 import io.tetrapod.raft.storage.*;
 
 import java.io.*;
@@ -48,6 +48,8 @@ public class TetrapodCluster extends Storage implements RaftRPC<TetrapodStateMac
 
    private final RaftEngine<TetrapodStateMachine> raft;
 
+   private final TetrapodStateMachine             state;
+
    private final Config                           cfg;
 
    /**
@@ -61,7 +63,7 @@ public class TetrapodCluster extends Storage implements RaftRPC<TetrapodStateMac
       this.server = new Server(service.getClusterPort(), this, service.getDispatcher());
 
       this.cfg = new Config().setLogDir(new File(Util.getProperty("raft.logs", "logs/raft"))).setClusterName(
-            Util.getProperty("raft.name", "RaftStorage"));
+            Util.getProperty("raft.name", "Tetrapod"));
 
       RaftEngine<TetrapodStateMachine> raftEngine = null;
       try {
@@ -70,7 +72,9 @@ public class TetrapodCluster extends Storage implements RaftRPC<TetrapodStateMac
          service.fail(e);
       }
       this.raft = raftEngine;
-      this.raft.getStateMachine().addListener(this);
+      this.state = this.raft.getStateMachine();
+      this.state.addListener(this);
+
    }
 
    public void startListening() throws IOException {
@@ -286,7 +290,7 @@ public class TetrapodCluster extends Storage implements RaftRPC<TetrapodStateMac
       if (ses.getTheirEntityType() != Core.TYPE_TETRAPOD) {
          synchronized (raft) {
             // send properties
-            for (ClusterProperty prop : raft.getStateMachine().props.values()) {
+            for (ClusterProperty prop : state.props.values()) {
                if (ses.getTheirEntityType() == Core.TYPE_ADMIN) {
                   // blank out values for protected properties sent to admins
                   prop = new ClusterProperty(prop.key, prop.secret, prop.secret ? "" : prop.val);
@@ -295,7 +299,7 @@ public class TetrapodCluster extends Storage implements RaftRPC<TetrapodStateMac
             }
             // admin app needs web roots
             if (ses.getTheirEntityType() == Core.TYPE_ADMIN) {
-               for (WebRootDef def : raft.getStateMachine().webRootDefs.values()) {
+               for (WebRootDef def : state.webRootDefs.values()) {
                   ses.sendMessage(new WebRootAddedMessage(def), MessageHeader.TO_ENTITY, toEntityId);
                }
             }
@@ -438,7 +442,7 @@ public class TetrapodCluster extends Storage implements RaftRPC<TetrapodStateMac
    private Command<TetrapodStateMachine> bytesToCommand(byte[] data, int type) throws IOException {
       if (data == null)
          return null;
-      Command<TetrapodStateMachine> cmd = (Command<TetrapodStateMachine>) raft.getStateMachine().makeCommandById(type);
+      Command<TetrapodStateMachine> cmd = (Command<TetrapodStateMachine>) state.makeCommandById(type);
       try (ByteArrayInputStream buf = new ByteArrayInputStream(data)) {
          try (DataInputStream in = new DataInputStream(buf)) {
             cmd.read(in);
@@ -454,6 +458,19 @@ public class TetrapodCluster extends Storage implements RaftRPC<TetrapodStateMac
     * available peerId
     */
    public Response requestIssuePeerId(final IssuePeerIdRequest r, final SessionRequestContext ctx) {
+      for (TetrapodPeer peer : cluster.values()) {
+         if (peer.host.equals(r.host) && peer.clusterPort == r.clusterPort) {
+
+            EntityInfo e = service.registry.getEntity(peer.entityId);
+            if (e != null) {
+               service.registry.clearGone(e, ctx.session);
+            }
+            peer.setSession(ctx.session);
+
+            return new IssuePeerIdResponse(peer.peerId, service.getEntityId(), raft.getLog().getLastTerm(), raft.getLog().getLastIndex());
+         }
+      }
+
       final ClientResponseHandler<TetrapodStateMachine> handler = new ClientResponseHandler<TetrapodStateMachine>() {
          @Override
          public void handleResponse(Entry<TetrapodStateMachine> e) {
@@ -673,7 +690,7 @@ public class TetrapodCluster extends Storage implements RaftRPC<TetrapodStateMac
             // TODO / FIXME / IMPLEMENT
             // send RPC to read from leader
          case Local:
-            StorageItem item = ((TetrapodStateMachine) raft.getStateMachine()).getItem(key);
+            StorageItem item = state.getItem(key);
             return item != null ? item.getDataAsString() : null;
       }
       return null;
@@ -711,7 +728,7 @@ public class TetrapodCluster extends Storage implements RaftRPC<TetrapodStateMac
    public void logStatus() {
       logger.info(String.format("#%d: %9s term=%d, lastIndex=%d, lastTerm=%d commitIndex=%d, %s, peers=%d, leader=%d", raft.getPeerId(),
             raft.getRole(), raft.getCurrentTerm(), raft.getLog().getLastIndex(), raft.getLog().getLastTerm(), raft.getLog()
-                  .getCommitIndex(), raft.getStateMachine(), raft.getClusterSize(), raft.getLeader()));
+                  .getCommitIndex(), state, raft.getClusterSize(), raft.getLeader()));
 
       if (raft.getRole() == Role.Leader) {
          // HACK: generate some command activity for testing
@@ -722,8 +739,8 @@ public class TetrapodCluster extends Storage implements RaftRPC<TetrapodStateMac
    public Response requestRaftStats(RaftStatsRequest r, RequestContext ctx) {
       synchronized (raft) {
          int i = 0;
-         int[] peers = new int[raft.getClusterSize() - 1];
-         for (Peer p : raft.getPeers()) {
+         int[] peers = new int[state.getPeers().size()];
+         for (Peer p : state.getPeers()) {
             peers[i++] = p.peerId << Registry.PARENT_ID_SHIFT;
          }
 
@@ -744,7 +761,7 @@ public class TetrapodCluster extends Storage implements RaftRPC<TetrapodStateMac
 
    public void registerContract(ContractDescription info) {
       // FIXME: version isn't updated for minor changes, so we should also include a hash or timestamp for minor updates 
-      if (raft.getStateMachine().hasContract(info.contractId, info.version)) {
+      if (state.hasContract(info.contractId, info.version)) {
          executeCommand(new RegisterContractCommand(info), null);
       }
    }
@@ -760,11 +777,11 @@ public class TetrapodCluster extends Storage implements RaftRPC<TetrapodStateMac
    }
 
    public WebRoutes getWebRoutes() {
-      return raft.getStateMachine().webRoutes;
+      return state.webRoutes;
    }
 
    public Map<String, WebRoot> getWebRootDirs() {
-      return raft.getStateMachine().webRootDirs;
+      return state.webRootDirs;
    }
 
    public void setWebRoot(WebRootDef def) {

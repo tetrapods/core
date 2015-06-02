@@ -2,6 +2,7 @@ package io.tetrapod.core.storage;
 
 import io.netty.channel.socket.SocketChannel;
 import io.tetrapod.core.*;
+import io.tetrapod.core.registry.Registry;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.utils.Util;
 import io.tetrapod.protocol.core.*;
@@ -20,6 +21,7 @@ public class TetrapodPeer implements Session.Listener, SessionFactory {
 
    public final TetrapodService service;
    public final int             entityId;
+   public final int             peerId;
    public final String          host;
    public final int             clusterPort;
 
@@ -37,6 +39,7 @@ public class TetrapodPeer implements Session.Listener, SessionFactory {
       this.host = host;
       this.clusterPort = clusterPort;
       this.servicePort = servicePort;
+      this.peerId = entityId >> Registry.PARENT_ID_SHIFT;
    }
 
    public synchronized boolean isConnected() {

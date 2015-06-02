@@ -565,4 +565,13 @@ public class Registry implements TetrapodContract.Registry.API {
       }
    }
 
+   public void clearGone(EntityInfo e, Session ses) {
+      lock.readLock().lock();
+      try {
+         updateStatus(e, e.status & ~Core.STATUS_GONE);
+         e.setSession(ses);
+      } finally {
+         lock.readLock().unlock();
+      }
+   }
 }

@@ -1152,6 +1152,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
    @Override
    public Response requestIssuePeerId(IssuePeerIdRequest r, RequestContext ctx) {
+      // FIXME: Check ctx to ensure it's tetrapod
       return cluster.requestIssuePeerId(r, (SessionRequestContext) ctx);
    }
 
