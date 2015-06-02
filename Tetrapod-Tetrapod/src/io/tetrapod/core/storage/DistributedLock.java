@@ -16,11 +16,11 @@ import org.slf4j.*;
 public class DistributedLock implements Closeable {
 
    private static final Logger logger = LoggerFactory.getLogger(DistributedLock.class);
-   final RaftStorage           raft;
+   final TetrapodCluster           raft;
    final String                key;
    final String                uuid;
 
-   public DistributedLock(String key, RaftStorage raft) {
+   public DistributedLock(String key, TetrapodCluster raft) {
       this.key = key;
       this.raft = raft;
       this.uuid = UUID.randomUUID().toString();

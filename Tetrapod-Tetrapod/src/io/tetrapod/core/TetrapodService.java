@@ -11,7 +11,7 @@ import io.tetrapod.core.registry.*;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.rpc.Error;
 import io.tetrapod.core.serialize.datasources.ByteBufDataSource;
-import io.tetrapod.core.storage.RaftStorage;
+import io.tetrapod.core.storage.TetrapodCluster;
 import io.tetrapod.core.utils.*;
 import io.tetrapod.core.web.*;
 import io.tetrapod.protocol.core.*;
@@ -54,7 +54,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
    private final TetrapodWorker                    worker;
 
-   final protected RaftStorage                     raftStorage       = new RaftStorage(this);
+   final protected TetrapodCluster                 cluster           = new TetrapodCluster(this);
 
    private AdminAccounts                           adminAccounts;
 
@@ -77,7 +77,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          getWebRoutes().setRoute(r.path, r.contractId, r.structId);
       }
       // add the tetrapod admin web root
-      raftStorage.getWebRootDirs().put("tetrapod", new WebRootLocalFilesystem("/", new File("webContent")));
+      cluster.getWebRootDirs().put("tetrapod", new WebRootLocalFilesystem("/", new File("webContent")));
 
       addSubscriptionHandler(new TetrapodContract.Registry(), registry);
    }
@@ -87,12 +87,12 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       logger.info("***** Start Network ***** ");
       logger.info("Joining Cluster: {}", address.dump());
       this.startPaused = otherOpts.get("paused").equals("true");
-      raftStorage.startListening();
+      cluster.startListening();
       if (address.host.equals("self")) {
-         raftStorage.bootstrap();
+         cluster.bootstrap();
       } else {
          this.token = token;
-         raftStorage.joinCluster(address);
+         cluster.joinCluster(address);
       }
    }
 
@@ -130,9 +130,9 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
    @Override
    public boolean dependenciesReady() {
-      return raftStorage.isReady();
+      return cluster.isReady();
    }
-   
+
    /**
     * We need to override the connectToCluster in superclass because that one tries to reconnect to other tetrapods, but the clusterClient
     * connection is a special loopback connection in the tetrapod, so we should only ever reconnect back to ourselves.
@@ -186,7 +186,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
    @Override
    public long getCounter() {
-      long count = raftStorage.getNumSessions();
+      long count = cluster.getNumSessions();
       for (Server s : servers) {
          count += s.getNumSessions();
       }
@@ -266,16 +266,16 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          Properties props = new Properties();
          Launcher.loadClusterProperties(props);
          for (Object key : props.keySet()) {
-            raftStorage.setClusterProperty(new ClusterProperty(key.toString(), false, props.getProperty(key.toString())));
+            cluster.setClusterProperty(new ClusterProperty(key.toString(), false, props.getProperty(key.toString())));
          }
 
          props = new Properties();
          Launcher.loadSecretProperties(props);
          for (Object key : props.keySet()) {
-            raftStorage.setClusterProperty(new ClusterProperty(key.toString(), true, props.getProperty(key.toString())));
+            cluster.setClusterProperty(new ClusterProperty(key.toString(), true, props.getProperty(key.toString())));
          }
 
-         raftStorage.setClusterProperty(new ClusterProperty("props.init", false, "true"));
+         cluster.setClusterProperty(new ClusterProperty("props.init", false, "true"));
       }
    }
 
@@ -290,20 +290,20 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          loadClusterPropertiesIntoRaft();
          try {
             AuthToken.setSecret(getSharedSecret());
-            adminAccounts = new AdminAccounts(raftStorage);
+            adminAccounts = new AdminAccounts(cluster);
 
             // FIXME:
             // Ensure we have all of the needed WebRootDir files installed before we open http ports
 
             // create servers
-            Server httpServer = (new Server(getHTTPPort(), new WebSessionFactory(raftStorage.getWebRootDirs(), "/sockets"), dispatcher));
+            Server httpServer = (new Server(getHTTPPort(), new WebSessionFactory(cluster.getWebRootDirs(), "/sockets"), dispatcher));
             servers.add((httpServer));
             httpServers.add(httpServer);
 
             // create secure port servers, if configured
             if (sslContext != null) {
-               httpServer = new Server(getHTTPSPort(), new WebSessionFactory(raftStorage.getWebRootDirs(), "/sockets"), dispatcher,
-                     sslContext, false);
+               httpServer = new Server(getHTTPSPort(), new WebSessionFactory(cluster.getWebRootDirs(), "/sockets"), dispatcher, sslContext,
+                     false);
                servers.add((httpServer));
                httpServers.add(httpServer);
             }
@@ -352,8 +352,8 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    @Override
    public void onShutdown(boolean restarting) {
       logger.info("Shutting Down Tetrapod");
-      if (raftStorage != null) {
-         raftStorage.shutdown();
+      if (cluster != null) {
+         cluster.shutdown();
       }
    }
 
@@ -372,12 +372,12 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          return entity.getSession();
       } else {
          if (entity.isTetrapod()) {
-            return raftStorage.getSession(entity.entityId);
+            return cluster.getSession(entity.entityId);
          }
          final EntityInfo parent = registry.getEntity(entity.parentId);
          if (parent != null) {
             assert (parent != null);
-            return raftStorage.getSession(parent.entityId);
+            return cluster.getSession(parent.entityId);
          } else {
             logger.warn("Could not find parent entity {} for {}", entity.parentId, entity);
             return null;
@@ -559,7 +559,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
    @Override
    public WebRoutes getWebRoutes() {
-      return raftStorage.getWebRoutes();
+      return cluster.getWebRoutes();
    }
 
    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -569,7 +569,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       if (registryTopic.getNumSubscribers() > 0) {
          broadcast(msg, registryTopic);
       }
-      raftStorage.broadcast(msg);
+      cluster.broadcast(msg);
    }
 
    @Override
@@ -629,11 +629,11 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    }
 
    private void healthCheck() {
-      raftStorage.service();
+      cluster.service();
       final long now = System.currentTimeMillis();
       if (now - lastStatsLog > 10 * 1000) {
          registry.logStats();
-         raftStorage.logStatus();
+         cluster.logStatus();
          lastStatsLog = System.currentTimeMillis();
       }
       for (final EntityInfo e : registry.getChildren()) {
@@ -676,16 +676,16 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
    public void subscribeToCluster(Session ses, int toEntityId) {
       assert (clusterTopic != null);
-      synchronized (raftStorage) {
+      synchronized (cluster) {
          subscribe(clusterTopic.topicId, toEntityId);
-         raftStorage.sendClusterDetails(ses, toEntityId, clusterTopic.topicId);
+         cluster.sendClusterDetails(ses, toEntityId, clusterTopic.topicId);
       }
    }
 
    @Override
    public void messageClusterMember(ClusterMemberMessage m, MessageContext ctx) {
-      synchronized (raftStorage) {
-         if (raftStorage.addMember(m.entityId, m.host, m.servicePort, m.clusterPort, null)) {
+      synchronized (cluster) {
+         if (cluster.addMember(m.entityId, m.host, m.servicePort, m.clusterPort, null)) {
             broadcast(new ClusterMemberMessage(m.entityId, m.host, m.servicePort, m.clusterPort, m.uuid), clusterTopic);
          }
       }
@@ -885,7 +885,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       //         logger.debug("Setting Web route [{}] for {}", r.path, r.contractId);
       //      } 
 
-      raftStorage.registerContract(req.info);
+      cluster.registerContract(req.info);
 
       return Response.SUCCESS;
    }
@@ -903,18 +903,18 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
    @Override
    public Response requestStorageGet(StorageGetRequest r, RequestContext ctx) {
-      return new StorageGetResponse(raftStorage.get(r.key));
+      return new StorageGetResponse(cluster.get(r.key));
    }
 
    @Override
    public Response requestStorageSet(StorageSetRequest r, RequestContext ctx) {
-      raftStorage.put(r.key, r.value);
+      cluster.put(r.key, r.value);
       return Response.SUCCESS;
    }
 
    @Override
    public Response requestStorageDelete(StorageDeleteRequest r, RequestContext ctx) {
-      raftStorage.delete(r.key);
+      cluster.delete(r.key);
       return Response.SUCCESS;
    }
 
@@ -1122,42 +1122,42 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       if (ctx.session.getTheirEntityType() != Core.TYPE_TETRAPOD) {
          return new Error(ERROR_INVALID_RIGHTS);
       }
-      return raftStorage.requestClusterJoin(r, clusterTopic, ctx);
+      return cluster.requestClusterJoin(r, clusterTopic, ctx);
    }
 
    @Override
    public Response requestClusterLeave(ClusterLeaveRequest r, RequestContext ctx) {
-      return raftStorage.requestClusterLeave(r, (SessionRequestContext) ctx);
+      return cluster.requestClusterLeave(r, (SessionRequestContext) ctx);
    }
 
    @Override
    public Response requestAppendEntries(AppendEntriesRequest r, RequestContext ctx) {
-      return raftStorage.requestAppendEntries(r, ctx);
+      return cluster.requestAppendEntries(r, ctx);
    }
 
    @Override
    public Response requestVote(VoteRequest r, RequestContext ctx) {
-      return raftStorage.requestVote(r, ctx);
+      return cluster.requestVote(r, ctx);
    }
 
    @Override
    public Response requestInstallSnapshot(InstallSnapshotRequest r, RequestContext ctx) {
-      return raftStorage.requestInstallSnapshot(r, ctx);
+      return cluster.requestInstallSnapshot(r, ctx);
    }
 
    @Override
    public Response requestIssueCommand(IssueCommandRequest r, RequestContext ctx) {
-      return raftStorage.requestIssueCommand(r, ctx);
+      return cluster.requestIssueCommand(r, ctx);
    }
 
    @Override
    public Response requestIssuePeerId(IssuePeerIdRequest r, RequestContext ctx) {
-      return raftStorage.requestIssuePeerId(r, (SessionRequestContext) ctx);
+      return cluster.requestIssuePeerId(r, (SessionRequestContext) ctx);
    }
 
    @Override
    public Response requestRaftStats(RaftStatsRequest r, RequestContext ctx) {
-      return raftStorage.requestRaftStats(r, ctx);
+      return cluster.requestRaftStats(r, ctx);
    }
 
    @Override
@@ -1165,7 +1165,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       if (!adminAccounts.isValidAdminRequest(ctx, r.adminToken)) {
          return new Error(ERROR_INVALID_RIGHTS);
       }
-      raftStorage.delClusterProperty(r.key);
+      cluster.delClusterProperty(r.key);
       return Response.SUCCESS;
    }
 
@@ -1174,7 +1174,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       if (!adminAccounts.isValidAdminRequest(ctx, r.adminToken)) {
          return new Error(ERROR_INVALID_RIGHTS);
       }
-      raftStorage.setClusterProperty(r.property);
+      cluster.setClusterProperty(r.property);
       return Response.SUCCESS;
    }
 
@@ -1193,7 +1193,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          return new Error(ERROR_INVALID_RIGHTS);
       }
       if (r.def != null) {
-         raftStorage.setWebRoot(r.def);
+         cluster.setWebRoot(r.def);
          return Response.SUCCESS;
       }
       return new Error(ERROR_INVALID_DATA);
@@ -1205,7 +1205,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          return new Error(ERROR_INVALID_RIGHTS);
       }
       if (r.name != null) {
-         raftStorage.delWebRoot(r.name);
+         cluster.delWebRoot(r.name);
          return Response.SUCCESS;
       }
       return new Error(ERROR_INVALID_DATA);
