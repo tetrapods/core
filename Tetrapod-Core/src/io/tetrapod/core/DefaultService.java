@@ -171,41 +171,45 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
       sendDirectRequest(new ServicesSubscribeRequest());
    }
 
-   
    public boolean dependenciesReady() {
       return services.checkDependencies(dependencies);
    }
-   
+
+   private final Object checkDependenciesLock = new Object();
+
    public void checkDependencies() {
-      if (!isShuttingDown()) {
-         if (dependenciesReady()) {
-            try {
-               if (startPaused) {
-                  updateStatus(getStatus() | Core.STATUS_PAUSED);
-               }
-               onReadyToServe();
-               if (getEntityType() != Core.TYPE_TETRAPOD) {
-                  if (serviceConnector != null) {
-                     serviceConnector.shutdown();
+      synchronized (checkDependenciesLock) {
+         if (!isShuttingDown() && isStartingUp()) {
+            logger.info("Checking Dependencies...");
+            if (dependenciesReady()) {
+               try {
+                  if (startPaused) {
+                     updateStatus(getStatus() | Core.STATUS_PAUSED);
                   }
-                  serviceConnector = new ServiceConnector(this, sslContext);
+                  onReadyToServe();
+                  if (getEntityType() != Core.TYPE_TETRAPOD) {
+                     if (serviceConnector != null) {
+                        serviceConnector.shutdown();
+                     }
+                     serviceConnector = new ServiceConnector(this, sslContext);
+                  }
+               } catch (Throwable t) {
+                  fail(t);
                }
-            } catch (Throwable t) {
-               fail(t);
-            }
-            // ok, we're good to go
-            updateStatus(getStatus() & ~Core.STATUS_STARTING);
-            onStarted();
-            if (startPaused) {
-               onPaused();
-               startPaused = false; // only start paused once
-            }
-         } else {
-            dispatcher.dispatch(1, TimeUnit.SECONDS, new Runnable() {
-               public void run() {
-                  checkDependencies();
+               // ok, we're good to go
+               updateStatus(getStatus() & ~Core.STATUS_STARTING);
+               onStarted();
+               if (startPaused) {
+                  onPaused();
+                  startPaused = false; // only start paused once
                }
-            });
+            } else {
+               dispatcher.dispatch(1, TimeUnit.SECONDS, new Runnable() {
+                  public void run() {
+                     checkDependencies();
+                  }
+               });
+            }
          }
       }
    }

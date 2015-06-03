@@ -120,9 +120,6 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          // connects to self on localhost on our clusterport
          clusterClient.connect("localhost", getClusterPort(), dispatcher).sync();
 
-         if (myEntityId == io.tetrapod.core.registry.Registry.BOOTSTRAP_ID) {
-            checkDependencies();
-         }
       } catch (Exception ex) {
          fail(ex);
       }
@@ -361,8 +358,12 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
     * Extract a shared secret key for seeding server HMACs
     */
    public byte[] getSharedSecret() {
-      return Base64.decode(Util.getProperty(SHARED_SECRET_KEY, "!! Set me to AuthToken.generateSharedSecret() !!").getBytes(
-            Charset.forName("UTF-8")));
+      String secret = Util.getProperty(SHARED_SECRET_KEY);
+      if (secret == null) {
+         secret = AuthToken.generateSharedSecret();
+         cluster.setClusterProperty(new ClusterProperty(SHARED_SECRET_KEY, true, secret));
+      }
+      return Base64.decode(secret.getBytes(Charset.forName("UTF-8")));
    }
 
    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

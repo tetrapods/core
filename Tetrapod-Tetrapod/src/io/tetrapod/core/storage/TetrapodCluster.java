@@ -17,6 +17,7 @@ import java.io.*;
 import java.security.SecureRandom;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.slf4j.*;
 
@@ -55,7 +56,7 @@ public class TetrapodCluster extends Storage implements RaftRPC<TetrapodStateMac
    /**
     * The index of the command we joined the cluster
     */
-   private long                                   joinIndex = -1;
+   private AtomicLong                             joinIndex = new AtomicLong(-1);
 
    public TetrapodCluster(TetrapodService service) {
       this.service = service;
@@ -127,13 +128,15 @@ public class TetrapodCluster extends Storage implements RaftRPC<TetrapodStateMac
       logger.info("Bootstrapping new cluster");
       raft.bootstrap(Util.getHostName(), service.getClusterPort());
       service.registerSelf(io.tetrapod.core.registry.Registry.BOOTSTRAP_ID, random.nextLong());
-      joinIndex = raft.getLog().getLastIndex();
+      //    joinIndex = raft.getLog().getLastIndex();
+      service.checkDependencies();
+
    }
 
    private void addPeer(AddPeerCommand<TetrapodStateMachine> command) {}
 
    private void delPeer(DelPeerCommand<TetrapodStateMachine> command, Entry<TetrapodStateMachine> entry) {
-      if (command.peerId == raft.getPeerId() && entry.getIndex() > joinIndex) {
+      if (command.peerId == raft.getPeerId() && joinIndex.get() > 0 && entry.getIndex() > joinIndex.get()) {
          service.shutdown(false);
       }
    }
@@ -198,8 +201,6 @@ public class TetrapodCluster extends Storage implements RaftRPC<TetrapodStateMac
                               ses.setTheirEntityId(r.entityId);
                               // ses.close();
 
-                              joinIndex = r.index;
-                              logger.info("Join Index = {}", joinIndex);
                               service.registerSelf(myEntityId, service.random.nextLong());
                               raft.start(r.peerId);
 
@@ -207,10 +208,12 @@ public class TetrapodCluster extends Storage implements RaftRPC<TetrapodStateMac
                               service.dispatcher.dispatch(1, TimeUnit.SECONDS, new Runnable() {
                                  public void run() {
                                     addMember(r.entityId, address.host, Core.DEFAULT_SERVICE_PORT, address.port, ses);
+                                    service.checkDependencies();
                                  }
                               });
                            }
                         }
+
                      });
             }
          }).sync();
@@ -412,6 +415,7 @@ public class TetrapodCluster extends Storage implements RaftRPC<TetrapodStateMac
             public void onResponse(Response res) {
                if (res.isError()) {
                   logger.error("IssueCommandRequest {}", res);
+                  handler.handleResponse(null);
                } else {
                   IssueCommandResponse r = (IssueCommandResponse) res;
                   try {
@@ -726,13 +730,13 @@ public class TetrapodCluster extends Storage implements RaftRPC<TetrapodStateMac
    ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
    public void logStatus() {
-      logger.info(String.format("#%d: %9s term=%d, lastIndex=%d, lastTerm=%d commitIndex=%d, %s, peers=%d, leader=%d", raft.getPeerId(),
+      logger.info(String.format("#%d: %9s term=%d, lastIndex=%d, lastTerm=%d commitIndex=%d, %s, peers=%d, leader=%d checksum=%016X", raft.getPeerId(),
             raft.getRole(), raft.getCurrentTerm(), raft.getLog().getLastIndex(), raft.getLog().getLastTerm(), raft.getLog()
-                  .getCommitIndex(), state, raft.getClusterSize(), raft.getLeader()));
+                  .getCommitIndex(), state, raft.getClusterSize(), raft.getLeader(), state.getChecksum()));
 
       if (raft.getRole() == Role.Leader) {
-         // HACK: generate some command activity for testing
-         // raft.executeCommand(new PutItemCommand<TetrapodStateMachine>("foo", ("bar-" + raft.getLog().getCommitIndex()).getBytes()), null);
+         // Generate some command activity periodically to ensure things still moving
+         raft.executeCommand(new HealthCheckCommand<TetrapodStateMachine>(), null);
       }
    }
 
@@ -801,7 +805,26 @@ public class TetrapodCluster extends Storage implements RaftRPC<TetrapodStateMac
    }
 
    public boolean isReady() {
-      return joinIndex >= 0 && raft.getLog().getLastIndex() >= joinIndex;
+      if (joinIndex.get() > 0) {
+         return raft.getStateMachine().getIndex() >= joinIndex.get();
+      } else {
+         if (joinIndex.get() == -1) {
+            joinIndex.set(0);
+            executeCommand(new HealthCheckCommand<TetrapodStateMachine>(), new ClientResponseHandler<TetrapodStateMachine>() {
+               @Override
+               public void handleResponse(Entry<TetrapodStateMachine> entry) {
+                  if (entry != null) {
+                     joinIndex.set(entry.getIndex());
+                     logger.info("Join Index = {}", joinIndex);
+                  } else {
+                     joinIndex.set(-1);
+                  }
+               }
+            });
+         }
+         return false;
+      }
+
    }
 
 }

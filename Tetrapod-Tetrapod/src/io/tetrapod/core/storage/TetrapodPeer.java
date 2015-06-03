@@ -40,6 +40,7 @@ public class TetrapodPeer implements Session.Listener, SessionFactory {
       this.clusterPort = clusterPort;
       this.servicePort = servicePort;
       this.peerId = entityId >> Registry.PARENT_ID_SHIFT;
+      scheduleReconnect(0);
    }
 
    public synchronized boolean isConnected() {

@@ -28,6 +28,7 @@ public class TetrapodStateMachine extends StorageStateMachine<TetrapodStateMachi
    public static final int                        REGISTER_CONTRACT_COMMAND_ID    = 402;
    public static final int                        SET_WEB_ROUTE_COMMAND_ID        = 403;
    public static final int                        DEL_WEB_ROUTE_COMMAND_ID        = 404;
+   public static final int                        HEALTH_CHECK_COMMAND_ID         = 405;
 
    public final Map<String, ClusterProperty>      props                           = new HashMap<>();
    public final Map<Integer, ContractDescription> contracts                       = new HashMap<>();
