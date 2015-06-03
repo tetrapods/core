@@ -232,7 +232,7 @@ public class AuthToken {
       byte[] b = new byte[64];
       Random r = new SecureRandom();
       r.nextBytes(b);
-      return Base64.encode(Unpooled.wrappedBuffer(b), Base64Dialect.URL_SAFE).toString(Charset.forName("UTF-8"));
+      return Base64.encode(Unpooled.wrappedBuffer(b), Base64Dialect.STANDARD).toString(Charset.forName("UTF-8"));
    }
 
 }
