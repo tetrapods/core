@@ -417,12 +417,14 @@ public class TetrapodCluster extends Storage implements RaftRPC<TetrapodStateMac
                   logger.error("IssueCommandRequest {}", res);
                   handler.handleResponse(null);
                } else {
-                  IssueCommandResponse r = (IssueCommandResponse) res;
-                  try {
-                     handler.handleResponse(new Entry<TetrapodStateMachine>(r.term, r.index, bytesToCommand(r.command,
-                           command.getCommandType())));
-                  } catch (IOException e) {
-                     logger.error(e.getMessage(), e);
+                  if (handler != null) {
+                     IssueCommandResponse r = (IssueCommandResponse) res;
+                     try {
+                        handler.handleResponse(new Entry<TetrapodStateMachine>(r.term, r.index, bytesToCommand(r.command,
+                              command.getCommandType())));
+                     } catch (IOException e) {
+                        logger.error(e.getMessage(), e);
+                     }
                   }
                }
             }
@@ -730,9 +732,9 @@ public class TetrapodCluster extends Storage implements RaftRPC<TetrapodStateMac
    ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
    public void logStatus() {
-      logger.info(String.format("#%d: %9s term=%d, lastIndex=%d, lastTerm=%d commitIndex=%d, %s, peers=%d, leader=%d checksum=%016X", raft.getPeerId(),
-            raft.getRole(), raft.getCurrentTerm(), raft.getLog().getLastIndex(), raft.getLog().getLastTerm(), raft.getLog()
-                  .getCommitIndex(), state, raft.getClusterSize(), raft.getLeader(), state.getChecksum()));
+      logger.info(String.format("#%d: %9s term=%d, lastIndex=%d, lastTerm=%d commitIndex=%d, %s, peers=%d, leader=%d checksum=%016X", raft
+            .getPeerId(), raft.getRole(), raft.getCurrentTerm(), raft.getLog().getLastIndex(), raft.getLog().getLastTerm(), raft.getLog()
+            .getCommitIndex(), state, raft.getClusterSize(), raft.getLeader(), state.getChecksum()));
 
       if (raft.getRole() == Role.Leader) {
          // Generate some command activity periodically to ensure things still moving
