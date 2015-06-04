@@ -86,6 +86,8 @@ function TP_Core(server) {
    server.register("struct", "Core", "ServerAddress", 1, 14893956);
    server.register("request", "Core", "Pause", 1, 14690004);
    server.register("request", "Core", "Unpause", 1, 10620319);
+   server.register("request", "Core", "Rebalance", 1, 1734199);
+   server.register("request", "Core", "ReleaseExcess", 1, 12519092);
    server.register("request", "Core", "Purge", 1, 2667367);
    server.register("request", "Core", "Shutdown", 1, 8989182);
    server.register("request", "Core", "Restart", 1, 4802943);
