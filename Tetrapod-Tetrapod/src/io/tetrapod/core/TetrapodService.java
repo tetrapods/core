@@ -88,7 +88,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       logger.info("Joining Cluster: {}", address.dump());
       this.startPaused = otherOpts.get("paused").equals("true");
       cluster.startListening();
-      if (address.host.equals("self")) {
+      if (address.host.equals("bootstrap")) {
          cluster.bootstrap();
       } else {
          this.token = token;
@@ -265,8 +265,9 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          for (Object key : props.keySet()) {
             cluster.setClusterProperty(new ClusterProperty(key.toString(), false, props.getProperty(key.toString())));
          }
-
+         String secrets = props.getProperty("secrets");
          props = new Properties();
+         props.put("secrets", secrets);
          Launcher.loadSecretProperties(props);
          for (Object key : props.keySet()) {
             cluster.setClusterProperty(new ClusterProperty(key.toString(), true, props.getProperty(key.toString())));
