@@ -285,14 +285,19 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
             logger.error(e.getMessage(), e);
          }
       } else {
-         sendDirectRequest(new UnregisterRequest(getEntityId())).handle(new ResponseHandler() {
-            @Override
-            public void onResponse(Response res) {
-               clusterClient.close();
-               dispatcher.shutdown();
-               setTerminated(true);
-            }
-         });
+         if (getEntityId() != 0 && clusterClient.getSession() != null) {
+            sendDirectRequest(new UnregisterRequest(getEntityId())).handle(new ResponseHandler() {
+               @Override
+               public void onResponse(Response res) {
+                  clusterClient.close();
+                  dispatcher.shutdown();
+                  setTerminated(true);
+               }
+            });
+         } else {
+            dispatcher.shutdown();
+            setTerminated(true);
+         }
       }
 
       // If JVM doesn't gracefully terminate after 1 minute, explicitly kill the process

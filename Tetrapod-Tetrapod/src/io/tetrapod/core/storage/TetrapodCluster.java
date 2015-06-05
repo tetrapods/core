@@ -159,6 +159,20 @@ public class TetrapodCluster extends Storage implements RaftRPC<TetrapodStateMac
    }
 
    /**
+    * Looks through raft state for peers we can attempt to join
+    */
+   public synchronized boolean joinCluster() {
+      for (Peer peer : state.getPeers()) {
+         if (!(peer.port == service.getClusterPort() && peer.host.equals(Util.getHostName()))) {
+            if (joinCluster(new ServerAddress(peer.host, peer.port))) {
+               return true;
+            }
+         }
+      }
+      return false;
+   }
+
+   /**
     * Attempts to join the raft cluster by contacting the given node. If we connect, we send a ClusterJoinRequest to obtain a peerId. The
     * peerId is used to derive our entityId, and we expect the raft leader to start giving us the state of the system.
     */

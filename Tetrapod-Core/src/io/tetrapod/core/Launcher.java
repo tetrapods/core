@@ -126,7 +126,7 @@ public class Launcher {
    private static Map<String, String> getOpts(String[] array, int startIx, Map<String, String> opts) {
       for (int i = startIx; i < array.length; i += 2) {
          String key = array[i];
-         String value = array[i + 1];
+         String value = array.length > i + 1 ? array[i + 1] : null;
          if (!key.startsWith("-")) {
             throw new RuntimeException("expected option, got [" + key + "]");
          }
