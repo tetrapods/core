@@ -155,29 +155,24 @@
 
                         <table id="props-table" class="table table-bordered table-condensed">
                            <thead>
-                              <tr>
-                                 <th><i class="fa fa-gear fa-fw"></i></th>
+                              <tr>                                
                                  <th>Key</th>
                                  <th>Value</th>
                               </tr>
                            </thead>
                            <tbody data-bind="foreach: props" class="props">
-                              <tr>
-                                 <td class="centered">
-                                    <div class="dropdown btn btn-sm" style="display: inline-block;">
-                                       <a class="dropdown-toggle" data-toggle="dropdown" href="#">
-                                          <i class="fa fa-gear fa-fw"></i><i class="fa fa-caret-down"></i>
-                                       </a>
-                                       <ul class="dropdown-menu">
-                                          <li><a href="#" data-bind="click: editValue">Edit Value...</a></li>
-                                          <li><a href="#" data-bind="click: deleteProp">Delete Property...</a></li>
-                                       </ul>
-                                    </div>
-                                 </td>
+                              <tr>                               
                                  <td>
+                                    <div data-bind="click: deleteProp" class="btn btn-sm">
+                                       <span class="fa fa-fw fa-trash"></span>
+                                    </div>
                                     <span data-bind="text: key" class="property"></span>
                                  </td>
                                  <td>
+                                    <div data-bind="click: editValue" class="btn btn-sm">
+                                       <span class="fa fa-fw fa-edit"></span>
+                                    </div>
+
                                     <i data-bind="visible: secret" class="fa fa-fw fa-lock"></i>
                                     <span data-bind="text: val" class="property"></span>
                                     &nbsp;
@@ -312,8 +307,9 @@
                                                       Errors</a></li>
                                                 <li><a href="#" data-bind="click: setCommsLogLevel">Set Comms Log
                                                       Level...</a>
-                                                   <li><a href="#"
-                                                         data-bind="click: function() { $parent.execute($data) }, text: name"></a></li></li>
+                                                <li><a href="#"
+                                                      data-bind="click: function() { $parent.execute($data) }, text: name"></a></li>
+                                                </li>
 
                                                 <li data-bind="visible: name=='Tetrapod'" class="divider"></li>
                                                 <li><a href="#"

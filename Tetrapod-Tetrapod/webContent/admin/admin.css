@@ -323,6 +323,15 @@
 	white-space: nowrap;
 }
 
+#props-table .btn {
+   color: #aaa;
+}
+
+#props-table .btn:HOVER {
+   color: #000;
+}
+   
+
 .property {
 	font-family: monospace;
 }
@@ -334,5 +343,4 @@
 .webroots .btn:HOVER {
    color: #000;
 }
-	
-}
+   

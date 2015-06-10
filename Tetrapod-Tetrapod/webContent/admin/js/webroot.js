@@ -28,7 +28,7 @@ define(["knockout", "jquery", "bootbox", "app", "alert"], function(ko, $, bootbo
                   }
                }, app.server.logResponse);
             }
-         });
+         }, self.path);
       }
 
       function editLocation() {
@@ -43,7 +43,7 @@ define(["knockout", "jquery", "bootbox", "app", "alert"], function(ko, $, bootbo
                   }
                }, app.server.logResponse);
             }
-         });
+         }, self.file());
       }
 
       function deleteWebRoot() {

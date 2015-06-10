@@ -28,7 +28,7 @@ define(["knockout", "jquery", "bootbox", "app", "alert"], function(ko, $, bootbo
                   }
                }, app.server.logResponse);
             }
-         });
+         }, self.val());
       }
 
       function deleteProp() {
