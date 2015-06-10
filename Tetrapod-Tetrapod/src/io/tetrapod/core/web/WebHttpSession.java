@@ -285,8 +285,12 @@ public class WebHttpSession extends WebSession {
          try {
             if (header.structId == WebAPIRequest.STRUCT_ID) {
                // @webapi() generic WebAPIRequest call 
+               String body = req.content().toString(CharsetUtil.UTF_8);
+               if (body == null || body.trim().isEmpty()) {
+                  body = req.getUri();
+               }
                final WebAPIRequest request = new WebAPIRequest(route.path, getHeaders(req).toString(), context.getRequestParams()
-                     .toString(), req.content().toString(CharsetUtil.UTF_8));
+                     .toString(), body);
                final int toEntityId = relayHandler.getAvailableService(header.contractId);
                if (toEntityId != 0) {
                   final Session ses = relayHandler.getRelaySession(toEntityId, header.contractId);
@@ -389,6 +393,21 @@ public class WebHttpSession extends WebSession {
       if (isWebSocket()) {
          return new TextWebSocketFrame(jo.toString(3));
       } else {
+         if (jo.has("__httpOverride")) {
+            ByteBuf buf = WebContext.makeByteBufResult(jo.optString("__httpPayload"));
+            FullHttpResponse httpResponse = new DefaultFullHttpResponse(HTTP_1_1, OK, buf);
+            httpResponse.headers().set(CONTENT_TYPE, jo.optString("__httpMime", "text/json"));
+            httpResponse.headers().set(CONTENT_LENGTH, httpResponse.content().readableBytes());
+            if (jo.has("__httpDisposition")) {
+               httpResponse.headers().set("Content-Disposition", jo.optString("__httpDisposition"));
+            }
+            if (keepAlive) {
+               httpResponse.headers().set(CONNECTION, HttpHeaders.Values.KEEP_ALIVE);
+            } else {
+               httpResponse.headers().set(CONNECTION, HttpHeaders.Values.CLOSE);
+            }
+            return httpResponse;
+         }
          ByteBuf buf = WebContext.makeByteBufResult(jo.toString(3));
          FullHttpResponse httpResponse = new DefaultFullHttpResponse(HTTP_1_1, OK, buf);
          httpResponse.headers().set(CONTENT_TYPE, "text/json");
