@@ -90,7 +90,8 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       cluster.startListening();
       this.token = token;
 
-      if (otherOpts.containsKey("bootstrap") && otherOpts.get("bootstrap").equals("force")) {
+      String bootstrap = otherOpts.get("bootstrap");
+      if (bootstrap != null && bootstrap.equals("force")) {
          cluster.bootstrap();
       } else if (address.host.equals("self")) {
          if (!cluster.joinCluster()) {
