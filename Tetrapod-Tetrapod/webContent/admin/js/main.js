@@ -10,7 +10,8 @@ require.config({
       "jquery" : "../ext/jquery.min",
       "bootstrap" : "../ext/bootstrap.min",
       "bootbox" : "../ext/bootbox.min",
-      "sweet-alert" : "../ext/sweet-alert",
+      "vex" : "../ext/vex",
+      "vex.dialog" : "../ext/vex.dialog",
       "jquery.flot" : "//cdnjs.cloudflare.com/ajax/libs/flot/0.8.2/jquery.flot.min",
       "protocol" : "../../protocol"
    }
