@@ -15,7 +15,7 @@ define(["knockout", "jquery", "bootbox", "toolbox", "protocol/server", "protocol
       self.onLogout = onLogout;
       self.modalData = ko.observable({});
       self.name = window.location.hostname;
-      self.isProd = self.name == "chatbox.com" || (self.name.indexOf(".prod.") > 0);
+      self.isProd = self.name == "chatbox.com" || self.name == "xbox.chatbox.com" || (self.name.indexOf(".prod.") > 0);
 
       function run(clusterModel) {
          ko.bindingHandlers.stopBinding = {
