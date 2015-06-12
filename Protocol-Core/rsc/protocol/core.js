@@ -61,21 +61,21 @@ function TP_Core(server) {
    server.registerConst("Core", "ServiceLogEntry", "LEVEL_ERROR", 50);
    server.registerConst("Core", "ServiceLogEntry", "LEVEL_OFF", 100);
    
-   server.registerConst("Core", "null", "CONNECTION_CLOSED", 7);
-   server.registerConst("Core", "null", "FLOOD", 12);
-   server.registerConst("Core", "null", "INVALID_ENTITY", 9);
-   server.registerConst("Core", "null", "INVALID_RIGHTS", 8);
-   server.registerConst("Core", "null", "INVALID_TOKEN", 13);
-   server.registerConst("Core", "null", "NOT_CONFIGURED", 2718243);
-   server.registerConst("Core", "null", "PROTOCOL_MISMATCH", 5);
-   server.registerConst("Core", "null", "RIGHTS_EXPIRED", 10);
-   server.registerConst("Core", "null", "SERIALIZATION", 4);
-   server.registerConst("Core", "null", "SERVICE_OVERLOADED", 11);
-   server.registerConst("Core", "null", "SERVICE_UNAVAILABLE", 2);
-   server.registerConst("Core", "null", "TIMEOUT", 3);
-   server.registerConst("Core", "null", "UNKNOWN", 1);
-   server.registerConst("Core", "null", "UNKNOWN_REQUEST", 6);
-   server.registerConst("Core", "null", "UNSUPPORTED", 14);
+   server.registerErrorConst("Core", "null", "CONNECTION_CLOSED", 7);
+   server.registerErrorConst("Core", "null", "FLOOD", 12);
+   server.registerErrorConst("Core", "null", "INVALID_ENTITY", 9);
+   server.registerErrorConst("Core", "null", "INVALID_RIGHTS", 8);
+   server.registerErrorConst("Core", "null", "INVALID_TOKEN", 13);
+   server.registerErrorConst("Core", "null", "NOT_CONFIGURED", 2718243);
+   server.registerErrorConst("Core", "null", "PROTOCOL_MISMATCH", 5);
+   server.registerErrorConst("Core", "null", "RIGHTS_EXPIRED", 10);
+   server.registerErrorConst("Core", "null", "SERIALIZATION", 4);
+   server.registerErrorConst("Core", "null", "SERVICE_OVERLOADED", 11);
+   server.registerErrorConst("Core", "null", "SERVICE_UNAVAILABLE", 2);
+   server.registerErrorConst("Core", "null", "TIMEOUT", 3);
+   server.registerErrorConst("Core", "null", "UNKNOWN", 1);
+   server.registerErrorConst("Core", "null", "UNKNOWN_REQUEST", 6);
+   server.registerErrorConst("Core", "null", "UNSUPPORTED", 14);
    
    server.register("struct", "Core", "Core", 1, 9088168);
    server.register("struct", "Core", "RequestHeader", 1, 7165109);
@@ -85,6 +85,8 @@ function TP_Core(server) {
    server.register("struct", "Core", "ServerAddress", 1, 14893956);
    server.register("request", "Core", "Pause", 1, 14690004);
    server.register("request", "Core", "Unpause", 1, 10620319);
+   server.register("request", "Core", "Rebalance", 1, 1734199);
+   server.register("request", "Core", "ReleaseExcess", 1, 12519092);
    server.register("request", "Core", "Purge", 1, 2667367);
    server.register("request", "Core", "Shutdown", 1, 8989182);
    server.register("request", "Core", "Restart", 1, 4802943);

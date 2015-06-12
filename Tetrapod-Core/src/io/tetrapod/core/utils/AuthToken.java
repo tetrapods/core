@@ -3,9 +3,11 @@ package io.tetrapod.core.utils;
 import io.netty.buffer.*;
 import io.netty.handler.codec.base64.*;
 import io.tetrapod.core.serialize.datasources.ByteBufDataSource;
+
 import java.io.IOException;
 import java.nio.charset.Charset;
-import java.util.Arrays;
+import java.security.SecureRandom;
+import java.util.*;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -224,6 +226,13 @@ public class AuthToken {
       public int   accountId;
       public int   timeLeft;
       public int[] miscValues;
+   }
+
+   public static String generateSharedSecret() {
+      byte[] b = new byte[64];
+      Random r = new SecureRandom();
+      r.nextBytes(b);
+      return Base64.encode(Unpooled.wrappedBuffer(b), Base64Dialect.STANDARD).toString(Charset.forName("UTF-8"));
    }
 
 }

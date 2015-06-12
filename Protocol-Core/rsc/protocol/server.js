@@ -12,7 +12,8 @@ function TP_Server() {
       struct: {},
       message: {},
       consts: {},
-      reverseMap: {}
+      reverseMap: {},
+      errors: {}
    };
    var requestCounter = 0;
    var requestContexts = {};
@@ -30,8 +31,10 @@ function TP_Server() {
    self.commsLogKeepAlives = false;
    self.register = register;
    self.registerConst = registerConst;
+   self.registerErrorConst = registerErrorConst;
    self.addMessageHandler = addMessageHandler;
    self.removeMessageHandler = removeMessageHandler;
+   self.getErrorStrings = getErrorStrings;
    self.send = send; // to any
    self.sendTo = sendTo;
    self.sendDirect = sendDirect;
@@ -66,6 +69,14 @@ function TP_Server() {
       protocol.reverseMap["" + contractId + "." + structId] = contractName + "." + structName;
    }
 
+   function registerErrorConst(contractName, structName, constName, constValue) {
+      registerConst(contractName, structName, constName, constValue);
+      if (!protocol.errors[constValue]) {
+         protocol.errors[constValue] = [];
+      }
+      protocol.errors[constValue].push(constName);
+   }
+   
    function registerConst(contractName, structName, constName, constValue) {
       var map = protocol["consts"];
       var o;
@@ -300,12 +311,18 @@ function TP_Server() {
          if (!isKeepAlive(req._contractId, req._structId) || self.commsLogKeepAlives) {
             var str = logstamp() + ' [' + result._requestId + '] <- ' + nameOf(result) + ' ' + JSON.stringify(result, dropUnderscored);
             if (result.isError()) {
-               console.warn(str);
+               var err = getErrorStrings(result.errorCode);
+               err = err ? (" " + err.join(" ")) : "";
+               console.warn(str + err);
             } else {
                console.debug(str);
             }
          }
       }
+   }
+   
+   function getErrorStrings(code) {
+      return protocol.errors[code];
    }
 
    function logRequest(req, toId) {

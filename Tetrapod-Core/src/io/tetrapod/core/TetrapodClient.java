@@ -58,7 +58,7 @@ public class TetrapodClient implements SessionFactory, Session.Helper {
 
          client.enableTLS(ctx);
       }
-      client.connect(address.host, address.port, dispatcher).sync(); 
+      client.connect(address.host, address.port, dispatcher).sync();
    }
 
    public void addContracts(Contract... contracts) {
@@ -99,11 +99,6 @@ public class TetrapodClient implements SessionFactory, Session.Helper {
    @Override
    public Dispatcher getDispatcher() {
       return dispatcher;
-   }
-
-   @Override
-   public ServiceAPI getServiceHandler(int contractId) {
-      return null; // N/A
    }
 
    @Override
@@ -189,6 +184,11 @@ public class TetrapodClient implements SessionFactory, Session.Helper {
             }
          }
       });
+   }
+
+   @Override
+   public Async dispatchRequest(RequestHeader header, Request req, Session fromSession) {
+      return null; // clients don't handle requests
    }
 
 }

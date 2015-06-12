@@ -7,8 +7,7 @@ import io.tetrapod.core.utils.Util;
 
 import java.io.*;
 import java.nio.charset.Charset;
-import java.security.SecureRandom;
-import java.util.*;
+import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
 import org.slf4j.*;
@@ -51,16 +50,17 @@ public class Storage {
    }
 
    public byte[] getSharedSecret() {
-      String str = map.get(SHARED_SECRET_KEY);
-      if (str != null) {
-         return Base64.decode(str.getBytes(Charset.forName("UTF-8")));
-      } else {
-         byte[] b = new byte[64];
-         Random r = new SecureRandom();
-         r.nextBytes(b);
-         map.put(SHARED_SECRET_KEY, new String(Base64.encode(b), Charset.forName("UTF-8")));
-         return b;
-      }
+      return Base64.decode(Util.getProperty(SHARED_SECRET_KEY).getBytes(Charset.forName("UTF-8")));
+      //      String str = map.get(SHARED_SECRET_KEY);
+      //      if (str != null) {
+      //         return Base64.decode(str.getBytes(Charset.forName("UTF-8")));
+      //      } else {
+      //         byte[] b = new byte[64];
+      //         Random r = new SecureRandom();
+      //         r.nextBytes(b);
+      //         map.put(SHARED_SECRET_KEY, new String(Base64.encode(b), Charset.forName("UTF-8")));
+      //         return b;
+      //      }
    }
 
    public void shutdown() {
@@ -172,6 +172,5 @@ public class Storage {
          getLock(key).unlock();
       }
    }
- 
 
 }

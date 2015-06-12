@@ -11,6 +11,7 @@ import java.security.*;
 import java.util.*;
 
 import javax.net.ssl.*;
+import javax.xml.bind.DatatypeConverter;
 
 /**
  * A random collection of useful static utility methods
@@ -19,11 +20,11 @@ public class Util {
 
    public static final SecureRandom random     = new SecureRandom();
 
-   public static long               ONE_SECOND = 1000;
-   public static long               ONE_MINUTE = ONE_SECOND * 60;
-   public static long               ONE_HOUR   = ONE_MINUTE * 60;
-   public static long               ONE_DAY    = ONE_HOUR * 24;
-   public static long               ONE_WEEK   = ONE_DAY * 7;
+   public static final long         ONE_SECOND = 1000;
+   public static final long         ONE_MINUTE = ONE_SECOND * 60;
+   public static final long         ONE_HOUR   = ONE_MINUTE * 60;
+   public static final long         ONE_DAY    = ONE_HOUR * 24;
+   public static final long         ONE_WEEK   = ONE_DAY * 7;
 
    /**
     * Sleeps the current thread for a number of milliseconds, ignores interrupts.
@@ -97,7 +98,7 @@ public class Util {
       return res;
    }
 
-   public static long[] toLongArray(List<Long> list) {
+   public static long[] toLongArray(Collection<Long> list) {
       long[] res = new long[list.size()];
       int i = 0;
       for (Iterator<Long> iterator = list.iterator(); iterator.hasNext();) {
@@ -106,7 +107,7 @@ public class Util {
       return res;
    }
 
-   public static boolean[] toBooleanArray(List<Boolean> list) {
+   public static boolean[] toBooleanArray(Collection<Boolean> list) {
       boolean[] res = new boolean[list.size()];
       int i = 0;
       for (Iterator<Boolean> iterator = list.iterator(); iterator.hasNext();) {
@@ -345,6 +346,7 @@ public class Util {
 
    /**
     * Checks if Object o has any of the bits of the flag set
+    * 
     * @param o object to check, must have a "flags" field
     * @param flag to check for
     * @return true if that flag is set
@@ -359,9 +361,10 @@ public class Util {
       }
       return (source & flag) != 0;
    }
-   
+
    /**
     * Checks if Object o has ALL of the bits of the flag set
+    * 
     * @param o object to check, must have a "flags" field
     * @param flag to check for
     * @return true if that flag is set
@@ -376,7 +379,7 @@ public class Util {
       }
       return (source & flags) == flags;
    }
-   
+
    /**
     * Checks if source has any of flag bits set
     */
@@ -389,6 +392,39 @@ public class Util {
     */
    public static boolean hasAllFlags(int source, int flags) {
       return (source & flags) == flags;
+   }
+
+   /**
+    * Download a URL's contents to the given file
+    */
+   public static void downloadFile(URL url, File toFile) throws IOException {
+      try (InputStream in = new BufferedInputStream(url.openStream())) {
+         try (BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(toFile))) {
+            int n = 0;
+            while (-1 != (n = in.read())) {
+               out.write(n);
+            }
+         }
+      }
+   }
+
+   /**
+    * Launch a task in a new thread
+    */
+   public static void runThread(String name, Runnable runnable) {
+      new Thread(runnable, name).start();
+   }
+
+   /**
+    * Returns a md5 hash string for this file
+    */
+   public static String digest(String string) {
+      try {
+         MessageDigest md = MessageDigest.getInstance("MD5");
+         return DatatypeConverter.printHexBinary(md.digest(string.getBytes("UTF-8"))).toUpperCase();
+      } catch (Exception e) {
+         throw new RuntimeException(e);
+      }
    }
 
 }

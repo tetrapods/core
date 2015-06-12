@@ -76,7 +76,7 @@ class JavascriptGenerator implements LanguageGenerator {
                }
             }
             for (Err err : context.allErrors) {
-               Template sub = template("register.const");
+               Template sub = template("register.errconst");
                sub.add("contractClass", contractName);
                sub.add("class", "null");
                sub.add("constName", err.name);
