@@ -14,7 +14,7 @@
       </triggeringPolicy>
       
       <encoder>
-         <pattern>%d{HH:mm:ss.SSS} %-5level %24thread{24} - %16logger{0} - %msg%n</pattern>
+         <pattern>%d %-5level %24thread{24} - %16logger{0} - %msg%n</pattern>
       </encoder>
    </appender>
    
@@ -33,7 +33,7 @@
       </triggeringPolicy>
       
       <encoder>
-         <pattern>%d{HH:mm:ss.SSS} %-5level %24thread{24} - %16logger{0} - %msg%n</pattern>
+         <pattern>%d %-5level %24thread{24} - %16logger{0} - %msg%n</pattern>
       </encoder>
    </appender>
    
