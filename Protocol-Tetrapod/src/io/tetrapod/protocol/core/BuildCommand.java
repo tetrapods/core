@@ -29,15 +29,17 @@ public class BuildCommand extends Structure {
       defaults();
    }
 
-   public BuildCommand(String serviceName, int build, int command) {
+   public BuildCommand(String serviceName, int build, int command, String name) {
       this.serviceName = serviceName;
       this.build = build;
       this.command = command;
+      this.name = name;
    }   
    
    public String serviceName;
    public int build;
    public int command;
+   public String name;
 
    public final Structure.Security getSecurity() {
       return Security.ADMIN;
@@ -47,6 +49,7 @@ public class BuildCommand extends Structure {
       serviceName = null;
       build = 0;
       command = 0;
+      name = null;
    }
    
    @Override
@@ -54,6 +57,7 @@ public class BuildCommand extends Structure {
       data.write(1, this.serviceName);
       data.write(2, this.build);
       data.write(3, this.command);
+      data.write(4, this.name);
       data.writeEndTag();
    }
    
@@ -66,6 +70,7 @@ public class BuildCommand extends Structure {
             case 1: this.serviceName = data.read_string(tag); break;
             case 2: this.build = data.read_int(tag); break;
             case 3: this.command = data.read_int(tag); break;
+            case 4: this.name = data.read_string(tag); break;
             case Codec.END_TAG:
                return;
             default:
@@ -87,10 +92,11 @@ public class BuildCommand extends Structure {
       // Note do not use this tags in long term serializations (to disk or databases) as 
       // implementors are free to rename them however they wish.  A null means the field
       // is not to participate in web serialization (remaining at default)
-      String[] result = new String[3+1];
+      String[] result = new String[4+1];
       result[1] = "serviceName";
       result[2] = "build";
       result[3] = "command";
+      result[4] = "name";
       return result;
    }
 
@@ -106,6 +112,7 @@ public class BuildCommand extends Structure {
       desc.types[1] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
       desc.types[2] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
       desc.types[3] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
+      desc.types[4] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
       return desc;
    }
 }

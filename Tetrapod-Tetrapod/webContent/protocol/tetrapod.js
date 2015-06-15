@@ -18,13 +18,13 @@ function TP_Tetrapod(server) {
    server.registerConst("Tetrapod", "BuildCommand", "DEPLOY_LATEST", -1);
    server.registerConst("Tetrapod", "BuildCommand", "LAUNCH_DEPLOYED", -1);
    
-   server.registerConst("Tetrapod", "null", "HOSTNAME_MISMATCH", 12239905);
-   server.registerConst("Tetrapod", "null", "INVALID_ACCOUNT", 14623816);
-   server.registerConst("Tetrapod", "null", "INVALID_CREDENTIALS", 8845805);
-   server.registerConst("Tetrapod", "null", "INVALID_UUID", 398174);
-   server.registerConst("Tetrapod", "null", "NOT_PARENT", 2219555);
-   server.registerConst("Tetrapod", "null", "NOT_READY", 12438466);
-   server.registerConst("Tetrapod", "null", "UNKNOWN_ENTITY_ID", 15576171);
+   server.registerErrorConst("Tetrapod", "null", "HOSTNAME_MISMATCH", 12239905);
+   server.registerErrorConst("Tetrapod", "null", "INVALID_ACCOUNT", 14623816);
+   server.registerErrorConst("Tetrapod", "null", "INVALID_CREDENTIALS", 8845805);
+   server.registerErrorConst("Tetrapod", "null", "INVALID_UUID", 398174);
+   server.registerErrorConst("Tetrapod", "null", "NOT_PARENT", 2219555);
+   server.registerErrorConst("Tetrapod", "null", "NOT_READY", 12438466);
+   server.registerErrorConst("Tetrapod", "null", "UNKNOWN_ENTITY_ID", 15576171);
    
    server.register("struct", "Tetrapod", "Entity", 1, 10171140);
    server.register("request", "Tetrapod", "Register", 1, 10895179);

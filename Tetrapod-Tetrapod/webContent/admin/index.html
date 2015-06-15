@@ -155,13 +155,13 @@
 
                         <table id="props-table" class="table table-bordered table-condensed">
                            <thead>
-                              <tr>                                
+                              <tr>
                                  <th>Key</th>
                                  <th>Value</th>
                               </tr>
                            </thead>
                            <tbody data-bind="foreach: props" class="props">
-                              <tr>                               
+                              <tr>
                                  <td>
                                     <div data-bind="click: deleteProp" class="btn btn-sm">
                                        <span class="fa fa-fw fa-trash"></span>
@@ -309,7 +309,7 @@
                                                       Level...</a>
                                                 <li><a href="#"
                                                       data-bind="click: function() { $parent.execute($data) }, text: name"></a></li>
-                                                </li>
+
 
                                                 <li data-bind="visible: name=='Tetrapod'" class="divider"></li>
                                                 <li><a href="#"
@@ -503,6 +503,11 @@
                            <label>Build number</label>
                            <input type="text" class="form-control" data-bind="value: modalData().buildNumber"
                               placeholder="current" />
+                        </div>
+                        <div class="form-group">
+                           <label>Build Name</label>
+                           <input type="text" class="form-control" data-bind="value: modalData().buildName"
+                              placeholder="default" />
                         </div>
                      </div>
                      <div class="col-md-6">
