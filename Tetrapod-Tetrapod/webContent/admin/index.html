@@ -167,8 +167,8 @@
                                                    <i class="fa fa-pause fa-fw"></i>Pause
                                                 </a></li>
                                              <li><a href="#" data-bind="click: purge, visible: canPause()">
-                                                <i class="fa fa-user-times fa-fw"></i>Purge
-                                             </a></li>
+                                                   <i class="fa fa-user-times fa-fw"></i>Purge
+                                                </a></li>
 
                                              <li><a href="#" data-bind="click: unpause, visible: canUnpause()">
                                                    <i class="fa fa-play fa-fw"></i>Resume
@@ -351,6 +351,11 @@
                            <label>Build number</label>
                            <input type="text" class="form-control" data-bind="value: modalData().buildNumber"
                               placeholder="current" />
+                        </div>
+                        <div class="form-group">
+                           <label>Build Name</label>
+                           <input type="text" class="form-control" data-bind="value: modalData().buildName"
+                              placeholder="default" />
                         </div>
                      </div>
                      <div class="col-md-6">
