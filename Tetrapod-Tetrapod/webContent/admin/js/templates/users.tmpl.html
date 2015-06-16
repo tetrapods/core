@@ -1,0 +1,29 @@
+
+<button data-bind="click: addAdminUser">
+   <i class="fa fa-fw fa-plus"></i> Add User
+</button>
+
+<table id="props-table" class="table table-bordered table-condensed">
+   <thead>
+      <tr>
+         <th>Email</th>
+         <th>Role</th>
+      </tr>
+   </thead>
+   <tbody data-bind="foreach: users" class="admins">
+      <tr>
+         <td>
+            <div data-bind="click: deleteUser" class="btn btn-sm">
+               <span class="fa fa-fw fa-trash"></span>
+            </div>
+            <span data-bind="text: email" class="property"></span>
+         </td>
+         <td>
+            <div data-bind="click: changePassword" class="btn btn-sm">
+               <span class="fa fa-fw fa-edit"></span>
+            </div>
+            <span data-bind="text: path" class="property"></span>
+         </td>
+      </tr>
+   </tbody>
+</table>

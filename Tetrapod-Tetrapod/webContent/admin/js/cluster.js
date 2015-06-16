@@ -8,6 +8,7 @@ define(function(require) {
    var Properties = require("modules/properties");
    var WebRoots = require("modules/webroots");
    var Builder = require("modules/builder");
+   var Users = require("modules/users");
 
 
    return new ClusterModel();
@@ -19,6 +20,7 @@ define(function(require) {
       self.raft = new Raft(app);
       self.webroots = new WebRoots(app);
       self.properties = new Properties(app);
+      self.users = new Users(app);
 
    }
 

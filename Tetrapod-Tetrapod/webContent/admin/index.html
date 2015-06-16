@@ -43,8 +43,6 @@
                         <i class="fa fa-gear fa-fw"></i> Settings
                      </a> <a href="#" data-bind="click: onShowEditPassword">
                         <i class="fa fa-lock fa-fw"></i> Change Password...
-                     </a> <a href="#" data-bind="click: manageAdminUsers">
-                        <i class="fa fa-lock fa-fw"></i> Manage Admin Users...
                      </a></li>
 
                   <li class="divider"></li>
@@ -83,12 +81,14 @@
                      <li><a href="#raft-tab" data-toggle="tab">Raft</a></li>
                      <li><a href="#props-tab" data-toggle="tab">Properties</a></li>
                      <li><a href="#web-tab" data-toggle="tab">Web Roots</a></li>
+                     <li><a href="#users-tab" data-toggle="tab">Users</a></li>
                   </ul>
                   <div class="tab-content">
                      <div class="tab-pane active" id="hosts-tab" data-bind="template: { name: 'hosts', data: hosts }"></div>
                      <div class="tab-pane" id="raft-tab" data-bind="template: { name: 'raft', data: raft }"></div>
                      <div class="tab-pane" id="props-tab" data-bind="template: { name: 'properties', data: properties }"></div>
                      <div class="tab-pane" id="web-tab" data-bind="template: { name: 'webroots', data: webroots }"></div>
+                     <div class="tab-pane" id="users-tab" data-bind="template: { name: 'users', data: users }"></div>
                   </div>
                </div>
                <!-- cluster-view -->
