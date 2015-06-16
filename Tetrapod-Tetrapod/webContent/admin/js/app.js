@@ -8,6 +8,7 @@ define(["knockout", "jquery", "bootbox", "toolbox", "protocol/server", "protocol
       var token = null;
       var model;
 
+      self.leaderEntityId;
       self.server = server;
       self.run = run;
       self.login = login;
@@ -41,7 +42,7 @@ define(["knockout", "jquery", "bootbox", "toolbox", "protocol/server", "protocol
 
       function onConnected() {
          $('#disconnected-alertbox').hide();
-         model.services.removeAll();
+         model.hosts.clear();
          server.sendDirect("Register", {
             build: 0,
             contractId: 0,

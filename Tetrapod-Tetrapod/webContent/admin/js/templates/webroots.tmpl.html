@@ -1,0 +1,36 @@
+
+<button data-bind="click: addWebRoot">
+   <i class="fa fa-fw fa-plus"></i> Add Web Root
+</button>
+
+<table id="props-table" class="table table-bordered table-condensed">
+   <thead>
+      <tr>
+         <th>Name</th>
+         <th>Path</th>
+         <th>Location</th>
+      </tr>
+   </thead>
+   <tbody data-bind="foreach: webroots" class="webroots">
+      <tr>
+         <td>
+            <div data-bind="click: deleteWebRoot" class="btn btn-sm">
+               <span class="fa fa-fw fa-trash"></span>
+            </div>
+            <span data-bind="text: name" class="property"></span>
+         </td>
+         <td>
+            <div data-bind="click: editPath" class="btn btn-sm">
+               <span class="fa fa-fw fa-edit"></span>
+            </div>
+            <span data-bind="text: path" class="property"></span>
+         </td>
+         <td>
+            <div data-bind="click: editLocation" class="btn btn-sm">
+               <span class="fa fa-fw fa-edit"></span>
+            </div>
+            <span data-bind="text: file" class="property"></span>
+         </td>
+      </tr>
+   </tbody>
+</table>

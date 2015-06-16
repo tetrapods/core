@@ -1,4 +1,4 @@
-define(["knockout", "jquery", "bootbox", "app", "build", "chart"], function(ko, $, bootbox, app, builder, Chart) {
+define(["knockout", "jquery", "bootbox", "app", "chart", "modules/builder"], function(ko, $, bootbox, app, Chart, builder) {
    // static variables
 
    var Core = app.server.consts["Core.Core"];
@@ -136,10 +136,10 @@ define(["knockout", "jquery", "bootbox", "app", "build", "chart"], function(ko, 
       self.releaseExcess = function() {
          bootbox.confirm("Are you sure you want to release excess rooms on: " + self.name + "[" + self.entityId + "]?", function(result) {
             if (result) {
-                  app.server.sendTo("ReleaseExcess", {}, self.entityId);
-               }
-            });
-         }
+               app.server.sendTo("ReleaseExcess", {}, self.entityId);
+            }
+         });
+      }
 
       self.unpause = function() {
          app.server.sendTo("Unpause", {}, self.entityId);
