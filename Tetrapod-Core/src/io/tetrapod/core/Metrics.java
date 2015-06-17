@@ -59,6 +59,10 @@ public class Metrics {
    public static Metric register(Metric metric, Object o, String... names) {
       return metrics.register(MetricRegistry.name(o.getClass(), names), metric);
    }
+   
+   public static Metric register(Metric metric, Class<?> c, String... names) {
+      return metrics.register(MetricRegistry.name(c, names), metric);
+   }
 
    public static void init(String prefix) {
       gc = metrics.register(MetricRegistry.name("jvm", "gc"), new GarbageCollectorMetricSet());
@@ -113,6 +117,6 @@ public class Metrics {
 
    public static int getNumCores() {
       return ManagementFactory.getOperatingSystemMXBean().getAvailableProcessors();
-   } 
+   }
  
 }
