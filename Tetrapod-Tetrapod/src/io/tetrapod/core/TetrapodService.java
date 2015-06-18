@@ -5,6 +5,7 @@ import static io.tetrapod.protocol.core.CoreContract.*;
 import static io.tetrapod.protocol.core.TetrapodContract.*;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.socket.SocketChannel;
+import io.netty.handler.codec.base64.Base64Dialect;
 import io.tetrapod.core.AdminAccounts.AdminMutator;
 import io.tetrapod.core.Session.RelayHandler;
 import io.tetrapod.core.registry.*;
@@ -19,7 +20,6 @@ import io.tetrapod.protocol.raft.*;
 import io.tetrapod.protocol.storage.*;
 
 import java.io.*;
-import java.nio.charset.Charset;
 import java.security.*;
 import java.security.spec.InvalidKeySpecException;
 import java.util.*;
@@ -27,8 +27,6 @@ import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
 import org.slf4j.*;
-
-import com.hazelcast.util.Base64;
 
 /**
  * The tetrapod service is the core cluster service which handles message routing, cluster management, service discovery, and load balancing
@@ -48,6 +46,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    private Topic                                   clusterTopic;
    private Topic                                   registryTopic;
    private Topic                                   servicesTopic;
+   private Topic                                   adminTopic;
 
    private final Object                            registryTopicLock = new Object();
    private final Object                            servicesTopicLock = new Object();
@@ -128,6 +127,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          clusterTopic = registry.publish(entityId);
          registryTopic = registry.publish(entityId);
          servicesTopic = registry.publish(entityId);
+         adminTopic = registry.publish(entityId);
 
          //   cluster.startListening();
          // Establish a special loopback connection to ourselves
@@ -378,7 +378,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          secret = AuthToken.generateSharedSecret();
          cluster.setClusterProperty(new ClusterProperty(SHARED_SECRET_KEY, true, secret));
       }
-      return Base64.decode(secret.getBytes(Charset.forName("UTF-8")));
+      return Encryptor.decodeBase64(secret, Base64Dialect.STANDARD);
    }
 
    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -612,6 +612,10 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       }
    }
 
+   public void broadcastAdminMessage(Message msg) {
+      broadcast(msg, adminTopic);
+   }
+
    @Override
    public void subscribe(int topicId, int entityId) {
       registry.subscribe(registry.getEntity(getEntityId()), topicId, entityId, false);
@@ -704,6 +708,14 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          if (cluster.addMember(m.entityId, m.host, m.servicePort, m.clusterPort, null)) {
             broadcast(new ClusterMemberMessage(m.entityId, m.host, m.servicePort, m.clusterPort, m.uuid), clusterTopic);
          }
+      }
+   }
+
+   public void subscribeToAdmin(Session ses, int toEntityId) {
+      assert (adminTopic != null);
+      synchronized (cluster) {
+         subscribe(adminTopic.topicId, toEntityId);
+         cluster.sendAdminDetails(ses, toEntityId, adminTopic.topicId);
       }
    }
 
@@ -1033,6 +1045,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
             try {
                if (adminAccounts.verifyPermission(admin, Admin.RIGHTS_USER_WRITE)) {
                   final String hash = PasswordHash.createHash(r.password);
+
                   final Admin newUser = adminAccounts.addAdmin(r.email.trim(), hash, r.rights);
                   if (newUser != null) {
                      return Response.SUCCESS;
@@ -1196,11 +1209,11 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    }
 
    @Override
-   public Response requestClusterSubscribe(ClusterSubscribeRequest r, RequestContext ctx) {
+   public Response requestAdminSubscribe(AdminSubscribeRequest r, RequestContext ctx) {
       if (!adminAccounts.isValidAdminRequest(ctx, r.adminToken)) {
          return new Error(ERROR_INVALID_RIGHTS);
       }
-      subscribeToCluster(((SessionRequestContext) ctx).session, ctx.header.fromId);
+      subscribeToAdmin(((SessionRequestContext) ctx).session, ctx.header.fromId);
       return Response.SUCCESS;
    }
 

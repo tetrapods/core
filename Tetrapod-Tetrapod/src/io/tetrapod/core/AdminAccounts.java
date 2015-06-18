@@ -1,52 +1,48 @@
 package io.tetrapod.core;
 
 import static io.tetrapod.protocol.core.Core.TYPE_ADMIN;
-import io.tetrapod.core.rpc.*;
+import io.tetrapod.core.rpc.RequestContext;
 import io.tetrapod.core.storage.*;
 import io.tetrapod.core.utils.*;
 import io.tetrapod.protocol.core.Admin;
+import io.tetrapod.raft.*;
+import io.tetrapod.raft.RaftRPC.ClientResponseHandler;
 
 import org.slf4j.*;
-
-import com.hazelcast.core.HazelcastInstanceNotActiveException;
 
 /**
  * Manages tetrapod administration accounts
  */
 public class AdminAccounts {
 
-   public static final Logger logger = LoggerFactory.getLogger(AdminAccounts.class);
-   private final Storage      storage;
+   public static final Logger    logger = LoggerFactory.getLogger(AdminAccounts.class);
 
-   public AdminAccounts(Storage storage) {
-      this.storage = storage;
-   }
+   private final TetrapodCluster cluster;
 
-   public Admin getAdminByEmail(String email) {
-      Admin admin = null;
+   public AdminAccounts(TetrapodCluster storage) {
+      this.cluster = storage;
+
+      // will add the default admin user if missing
       try {
-         int accountId = storage.get("admin.email::" + email, 0);
-         admin = getAdminByAccountId(accountId);
-         if (admin == null) {
-            // check for default admin user
-            final String defaultAdminEmail = "admin@" + Util.getProperty("product.url", "tetrapod.io");
-            if (email.equals(defaultAdminEmail)) {
-               String defaultPassword = Util.getProperty("admin.default.password", "admin");
-               admin = addAdmin(defaultAdminEmail, PasswordHash.createHash(defaultPassword), 0xFF);
-            } else {
-               admin = null;
-            }
-         }
+         addAdmin("admin@localhost", PasswordHash.createHash("admin"), 0xFF);
       } catch (Exception e) {
          logger.error(e.getMessage(), e);
       }
-      return admin;
+   }
+
+   public Admin getAdminByEmail(String email) {
+      for (Admin admin : cluster.getAdmins()) {
+         if (admin.email.equalsIgnoreCase(email)) {
+            return admin;
+         }
+      }
+      return null;
    }
 
    public Admin getAdminByAccountId(int accountId) {
       if (accountId > 0) {
          try {
-            return storage.read("admin::" + accountId, new Admin());
+            return cluster.read("admin::" + accountId, new Admin());
          } catch (Exception e) {
             logger.error(e.getMessage(), e);
          }
@@ -55,19 +51,20 @@ public class AdminAccounts {
    }
 
    public Admin addAdmin(String email, String hash, long rights) {
-      try {
-         int accountId = storage.get("admin.email::" + email, 0);
-         if (accountId == 0) {
-            accountId = (int) storage.increment("admin.accounts");
-            Admin admin = new Admin(accountId, email, hash, rights, new long[Admin.MAX_LOGIN_ATTEMPTS]);
-            storage.put("admin::" + accountId, admin);
-            storage.put("admin.email::" + email, accountId);
-            return admin;
+      final Value<Admin> val = new Value<Admin>();
+      final Admin admin = new Admin(0, email, hash, rights, new long[Admin.MAX_LOGIN_ATTEMPTS]);
+      cluster.executeCommand(new AddAdminUserCommand(admin), new ClientResponseHandler<TetrapodStateMachine>() {
+         @Override
+         public void handleResponse(Entry<TetrapodStateMachine> e) {
+            if (e != null) {
+               AddAdminUserCommand cmd = (AddAdminUserCommand) e.getCommand();
+               val.set(cmd.getAdminUser());
+            } else {
+               val.set(null);
+            }
          }
-      } catch (Exception e) {
-         logger.error(e.getMessage(), e);
-      }
-      return null;
+      });
+      return val.waitForValue();
    }
 
    public interface AdminMutator {
@@ -78,19 +75,17 @@ public class AdminAccounts {
    public Admin mutate(Admin presumedCurrent, AdminMutator mutator) {
       try {
          final String key = "admin::" + presumedCurrent.accountId;
-         final DistributedLock lock = storage.getLock(key);
+         final DistributedLock lock = cluster.getLock(key);
          lock.lock(60000, 60000);
          try {
             Admin admin = getAdminByAccountId(presumedCurrent.accountId);
             mutator.mutate(admin);
-            storage.put(key, admin);
+            cluster.put(key, admin);
             logger.debug("Mutated {}", key);
             return admin;
          } finally {
             lock.unlock();
          }
-      } catch (HazelcastInstanceNotActiveException e) {
-         throw Fail.fail(e);
       } catch (Exception e) {
          logger.error(e.getMessage(), e);
          return null;

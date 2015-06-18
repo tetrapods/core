@@ -92,7 +92,7 @@ define(["knockout", "jquery", "bootbox", "toolbox", "protocol/server", "protocol
             $('#login-wrapper').hide();
             $('#app-wrapper').show();
             server.sendDirect("ServicesSubscribe", {}, server.logResponse);
-            server.sendDirect("ClusterSubscribe", {
+            server.sendDirect("AdminSubscribe", {
                adminToken: self.authtoken
             }, server.logResponse);
          } else {
@@ -107,40 +107,6 @@ define(["knockout", "jquery", "bootbox", "toolbox", "protocol/server", "protocol
          $('#app-wrapper').hide();
          model.services([]);
       }
-
-      ///////
-      self.addUserEmail = ko.observable();
-      self.addUserPassword = ko.observable();
-      self.onAddAdminUser = function() {
-      }
-      self.manageAdminUsers = function() {
-      }
-      //////////
-
-      self.modalOldPassword = ko.observable();
-      self.modalNewPassword = ko.observable();
-      self.onShowEditPassword = function() {
-         self.modalOldPassword('');
-         self.modalNewPassword('');
-         $('#set-password-modal').modal('show');
-      };
-      self.onEditPassword = function() {
-         server.sendDirect("AdminChangePassword", {
-            token: self.authtoken,
-            oldPassword: self.modalOldPassword(),
-            newPassword: self.modalNewPassword()
-         }, function(res) {
-            if (!res.isError()) {
-               bootbox.alert('Your password has been changed');
-            } else {
-               if (res.errorCode == server.consts["Tetrapod"].INVALID_PASSWORD) {
-                  bootbox.alert('Error: Incorrect Password');
-               } else {
-                  bootbox.alert('Error: Change Password Failed');
-               }
-            }
-         });
-      };
 
    }
 });

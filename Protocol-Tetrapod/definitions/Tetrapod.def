@@ -266,6 +266,9 @@ internal response RaftStats
       
 ## Cluster Messages
 
+internal request AdminSubscribe
+   1: string adminToken @sensitive
+   
 internal struct ClusterProperty
    1: string key
    2: boolean secret
@@ -277,10 +280,7 @@ internal message  Cluster.ClusterPropertyAdded
 internal message Cluster.ClusterPropertyRemoved        
    1: string key
    
-internal message Cluster.ClusterSynced      
-   
-internal request ClusterSubscribe
-   1: string adminToken @sensitive
+internal message Cluster.ClusterSynced         
    
 internal request SetClusterProperty
    1: string adminToken @sensitive
@@ -318,4 +318,10 @@ internal request SetWebRoot
 internal request DelWebRoot
    1: string adminToken @sensitive
    2: string name
-        
+                
+internal message AdminUserAdded  
+   1: Admin admin
+   
+internal message AdminUserRemoved       
+   1: int accountId
+    

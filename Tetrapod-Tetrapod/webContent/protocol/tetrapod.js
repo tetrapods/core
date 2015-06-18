@@ -78,11 +78,11 @@ function TP_Tetrapod(server) {
    server.register("request", "Tetrapod", "VerifyEntityToken", 1, 8934039);
    server.register("request", "Tetrapod", "RaftStats", 1, 15652108);
    server.register("response", "Tetrapod", "RaftStats", 1, 13186680);
+   server.register("request", "Tetrapod", "AdminSubscribe", 1, 4415191);
    server.register("struct", "Tetrapod", "ClusterProperty", 1, 16245306);
    server.register("message", "Tetrapod", "ClusterPropertyAdded", 1, 5735715);
    server.register("message", "Tetrapod", "ClusterPropertyRemoved", 1, 12285117);
    server.register("message", "Tetrapod", "ClusterSynced", 1, 12460484);
-   server.register("request", "Tetrapod", "ClusterSubscribe", 1, 12719262);
    server.register("request", "Tetrapod", "SetClusterProperty", 1, 11003897);
    server.register("request", "Tetrapod", "DelClusterProperty", 1, 15970020);
    server.register("message", "Tetrapod", "ClusterMember", 1, 1076508);
@@ -91,5 +91,7 @@ function TP_Tetrapod(server) {
    server.register("message", "Tetrapod", "WebRootRemoved", 1, 13146496);
    server.register("request", "Tetrapod", "SetWebRoot", 1, 4029010);
    server.register("request", "Tetrapod", "DelWebRoot", 1, 11212431);
+   server.register("message", "Tetrapod", "AdminUserAdded", 1, 2316676);
+   server.register("message", "Tetrapod", "AdminUserRemoved", 1, 9416406);
 
 }

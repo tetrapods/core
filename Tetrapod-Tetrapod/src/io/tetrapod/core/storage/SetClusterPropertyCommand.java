@@ -2,13 +2,14 @@ package io.tetrapod.core.storage;
 
 import io.tetrapod.core.serialize.datasources.IOStreamDataSource;
 import io.tetrapod.protocol.core.ClusterProperty;
-import io.tetrapod.raft.Command;
+import io.tetrapod.raft.*;
+import io.tetrapod.raft.StateMachine.CommandFactory;
 
 import java.io.*;
 
-public class SetClusterPropertyCommand implements Command<TetrapodStateMachine> { 
+public class SetClusterPropertyCommand implements Command<TetrapodStateMachine> {
    public static final int COMMAND_ID = TetrapodStateMachine.SET_CLUSTER_PROPERTY_COMMAND_ID;
-   
+
    private ClusterProperty prop;
 
    public SetClusterPropertyCommand() {}
@@ -40,5 +41,14 @@ public class SetClusterPropertyCommand implements Command<TetrapodStateMachine> 
 
    public ClusterProperty getProperty() {
       return prop;
+   }
+
+   public static void register(TetrapodStateMachine state) {
+      state.registerCommand(COMMAND_ID, new CommandFactory<TetrapodStateMachine>() {
+         @Override
+         public Command<TetrapodStateMachine> makeCommand() {
+            return new SetClusterPropertyCommand();
+         }
+      });
    }
 }

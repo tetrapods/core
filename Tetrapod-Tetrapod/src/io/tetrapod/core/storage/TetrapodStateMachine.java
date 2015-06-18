@@ -3,7 +3,7 @@ package io.tetrapod.core.storage;
 import io.tetrapod.core.StructureFactory;
 import io.tetrapod.core.serialize.StructureAdapter;
 import io.tetrapod.core.serialize.datasources.TempBufferDataSource;
-import io.tetrapod.core.utils.Util;
+import io.tetrapod.core.utils.*;
 import io.tetrapod.core.web.*;
 import io.tetrapod.protocol.core.*;
 import io.tetrapod.raft.*;
@@ -22,17 +22,22 @@ public class TetrapodStateMachine extends StorageStateMachine<TetrapodStateMachi
    private static final String                    TETRAPOD_PREF_PREFIX            = "tetrapod.prefs::";
    private static final String                    TETRAPOD_CONTRACT_PREFIX        = "tetrapod.contract::";
    private static final String                    TETRAPOD_WEBROOT_PREFIX         = "tetrapod.webroot::";
+   private static final String                    TETRAPOD_ADMIN_PREFIX           = "tetrapod.admin::";
+   private static final String                    TETRAPOD_ADMIN_ACCOUNT_SEQ_KEY  = "tetrapod.admin.account.seq";
 
    public static final int                        SET_CLUSTER_PROPERTY_COMMAND_ID = 400;
    public static final int                        DEL_CLUSTER_PROPERTY_COMMAND_ID = 401;
    public static final int                        REGISTER_CONTRACT_COMMAND_ID    = 402;
    public static final int                        SET_WEB_ROUTE_COMMAND_ID        = 403;
    public static final int                        DEL_WEB_ROUTE_COMMAND_ID        = 404;
+   public static final int                        ADD_ADMIN_COMMAND_ID            = 405;
+   public static final int                        DEL_ADMIN_COMMAND_ID            = 406;
+   public static final int                        EDIT_ADMIN_COMMAND_ID           = 407;
 
    public final Map<String, ClusterProperty>      props                           = new HashMap<>();
    public final Map<Integer, ContractDescription> contracts                       = new HashMap<>();
    public final Map<String, WebRootDef>           webRootDefs                     = new HashMap<>();
-
+   public final Map<Integer, Admin>               admins                          = new HashMap<>();
    public final WebRoutes                         webRoutes                       = new WebRoutes();
    public final ConcurrentMap<String, WebRoot>    webRootDirs                     = new ConcurrentHashMap<>();
 
@@ -44,36 +49,13 @@ public class TetrapodStateMachine extends StorageStateMachine<TetrapodStateMachi
 
    public TetrapodStateMachine() {
       super();
-      registerCommand(SetClusterPropertyCommand.COMMAND_ID, new CommandFactory<TetrapodStateMachine>() {
-         @Override
-         public Command<TetrapodStateMachine> makeCommand() {
-            return new SetClusterPropertyCommand();
-         }
-      });
-      registerCommand(DelClusterPropertyCommand.COMMAND_ID, new CommandFactory<TetrapodStateMachine>() {
-         @Override
-         public Command<TetrapodStateMachine> makeCommand() {
-            return new DelClusterPropertyCommand();
-         }
-      });
-      registerCommand(RegisterContractCommand.COMMAND_ID, new CommandFactory<TetrapodStateMachine>() {
-         @Override
-         public Command<TetrapodStateMachine> makeCommand() {
-            return new RegisterContractCommand();
-         }
-      });
-      registerCommand(SetWebRouteCommand.COMMAND_ID, new CommandFactory<TetrapodStateMachine>() {
-         @Override
-         public Command<TetrapodStateMachine> makeCommand() {
-            return new SetWebRouteCommand();
-         }
-      });
-      registerCommand(DelWebRouteCommand.COMMAND_ID, new CommandFactory<TetrapodStateMachine>() {
-         @Override
-         public Command<TetrapodStateMachine> makeCommand() {
-            return new DelWebRouteCommand();
-         }
-      });
+      SetClusterPropertyCommand.register(this);
+      DelClusterPropertyCommand.register(this);
+      RegisterContractCommand.register(this);
+      SetWebRouteCommand.register(this);
+      DelWebRouteCommand.register(this);
+      AddAdminUserCommand.register(this);
+      DelAdminUserCommand.register(this);
    }
 
    @Override
@@ -88,6 +70,7 @@ public class TetrapodStateMachine extends StorageStateMachine<TetrapodStateMachi
       webRootDefs.clear();
       webRoutes.clear();
       webRootDirs.clear();
+      admins.clear();
 
       super.loadState(in);
 
@@ -105,6 +88,10 @@ public class TetrapodStateMachine extends StorageStateMachine<TetrapodStateMachi
             WebRootDef info = new WebRootDef();
             info.read(TempBufferDataSource.forReading(item.getData()));
             setWebRoot(info, false);
+         } else if (item.key.startsWith(TETRAPOD_ADMIN_PREFIX)) {
+            Admin admin = new Admin();
+            admin.read(TempBufferDataSource.forReading(item.getData()));
+            addAdminUser(admin, false);
          }
       }
    }
@@ -195,6 +182,32 @@ public class TetrapodStateMachine extends StorageStateMachine<TetrapodStateMachi
       } catch (IOException e) {
          logger.error(e.getMessage(), e);
       }
+   }
+
+   public void addAdminUser(final Admin user, boolean write) {
+      if (write) {
+         for (Admin admin : admins.values()) {
+            if (admin.email.equalsIgnoreCase(user.email))
+               return;// don't clobber existing
+         }
+
+         // issue an accountId if not set
+         if (user.accountId == 0) {
+            user.accountId = (int) increment(TETRAPOD_ADMIN_ACCOUNT_SEQ_KEY, 1);
+         }
+         // store in state machine as a StorageItem
+         putItem(TETRAPOD_ADMIN_PREFIX + user.accountId, (byte[]) user.toRawForm(TempBufferDataSource.forWriting()));
+      }
+      admins.put(user.accountId, user);
+      logger.info(" Adding Admin = {}", user.dump());
+   }
+
+   public void delAdminUser(int accountId) {
+      logger.info(" Deleting Admin = {}", accountId);
+      // remove from backing store
+      removeItem(TETRAPOD_ADMIN_PREFIX + accountId);
+      // remove from local caches
+      admins.remove(accountId);
    }
 
 }

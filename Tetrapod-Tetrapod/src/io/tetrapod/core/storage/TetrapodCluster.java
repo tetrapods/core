@@ -75,7 +75,6 @@ public class TetrapodCluster extends Storage implements RaftRPC<TetrapodStateMac
       this.raft = raftEngine;
       this.state = this.raft.getStateMachine();
       this.state.addListener(this);
-
    }
 
    public void startListening() throws IOException {
@@ -120,6 +119,12 @@ public class TetrapodCluster extends Storage implements RaftRPC<TetrapodStateMac
             break;
          case DelWebRouteCommand.COMMAND_ID:
             onDelWebRouteCommand((DelWebRouteCommand) command);
+            break;
+         case AddAdminUserCommand.COMMAND_ID:
+            onAddAdminUserCommand((AddAdminUserCommand) command);
+            break;
+         case DelAdminUserCommand.COMMAND_ID:
+            onDelAdminUserCommand((DelAdminUserCommand) command);
             break;
       }
    }
@@ -308,22 +313,29 @@ public class TetrapodCluster extends Storage implements RaftRPC<TetrapodStateMac
          synchronized (raft) {
             // send properties
             for (ClusterProperty prop : state.props.values()) {
-               if (ses.getTheirEntityType() == Core.TYPE_ADMIN) {
-                  // blank out values for protected properties sent to admins
-                  prop = new ClusterProperty(prop.key, prop.secret, prop.secret ? "" : prop.val);
-               }
                ses.sendMessage(new ClusterPropertyAddedMessage(prop), MessageHeader.TO_ENTITY, toEntityId);
-            }
-            // admin app needs web roots
-            if (ses.getTheirEntityType() == Core.TYPE_ADMIN) {
-               for (WebRootDef def : state.webRootDefs.values()) {
-                  ses.sendMessage(new WebRootAddedMessage(def), MessageHeader.TO_ENTITY, toEntityId);
-               }
             }
          }
       }
       // tell them they are up to date
       ses.sendMessage(new ClusterSyncedMessage(), MessageHeader.TO_ENTITY, toEntityId);
+   }
+
+   public void sendAdminDetails(Session ses, int toEntityId, int topicId) {
+      synchronized (raft) {
+         // send properties
+         for (ClusterProperty prop : state.props.values()) {
+            // blank out values for protected properties sent to admins
+            prop = new ClusterProperty(prop.key, prop.secret, prop.secret ? "" : prop.val);
+            ses.sendMessage(new ClusterPropertyAddedMessage(prop), MessageHeader.TO_ENTITY, toEntityId);
+         }
+         for (WebRootDef def : state.webRootDefs.values()) {
+            ses.sendMessage(new WebRootAddedMessage(def), MessageHeader.TO_ENTITY, toEntityId);
+         }
+         for (Admin def : state.admins.values()) {
+            ses.sendMessage(new AdminUserAddedMessage(def), MessageHeader.TO_ENTITY, toEntityId);
+         }
+      }
    }
 
    public boolean addMember(int entityId, String host, int servicePort, int clusterPort, Session ses) {
@@ -786,16 +798,6 @@ public class TetrapodCluster extends Storage implements RaftRPC<TetrapodStateMac
       }
    }
 
-   private void onSetClusterPropertyCommand(SetClusterPropertyCommand command) {
-      // FIXME: Security hole here, when a secret property is sent to all subscribers here,
-      // we don't want to send the value to admin connections, just service connections
-      service.broadcastClusterMessage(new ClusterPropertyAddedMessage(command.getProperty()));
-   }
-
-   private void onDelClusterPropertyCommand(DelClusterPropertyCommand command) {
-      service.broadcastClusterMessage(new ClusterPropertyRemovedMessage(command.getProperty()));
-   }
-
    public WebRoutes getWebRoutes() {
       return state.webRoutes;
    }
@@ -812,12 +814,33 @@ public class TetrapodCluster extends Storage implements RaftRPC<TetrapodStateMac
       executeCommand(new DelWebRouteCommand(name), null);
    }
 
+   private void onSetClusterPropertyCommand(SetClusterPropertyCommand command) {
+      ClusterProperty prop = command.getProperty();
+      service.broadcastClusterMessage(new ClusterPropertyAddedMessage(prop));
+      // we don't want to send secret values to admin connections 
+      prop = new ClusterProperty(prop.key, prop.secret, prop.secret ? "" : prop.val);
+      service.broadcastAdminMessage(new ClusterPropertyAddedMessage(prop));
+   }
+
+   private void onDelClusterPropertyCommand(DelClusterPropertyCommand command) {
+      service.broadcastClusterMessage(new ClusterPropertyRemovedMessage(command.getProperty()));
+      service.broadcastAdminMessage(new ClusterPropertyRemovedMessage(command.getProperty()));
+   }
+
    private void onSetWebRouteCommand(SetWebRouteCommand command) {
-      service.broadcastClusterMessage(new WebRootAddedMessage(command.getWebRouteDef()));
+      service.broadcastAdminMessage(new WebRootAddedMessage(command.getWebRouteDef()));
    }
 
    private void onDelWebRouteCommand(DelWebRouteCommand command) {
-      service.broadcastClusterMessage(new WebRootRemovedMessage(command.getWebRouteName()));
+      service.broadcastAdminMessage(new WebRootRemovedMessage(command.getWebRouteName()));
+   }
+
+   private void onDelAdminUserCommand(DelAdminUserCommand command) {
+      service.broadcastAdminMessage(new AdminUserRemovedMessage(command.getAccountId()));
+   }
+
+   private void onAddAdminUserCommand(AddAdminUserCommand command) {
+      service.broadcastAdminMessage(new AdminUserAddedMessage(command.getAdminUser()));
    }
 
    public boolean isReady() {
@@ -841,6 +864,29 @@ public class TetrapodCluster extends Storage implements RaftRPC<TetrapodStateMac
          return false;
       }
 
+   }
+
+   public Admin addAdmin(String email, String hash, long rights) {
+      final Value<Admin> val = new Value<Admin>();
+      final Admin admin = new Admin(0, email, hash, rights, new long[Admin.MAX_LOGIN_ATTEMPTS]);
+      executeCommand(new AddAdminUserCommand(admin), new ClientResponseHandler<TetrapodStateMachine>() {
+         @Override
+         public void handleResponse(Entry<TetrapodStateMachine> e) {
+            if (e != null) {
+               AddAdminUserCommand cmd = (AddAdminUserCommand) e.getCommand();
+               val.set(cmd.getAdminUser());
+            } else {
+               val.set(null);
+            }
+         }
+      });
+      return val.waitForValue();
+   }
+
+   public Collection<Admin> getAdmins() {
+      synchronized (raft) {
+         return new ArrayList<Admin>(state.admins.values());
+      }
    }
 
 }

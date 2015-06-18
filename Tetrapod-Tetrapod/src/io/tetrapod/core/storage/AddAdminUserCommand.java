@@ -1,34 +1,37 @@
 package io.tetrapod.core.storage;
 
+import io.tetrapod.core.serialize.datasources.IOStreamDataSource;
+import io.tetrapod.protocol.core.*;
 import io.tetrapod.raft.Command;
 import io.tetrapod.raft.StateMachine.CommandFactory;
 
 import java.io.*;
 
-public class DelClusterPropertyCommand implements Command<TetrapodStateMachine> {
-   public static final int COMMAND_ID = TetrapodStateMachine.DEL_CLUSTER_PROPERTY_COMMAND_ID;
+public class AddAdminUserCommand implements Command<TetrapodStateMachine> {
+   public static final int COMMAND_ID = TetrapodStateMachine.ADD_ADMIN_COMMAND_ID;
 
-   private String          key;
+   private Admin           admin;
 
-   public DelClusterPropertyCommand() {}
+   public AddAdminUserCommand() {}
 
-   public DelClusterPropertyCommand(String key) {
-      this.key = key;
+   public AddAdminUserCommand(Admin admin) {
+      this.admin = admin;
    }
 
    @Override
    public void applyTo(TetrapodStateMachine state) {
-      state.delProperty(key);
+      state.addAdminUser(admin, true);
    }
 
    @Override
    public void write(DataOutputStream out) throws IOException {
-      out.writeUTF(key);
+      admin.write(IOStreamDataSource.forWriting(out));
    }
 
    @Override
    public void read(DataInputStream in) throws IOException {
-      key = in.readUTF();
+      admin = new Admin();
+      admin.read(IOStreamDataSource.forReading(in));
    }
 
    @Override
@@ -36,15 +39,15 @@ public class DelClusterPropertyCommand implements Command<TetrapodStateMachine> 
       return COMMAND_ID;
    }
 
-   public String getProperty() {
-      return key;
+   public Admin getAdminUser() {
+      return admin;
    }
-   
+
    public static void register(TetrapodStateMachine state) {
       state.registerCommand(COMMAND_ID, new CommandFactory<TetrapodStateMachine>() {
          @Override
          public Command<TetrapodStateMachine> makeCommand() {
-            return new DelClusterPropertyCommand();
+            return new AddAdminUserCommand();
          }
       });
    }

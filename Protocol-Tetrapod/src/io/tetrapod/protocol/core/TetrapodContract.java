@@ -26,9 +26,9 @@ public class TetrapodContract extends Contract {
       , AdminCreateRequest.Handler
       , AdminDeleteRequest.Handler
       , AdminLoginRequest.Handler
+      , AdminSubscribeRequest.Handler
       , ClusterJoinRequest.Handler
       , ClusterLeaveRequest.Handler
-      , ClusterSubscribeRequest.Handler
       , DelClusterPropertyRequest.Handler
       , DelWebRootRequest.Handler
       , ExecuteBuildCommandRequest.Handler
@@ -82,7 +82,7 @@ public class TetrapodContract extends Contract {
          new ExecuteBuildCommandRequest(),
          new VerifyEntityTokenRequest(),
          new RaftStatsRequest(),
-         new ClusterSubscribeRequest(),
+         new AdminSubscribeRequest(),
          new SetClusterPropertyRequest(),
          new DelClusterPropertyRequest(),
          new SetWebRootRequest(),
@@ -124,6 +124,8 @@ public class TetrapodContract extends Contract {
          new ClusterMemberMessage(),
          new WebRootAddedMessage(),
          new WebRootRemovedMessage(),
+         new AdminUserAddedMessage(),
+         new AdminUserRemovedMessage(),
       };
    }
    

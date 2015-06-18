@@ -12,16 +12,16 @@ import java.util.*;
 import java.util.concurrent.*;
 
 @SuppressWarnings("unused")
-public class ClusterSubscribeRequest extends Request {
+public class AdminSubscribeRequest extends Request {
 
-   public static final int STRUCT_ID = 12719262;
+   public static final int STRUCT_ID = 4415191;
    public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;
    
-   public ClusterSubscribeRequest() {
+   public AdminSubscribeRequest() {
       defaults();
    }
 
-   public ClusterSubscribeRequest(String adminToken) {
+   public AdminSubscribeRequest(String adminToken) {
       this.adminToken = adminToken;
    }   
 
@@ -58,22 +58,22 @@ public class ClusterSubscribeRequest extends Request {
    }
    
    public final int getContractId() {
-      return ClusterSubscribeRequest.CONTRACT_ID;
+      return AdminSubscribeRequest.CONTRACT_ID;
    }
 
    public final int getStructId() {
-      return ClusterSubscribeRequest.STRUCT_ID;
+      return AdminSubscribeRequest.STRUCT_ID;
    }
    
    @Override
    public final Response dispatch(ServiceAPI is, RequestContext ctx) {
       if (is instanceof Handler)
-         return ((Handler)is).requestClusterSubscribe(this, ctx);
+         return ((Handler)is).requestAdminSubscribe(this, ctx);
       return is.genericRequest(this, ctx);
    }
    
    public static interface Handler extends ServiceAPI {
-      Response requestClusterSubscribe(ClusterSubscribeRequest r, RequestContext ctx);
+      Response requestAdminSubscribe(AdminSubscribeRequest r, RequestContext ctx);
    }
    
    public final String[] tagWebNames() {
@@ -86,7 +86,7 @@ public class ClusterSubscribeRequest extends Request {
    }
    
    public final Structure make() {
-      return new ClusterSubscribeRequest();
+      return new AdminSubscribeRequest();
    }
    
    public final StructDescription makeDescription() {

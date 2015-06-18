@@ -22,8 +22,74 @@
             <div data-bind="click: changePassword" class="btn btn-sm">
                <span class="fa fa-fw fa-edit"></span>
             </div>
-            <span data-bind="text: path" class="property"></span>
+
          </td>
       </tr>
    </tbody>
 </table>
+
+<div class="modal fade app-bind" id="add-user-modal" tabindex="-1" role="dialog">
+   <div class="modal-dialog">
+      <div class="modal-content">
+         <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            <h4 class="modal-title">Add Admin User</h4>
+         </div>
+         <div class="modal-body">
+            <table class="form-table">
+               <tr>
+                  <td class="form-label">Email:</td>
+                  <td>
+                     <input type="email" data-bind="value: addUserEmail" />
+                  </td>
+               </tr>
+               <tr>
+                  <td class="form-label">New password:</td>
+                  <td>
+                     <input type="password" data-bind="value: addUserPassword" />
+                  </td>
+               </tr>
+            </table>
+         </div>
+         <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+            <button type="button" class="btn btn-primary" data-dismiss="modal" data-bind="click: onAddAdminUser">Add
+               Admin User</button>
+         </div>
+      </div>
+   </div>
+</div>
+
+<div class="modal fade app-bind" id="set-password-modal" tabindex="-1" role="dialog">
+   <div class="modal-dialog">
+      <div class="modal-content">
+         <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            <h4 class="modal-title">Change Password</h4>
+         </div>
+         <div class="modal-body">
+            <table class="form-table">
+               <tr>
+                  <td class="form-label">Current password:</td>
+                  <td>
+                     <input type="password" data-bind="value: modalOldPassword" />
+                  </td>
+               </tr>
+               <tr>
+                  <td class="form-label">New password:</td>
+                  <td>
+                     <input type="password" data-bind="value: modalNewPassword" />
+                  </td>
+               </tr>
+            </table>
+         </div>
+         <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+            <button type="button" class="btn btn-primary" data-dismiss="modal" data-bind="click: onEditPassword">Save
+               changes</button>
+         </div>
+      </div>
+   </div>
+</div>
+
+

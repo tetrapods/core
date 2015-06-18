@@ -5,30 +5,30 @@ import io.tetrapod.raft.StateMachine.CommandFactory;
 
 import java.io.*;
 
-public class DelClusterPropertyCommand implements Command<TetrapodStateMachine> {
-   public static final int COMMAND_ID = TetrapodStateMachine.DEL_CLUSTER_PROPERTY_COMMAND_ID;
+public class DelAdminUserCommand implements Command<TetrapodStateMachine> {
+   public static final int COMMAND_ID = TetrapodStateMachine.DEL_ADMIN_COMMAND_ID;
 
-   private String          key;
+   private int             accountId;
 
-   public DelClusterPropertyCommand() {}
+   public DelAdminUserCommand() {}
 
-   public DelClusterPropertyCommand(String key) {
-      this.key = key;
+   public DelAdminUserCommand(int accountId) {
+      this.accountId = accountId;
    }
 
    @Override
    public void applyTo(TetrapodStateMachine state) {
-      state.delProperty(key);
+      state.delAdminUser(accountId);
    }
 
    @Override
    public void write(DataOutputStream out) throws IOException {
-      out.writeUTF(key);
+      out.writeInt(accountId);
    }
 
    @Override
    public void read(DataInputStream in) throws IOException {
-      key = in.readUTF();
+      accountId = in.readInt();
    }
 
    @Override
@@ -36,15 +36,15 @@ public class DelClusterPropertyCommand implements Command<TetrapodStateMachine> 
       return COMMAND_ID;
    }
 
-   public String getProperty() {
-      return key;
+   public int getAccountId() {
+      return accountId;
    }
-   
+
    public static void register(TetrapodStateMachine state) {
       state.registerCommand(COMMAND_ID, new CommandFactory<TetrapodStateMachine>() {
          @Override
          public Command<TetrapodStateMachine> makeCommand() {
-            return new DelClusterPropertyCommand();
+            return new DelAdminUserCommand();
          }
       });
    }
