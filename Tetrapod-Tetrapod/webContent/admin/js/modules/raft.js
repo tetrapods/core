@@ -13,12 +13,19 @@ define(function(require) {
       self.rafts = ko.observableArray([]);
 
       self.updateRaftNode = updateRaftNode;
+      self.clear = clear;
       self.leaderEntityId = ko.pureComputed(leaderEntityId);
       self.tolerance = ko.pureComputed(tolerance);
       self.maxTerm = 0;
       self.ensurePeer = ensurePeer;
       self.isNodeInCluster = isNodeInCluster;
 
+
+      function clear() {
+         self.rafts.removeAll();
+      }
+
+      
       var raftTab = $('#raft-tab');
       setInterval(function() {
          if (raftTab.is(':visible')) {

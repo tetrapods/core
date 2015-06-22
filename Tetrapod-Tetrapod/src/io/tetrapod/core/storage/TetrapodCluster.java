@@ -889,4 +889,8 @@ public class TetrapodCluster extends Storage implements RaftRPC<TetrapodStateMac
       }
    }
 
+   public Admin getAdmin(int accountId) {
+      return state.admins.get(accountId);
+   }
+
 }

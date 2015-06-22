@@ -10,9 +10,14 @@ define(function(require) {
       self.props = ko.observableArray([]);
 
       self.findProperty = findProperty;
-
+      self.clear = clear;
       self.addClusterProperty = addClusterProperty;
 
+      function clear() {
+         self.props.removeAll();
+      }
+
+      
       function findProperty(key) {
          var arr = self.props();
          for (var i = 0; i < arr.length; i++) {

@@ -10,17 +10,26 @@ define(function(require) {
    var Builder = require("modules/builder");
    var Users = require("modules/users");
 
-
    return new ClusterModel();
 
    function ClusterModel() {
       var self = this;
+
+      self.clear = clear;
 
       self.hosts = new Hosts(app);
       self.raft = new Raft(app);
       self.webroots = new WebRoots(app);
       self.properties = new Properties(app);
       self.users = new Users(app);
+
+      function clear() {
+         self.hosts.clear();
+         self.raft.clear();
+         self.webroots.clear();
+         self.properties.clear();
+         self.users.clear();
+      }
 
    }
 

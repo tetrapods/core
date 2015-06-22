@@ -92,11 +92,15 @@ public request AdminLogin
    error INVALID_ACCOUNT         
 
 public response AdminLogin
-   2: string token @sensitive
+   1: string token @sensitive
    
 public request AdminAuthorize
    1: string token @sensitive
-
+   
+public response AdminAuthorize
+   1: int accountId
+   2: string email
+   
 internal request AdminCreate
    1: string token @sensitive
    2: string email @sensitive

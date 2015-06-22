@@ -53,7 +53,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
    private final TetrapodWorker                    worker;
 
-   final protected TetrapodCluster                 cluster           = new TetrapodCluster(this);
+   protected final TetrapodCluster                 cluster           = new TetrapodCluster(this);
 
    private AdminAccounts                           adminAccounts;
 
@@ -949,12 +949,14 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    @Override
    public Response requestAdminAuthorize(AdminAuthorizeRequest r, RequestContext ctxA) {
       SessionRequestContext ctx = (SessionRequestContext) ctxA;
-      logger.debug("AUTHORIZE WITH {} ...", r.token);
       AuthToken.Decoded d = AuthToken.decodeAuthToken1(r.token);
       if (d != null) {
          logger.debug("TOKEN {} time left = {}", r.token, d.timeLeft);
-         ctx.session.theirType = Core.TYPE_ADMIN;
-         return Response.SUCCESS;
+         Admin admin = adminAccounts.getAdminByAccountId(d.accountId);
+         if (admin != null) {
+            ctx.session.theirType = Core.TYPE_ADMIN;
+            return new AdminAuthorizeResponse(admin.accountId, admin.email);
+         }
       } else {
          logger.warn("TOKEN {} NOT VALID", r.token);
       }
@@ -970,7 +972,6 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       try {
          Admin admin = adminAccounts.getAdminByEmail(r.email);
          if (admin != null) {
-            logger.info("admin not null");
             if (adminAccounts.recordLoginAttempt(admin)) {
                logger.info("Invalid Credentials");
                return new Error(ERROR_INVALID_CREDENTIALS); // prevent brute force attack

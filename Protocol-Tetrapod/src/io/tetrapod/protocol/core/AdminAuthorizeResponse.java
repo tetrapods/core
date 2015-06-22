@@ -12,32 +12,36 @@ import java.util.*;
 import java.util.concurrent.*;
 
 @SuppressWarnings("unused")
-public class AdminLoginResponse extends Response {
+public class AdminAuthorizeResponse extends Response {
    
-   public static final int STRUCT_ID = 4213436;
+   public static final int STRUCT_ID = 8072638;
    public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;
     
-   public AdminLoginResponse() {
+   public AdminAuthorizeResponse() {
       defaults();
    }
 
-   public AdminLoginResponse(String token) {
-      this.token = token;
+   public AdminAuthorizeResponse(int accountId, String email) {
+      this.accountId = accountId;
+      this.email = email;
    }   
    
-   public String token;
+   public int accountId;
+   public String email;
 
    public final Structure.Security getSecurity() {
       return Security.PUBLIC;
    }
 
    public final void defaults() {
-      token = null;
+      accountId = 0;
+      email = null;
    }
    
    @Override
    public final void write(DataSource data) throws IOException {
-      data.write(1, this.token);
+      data.write(1, this.accountId);
+      data.write(2, this.email);
       data.writeEndTag();
    }
    
@@ -47,7 +51,8 @@ public class AdminLoginResponse extends Response {
       while (true) {
          int tag = data.readTag();
          switch (tag) {
-            case 1: this.token = data.read_string(tag); break;
+            case 1: this.accountId = data.read_int(tag); break;
+            case 2: this.email = data.read_string(tag); break;
             case Codec.END_TAG:
                return;
             default:
@@ -58,29 +63,25 @@ public class AdminLoginResponse extends Response {
    }
   
    public final int getContractId() {
-      return AdminLoginResponse.CONTRACT_ID;
+      return AdminAuthorizeResponse.CONTRACT_ID;
    }
 
    public final int getStructId() {
-      return AdminLoginResponse.STRUCT_ID;
+      return AdminAuthorizeResponse.STRUCT_ID;
    }
 
    public final String[] tagWebNames() {
       // Note do not use this tags in long term serializations (to disk or databases) as 
       // implementors are free to rename them however they wish.  A null means the field
       // is not to participate in web serialization (remaining at default)
-      String[] result = new String[1+1];
-      result[1] = "token";
+      String[] result = new String[2+1];
+      result[1] = "accountId";
+      result[2] = "email";
       return result;
    }
 
    public final Structure make() {
-      return new AdminLoginResponse();
-   }
-
-   protected boolean isSensitive(String fieldName) {
-      if (fieldName.equals("token")) return true;
-      return false;
+      return new AdminAuthorizeResponse();
    }
 
    public final StructDescription makeDescription() {
@@ -88,7 +89,8 @@ public class AdminLoginResponse extends Response {
       desc.tagWebNames = tagWebNames();
       desc.types = new TypeDescriptor[desc.tagWebNames.length];
       desc.types[0] = new TypeDescriptor(TypeDescriptor.T_STRUCT, getContractId(), getStructId());
-      desc.types[1] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
+      desc.types[1] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
+      desc.types[2] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
       return desc;
    }
  }

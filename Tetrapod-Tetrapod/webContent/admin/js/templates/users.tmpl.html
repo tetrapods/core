@@ -6,24 +6,30 @@
 <table id="props-table" class="table table-bordered table-condensed">
    <thead>
       <tr>
-         <th>Email</th>
-         <th>Role</th>
+         <th>User</th>
+         <th>Rights</th>
       </tr>
    </thead>
    <tbody data-bind="foreach: users" class="admins">
       <tr>
          <td>
-            <div data-bind="click: deleteUser" class="btn btn-sm">
-               <span class="fa fa-fw fa-trash"></span>
+
+            <div class="btn btn-sm dropdown">
+               <a class="dropdown-toggle" data-toggle="dropdown" href="#">
+                  <i class="fa fa-gear fa-fw"></i><i class="fa fa-caret-down"></i>
+               </a>
+               <ul class="dropdown-menu dropdown-service">
+                  <li><a href="#" data-bind="click: resetPassword">
+                        <i class="fa fa-key fa-fw"></i> Reset Password
+                     </a></li>
+                  <li><a href="#" data-bind="click: deleteUser">
+                        <i class="fa fa-fw fa-trash"></i> Delete User
+                     </a></li>
+               </ul>
             </div>
             <span data-bind="text: email" class="property"></span>
          </td>
-         <td>
-            <div data-bind="click: changePassword" class="btn btn-sm">
-               <span class="fa fa-fw fa-edit"></span>
-            </div>
-
-         </td>
+         <td></td>
       </tr>
    </tbody>
 </table>
@@ -41,12 +47,6 @@
                   <td class="form-label">Email:</td>
                   <td>
                      <input type="email" data-bind="value: addUserEmail" />
-                  </td>
-               </tr>
-               <tr>
-                  <td class="form-label">New password:</td>
-                  <td>
-                     <input type="password" data-bind="value: addUserPassword" />
                   </td>
                </tr>
             </table>

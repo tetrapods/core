@@ -1,6 +1,6 @@
 define(function(require) {
    var $ = require("jquery");
-   var ko = require("knockout"); 
+   var ko = require("knockout");
    var Alert = require("alert");
 
    return Users;
@@ -13,12 +13,13 @@ define(function(require) {
       self.modalOldPassword = ko.observable('');
       self.modalNewPassword = ko.observable('');
       self.addUserEmail = ko.observable('');
-      self.addUserPassword = ko.observable('');
 
+      self.changePassword = changePassword;
       self.addAdminUser = addAdminUser;
       self.onAddAdminUser = onAddAdminUser;
       self.onEditPassword = onEditPassword;
       self.findUser = findUser;
+      self.clear = clear;
 
       function addAdminUser() {
          $('#add-user-modal').modal('show');
@@ -29,13 +30,33 @@ define(function(require) {
          if (email && email.length > 0) {
             app.server.sendDirect("AdminCreate", {
                token: app.authtoken,
-               email: email.trim(),
-               password: email.trim(),
+               email: email,
+               password: email,
                rights: 0
-            }, app.server.logResponse);
+            }, function(res) {
+               if (!res.isError()) {
+                  Alert.info('New admin account created with initial password same as "' + email + '"');
+               } else {
+                  Alert.error('Error: Create Admin User failed: ' + app.server.getErrorStrings(res.errorCode));
+               }
+            });
+         } else {
+            Alert.error("Email must not be empty");
          }
       }
 
+      function clear() {
+         self.users.removeAll();
+      }
+
+      // shows the change password modal
+      function changePassword() {
+         self.modalOldPassword('');
+         self.modalNewPassword('');
+         $('#set-password-modal').modal('show');
+      }
+
+      // called when change password dialog is submitted
       function onEditPassword() {
          // TODO: apply to specific user, not just ourselves
          app.server.sendDirect("AdminChangePassword", {
@@ -91,16 +112,20 @@ define(function(require) {
 
          self.email = def.email;
          self.deleteUser = deleteUser;
-         self.changePassword = changePassword;
+         self.resetPassword = resetPassword;
 
          function deleteUser() {
-            // TODO
+            Alert.confirm("Are you sure you want to delete '" + self.email + "'?", function() {
+               Alert.error("Implement Me!"); // TODO
+            });
          }
 
-         function changePassword() {
-            users.modalOldPassword('');
-            users.modalNewPassword('');
-            $('#set-password-modal').modal('show');
+         function resetPassword() {
+            Alert.confirm("Are you sure you want to reset the password for '" + self.email + "'?", function() {
+               users.modalOldPassword('');
+               users.modalNewPassword('');
+               $('#set-password-modal').modal('show');
+            });
          }
 
       }

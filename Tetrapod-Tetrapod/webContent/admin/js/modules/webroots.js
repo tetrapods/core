@@ -1,7 +1,7 @@
 define(function(require) {
    var $ = require("jquery");
    var ko = require("knockout");
-   var Alert = require("alert"); 
+   var Alert = require("alert");
 
    return WebRoots; // not using new means this returns a constructor function (ie class)
 
@@ -12,6 +12,11 @@ define(function(require) {
 
       self.addWebRoot = addWebRoot;
       self.findWebRoot = findWebRoot;
+      self.clear = clear;
+
+      function clear() {
+         self.webroots.removeAll();
+      }
 
       function findWebRoot(name) {
          var arr = self.webroots();

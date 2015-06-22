@@ -40,14 +40,7 @@ public class AdminAccounts {
    }
 
    public Admin getAdminByAccountId(int accountId) {
-      if (accountId > 0) {
-         try {
-            return cluster.read("admin::" + accountId, new Admin());
-         } catch (Exception e) {
-            logger.error(e.getMessage(), e);
-         }
-      }
-      return null;
+      return cluster.getAdmin(accountId);
    }
 
    public Admin addAdmin(String email, String hash, long rights) {

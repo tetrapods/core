@@ -13,8 +13,10 @@ define(["knockout", "jquery", "bootbox", "toolbox", "protocol/server", "protocol
       self.run = run;
       self.login = login;
       self.onLogout = onLogout;
+      self.changePassword = changePassword;
       self.modalData = ko.observable({});
       self.name = window.location.hostname;
+      self.email = ko.observable();
       self.isProd = self.name == "chatbox.com" || self.name == "xbox.chatbox.com" || (self.name.indexOf(".prod.") > 0);
 
       function run(clusterModel) {
@@ -42,7 +44,7 @@ define(["knockout", "jquery", "bootbox", "toolbox", "protocol/server", "protocol
 
       function onConnected() {
          $('#disconnected-alertbox').hide();
-         model.hosts.clear();
+         model.clear();
          server.sendDirect("Register", {
             build: 0,
             contractId: 0,
@@ -72,13 +74,16 @@ define(["knockout", "jquery", "bootbox", "toolbox", "protocol/server", "protocol
       }
 
       function login() {
+         var email = $('#email').val().trim();
+         var pwd = $('#password').val();
          server.sendDirect("AdminLogin", {
-            email: $('#email').val(),
-            password: $('#password').val(),
+            email: email,
+            password: pwd
          }, function(result) {
             if (result.isError()) {
                bootbox.alert('Login Failed');
             }
+            self.email(email);
             onLogin(result);
          });
       }
@@ -88,6 +93,9 @@ define(["knockout", "jquery", "bootbox", "toolbox", "protocol/server", "protocol
             if (result.token) {
                self.authtoken = result.token;
                toolbox.setCookie("auth-token", self.authtoken);
+            }
+            if (result.email) {
+               self.email(result.email);
             }
             $('#login-wrapper').hide();
             $('#app-wrapper').show();
@@ -105,8 +113,12 @@ define(["knockout", "jquery", "bootbox", "toolbox", "protocol/server", "protocol
          toolbox.deleteCookie("auth-token");
          $('#login-wrapper').show();
          $('#app-wrapper').hide();
-         model.services([]);
+         model.clear();
+         self.email();
       }
 
+      function changePassword() {
+         model.users.changePassword();
+      }
    }
 });

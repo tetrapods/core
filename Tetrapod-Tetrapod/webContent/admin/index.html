@@ -35,11 +35,23 @@
                   <span data-bind="text: name"></span>
                </a>
             </div>
-            <ul class="nav navbar-nav navbar-right">
+            <ul class="nav navbar-nav navbar-right" style="margin-right: 10px;">
                <li>
-                  <button class="btn btn-default navbar-btn" data-bind="click: onLogout" style="margin-right: 10px;">
-                     <i class="fa fa-sign-out fa-fw"></i> Logout
-                  </button>
+                  <div class="btn btn-default navbar-btn dropdown">
+                     <a class="dropdown-toggle" data-toggle="dropdown" href="#">
+                        <i class="fa fa-user fa-fw"></i>
+                        <span data-bind="text: email"></span>
+                        <i class="fa fa-caret-down"></i>
+                     </a>
+                     <ul class="dropdown-menu dropdown-service">
+                        <li><a href="#" data-bind="click: changePassword">
+                              <i class="fa fa-fw fa-edit"></i> Change Password
+                           </a></li>
+                        <li><a href="#" data-bind="click: onLogout">
+                              <i class="fa fa-sign-out fa-fw"></i> Logout
+                           </a></li>
+                     </ul>
+                  </div>
                </li>
             </ul>
          </div>
@@ -62,7 +74,6 @@
          <div class="row" id="app-wrapper" hidden="true">
             <div class="col-lg-12">
                <!--  =============================================================================== -->
-
                <div id="disconnected-alertbox" class="alert alert-danger" hidden="true">
                   <strong>DISCONNECTED!</strong> Attempting to Reconnect...
                </div>

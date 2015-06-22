@@ -96,6 +96,7 @@ public class TetrapodContract extends Contract {
          new IssuePeerIdResponse(),
          new PublishResponse(),
          new AdminLoginResponse(),
+         new AdminAuthorizeResponse(),
          new GetSubscriberCountResponse(),
          new GetEntityInfoResponse(),
          new GetServiceBuildInfoResponse(),
