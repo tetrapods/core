@@ -293,7 +293,7 @@ public class AdminAccounts {
 
    public Response requestAdminDelete(AdminDeleteRequest r, RequestContext ctx) {
       final Admin admin = getAdmin(ctx, r.token, Admin.RIGHTS_USER_WRITE);
-      if (admin.accountId == r.accountId) {
+      if (r.accountId == 1 && admin.accountId == r.accountId) {
          return new Error(ERROR_INVALID_RIGHTS);
       }
       final Admin target = getAdmin(r.accountId);
