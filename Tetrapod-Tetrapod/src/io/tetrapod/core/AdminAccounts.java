@@ -192,107 +192,72 @@ public class AdminAccounts {
       }
    }
 
-   public Response requestAdminChangePassword(final AdminChangePasswordRequest r, RequestContext ctxA) {
-      if (ctxA.header.fromType != TYPE_ADMIN) {
-         return new Error(ERROR_INVALID_RIGHTS);
-      }
-      AuthToken.Decoded d = AuthToken.decodeAuthToken1(r.token);
-      if (d != null) {
-         Admin admin = getAdmin(d.accountId);
-         if (admin != null) {
-            try {
-               if (PasswordHash.validatePassword(r.oldPassword, admin.hash)) {
-                  final String newHash = PasswordHash.createHash(r.newPassword);
-                  admin = mutate(admin, new AdminMutator() {
-                     @Override
-                     public void mutate(Admin admin) {
-                        admin.hash = newHash;
-                     }
-                  });
-                  if (admin != null) {
-                     return Response.SUCCESS;
-                  }
-               } else {
-                  return new Error(ERROR_INVALID_CREDENTIALS);
+   public Response requestAdminChangePassword(final AdminChangePasswordRequest r, RequestContext ctx) {
+      Admin admin = getAdmin(ctx, r.token, 0);
+      try {
+         if (PasswordHash.validatePassword(r.oldPassword, admin.hash)) {
+            final String newHash = PasswordHash.createHash(r.newPassword);
+            admin = mutate(admin, new AdminMutator() {
+               @Override
+               public void mutate(Admin a) {
+                  a.hash = newHash;
                }
-            } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
-               logger.error(e.getMessage(), e);
+            });
+            if (admin != null) {
+               return Response.SUCCESS;
             }
+         } else {
+            return new Error(ERROR_INVALID_CREDENTIALS);
          }
-      } else {
-         return new Error(ERROR_INVALID_RIGHTS);
+      } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
+         logger.error(e.getMessage(), e);
       }
       return new Error(ERROR_UNKNOWN);
    }
 
    public Response requestAdminResetPassword(AdminResetPasswordRequest r, RequestContext ctx) {
-      if (ctx.header.fromType != TYPE_ADMIN) {
-         return new Error(ERROR_INVALID_RIGHTS);
-      }
-      AuthToken.Decoded d = AuthToken.decodeAuthToken1(r.token);
-      if (d != null) {
-         final Admin admin = getAdmin(d.accountId);
-         if (admin != null && verifyPermission(admin, Admin.RIGHTS_USER_WRITE)) {
-            try {
-               Admin target = getAdmin(r.accountId);
-               if (target != null) {
-                  final String newHash = PasswordHash.createHash(r.password);
-                  target = mutate(target, new AdminMutator() {
-                     @Override
-                     public void mutate(Admin a) {
-                        a.hash = newHash;
-                     }
-                  });
-                  if (target != null) {
-                     return Response.SUCCESS;
-                  }
+      getAdmin(ctx, r.token, Admin.RIGHTS_USER_WRITE);
+      try {
+         Admin target = getAdmin(r.accountId);
+         if (target != null) {
+            final String newHash = PasswordHash.createHash(r.password);
+            target = mutate(target, new AdminMutator() {
+               @Override
+               public void mutate(Admin a) {
+                  a.hash = newHash;
                }
-            } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
-               logger.error(e.getMessage(), e);
+            });
+            if (target != null) {
+               return Response.SUCCESS;
             }
-         } else {
-            return new Error(ERROR_INVALID_RIGHTS);
          }
-      } else {
-         return new Error(ERROR_INVALID_RIGHTS);
+      } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
+         logger.error(e.getMessage(), e);
       }
       return new Error(ERROR_UNKNOWN);
    }
 
    public Response requestAdminCreate(AdminCreateRequest r, RequestContext ctx) {
-      if (ctx.header.fromType != TYPE_ADMIN) {
-         return new Error(ERROR_INVALID_RIGHTS);
-      }
-      final AuthToken.Decoded d = AuthToken.decodeAuthToken1(r.token);
-      if (d != null) {
-         final Admin admin = getAdmin(d.accountId);
-         if (admin != null) {
-            try {
-               if (verifyPermission(admin, Admin.RIGHTS_USER_WRITE)) {
-                  final String hash = PasswordHash.createHash(r.password);
-
-                  final Admin newUser = addAdmin(r.email.trim(), hash, r.rights);
-                  if (newUser != null) {
-                     return Response.SUCCESS;
-                  } else {
-                     // they probably already exist
-                     return new Error(ERROR_INVALID_ACCOUNT);
-                  }
-               } else {
-                  return new Error(ERROR_INVALID_RIGHTS);
-               }
-            } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
-               logger.error(e.getMessage(), e);
-            }
+      final Admin admin = getAdmin(ctx, r.token, Admin.RIGHTS_USER_WRITE);
+      assert (admin != null);
+      try {
+         final String hash = PasswordHash.createHash(r.password);
+         final Admin newUser = addAdmin(r.email.trim(), hash, r.rights);
+         if (newUser != null) {
+            return Response.SUCCESS;
+         } else {
+            // they probably already exist
+            return new Error(ERROR_INVALID_ACCOUNT);
          }
-      } else {
-         return new Error(ERROR_INVALID_RIGHTS);
+      } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
+         logger.error(e.getMessage(), e);
+         return new Error(ERROR_UNKNOWN);
       }
-      return new Error(ERROR_UNKNOWN);
    }
 
    public Response requestAdminDelete(AdminDeleteRequest r, RequestContext ctx) {
       final Admin admin = getAdmin(ctx, r.token, Admin.RIGHTS_USER_WRITE);
+      // don't allow deleting ourselves or the default admin user
       if (r.accountId == 1 && admin.accountId == r.accountId) {
          return new Error(ERROR_INVALID_RIGHTS);
       }
@@ -317,6 +282,7 @@ public class AdminAccounts {
 
    public Response requestAdminChangeRights(final AdminChangeRightsRequest r, RequestContext ctx) {
       final Admin admin = getAdmin(ctx, r.token, Admin.RIGHTS_USER_WRITE);
+      // don't allow changing our own rights
       if (admin.accountId == r.accountId) {
          return new Error(ERROR_INVALID_RIGHTS);
       }
