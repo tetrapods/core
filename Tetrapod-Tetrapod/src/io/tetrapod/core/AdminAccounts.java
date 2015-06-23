@@ -73,7 +73,7 @@ public class AdminAccounts {
          try {
             Admin admin = getAdminByAccountId(presumedCurrent.accountId);
             mutator.mutate(admin);
-            cluster.put(key, admin);
+            cluster.modify(admin);
             logger.debug("Mutated {}", key);
             return admin;
          } finally {

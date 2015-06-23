@@ -998,7 +998,6 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       if (ctxA.header.fromType != TYPE_ADMIN) {
          return new Error(ERROR_INVALID_RIGHTS);
       }
-      // TODO: validate they are already logged in as an admin
       AuthToken.Decoded d = AuthToken.decodeAuthToken1(r.token);
       if (d != null) {
          Admin admin = adminAccounts.getAdminByAccountId(d.accountId);
@@ -1021,6 +1020,41 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
             } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
                logger.error(e.getMessage(), e);
             }
+         }
+      } else {
+         return new Error(ERROR_INVALID_RIGHTS);
+      }
+      return new Error(ERROR_UNKNOWN);
+   }
+
+   @Override
+   public Response requestAdminResetPassword(AdminResetPasswordRequest r, RequestContext ctx) {
+      if (ctx.header.fromType != TYPE_ADMIN) {
+         return new Error(ERROR_INVALID_RIGHTS);
+      }
+      AuthToken.Decoded d = AuthToken.decodeAuthToken1(r.token);
+      if (d != null) {
+         final Admin admin = adminAccounts.getAdminByAccountId(d.accountId);
+         if (admin != null && adminAccounts.verifyPermission(admin, Admin.RIGHTS_USER_WRITE)) {
+            try {
+               Admin target = adminAccounts.getAdminByAccountId(r.accountId);
+               if (target != null) {
+                  final String newHash = PasswordHash.createHash(r.password);
+                  target = adminAccounts.mutate(admin, new AdminMutator() {
+                     @Override
+                     public void mutate(Admin admin) {
+                        admin.hash = newHash;
+                     }
+                  });
+                  if (target != null) {
+                     return Response.SUCCESS;
+                  }
+               }
+            } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
+               logger.error(e.getMessage(), e);
+            }
+         } else {
+            return new Error(ERROR_INVALID_RIGHTS);
          }
       } else {
          return new Error(ERROR_INVALID_RIGHTS);
@@ -1241,4 +1275,5 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       }
       return new Error(ERROR_INVALID_DATA);
    }
+
 }

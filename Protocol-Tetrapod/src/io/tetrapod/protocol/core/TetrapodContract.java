@@ -26,6 +26,7 @@ public class TetrapodContract extends Contract {
       , AdminCreateRequest.Handler
       , AdminDeleteRequest.Handler
       , AdminLoginRequest.Handler
+      , AdminResetPasswordRequest.Handler
       , AdminSubscribeRequest.Handler
       , ClusterJoinRequest.Handler
       , ClusterLeaveRequest.Handler
@@ -73,6 +74,7 @@ public class TetrapodContract extends Contract {
          new AdminCreateRequest(),
          new AdminDeleteRequest(),
          new AdminChangePasswordRequest(),
+         new AdminResetPasswordRequest(),
          new AdminChangeRightsRequest(),
          new KeepAliveRequest(),
          new SetAlternateIdRequest(),

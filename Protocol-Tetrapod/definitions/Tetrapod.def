@@ -109,12 +109,18 @@ internal request AdminCreate
    
 internal request AdminDelete
    1: string token @sensitive
-   2: int accountId;
+   2: int accountId
    
 internal request AdminChangePassword
    1: string token @sensitive
    2: string oldPassword @sensitive
    3: string newPassword @sensitive
+   
+internal request AdminResetPassword
+   1: string token @sensitive
+   2: int accountId
+   3: string password @sensitive
+ 
    
 internal request AdminChangeRights
    1: string token @sensitive

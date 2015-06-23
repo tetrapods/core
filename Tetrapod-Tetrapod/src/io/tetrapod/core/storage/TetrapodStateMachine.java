@@ -3,10 +3,10 @@ package io.tetrapod.core.storage;
 import io.tetrapod.core.StructureFactory;
 import io.tetrapod.core.serialize.StructureAdapter;
 import io.tetrapod.core.serialize.datasources.TempBufferDataSource;
-import io.tetrapod.core.utils.*;
+import io.tetrapod.core.utils.Util;
 import io.tetrapod.core.web.*;
 import io.tetrapod.protocol.core.*;
-import io.tetrapod.raft.*;
+import io.tetrapod.raft.StateMachine;
 import io.tetrapod.raft.storage.*;
 
 import java.io.*;
@@ -32,7 +32,7 @@ public class TetrapodStateMachine extends StorageStateMachine<TetrapodStateMachi
    public static final int                        DEL_WEB_ROUTE_COMMAND_ID        = 404;
    public static final int                        ADD_ADMIN_COMMAND_ID            = 405;
    public static final int                        DEL_ADMIN_COMMAND_ID            = 406;
-   public static final int                        EDIT_ADMIN_COMMAND_ID           = 407;
+   public static final int                        MOD_ADMIN_COMMAND_ID            = 407;
 
    public final Map<String, ClusterProperty>      props                           = new HashMap<>();
    public final Map<Integer, ContractDescription> contracts                       = new HashMap<>();
@@ -56,6 +56,7 @@ public class TetrapodStateMachine extends StorageStateMachine<TetrapodStateMachi
       DelWebRouteCommand.register(this);
       AddAdminUserCommand.register(this);
       DelAdminUserCommand.register(this);
+      ModAdminUserCommand.register(this);
    }
 
    @Override
@@ -200,6 +201,17 @@ public class TetrapodStateMachine extends StorageStateMachine<TetrapodStateMachi
       }
       admins.put(user.accountId, user);
       logger.info(" Adding Admin = {}", user.dump());
+   }
+
+   public void modifyAdminUser(final Admin user) {
+      Admin orig = admins.get(user.accountId);
+      if (orig != null) {
+         // store in state machine as a StorageItem
+         putItem(TETRAPOD_ADMIN_PREFIX + user.accountId, (byte[]) user.toRawForm(TempBufferDataSource.forWriting()));
+         admins.put(user.accountId, user);
+      } else {
+         throw new RuntimeException("Admin user not found " + user.accountId);
+      }
    }
 
    public void delAdminUser(int accountId) {

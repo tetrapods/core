@@ -863,7 +863,6 @@ public class TetrapodCluster extends Storage implements RaftRPC<TetrapodStateMac
          }
          return false;
       }
-
    }
 
    public Admin addAdmin(String email, String hash, long rights) {
@@ -891,6 +890,17 @@ public class TetrapodCluster extends Storage implements RaftRPC<TetrapodStateMac
 
    public Admin getAdmin(int accountId) {
       return state.admins.get(accountId);
+   }
+
+   public boolean modify(Admin admin) {
+      final Value<Boolean> val = new Value<Boolean>();
+      executeCommand(new ModAdminUserCommand(admin), new ClientResponseHandler<TetrapodStateMachine>() {
+         @Override
+         public void handleResponse(Entry<TetrapodStateMachine> e) {
+            val.set(e != null);
+         }
+      });
+      return val.waitForValue();
    }
 
 }

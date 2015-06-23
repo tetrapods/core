@@ -50,6 +50,7 @@ function TP_Tetrapod(server) {
    server.register("request", "Tetrapod", "AdminCreate", 1, 14596683);
    server.register("request", "Tetrapod", "AdminDelete", 1, 7421322);
    server.register("request", "Tetrapod", "AdminChangePassword", 1, 2877212);
+   server.register("request", "Tetrapod", "AdminResetPassword", 1, 868729);
    server.register("request", "Tetrapod", "AdminChangeRights", 1, 16102706);
    server.register("struct", "Tetrapod", "Admin", 1, 16753598);
    server.register("request", "Tetrapod", "KeepAlive", 1, 5512920);

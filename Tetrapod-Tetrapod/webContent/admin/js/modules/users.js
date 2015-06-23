@@ -58,7 +58,6 @@ define(function(require) {
 
       // called when change password dialog is submitted
       function onEditPassword() {
-         // TODO: apply to specific user, not just ourselves
          app.server.sendDirect("AdminChangePassword", {
             token: app.authtoken,
             oldPassword: self.modalOldPassword().trim(),
@@ -111,6 +110,7 @@ define(function(require) {
          var self = this;
 
          self.email = def.email;
+         self.accountId = def.accountId;
          self.deleteUser = deleteUser;
          self.resetPassword = resetPassword;
 
@@ -121,10 +121,18 @@ define(function(require) {
          }
 
          function resetPassword() {
-            Alert.confirm("Are you sure you want to reset the password for '" + self.email + "'?", function() {
-               users.modalOldPassword('');
-               users.modalNewPassword('');
-               $('#set-password-modal').modal('show');
+            Alert.prompt("Change password for '" + self.email + "':", function(val) {
+               app.server.sendDirect("AdminResetPassword", {
+                  token: app.authtoken,
+                  accountId: self.accountId,
+                  password: val
+               }, function(res) {
+                  if (res.isError()) {
+                     Alert.error('Error: Reset Password Failed');
+                  } else {
+                     Alert.info('Password has been changed.');
+                  }
+               });
             });
          }
 

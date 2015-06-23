@@ -82,8 +82,9 @@ define(["knockout", "jquery", "bootbox", "toolbox", "protocol/server", "protocol
          }, function(result) {
             if (result.isError()) {
                bootbox.alert('Login Failed');
+            } else {
+               self.email(email);
             }
-            self.email(email);
             onLogin(result);
          });
       }
@@ -114,7 +115,7 @@ define(["knockout", "jquery", "bootbox", "toolbox", "protocol/server", "protocol
          $('#login-wrapper').show();
          $('#app-wrapper').hide();
          model.clear();
-         self.email();
+         self.email(null);
       }
 
       function changePassword() {
