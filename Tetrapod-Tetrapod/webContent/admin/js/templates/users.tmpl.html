@@ -29,7 +29,24 @@
             </div>
             <span data-bind="text: email" class="property"></span>
          </td>
-         <td></td>
+         <td class="rights">
+            <label>
+               <input type="checkbox" data-bind="checked: clusterRead, enable: canModifyRights">
+               Cluster Read
+            </label>
+            <label>
+               <input type="checkbox" data-bind="checked: clusterWrite, enable: canModifyRights">
+               Cluster Write
+            </label>
+            <label>
+               <input type="checkbox" data-bind="checked: userRead, enable: canModifyRights">
+               User Read
+            </label>
+            <label>
+               <input type="checkbox" data-bind="checked: userWrite, enable: canModifyRights">
+               User Write
+            </label>
+         </td>
       </tr>
    </tbody>
 </table>

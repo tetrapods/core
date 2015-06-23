@@ -344,3 +344,10 @@
    color: #000;
 }
    
+
+.rights label {
+	font-size: 11px;
+	font-style: normal;
+	padding-right: 10px;
+	padding-left: 10px;
+}

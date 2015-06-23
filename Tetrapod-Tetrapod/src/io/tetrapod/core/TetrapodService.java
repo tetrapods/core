@@ -6,7 +6,6 @@ import static io.tetrapod.protocol.core.TetrapodContract.*;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.base64.Base64Dialect;
-import io.tetrapod.core.AdminAccounts.AdminMutator;
 import io.tetrapod.core.Session.RelayHandler;
 import io.tetrapod.core.registry.*;
 import io.tetrapod.core.rpc.*;
@@ -20,8 +19,7 @@ import io.tetrapod.protocol.raft.*;
 import io.tetrapod.protocol.storage.*;
 
 import java.io.*;
-import java.security.*;
-import java.security.spec.InvalidKeySpecException;
+import java.security.SecureRandom;
 import java.util.*;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
@@ -948,163 +946,37 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
    @Override
    public Response requestAdminAuthorize(AdminAuthorizeRequest r, RequestContext ctxA) {
-      SessionRequestContext ctx = (SessionRequestContext) ctxA;
-      AuthToken.Decoded d = AuthToken.decodeAuthToken1(r.token);
-      if (d != null) {
-         logger.debug("TOKEN {} time left = {}", r.token, d.timeLeft);
-         Admin admin = adminAccounts.getAdminByAccountId(d.accountId);
-         if (admin != null) {
-            ctx.session.theirType = Core.TYPE_ADMIN;
-            return new AdminAuthorizeResponse(admin.accountId, admin.email);
-         }
-      } else {
-         logger.warn("TOKEN {} NOT VALID", r.token);
-      }
-      return new Error(ERROR_INVALID_RIGHTS);
+      return adminAccounts.requestAdminAuthorize(r, ctxA);
    }
 
    @Override
    public Response requestAdminLogin(AdminLoginRequest r, RequestContext ctxA) {
-      SessionRequestContext ctx = (SessionRequestContext) ctxA;
-      if (r.email == null) {
-         return new Error(ERROR_INVALID_RIGHTS);
-      }
-      try {
-         Admin admin = adminAccounts.getAdminByEmail(r.email);
-         if (admin != null) {
-            if (adminAccounts.recordLoginAttempt(admin)) {
-               logger.info("Invalid Credentials");
-               return new Error(ERROR_INVALID_CREDENTIALS); // prevent brute force attack
-            }
-            if (PasswordHash.validatePassword(r.password, admin.hash)) {
-               // mark the session as an admin
-               ctx.session.theirType = Core.TYPE_ADMIN;
-               final String authtoken = AuthToken.encodeAuthToken1(admin.accountId, 0, 60 * 24 * 14);
-               return new AdminLoginResponse(authtoken);
-            } else {
-               return new Error(ERROR_INVALID_CREDENTIALS); // invalid password
-            }
-         } else {
-            return new Error(ERROR_INVALID_CREDENTIALS); // invalid account
-         }
-      } catch (Exception e) {
-         logger.error(e.getMessage(), e);
-         return new Error(ERROR_UNKNOWN);
-      }
+      return adminAccounts.requestAdminLogin(r, ctxA);
    }
 
    @Override
    public Response requestAdminChangePassword(final AdminChangePasswordRequest r, RequestContext ctxA) {
-      if (ctxA.header.fromType != TYPE_ADMIN) {
-         return new Error(ERROR_INVALID_RIGHTS);
-      }
-      AuthToken.Decoded d = AuthToken.decodeAuthToken1(r.token);
-      if (d != null) {
-         Admin admin = adminAccounts.getAdminByAccountId(d.accountId);
-         if (admin != null) {
-            try {
-               if (PasswordHash.validatePassword(r.oldPassword, admin.hash)) {
-                  final String newHash = PasswordHash.createHash(r.newPassword);
-                  admin = adminAccounts.mutate(admin, new AdminMutator() {
-                     @Override
-                     public void mutate(Admin admin) {
-                        admin.hash = newHash;
-                     }
-                  });
-                  if (admin != null) {
-                     return Response.SUCCESS;
-                  }
-               } else {
-                  return new Error(ERROR_INVALID_CREDENTIALS);
-               }
-            } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
-               logger.error(e.getMessage(), e);
-            }
-         }
-      } else {
-         return new Error(ERROR_INVALID_RIGHTS);
-      }
-      return new Error(ERROR_UNKNOWN);
+      return adminAccounts.requestAdminChangePassword(r, ctxA);
    }
 
    @Override
    public Response requestAdminResetPassword(AdminResetPasswordRequest r, RequestContext ctx) {
-      if (ctx.header.fromType != TYPE_ADMIN) {
-         return new Error(ERROR_INVALID_RIGHTS);
-      }
-      AuthToken.Decoded d = AuthToken.decodeAuthToken1(r.token);
-      if (d != null) {
-         final Admin admin = adminAccounts.getAdminByAccountId(d.accountId);
-         if (admin != null && adminAccounts.verifyPermission(admin, Admin.RIGHTS_USER_WRITE)) {
-            try {
-               Admin target = adminAccounts.getAdminByAccountId(r.accountId);
-               if (target != null) {
-                  final String newHash = PasswordHash.createHash(r.password);
-                  target = adminAccounts.mutate(admin, new AdminMutator() {
-                     @Override
-                     public void mutate(Admin admin) {
-                        admin.hash = newHash;
-                     }
-                  });
-                  if (target != null) {
-                     return Response.SUCCESS;
-                  }
-               }
-            } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
-               logger.error(e.getMessage(), e);
-            }
-         } else {
-            return new Error(ERROR_INVALID_RIGHTS);
-         }
-      } else {
-         return new Error(ERROR_INVALID_RIGHTS);
-      }
-      return new Error(ERROR_UNKNOWN);
+      return adminAccounts.requestAdminResetPassword(r, ctx);
    }
 
    @Override
    public Response requestAdminChangeRights(AdminChangeRightsRequest r, RequestContext ctx) {
-      // TODO: Implement;
-      return new Error(ERROR_UNKNOWN);
+      return adminAccounts.requestAdminChangeRights(r, ctx);
    }
 
    @Override
    public Response requestAdminCreate(AdminCreateRequest r, RequestContext ctx) {
-      if (ctx.header.fromType != TYPE_ADMIN) {
-         return new Error(ERROR_INVALID_RIGHTS);
-      }
-      final AuthToken.Decoded d = AuthToken.decodeAuthToken1(r.token);
-      if (d != null) {
-         final Admin admin = adminAccounts.getAdminByAccountId(d.accountId);
-         if (admin != null) {
-            try {
-               if (adminAccounts.verifyPermission(admin, Admin.RIGHTS_USER_WRITE)) {
-                  final String hash = PasswordHash.createHash(r.password);
-
-                  final Admin newUser = adminAccounts.addAdmin(r.email.trim(), hash, r.rights);
-                  if (newUser != null) {
-                     return Response.SUCCESS;
-                  } else {
-                     // they probably already exist
-                     return new Error(ERROR_INVALID_ACCOUNT);
-                  }
-               } else {
-                  return new Error(ERROR_INVALID_RIGHTS);
-               }
-            } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
-               logger.error(e.getMessage(), e);
-            }
-         }
-      } else {
-         return new Error(ERROR_INVALID_RIGHTS);
-      }
-      return new Error(ERROR_UNKNOWN);
+      return adminAccounts.requestAdminCreate(r, ctx);
    }
 
    @Override
    public Response requestAdminDelete(AdminDeleteRequest r, RequestContext ctx) {
-      // TODO: Implement;
-      return new Error(ERROR_UNKNOWN);
+      return adminAccounts.requestAdminDelete(r, ctx);
    }
 
    //------------ building

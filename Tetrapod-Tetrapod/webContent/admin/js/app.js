@@ -17,6 +17,7 @@ define(["knockout", "jquery", "bootbox", "toolbox", "protocol/server", "protocol
       self.modalData = ko.observable({});
       self.name = window.location.hostname;
       self.email = ko.observable();
+      self.accountId = ko.observable();
       self.isProd = self.name == "chatbox.com" || self.name == "xbox.chatbox.com" || (self.name.indexOf(".prod.") > 0);
 
       function run(clusterModel) {
@@ -98,6 +99,10 @@ define(["knockout", "jquery", "bootbox", "toolbox", "protocol/server", "protocol
             if (result.email) {
                self.email(result.email);
             }
+            if (result.accountId) {
+               self.accountId(result.accountId);
+            }
+
             $('#login-wrapper').hide();
             $('#app-wrapper').show();
             server.sendDirect("ServicesSubscribe", {}, server.logResponse);

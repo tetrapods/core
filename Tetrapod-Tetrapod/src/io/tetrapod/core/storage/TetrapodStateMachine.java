@@ -189,13 +189,11 @@ public class TetrapodStateMachine extends StorageStateMachine<TetrapodStateMachi
       if (write) {
          for (Admin admin : admins.values()) {
             if (admin.email.equalsIgnoreCase(user.email))
-               return;// don't clobber existing
+               return; // don't clobber existing
          }
 
-         // issue an accountId if not set
-         if (user.accountId == 0) {
-            user.accountId = (int) increment(TETRAPOD_ADMIN_ACCOUNT_SEQ_KEY, 1);
-         }
+        user.accountId = (int) increment(TETRAPOD_ADMIN_ACCOUNT_SEQ_KEY, 1);
+
          // store in state machine as a StorageItem
          putItem(TETRAPOD_ADMIN_PREFIX + user.accountId, (byte[]) user.toRawForm(TempBufferDataSource.forWriting()));
       }

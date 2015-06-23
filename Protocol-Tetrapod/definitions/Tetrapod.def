@@ -93,6 +93,7 @@ public request AdminLogin
 
 public response AdminLogin
    1: string token @sensitive
+   2: int accountId
    
 public request AdminAuthorize
    1: string token @sensitive

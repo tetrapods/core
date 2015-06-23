@@ -7,6 +7,7 @@ define(function(require) {
 
    function Users(app) {
       var self = this;
+      var CONSTS = $.extend({}, app.server.consts["Core"] || {}, app.server.consts["Core.Core"] || {}, app.server.consts["Tetrapod.Admin"] || {});
 
       self.users = ko.observableArray([]);
 
@@ -96,7 +97,7 @@ define(function(require) {
       });
 
       app.server.addMessageHandler("AdminUserRemoved", function(msg) {
-         var u = self.findUser(msg.key);
+         var u = self.findUser(msg.accountId);
          if (u) {
             self.users.remove(u);
          }
@@ -113,10 +114,34 @@ define(function(require) {
          self.accountId = def.accountId;
          self.deleteUser = deleteUser;
          self.resetPassword = resetPassword;
+         self.canModifyRights = ko.pureComputed(canModifyRights);
+
+         self.clusterRead = ko.observable();
+         self.clusterWrite = ko.observable();
+         self.userRead = ko.observable();
+         self.userWrite = ko.observable();
+
+         updateRights(def.rights);
+
+         function updateRights(rights) {
+            self.updatingRights = true;
+            self.clusterRead(rights & CONSTS.RIGHTS_CLUSTER_READ);
+            self.clusterWrite(rights & CONSTS.RIGHTS_CLUSTER_WRITE);
+            self.userRead(rights & CONSTS.RIGHTS_USER_READ);
+            self.userWrite(rights & CONSTS.RIGHTS_USER_WRITE);
+            self.updatingRights = false;
+         }
 
          function deleteUser() {
             Alert.confirm("Are you sure you want to delete '" + self.email + "'?", function() {
-               Alert.error("Implement Me!"); // TODO
+               app.server.sendDirect("AdminDelete", {
+                  token: app.authtoken,
+                  accountId: self.accountId
+               }, function(res) {
+                  if (res.isError()) {
+                     Alert.error('Error: Delete Admin Failed');
+                  }
+               });
             });
          }
 
@@ -134,6 +159,51 @@ define(function(require) {
                   }
                });
             });
+         }
+
+         // get the bitmask int from the checkbox observables
+         function rights() {
+            var r = 0;
+            if (self.clusterRead()) {
+               r |= CONSTS.RIGHTS_CLUSTER_READ
+            }
+            if (self.clusterWrite()) {
+               r |= CONSTS.RIGHTS_CLUSTER_WRITE
+            }
+            if (self.userRead()) {
+               r |= CONSTS.RIGHTS_USER_READ
+            }
+            if (self.userWrite()) {
+               r |= CONSTS.RIGHTS_USER_WRITE
+            }
+            return r;
+         }
+
+         self.clusterRead.subscribe(changeRights);
+         self.clusterWrite.subscribe(changeRights);
+         self.userRead.subscribe(changeRights);
+         self.userWrite.subscribe(changeRights);
+
+         function changeRights() {
+            if (!self.updatingRights) {
+               var r = rights();
+               app.server.sendDirect("AdminChangeRights", {
+                  token: app.authtoken,
+                  accountId: self.accountId,
+                  rights: r
+               }, function(res) {
+                  if (res.isError()) {
+                     Alert.error('Error: Update Rights Failed');
+                     r = def.rights;
+                  }
+                  def.rights = r;
+                  updateRights(r);
+               });
+            }
+         }
+
+         function canModifyRights() {
+            return app.accountId() != self.accountId;
          }
 
       }

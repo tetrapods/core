@@ -21,11 +21,13 @@ public class AdminLoginResponse extends Response {
       defaults();
    }
 
-   public AdminLoginResponse(String token) {
+   public AdminLoginResponse(String token, int accountId) {
       this.token = token;
+      this.accountId = accountId;
    }   
    
    public String token;
+   public int accountId;
 
    public final Structure.Security getSecurity() {
       return Security.PUBLIC;
@@ -33,11 +35,13 @@ public class AdminLoginResponse extends Response {
 
    public final void defaults() {
       token = null;
+      accountId = 0;
    }
    
    @Override
    public final void write(DataSource data) throws IOException {
       data.write(1, this.token);
+      data.write(2, this.accountId);
       data.writeEndTag();
    }
    
@@ -48,6 +52,7 @@ public class AdminLoginResponse extends Response {
          int tag = data.readTag();
          switch (tag) {
             case 1: this.token = data.read_string(tag); break;
+            case 2: this.accountId = data.read_int(tag); break;
             case Codec.END_TAG:
                return;
             default:
@@ -69,8 +74,9 @@ public class AdminLoginResponse extends Response {
       // Note do not use this tags in long term serializations (to disk or databases) as 
       // implementors are free to rename them however they wish.  A null means the field
       // is not to participate in web serialization (remaining at default)
-      String[] result = new String[1+1];
+      String[] result = new String[2+1];
       result[1] = "token";
+      result[2] = "accountId";
       return result;
    }
 
@@ -89,6 +95,7 @@ public class AdminLoginResponse extends Response {
       desc.types = new TypeDescriptor[desc.tagWebNames.length];
       desc.types[0] = new TypeDescriptor(TypeDescriptor.T_STRUCT, getContractId(), getStructId());
       desc.types[1] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
+      desc.types[2] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
       return desc;
    }
  }
