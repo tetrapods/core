@@ -9,6 +9,7 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.security.*;
 import java.util.*;
+import java.util.regex.*;
 
 import javax.net.ssl.*;
 import javax.xml.bind.DatatypeConverter;
@@ -425,6 +426,16 @@ public class Util {
       } catch (Exception e) {
          throw new RuntimeException(e);
       }
+   }
+   
+   public static String camelCaseUnderscores(String str) {
+      Matcher m = Pattern.compile("_([a-z])").matcher(str);
+      StringBuffer sb = new StringBuffer();
+      while (m.find()) {
+          m.appendReplacement(sb, m.group().substring(1).toUpperCase());
+      }
+      m.appendTail(sb);
+      return sb.toString();
    }
 
 }
