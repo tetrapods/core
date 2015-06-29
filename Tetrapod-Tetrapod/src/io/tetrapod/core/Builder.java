@@ -76,14 +76,14 @@ public class Builder {
       Collections.sort(services);
       return services;
    }
-   
+
    private static class MyCallback implements Callback<String> {
 
       public void call(String data) throws Exception {
          // TODO: send BuildCommandProgress message
          logger.info(data);
       }
-      
+
    }
 
    public static boolean executeCommand(BuildCommand command, TetrapodService tetrapodService) {
@@ -99,7 +99,7 @@ public class Builder {
             case BuildCommand.BUILD:
                if (!canBuild)
                   return false;
-               return doPullBuild(buildDir, command.build, m);
+               return doPullBuild(buildDir, command.name, command.build, m);
             case BuildCommand.DEPLOY:
                if (!canDeploy)
                   return false;
@@ -121,28 +121,32 @@ public class Builder {
       return true;
    }
 
-   private static boolean doPullBuild(File buildDir, int build, MyCallback callback) throws IOException {
+   private static boolean doPullBuild(File buildDir, String name, int build, MyCallback callback) throws IOException {
       if (build == BuildCommand.DEPLOY_LATEST) {
          // force use of real build numbers
          return false;
       }
-      String buildNum = "" + build; 
-      int rc = Util.runProcess(callback, new File(buildDir, "pullBuild").getPath(), buildNum);
+      if (name == null || name.trim().isEmpty()) {
+         name = Util.getProperty("build.name", "dev");
+      }
+      String buildNum = "" + build;
+      int rc = Util.runProcess(callback, new File(buildDir, "pullBuild").getPath(), name.trim(), buildNum);
       return rc == 0;
    }
 
-   private static boolean doDeploy(File buildDir, File clusterDir, String serviceName, int build, MyCallback callback) throws IOException  {
+   private static boolean doDeploy(File buildDir, File clusterDir, String serviceName, int build, MyCallback callback) throws IOException {
       if (build == BuildCommand.DEPLOY_LATEST) {
          // force use of real build numbers for deploy
          return false;
       }
-      String buildNum = "" + build; 
+      String buildNum = "" + build;
       int rc = Util.runProcess(callback, new File(clusterDir, "deploy").getPath(), buildNum, serviceName);
       return rc == 0;
    }
 
-   private static boolean doLaunch(File clusterDir, String serviceName, int build, MyCallback callback, boolean startPaused) throws IOException {
-      String buildNum = build == BuildCommand.LAUNCH_DEPLOYED ? "current" : "" + build; 
+   private static boolean doLaunch(File clusterDir, String serviceName, int build, MyCallback callback, boolean startPaused)
+         throws IOException {
+      String buildNum = build == BuildCommand.LAUNCH_DEPLOYED ? "current" : "" + build;
       if (startPaused) {
          int rc = Util.runProcess(callback, new File(clusterDir, "launch").getPath(), "paused", buildNum, serviceName);
          return rc == 0;
@@ -152,7 +156,7 @@ public class Builder {
    }
 
    private static boolean doFullCycle(File clusterDir, String serviceName, int build, MyCallback callback) throws IOException {
-      String buildNum = build == BuildCommand.LAUNCH_DEPLOYED ? "current" : "" + build; 
+      String buildNum = build == BuildCommand.LAUNCH_DEPLOYED ? "current" : "" + build;
       int rc = Util.runProcess(callback, new File(clusterDir, "fullCycle").getPath(), buildNum, serviceName);
       return rc == 0;
    }

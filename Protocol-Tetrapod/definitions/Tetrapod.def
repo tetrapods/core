@@ -230,6 +230,7 @@ admin struct BuildCommand
    1: string serviceName
    2: int build
    3: int command
+   4: string name 
    
    const int BUILD   = 1
    const int DEPLOY  = 2
