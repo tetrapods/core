@@ -135,7 +135,11 @@ public class TetrapodCluster extends Storage implements RaftRPC<TetrapodStateMac
       service.registerSelf(io.tetrapod.core.registry.Registry.BOOTSTRAP_ID, random.nextLong());
       //    joinIndex = raft.getLog().getLastIndex();
       service.checkDependencies();
+   }
 
+   public void forceBootstrap() {
+      logger.warn("FORCE bootstrapping new cluster");
+      raft.bootstrap(Util.getHostName(), service.getClusterPort());
    }
 
    private void addPeer(AddPeerCommand<TetrapodStateMachine> command) {}
@@ -536,6 +540,14 @@ public class TetrapodCluster extends Storage implements RaftRPC<TetrapodStateMac
          entity = new EntityInfo(req.entityId, req.entityId, 0L, req.host, req.status, Core.TYPE_TETRAPOD, "Tetrapod*", req.build,
                TetrapodContract.VERSION, TetrapodContract.CONTRACT_ID);
          service.registry.register(entity);
+      } else {
+         // reconnecting with a pre-existing peerId
+         final int peerId = req.entityId >> Registry.PARENT_ID_SHIFT;
+         if (!raft.isValidPeer(peerId)) {
+            // we must have bootstrapped again, so re-add the peer
+            final AddPeerCommand<TetrapodStateMachine> cmd = new AddPeerCommand<>(req.host, req.clusterPort);
+            executeCommand(cmd, null);
+         }
       }
       entity.setSession(ctx.session);
 

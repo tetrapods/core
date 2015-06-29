@@ -33,6 +33,7 @@ function TP_Tetrapod(server) {
    server.register("response", "Tetrapod", "IssuePeerId", 1, 14036188);
    server.register("request", "Tetrapod", "ClusterJoin", 1, 8294880);
    server.register("request", "Tetrapod", "ClusterLeave", 1, 12863875);
+   server.register("request", "Tetrapod", "ClusterBootstrap", 1, 3440752);
    server.register("request", "Tetrapod", "Unregister", 1, 3896262);
    server.register("request", "Tetrapod", "Publish", 1, 3171651);
    server.register("response", "Tetrapod", "Publish", 1, 2698673);

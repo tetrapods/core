@@ -1099,7 +1099,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
    @Override
    public Response requestDelClusterProperty(DelClusterPropertyRequest r, RequestContext ctx) {
-      if (!adminAccounts.isValidAdminRequest(ctx, r.adminToken)) {
+      if (!adminAccounts.isValidAdminRequest(ctx, r.adminToken, Admin.RIGHTS_CLUSTER_WRITE)) {
          return new Error(ERROR_INVALID_RIGHTS);
       }
       cluster.delClusterProperty(r.key);
@@ -1108,7 +1108,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
    @Override
    public Response requestSetClusterProperty(SetClusterPropertyRequest r, RequestContext ctx) {
-      if (!adminAccounts.isValidAdminRequest(ctx, r.adminToken)) {
+      if (!adminAccounts.isValidAdminRequest(ctx, r.adminToken, Admin.RIGHTS_CLUSTER_WRITE)) {
          return new Error(ERROR_INVALID_RIGHTS);
       }
       cluster.setClusterProperty(r.property);
@@ -1117,7 +1117,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
    @Override
    public Response requestAdminSubscribe(AdminSubscribeRequest r, RequestContext ctx) {
-      if (!adminAccounts.isValidAdminRequest(ctx, r.adminToken)) {
+      if (!adminAccounts.isValidAdminRequest(ctx, r.adminToken, Admin.RIGHTS_CLUSTER_READ)) {
          return new Error(ERROR_INVALID_RIGHTS);
       }
       subscribeToAdmin(((SessionRequestContext) ctx).session, ctx.header.fromId);
@@ -1126,7 +1126,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
    @Override
    public Response requestSetWebRoot(SetWebRootRequest r, RequestContext ctx) {
-      if (!adminAccounts.isValidAdminRequest(ctx, r.adminToken)) {
+      if (!adminAccounts.isValidAdminRequest(ctx, r.adminToken, Admin.RIGHTS_CLUSTER_WRITE)) {
          return new Error(ERROR_INVALID_RIGHTS);
       }
       if (r.def != null) {
@@ -1138,7 +1138,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
    @Override
    public Response requestDelWebRoot(DelWebRootRequest r, RequestContext ctx) {
-      if (!adminAccounts.isValidAdminRequest(ctx, r.adminToken)) {
+      if (!adminAccounts.isValidAdminRequest(ctx, r.adminToken, Admin.RIGHTS_CLUSTER_WRITE)) {
          return new Error(ERROR_INVALID_RIGHTS);
       }
       if (r.name != null) {
@@ -1146,6 +1146,15 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          return Response.SUCCESS;
       }
       return new Error(ERROR_INVALID_DATA);
+   }
+
+   @Override
+   public Response requestClusterBootstrap(ClusterBootstrapRequest r, RequestContext ctx) {
+      if (!adminAccounts.isValidAdminRequest(ctx, r.adminToken, Admin.RIGHTS_CLUSTER_WRITE)) {
+         return new Error(ERROR_INVALID_RIGHTS);
+      }
+      cluster.forceBootstrap();
+      return Response.SUCCESS;
    }
 
 }

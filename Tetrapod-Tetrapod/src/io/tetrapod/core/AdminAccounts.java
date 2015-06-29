@@ -118,12 +118,18 @@ public class AdminAccounts {
    }
 
    public boolean isValidAdminRequest(RequestContext ctx, String adminToken) {
+      return isValidAdminRequest(ctx, adminToken, 0);
+   }
+
+   public boolean isValidAdminRequest(RequestContext ctx, String adminToken, int rightsRequired) {
       if (ctx.header.fromType == TYPE_ADMIN) {
-         AuthToken.Decoded d = AuthToken.decodeAuthToken1(adminToken);
+         final AuthToken.Decoded d = AuthToken.decodeAuthToken1(adminToken);
          if (d != null) {
-            Admin admin = getAdmin(d.accountId);
+            final Admin admin = getAdmin(d.accountId);
             if (admin != null) {
-               return true;
+               if (verifyPermission(admin, rightsRequired)) {
+                  return true;
+               }
             }
          }
       }

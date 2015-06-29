@@ -60,6 +60,9 @@ internal request ClusterJoin
 internal request ClusterLeave
    1: int entityId      
    
+internal request ClusterBootstrap
+   1: string adminToken @sensitive
+
 internal request Unregister
    1: int entityId
 
@@ -335,4 +338,5 @@ internal message AdminUserAdded
    
 internal message AdminUserRemoved       
    1: int accountId
+    
     

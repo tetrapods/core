@@ -86,7 +86,9 @@ public class TetrapodPeer implements Session.Listener, SessionFactory {
             pendingConnect = true;
          }
          if (!service.isShuttingDown() && !isConnected()) {
-            logger.info(" - Joining Tetrapod {} @ {}", entityId, host);
+            if (failures < 10) {
+               logger.info(" - Joining Tetrapod {} @ {} : {}", entityId, host, clusterPort);
+            }
             final Client client = new Client(this);
             client.connect(host, clusterPort, service.getDispatcher()).sync();
             setSession(client.getSession());
@@ -95,7 +97,8 @@ public class TetrapodPeer implements Session.Listener, SessionFactory {
          if (!(e instanceof ConnectException)) {
             logger.error(e.getMessage(), e);
          }
-         scheduleReconnect(++failures);
+         ++failures;
+         //scheduleReconnect(++failures);
       } finally {
          synchronized (this) {
             pendingConnect = false;
