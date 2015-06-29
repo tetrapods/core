@@ -140,16 +140,9 @@ public class TetrapodCluster extends Storage implements RaftRPC<TetrapodStateMac
 
    private void addPeer(AddPeerCommand<TetrapodStateMachine> command) {}
 
-   private void delPeer(DelPeerCommand<TetrapodStateMachine> command, Entry<TetrapodStateMachine> entry) {
-      if (command.peerId == raft.getPeerId() && joinIndex.get() > 0 && entry.getIndex() > joinIndex.get()) {
-         service.shutdown(false);
-      }
-   }
+   private void delPeer(DelPeerCommand<TetrapodStateMachine> command, Entry<TetrapodStateMachine> entry) {}
 
    public void stop() {
-      //      if (raft.getRole() != Role.Leaving) {
-      //         executeCommand(new DelPeerCommand<TetrapodStateMachine>(raft.getPeerId()), null);
-      //      }
       raft.stop();
    }
 
@@ -570,7 +563,6 @@ public class TetrapodCluster extends Storage implements RaftRPC<TetrapodStateMac
             @Override
             public void handleResponse(Entry<TetrapodStateMachine> e) {
                if (e != null) {
-                  // on success we can shutdown
                   ctx.session.sendResponse(Response.SUCCESS, ctx.header.requestId);
                } else {
                   ctx.session.sendResponse(Response.error(CoreContract.ERROR_UNKNOWN), ctx.header.requestId);

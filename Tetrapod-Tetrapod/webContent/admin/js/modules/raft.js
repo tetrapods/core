@@ -20,12 +20,10 @@ define(function(require) {
       self.ensurePeer = ensurePeer;
       self.isNodeInCluster = isNodeInCluster;
 
-
       function clear() {
          self.rafts.removeAll();
       }
 
-      
       var raftTab = $('#raft-tab');
       setInterval(function() {
          if (raftTab.is(':visible')) {
