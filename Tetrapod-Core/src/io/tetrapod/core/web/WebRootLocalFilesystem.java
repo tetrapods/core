@@ -6,6 +6,7 @@ import java.io.*;
 import java.net.URL;
 import java.nio.file.*;
 import java.util.*;
+import java.util.zip.*;
 
 import org.slf4j.*;
 
@@ -44,8 +45,31 @@ public class WebRootLocalFilesystem implements WebRoot {
       addFile(webDir.getAbsolutePath(), null);
    }
 
-   private void unzip(File zipFile, File webDir) throws IOException {
-      Runtime.getRuntime().exec(String.format("unzip %s -d %s", zipFile.getAbsolutePath(), webDir.getAbsolutePath()));
+   private void unzip(File source, File destination) throws IOException {
+      try (FileInputStream fis = new FileInputStream(source)) {
+         try (ZipInputStream zis = new ZipInputStream(new BufferedInputStream(fis))) {
+            ZipEntry entry;
+            while ((entry = zis.getNextEntry()) != null) {
+               File file = new File(destination, entry.getName());
+               if (entry.isDirectory()) {
+                  file.mkdir();
+               } else {
+                  byte[] buffer = new byte[2048];
+                  try (FileOutputStream fos = new FileOutputStream(file)) {
+                     try (BufferedOutputStream bos = new BufferedOutputStream(fos, buffer.length)) {
+                        int size;
+                        while ((size = zis.read(buffer, 0, buffer.length)) != -1) {
+                           bos.write(buffer, 0, size);
+                        }
+                        bos.flush();
+                     }
+                  }
+               }
+            }
+         }
+      } catch (IOException e) {
+         throw new IOException(e);
+      }
    }
 
    public WebRootLocalFilesystem(String path, File dir) {

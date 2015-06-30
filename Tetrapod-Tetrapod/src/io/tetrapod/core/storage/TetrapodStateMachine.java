@@ -174,12 +174,14 @@ public class TetrapodStateMachine extends StorageStateMachine<TetrapodStateMachi
    private void install(WebRootDef def) {
       try {
          WebRoot wr = null;
-         if (def.file.startsWith("http")) {
-            wr = new WebRootLocalFilesystem(def.path, new URL(def.file));
-         } else {
-            wr = new WebRootLocalFilesystem(def.path, new File(def.file));
+         synchronized (webRootDirs) {
+            if (def.file.startsWith("http")) {
+               wr = new WebRootLocalFilesystem(def.path, new URL(def.file));
+            } else {
+               wr = new WebRootLocalFilesystem(def.path, new File(def.file));
+            }
+            webRootDirs.put(def.name, wr);
          }
-         webRootDirs.put(def.name, wr);
       } catch (IOException e) {
          logger.error(e.getMessage(), e);
       }
@@ -192,7 +194,7 @@ public class TetrapodStateMachine extends StorageStateMachine<TetrapodStateMachi
                return; // don't clobber existing
          }
 
-        user.accountId = (int) increment(TETRAPOD_ADMIN_ACCOUNT_SEQ_KEY, 1);
+         user.accountId = (int) increment(TETRAPOD_ADMIN_ACCOUNT_SEQ_KEY, 1);
 
          // store in state machine as a StorageItem
          putItem(TETRAPOD_ADMIN_PREFIX + user.accountId, (byte[]) user.toRawForm(TempBufferDataSource.forWriting()));
