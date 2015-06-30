@@ -123,7 +123,7 @@ public class TetrapodStateMachine extends StorageStateMachine<TetrapodStateMachi
    public boolean hasContract(int contractId, int version) {
       ContractDescription info = contracts.get(contractId);
       if (info != null) {
-         return info.version >= version;
+         return info.version > version;
       }
       return false;
    }
