@@ -278,11 +278,13 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
             cluster.setClusterProperty(new ClusterProperty(key.toString(), false, props.getProperty(key.toString())));
          }
          String secrets = props.getProperty("secrets");
-         props = new Properties();
-         props.put("secrets", secrets);
-         Launcher.loadSecretProperties(props);
-         for (Object key : props.keySet()) {
-            cluster.setClusterProperty(new ClusterProperty(key.toString(), true, props.getProperty(key.toString())));
+         if (secrets != null) {
+            props = new Properties();
+            props.put("secrets", secrets);
+            Launcher.loadSecretProperties(props);
+            for (Object key : props.keySet()) {
+               cluster.setClusterProperty(new ClusterProperty(key.toString(), true, props.getProperty(key.toString())));
+            }
          }
 
          cluster.setClusterProperty(new ClusterProperty("props.init", false, "true"));
