@@ -21,43 +21,43 @@ public class ClusterJoinRequest extends Request {
       defaults();
    }
 
-   public ClusterJoinRequest(int entityId, String host, int servicePort, int clusterPort, String uuid, int expectedEntityId) {
-      this.entityId = entityId;
+   public ClusterJoinRequest(int build, int status, String host, int entityId, int servicePort, int clusterPort) {
+      this.build = build;
+      this.status = status;
       this.host = host;
+      this.entityId = entityId;
       this.servicePort = servicePort;
       this.clusterPort = clusterPort;
-      this.uuid = uuid;
-      this.expectedEntityId = expectedEntityId;
    }   
 
-   public int entityId;
+   public int build;
+   public int status;
    public String host;
+   public int entityId;
    public int servicePort;
    public int clusterPort;
-   public String uuid;
-   public int expectedEntityId;
 
    public final Structure.Security getSecurity() {
-      return Security.PUBLIC;
+      return Security.INTERNAL;
    }
 
    public final void defaults() {
-      entityId = 0;
+      build = 0;
+      status = 0;
       host = null;
+      entityId = 0;
       servicePort = 0;
       clusterPort = 0;
-      uuid = null;
-      expectedEntityId = 0;
    }
    
    @Override
    public final void write(DataSource data) throws IOException {
-      data.write(1, this.entityId);
-      data.write(2, this.host);
-      data.write(3, this.servicePort);
-      data.write(4, this.clusterPort);
-      data.write(5, this.uuid);
-      data.write(6, this.expectedEntityId);
+      data.write(1, this.build);
+      data.write(2, this.status);
+      data.write(3, this.host);
+      data.write(4, this.entityId);
+      data.write(5, this.servicePort);
+      data.write(6, this.clusterPort);
       data.writeEndTag();
    }
    
@@ -67,12 +67,12 @@ public class ClusterJoinRequest extends Request {
       while (true) {
          int tag = data.readTag();
          switch (tag) {
-            case 1: this.entityId = data.read_int(tag); break;
-            case 2: this.host = data.read_string(tag); break;
-            case 3: this.servicePort = data.read_int(tag); break;
-            case 4: this.clusterPort = data.read_int(tag); break;
-            case 5: this.uuid = data.read_string(tag); break;
-            case 6: this.expectedEntityId = data.read_int(tag); break;
+            case 1: this.build = data.read_int(tag); break;
+            case 2: this.status = data.read_int(tag); break;
+            case 3: this.host = data.read_string(tag); break;
+            case 4: this.entityId = data.read_int(tag); break;
+            case 5: this.servicePort = data.read_int(tag); break;
+            case 6: this.clusterPort = data.read_int(tag); break;
             case Codec.END_TAG:
                return;
             default:
@@ -106,12 +106,12 @@ public class ClusterJoinRequest extends Request {
       // implementors are free to rename them however they wish.  A null means the field
       // is not to participate in web serialization (remaining at default)
       String[] result = new String[6+1];
-      result[1] = "entityId";
-      result[2] = "host";
-      result[3] = "servicePort";
-      result[4] = "clusterPort";
-      result[5] = "uuid";
-      result[6] = "expectedEntityId";
+      result[1] = "build";
+      result[2] = "status";
+      result[3] = "host";
+      result[4] = "entityId";
+      result[5] = "servicePort";
+      result[6] = "clusterPort";
       return result;
    }
    
@@ -125,10 +125,10 @@ public class ClusterJoinRequest extends Request {
       desc.types = new TypeDescriptor[desc.tagWebNames.length];
       desc.types[0] = new TypeDescriptor(TypeDescriptor.T_STRUCT, getContractId(), getStructId());
       desc.types[1] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
-      desc.types[2] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
-      desc.types[3] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
+      desc.types[2] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
+      desc.types[3] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
       desc.types[4] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
-      desc.types[5] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
+      desc.types[5] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
       desc.types[6] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
       return desc;
    }

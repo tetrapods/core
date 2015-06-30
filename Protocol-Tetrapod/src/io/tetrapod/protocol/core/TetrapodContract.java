@@ -20,29 +20,37 @@ public class TetrapodContract extends Contract {
    
    public static interface API extends APIHandler
       , AddServiceInformationRequest.Handler
-      , AddWebFileRequest.Handler
       , AdminAuthorizeRequest.Handler
       , AdminChangePasswordRequest.Handler
       , AdminChangeRightsRequest.Handler
       , AdminCreateRequest.Handler
       , AdminDeleteRequest.Handler
       , AdminLoginRequest.Handler
+      , AdminResetPasswordRequest.Handler
+      , AdminSubscribeRequest.Handler
+      , ClusterBootstrapRequest.Handler
       , ClusterJoinRequest.Handler
+      , ClusterLeaveRequest.Handler
+      , DelClusterPropertyRequest.Handler
+      , DelWebRootRequest.Handler
       , ExecuteBuildCommandRequest.Handler
       , GetEntityInfoRequest.Handler
       , GetServiceBuildInfoRequest.Handler
       , GetSubscriberCountRequest.Handler
+      , IssuePeerIdRequest.Handler
       , KeepAliveRequest.Handler
       , LogRegistryStatsRequest.Handler
       , PublishRequest.Handler
+      , RaftStatsRequest.Handler
       , RegisterRequest.Handler
       , RegistrySubscribeRequest.Handler
       , RegistryUnsubscribeRequest.Handler
-      , SendWebRootRequest.Handler
       , ServiceStatusUpdateRequest.Handler
       , ServicesSubscribeRequest.Handler
       , ServicesUnsubscribeRequest.Handler
       , SetAlternateIdRequest.Handler
+      , SetClusterPropertyRequest.Handler
+      , SetWebRootRequest.Handler
       , UnregisterRequest.Handler
       , VerifyEntityTokenRequest.Handler
       {}
@@ -50,7 +58,10 @@ public class TetrapodContract extends Contract {
    public Structure[] getRequests() {
       return new Structure[] {
          new RegisterRequest(),
+         new IssuePeerIdRequest(),
          new ClusterJoinRequest(),
+         new ClusterLeaveRequest(),
+         new ClusterBootstrapRequest(),
          new UnregisterRequest(),
          new PublishRequest(),
          new RegistrySubscribeRequest(),
@@ -65,35 +76,41 @@ public class TetrapodContract extends Contract {
          new AdminCreateRequest(),
          new AdminDeleteRequest(),
          new AdminChangePasswordRequest(),
+         new AdminResetPasswordRequest(),
          new AdminChangeRightsRequest(),
          new KeepAliveRequest(),
-         new AddWebFileRequest(),
-         new SendWebRootRequest(),
          new SetAlternateIdRequest(),
          new GetSubscriberCountRequest(),
          new GetEntityInfoRequest(),
          new GetServiceBuildInfoRequest(),
          new ExecuteBuildCommandRequest(),
          new VerifyEntityTokenRequest(),
+         new RaftStatsRequest(),
+         new AdminSubscribeRequest(),
+         new SetClusterPropertyRequest(),
+         new DelClusterPropertyRequest(),
+         new SetWebRootRequest(),
+         new DelWebRootRequest(),
       };
    }
    
    public Structure[] getResponses() {
       return new Structure[] {
          new RegisterResponse(),
-         new ClusterJoinResponse(),
+         new IssuePeerIdResponse(),
          new PublishResponse(),
          new AdminLoginResponse(),
+         new AdminAuthorizeResponse(),
          new GetSubscriberCountResponse(),
          new GetEntityInfoResponse(),
          new GetServiceBuildInfoResponse(),
+         new RaftStatsResponse(),
       };
    }
    
    public Structure[] getMessages() {
       return new Structure[] {
          new EntityMessage(),
-         new ClusterMemberMessage(),
          new EntityRegisteredMessage(),
          new EntityUnregisteredMessage(),
          new EntityUpdatedMessage(),
@@ -106,6 +123,14 @@ public class TetrapodContract extends Contract {
          new ServiceAddedMessage(),
          new ServiceRemovedMessage(),
          new ServiceUpdatedMessage(),
+         new ClusterPropertyAddedMessage(),
+         new ClusterPropertyRemovedMessage(),
+         new ClusterSyncedMessage(),
+         new ClusterMemberMessage(),
+         new WebRootAddedMessage(),
+         new WebRootRemovedMessage(),
+         new AdminUserAddedMessage(),
+         new AdminUserRemovedMessage(),
       };
    }
    
@@ -115,6 +140,8 @@ public class TetrapodContract extends Contract {
          new Admin(),
          new BuildInfo(),
          new BuildCommand(),
+         new ClusterProperty(),
+         new WebRootDef(),
       };
    }
    
@@ -126,12 +153,47 @@ public class TetrapodContract extends Contract {
       return TetrapodContract.CONTRACT_ID;
    }
    
+   public int getContractVersion() {
+      return TetrapodContract.VERSION;
+   }
+   
    public WebRoute[] getWebRoutes() {
       return new WebRoute[] {
          
       };
    }
 
+   public static class Cluster extends Contract {
+      public static interface API extends
+         ClusterMemberMessage.Handler,
+         ClusterPropertyAddedMessage.Handler,
+         ClusterPropertyRemovedMessage.Handler,
+         ClusterSyncedMessage.Handler
+         {}
+         
+      public Structure[] getMessages() {
+         return new Structure[] {
+            new ClusterMemberMessage(),
+            new ClusterPropertyAddedMessage(),
+            new ClusterPropertyRemovedMessage(),
+            new ClusterSyncedMessage(),
+         };
+      }
+      
+      public String getName() {
+         return TetrapodContract.NAME;
+      }
+      
+      public int getContractId() {
+         return TetrapodContract.CONTRACT_ID;
+      } 
+       
+      public int getContractVersion() {
+         return TetrapodContract.VERSION;
+      } 
+       
+   }
+      
    public static class Registry extends Contract {
       public static interface API extends
          EntityListCompleteMessage.Handler,
@@ -165,6 +227,10 @@ public class TetrapodContract extends Contract {
          return TetrapodContract.CONTRACT_ID;
       } 
        
+      public int getContractVersion() {
+         return TetrapodContract.VERSION;
+      } 
+       
    }
       
    public static class Services extends Contract {
@@ -188,6 +254,10 @@ public class TetrapodContract extends Contract {
       
       public int getContractId() {
          return TetrapodContract.CONTRACT_ID;
+      } 
+       
+      public int getContractVersion() {
+         return TetrapodContract.VERSION;
       } 
        
    }

@@ -1,6 +1,7 @@
 java package io.tetrapod.protocol.core
 java outdir "../src"
-javascript out "../rsc/protocol/tetrapod.js"
+javascript out "../../Tetrapod-Tetrapod/webContent/protocol/tetrapod.js"
+#javascript out "../rsc/protocol/tetrapod.js"
 
 // The core tetrapod service
 service Tetrapod @version(1) @id(1)
@@ -22,7 +23,7 @@ public struct Entity
    8: int build  
    9: int version
   10: int contractId  
-
+  
 ################################# REQUESTS #################################
 
 public request Register
@@ -37,19 +38,32 @@ public response Register
    1: int entityId
    2: int parentId
    3: string token
+
+internal request IssuePeerId
+   1: string host
+   2: int clusterPort
    
-public request ClusterJoin
-   1: int entityId
-   2: string host
-   3: int servicePort
-   4: int clusterPort
-   5: string uuid    
-   6: int expectedEntityId
+internal response IssuePeerId
+   1: int peerId   // our new peerId 
+   2: int entityId // of the host we are talking to
+   3: long term    // term of command that issued the peerId
+   4: long index   // index of command that issued the peerId
+
+internal request ClusterJoin
+   1: int build
+   2: int status
+   3: string host
+   4: int entityId
+   5: int servicePort
+   6: int clusterPort
    
-public response ClusterJoin
-   1: int entityId
+internal request ClusterLeave
+   1: int entityId      
    
-public request Unregister
+internal request ClusterBootstrap
+   1: string adminToken @sensitive
+
+internal request Unregister
    1: int entityId
 
 internal request Publish 
@@ -70,8 +84,7 @@ internal request ServiceStatusUpdate
 
 # perhaps this should be merged into a new RegisterService   
 internal request AddServiceInformation
-   1: WebRoute[] routes
-   2: StructDescription<list> structs // structs that could possibly be used in end user comms
+   1: ContractDescription info
    
 internal request LogRegistryStats 
 
@@ -82,30 +95,42 @@ public request AdminLogin
    error INVALID_ACCOUNT         
 
 public response AdminLogin
-   2: string token @sensitive
+   1: string token @sensitive
+   2: int accountId
    
 public request AdminAuthorize
    1: string token @sensitive
-
-public request AdminCreate
+   
+public response AdminAuthorize
+   1: int accountId
+   2: string email
+   
+internal request AdminCreate
    1: string token @sensitive
    2: string email @sensitive
    3: string password @sensitive
+   4: long rights
    
-public request AdminDelete
+internal request AdminDelete
    1: string token @sensitive
-   2: int accountId;
+   2: int accountId
    
-public request AdminChangePassword
+internal request AdminChangePassword
    1: string token @sensitive
    2: string oldPassword @sensitive
    3: string newPassword @sensitive
    
-public request AdminChangeRights
+internal request AdminResetPassword
+   1: string token @sensitive
+   2: int accountId
+   3: string password @sensitive
+ 
+   
+internal request AdminChangeRights
    1: string token @sensitive
    2: int accountId
    3: long rights
-   
+
 public struct Admin
    1: int accountId
    2: string email @sensitive
@@ -119,18 +144,9 @@ public struct Admin
    const int RIGHTS_CLUSTER_WRITE  = 2
    const int RIGHTS_USER_READ      = 4
    const int RIGHTS_USER_WRITE     = 8
-   
+
 public request KeepAlive
 
-internal request AddWebFile
-   1: string path
-   2: string webRootName
-   3: byte[] contents
-   4: boolean clearBeforAdding 
-
-private request SendWebRoot
-   1: string webRootName
-    
 internal request SetAlternateId
    1: int entityId
    2: int alternateId
@@ -156,14 +172,6 @@ internal response GetEntityInfo
 // a special message to avoid race conditions on the Register response
 public message Entity 
    1: int entityId
-   
-// notification of an existing tetrapod cluster member    
-internal message ClusterMember
-   1: int entityId
-   2: string host
-   3: int servicePort
-   4: int clusterPort
-   5: string uuid
     
 ##### Registry Topic Messages ##### 
 
@@ -259,4 +267,76 @@ internal request VerifyEntityToken
    1: int entityId
    2: string token
      
-     
+
+internal request RaftStats
+internal response RaftStats 
+   1: byte role
+   2: long curTerm
+   3: long lastTerm
+   4: long lastIndex
+   5: long commitIndex
+   6: int leaderId
+   7: int[] peers
+      
+## Cluster Messages
+
+internal request AdminSubscribe
+   1: string adminToken @sensitive
+   
+internal struct ClusterProperty
+   1: string key
+   2: boolean secret
+   3: string val @sensitive
+
+internal message  Cluster.ClusterPropertyAdded        
+   1: ClusterProperty property
+
+internal message Cluster.ClusterPropertyRemoved        
+   1: string key
+   
+internal message Cluster.ClusterSynced         
+   
+internal request SetClusterProperty
+   1: string adminToken @sensitive
+   2: ClusterProperty property
+
+internal request DelClusterProperty
+   1: string adminToken @sensitive
+   2: string key
+   
+      
+// notification of an existing tetrapod cluster member    
+internal message Cluster.ClusterMember
+   1: int entityId
+   2: string host
+   3: int servicePort
+   4: int clusterPort
+   5: string uuid
+
+# defines an archive or location to be served as a a web root    
+internal struct WebRootDef
+   1: string name // semantic name/key of the web root
+   2: string path // resource root path name 
+   3: string file // location of static files to serve
+
+internal message WebRootAdded  
+   1: WebRootDef def
+   
+internal message WebRootRemoved       
+   1: string name
+    
+internal request SetWebRoot
+   1: string adminToken @sensitive
+   2: WebRootDef def
+   
+internal request DelWebRoot
+   1: string adminToken @sensitive
+   2: string name
+                
+internal message AdminUserAdded  
+   1: Admin admin
+   
+internal message AdminUserRemoved       
+   1: int accountId
+    
+    

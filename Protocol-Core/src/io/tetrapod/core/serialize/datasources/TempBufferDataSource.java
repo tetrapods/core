@@ -46,6 +46,10 @@ public class TempBufferDataSource extends IOStreamDataSource {
       return t;
    }
 
+   public static TempBufferDataSource forReading(byte[] buf) {
+      return forReading(buf, 0, buf.length);
+   }
+   
    public static TempBufferDataSource forReading(byte[] buf, int offset, int length) {
       TempBufferDataSource t = new TempBufferDataSource();
       t.myInStream = new MyByteArrayInputStream(buf, offset, length);

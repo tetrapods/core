@@ -30,7 +30,7 @@ public class AdminDeleteRequest extends Request {
    public int accountId;
 
    public final Structure.Security getSecurity() {
-      return Security.PUBLIC;
+      return Security.INTERNAL;
    }
 
    public final void defaults() {

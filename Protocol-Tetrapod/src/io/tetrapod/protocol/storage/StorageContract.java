@@ -54,6 +54,10 @@ public class StorageContract extends Contract {
       return StorageContract.CONTRACT_ID;
    }
    
+   public int getContractVersion() {
+      return StorageContract.VERSION;
+   }
+   
    public WebRoute[] getWebRoutes() {
       return new WebRoute[] {
          

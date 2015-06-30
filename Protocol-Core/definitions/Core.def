@@ -1,6 +1,7 @@
 java package io.tetrapod.protocol.core
 java outdir "../src"
-javascript out "../rsc/protocol/core.js"
+javascript out "../../Tetrapod-Tetrapod/webContent/protocol/core.js"
+#javascript out "../rsc/protocol/core.js"
 
 // The core tetrapod service
 service Core @version(1) @id(1)
@@ -50,6 +51,7 @@ struct Core
    error FLOOD                = 12 // client has sent too many requests recently
    error INVALID_TOKEN        = 13 // for any sort of invalid token
    error UNSUPPORTED          = 14 // request is currently unsupported
+   error INVALID_DATA         = 15 // for any sort of invalid data 
 
    const byte  ENVELOPE_HANDSHAKE      = 1 
    const byte  ENVELOPE_REQUEST        = 2
@@ -234,6 +236,12 @@ internal struct TypeDescriptor
    const byte T_DOUBLE_LIST   = 12
    const byte T_STRING_LIST   = 13
    const byte T_STRUCT_LIST   = 14
+   
+internal struct ContractDescription
+   1: int contractId
+   2: int version
+   3: StructDescription<list> structs
+   4: WebRoute[] routes
    
 internal struct StructDescription
    1: TypeDescriptor[] types

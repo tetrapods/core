@@ -19,8 +19,7 @@ public class WebRoutes {
       int ix = uri.indexOf('?');
       String path = ix < 0 ? uri : uri.substring(0, ix);
 
-
-      WebRoute r = routes.get(path); 
+      WebRoute r = routes.get(path);
       if (r == null) {
          // special handling for @root paths
          for (WebRoute route : routes.values()) {
@@ -29,7 +28,7 @@ public class WebRoutes {
             }
          }
       }
-      
+
       if (r == null) {
          // allow /route/params instead of /route?params
          ix = uri.lastIndexOf('/');
@@ -37,6 +36,10 @@ public class WebRoutes {
          r = routes.get(path);
       }
       return r;
+   }
+
+   public void clear() {
+      routes.clear();
    }
 
 }

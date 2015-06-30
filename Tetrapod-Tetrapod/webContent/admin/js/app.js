@@ -6,15 +6,18 @@ define(["knockout", "jquery", "bootbox", "toolbox", "protocol/server", "protocol
       var server = new Server(Tetrapod, CoreProt);
       var Core = server.consts["Core.Core"];
       var token = null;
-      var authtoken;
       var model;
 
+      self.leaderEntityId;
       self.server = server;
       self.run = run;
       self.login = login;
       self.onLogout = onLogout;
+      self.changePassword = changePassword;
       self.modalData = ko.observable({});
       self.name = window.location.hostname;
+      self.email = ko.observable();
+      self.accountId = ko.observable();
       self.isProd = self.name == "chatbox.com" || self.name == "xbox.chatbox.com" || (self.name.indexOf(".prod.") > 0);
 
       function run(clusterModel) {
@@ -27,7 +30,7 @@ define(["knockout", "jquery", "bootbox", "toolbox", "protocol/server", "protocol
          };
          model = clusterModel;
          server.commsLog = true;
-         authtoken = toolbox.getCookie("auth-token");
+         self.authtoken = toolbox.getCookie("auth-token");
          ko.applyBindings(model, $("#cluster-view")[0]);
          var array = $(".app-bind");
          for (var i = 0; i < array.length; i++) {
@@ -42,7 +45,7 @@ define(["knockout", "jquery", "bootbox", "toolbox", "protocol/server", "protocol
 
       function onConnected() {
          $('#disconnected-alertbox').hide();
-         model.services.removeAll();
+         model.clear();
          server.sendDirect("Register", {
             build: 0,
             contractId: 0,
@@ -61,9 +64,9 @@ define(["knockout", "jquery", "bootbox", "toolbox", "protocol/server", "protocol
       function onRegistered(result) {
          if (!result.isError()) {
             token = result.token;
-            if (authtoken != null && authtoken != "") {
+            if (self.authtoken != null && self.authtoken != "") {
                server.sendDirect("AdminAuthorize", {
-                  token: authtoken
+                  token: self.authtoken
                }, onLogin);
             } else {
                onLogout();
@@ -72,12 +75,16 @@ define(["knockout", "jquery", "bootbox", "toolbox", "protocol/server", "protocol
       }
 
       function login() {
+         var email = $('#email').val().trim();
+         var pwd = $('#password').val();
          server.sendDirect("AdminLogin", {
-            email: $('#email').val(),
-            password: $('#password').val(),
+            email: email,
+            password: pwd
          }, function(result) {
             if (result.isError()) {
                bootbox.alert('Login Failed');
+            } else {
+               self.email(email);
             }
             onLogin(result);
          });
@@ -86,59 +93,38 @@ define(["knockout", "jquery", "bootbox", "toolbox", "protocol/server", "protocol
       function onLogin(result) {
          if (!result.isError()) {
             if (result.token) {
-               authtoken = result.token;
-               toolbox.setCookie("auth-token", authtoken);
+               self.authtoken = result.token;
+               toolbox.setCookie("auth-token", self.authtoken);
             }
+            if (result.email) {
+               self.email(result.email);
+            }
+            if (result.accountId) {
+               self.accountId(result.accountId);
+            }
+
             $('#login-wrapper').hide();
             $('#app-wrapper').show();
             server.sendDirect("ServicesSubscribe", {}, server.logResponse);
+            server.sendDirect("AdminSubscribe", {
+               adminToken: self.authtoken
+            }, server.logResponse);
          } else {
             onLogout();
          }
       }
 
       function onLogout() {
-         authtoken = null;
+         self.authtoken = null;
          toolbox.deleteCookie("auth-token");
          $('#login-wrapper').show();
          $('#app-wrapper').hide();
-         model.services([]);
+         model.clear();
+         self.email(null);
       }
 
-      ///////
-      self.addUserEmail = ko.observable();
-      self.addUserPassword = ko.observable();
-      self.onAddAdminUser = function() {
+      function changePassword() {
+         model.users.changePassword();
       }
-      self.manageAdminUsers = function() {
-      }
-
-      //////////
-
-      self.modalOldPassword = ko.observable();
-      self.modalNewPassword = ko.observable();
-      self.onShowEditPassword = function() {
-         self.modalOldPassword('');
-         self.modalNewPassword('');
-         $('#set-password-modal').modal('show');
-      };
-      self.onEditPassword = function() {
-         server.sendDirect("AdminChangePassword", {
-            token: authtoken,
-            oldPassword: self.modalOldPassword(),
-            newPassword: self.modalNewPassword()
-         }, function(res) {
-            if (!res.isError()) {
-               bootbox.alert('Your password has been changed');
-            } else {
-               if (res.errorCode == server.consts["Tetrapod"].INVALID_PASSWORD) {
-                  bootbox.alert('Error: Incorrect Password');
-               } else {
-                  bootbox.alert('Error: Change Password Failed');
-               }
-            }
-         });
-      };
-
    }
 });

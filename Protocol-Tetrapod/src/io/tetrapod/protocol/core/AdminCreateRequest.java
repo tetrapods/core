@@ -21,24 +21,27 @@ public class AdminCreateRequest extends Request {
       defaults();
    }
 
-   public AdminCreateRequest(String token, String email, String password) {
+   public AdminCreateRequest(String token, String email, String password, long rights) {
       this.token = token;
       this.email = email;
       this.password = password;
+      this.rights = rights;
    }   
 
    public String token;
    public String email;
    public String password;
+   public long rights;
 
    public final Structure.Security getSecurity() {
-      return Security.PUBLIC;
+      return Security.INTERNAL;
    }
 
    public final void defaults() {
       token = null;
       email = null;
       password = null;
+      rights = 0;
    }
    
    @Override
@@ -46,6 +49,7 @@ public class AdminCreateRequest extends Request {
       data.write(1, this.token);
       data.write(2, this.email);
       data.write(3, this.password);
+      data.write(4, this.rights);
       data.writeEndTag();
    }
    
@@ -58,6 +62,7 @@ public class AdminCreateRequest extends Request {
             case 1: this.token = data.read_string(tag); break;
             case 2: this.email = data.read_string(tag); break;
             case 3: this.password = data.read_string(tag); break;
+            case 4: this.rights = data.read_long(tag); break;
             case Codec.END_TAG:
                return;
             default:
@@ -90,10 +95,11 @@ public class AdminCreateRequest extends Request {
       // Note do not use this tags in long term serializations (to disk or databases) as 
       // implementors are free to rename them however they wish.  A null means the field
       // is not to participate in web serialization (remaining at default)
-      String[] result = new String[3+1];
+      String[] result = new String[4+1];
       result[1] = "token";
       result[2] = "email";
       result[3] = "password";
+      result[4] = "rights";
       return result;
    }
    
@@ -109,6 +115,7 @@ public class AdminCreateRequest extends Request {
       desc.types[1] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
       desc.types[2] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
       desc.types[3] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
+      desc.types[4] = new TypeDescriptor(TypeDescriptor.T_LONG, 0, 0);
       return desc;
    }
 

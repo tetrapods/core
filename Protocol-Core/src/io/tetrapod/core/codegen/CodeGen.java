@@ -46,6 +46,8 @@ public class CodeGen {
          services.add("chat");
          services.add("email");
          services.add("tetrapod");
+         services.add("storage");
+         services.add("raft");
          services.add("search");
          services.add("twitter");
          services.add("ticket");

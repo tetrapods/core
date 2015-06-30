@@ -1,4 +1,4 @@
-define(["knockout", "jquery", "bootbox", "app", "build", "chart"], function(ko, $, bootbox, app, builder, Chart) {
+define(["knockout", "jquery", "bootbox", "app", "chart", "modules/builder"], function(ko, $, bootbox, app, Chart, builder) {
    // static variables
 
    var Core = app.server.consts["Core.Core"];
@@ -136,10 +136,10 @@ define(["knockout", "jquery", "bootbox", "app", "build", "chart"], function(ko, 
       self.releaseExcess = function() {
          bootbox.confirm("Are you sure you want to release excess rooms on: " + self.name + "[" + self.entityId + "]?", function(result) {
             if (result) {
-                  app.server.sendTo("ReleaseExcess", {}, self.entityId);
-               }
-            });
-         }
+               app.server.sendTo("ReleaseExcess", {}, self.entityId);
+            }
+         });
+      }
 
       self.unpause = function() {
          app.server.sendTo("Unpause", {}, self.entityId);
@@ -192,17 +192,17 @@ define(["knockout", "jquery", "bootbox", "app", "build", "chart"], function(ko, 
          });
       }
 
-      self.hasErrors = function() {
+      self.hasErrors = ko.pureComputed(function() {
          return (self.status() & Core.STATUS_ERRORS) != 0;
-      }
+      });
 
-      self.hasWarningsOnly = function() {
+      self.hasWarningsOnly = ko.pureComputed(function() {
          return (self.status() & Core.STATUS_WARNINGS) != 0 && (self.status() & Core.STATUS_ERRORS) == 0;
-      }
+      });
 
-      self.hasErrorsOrWarnings = function() {
+      self.hasErrorsOrWarnings = ko.pureComputed(function() {
          return (self.status() & Core.STATUS_ERRORS) != 0 || (self.status() & Core.STATUS_WARNINGS) != 0;
-      }
+      });
 
       self.setCommsLogLevel = function() {
          bootbox.dialog({
@@ -232,13 +232,17 @@ define(["knockout", "jquery", "bootbox", "app", "build", "chart"], function(ko, 
          });
       }
 
-      self.canPause = function() {
-         return !self.isGone() && !self.isPaused();
-      }
+      self.canPurge = ko.pureComputed(function() {
+         return self.isPaused();
+      });
 
-      self.canUnpause = function() {
+      self.canPause = ko.pureComputed(function() {
+         return !self.isGone() && !self.isPaused();
+      });
+
+      self.canUnpause = ko.pureComputed(function() {
          return !self.isGone() && self.isPaused();
-      }
+      });
 
       self.statsUpdate = function(msg) {
          self.latency(msg.latency);
@@ -250,9 +254,10 @@ define(["knockout", "jquery", "bootbox", "app", "build", "chart"], function(ko, 
          self.disk(msg.disk);
          self.threads(msg.threads);
       }
-      self.memoryWidth = ko.computed(function() {
-         return self.memory() + '%';
-      }, self);
+
+      self.isRaftNode = ko.pureComputed(function() {
+         return entity.type == Core.TYPE_TETRAPOD;
+      });
 
       // ////////////////////////////////////// stats graphs ////////////////////////////////////////
 

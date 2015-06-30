@@ -28,7 +28,7 @@ public class UnregisterRequest extends Request {
    public int entityId;
 
    public final Structure.Security getSecurity() {
-      return Security.PUBLIC;
+      return Security.INTERNAL;
    }
 
    public final void defaults() {

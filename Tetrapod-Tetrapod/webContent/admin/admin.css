@@ -4,7 +4,7 @@
 }
 
 #cluster-table th {
-	background: #000;
+	background: #666;
 	color: #fff;
 	text-align: center;
 }
@@ -49,9 +49,9 @@
 	color: #a88;
 }
 
-.selected { 
-   background: #FFFFE0;
-} 
+.selected {
+	background: #FFFFE0;
+}
 
 .starting {
 	background: #eee;
@@ -246,8 +246,8 @@
 .host-name {
 	vertical-align: middle;
 	display: table-cell;
-   padding-left: 20px;
-   padding-right: 20px;
+	padding-left: 20px;
+	padding-right: 20px;
 }
 
 .host-info {
@@ -286,4 +286,68 @@
 	top: 8px;
 	left: 0;
 	width: 100%
+}
+
+#raft-table {
+	font-size: 90%;
+	padding: 5px;
+	background: white;
+}
+
+#raft-table th {
+	background: #666;
+	color: #fff;
+	text-align: center;
+}
+
+#raft-table td {
+	padding: 2px 3px;
+	vertical-align: middle;
+	white-space: nowrap;
+}
+
+#props-table {
+	margin: 5px;
+	background: white;
+}
+
+#props-table th {
+	background: #666;
+	color: #fff;
+	text-align: center;
+}
+
+#props-table td {
+	padding: 1px 4px;
+	vertical-align: middle;
+	white-space: nowrap;
+}
+
+#props-table .btn {
+   color: #aaa;
+}
+
+#props-table .btn:HOVER {
+   color: #000;
+}
+   
+
+.property {
+	font-family: monospace;
+}
+
+.webroots .btn {
+   color: #aaa;
+}
+
+.webroots .btn:HOVER {
+   color: #000;
+}
+   
+
+.rights label {
+	font-size: 11px;
+	font-style: normal;
+	padding-right: 10px;
+	padding-left: 10px;
 }

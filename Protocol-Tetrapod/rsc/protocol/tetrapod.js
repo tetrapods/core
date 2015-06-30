@@ -29,8 +29,10 @@ function TP_Tetrapod(server) {
    server.register("struct", "Tetrapod", "Entity", 1, 10171140);
    server.register("request", "Tetrapod", "Register", 1, 10895179);
    server.register("response", "Tetrapod", "Register", 1, 13376201);
+   server.register("request", "Tetrapod", "IssuePeerId", 1, 10809624);
+   server.register("response", "Tetrapod", "IssuePeerId", 1, 14036188);
    server.register("request", "Tetrapod", "ClusterJoin", 1, 8294880);
-   server.register("response", "Tetrapod", "ClusterJoin", 1, 8947508);
+   server.register("request", "Tetrapod", "ClusterLeave", 1, 12863875);
    server.register("request", "Tetrapod", "Unregister", 1, 3896262);
    server.register("request", "Tetrapod", "Publish", 1, 3171651);
    server.register("response", "Tetrapod", "Publish", 1, 2698673);
@@ -52,6 +54,7 @@ function TP_Tetrapod(server) {
    server.register("request", "Tetrapod", "KeepAlive", 1, 5512920);
    server.register("request", "Tetrapod", "AddWebFile", 1, 5158759);
    server.register("request", "Tetrapod", "SendWebRoot", 1, 16081718);
+   server.register("struct", "Tetrapod", "WebRootDef", 1, 943242);
    server.register("request", "Tetrapod", "SetAlternateId", 1, 10499521);
    server.register("request", "Tetrapod", "GetSubscriberCount", 1, 9966915);
    server.register("response", "Tetrapod", "GetSubscriberCount", 1, 6503857);
@@ -77,5 +80,14 @@ function TP_Tetrapod(server) {
    server.register("message", "Tetrapod", "ServiceRemoved", 1, 1629937);
    server.register("message", "Tetrapod", "ServiceUpdated", 1, 1658756);
    server.register("request", "Tetrapod", "VerifyEntityToken", 1, 8934039);
+   server.register("request", "Tetrapod", "RaftStats", 1, 15652108);
+   server.register("response", "Tetrapod", "RaftStats", 1, 13186680);
+   server.register("struct", "Tetrapod", "ClusterProperty", 1, 16245306);
+   server.register("message", "Tetrapod", "ClusterPropertyAdded", 1, 5735715);
+   server.register("message", "Tetrapod", "ClusterPropertyRemoved", 1, 12285117);
+   server.register("message", "Tetrapod", "ClusterSynced", 1, 12460484);
+   server.register("request", "Tetrapod", "ClusterSubscribe", 1, 12719262);
+   server.register("request", "Tetrapod", "SetClusterProperty", 1, 11003897);
+   server.register("request", "Tetrapod", "DelClusterProperty", 1, 15970020);
 
 }

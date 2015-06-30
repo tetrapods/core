@@ -2,8 +2,6 @@ package io.tetrapod.core;
 
 import static io.tetrapod.protocol.core.Core.UNADDRESSED;
 import static io.tetrapod.protocol.core.CoreContract.*;
-import io.netty.channel.EventLoopGroup;
-import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.rpc.Error;
@@ -13,7 +11,6 @@ import io.tetrapod.protocol.core.*;
 import java.io.*;
 import java.lang.management.ManagementFactory;
 import java.net.ConnectException;
-import java.nio.file.Files;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -21,20 +18,18 @@ import javax.net.ssl.SSLContext;
 
 import org.slf4j.*;
 
-import com.codahale.metrics.Timer.Context;
-
 import ch.qos.logback.classic.LoggerContext;
 
+import com.codahale.metrics.Timer.Context;
+
 public class DefaultService implements Service, Fail.FailHandler, CoreContract.API, SessionFactory, EntityMessage.Handler,
-      ClusterMemberMessage.Handler {
+      TetrapodContract.Cluster.API {
 
    private static final Logger             logger          = LoggerFactory.getLogger(DefaultService.class);
 
-   protected final EventLoopGroup          bossGroup       = new NioEventLoopGroup();
-
    protected final Set<Integer>            dependencies    = new HashSet<>();
 
-   protected final Dispatcher              dispatcher;
+   public final Dispatcher                 dispatcher;
    protected final Client                  clusterClient;
    protected final Contract                contract;
    protected final ServiceCache            services;
@@ -43,7 +38,7 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
    protected int                           parentId;
    protected String                        token;
    private int                             status;
-   protected final int                     buildNumber;
+   public final int                        buildNumber;
    protected final LogBuffer               logBuffer;
    protected SSLContext                    sslContext;
 
@@ -52,7 +47,7 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
    protected final ServiceStats            stats;
    protected boolean                       startPaused;
 
-   private final LinkedList<ServerAddress> clusterMembers  = new LinkedList<ServerAddress>();
+   private final LinkedList<ServerAddress> clusterMembers  = new LinkedList<>();
 
    private final MessageHandlers           messageHandlers = new MessageHandlers();
 
@@ -76,7 +71,7 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
       addContracts(new CoreContract());
       addPeerContracts(new TetrapodContract());
       addMessageHandler(new EntityMessage(), this);
-      addMessageHandler(new ClusterMemberMessage(), this);
+      addSubscriptionHandler(new TetrapodContract.Cluster(), this);
 
       try {
          if (Util.getProperty("tetrapod.tls", true)) {
@@ -163,7 +158,7 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
     * Called after registration is complete and this service has a valid entityId and is free to make requests into the cluster. Default
     * implementation is to do nothing.
     */
-   public void onRegistered() {}
+   //public void onRegistered() {}
 
    /**
     * Called after we've registered and dependencies are all available
@@ -174,40 +169,47 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
       registerServiceInformation();
       stats.publishTopic();
       sendDirectRequest(new ServicesSubscribeRequest());
-      onRegistered();
-      checkDependencies();
    }
 
-   private void checkDependencies() {
-      if (!isShuttingDown()) {
-         if (getEntityType() == Core.TYPE_TETRAPOD || services.checkDependencies(dependencies)) {
-            try {
-               if (startPaused) {
-                  updateStatus(getStatus() | Core.STATUS_PAUSED);
-               }
-               onReadyToServe();
-               if (getEntityType() != Core.TYPE_TETRAPOD) {
-                  if (serviceConnector != null) {
-                     serviceConnector.shutdown();
+   public boolean dependenciesReady() {
+      return services.checkDependencies(dependencies);
+   }
+
+   private final Object checkDependenciesLock = new Object();
+
+   public void checkDependencies() {
+      synchronized (checkDependenciesLock) {
+         if (!isShuttingDown() && isStartingUp()) {
+            logger.info("Checking Dependencies...");
+            if (dependenciesReady()) {
+               try {
+                  if (startPaused) {
+                     updateStatus(getStatus() | Core.STATUS_PAUSED);
                   }
-                  serviceConnector = new ServiceConnector(this, sslContext);
+                  onReadyToServe();
+                  if (getEntityType() != Core.TYPE_TETRAPOD) {
+                     if (serviceConnector != null) {
+                        serviceConnector.shutdown();
+                     }
+                     serviceConnector = new ServiceConnector(this, sslContext);
+                  }
+               } catch (Throwable t) {
+                  fail(t);
                }
-            } catch (Throwable t) {
-               fail(t);
-            }
-            // ok, we're good to go
-            updateStatus(getStatus() & ~Core.STATUS_STARTING);
-            onStarted();
-            if (startPaused) {
-               onPaused();
-               startPaused = false; // only start paused once
-            }
-         } else {
-            dispatcher.dispatch(1, TimeUnit.SECONDS, new Runnable() {
-               public void run() {
-                  checkDependencies();
+               // ok, we're good to go
+               updateStatus(getStatus() & ~Core.STATUS_STARTING);
+               onStarted();
+               if (startPaused) {
+                  onPaused();
+                  startPaused = false; // only start paused once
                }
-            });
+            } else {
+               dispatcher.dispatch(1, TimeUnit.SECONDS, new Runnable() {
+                  public void run() {
+                     checkDependencies();
+                  }
+               });
+            }
          }
       }
    }
@@ -263,48 +265,12 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
 
    public void onUnpaused() {}
 
-   public void onStarted() {
-      if (Launcher.getOpt("webOnly") != null) {
-         doWebOnlyService();
-      }
-   }
-
-   /**
-    * Runs a web only service. This should probably be a separate service class instead of bolted into default service
-    */
-   private void doWebOnlyService() {
-      String name = Launcher.getOpt("webOnly");
-      try {
-         recursiveAddWebFiles(name, new File("webContent"), true);
-         if (Util.isLocal()) {
-            // adds all protocol files, which is also what happens on dev and prod--though there 
-            // the deployment scripts make sure the previous call contains all protocol files
-            for (File f : new File("../private/services").listFiles()) {
-               if (f.isDirectory() && f.getName().startsWith("Protocol")) {
-                  File dir = new File(f, "rsc");
-                  if (dir.exists()) {
-                     recursiveAddWebFiles(name, dir, false);
-                  }
-               }
-            }
-         }
-      } catch (IOException e) {
-         logger.error(e.getMessage(), e);
-      }
-      shutdown(false);
-   }
+   public void onStarted() {}
 
    public void shutdown(boolean restarting) {
       updateStatus(getStatus() | Core.STATUS_STOPPING);
       try {
          onShutdown(restarting);
-      } catch (Exception e) {
-         logger.error(e.getMessage(), e);
-      }
-
-      try {
-         // we have one boss group for all our servers
-         bossGroup.shutdownGracefully().sync();
       } catch (Exception e) {
          logger.error(e.getMessage(), e);
       }
@@ -319,14 +285,19 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
             logger.error(e.getMessage(), e);
          }
       } else {
-         sendDirectRequest(new UnregisterRequest(getEntityId())).handle(new ResponseHandler() {
-            @Override
-            public void onResponse(Response res) {
-               clusterClient.close();
-               dispatcher.shutdown();
-               setTerminated(true);
-            }
-         });
+         if (getEntityId() != 0 && clusterClient.getSession() != null) {
+            sendDirectRequest(new UnregisterRequest(getEntityId())).handle(new ResponseHandler() {
+               @Override
+               public void onResponse(Response res) {
+                  clusterClient.close();
+                  dispatcher.shutdown();
+                  setTerminated(true);
+               }
+            });
+         } else {
+            dispatcher.shutdown();
+            setTerminated(true);
+         }
       }
 
       // If JVM doesn't gracefully terminate after 1 minute, explicitly kill the process
@@ -727,24 +698,44 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
       clusterMembers.add(new ServerAddress(m.host, m.servicePort));
    }
 
+   @Override
+   public void messageClusterPropertyAdded(ClusterPropertyAddedMessage m, MessageContext ctx) {
+      logger.info("******** {}", m.dump());
+      System.setProperty(m.property.key, m.property.val);
+   }
+
+   @Override
+   public void messageClusterPropertyRemoved(ClusterPropertyRemovedMessage m, MessageContext ctx) {
+      logger.info("******** {}", m.dump());
+      System.clearProperty(m.key);
+   }
+
+   @Override
+   public void messageClusterSynced(ClusterSyncedMessage m, MessageContext ctx) {
+      checkDependencies();
+   }
+
    // private methods
 
    protected void registerServiceInformation() {
       if (contract != null) {
          AddServiceInformationRequest asi = new AddServiceInformationRequest();
-         asi.routes = contract.getWebRoutes();
-         asi.structs = new ArrayList<>();
+         asi.info = new ContractDescription();
+         asi.info.contractId = contract.getContractId();
+         asi.info.version = contract.getContractVersion();
+         asi.info.routes = contract.getWebRoutes();
+         asi.info.structs = new ArrayList<>();
          for (Structure s : contract.getRequests()) {
-            asi.structs.add(s.makeDescription());
+            asi.info.structs.add(s.makeDescription());
          }
          for (Structure s : contract.getResponses()) {
-            asi.structs.add(s.makeDescription());
+            asi.info.structs.add(s.makeDescription());
          }
          for (Structure s : contract.getMessages()) {
-            asi.structs.add(s.makeDescription());
+            asi.info.structs.add(s.makeDescription());
          }
          for (Structure s : contract.getStructs()) {
-            asi.structs.add(s.makeDescription());
+            asi.info.structs.add(s.makeDescription());
          }
          sendDirectRequest(asi).handle(ResponseHandler.LOGGER);
       }
@@ -754,6 +745,7 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
 
    @Override
    public Response requestPause(PauseRequest r, RequestContext ctx) {
+      // TODO: Check admin rights or macaroon
       updateStatus(getStatus() | Core.STATUS_PAUSED);
       onPaused();
       return Response.SUCCESS;
@@ -779,6 +771,7 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
 
    @Override
    public Response requestUnpause(UnpauseRequest r, RequestContext ctx) {
+      // TODO: Check admin rights or macaroon
       updateStatus(getStatus() & ~Core.STATUS_PAUSED);
       onUnpaused();
       return Response.SUCCESS;
@@ -786,6 +779,7 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
 
    @Override
    public Response requestRestart(RestartRequest r, RequestContext ctx) {
+      // TODO: Check admin rights or macaroon
       dispatcher.dispatch(new Runnable() {
          public void run() {
             shutdown(true);
@@ -796,6 +790,7 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
 
    @Override
    public Response requestShutdown(ShutdownRequest r, RequestContext ctx) {
+      // TODO: Check admin rights or macaroon
       dispatcher.dispatch(new Runnable() {
          public void run() {
             shutdown(false);
@@ -819,47 +814,6 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
    public Response requestServiceStatsUnsubscribe(ServiceStatsUnsubscribeRequest r, RequestContext ctx) {
       stats.unsubscribe(ctx.header.fromId);
       return Response.SUCCESS;
-   }
-
-   private static final Set<String> VALID_EXTENSIONS = new HashSet<>(Arrays.asList(new String[] { "html", "htm", "js", "css", "jpg", "png",
-         "gif", "wav", "woff", "svg", "ttf", "swf"  }));
-
-   protected void recursiveAddWebFiles(String webRootName, File dir, boolean first) throws IOException {
-      if (Util.isLocal()) {
-         Async a = sendDirectRequest(new AddWebFileRequest(dir.getCanonicalPath(), webRootName, null, first));
-         if (first) {
-            a.waitForResponse();
-         }
-         return;
-      }
-      ArrayList<File> files = new ArrayList<>(Arrays.asList(dir.listFiles()));
-      while (!files.isEmpty()) {
-         File f = files.remove(0);
-         if (f.isDirectory()) {
-            files.addAll(Arrays.asList(f.listFiles()));
-            continue;
-         }
-         int ix = f.getName().lastIndexOf(".");
-         String ext = ix < 0 ? "" : f.getName().substring(ix + 1).toLowerCase();
-         if (VALID_EXTENSIONS.contains(ext)) {
-            byte[] contents = Files.readAllBytes(f.toPath());
-            String path = "/" + dir.toPath().relativize(f.toPath()).toString();
-            Async a = sendDirectRequest(new AddWebFileRequest(path, webRootName, contents, first));
-            if (first) {
-               // have to wait for the first one to finish so the first flag is really 
-               // the first one that is processed
-               a.waitForResponse();
-            }
-            first = false;
-         }
-      }
-   }
-
-   protected File[] getDevProtocolWebRoots() {
-      if (getShortName() == null) {
-         return new File[] {};
-      }
-      return new File[] { new File("../Protocol-" + getShortName() + "/rsc") };
    }
 
    @Override

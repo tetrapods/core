@@ -1,0 +1,63 @@
+
+<div class="modal fade app-bind" id="buildModal" tabindex="-1" role="dialog">
+   <div class="modal-dialog">
+      <div class="modal-content">
+         <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal">&times;</button>
+            <h4 class="modal-title" id="myModalLabel">Deploy</h4>
+         </div>
+         <div class="modal-body">
+            <form>
+               <div class="row">
+                  <div class="col-md-6">
+                     <div class="form-group">
+                        <div class="checkbox">
+                           <label>
+                              <input type="checkbox" data-bind="checked: modalData().doDeploy">
+                              Deploy
+                           </label>
+                        </div>
+                        <div class="checkbox">
+                           <label>
+                              <input type="checkbox" data-bind="checked: modalData().doLaunch">
+                              Launch
+                           </label>
+                        </div>
+                        <div class="checkbox">
+                           <label>
+                              <input type="checkbox" data-bind="checked: modalData().paused">
+                              Start Paused
+                           </label>
+                        </div>
+                     </div>
+                     <div class="form-group">
+                        <label>Build number</label>
+                        <input type="text" class="form-control" data-bind="value: modalData().buildNumber" placeholder="current" />
+                     </div>
+                     <div class="form-group">
+                        <label>Build Name</label>
+                        <input type="text" class="form-control" data-bind="value: modalData().buildName" placeholder="default" />
+                     </div>
+                  </div>
+                  <div class="col-md-6">
+                     <div class="form-group" data-bind="foreach: modalData().services">
+                        <div class="checkbox">
+                           <label>
+                              <input type="checkbox" data-bind="checked: isChecked">
+                              <span data-bind="text: name"></span>
+                              <span data-bind="text: '(' + current + ')'" class="text-muted small"></span>
+                           </label>
+                        </div>
+                     </div>
+                  </div>
+                  <div class="col-md-12 text-center">
+                     <br />
+                     <button id="buildExecute" type="submit" class="btn btn-primary" data-bind="click: modalData().run"
+                        data-loading-text="Running...">Execute</button>
+                  </div>
+               </div>
+            </form>
+         </div>
+      </div>
+   </div>
+</div>

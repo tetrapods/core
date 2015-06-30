@@ -19,18 +19,18 @@ import org.slf4j.*;
  */
 public class Server extends ChannelInitializer<SocketChannel> implements Session.Listener {
 
-   public static final Logger logger = LoggerFactory.getLogger(Server.class);
+   public static final Logger    logger   = LoggerFactory.getLogger(Server.class);
 
    private Map<Integer, Session> sessions = new ConcurrentHashMap<>();
 
-   private EventLoopGroup bossGroup;
+   private EventLoopGroup        bossGroup;
 
-   private       int            port;
-   private final Dispatcher     dispatcher;
-   private final SessionFactory sessionFactory;
-   private       SSLContext     sslContext;
-   private       boolean        clientAuth;
-   private       ChannelFuture  channel;
+   private int                   port;
+   private final Dispatcher      dispatcher;
+   private final SessionFactory  sessionFactory;
+   private SSLContext            sslContext;
+   private boolean               clientAuth;
+   private ChannelFuture         channel;
 
    public Server(int port, SessionFactory sessionFactory, Dispatcher dispatcher) {
       this.sessionFactory = sessionFactory;
@@ -117,8 +117,6 @@ public class Server extends ChannelInitializer<SocketChannel> implements Session
       WEAK_CIPHERS.add("TLS_DHE_RSA_WITH_AES_256_CBC_SHA256");
    }
 
-   ;
-
    private void startSession(final SocketChannel ch) throws Exception {
       logger.info("Connection from {}", ch);
       if (sslContext != null) {
@@ -153,11 +151,13 @@ public class Server extends ChannelInitializer<SocketChannel> implements Session
       session.addSessionListener(this);
    }
 
-   @Override public void onSessionStart(Session ses) {
+   @Override
+   public void onSessionStart(Session ses) {
       sessions.put(ses.getSessionNum(), ses);
    }
 
-   @Override public void onSessionStop(Session ses) {
+   @Override
+   public void onSessionStop(Session ses) {
       sessions.remove(ses.getSessionNum());
    }
 
@@ -168,6 +168,5 @@ public class Server extends ChannelInitializer<SocketChannel> implements Session
    public int getNumSessions() {
       return sessions.size();
    }
-
 
 }

@@ -1,0 +1,56 @@
+
+<h3>Raft Cluster</h3>
+<h4 data-bind="text: 'Leader: ' + leaderEntityId()"></h4>
+<h4 data-bind="text: 'Fault Tolerance: ' + tolerance()"></h4>
+
+<table id="raft-table" class="table table-bordered table-condensed">
+   <thead>
+      <tr>
+         <th>Entity</th>
+         <th>Role</th>
+         <th>Term</th>
+         <th>Index</th>
+         <th>Log</th>
+         <th>Peers</th>
+      </tr>
+   </thead>
+   <tbody data-bind="foreach: rafts" class="raft">
+      <tr data-bind="css: inCluster() ? 'active' : 'gone'">
+         <td>
+            <div class="dropdown" style="display: inline-block;">
+               <a class="dropdown-toggle" data-toggle="dropdown" href="#">
+                  <i class="fa fa-gear fa-fw"></i><i class="fa fa-caret-down"></i>
+               </a>
+               <ul class="dropdown-menu dropdown-service">
+                  <li><a href="#" data-bind="click: leaveCluster">Leave Cluster</a></li>
+               </ul>
+               <ul class="dropdown-menu dropdown-service">
+                  <li><a href="#" data-bind="click: forceBootstrap">Force Bootstrap</a></li>
+               </ul>
+            </div>
+            &nbsp;
+            <span data-bind="text: entityId"></span>
+            &nbsp;@&nbsp;
+            <span data-bind="text: host"></span>
+         </td>
+         <td>
+            <i class="fa" data-bind="css: roleIcon"></i>
+            <span data-bind="text: roleName"></span>
+         </td>
+         <td>
+            <span data-bind="text: curTerm"></span>
+         </td>
+         <td>
+            <span data-bind="text: commitIndex"></span>
+         </td>
+         <td>
+            <span data-bind="text: lastTerm"></span>
+            :
+            <span data-bind="text: lastIndex"></span>
+         </td>
+         <td>
+            <span data-bind="text: numPeers"></span>
+         </td>
+      </tr>
+   </tbody>
+</table>

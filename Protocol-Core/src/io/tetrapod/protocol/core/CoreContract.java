@@ -96,6 +96,7 @@ public class CoreContract extends Contract {
          new Subscriber(),
          new WebRoute(),
          new TypeDescriptor(),
+         new ContractDescription(),
          new StructDescription(),
          new ServiceLogEntry(),
       };
@@ -107,6 +108,10 @@ public class CoreContract extends Contract {
    
    public int getContractId() {
       return CoreContract.CONTRACT_ID;
+   }
+   
+   public int getContractVersion() {
+      return CoreContract.VERSION;
    }
    
    public WebRoute[] getWebRoutes() {
@@ -134,6 +139,10 @@ public class CoreContract extends Contract {
          return CoreContract.CONTRACT_ID;
       } 
        
+      public int getContractVersion() {
+         return CoreContract.VERSION;
+      } 
+       
    }
       
    /**
@@ -145,6 +154,11 @@ public class CoreContract extends Contract {
     * client has sent too many requests recently
     */
    public static final int ERROR_FLOOD = 12; 
+   
+   /**
+    * for any sort of invalid data
+    */
+   public static final int ERROR_INVALID_DATA = 15; 
    
    /**
     * An addressed entityId was invalid

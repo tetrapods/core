@@ -56,7 +56,7 @@ public class Client implements Session.Listener {
       b.handler(new ChannelInitializer<SocketChannel>() {
          @Override
          public void initChannel(SocketChannel ch) throws Exception {
-            logger.info("Connection to {}:{}", host, port);
+            logger.trace("Connection to {}:{}", host, port);
             startSession(ch);
             if (listener != null) {
                session.addSessionListener(listener);

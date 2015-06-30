@@ -27,7 +27,7 @@ public class Launcher {
    public static void main(String[] args) {
       loadProperties("cfg/service.properties");
       loadClusterProperties();
-      loadSecretProperties();
+      //  loadSecretProperties();
       try {
          if (args.length < 1)
             usage();
@@ -37,7 +37,7 @@ public class Launcher {
          System.setProperty("APPNAME", appName);
          opts = getOpts(args, 1, defaultOpts(appName));
 
-         String host = System.getProperty("service.host", "localhost"); 
+         String host = System.getProperty("service.host", "localhost");
          int port = Integer.parseInt(System.getProperty("service.port", "9901"));
          if (appName.equalsIgnoreCase("tetrapod")) {
             host = System.getProperty("tetrapod.host", "self");
@@ -66,7 +66,7 @@ public class Launcher {
 
       // capitalize first letter
       serviceClass = serviceClass.substring(0, 1).toUpperCase() + serviceClass.substring(1);
-      
+
       // io.tetrapod.core.X
       try {
          return tryName("io.tetrapod.core." + serviceClass);
@@ -92,7 +92,7 @@ public class Launcher {
       try {
          return tryName("io.tetrapod." + serviceClass.toLowerCase() + "." + serviceClass + "Service");
       } catch (ClassNotFoundException | NoClassDefFoundError e) {}
-      
+
       // io.tetrapod.lowercase(X).uppercase(X)Service
       try {
          return tryName("io.tetrapod." + serviceClass.toLowerCase() + "." + serviceClass.toUpperCase() + "Service");
@@ -100,9 +100,9 @@ public class Launcher {
 
       return null;
    }
-   
+
    private static Class<?> tryName(String name) throws ClassNotFoundException {
-//      System.out.println("trying " + name);
+      //      System.out.println("trying " + name);
       return Class.forName(name);
    }
 
@@ -126,7 +126,7 @@ public class Launcher {
    private static Map<String, String> getOpts(String[] array, int startIx, Map<String, String> opts) {
       for (int i = startIx; i < array.length; i += 2) {
          String key = array[i];
-         String value = array[i + 1];
+         String value = array.length > i + 1 ? array[i + 1] : null;
          if (!key.startsWith("-")) {
             throw new RuntimeException("expected option, got [" + key + "]");
          }
@@ -158,12 +158,19 @@ public class Launcher {
       System.out.println("EXEC: " + sb);
       Runtime.getRuntime().exec(sb.toString());
    }
-   
+
    public static boolean loadProperties(String fileName) {
-      final File file = new File(fileName);
+      return loadProperties(fileName, System.getProperties());
+   }
+
+   public static boolean loadProperties(String fileName, Properties properties) {
+      return loadProperties(new File(fileName), properties);
+   }
+
+   public static boolean loadProperties(File file, Properties properties) {
       if (file.exists()) {
          try (Reader reader = new FileReader(file)) {
-            System.getProperties().load(reader);
+            properties.load(reader);
             return true;
          } catch (IOException e) {
             e.printStackTrace();
@@ -171,17 +178,20 @@ public class Launcher {
       }
       return false;
    }
-   
+
    public static void loadClusterProperties() {
+      loadClusterProperties(System.getProperties());
+   }
+
+   public static void loadClusterProperties(Properties properties) {
       String name = System.getProperty("user.name");
       String[] locs = {
             "cluster.properties", // in prod, gets symlinked in
-            "../core/Tetrapod-Core/rsc/cluster/%s.cluster.properties",
-            "../../core/Tetrapod-Core/rsc/cluster/%s.cluster.properties",
+            "../core/Tetrapod-Core/rsc/cluster/%s.cluster.properties", "../../core/Tetrapod-Core/rsc/cluster/%s.cluster.properties",
             "../../../core/Tetrapod-Core/rsc/cluster/%s.cluster.properties", // in case services are one level deeper
       };
       for (String f : locs) {
-         if (loadProperties(String.format(f, name)))
+         if (loadProperties(String.format(f, name), properties))
             return;
       }
       System.err.println("ERR: no cluster properties found");
@@ -189,15 +199,19 @@ public class Launcher {
    }
 
    public static void loadSecretProperties() {
-      String file = System.getProperty("secrets");
+      loadSecretProperties(System.getProperties());
+   }
+
+   public static void loadSecretProperties(Properties properties) {
+      String file = properties.getProperty("secrets");
       if (file != null && !file.isEmpty())
-         loadProperties(file);
+         loadProperties(file, properties);
    }
 
    public static String getOpt(String key) {
       return opts.get(key);
    }
-   
+
    public static String getAllOpts() {
       StringBuilder sb = new StringBuilder();
       for (Entry<String, String> e : opts.entrySet()) {

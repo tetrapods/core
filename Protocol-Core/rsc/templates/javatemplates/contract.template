@@ -53,6 +53,10 @@ public class {{class}} extends Contract {
       return {{class}}.CONTRACT_ID;
    }
    
+   public int getContractVersion() {
+      return {{class}}.VERSION;
+   }
+   
    public WebRoute[] getWebRoutes() {
       return new WebRoute[] {
          {{webRoutes}}

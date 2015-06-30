@@ -12,44 +12,32 @@ import java.util.*;
 import java.util.concurrent.*;
 
 @SuppressWarnings("unused")
-public class AddWebFileRequest extends Request {
+public class AdminSubscribeRequest extends Request {
 
-   public static final int STRUCT_ID = 5158759;
+   public static final int STRUCT_ID = 4415191;
    public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;
    
-   public AddWebFileRequest() {
+   public AdminSubscribeRequest() {
       defaults();
    }
 
-   public AddWebFileRequest(String path, String webRootName, byte[] contents, boolean clearBeforAdding) {
-      this.path = path;
-      this.webRootName = webRootName;
-      this.contents = contents;
-      this.clearBeforAdding = clearBeforAdding;
+   public AdminSubscribeRequest(String adminToken) {
+      this.adminToken = adminToken;
    }   
 
-   public String path;
-   public String webRootName;
-   public byte[] contents;
-   public boolean clearBeforAdding;
+   public String adminToken;
 
    public final Structure.Security getSecurity() {
       return Security.INTERNAL;
    }
 
    public final void defaults() {
-      path = null;
-      webRootName = null;
-      contents = null;
-      clearBeforAdding = false;
+      adminToken = null;
    }
    
    @Override
    public final void write(DataSource data) throws IOException {
-      data.write(1, this.path);
-      data.write(2, this.webRootName);
-      if (this.contents != null) data.write(3, this.contents);
-      data.write(4, this.clearBeforAdding);
+      data.write(1, this.adminToken);
       data.writeEndTag();
    }
    
@@ -59,10 +47,7 @@ public class AddWebFileRequest extends Request {
       while (true) {
          int tag = data.readTag();
          switch (tag) {
-            case 1: this.path = data.read_string(tag); break;
-            case 2: this.webRootName = data.read_string(tag); break;
-            case 3: this.contents = data.read_byte_array(tag); break;
-            case 4: this.clearBeforAdding = data.read_boolean(tag); break;
+            case 1: this.adminToken = data.read_string(tag); break;
             case Codec.END_TAG:
                return;
             default:
@@ -73,38 +58,35 @@ public class AddWebFileRequest extends Request {
    }
    
    public final int getContractId() {
-      return AddWebFileRequest.CONTRACT_ID;
+      return AdminSubscribeRequest.CONTRACT_ID;
    }
 
    public final int getStructId() {
-      return AddWebFileRequest.STRUCT_ID;
+      return AdminSubscribeRequest.STRUCT_ID;
    }
    
    @Override
    public final Response dispatch(ServiceAPI is, RequestContext ctx) {
       if (is instanceof Handler)
-         return ((Handler)is).requestAddWebFile(this, ctx);
+         return ((Handler)is).requestAdminSubscribe(this, ctx);
       return is.genericRequest(this, ctx);
    }
    
    public static interface Handler extends ServiceAPI {
-      Response requestAddWebFile(AddWebFileRequest r, RequestContext ctx);
+      Response requestAdminSubscribe(AdminSubscribeRequest r, RequestContext ctx);
    }
    
    public final String[] tagWebNames() {
       // Note do not use this tags in long term serializations (to disk or databases) as 
       // implementors are free to rename them however they wish.  A null means the field
       // is not to participate in web serialization (remaining at default)
-      String[] result = new String[4+1];
-      result[1] = "path";
-      result[2] = "webRootName";
-      result[3] = "contents";
-      result[4] = "clearBeforAdding";
+      String[] result = new String[1+1];
+      result[1] = "adminToken";
       return result;
    }
    
    public final Structure make() {
-      return new AddWebFileRequest();
+      return new AdminSubscribeRequest();
    }
    
    public final StructDescription makeDescription() {
@@ -113,10 +95,11 @@ public class AddWebFileRequest extends Request {
       desc.types = new TypeDescriptor[desc.tagWebNames.length];
       desc.types[0] = new TypeDescriptor(TypeDescriptor.T_STRUCT, getContractId(), getStructId());
       desc.types[1] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
-      desc.types[2] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
-      desc.types[3] = new TypeDescriptor(TypeDescriptor.T_BYTE_LIST, 0, 0);
-      desc.types[4] = new TypeDescriptor(TypeDescriptor.T_BOOLEAN, 0, 0);
       return desc;
    }
 
+   protected boolean isSensitive(String fieldName) {
+      if (fieldName.equals("adminToken")) return true;
+      return false;
+   }
 }

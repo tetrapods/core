@@ -1,89 +1,34 @@
-define(["knockout", "jquery", "app", "host", "service"], function(ko, $, app, Host, Service) {
-   var Core = app.server.consts["Core.Core"];
+define(function(require) {
+   var $ = require("jquery");
+   var ko = require("knockout");
+   var Alert = require("alert");
+   var app = require("app");
+   var Hosts = require("modules/hosts");
+   var Raft = require("modules/raft");
+   var Properties = require("modules/properties");
+   var WebRoots = require("modules/webroots");
+   var Builder = require("modules/builder");
+   var Users = require("modules/users");
 
    return new ClusterModel();
 
    function ClusterModel() {
       var self = this;
 
-      self.raft = ko.observableArray([]);
-      self.hosts = ko.observableArray([]);
-      self.services = ko.observableArray([]);
+      self.clear = clear;
 
-      // Timer to update charts
-      setInterval(function updateCharts() {
-         $.each(self.services(), function(i, s) {
-            s.update();
-         });
-      }, 1000);
+      self.hosts = new Hosts(app);
+      self.raft = new Raft(app);
+      self.webroots = new WebRoots(app);
+      self.properties = new Properties(app);
+      self.users = new Users(app);
 
-      self.findService = function(entityId) {
-         for (var i = 0; i < self.services().length; i++) {
-            if (self.services()[i].entityId == entityId) {
-               return self.services()[i];
-            }
-         }
-         return null;
-      }
-      
-      self.onClearAllErrors = function() {
-         for (var i = 0; i < self.services().length; i++) {
-            self.services()[i].clearErrors();
-         }
-      };
-      
-      app.server.addMessageHandler("ServiceAdded", function(msg) {
-         var s = self.findService(msg.entity.entityId);
-         if (s) {
-            self.services.remove(s);
-         }
-         s = new Service(msg.entity);
-         self.services.push(s);
-         self.services.sort(compareServices);
-         self.getHost(s.host).addService(s);
-      });
-
-      app.server.addMessageHandler("ServiceUpdated", function(msg) {
-         var s = self.findService(msg.entityId);
-         if (s) {
-            s.status(msg.status);
-         }
-      });
-
-      app.server.addMessageHandler("ServiceRemoved", function(msg) {
-         var s = self.findService(msg.entityId);
-         if (s) {
-            self.services.remove(s);
-            self.getHost(s.host).removeService(s);
-         }
-      });
-
-      app.server.addMessageHandler("ServiceStats", function(msg) {
-         var s = self.findService(msg.entityId);
-         if (s) {
-            s.statsUpdate(msg);
-         }
-      });
-
-      function compareServices(a, b) {
-         return (a.entityId - b.entityId);
-      }
-
-      self.getHost = function(hostname) {
-         for (var i = 0; i < self.hosts().length; i++) {
-            var host = self.hosts()[i];
-            if (host.hostname == hostname) {
-               return host;
-            }
-         }
-         var host = new Host(hostname);
-         var array = self.hosts();
-         array.push(host);
-         array.sort(function(a,b) {
-            return a.hostname == b.hostname ? 0 : (a.hostname < b.hostname ? -1 : 1);
-         });
-         self.hosts(array);
-         return host;
+      function clear() {
+         self.hosts.clear();
+         self.raft.clear();
+         self.webroots.clear();
+         self.properties.clear();
+         self.users.clear();
       }
 
    }

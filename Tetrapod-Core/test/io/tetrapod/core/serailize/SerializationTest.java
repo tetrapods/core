@@ -18,8 +18,8 @@ public class SerializationTest {
       WebRoute[] routes = new TetrapodContract().getWebRoutes();
       for (WebRoute w : routes)
          assertTrue(rinseTempBuff(w));
-      AddServiceInformationRequest awr = new AddServiceInformationRequest();
-      awr.routes = routes;
+      AddServiceInformationRequest awr = new AddServiceInformationRequest(new ContractDescription());
+      awr.info.routes = routes;
       assertTrue(rinseTempBuff(awr));
    }
 
@@ -29,8 +29,8 @@ public class SerializationTest {
       WebRoute[] routes = new TetrapodContract().getWebRoutes();
       for (WebRoute w : routes)
          assertTrue(rinseViaAdapter(w));
-      AddServiceInformationRequest awr = new AddServiceInformationRequest();
-      awr.routes = routes;
+      AddServiceInformationRequest awr = new AddServiceInformationRequest(new ContractDescription());
+      awr.info.routes = routes;
       assertTrue(rinseViaAdapter(awr));
    }
    
