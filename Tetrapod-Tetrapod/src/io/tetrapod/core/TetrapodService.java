@@ -286,6 +286,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          }
 
          cluster.setClusterProperty(new ClusterProperty("props.init", false, "true"));
+         Util.sleep(1000);
       }
    }
 
