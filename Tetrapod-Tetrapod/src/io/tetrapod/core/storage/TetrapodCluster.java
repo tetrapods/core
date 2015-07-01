@@ -293,6 +293,9 @@ public class TetrapodCluster extends Storage implements RaftRPC<TetrapodStateMac
             }
          }
       }
+      if (!raft.getLog().isRunning() && !service.isShuttingDown()) {
+         service.fail("Raft Log Stopped");
+      }
    }
 
    public void sendClusterDetails(Session ses, int toEntityId, int topicId) {
