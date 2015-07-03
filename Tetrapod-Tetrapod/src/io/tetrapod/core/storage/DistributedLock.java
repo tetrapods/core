@@ -1,6 +1,6 @@
 package io.tetrapod.core.storage;
 
-import io.tetrapod.core.utils.Value;
+import io.tetrapod.core.utils.*;
 import io.tetrapod.raft.*;
 import io.tetrapod.raft.RaftRPC.ClientResponseHandler;
 import io.tetrapod.raft.storage.*;
@@ -16,7 +16,8 @@ import org.slf4j.*;
 public class DistributedLock implements Closeable {
 
    private static final Logger logger = LoggerFactory.getLogger(DistributedLock.class);
-   final TetrapodCluster           raft;
+
+   final TetrapodCluster       raft;
    final String                key;
    final String                uuid;
 
@@ -29,8 +30,14 @@ public class DistributedLock implements Closeable {
    public boolean lock(long leaseForMillis, long waitForMillis) {
       final long started = System.currentTimeMillis();
       logger.info("LOCKING {} ...", key);
-      final Value<Boolean> acquired = new Value<Boolean>(false);
+      final Value<Boolean> acquired = new Value<>(false);
+      final Value<Integer> attempts = new Value<>();
       while (!acquired.get() && started + waitForMillis > System.currentTimeMillis()) {
+         final int attempt = attempts.get();
+         if (attempt > 0) {
+            Util.sleep(Math.max(1024, attempt * attempt));
+         }
+         attempts.set(attempt + 1);
          raft.executeCommand(new LockCommand<TetrapodStateMachine>(key, leaseForMillis), new ClientResponseHandler<TetrapodStateMachine>() {
             @Override
             public void handleResponse(Entry<TetrapodStateMachine> e) {
