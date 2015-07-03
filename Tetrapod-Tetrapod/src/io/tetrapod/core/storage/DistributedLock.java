@@ -31,7 +31,7 @@ public class DistributedLock implements Closeable {
       final long started = System.currentTimeMillis();
       logger.info("LOCKING {} ...", key);
       final Value<Boolean> acquired = new Value<>(false);
-      final Value<Integer> attempts = new Value<>();
+      final Value<Integer> attempts = new Value<>(0);
       while (!acquired.get() && started + waitForMillis > System.currentTimeMillis()) {
          final int attempt = attempts.get();
          if (attempt > 0) {
