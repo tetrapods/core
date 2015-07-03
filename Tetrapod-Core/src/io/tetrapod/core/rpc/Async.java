@@ -57,7 +57,7 @@ public class Async {
    }
 
    public boolean isTimedout() {
-      return System.currentTimeMillis() - sendTime > header.timeout * 1000;
+      return header == null ? false : System.currentTimeMillis() - sendTime > header.timeout * 1000;
    }
 
    public synchronized Response waitForResponse() {
