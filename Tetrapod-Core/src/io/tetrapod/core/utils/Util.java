@@ -3,7 +3,7 @@ package io.tetrapod.core.utils;
 import io.tetrapod.core.json.*;
 
 import java.io.*;
-import java.lang.reflect.Field;
+import java.lang.reflect.*;
 import java.net.*;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
@@ -437,5 +437,28 @@ public class Util {
       m.appendTail(sb);
       return sb.toString();
    }
+   
+   public static String toString(Object object) {
+      StringBuilder sb = new StringBuilder();
+      sb.append(object.getClass().getSimpleName()).append(" { ");
+      boolean first = true;
+      for (Field f : object.getClass().getDeclaredFields()) {
+         try {
+            int mod = f.getModifiers();
+            if (!Modifier.isStatic(mod)) {
+               if (!Modifier.isPublic(mod)) {
+                  f.setAccessible(true);
+               }
+               if (!first) { sb.append(", "); }
+               first = false;
+               sb.append(f.getName()).append(":").append(f.get(object));
+            }
+         } catch (Exception e) {
+         }
+      }
+      sb.append(" }");
+      return sb.toString();
+   }
+
 
 }
