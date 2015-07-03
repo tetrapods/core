@@ -200,7 +200,7 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
                   s.requests++;
                   if (s.ses != null) {
                      if (s.valid && s.ses.isConnected()) {
-                        logger.debug("Sending {} direct to {}", req, s.ses);
+                        logger.trace("Sending {} direct to {}", req, s.ses);
                         return s.ses;
                      }
                   } else {
@@ -268,7 +268,7 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
       }
 
       if (toEntityId == service.getEntityId()) {
-         logger.debug("Self-dispatching {}", req);
+         logger.trace("Self-dispatching {}", req);
          final RequestHeader header = new RequestHeader();
          header.contractId = req.getContractId();
          header.structId = req.getStructId();
