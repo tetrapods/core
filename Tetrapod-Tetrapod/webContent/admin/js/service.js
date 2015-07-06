@@ -177,7 +177,7 @@ define(["knockout", "jquery", "bootbox", "app", "chart", "modules/builder"], fun
                   messages.push('<li class="' + levelStyle + '">');
                   messages.push(timestamp + "&nbsp;");
                   messages.push(error.thread + "&nbsp;");
-                  messages.push(error.logger);
+                  messages.push(error.logger  + "&nbsp;");
                   messages.push('<span class="service-logs-msg">' + error.msg + '</span>');
                   messages.push('</li>');
                }

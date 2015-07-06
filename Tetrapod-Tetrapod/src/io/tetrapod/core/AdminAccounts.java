@@ -157,7 +157,7 @@ public class AdminAccounts {
       SessionRequestContext ctx = (SessionRequestContext) ctxA;
       AuthToken.Decoded d = AuthToken.decodeAuthToken1(r.token);
       if (d != null) {
-         logger.debug("TOKEN {} time left = {}", r.token, d.timeLeft);
+         //logger.debug("TOKEN {} time left = {}", r.token, d.timeLeft);
          Admin admin = getAdmin(d.accountId);
          if (admin != null) {
             ctx.session.theirType = Core.TYPE_ADMIN;
