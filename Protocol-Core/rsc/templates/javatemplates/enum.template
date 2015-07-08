@@ -1,0 +1,28 @@
+package {{package}};
+
+// This is a code generated file.  All edits will be lost the next time code gen is run.
+
+import io.*;
+import java.util.*;
+
+
+@SuppressWarnings("unused")
+public enum {{class}}  {
+   {{constants}}
+   OUT_OF_RANGE({{outRangeVal}});
+   
+   public static {{class}} from({{type}} val) {
+      for ({{class}} e : {{class}}.values())
+         if (e.value{{equals}}(val))
+            return e; 
+      return OUT_OF_RANGE;
+   }
+   
+   public final {{type}} value;
+   
+   private {{class}}({{type}} value) {
+      this.value = value;
+   }
+}
+
+

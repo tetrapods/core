@@ -1,0 +1,9 @@
+public {{javatype}} {{name}};
+{{name}} = null;
+case {{tag}}: this.{{name}} = {{javatype}}.from(data.read_{{interiortype}}(tag)); break;
+if (this.{{name}} != null) data.write({{tag}}, this.{{name}}.value);
+{{javatype}} {{name}}
+this.{{name}} = {{name}};
+
+Lines are: 1) declaration 2) initialization 3) read 4) write 5) constructor declaration 6) constructor initilizer 
+

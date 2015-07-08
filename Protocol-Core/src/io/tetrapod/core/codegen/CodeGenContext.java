@@ -44,7 +44,13 @@ class CodeGenContext {
          return structId;
       }
    }
-
+   
+   public static class ClassLike  {
+      String      name;
+      String      comment;
+      List<Field> fields = new ArrayList<>();
+   }
+   
    public static class Field {
       String name;
       String type;
@@ -52,12 +58,21 @@ class CodeGenContext {
       String defaultValue;
       String tag;
       String comment;
+      String interiorType; // eg flags can be int or long
       Annotations annotations;
 
       public boolean isConstant() {
          return tag.equals("0");
       }
 
+      public boolean isFlag() {
+         return tag.equals("flag");
+      }
+
+      public boolean isEnum() {
+         return tag.equals("enum");
+      }
+      
       public String getWebName() {
          if (annotations.getFirst("noweb") != null)
             return null;
@@ -71,6 +86,10 @@ class CodeGenContext {
          if (type.equals("string"))
             return JavaGenerator.escapeString(defaultValue);
          return defaultValue;
+      }
+
+      public String embeddedClassName() {
+         return name.substring(0, name.indexOf('.'));
       }
    }
    
@@ -113,6 +132,8 @@ class CodeGenContext {
    public Set<Err>                 allErrors       = new TreeSet<>();
    public Set<String>              subscriptions   = new TreeSet<>();
    public boolean                  inGlobalScope   = true;
+   public Map<String,ClassLike>    enums           = new HashMap<>();
+   public Map<String,ClassLike>    flags           = new HashMap<>();
 
    private Map<String, Set<Class>> classesByType   = new HashMap<>();
 
@@ -198,7 +219,17 @@ class CodeGenContext {
       f.name = name;
       f.collectionType = collectionType;
       f.defaultValue = defaultValue;
-      if (inGlobalScope) {
+      if (f.isFlag() || f.isEnum()) {
+         String className = f.embeddedClassName();
+         f.name = f.name.substring(f.name.indexOf('.') + 1);
+         ClassLike c = (f.isFlag() ? flags : enums).get(className);
+         if (c == null) {
+            c = new ClassLike();
+            c.name = className;
+            (f.isFlag() ? flags : enums).put(className, c);
+         }
+         c.fields.add(f);
+      } else if (inGlobalScope) {
          if (!f.isConstant())
             throw new ParseException("non-constant field declared in global scope");
          globalConstants.add(f);
@@ -258,6 +289,23 @@ class CodeGenContext {
       }
       if (c.security == null) {
          c.security = defaultSecurity;
+      }
+   }
+
+   public void done() {
+      // fill interiorTypes for fields which are flags
+      for (Class c : classes) {
+         for (Field f : c.fields) {
+            ClassLike fg = flags.get(f.type);
+            if (fg != null) {
+               f.interiorType = "flag." + fg.fields.get(0).type;
+               continue;
+            }
+            fg = enums.get(f.type);
+            if (fg != null) {
+               f.interiorType = "enum." + fg.fields.get(0).type;
+            }
+         }
       }
    }
 

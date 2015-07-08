@@ -1,0 +1,41 @@
+package {{package}};
+
+// This is a code generated file.  All edits will be lost the next time code gen is run.
+
+import io.*;
+
+@SuppressWarnings("unused")
+public class {{class}}  {
+
+   {{constants}}
+     
+   public {{type}} value;
+   
+   public static {{class}} on({{type}} value) {
+      {{class}} xx = new {{class}}();
+      xx.value = value;
+      return xx;
+   }
+   
+   public boolean isAnySet({{type}} flags) {
+      return (value & flags) != 0;
+   }
+
+   public boolean isAllSet({{type}} flags) {
+      return (value & flags) == flags;
+   }
+
+   public boolean isNoneSet({{type}} flags) {
+      return (value & flags) == 0;
+   }
+   
+   public {{class}} set({{type}} flags) {
+      value |= flags;
+      return this;
+   }
+   
+   public {{class}} unset({{type}} flags) {
+      value &= ~flags;
+      return this;
+   }
+}
