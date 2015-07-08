@@ -9,13 +9,13 @@ import java.util.*;
 @SuppressWarnings("unused")
 public enum {{class}}  {
    {{constants}}
-   OUT_OF_RANGE({{outRangeVal}});
+   ;
    
    public static {{class}} from({{type}} val) {
       for ({{class}} e : {{class}}.values())
          if (e.value{{equals}}(val))
             return e; 
-      return OUT_OF_RANGE;
+      return null;
    }
    
    public final {{type}} value;
