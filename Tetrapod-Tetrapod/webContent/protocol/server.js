@@ -32,6 +32,8 @@ function TP_Server() {
    self.register = register;
    self.registerConst = registerConst;
    self.registerErrorConst = registerErrorConst;
+   self.registerEnumConst = registerEnumConst;
+   self.registerFlagConst = registerFlagConst;
    self.addMessageHandler = addMessageHandler;
    self.removeMessageHandler = removeMessageHandler;
    self.getErrorStrings = getErrorStrings;
@@ -86,6 +88,36 @@ function TP_Server() {
       } else {
          o = map[contractName] || {};
          map[contractName] = o;
+      }
+      o[constName] = constValue;
+   }
+
+   function registerEnumConst(contractName, structName, constName, constValue) {
+      var map = protocol["consts"];
+      var o = map[contractName][structName];
+      if (!o) {
+         o = {};
+         map[contractName][structName] = o;
+      }
+      o[constName] = constValue;
+   }
+
+   function registerFlagConst(contractName, structName, constName, constValue) {
+      var map = protocol["consts"];
+      var o = map[contractName][structName];
+      if (!o) {
+         o = {};
+         o.on = function(val) {
+            return {
+               value: val,
+               isAnySet: function(flags) { return (flags & this.value) != 0; },
+               isAllSet: function(flags) { return (flags & this.value) == flags; },
+               isNoneSet: function(flags) { return (flags & this.value) == 0; },
+               set: function(flags) { this.value = this.value | flags; return this; },
+               unset: function(flags) { this.value = this.value & ~flags; return this; }
+            };
+         };
+         map[contractName][structName] = o;
       }
       o[constName] = constValue;
    }

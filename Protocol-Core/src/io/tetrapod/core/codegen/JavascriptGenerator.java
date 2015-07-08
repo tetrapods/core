@@ -58,6 +58,7 @@ class JavascriptGenerator implements LanguageGenerator {
                for (Field f : c.fields) {
                   if (f.isConstant()) {
                      sub = template("register.const");
+                     sub.add("register", "registerConst");
                      sub.add("contractClass", contractName);
                      sub.add("class", c.name);
                      sub.add("constName", f.name);
@@ -69,6 +70,7 @@ class JavascriptGenerator implements LanguageGenerator {
             for (Field f : context.globalConstants) {
                if (f.isConstant()) {
                   Template sub = template("register.const");
+                  sub.add("register", "registerConst");
                   sub.add("contractClass", contractName);
                   sub.add("class", "null");
                   sub.add("constName", f.name);
@@ -76,8 +78,31 @@ class JavascriptGenerator implements LanguageGenerator {
                   t.add("constants", sub);
                }
             }
+            for (ClassLike c : context.enums.values()) {
+               for (Field f : c.fields) {
+                  Template sub = template("register.const");
+                  sub.add("register", "registerEnumConst");
+                  sub.add("contractClass", contractName);
+                  sub.add("class", c.name);
+                  sub.add("constName", f.name);
+                  sub.add("constValue", f.getEscapedDefaultValue());
+                  t.add("constants", sub);
+               }
+            }
+            for (ClassLike c : context.flags.values()) {
+               for (Field f : c.fields) {
+                  Template sub = template("register.const");
+                  sub.add("register", "registerFlagConst");
+                  sub.add("contractClass", contractName);
+                  sub.add("class", c.name);
+                  sub.add("constName", f.name);
+                  sub.add("constValue", f.getEscapedDefaultValue());
+                  t.add("constants", sub);
+               }
+            }
             for (Err err : context.allErrors) {
-               Template sub = template("register.errconst");
+               Template sub = template("register.const");
+               sub.add("register", "registerErrorConst");
                sub.add("contractClass", contractName);
                sub.add("class", "null");
                sub.add("constName", err.name);
