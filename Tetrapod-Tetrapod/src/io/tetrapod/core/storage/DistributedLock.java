@@ -35,7 +35,7 @@ public class DistributedLock implements Closeable {
       while (!acquired.get() && started + waitForMillis > System.currentTimeMillis()) {
          final int attempt = attempts.get();
          if (attempt > 0) {
-            Util.sleep(Math.max(1024, attempt * attempt));
+            Util.sleep(Math.min(1024, 8 * attempt * attempt));
          }
          attempts.set(attempt + 1);
          raft.executeCommand(new LockCommand<TetrapodStateMachine>(key, leaseForMillis), new ClientResponseHandler<TetrapodStateMachine>() {
