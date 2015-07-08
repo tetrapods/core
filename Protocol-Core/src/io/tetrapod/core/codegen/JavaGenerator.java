@@ -2,6 +2,7 @@ package io.tetrapod.core.codegen;
 
 import io.tetrapod.core.codegen.CodeGen.TokenizedLine;
 import io.tetrapod.core.codegen.CodeGenContext.Class;
+import io.tetrapod.core.codegen.CodeGenContext.ClassLike;
 import io.tetrapod.core.codegen.CodeGenContext.Err;
 import io.tetrapod.core.codegen.CodeGenContext.Field;
 
@@ -46,6 +47,13 @@ class JavaGenerator implements LanguageGenerator {
       for (Class c : context.classes) {
          generateClass(c, context.serviceName + "Contract");
       }
+      for (String name : context.enums.keySet()) {
+         generateEnum(context.enums.get(name));
+      }
+      for (String name : context.flags.keySet()) {
+         generateFlags(context.flags.get(name));
+      }
+
       generateContract(context);
    }
 
@@ -206,6 +214,22 @@ class JavaGenerator implements LanguageGenerator {
          global.add("constants", comment + lines[0]);
       }
    }
+   
+   private void addAllAsConstantValues(List<Field> fields, Template global) throws ParseException, IOException {
+      for (Field f : fields) {
+         Template sub = template("field.constants");
+         sub.add("default", f.defaultValue);
+         sub.add("name", f.name);
+         sub.add("javatype", f.type);
+         String[] lines = sub.expand().split("\r\n|\n|\r");
+         String comment = "";
+         if (f.comment != null && !f.comment.trim().isEmpty()) {
+            comment = generateComment(f.comment.trim());
+         }
+         global.add("constants", comment + (f.isEnum() ? lines[4] : lines[0]));
+      }
+   }
+
 
    private Template getFieldTemplate(Field f) throws IOException {
       JavaTypes.Info info = JavaTypes.get(f.type);
@@ -218,6 +242,7 @@ class JavaGenerator implements LanguageGenerator {
       String descStructId = "0";
       String descType = "";
       String descArray = "";
+      String interiorType = "";
       if (f.collectionType != null) {
          defaultVal = "null";
          switch (f.collectionType) {
@@ -235,7 +260,7 @@ class JavaGenerator implements LanguageGenerator {
       }
       if (f.isConstant()) {
          primTemplate = structTemplate = "field.constants";
-      }
+      } 
       switch (f.type) {
          case "int":
             descType = "TypeDescriptor.T_INT";
@@ -261,11 +286,23 @@ class JavaGenerator implements LanguageGenerator {
             descStructId = f.type + ".STRUCT_ID";
             break;
       }
+      if (f.interiorType != null) {
+         primTemplate = structTemplate = f.interiorType.startsWith("flag") ? "field.flags" : "field.enum";
+         interiorType = f.interiorType.substring(f.interiorType.indexOf('.')+1);
+         switch (interiorType) {
+            case "int": descType = "TypeDescriptor.T_INT"; break;
+            case "long": descType = "TypeDescriptor.T_LONG"; break;
+            case "string":descType = "TypeDescriptor.T_STRING"; break;
+         }
+         descContractId = "0";
+         descStructId = "0";
+      }
       Template t = template(info.isPrimitive ? primTemplate : structTemplate);
       t.add("tag", f.tag);
       t.add("default", defaultVal);
       t.add("name", f.name);
       t.add("javatype", info.base);
+      t.add("interiortype", interiorType);
       t.add("type", f.type);
       t.add("boxed", info.boxed);
       t.add("descType", descType + descArray);
@@ -334,5 +371,33 @@ class JavaGenerator implements LanguageGenerator {
 
    private Template template(String name) throws IOException {
       return Template.get(getClass(), "/templates/javatemplates/" + name + ".template");
+   }
+   
+   private void generateFlags(ClassLike c) throws IOException, ParseException {
+      Template t = template("flags");
+      t.add("class", c.name);
+      t.add("package", packageName);
+      t.add("type", c.fields.get(0).type);
+      addAllAsConstantValues(c.fields, t);
+      t.expandAndTrim(getFilename(c.name));   
+   }
+
+   private void generateEnum(ClassLike c) throws IOException, ParseException {
+      Template t = template("enum");
+      t.add("class", c.name);
+      t.add("package", packageName);
+      String type = c.fields.get(0).type;
+      if (type.equalsIgnoreCase("string")) {
+         t.add("type", "String");
+         t.add("equals", ".equals");
+         t.add("outRangeVal", "\"__out_of_range__\"");
+         for (Field f : c.fields) { f.defaultValue = "\"" + f.defaultValue + "\""; }
+      } else {
+         t.add("type", type);
+         t.add("equals", " == ");
+         t.add("outRangeVal", "-99");
+      }
+      addAllAsConstantValues(c.fields, t);
+      t.expandAndTrim(getFilename(c.name));        
    }
 }

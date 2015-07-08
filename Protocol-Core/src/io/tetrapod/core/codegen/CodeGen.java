@@ -142,6 +142,7 @@ public class CodeGen {
             tokenizedLine.clear();
             parse(currentLine);
          }
+         context.done();
          contexts.add(context);
       } catch (IOException | ParseException | IndexOutOfBoundsException e) {
          System.err.printf("Error in file %s line #%d, [%s]\n\n", currentFile.getName(), currentLineNumber, currentLine);
@@ -200,6 +201,18 @@ public class CodeGen {
          case "const":
             tokenizedLine.parts.set(0, "field");
             tokenizedLine.parts.add(1, "0");
+            context.parseField(tokenizedLine);
+            break;
+            
+         case "flag":
+            tokenizedLine.parts.set(0, "field");
+            tokenizedLine.parts.add(1, "flag");
+            context.parseField(tokenizedLine);
+            break;
+
+         case "enum":
+            tokenizedLine.parts.set(0, "field");
+            tokenizedLine.parts.add(1, "enum");
             context.parseField(tokenizedLine);
             break;
             
