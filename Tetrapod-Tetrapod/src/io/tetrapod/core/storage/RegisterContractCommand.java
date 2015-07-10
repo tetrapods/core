@@ -29,7 +29,7 @@ public class RegisterContractCommand implements Command<TetrapodStateMachine> {
    }
 
    @Override
-   public void read(DataInputStream in) throws IOException {
+   public void read(DataInputStream in, int fileVersion) throws IOException {
       info = new ContractDescription();
       info.read(IOStreamDataSource.forReading(in));
    }

@@ -75,20 +75,21 @@ public class AdminAccounts {
       try {
          final String key = "admin::" + presumedCurrent.accountId;
          final DistributedLock lock = cluster.getLock(key);
-         lock.lock(60000, 60000);
-         try {
-            Admin admin = getAdmin(presumedCurrent.accountId);
-            mutator.mutate(admin);
-            cluster.modify(admin);
-            logger.debug("Mutated {}", key);
-            return admin;
-         } finally {
-            lock.unlock();
+         if (lock.lock(60000, 60000)) {
+            try {
+               Admin admin = getAdmin(presumedCurrent.accountId);
+               mutator.mutate(admin);
+               cluster.modify(admin);
+               logger.debug("Mutated {}", key);
+               return admin;
+            } finally {
+               lock.unlock();
+            }
          }
       } catch (Exception e) {
          logger.error(e.getMessage(), e);
-         return null;
       }
+      return null;
    }
 
    /**

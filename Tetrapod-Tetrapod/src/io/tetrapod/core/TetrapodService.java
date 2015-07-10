@@ -11,7 +11,7 @@ import io.tetrapod.core.registry.*;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.rpc.Error;
 import io.tetrapod.core.serialize.datasources.ByteBufDataSource;
-import io.tetrapod.core.storage.TetrapodCluster;
+import io.tetrapod.core.storage.*;
 import io.tetrapod.core.utils.*;
 import io.tetrapod.core.web.*;
 import io.tetrapod.protocol.core.*;
@@ -1157,6 +1157,22 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          return new Error(ERROR_INVALID_RIGHTS);
       }
       cluster.forceBootstrap();
+      return Response.SUCCESS;
+   }
+
+   @Override
+   public Response requestLock(LockRequest r, RequestContext ctx) {
+      final DistributedLock lock = cluster.getLock(r.key);
+      if (lock.lock(r.leaseMillis, 10000)) {
+         return new LockResponse(lock.uuid);
+      }
+      return Response.error(ERROR_TIMEOUT);
+   }
+
+   @Override
+   public Response requestUnlock(UnlockRequest r, RequestContext ctx) {
+      final DistributedLock lock = new DistributedLock(r.key, r.uuid, cluster);
+      lock.unlock();
       return Response.SUCCESS;
    }
 

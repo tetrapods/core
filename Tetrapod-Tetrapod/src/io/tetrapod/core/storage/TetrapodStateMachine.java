@@ -65,7 +65,7 @@ public class TetrapodStateMachine extends StorageStateMachine<TetrapodStateMachi
    }
 
    @Override
-   public void loadState(DataInputStream in) throws IOException {
+   public void loadState(DataInputStream in, int snapshotVersion) throws IOException {
       props.clear();
       contracts.clear();
       webRootDefs.clear();
@@ -73,7 +73,7 @@ public class TetrapodStateMachine extends StorageStateMachine<TetrapodStateMachi
       webRootDirs.clear();
       admins.clear();
 
-      super.loadState(in);
+      super.loadState(in, snapshotVersion);
 
       // iterate over the storage items and extract objects (properties, web roots, contracts)
       for (StorageItem item : items.values()) {

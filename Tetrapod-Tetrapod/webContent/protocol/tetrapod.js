@@ -96,5 +96,8 @@ function TP_Tetrapod(server) {
    server.register("request", "Tetrapod", "DelWebRoot", 1, 11212431);
    server.register("message", "Tetrapod", "AdminUserAdded", 1, 2316676);
    server.register("message", "Tetrapod", "AdminUserRemoved", 1, 9416406);
+   server.register("request", "Tetrapod", "Lock", 1, 3921081);
+   server.register("response", "Tetrapod", "Lock", 1, 7264127);
+   server.register("request", "Tetrapod", "Unlock", 1, 426316);
 
 }

@@ -29,7 +29,7 @@ public class SetClusterPropertyCommand implements Command<TetrapodStateMachine> 
    }
 
    @Override
-   public void read(DataInputStream in) throws IOException {
+   public void read(DataInputStream in, int fileVersion) throws IOException {
       prop = new ClusterProperty();
       prop.read(IOStreamDataSource.forReading(in));
    }

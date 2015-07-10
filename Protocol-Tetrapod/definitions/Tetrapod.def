@@ -339,4 +339,15 @@ internal message AdminUserAdded
 internal message AdminUserRemoved       
    1: int accountId
     
-    
+internal request Lock
+   1: string key
+   2: string uuid
+   3: int leaseMillis
+
+internal response Lock
+   1: string uuid
+   
+internal request Unlock
+   1: string key
+   2: string uuid
+   

@@ -39,6 +39,7 @@ public class TetrapodContract extends Contract {
       , GetSubscriberCountRequest.Handler
       , IssuePeerIdRequest.Handler
       , KeepAliveRequest.Handler
+      , LockRequest.Handler
       , LogRegistryStatsRequest.Handler
       , PublishRequest.Handler
       , RaftStatsRequest.Handler
@@ -51,6 +52,7 @@ public class TetrapodContract extends Contract {
       , SetAlternateIdRequest.Handler
       , SetClusterPropertyRequest.Handler
       , SetWebRootRequest.Handler
+      , UnlockRequest.Handler
       , UnregisterRequest.Handler
       , VerifyEntityTokenRequest.Handler
       {}
@@ -91,6 +93,8 @@ public class TetrapodContract extends Contract {
          new DelClusterPropertyRequest(),
          new SetWebRootRequest(),
          new DelWebRootRequest(),
+         new LockRequest(),
+         new UnlockRequest(),
       };
    }
    
@@ -105,6 +109,7 @@ public class TetrapodContract extends Contract {
          new GetEntityInfoResponse(),
          new GetServiceBuildInfoResponse(),
          new RaftStatsResponse(),
+         new LockResponse(),
       };
    }
    

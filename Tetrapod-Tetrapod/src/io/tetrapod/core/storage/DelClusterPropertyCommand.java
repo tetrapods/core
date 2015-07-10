@@ -27,7 +27,7 @@ public class DelClusterPropertyCommand implements Command<TetrapodStateMachine> 
    }
 
    @Override
-   public void read(DataInputStream in) throws IOException {
+   public void read(DataInputStream in, int fileVersion) throws IOException {
       key = in.readUTF();
    }
 

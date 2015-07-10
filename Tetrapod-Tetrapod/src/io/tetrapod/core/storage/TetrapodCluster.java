@@ -477,7 +477,7 @@ public class TetrapodCluster extends Storage implements RaftRPC<TetrapodStateMac
       Command<TetrapodStateMachine> cmd = (Command<TetrapodStateMachine>) state.makeCommandById(type);
       try (ByteArrayInputStream buf = new ByteArrayInputStream(data)) {
          try (DataInputStream in = new DataInputStream(buf)) {
-            cmd.read(in);
+            cmd.read(in, Log.LOG_FILE_VERSION);
             return cmd;
          }
       }
@@ -744,7 +744,7 @@ public class TetrapodCluster extends Storage implements RaftRPC<TetrapodStateMac
    public DistributedLock getLock(String lockKey) {
       return new DistributedLock(lockKey, this);
    }
-
+ 
    @Override
    public long increment(String key) {
       final Value<Long> val = new Value<Long>();

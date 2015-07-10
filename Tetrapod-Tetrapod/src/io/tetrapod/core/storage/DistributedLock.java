@@ -5,40 +5,42 @@ import io.tetrapod.raft.*;
 import io.tetrapod.raft.RaftRPC.ClientResponseHandler;
 import io.tetrapod.raft.storage.*;
 
-import java.io.*;
 import java.util.UUID;
 
 import org.slf4j.*;
 
 /**
- * TODO: implement uuid key for lock command to be idempotent
+ * Convenience wrapper for a Distributed Lock via raft
  */
-public class DistributedLock implements Closeable {
+public class DistributedLock {
 
-   private static final Logger logger = LoggerFactory.getLogger(DistributedLock.class);
+   private static final Logger   logger = LoggerFactory.getLogger(DistributedLock.class);
 
-   final TetrapodCluster       raft;
-   final String                key;
-   final String                uuid;
+   final private TetrapodCluster raft;
+
+   final public String           key;
+   final public String           uuid;
 
    public DistributedLock(String key, TetrapodCluster raft) {
+      this(key, UUID.randomUUID().toString(), raft);
+   }
+
+   public DistributedLock(String key, String uuid, TetrapodCluster raft) {
       this.key = key;
+      this.uuid = uuid;
       this.raft = raft;
-      this.uuid = UUID.randomUUID().toString();
    }
 
    public boolean lock(long leaseForMillis, long waitForMillis) {
       final long started = System.currentTimeMillis();
       logger.info("LOCKING {} ...", key);
       final Value<Boolean> acquired = new Value<>(false);
-      final Value<Integer> attempts = new Value<>(0);
+      int attempts = 0;
       while (!acquired.get() && started + waitForMillis > System.currentTimeMillis()) {
-         final int attempt = attempts.get();
-         if (attempt > 0) {
-            Util.sleep(Math.min(1024, 8 * attempt * attempt));
+         if (attempts++ > 0) {
+            Util.sleep(Math.min(1024, 8 * attempts * attempts));
          }
-         attempts.set(attempt + 1);
-         raft.executeCommand(new LockCommand<TetrapodStateMachine>(key, leaseForMillis), new ClientResponseHandler<TetrapodStateMachine>() {
+         raft.executeCommand(new LockCommand<TetrapodStateMachine>(key, uuid, leaseForMillis), new ClientResponseHandler<TetrapodStateMachine>() {
             @Override
             public void handleResponse(Entry<TetrapodStateMachine> e) {
                if (e != null) {
@@ -67,11 +69,6 @@ public class DistributedLock implements Closeable {
             }
          }
       });
-   }
-
-   @Override
-   public void close() throws IOException {
-      unlock();
    }
 
 }
