@@ -8,6 +8,7 @@ import java.net.*;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.security.*;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.regex.*;
 
@@ -427,17 +428,17 @@ public class Util {
          throw new RuntimeException(e);
       }
    }
-   
+
    public static String camelCaseUnderscores(String str) {
       Matcher m = Pattern.compile("_([a-z])").matcher(str);
       StringBuffer sb = new StringBuffer();
       while (m.find()) {
-          m.appendReplacement(sb, m.group().substring(1).toUpperCase());
+         m.appendReplacement(sb, m.group().substring(1).toUpperCase());
       }
       m.appendTail(sb);
       return sb.toString();
    }
-   
+
    public static String toString(Object object) {
       StringBuilder sb = new StringBuilder();
       sb.append(object.getClass().getSimpleName()).append(" { ");
@@ -449,16 +450,26 @@ public class Util {
                if (!Modifier.isPublic(mod)) {
                   f.setAccessible(true);
                }
-               if (!first) { sb.append(", "); }
+               if (!first) {
+                  sb.append(", ");
+               }
                first = false;
                sb.append(f.getName()).append(":").append(f.get(object));
             }
-         } catch (Exception e) {
-         }
+         } catch (Exception e) {}
       }
       sb.append(" }");
       return sb.toString();
    }
 
+   private final static SimpleDateFormat macaroonDateTimeFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
 
+   /**
+    * Generate a timestamp in correct format for macaroon TTL checks
+    */
+   public static String macaroonTime(long millis) {
+      synchronized (macaroonDateTimeFormat) {
+         return macaroonDateTimeFormat.format(new Date(millis));
+      }
+   }
 }
