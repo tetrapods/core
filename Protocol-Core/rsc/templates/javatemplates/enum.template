@@ -20,6 +20,15 @@ public enum {{class}}  {
    
    public final {{type}} value;
    
+   /** 
+    * Returns the value of the enum, as opposed to the name like the superclass.  To get
+    * the name you can use this.name().
+    * @return the value as a string
+    */
+   public String toString() { 
+      return "" + value; 
+   }
+   
    private {{class}}({{type}} value) {
       this.value = value;
    }
