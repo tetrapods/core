@@ -91,6 +91,16 @@ public class ServiceCache implements TetrapodContract.Services.API {
       }
       return false;
    }
+   
+   public boolean isServiceExistant(int entityId, int contractId) {
+      Entity e = services.get(entityId);
+      if (e != null) {
+         synchronized (e) {
+            return e.contractId == contractId && (e.status & Core.STATUS_GONE) == 0;
+         }
+      }
+      return false;
+   }
 
    public boolean isServiceAvailable(int entityId) {
       Entity e = services.get(entityId);
