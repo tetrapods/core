@@ -52,7 +52,6 @@ public class Builder {
          return Integer.parseInt(build.trim());
       } catch (IOException e) {
          logger.error("trouble reading build number", e);
-         e.printStackTrace();
          return 0;
       }
    }

@@ -652,21 +652,21 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    private void healthCheck() {
       cluster.service();
       final long now = System.currentTimeMillis();
-      if (now - lastStatsLog > 10 * 1000) {
+      if (now - lastStatsLog > Util.ONE_MINUTE) {
          registry.logStats();
          cluster.logStatus();
          lastStatsLog = System.currentTimeMillis();
       }
       for (final EntityInfo e : registry.getChildren()) {
          if (e.isGone()) {
-            if (now - e.getGoneSince() > 60 * 1000) {
+            if (now - e.getGoneSince() > Util.ONE_MINUTE) {
                logger.info("Reaping: {}", e);
                registry.unregister(e);
             }
          } else {
             // special check for long-polling clients
             if (e.getLastContact() != null) {
-               if (now - e.getLastContact() > 60 * 1000) {
+               if (now - e.getLastContact() > Util.ONE_MINUTE) {
                   e.setLastContact(null);
                   registry.setGone(e);
                }
