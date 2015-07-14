@@ -147,6 +147,9 @@ public class Builder {
    private static boolean doLaunch(File clusterDir, String serviceName, int build, MyCallback callback, boolean startPaused)
          throws IOException {
       String buildNum = build == BuildCommand.LAUNCH_DEPLOYED ? "current" : "" + build;
+
+      logger.info("Launching {}/{} {}", clusterDir, serviceName, build);
+
       if (startPaused) {
          int rc = Util.runProcess(callback, new File(clusterDir, "launch").getPath(), "paused", buildNum, serviceName);
          return rc == 0;
