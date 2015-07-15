@@ -71,7 +71,7 @@ define(function(require) {
          var s = self.findService(msg.entityId);
          if (s) {
             self.services.remove(s);
-            self.getHost(msg.entity.host).removeService(s);
+            self.getHost(s.host).removeService(s);
          }
       });
 

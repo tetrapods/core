@@ -47,6 +47,11 @@ define(function(require) {
             return raft.update();
          }
          self.rafts.push(new RaftNode(entityId, host, self));
+         self.rafts.sort(compareRaftNodes);
+      }
+
+      function compareRaftNodes(a, b) {
+         return (a.entityId - b.entityId);
       }
 
       // if a node is reporting existence of a peer, make sure our list contains it

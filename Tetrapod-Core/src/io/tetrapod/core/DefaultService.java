@@ -695,6 +695,7 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
 
    @Override
    public void messageClusterMember(ClusterMemberMessage m, MessageContext ctx) {
+      logger.info("******** {}", m.dump());
       clusterMembers.add(new ServerAddress(m.host, m.servicePort));
    }
 

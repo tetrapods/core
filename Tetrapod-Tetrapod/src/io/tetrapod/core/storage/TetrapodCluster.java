@@ -14,7 +14,6 @@ import io.tetrapod.raft.StateMachine.Peer;
 import io.tetrapod.raft.storage.*;
 
 import java.io.*;
-import java.security.SecureRandom;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
@@ -35,8 +34,6 @@ public class TetrapodCluster extends Storage implements RaftRPC<TetrapodStateMac
       StateMachine.Listener<TetrapodStateMachine>, SessionFactory {
 
    private static final Logger                    logger    = LoggerFactory.getLogger(TetrapodCluster.class);
-
-   private final SecureRandom                     random    = new SecureRandom();
 
    private final Server                           server;
 
@@ -77,6 +74,36 @@ public class TetrapodCluster extends Storage implements RaftRPC<TetrapodStateMac
       this.state.addListener(this);
    }
 
+   public void loadProperties() {
+      int myPeerId = 0;
+      int size = Util.getProperty("raft.cluster.size", 1);
+      for (int peerId = 1; peerId <= size; peerId++) {
+         raft.addPeer(peerId);
+
+         String[] node = Util.getProperty("raft.node." + peerId, Util.getHostName() + ":" + service.getClusterPort()).split(":");
+         String host = node[0];
+         int port = Integer.parseInt(node[1]);
+         int entityId = peerId << Registry.PARENT_ID_SHIFT;
+
+         if (host.equals(Util.getHostName()) && port == service.getClusterPort()) {
+            myPeerId = peerId;
+         }
+
+         addMember(entityId, host, service.getServicePort(), port, null);
+      }
+      if (myPeerId != 0) {
+         service.registerSelf(myPeerId << Registry.PARENT_ID_SHIFT, service.random.nextLong());
+         raft.start(myPeerId);
+         service.dispatcher.dispatch(new Runnable() {
+            public void run() {
+               service.checkDependencies();
+            }
+         });
+      } else {
+         service.fail("Could not find my peerId for " + Util.getHostName() + ":" + service.getClusterPort());
+      }
+   }
+
    public void startListening() throws IOException {
       try {
          server.start().sync();
@@ -102,12 +129,12 @@ public class TetrapodCluster extends Storage implements RaftRPC<TetrapodStateMac
    public void onLogEntryApplied(Entry<TetrapodStateMachine> entry) {
       final Command<TetrapodStateMachine> command = entry.getCommand();
       switch (command.getCommandType()) {
-         case StateMachine.COMMAND_ID_ADD_PEER:
-            addPeer((AddPeerCommand<TetrapodStateMachine>) command);
-            break;
-         case StateMachine.COMMAND_ID_DEL_PEER:
-            delPeer((DelPeerCommand<TetrapodStateMachine>) command, entry);
-            break;
+      //         case StateMachine.COMMAND_ID_ADD_PEER:
+      //            addPeer((AddPeerCommand<TetrapodStateMachine>) command);
+      //            break;
+      //         case StateMachine.COMMAND_ID_DEL_PEER:
+      //            delPeer((DelPeerCommand<TetrapodStateMachine>) command, entry);
+      //            break;
          case SetClusterPropertyCommand.COMMAND_ID:
             onSetClusterPropertyCommand((SetClusterPropertyCommand) command);
             break;
@@ -129,22 +156,22 @@ public class TetrapodCluster extends Storage implements RaftRPC<TetrapodStateMac
       }
    }
 
-   public void bootstrap() {
-      logger.info("Bootstrapping new cluster");
-      raft.bootstrap(Util.getHostName(), service.getClusterPort());
-      service.registerSelf(io.tetrapod.core.registry.Registry.BOOTSTRAP_ID, random.nextLong());
-      //    joinIndex = raft.getLog().getLastIndex();
-      service.checkDependencies();
-   }
+   //   public void bootstrap() {
+   //      logger.info("Bootstrapping new cluster");
+   //      raft.bootstrap(Util.getHostName(), service.getClusterPort());
+   //      service.registerSelf(io.tetrapod.core.registry.Registry.BOOTSTRAP_ID, random.nextLong());
+   //      //    joinIndex = raft.getLog().getLastIndex();
+   //      service.checkDependencies();
+   //   }
+   //
+   //   public void forceBootstrap() {
+   //      logger.warn("FORCE bootstrapping new cluster");
+   //      raft.bootstrap(Util.getHostName(), service.getClusterPort());
+   //   }
 
-   public void forceBootstrap() {
-      logger.warn("FORCE bootstrapping new cluster");
-      raft.bootstrap(Util.getHostName(), service.getClusterPort());
-   }
+   //private void addPeer(AddPeerCommand<TetrapodStateMachine> command) {}
 
-   private void addPeer(AddPeerCommand<TetrapodStateMachine> command) {}
-
-   private void delPeer(DelPeerCommand<TetrapodStateMachine> command, Entry<TetrapodStateMachine> entry) {}
+   //private void delPeer(DelPeerCommand<TetrapodStateMachine> command, Entry<TetrapodStateMachine> entry) {}
 
    public void stop() {
       raft.stop();
@@ -163,81 +190,81 @@ public class TetrapodCluster extends Storage implements RaftRPC<TetrapodStateMac
    /**
     * Looks through raft state for peers we can attempt to join
     */
-   public synchronized boolean joinCluster() {
-      for (Peer peer : state.getPeers()) {
-         if (!(peer.port == service.getClusterPort() && peer.host.equals(Util.getHostName()))) {
-            if (joinCluster(new ServerAddress(peer.host, peer.port))) {
-               return true;
-            }
-         }
-      }
-      return false;
-   }
+   //   public synchronized boolean joinCluster() {
+   //      for (Peer peer : state.getPeers()) {
+   //         if (!(peer.port == service.getClusterPort() && peer.host.equals(Util.getHostName()))) {
+   //            if (joinCluster(new ServerAddress(peer.host, peer.port))) {
+   //               return true;
+   //            }
+   //         }
+   //      }
+   //      return false;
+   //   }
 
    /**
     * Attempts to join the raft cluster by contacting the given node. If we connect, we send a ClusterJoinRequest to obtain a peerId. The
     * peerId is used to derive our entityId, and we expect the raft leader to start giving us the state of the system.
     */
-   public synchronized boolean joinCluster(final ServerAddress address) {
-
-      final Client client = new Client(this);
-      try {
-         client.connect(address.host, address.port, service.getDispatcher(), new Session.Listener() {
-
-            @Override
-            public void onSessionStop(Session ses) {}
-
-            @Override
-            public void onSessionStart(final Session ses) {
-
-               ses.sendRequest(new IssuePeerIdRequest(Util.getHostName(), service.getClusterPort()), Core.DIRECT).handle(
-                     new ResponseHandler() {
-                        @Override
-                        public void onResponse(Response res) {
-                           if (res.isError()) {
-                              logger.error("Unable to Join cluster @ {} : {}", address, res.errorCode());
-                              ses.close();
-                              service.getDispatcher().dispatch(1, TimeUnit.SECONDS, new Runnable() {
-                                 public void run() {
-                                    if (!service.isShuttingDown()) {
-                                       try {
-                                          if (!joinCluster(address)) {
-                                             service.fail("Unable to register");
-                                          }
-                                       } catch (Exception e) {
-                                          service.fail("Unable to register: {}" + e);
-                                       }
-                                    }
-                                 }
-                              });
-                           } else {
-                              final IssuePeerIdResponse r = (IssuePeerIdResponse) res;
-                              final int myEntityId = r.peerId << Registry.PARENT_ID_SHIFT;
-                              ses.setMyEntityId(myEntityId);
-                              ses.setTheirEntityId(r.entityId);
-                              // ses.close();
-
-                              service.registerSelf(myEntityId, service.random.nextLong());
-                              raft.start(r.peerId);
-
-                              // HACK: We need to wait for our loop-back connection to be established
-                              service.dispatcher.dispatch(1, TimeUnit.SECONDS, new Runnable() {
-                                 public void run() {
-                                    addMember(r.entityId, address.host, Core.DEFAULT_SERVICE_PORT, address.port, ses);
-                                    service.checkDependencies();
-                                 }
-                              });
-                           }
-                        }
-
-                     });
-            }
-         }).sync();
-      } catch (Exception e) {
-         logger.error(e.getMessage(), e);
-      }
-      return client.isConnected();
-   }
+   //   public synchronized boolean joinCluster(final ServerAddress address) {
+   //
+   //      final Client client = new Client(this);
+   //      try {
+   //         client.connect(address.host, address.port, service.getDispatcher(), new Session.Listener() {
+   //
+   //            @Override
+   //            public void onSessionStop(Session ses) {}
+   //
+   //            @Override
+   //            public void onSessionStart(final Session ses) {
+   //
+   //               ses.sendRequest(new IssuePeerIdRequest(Util.getHostName(), service.getClusterPort()), Core.DIRECT).handle(
+   //                     new ResponseHandler() {
+   //                        @Override
+   //                        public void onResponse(Response res) {
+   //                           if (res.isError()) {
+   //                              logger.error("Unable to Join cluster @ {} : {}", address, res.errorCode());
+   //                              ses.close();
+   //                              service.getDispatcher().dispatch(1, TimeUnit.SECONDS, new Runnable() {
+   //                                 public void run() {
+   //                                    if (!service.isShuttingDown()) {
+   //                                       try {
+   //                                          if (!joinCluster(address)) {
+   //                                             service.fail("Unable to register");
+   //                                          }
+   //                                       } catch (Exception e) {
+   //                                          service.fail("Unable to register: {}" + e);
+   //                                       }
+   //                                    }
+   //                                 }
+   //                              });
+   //                           } else {
+   //                              final IssuePeerIdResponse r = (IssuePeerIdResponse) res;
+   //                              final int myEntityId = r.peerId << Registry.PARENT_ID_SHIFT;
+   //                              ses.setMyEntityId(myEntityId);
+   //                              ses.setTheirEntityId(r.entityId);
+   //                              // ses.close();
+   //
+   //                              service.registerSelf(myEntityId, service.random.nextLong());
+   //                              raft.start(r.peerId);
+   //
+   //                              // HACK: We need to wait for our loop-back connection to be established
+   //                              service.dispatcher.dispatch(1, TimeUnit.SECONDS, new Runnable() {
+   //                                 public void run() {
+   //                                    addMember(r.entityId, address.host, Core.DEFAULT_SERVICE_PORT, address.port, ses);
+   //                                    service.checkDependencies();
+   //                                 }
+   //                              });
+   //                           }
+   //                        }
+   //
+   //                     });
+   //            }
+   //         }).sync();
+   //      } catch (Exception e) {
+   //         logger.error(e.getMessage(), e);
+   //      }
+   //      return client.isConnected();
+   //   }
 
    public Session getSession(int entityId) {
       final TetrapodPeer pod = cluster.get(entityId);
@@ -280,6 +307,8 @@ public class TetrapodCluster extends Storage implements RaftRPC<TetrapodStateMac
       }
    }
 
+   private long lastStatsLog;
+
    /**
     * Scan our list of known tetrapods and establish a connection to any we are missing
     */
@@ -292,6 +321,20 @@ public class TetrapodCluster extends Storage implements RaftRPC<TetrapodStateMac
                }
             }
          }
+
+         final long now = System.currentTimeMillis();
+         if (now - lastStatsLog > Util.ONE_SECOND * 10) {
+            lastStatsLog = System.currentTimeMillis();
+
+            logStatus();
+
+            if (raft.getRole() == Role.Leader) {
+               // Generate some command activity periodically to ensure things still moving
+               raft.executeCommand(new HealthCheckCommand<TetrapodStateMachine>(), null);
+            }
+
+         }
+
       }
       if (!raft.getLog().isRunning() && !service.isShuttingDown()) {
          service.fail("Raft Log Stopped");
@@ -535,6 +578,13 @@ public class TetrapodCluster extends Storage implements RaftRPC<TetrapodStateMac
 
       logger.info("**************************** requestClusterJoin {} {}", ctx.session, req.dump());
 
+      final TetrapodPeer peer = cluster.get(req.entityId);
+      if (peer == null) {
+         return Response.error(CoreContract.ERROR_INVALID_ENTITY);
+      }
+
+      peer.servicePort = req.servicePort;
+
       ctx.session.setTheirEntityId(req.entityId);
 
       // register them in our registry
@@ -548,16 +598,16 @@ public class TetrapodCluster extends Storage implements RaftRPC<TetrapodStateMac
          final int peerId = req.entityId >> Registry.PARENT_ID_SHIFT;
          if (!raft.isValidPeer(peerId)) {
             // we must have bootstrapped again, so re-add the peer
-            final AddPeerCommand<TetrapodStateMachine> cmd = new AddPeerCommand<>(req.host, req.clusterPort);
-            executeCommand(cmd, null);
+            //final AddPeerCommand<TetrapodStateMachine> cmd = new AddPeerCommand<>(req.host, req.clusterPort);
+            //executeCommand(cmd, null);
          }
       }
       entity.setSession(ctx.session);
 
       // add them to the cluster list
-      if (addMember(req.entityId, req.host, req.servicePort, req.clusterPort, ctx.session)) {
-         service.broadcast(new ClusterMemberMessage(req.entityId, req.host, req.servicePort, req.clusterPort, null), clusterTopic);
-      }
+      //if (addMember(req.entityId, req.host, req.servicePort, req.clusterPort, ctx.session)) {
+      //   service.broadcast(new ClusterMemberMessage(req.entityId, req.host, req.servicePort, req.clusterPort, null), clusterTopic);
+      // }
 
       // subscribe them to our cluster and registry views
       logger.info("**************************** SYNC TO {} {}", ctx.session, req.entityId);
@@ -744,7 +794,7 @@ public class TetrapodCluster extends Storage implements RaftRPC<TetrapodStateMac
    public DistributedLock getLock(String lockKey) {
       return new DistributedLock(lockKey, this);
    }
- 
+
    @Override
    public long increment(String key) {
       final Value<Long> val = new Value<Long>();
@@ -768,18 +818,13 @@ public class TetrapodCluster extends Storage implements RaftRPC<TetrapodStateMac
       logger.info(String.format("#%d: %9s term=%d, lastIndex=%d, lastTerm=%d commitIndex=%d, %s, peers=%d, leader=%d checksum=%016X", raft
             .getPeerId(), raft.getRole(), raft.getCurrentTerm(), raft.getLog().getLastIndex(), raft.getLog().getLastTerm(), raft.getLog()
             .getCommitIndex(), state, raft.getClusterSize(), raft.getLeader(), state.getChecksum()));
-
-      if (raft.getRole() == Role.Leader) {
-         // Generate some command activity periodically to ensure things still moving
-         raft.executeCommand(new HealthCheckCommand<TetrapodStateMachine>(), null);
-      }
    }
 
    public Response requestRaftStats(RaftStatsRequest r, RequestContext ctx) {
       synchronized (raft) {
          int i = 0;
-         int[] peers = new int[state.getPeers().size()];
-         for (Peer p : state.getPeers()) {
+         int[] peers = new int[raft.getPeers().size()];
+         for (RaftEngine.Peer p : raft.getPeers()) {
             peers[i++] = p.peerId << Registry.PARENT_ID_SHIFT;
          }
 

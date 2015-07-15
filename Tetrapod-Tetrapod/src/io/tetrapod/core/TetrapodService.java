@@ -39,7 +39,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
    public final SecureRandom                       random            = new SecureRandom();
 
-   public final io.tetrapod.core.registry.Registry registry;
+   public final io.tetrapod.core.registry.Registry registry          = new io.tetrapod.core.registry.Registry(this);
 
    private Topic                                   clusterTopic;
    private Topic                                   registryTopic;
@@ -63,8 +63,6 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    public TetrapodService() throws IOException {
       super(new TetrapodContract());
 
-      registry = new io.tetrapod.core.registry.Registry(this);
-
       worker = new TetrapodWorker(this);
       addContracts(new StorageContract());
       addContracts(new RaftContract());
@@ -84,27 +82,11 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       logger.info("***** Start Network ***** ");
       logger.info("Joining Cluster: {} {}", address.dump(), otherOpts);
       this.startPaused = otherOpts.get("paused").equals("true");
-      cluster.startListening();
       this.token = token;
+      cluster.startListening();
+      cluster.loadProperties();
+      scheduleHealthCheck();
 
-      String bootstrap = otherOpts.get("bootstrap");
-      if (bootstrap != null && bootstrap.equals("force")) {
-         cluster.bootstrap();
-      } else if (address.host.equals("self")) {
-         if (!cluster.joinCluster()) {
-            if (otherOpts.containsKey("bootstrap")) {
-               cluster.bootstrap();
-            } else {
-               fail("Could not join cluster");
-               System.exit(1);
-            }
-         }
-      } else {
-         if (!cluster.joinCluster(address)) {
-            fail("Could not join cluster @ " + address);
-            System.exit(1);
-         }
-      }
    }
 
    /**
@@ -330,7 +312,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          } catch (Exception e) {
             fail(e);
          }
-         scheduleHealthCheck();
+         // scheduleHealthCheck();
       }
    }
 
@@ -654,7 +636,6 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       final long now = System.currentTimeMillis();
       if (now - lastStatsLog > Util.ONE_MINUTE) {
          registry.logStats();
-         cluster.logStatus();
          lastStatsLog = System.currentTimeMillis();
       }
       for (final EntityInfo e : registry.getChildren()) {
@@ -705,11 +686,11 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
    @Override
    public void messageClusterMember(ClusterMemberMessage m, MessageContext ctx) {
-      synchronized (cluster) {
-         if (cluster.addMember(m.entityId, m.host, m.servicePort, m.clusterPort, null)) {
-            broadcast(new ClusterMemberMessage(m.entityId, m.host, m.servicePort, m.clusterPort, m.uuid), clusterTopic);
-         }
-      }
+      //      synchronized (cluster) {
+      //         if (cluster.addMember(m.entityId, m.host, m.servicePort, m.clusterPort, null)) {
+      //            broadcast(new ClusterMemberMessage(m.entityId, m.host, m.servicePort, m.clusterPort, m.uuid), clusterTopic);
+      //         }
+      //      }
    }
 
    public void subscribeToAdmin(Session ses, int toEntityId) {
@@ -1153,11 +1134,14 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
    @Override
    public Response requestClusterBootstrap(ClusterBootstrapRequest r, RequestContext ctx) {
-      if (!adminAccounts.isValidAdminRequest(ctx, r.adminToken, Admin.RIGHTS_CLUSTER_WRITE)) {
-         return new Error(ERROR_INVALID_RIGHTS);
-      }
-      cluster.forceBootstrap();
-      return Response.SUCCESS;
+
+      return new Error(ERROR_UNSUPPORTED);
+
+      //      if (!adminAccounts.isValidAdminRequest(ctx, r.adminToken, Admin.RIGHTS_CLUSTER_WRITE)) {
+      //         return new Error(ERROR_INVALID_RIGHTS);
+      //      }
+      //      cluster.forceBootstrap();
+      //      return Response.SUCCESS;
    }
 
    @Override
