@@ -4,6 +4,7 @@ import io.tetrapod.core.codegen.CodeGen.TokenizedLine;
 import io.tetrapod.core.utils.FNVHash;
 
 import java.util.*;
+import java.util.regex.*;
 
 class CodeGenContext {
 
@@ -210,6 +211,15 @@ class CodeGenContext {
       }
       if (parts.size() > nameIx + 2 && parts.get(nameIx + 1).equals("=")) {
          defaultValue = parts.get(nameIx + 2);
+         Pattern p = Pattern.compile("(\\d?)\\s*\\^\\s*(\\d+)");
+         Matcher m = p.matcher(defaultValue);
+         if (m.matches()) {
+            String a = m.group(1).isEmpty() ? "2" : m.group(1);
+            String b = m.group(2);
+            defaultValue = Integer.toString((int)Math.pow(Integer.parseInt(a), Integer.parseInt(b)));
+            if (line.comment == null || line.comment.isEmpty())
+               line.comment = a + "^" + b;
+         }
       }
       Field f = new Field();
       f.comment = line.comment;
