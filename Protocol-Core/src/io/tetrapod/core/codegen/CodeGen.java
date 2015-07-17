@@ -377,7 +377,7 @@ public class CodeGen {
    private static boolean isWord(char c) {
       if (Character.isAlphabetic(c)) return true;
       if (Character.isDigit(c)) return true;
-      return c == '_' || c == '.' || c == '-';
+      return c == '_' || c == '.' || c == '-' || c == '^';
    }
 
    private static boolean isDivider(char c) {
