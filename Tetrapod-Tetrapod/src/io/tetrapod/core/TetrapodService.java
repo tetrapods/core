@@ -251,24 +251,39 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       }
    }
 
-   private void loadClusterPropertiesIntoRaft() {
+   private void importClusterPropertiesIntoRaft() {
       if (!Util.getProperty("props.init", false)) {
          logger.warn("###### LOADING CLUSTER PROPERTIES INTO RAFT STATE MACHINE ######");
+
          Properties props = new Properties();
          Launcher.loadClusterProperties(props);
+         String importFile = Util.getProperty("raft.import.properties");
+         if (importFile != null) {
+            Launcher.loadProperties(importFile, props);
+         }
          for (Object key : props.keySet()) {
             cluster.setClusterProperty(new ClusterProperty(key.toString(), false, props.getProperty(key.toString())));
          }
+
+         // secrets
+         props = new Properties();
+
          String secrets = props.getProperty("secrets");
          if (secrets != null) {
-            props = new Properties();
             props.put("secrets", secrets);
             Launcher.loadSecretProperties(props);
-            for (Object key : props.keySet()) {
-               cluster.setClusterProperty(new ClusterProperty(key.toString(), true, props.getProperty(key.toString())));
-            }
          }
 
+         String importSecretsFile = Util.getProperty("raft.import.secret.properties");
+         if (importSecretsFile != null) {
+            Launcher.loadProperties(importSecretsFile, props);
+         }
+
+         for (Object key : props.keySet()) {
+            cluster.setClusterProperty(new ClusterProperty(key.toString(), true, props.getProperty(key.toString())));
+         }
+
+         // save property indicating we've imported
          cluster.setClusterProperty(new ClusterProperty("props.init", false, "true"));
          Util.sleep(1000);
       }
@@ -282,7 +297,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    public void onReadyToServe() {
       logger.info(" ***** READY TO SERVE ***** ");
       if (isStartingUp()) {
-         loadClusterPropertiesIntoRaft();
+         importClusterPropertiesIntoRaft();
          try {
             AuthToken.setSecret(getSharedSecret());
             adminAccounts = new AdminAccounts(cluster);
@@ -361,7 +376,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          secret = AuthToken.generateSharedSecret();
          cluster.setClusterProperty(new ClusterProperty(SHARED_SECRET_KEY, true, secret));
       }
-      return Encryptor.decodeBase64(secret, Base64Dialect.STANDARD);
+      return AESEncryptor.decodeBase64(secret, Base64Dialect.STANDARD);
    }
 
    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1157,6 +1172,15 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    public Response requestUnlock(UnlockRequest r, RequestContext ctx) {
       final DistributedLock lock = new DistributedLock(r.key, r.uuid, cluster);
       lock.unlock();
+      return Response.SUCCESS;
+   }
+
+   @Override
+   public Response requestSnapshot(SnapshotRequest r, RequestContext ctx) {
+      if (!adminAccounts.isValidAdminRequest(ctx, r.adminToken, Admin.RIGHTS_CLUSTER_WRITE)) {
+         return new Error(ERROR_INVALID_RIGHTS);
+      }
+      cluster.snapshot();
       return Response.SUCCESS;
    }
 

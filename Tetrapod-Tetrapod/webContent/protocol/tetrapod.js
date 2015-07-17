@@ -99,5 +99,6 @@ function TP_Tetrapod(server) {
    server.register("request", "Tetrapod", "Lock", 1, 3921081);
    server.register("response", "Tetrapod", "Lock", 1, 7264127);
    server.register("request", "Tetrapod", "Unlock", 1, 426316);
+   server.register("request", "Tetrapod", "Snapshot", 1, 7083092);
 
 }

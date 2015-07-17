@@ -10,12 +10,11 @@ import io.tetrapod.protocol.core.*;
 import io.tetrapod.protocol.raft.*;
 import io.tetrapod.raft.*;
 import io.tetrapod.raft.RaftEngine.Role;
-import io.tetrapod.raft.StateMachine.Peer;
 import io.tetrapod.raft.storage.*;
 
 import java.io.*;
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.slf4j.*;
@@ -356,6 +355,8 @@ public class TetrapodCluster extends Storage implements RaftRPC<TetrapodStateMac
          synchronized (raft) {
             // send properties
             for (ClusterProperty prop : state.props.values()) {
+               prop = new ClusterProperty(prop.key, prop.secret, prop.val);
+               prop.val = AESEncryptor.decryptSaltedAES(prop.val, state.secretKey);
                ses.sendMessage(new ClusterPropertyAddedMessage(prop), MessageHeader.TO_ENTITY, toEntityId);
             }
          }
@@ -369,7 +370,8 @@ public class TetrapodCluster extends Storage implements RaftRPC<TetrapodStateMac
          // send properties
          for (ClusterProperty prop : state.props.values()) {
             // blank out values for protected properties sent to admins
-            prop = new ClusterProperty(prop.key, prop.secret, prop.secret ? "" : prop.val);
+            prop = new ClusterProperty(prop.key, prop.secret, prop.val);
+            prop.val = prop.secret ? "" : AESEncryptor.decryptSaltedAES(prop.val, state.secretKey);
             ses.sendMessage(new ClusterPropertyAddedMessage(prop), MessageHeader.TO_ENTITY, toEntityId);
          }
          for (WebRootDef def : state.webRootDefs.values()) {
@@ -836,6 +838,7 @@ public class TetrapodCluster extends Storage implements RaftRPC<TetrapodStateMac
    ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
    public void setClusterProperty(ClusterProperty property) {
+      property.val = AESEncryptor.encryptSaltedAES(property.val, state.secretKey);
       executeCommand(new SetClusterPropertyCommand(property), null);
    }
 
@@ -869,9 +872,13 @@ public class TetrapodCluster extends Storage implements RaftRPC<TetrapodStateMac
 
    private void onSetClusterPropertyCommand(SetClusterPropertyCommand command) {
       ClusterProperty prop = command.getProperty();
+      prop = new ClusterProperty(prop.key, prop.secret, prop.val);
+      prop.val = AESEncryptor.decryptSaltedAES(prop.val, state.secretKey);
       service.broadcastClusterMessage(new ClusterPropertyAddedMessage(prop));
-      // we don't want to send secret values to admin connections 
-      prop = new ClusterProperty(prop.key, prop.secret, prop.secret ? "" : prop.val);
+
+      if (prop.secret) {
+         prop.val = ""; // we don't want to send secret values to admin connections
+      }
       service.broadcastAdminMessage(new ClusterPropertyAddedMessage(prop));
    }
 
@@ -954,6 +961,14 @@ public class TetrapodCluster extends Storage implements RaftRPC<TetrapodStateMac
          }
       });
       return val.waitForValue();
+   }
+
+   public void snapshot() {
+      try {
+         raft.getLog().saveSnapshot();
+      } catch (IOException e) {
+         throw new RuntimeException(e);
+      }
    }
 
 }

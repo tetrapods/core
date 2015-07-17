@@ -3,7 +3,7 @@ package io.tetrapod.core.storage;
 import io.tetrapod.core.StructureFactory;
 import io.tetrapod.core.serialize.StructureAdapter;
 import io.tetrapod.core.serialize.datasources.TempBufferDataSource;
-import io.tetrapod.core.utils.Util;
+import io.tetrapod.core.utils.*;
 import io.tetrapod.core.web.*;
 import io.tetrapod.protocol.core.*;
 import io.tetrapod.raft.StateMachine;
@@ -11,13 +11,19 @@ import io.tetrapod.raft.storage.*;
 
 import java.io.*;
 import java.net.URL;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
 import java.util.*;
 import java.util.concurrent.*;
+
+import javax.crypto.SecretKey;
 
 /**
  * Tetrapod state machine adds cluster properties, service protocols, and tetrapod web routes
  */
 public class TetrapodStateMachine extends StorageStateMachine<TetrapodStateMachine> {
+
+   public final static int                        TETRAPOD_STATE_FILE_VERSION     = 1;
 
    private static final String                    TETRAPOD_PREF_PREFIX            = "tetrapod.prefs::";
    private static final String                    TETRAPOD_CONTRACT_PREFIX        = "tetrapod.contract::";
@@ -41,6 +47,8 @@ public class TetrapodStateMachine extends StorageStateMachine<TetrapodStateMachi
    public final WebRoutes                         webRoutes                       = new WebRoutes();
    public final ConcurrentMap<String, WebRoot>    webRootDirs                     = new ConcurrentHashMap<>();
 
+   protected SecretKey                            secretKey;
+
    public static class Factory implements StateMachine.Factory<TetrapodStateMachine> {
       public TetrapodStateMachine makeStateMachine() {
          return new TetrapodStateMachine();
@@ -57,15 +65,27 @@ public class TetrapodStateMachine extends StorageStateMachine<TetrapodStateMachi
       AddAdminUserCommand.register(this);
       DelAdminUserCommand.register(this);
       ModAdminUserCommand.register(this);
+      initSecretKey();
    }
 
    @Override
    public void saveState(DataOutputStream out) throws IOException {
+      out.writeInt(TETRAPOD_STATE_FILE_VERSION);
       super.saveState(out);
    }
 
+   private void initSecretKey() {
+      try {
+         final char[] keyPassword = Util.getProperty("raft.tetrapod.key", "??!!deefault!!??").toCharArray();
+         final byte[] keySalt = Util.getProperty("raft.tetrapod.salt", "??!!deesault!!??").getBytes("UTF-8");
+         secretKey = AESEncryptor.makeKey(keyPassword, keySalt);
+      } catch (NoSuchAlgorithmException | InvalidKeySpecException | UnsupportedEncodingException e) {
+         Fail.fail(e);
+      }
+   }
+
    @Override
-   public void loadState(DataInputStream in, int snapshotVersion) throws IOException {
+   public void loadState(DataInputStream in) throws IOException {
       props.clear();
       contracts.clear();
       webRootDefs.clear();
@@ -73,7 +93,12 @@ public class TetrapodStateMachine extends StorageStateMachine<TetrapodStateMachi
       webRootDirs.clear();
       admins.clear();
 
-      super.loadState(in, snapshotVersion);
+      final int fileVersion = in.readInt();
+      if (fileVersion > TETRAPOD_STATE_FILE_VERSION) {
+         throw new IOException("Incompatible Snapshot Format: " + fileVersion + " > " + TETRAPOD_STATE_FILE_VERSION);
+      }
+
+      super.loadState(in);
 
       // iterate over the storage items and extract objects (properties, web roots, contracts)
       for (StorageItem item : items.values()) {
@@ -130,12 +155,16 @@ public class TetrapodStateMachine extends StorageStateMachine<TetrapodStateMachi
 
    public void setProperty(ClusterProperty prop, boolean write) {
       if (write) {
-         // store in state machine as a StorageItem
+         // store in state machine as a StorageItem         
          putItem(TETRAPOD_PREF_PREFIX + prop.key, (byte[]) prop.toRawForm(TempBufferDataSource.forWriting()));
       }
       // keep local caches
       props.put(prop.key, prop);
-      System.setProperty(prop.key, prop.val);
+      try {
+         System.setProperty(prop.key, AESEncryptor.decryptSaltedAES(prop.val, secretKey));
+      } catch (Exception e) {
+         logger.error(e.getMessage(), e);
+      }
    }
 
    public void delProperty(String key) {

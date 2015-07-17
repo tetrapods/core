@@ -10,3 +10,5 @@ jeremy.cluster.properties
 adavidson.hazelcast.xml
 Tetrapod-Tetrapod/cache
 adavidson.orig.cluster.properties
+Tetrapod-Core/rsc/cluster/adavidson.import.cluster.properties
+Tetrapod-Core/rsc/cluster/adavidson.secret.properties

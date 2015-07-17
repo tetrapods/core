@@ -351,3 +351,6 @@ internal request Unlock
    1: string key
    2: string uuid
    
+internal request Snapshot
+   1: string adminToken @sensitive 
+   

@@ -24,6 +24,15 @@ public class Rand {
       return sb.toString();
    }
 
+   public static String nextBase62String(int numDigits) {
+      StringBuilder sb = new StringBuilder();
+      String digits = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+      for (int i = 0; i < numDigits; i++) {
+         sb.append(digits.charAt(nextInt(digits.length())));
+      }
+      return sb.toString();
+   }
+
    public static byte[] bytes(int len) {
       byte[] bytes = new byte[len];
       nextBytes(bytes);

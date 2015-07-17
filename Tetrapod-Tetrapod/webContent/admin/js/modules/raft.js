@@ -151,10 +151,11 @@ define(function(require) {
          });
 
          self.update = update;
-         self.leaveCluster = leaveCluster;
+         //   self.leaveCluster = leaveCluster;
          self.isHealthy = isHealthy;
          self.hasPeer = hasPeer;
-         self.forceBootstrap = forceBootstrap;
+         //self.forceBootstrap = forceBootstrap;
+         self.snapshot = snapshot;
 
          self.update();
 
@@ -221,25 +222,35 @@ define(function(require) {
             return 'fa-question';
          });
 
-         function leaveCluster() {
-            app.server.sendTo("ClusterLeave", {
-               entityId: self.entityId
-            }, cluster.leaderEntityId(), function(info) {
-               if (info.isError()) {
-                  console.error("Cluster Leave Failed");
-               }
-            });
-         }
+         //         function leaveCluster() {
+         //            app.server.sendTo("ClusterLeave", {
+         //               entityId: self.entityId
+         //            }, cluster.leaderEntityId(), function(info) {
+         //               if (info.isError()) {
+         //                  console.error("Cluster Leave Failed");
+         //               }
+         //            });
+         //         }
+         //
+         //         function forceBootstrap() {
+         //            Alert.confirm("Are you sure you want to bootstrap raft with leader = '" + self.entityId + "'?", function() {
+         //               app.server.sendTo("ClusterBootstrap", {
+         //                  adminToken: app.authtoken,
+         //               }, self.entityId, function(info) {
+         //                  if (info.isError()) {
+         //                     console.error("ClusterBootstrap Failed");
+         //                  }
+         //               });
+         //            });
+         //         }
 
-         function forceBootstrap() {
-            Alert.confirm("Are you sure you want to bootstrap raft with leader = '" + self.entityId + "'?", function() {
-               app.server.sendTo("ClusterBootstrap", {
-                  adminToken: app.authtoken,
-               }, self.entityId, function(info) {
-                  if (info.isError()) {
-                     console.error("ClusterBootstrap Failed");
-                  }
-               });
+         function snapshot() {
+            app.server.sendTo("Snapshot", {
+               adminToken: app.authtoken,
+            }, self.entityId, function(info) {
+               if (info.isError()) {
+                  console.error("Snapshot Failed");
+               }
             });
          }
 

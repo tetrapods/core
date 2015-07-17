@@ -52,6 +52,7 @@ public class TetrapodContract extends Contract {
       , SetAlternateIdRequest.Handler
       , SetClusterPropertyRequest.Handler
       , SetWebRootRequest.Handler
+      , SnapshotRequest.Handler
       , UnlockRequest.Handler
       , UnregisterRequest.Handler
       , VerifyEntityTokenRequest.Handler
@@ -95,6 +96,7 @@ public class TetrapodContract extends Contract {
          new DelWebRootRequest(),
          new LockRequest(),
          new UnlockRequest(),
+         new SnapshotRequest(),
       };
    }
    
