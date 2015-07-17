@@ -94,7 +94,12 @@ function TP_Server() {
 
    function registerEnumConst(contractName, structName, constName, constValue) {
       var map = protocol["consts"];
-      var o = map[contractName][structName];
+      var o = map[contractName];
+      if (!o) {
+         o = {};
+         map[contractName] = o; 
+      }
+      o = o[structName];
       if (!o) {
          o = {};
          map[contractName][structName] = o;
@@ -104,22 +109,39 @@ function TP_Server() {
 
    function registerFlagConst(contractName, structName, constName, constValue) {
       var map = protocol["consts"];
-      var o = map[contractName][structName];
+      var o = map[contractName];
+      if (!o) {
+         o = {};
+         map[contractName] = o; 
+      }
+      o = o[structName];
       if (!o) {
          o = {};
          o.on = function(val) {
             return {
                value: val,
-               isAnySet: function(flags) { return (flags & this.value) != 0; },
-               isAllSet: function(flags) { return (flags & this.value) == flags; },
-               isNoneSet: function(flags) { return (flags & this.value) == 0; },
-               set: function(flags) { this.value = this.value | flags; return this; },
-               unset: function(flags) { this.value = this.value & ~flags; return this; }
+               parent: o,
+               isAnySet: function() { return (toFlags(arguments, this.parent) & this.value) != 0; },
+               isSet: function() { return (toFlags(arguments, this.parent) & this.value) == flags; },
+               isNoneSet: function() { return (toFlags(arguments, this.parent) & this.value) == 0; },
+               set: function() { this.value = this.value | toFlags(arguments, this.parent); return this; },
+               unset: function() { this.value = this.value & ~toFlags(arguments, this.parent); return this; },
             };
          };
          map[contractName][structName] = o;
       }
       o[constName] = constValue;
+   }
+   
+   function toFlags(args, parent) {
+      var flags = 0;
+      for (var i = 0; i < args.length; i++) {
+         if (typeof args[i] === "number")
+            flags = flags | args[i];
+         else if (typeof args[i] === "string")
+            flags = flags | parent[args[i]];
+      }
+      return flags;
    }
 
    function consts(name) {
