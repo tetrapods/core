@@ -266,9 +266,10 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          }
 
          // secrets
+         String secrets = props.getProperty("secrets");
+
          props = new Properties();
 
-         String secrets = props.getProperty("secrets");
          if (secrets != null) {
             props.put("secrets", secrets);
             Launcher.loadSecretProperties(props);
