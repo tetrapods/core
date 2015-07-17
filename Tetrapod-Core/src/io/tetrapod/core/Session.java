@@ -211,6 +211,8 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
             Response pendingRes = null;
             try {
                pendingRes = pendingHandler.onResponse(res);
+            } catch (ErrorResponseException e1) {
+               pendingRes = Response.error(e1.errorCode);
             } catch (Throwable e) {
                logger.error(e.getMessage(), e);
             } finally {
