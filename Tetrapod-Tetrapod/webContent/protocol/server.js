@@ -122,7 +122,7 @@ function TP_Server() {
                value: val,
                parent: o,
                isAnySet: function() { return (toFlags(arguments, this.parent) & this.value) != 0; },
-               isSet: function() { return (toFlags(arguments, this.parent) & this.value) == flags; },
+               isSet: function() { var flags = toFlags(arguments, this.parent); return (flags & this.value) == flags; },
                isNoneSet: function() { return (toFlags(arguments, this.parent) & this.value) == 0; },
                set: function() { this.value = this.value | toFlags(arguments, this.parent); return this; },
                unset: function() { this.value = this.value & ~toFlags(arguments, this.parent); return this; },
