@@ -27,7 +27,7 @@ public class Launcher {
    public static void main(String[] args) {
       loadProperties("cfg/service.properties");
       loadClusterProperties();
-      //  loadSecretProperties();
+      loadSecretProperties();
       try {
          if (args.length < 1)
             usage();
