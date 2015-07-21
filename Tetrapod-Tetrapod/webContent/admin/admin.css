@@ -227,6 +227,11 @@
 	background: repeating-linear-gradient(-45deg, yellow, yellow 25%, black 25%, black
 		50%, yellow 50%) top left fixed;
 	background-size: 20px 20px;
+	min-height: 20px;
+}
+
+#cluster-view {
+	background: white;
 }
 
 .host {

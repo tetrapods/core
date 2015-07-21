@@ -57,7 +57,7 @@
          </div>
       </nav>
 
-      <div id="page-wrapper" data-bind="css: {prod: isProd}, stopBinding: true" class="app-bind">
+      <div id="page-wrapper" data-bind="stopBinding: true" class="app-bind">
 
          <div class="row app-bind" id="login-wrapper" align="center" hidden="true">
             <div id="login-form">
@@ -72,12 +72,13 @@
          </div>
 
          <div class="row" id="app-wrapper" hidden="true">
-            <div class="col-lg-12">
+            <div class="col-lg-12" data-bind="css: {prod: isProd}">
                <!--  =============================================================================== -->
                <div id="disconnected-alertbox" class="alert alert-danger" hidden="true">
                   <strong>DISCONNECTED!</strong> Attempting to Reconnect...
                </div>
 
+               <div data-bind="css: {prod: isProd}"></div>
                <div id="cluster-view">
                   <ul id="cluster-tabs" class="nav nav-tabs">
                      <li class="active"><a href="#hosts-tab" data-toggle="tab">Services</a></li>
@@ -95,6 +96,7 @@
                   </div>
                </div>
                <!-- cluster-view -->
+               <div data-bind="css: {prod: isProd}"></div>
                <!--  =============================================================================== -->
 
             </div>
