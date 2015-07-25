@@ -47,7 +47,7 @@ public class TetrapodStateMachine extends StorageStateMachine<TetrapodStateMachi
    public final WebRoutes                         webRoutes                       = new WebRoutes();
    public final ConcurrentMap<String, WebRoot>    webRootDirs                     = new ConcurrentHashMap<>();
 
-   private final Executor                         sequential                      = new ThreadPoolExecutor(0, 1, 5L, TimeUnit.SECONDS,
+   private final Executor                         webRootSequentialExecutor       = new ThreadPoolExecutor(0, 1, 5L, TimeUnit.SECONDS,
                                                                                         new LinkedBlockingQueue<Runnable>());
 
    protected SecretKey                            secretKey;
@@ -184,39 +184,36 @@ public class TetrapodStateMachine extends StorageStateMachine<TetrapodStateMachi
          // store in state machine as a StorageItem
          putItem(TETRAPOD_WEBROOT_PREFIX + def.name, (byte[]) def.toRawForm(TempBufferDataSource.forWriting()));
       }
-      webRootDefs.put(def.name, def);
-      if (def.file != null) {
-         sequential.execute(new Runnable() {
-            public void run() {
-               install(def);
+      // add to local cache, in thread as it could take a while for downloading files
+      webRootSequentialExecutor.execute(new Runnable() {
+         public void run() {
+            try {
+               WebRoot wr = null;
+               if (def.file.startsWith("http")) {
+                  wr = new WebRootLocalFilesystem(def.path, new URL(def.file));
+               } else {
+                  wr = new WebRootLocalFilesystem(def.path, new File(def.file));
+               }
+               webRootDefs.put(def.name, def);
+               webRootDirs.put(def.name, wr);
+            } catch (IOException e) {
+               logger.error(e.getMessage(), e);
             }
-         });
-      }
+         }
+      });
    }
 
-   public void delWebRoot(String name) {
+   public void delWebRoot(final String name) {
       logger.info(" Deleting WebRootDef = {}", name);
       // remove from backing store
       removeItem(TETRAPOD_WEBROOT_PREFIX + name);
-      // remove from local caches
-      webRootDefs.remove(name);
-      webRootDirs.remove(name);
-   }
-
-   private void install(WebRootDef def) {
-      try {
-         WebRoot wr = null;
-         synchronized (webRootDirs) {
-            if (def.file.startsWith("http")) {
-               wr = new WebRootLocalFilesystem(def.path, new URL(def.file));
-            } else {
-               wr = new WebRootLocalFilesystem(def.path, new File(def.file));
-            }
-            webRootDirs.put(def.name, wr);
+      // remove from local caches, needs to happen in sequence with add
+      webRootSequentialExecutor.execute(new Runnable() {
+         public void run() {
+            webRootDefs.remove(name);
+            webRootDirs.remove(name);
          }
-      } catch (IOException e) {
-         logger.error(e.getMessage(), e);
-      }
+      });
    }
 
    public void addAdminUser(final Admin user, boolean write) {
