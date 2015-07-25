@@ -47,6 +47,9 @@ public class TetrapodStateMachine extends StorageStateMachine<TetrapodStateMachi
    public final WebRoutes                         webRoutes                       = new WebRoutes();
    public final ConcurrentMap<String, WebRoot>    webRootDirs                     = new ConcurrentHashMap<>();
 
+   private final Executor                         sequential                      = new ThreadPoolExecutor(0, 1, 5L, TimeUnit.SECONDS,
+                                                                                        new LinkedBlockingQueue<Runnable>());
+
    protected SecretKey                            secretKey;
 
    public static class Factory implements StateMachine.Factory<TetrapodStateMachine> {
@@ -183,7 +186,7 @@ public class TetrapodStateMachine extends StorageStateMachine<TetrapodStateMachi
       }
       webRootDefs.put(def.name, def);
       if (def.file != null) {
-         Util.runThread("Installing WebRoot" + def.name, new Runnable() {
+         sequential.execute(new Runnable() {
             public void run() {
                install(def);
             }
