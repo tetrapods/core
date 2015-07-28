@@ -188,12 +188,14 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
       }
    }
 
-   private Session getSession(Request req, int entityId) {
+   private Session getSession(Request req, int entityId, boolean isPending) {
       if (entityId != Core.DIRECT) {
 
          if (entityId != Core.UNADDRESSED) {
             if (entityId == service.getEntityId()) {
-               logger.warn("For some reason we're sending {} to ourselves", req);
+               if (!isPending) {
+                  logger.warn("For some reason we're sending {} to ourselves", req);                  
+               }
             } else {
                final DirectServiceInfo s = getDirectServiceInfo(entityId);
                synchronized (s) {
@@ -227,7 +229,7 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
          }
       }
 
-      final Session ses = handler.session != null ? getSession(req, toEntityId) : service.clusterClient.getSession();
+      final Session ses = handler.session != null ? getSession(req, toEntityId, true) : service.clusterClient.getSession();
       if (ses != service.clusterClient.getSession()) {
          logger.debug("Dispatching pending {} to {} returning on {}", req, ses, handler.session);
          final Async async = ses.sendRequest(req, toEntityId, (byte) 30);
@@ -279,7 +281,7 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
          return service.dispatchRequest(header, req, null);
       }
 
-      final Session ses = getSession(req, toEntityId);
+      final Session ses = getSession(req, toEntityId, false);
       return ses.sendRequest(req, toEntityId, (byte) 30);
    }
 
