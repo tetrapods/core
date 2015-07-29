@@ -188,14 +188,16 @@ public class TetrapodStateMachine extends StorageStateMachine<TetrapodStateMachi
       webRootSequentialExecutor.execute(new Runnable() {
          public void run() {
             try {
-               WebRoot wr = null;
-               if (def.file.startsWith("http")) {
-                  wr = new WebRootLocalFilesystem(def.path, new URL(def.file));
-               } else {
-                  wr = new WebRootLocalFilesystem(def.path, new File(def.file));
+               if (!Util.isEmpty(def.file) && !Util.isEmpty(def.path)) {
+                  WebRoot wr = null;
+                  if (def.file.startsWith("http")) {
+                     wr = new WebRootLocalFilesystem(def.path, new URL(def.file));
+                  } else {
+                     wr = new WebRootLocalFilesystem(def.path, new File(def.file));
+                  }
+                  webRootDefs.put(def.name, def);
+                  webRootDirs.put(def.name, wr);
                }
-               webRootDefs.put(def.name, def);
-               webRootDirs.put(def.name, wr);
             } catch (IOException e) {
                logger.error(e.getMessage(), e);
             }
