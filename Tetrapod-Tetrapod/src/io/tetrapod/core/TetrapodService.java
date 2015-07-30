@@ -22,7 +22,7 @@ import java.io.*;
 import java.security.SecureRandom;
 import java.util.*;
 import java.util.Properties;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 import org.slf4j.*;
 
@@ -1062,11 +1062,6 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    }
 
    @Override
-   public Response requestClusterLeave(ClusterLeaveRequest r, RequestContext ctx) {
-      return cluster.requestClusterLeave(r, (SessionRequestContext) ctx);
-   }
-
-   @Override
    public Response requestAppendEntries(AppendEntriesRequest r, RequestContext ctx) {
       return cluster.requestAppendEntries(r, ctx);
    }
@@ -1084,12 +1079,6 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    @Override
    public Response requestIssueCommand(IssueCommandRequest r, RequestContext ctx) {
       return cluster.requestIssueCommand(r, ctx);
-   }
-
-   @Override
-   public Response requestIssuePeerId(IssuePeerIdRequest r, RequestContext ctx) {
-      // FIXME: Check ctx to ensure it's tetrapod
-      return cluster.requestIssuePeerId(r, (SessionRequestContext) ctx);
    }
 
    @Override
@@ -1149,18 +1138,6 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    }
 
    @Override
-   public Response requestClusterBootstrap(ClusterBootstrapRequest r, RequestContext ctx) {
-
-      return new Error(ERROR_UNSUPPORTED);
-
-      //      if (!adminAccounts.isValidAdminRequest(ctx, r.adminToken, Admin.RIGHTS_CLUSTER_WRITE)) {
-      //         return new Error(ERROR_INVALID_RIGHTS);
-      //      }
-      //      cluster.forceBootstrap();
-      //      return Response.SUCCESS;
-   }
-
-   @Override
    public Response requestLock(LockRequest r, RequestContext ctx) {
       final DistributedLock lock = cluster.getLock(r.key);
       if (lock.lock(r.leaseMillis, 10000)) {
@@ -1183,6 +1160,49 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       }
       cluster.snapshot();
       return Response.SUCCESS;
+   }
+
+   @Override
+   public Response requestClaimOwnership(ClaimOwnershipRequest r, RequestContext ctx) {
+      if (ctx.header.fromType != TYPE_SERVICE)
+         return new Error(ERROR_INVALID_RIGHTS);
+      try {
+         return cluster.requestClaimOwnership(r, ctx.header.fromId);
+      } finally {
+         logger.info("Returning Claim Ownership : {} ", r.dump());
+      }
+   }
+
+   @Override
+   public Response requestRetainOwnership(RetainOwnershipRequest r, RequestContext ctx) {
+      if (ctx.header.fromType != TYPE_SERVICE)
+         return new Error(ERROR_INVALID_RIGHTS);
+
+      return cluster.requestRetainOwnership(r, ctx.header.fromId);
+   }
+
+   @Override
+   public Response requestReleaseOwnership(ReleaseOwnershipRequest r, RequestContext ctx) {
+      if (ctx.header.fromType != TYPE_SERVICE)
+         return new Error(ERROR_INVALID_RIGHTS);
+
+      return cluster.requestReleaseOwnership(r, ctx.header.fromId);
+   }
+
+   @Override
+   public Response requestSubscribeOwnership(SubscribeOwnershipRequest r, RequestContext ctx) {
+      if (ctx.header.fromType != TYPE_SERVICE)
+         return new Error(ERROR_INVALID_RIGHTS);
+
+      return cluster.requestSubscribeOwnership(r, ctx);
+   }
+
+   @Override
+   public Response requestUnsubscribeOwnership(UnsubscribeOwnershipRequest r, RequestContext ctx) {
+      if (ctx.header.fromType != TYPE_SERVICE)
+         return new Error(ERROR_INVALID_RIGHTS);
+
+      return cluster.requestUnsubscribeOwnership(r, ctx);
    }
 
 }

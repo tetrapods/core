@@ -316,6 +316,10 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
       hitman.start();
    }
 
+   public ServiceCache getServiceCache() {
+      return services;
+   }
+
    protected String getRelaunchToken() {
       return token;
    }

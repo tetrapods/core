@@ -28,16 +28,14 @@ public class TetrapodContract extends Contract {
       , AdminLoginRequest.Handler
       , AdminResetPasswordRequest.Handler
       , AdminSubscribeRequest.Handler
-      , ClusterBootstrapRequest.Handler
+      , ClaimOwnershipRequest.Handler
       , ClusterJoinRequest.Handler
-      , ClusterLeaveRequest.Handler
       , DelClusterPropertyRequest.Handler
       , DelWebRootRequest.Handler
       , ExecuteBuildCommandRequest.Handler
       , GetEntityInfoRequest.Handler
       , GetServiceBuildInfoRequest.Handler
       , GetSubscriberCountRequest.Handler
-      , IssuePeerIdRequest.Handler
       , KeepAliveRequest.Handler
       , LockRequest.Handler
       , LogRegistryStatsRequest.Handler
@@ -46,6 +44,8 @@ public class TetrapodContract extends Contract {
       , RegisterRequest.Handler
       , RegistrySubscribeRequest.Handler
       , RegistryUnsubscribeRequest.Handler
+      , ReleaseOwnershipRequest.Handler
+      , RetainOwnershipRequest.Handler
       , ServiceStatusUpdateRequest.Handler
       , ServicesSubscribeRequest.Handler
       , ServicesUnsubscribeRequest.Handler
@@ -53,18 +53,17 @@ public class TetrapodContract extends Contract {
       , SetClusterPropertyRequest.Handler
       , SetWebRootRequest.Handler
       , SnapshotRequest.Handler
+      , SubscribeOwnershipRequest.Handler
       , UnlockRequest.Handler
       , UnregisterRequest.Handler
+      , UnsubscribeOwnershipRequest.Handler
       , VerifyEntityTokenRequest.Handler
       {}
    
    public Structure[] getRequests() {
       return new Structure[] {
          new RegisterRequest(),
-         new IssuePeerIdRequest(),
          new ClusterJoinRequest(),
-         new ClusterLeaveRequest(),
-         new ClusterBootstrapRequest(),
          new UnregisterRequest(),
          new PublishRequest(),
          new RegistrySubscribeRequest(),
@@ -97,13 +96,17 @@ public class TetrapodContract extends Contract {
          new LockRequest(),
          new UnlockRequest(),
          new SnapshotRequest(),
+         new ClaimOwnershipRequest(),
+         new RetainOwnershipRequest(),
+         new ReleaseOwnershipRequest(),
+         new SubscribeOwnershipRequest(),
+         new UnsubscribeOwnershipRequest(),
       };
    }
    
    public Structure[] getResponses() {
       return new Structure[] {
          new RegisterResponse(),
-         new IssuePeerIdResponse(),
          new PublishResponse(),
          new AdminLoginResponse(),
          new AdminAuthorizeResponse(),
@@ -138,6 +141,9 @@ public class TetrapodContract extends Contract {
          new WebRootRemovedMessage(),
          new AdminUserAddedMessage(),
          new AdminUserRemovedMessage(),
+         new ClaimOwnershipMessage(),
+         new RetainOwnershipMessage(),
+         new ReleaseOwnershipMessage(),
       };
    }
    
@@ -149,6 +155,7 @@ public class TetrapodContract extends Contract {
          new BuildCommand(),
          new ClusterProperty(),
          new WebRootDef(),
+         new Owner(),
       };
    }
    
@@ -184,6 +191,35 @@ public class TetrapodContract extends Contract {
             new ClusterPropertyAddedMessage(),
             new ClusterPropertyRemovedMessage(),
             new ClusterSyncedMessage(),
+         };
+      }
+      
+      public String getName() {
+         return TetrapodContract.NAME;
+      }
+      
+      public int getContractId() {
+         return TetrapodContract.CONTRACT_ID;
+      } 
+       
+      public int getContractVersion() {
+         return TetrapodContract.VERSION;
+      } 
+       
+   }
+      
+   public static class Ownership extends Contract {
+      public static interface API extends
+         ClaimOwnershipMessage.Handler,
+         ReleaseOwnershipMessage.Handler,
+         RetainOwnershipMessage.Handler
+         {}
+         
+      public Structure[] getMessages() {
+         return new Structure[] {
+            new ClaimOwnershipMessage(),
+            new ReleaseOwnershipMessage(),
+            new RetainOwnershipMessage(),
          };
       }
       
@@ -273,6 +309,7 @@ public class TetrapodContract extends Contract {
    public static final int ERROR_INVALID_ACCOUNT = 14623816; 
    public static final int ERROR_INVALID_CREDENTIALS = 8845805; 
    public static final int ERROR_INVALID_UUID = 398174; 
+   public static final int ERROR_ITEM_OWNED = 10331576; 
    public static final int ERROR_NOT_PARENT = 2219555; 
    public static final int ERROR_NOT_READY = 12438466; 
    public static final int ERROR_UNKNOWN_ENTITY_ID = 15576171; 

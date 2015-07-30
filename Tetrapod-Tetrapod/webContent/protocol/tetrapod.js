@@ -22,6 +22,7 @@ function TP_Tetrapod(server) {
    server.registerErrorConst("Tetrapod", "null", "INVALID_ACCOUNT", 14623816);
    server.registerErrorConst("Tetrapod", "null", "INVALID_CREDENTIALS", 8845805);
    server.registerErrorConst("Tetrapod", "null", "INVALID_UUID", 398174);
+   server.registerErrorConst("Tetrapod", "null", "ITEM_OWNED", 10331576);
    server.registerErrorConst("Tetrapod", "null", "NOT_PARENT", 2219555);
    server.registerErrorConst("Tetrapod", "null", "NOT_READY", 12438466);
    server.registerErrorConst("Tetrapod", "null", "UNKNOWN_ENTITY_ID", 15576171);
@@ -29,11 +30,7 @@ function TP_Tetrapod(server) {
    server.register("struct", "Tetrapod", "Entity", 1, 10171140);
    server.register("request", "Tetrapod", "Register", 1, 10895179);
    server.register("response", "Tetrapod", "Register", 1, 13376201);
-   server.register("request", "Tetrapod", "IssuePeerId", 1, 10809624);
-   server.register("response", "Tetrapod", "IssuePeerId", 1, 14036188);
    server.register("request", "Tetrapod", "ClusterJoin", 1, 8294880);
-   server.register("request", "Tetrapod", "ClusterLeave", 1, 12863875);
-   server.register("request", "Tetrapod", "ClusterBootstrap", 1, 3440752);
    server.register("request", "Tetrapod", "Unregister", 1, 3896262);
    server.register("request", "Tetrapod", "Publish", 1, 3171651);
    server.register("response", "Tetrapod", "Publish", 1, 2698673);
@@ -100,5 +97,14 @@ function TP_Tetrapod(server) {
    server.register("response", "Tetrapod", "Lock", 1, 7264127);
    server.register("request", "Tetrapod", "Unlock", 1, 426316);
    server.register("request", "Tetrapod", "Snapshot", 1, 7083092);
+   server.register("struct", "Tetrapod", "Owner", 1, 2276990);
+   server.register("request", "Tetrapod", "ClaimOwnership", 1, 4158859);
+   server.register("request", "Tetrapod", "RetainOwnership", 1, 3539584);
+   server.register("request", "Tetrapod", "ReleaseOwnership", 1, 3927214);
+   server.register("request", "Tetrapod", "SubscribeOwnership", 1, 15739199);
+   server.register("request", "Tetrapod", "UnsubscribeOwnership", 1, 5167974);
+   server.register("message", "Tetrapod", "ClaimOwnership", 1, 500513);
+   server.register("message", "Tetrapod", "RetainOwnership", 1, 12503106);
+   server.register("message", "Tetrapod", "ReleaseOwnership", 1, 9542348);
 
 }

@@ -40,17 +40,18 @@ public class DistributedLock {
          if (attempts++ > 0) {
             Util.sleep(Math.min(1024, 8 * attempts * attempts));
          }
-         raft.executeCommand(new LockCommand<TetrapodStateMachine>(key, uuid, leaseForMillis), new ClientResponseHandler<TetrapodStateMachine>() {
-            @Override
-            public void handleResponse(Entry<TetrapodStateMachine> e) {
-               if (e != null) {
-                  final LockCommand<TetrapodStateMachine> command = (LockCommand<TetrapodStateMachine>) e.getCommand();
-                  acquired.set(command.wasAcquired());
-               } else {
-                  acquired.set(false);
-               }
-            }
-         });
+         raft.executeCommand(new LockCommand<TetrapodStateMachine>(key, uuid, leaseForMillis, System.currentTimeMillis()),
+               new ClientResponseHandler<TetrapodStateMachine>() {
+                  @Override
+                  public void handleResponse(Entry<TetrapodStateMachine> e) {
+                     if (e != null) {
+                        final LockCommand<TetrapodStateMachine> command = (LockCommand<TetrapodStateMachine>) e.getCommand();
+                        acquired.set(command.wasAcquired());
+                     } else {
+                        acquired.set(false);
+                     }
+                  }
+               });
 
          acquired.waitForValue();
          logger.info("\tlock {} value {}", key, acquired.get());

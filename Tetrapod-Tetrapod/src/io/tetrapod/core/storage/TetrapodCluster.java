@@ -21,25 +21,18 @@ import org.slf4j.*;
 
 /**
  * Wraps a RaftEngine in our Tetrapod-RPC and implements the StorageContract via TetrapodStateMachine
- * 
- * Cluster Joining Steps:
- * <ol>
- * <li>Connect to an existing member
- * <li>Ask for a tetrapod peerId
- * <li>For each known member send ClusterJoinRequest to subscribes to that member's registry, discover more peers
- * </ol>
  */
 public class TetrapodCluster extends Storage implements RaftRPC<TetrapodStateMachine>, RaftContract.API,
       StateMachine.Listener<TetrapodStateMachine>, SessionFactory {
 
-   private static final Logger                    logger    = LoggerFactory.getLogger(TetrapodCluster.class);
+   private static final Logger                    logger          = LoggerFactory.getLogger(TetrapodCluster.class);
 
    private final Server                           server;
 
    /**
     * Maps EntityId to TetrapodPeer
     */
-   private final Map<Integer, TetrapodPeer>       cluster   = new ConcurrentHashMap<>();
+   private final Map<Integer, TetrapodPeer>       cluster         = new ConcurrentHashMap<>();
 
    private final TetrapodService                  service;
 
@@ -50,9 +43,19 @@ public class TetrapodCluster extends Storage implements RaftRPC<TetrapodStateMac
    private final Config                           cfg;
 
    /**
+    * Maps key prefixes to Topics
+    */
+   private final Map<String, Topic>               ownershipTopics = new ConcurrentHashMap<>();
+
+   /**
+    * Maps ownerId to set of topics
+    */
+   private final Map<Integer, Set<Topic>>         ownerTopics     = new ConcurrentHashMap<>();
+
+   /**
     * The index of the command we joined the cluster
     */
-   private AtomicLong                             joinIndex = new AtomicLong(-1);
+   private AtomicLong                             joinIndex       = new AtomicLong(-1);
 
    public TetrapodCluster(TetrapodService service) {
       this.service = service;
@@ -128,12 +131,6 @@ public class TetrapodCluster extends Storage implements RaftRPC<TetrapodStateMac
    public void onLogEntryApplied(Entry<TetrapodStateMachine> entry) {
       final Command<TetrapodStateMachine> command = entry.getCommand();
       switch (command.getCommandType()) {
-      //         case StateMachine.COMMAND_ID_ADD_PEER:
-      //            addPeer((AddPeerCommand<TetrapodStateMachine>) command);
-      //            break;
-      //         case StateMachine.COMMAND_ID_DEL_PEER:
-      //            delPeer((DelPeerCommand<TetrapodStateMachine>) command, entry);
-      //            break;
          case SetClusterPropertyCommand.COMMAND_ID:
             onSetClusterPropertyCommand((SetClusterPropertyCommand) command);
             break;
@@ -152,25 +149,17 @@ public class TetrapodCluster extends Storage implements RaftRPC<TetrapodStateMac
          case DelAdminUserCommand.COMMAND_ID:
             onDelAdminUserCommand((DelAdminUserCommand) command);
             break;
+         case ClaimOwnershipCommand.COMMAND_ID:
+            onClaimOwnershipCommand((ClaimOwnershipCommand) command);
+            break;
+         case RetainOwnershipCommand.COMMAND_ID:
+            onRetainOwnershipCommand((RetainOwnershipCommand) command);
+            break;
+         case ReleaseOwnershipCommand.COMMAND_ID:
+            onReleaseOwnershipCommand((ReleaseOwnershipCommand) command);
+            break;
       }
    }
-
-   //   public void bootstrap() {
-   //      logger.info("Bootstrapping new cluster");
-   //      raft.bootstrap(Util.getHostName(), service.getClusterPort());
-   //      service.registerSelf(io.tetrapod.core.registry.Registry.BOOTSTRAP_ID, random.nextLong());
-   //      //    joinIndex = raft.getLog().getLastIndex();
-   //      service.checkDependencies();
-   //   }
-   //
-   //   public void forceBootstrap() {
-   //      logger.warn("FORCE bootstrapping new cluster");
-   //      raft.bootstrap(Util.getHostName(), service.getClusterPort());
-   //   }
-
-   //private void addPeer(AddPeerCommand<TetrapodStateMachine> command) {}
-
-   //private void delPeer(DelPeerCommand<TetrapodStateMachine> command, Entry<TetrapodStateMachine> entry) {}
 
    public void stop() {
       raft.stop();
@@ -185,85 +174,6 @@ public class TetrapodCluster extends Storage implements RaftRPC<TetrapodStateMac
    public int getNumSessions() {
       return server.getNumSessions();
    }
-
-   /**
-    * Looks through raft state for peers we can attempt to join
-    */
-   //   public synchronized boolean joinCluster() {
-   //      for (Peer peer : state.getPeers()) {
-   //         if (!(peer.port == service.getClusterPort() && peer.host.equals(Util.getHostName()))) {
-   //            if (joinCluster(new ServerAddress(peer.host, peer.port))) {
-   //               return true;
-   //            }
-   //         }
-   //      }
-   //      return false;
-   //   }
-
-   /**
-    * Attempts to join the raft cluster by contacting the given node. If we connect, we send a ClusterJoinRequest to obtain a peerId. The
-    * peerId is used to derive our entityId, and we expect the raft leader to start giving us the state of the system.
-    */
-   //   public synchronized boolean joinCluster(final ServerAddress address) {
-   //
-   //      final Client client = new Client(this);
-   //      try {
-   //         client.connect(address.host, address.port, service.getDispatcher(), new Session.Listener() {
-   //
-   //            @Override
-   //            public void onSessionStop(Session ses) {}
-   //
-   //            @Override
-   //            public void onSessionStart(final Session ses) {
-   //
-   //               ses.sendRequest(new IssuePeerIdRequest(Util.getHostName(), service.getClusterPort()), Core.DIRECT).handle(
-   //                     new ResponseHandler() {
-   //                        @Override
-   //                        public void onResponse(Response res) {
-   //                           if (res.isError()) {
-   //                              logger.error("Unable to Join cluster @ {} : {}", address, res.errorCode());
-   //                              ses.close();
-   //                              service.getDispatcher().dispatch(1, TimeUnit.SECONDS, new Runnable() {
-   //                                 public void run() {
-   //                                    if (!service.isShuttingDown()) {
-   //                                       try {
-   //                                          if (!joinCluster(address)) {
-   //                                             service.fail("Unable to register");
-   //                                          }
-   //                                       } catch (Exception e) {
-   //                                          service.fail("Unable to register: {}" + e);
-   //                                       }
-   //                                    }
-   //                                 }
-   //                              });
-   //                           } else {
-   //                              final IssuePeerIdResponse r = (IssuePeerIdResponse) res;
-   //                              final int myEntityId = r.peerId << Registry.PARENT_ID_SHIFT;
-   //                              ses.setMyEntityId(myEntityId);
-   //                              ses.setTheirEntityId(r.entityId);
-   //                              // ses.close();
-   //
-   //                              service.registerSelf(myEntityId, service.random.nextLong());
-   //                              raft.start(r.peerId);
-   //
-   //                              // HACK: We need to wait for our loop-back connection to be established
-   //                              service.dispatcher.dispatch(1, TimeUnit.SECONDS, new Runnable() {
-   //                                 public void run() {
-   //                                    addMember(r.entityId, address.host, Core.DEFAULT_SERVICE_PORT, address.port, ses);
-   //                                    service.checkDependencies();
-   //                                 }
-   //                              });
-   //                           }
-   //                        }
-   //
-   //                     });
-   //            }
-   //         }).sync();
-   //      } catch (Exception e) {
-   //         logger.error(e.getMessage(), e);
-   //      }
-   //      return client.isConnected();
-   //   }
 
    public Session getSession(int entityId) {
       final TetrapodPeer pod = cluster.get(entityId);
@@ -531,49 +441,6 @@ public class TetrapodCluster extends Storage implements RaftRPC<TetrapodStateMac
    ///////////////////////////////////////////////////// REQUEST HANDLERS //////////////////////////////////////////////////////
 
    /**
-    * A new tetrapod is asking to be issued a unique peerId for the cluster. Find the leader and issue a command to generate the next
-    * available peerId
-    */
-   public Response requestIssuePeerId(final IssuePeerIdRequest r, final SessionRequestContext ctx) {
-      for (TetrapodPeer peer : cluster.values()) {
-         if (peer.host.equals(r.host) && peer.clusterPort == r.clusterPort) {
-
-            EntityInfo e = service.registry.getEntity(peer.entityId);
-            if (e != null) {
-               service.registry.clearGone(e, ctx.session);
-            }
-            peer.setSession(ctx.session);
-
-            return new IssuePeerIdResponse(peer.peerId, service.getEntityId(), raft.getLog().getLastTerm(), raft.getLog().getLastIndex());
-         }
-      }
-
-      final ClientResponseHandler<TetrapodStateMachine> handler = new ClientResponseHandler<TetrapodStateMachine>() {
-         @Override
-         public void handleResponse(Entry<TetrapodStateMachine> e) {
-            Response res = Response.error(CoreContract.ERROR_UNKNOWN);
-            try {
-               if (e != null) {
-                  final int peerId = ((AddPeerCommand<TetrapodStateMachine>) e.getCommand()).peerId;
-                  res = new IssuePeerIdResponse(peerId, service.getEntityId(), e.getTerm(), e.getIndex());
-               }
-            } finally {
-               // return the pending result
-               ctx.session.sendResponse(res, ctx.header.requestId);
-            }
-         }
-      };
-      final AddPeerCommand<TetrapodStateMachine> cmd = new AddPeerCommand<>(r.host, r.clusterPort);
-      // if we're the leader we can execute directly
-      if (!raft.executeCommand(cmd, handler)) {
-         // else, send RPC to current leader
-         sendIssueCommand(raft.getLeader(), cmd, handler);
-      }
-
-      return Response.PENDING;
-   }
-
-   /**
     * A tetrapod has contacted us to join the cluster.
     */
    public Response requestClusterJoin(final ClusterJoinRequest req, final Topic clusterTopic, final SessionRequestContext ctx) {
@@ -618,26 +485,6 @@ public class TetrapodCluster extends Storage implements RaftRPC<TetrapodStateMac
       service.subscribeToCluster(ctx.session, req.entityId);
 
       return Response.SUCCESS;
-   }
-
-   /**
-    * Asks this tetrapod to try and leave the cluster.
-    */
-   public Response requestClusterLeave(final ClusterLeaveRequest req, final SessionRequestContext ctx) {
-      if (raft.getPeerId() != 0) {
-         int peerId = req.entityId >> Registry.PARENT_ID_SHIFT;
-         executeCommand(new DelPeerCommand<TetrapodStateMachine>(peerId), new ClientResponseHandler<TetrapodStateMachine>() {
-            @Override
-            public void handleResponse(Entry<TetrapodStateMachine> e) {
-               if (e != null) {
-                  ctx.session.sendResponse(Response.SUCCESS, ctx.header.requestId);
-               } else {
-                  ctx.session.sendResponse(Response.error(CoreContract.ERROR_UNKNOWN), ctx.header.requestId);
-               }
-            }
-         });
-      }
-      return Response.PENDING;
    }
 
    @Override
@@ -971,4 +818,113 @@ public class TetrapodCluster extends Storage implements RaftRPC<TetrapodStateMac
       }
    }
 
+   public Response requestClaimOwnership(ClaimOwnershipRequest r, int entityId) {
+      final Value<Boolean> acquired = new Value<>(false);
+      executeCommand(new ClaimOwnershipCommand(entityId, r.key, r.leaseMillis, System.currentTimeMillis()),
+            new ClientResponseHandler<TetrapodStateMachine>() {
+               @Override
+               public void handleResponse(Entry<TetrapodStateMachine> e) {
+                  if (e != null) {
+                     ClaimOwnershipCommand cmd = (ClaimOwnershipCommand) e.getCommand();
+                     acquired.set(cmd.wasAcquired());
+                  } else {
+                     acquired.set(false);
+                  }
+               }
+            });
+      // FIXME: Don't block this thread, use a PENDING response
+      return acquired.waitForValue() ? Response.SUCCESS : Response.error(TetrapodContract.ERROR_ITEM_OWNED);
+   }
+
+   public Response requestRetainOwnership(RetainOwnershipRequest r, int entityId) {
+      final Value<Boolean> success = new Value<>(false);
+      executeCommand(new RetainOwnershipCommand(entityId, r.leaseMillis, System.currentTimeMillis()),
+            new ClientResponseHandler<TetrapodStateMachine>() {
+               @Override
+               public void handleResponse(Entry<TetrapodStateMachine> e) {
+                  success.set(e != null);
+               }
+            });
+      // FIXME: Don't block this thread, use a PENDING response
+      return success.waitForValue() ? Response.SUCCESS : Response.error(CoreContract.ERROR_UNKNOWN);
+   }
+
+   public Response requestReleaseOwnership(ReleaseOwnershipRequest r, int entityId) {
+      final Value<Boolean> success = new Value<>(false);
+      executeCommand(new ReleaseOwnershipCommand(entityId, r.keys), new ClientResponseHandler<TetrapodStateMachine>() {
+         @Override
+         public void handleResponse(Entry<TetrapodStateMachine> e) {
+            success.set(e != null);
+         }
+      });
+      // FIXME: Don't block this thread, use a PENDING response
+      return success.waitForValue() ? Response.SUCCESS : Response.error(CoreContract.ERROR_UNKNOWN);
+   }
+
+   public Response requestSubscribeOwnership(SubscribeOwnershipRequest r, RequestContext ctx) {
+      Topic topic = null;
+      synchronized (ownershipTopics) {
+         topic = ownershipTopics.get(r.prefix);
+         if (topic == null) {
+            topic = service.registry.publish(service.getEntityId());
+            ownershipTopics.put(r.prefix, topic);
+         }
+         service.subscribe(topic.topicId, ctx.header.fromId);
+
+         // TODO: Send current owners
+      }
+
+      return Response.SUCCESS;
+   }
+
+   public Response requestUnsubscribeOwnership(UnsubscribeOwnershipRequest r, RequestContext ctx) {
+      final Topic topic = ownershipTopics.get(r.prefix);
+      if (topic != null) {
+         service.unsubscribe(topic.topicId, ctx.header.fromId);
+      }
+      return Response.SUCCESS;
+   }
+
+   private void onReleaseOwnershipCommand(ReleaseOwnershipCommand command) {
+      final Message msg = new ReleaseOwnershipMessage(command.getOwnerId(), command.getKeys());
+      final Set<Topic> topics = ownerTopics.get(command.getOwnerId());
+      if (topics != null) {
+         for (Topic topic : topics) {
+            service.broadcast(msg, topic);
+         }
+      }
+      if (command.getKeys() == null) {
+         ownerTopics.remove(command.getOwnerId());
+      }
+   }
+
+   private void onRetainOwnershipCommand(RetainOwnershipCommand command) {
+      final Message msg = new RetainOwnershipMessage(command.getOwnerId(), command.getExpiry());
+      final Set<Topic> topics = ownerTopics.get(command.getOwnerId());
+      if (topics != null) {
+         for (Topic topic : topics) {
+            service.broadcast(msg, topic);
+         }
+      }
+   }
+
+   private void onClaimOwnershipCommand(ClaimOwnershipCommand command) {
+      if (command.wasAcquired()) {
+         final String key = command.getKey();
+         for (String topicName : ownershipTopics.keySet()) {
+            if (key.startsWith(topicName)) {
+               Topic topic = ownershipTopics.get(topicName);
+               if (topic != null) {
+                  Set<Topic> topics = ownerTopics.get(command.getOwnerId());
+                  if (topics == null) {
+                     topics = new HashSet<Topic>();
+                     ownerTopics.put(command.getOwnerId(), topics);
+                  }
+                  topics.add(topic);
+                  service.broadcast(new ClaimOwnershipMessage(command.getOwnerId(), command.getExpiry(), new String[] { key }), topic);
+               }
+            }
+         }
+      }
+   }
 }
