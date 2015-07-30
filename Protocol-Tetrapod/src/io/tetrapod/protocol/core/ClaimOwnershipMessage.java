@@ -21,15 +21,15 @@ public class ClaimOwnershipMessage extends Message {
       defaults();
    }
 
-   public ClaimOwnershipMessage(int entityId, long expiry, String[] keys) {
+   public ClaimOwnershipMessage(int entityId, long expiry, String key) {
       this.entityId = entityId;
       this.expiry = expiry;
-      this.keys = keys;
+      this.key = key;
    }   
    
    public int entityId;
    public long expiry;
-   public String[] keys;
+   public String key;
 
    public final Structure.Security getSecurity() {
       return Security.INTERNAL;
@@ -38,14 +38,14 @@ public class ClaimOwnershipMessage extends Message {
    public final void defaults() {
       entityId = 0;
       expiry = 0;
-      keys = null;
+      key = null;
    }
    
    @Override
    public final void write(DataSource data) throws IOException {
       data.write(1, this.entityId);
       data.write(2, this.expiry);
-      if (this.keys != null) data.write(3, this.keys);
+      data.write(3, this.key);
       data.writeEndTag();
    }
    
@@ -57,7 +57,7 @@ public class ClaimOwnershipMessage extends Message {
          switch (tag) {
             case 1: this.entityId = data.read_int(tag); break;
             case 2: this.expiry = data.read_long(tag); break;
-            case 3: this.keys = data.read_string_array(tag); break;
+            case 3: this.key = data.read_string(tag); break;
             case Codec.END_TAG:
                return;
             default:
@@ -94,7 +94,7 @@ public class ClaimOwnershipMessage extends Message {
       String[] result = new String[3+1];
       result[1] = "entityId";
       result[2] = "expiry";
-      result[3] = "keys";
+      result[3] = "key";
       return result;
    }
    
@@ -109,7 +109,7 @@ public class ClaimOwnershipMessage extends Message {
       desc.types[0] = new TypeDescriptor(TypeDescriptor.T_STRUCT, getContractId(), getStructId());
       desc.types[1] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
       desc.types[2] = new TypeDescriptor(TypeDescriptor.T_LONG, 0, 0);
-      desc.types[3] = new TypeDescriptor(TypeDescriptor.T_STRING_LIST, 0, 0);
+      desc.types[3] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
       return desc;
    }
 }

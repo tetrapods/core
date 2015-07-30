@@ -25,14 +25,14 @@ import org.slf4j.*;
 public class TetrapodCluster extends Storage implements RaftRPC<TetrapodStateMachine>, RaftContract.API,
       StateMachine.Listener<TetrapodStateMachine>, SessionFactory {
 
-   private static final Logger                    logger          = LoggerFactory.getLogger(TetrapodCluster.class);
+   private static final Logger                    logger         = LoggerFactory.getLogger(TetrapodCluster.class);
 
    private final Server                           server;
 
    /**
     * Maps EntityId to TetrapodPeer
     */
-   private final Map<Integer, TetrapodPeer>       cluster         = new ConcurrentHashMap<>();
+   private final Map<Integer, TetrapodPeer>       cluster        = new ConcurrentHashMap<>();
 
    private final TetrapodService                  service;
 
@@ -43,19 +43,19 @@ public class TetrapodCluster extends Storage implements RaftRPC<TetrapodStateMac
    private final Config                           cfg;
 
    /**
-    * Maps key prefixes to Topics
-    */
-   private final Map<String, Topic>               ownershipTopics = new ConcurrentHashMap<>();
-
-   /**
-    * Maps ownerId to set of topics
-    */
-   private final Map<Integer, Set<Topic>>         ownerTopics     = new ConcurrentHashMap<>();
-
-   /**
     * The index of the command we joined the cluster
     */
-   private AtomicLong                             joinIndex       = new AtomicLong(-1);
+   private AtomicLong                             joinIndex      = new AtomicLong(-1);
+
+   /**
+    * Maps key prefixes to Topics
+    */
+   private final Map<Integer, Set<String>>        ownersToTopics = new ConcurrentHashMap<>();
+
+   /**
+    * Maps topics to sessions
+    */
+   private final Map<String, Set<Session>>        topicsToOwners = new ConcurrentHashMap<>();
 
    public TetrapodCluster(TetrapodService service) {
       this.service = service;
@@ -838,7 +838,7 @@ public class TetrapodCluster extends Storage implements RaftRPC<TetrapodStateMac
 
    public Response requestRetainOwnership(RetainOwnershipRequest r, int entityId) {
       final Value<Boolean> success = new Value<>(false);
-      executeCommand(new RetainOwnershipCommand(entityId, r.leaseMillis, System.currentTimeMillis()),
+      executeCommand(new RetainOwnershipCommand(entityId, r.prefix, r.leaseMillis, System.currentTimeMillis()),
             new ClientResponseHandler<TetrapodStateMachine>() {
                @Override
                public void handleResponse(Entry<TetrapodStateMachine> e) {
@@ -851,7 +851,7 @@ public class TetrapodCluster extends Storage implements RaftRPC<TetrapodStateMac
 
    public Response requestReleaseOwnership(ReleaseOwnershipRequest r, int entityId) {
       final Value<Boolean> success = new Value<>(false);
-      executeCommand(new ReleaseOwnershipCommand(entityId, r.keys), new ClientResponseHandler<TetrapodStateMachine>() {
+      executeCommand(new ReleaseOwnershipCommand(entityId, r.prefix, r.keys), new ClientResponseHandler<TetrapodStateMachine>() {
          @Override
          public void handleResponse(Entry<TetrapodStateMachine> e) {
             success.set(e != null);
@@ -861,70 +861,104 @@ public class TetrapodCluster extends Storage implements RaftRPC<TetrapodStateMac
       return success.waitForValue() ? Response.SUCCESS : Response.error(CoreContract.ERROR_UNKNOWN);
    }
 
-   public Response requestSubscribeOwnership(SubscribeOwnershipRequest r, RequestContext ctx) {
-      Topic topic = null;
-      synchronized (ownershipTopics) {
-         topic = ownershipTopics.get(r.prefix);
-         if (topic == null) {
-            topic = service.registry.publish(service.getEntityId());
-            ownershipTopics.put(r.prefix, topic);
+   public Response requestSubscribeOwnership(SubscribeOwnershipRequest r, SessionRequestContext ctx) {
+      synchronized (ownersToTopics) {
+         Set<String> topics = ownersToTopics.get(ctx.header.fromId);
+         if (topics == null) {
+            topics = new HashSet<String>();
+            ownersToTopics.put(ctx.header.fromId, topics);
          }
-         service.subscribe(topic.topicId, ctx.header.fromId);
+         topics.add(r.prefix);
 
-         // TODO: Send current owners
+         Set<Session> owners = topicsToOwners.get(r.prefix);
+         if (owners == null) {
+            owners = new HashSet<Session>();
+            topicsToOwners.put(r.prefix, owners);
+         }
+         owners.add(ctx.session);
+
+         for (Owner owner : state.owners.values()) {
+            for (String key : owner.keys) {
+               if (key.startsWith(r.prefix)) {
+                  ctx.session.sendMessage(new ClaimOwnershipMessage(owner.entityId, owner.expiry, key), MessageHeader.TO_ENTITY,
+                        ctx.header.fromId);
+               }
+            }
+         }
       }
 
       return Response.SUCCESS;
    }
 
    public Response requestUnsubscribeOwnership(UnsubscribeOwnershipRequest r, RequestContext ctx) {
-      final Topic topic = ownershipTopics.get(r.prefix);
-      if (topic != null) {
-         service.unsubscribe(topic.topicId, ctx.header.fromId);
-      }
+      unsubscribeOwnership(ctx.header.fromId);
       return Response.SUCCESS;
    }
 
-   private void onReleaseOwnershipCommand(ReleaseOwnershipCommand command) {
-      final Message msg = new ReleaseOwnershipMessage(command.getOwnerId(), command.getKeys());
-      final Set<Topic> topics = ownerTopics.get(command.getOwnerId());
-      if (topics != null) {
-         for (Topic topic : topics) {
-            service.broadcast(msg, topic);
+   private void unsubscribeOwnership(int entityId) {
+      synchronized (ownersToTopics) {
+         final Set<String> topics = ownersToTopics.remove(entityId);
+         if (topics != null) {
+            for (String topic : topics) {
+               topicsToOwners.get(topic).remove(entityId);
+            }
          }
       }
-      if (command.getKeys() == null) {
-         ownerTopics.remove(command.getOwnerId());
+   }
+
+   private void onReleaseOwnershipCommand(ReleaseOwnershipCommand command) {
+      final Message msg = new ReleaseOwnershipMessage(command.getOwnerId(), command.getPrefix(), command.getKeys());
+
+      synchronized (ownersToTopics) {
+         final Set<Session> owners = topicsToOwners.get(command.getPrefix());
+         if (owners != null) {
+            for (Session ses : owners) {
+               sendOwnershipMessage(msg, ses);
+            }
+         }
       }
    }
 
    private void onRetainOwnershipCommand(RetainOwnershipCommand command) {
-      final Message msg = new RetainOwnershipMessage(command.getOwnerId(), command.getExpiry());
-      final Set<Topic> topics = ownerTopics.get(command.getOwnerId());
-      if (topics != null) {
-         for (Topic topic : topics) {
-            service.broadcast(msg, topic);
+      final Message msg = new RetainOwnershipMessage(command.getOwnerId(), command.getPrefix(), command.getExpiry());
+      synchronized (ownersToTopics) {
+         final Set<Session> owners = topicsToOwners.get(command.getPrefix());
+         if (owners != null) {
+            for (Session ses : owners) {
+               sendOwnershipMessage(msg, ses);
+            }
          }
       }
+
    }
 
    private void onClaimOwnershipCommand(ClaimOwnershipCommand command) {
       if (command.wasAcquired()) {
          final String key = command.getKey();
-         for (String topicName : ownershipTopics.keySet()) {
-            if (key.startsWith(topicName)) {
-               Topic topic = ownershipTopics.get(topicName);
-               if (topic != null) {
-                  Set<Topic> topics = ownerTopics.get(command.getOwnerId());
-                  if (topics == null) {
-                     topics = new HashSet<Topic>();
-                     ownerTopics.put(command.getOwnerId(), topics);
+         final Message msg = new ClaimOwnershipMessage(command.getOwnerId(), command.getExpiry(), key);
+         synchronized (ownersToTopics) {
+            final Set<String> topics = ownersToTopics.get(command.getOwnerId());
+            if (topics != null) {
+               for (String topic : topics) {
+                  if (key.startsWith(topic)) {
+                     final Set<Session> owners = topicsToOwners.get(topic);
+                     if (owners != null) {
+                        for (Session ses : owners) {
+                           sendOwnershipMessage(msg, ses);
+                        }
+                     }
                   }
-                  topics.add(topic);
-                  service.broadcast(new ClaimOwnershipMessage(command.getOwnerId(), command.getExpiry(), new String[] { key }), topic);
                }
             }
          }
+      }
+   }
+
+   private void sendOwnershipMessage(Message msg, Session ses) {
+      if (ses.isConnected()) {
+         ses.sendMessage(msg, MessageHeader.TO_ENTITY, ses.getTheirEntityId());
+      } else {
+         unsubscribeOwnership(ses.getTheirEntityId());
       }
    }
 }

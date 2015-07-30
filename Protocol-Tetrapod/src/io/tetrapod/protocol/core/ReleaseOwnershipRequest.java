@@ -21,10 +21,13 @@ public class ReleaseOwnershipRequest extends Request {
       defaults();
    }
 
-   public ReleaseOwnershipRequest(String[] keys) {
+   public ReleaseOwnershipRequest(String prefix, String[] keys) {
+      this.prefix = prefix;
       this.keys = keys;
    }   
 
+   public String prefix;
+   
    /**
     * pass null for ALL
     */
@@ -35,12 +38,14 @@ public class ReleaseOwnershipRequest extends Request {
    }
 
    public final void defaults() {
+      prefix = null;
       keys = null;
    }
    
    @Override
    public final void write(DataSource data) throws IOException {
-      if (this.keys != null) data.write(1, this.keys);
+      data.write(1, this.prefix);
+      if (this.keys != null) data.write(2, this.keys);
       data.writeEndTag();
    }
    
@@ -50,7 +55,8 @@ public class ReleaseOwnershipRequest extends Request {
       while (true) {
          int tag = data.readTag();
          switch (tag) {
-            case 1: this.keys = data.read_string_array(tag); break;
+            case 1: this.prefix = data.read_string(tag); break;
+            case 2: this.keys = data.read_string_array(tag); break;
             case Codec.END_TAG:
                return;
             default:
@@ -83,8 +89,9 @@ public class ReleaseOwnershipRequest extends Request {
       // Note do not use this tags in long term serializations (to disk or databases) as 
       // implementors are free to rename them however they wish.  A null means the field
       // is not to participate in web serialization (remaining at default)
-      String[] result = new String[1+1];
-      result[1] = "keys";
+      String[] result = new String[2+1];
+      result[1] = "prefix";
+      result[2] = "keys";
       return result;
    }
    
@@ -97,7 +104,8 @@ public class ReleaseOwnershipRequest extends Request {
       desc.tagWebNames = tagWebNames();
       desc.types = new TypeDescriptor[desc.tagWebNames.length];
       desc.types[0] = new TypeDescriptor(TypeDescriptor.T_STRUCT, getContractId(), getStructId());
-      desc.types[1] = new TypeDescriptor(TypeDescriptor.T_STRING_LIST, 0, 0);
+      desc.types[1] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
+      desc.types[2] = new TypeDescriptor(TypeDescriptor.T_STRING_LIST, 0, 0);
       return desc;
    }
 

@@ -21,12 +21,14 @@ public class RetainOwnershipMessage extends Message {
       defaults();
    }
 
-   public RetainOwnershipMessage(int entityId, long expiry) {
+   public RetainOwnershipMessage(int entityId, String prefix, long expiry) {
       this.entityId = entityId;
+      this.prefix = prefix;
       this.expiry = expiry;
    }   
    
    public int entityId;
+   public String prefix;
    public long expiry;
 
    public final Structure.Security getSecurity() {
@@ -35,13 +37,15 @@ public class RetainOwnershipMessage extends Message {
 
    public final void defaults() {
       entityId = 0;
+      prefix = null;
       expiry = 0;
    }
    
    @Override
    public final void write(DataSource data) throws IOException {
       data.write(1, this.entityId);
-      data.write(2, this.expiry);
+      data.write(2, this.prefix);
+      data.write(3, this.expiry);
       data.writeEndTag();
    }
    
@@ -52,7 +56,8 @@ public class RetainOwnershipMessage extends Message {
          int tag = data.readTag();
          switch (tag) {
             case 1: this.entityId = data.read_int(tag); break;
-            case 2: this.expiry = data.read_long(tag); break;
+            case 2: this.prefix = data.read_string(tag); break;
+            case 3: this.expiry = data.read_long(tag); break;
             case Codec.END_TAG:
                return;
             default:
@@ -86,9 +91,10 @@ public class RetainOwnershipMessage extends Message {
       // Note do not use this tags in long term serializations (to disk or databases) as 
       // implementors are free to rename them however they wish.  A null means the field
       // is not to participate in web serialization (remaining at default)
-      String[] result = new String[2+1];
+      String[] result = new String[3+1];
       result[1] = "entityId";
-      result[2] = "expiry";
+      result[2] = "prefix";
+      result[3] = "expiry";
       return result;
    }
    
@@ -102,7 +108,8 @@ public class RetainOwnershipMessage extends Message {
       desc.types = new TypeDescriptor[desc.tagWebNames.length];
       desc.types[0] = new TypeDescriptor(TypeDescriptor.T_STRUCT, getContractId(), getStructId());
       desc.types[1] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
-      desc.types[2] = new TypeDescriptor(TypeDescriptor.T_LONG, 0, 0);
+      desc.types[2] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
+      desc.types[3] = new TypeDescriptor(TypeDescriptor.T_LONG, 0, 0);
       return desc;
    }
 }

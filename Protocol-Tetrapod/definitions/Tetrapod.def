@@ -349,13 +349,15 @@ internal struct Owner
 
 internal request ClaimOwnership
    1: string key
-   2: int leaseMillis   
+   2: int leaseMillis
 
 internal request RetainOwnership
    1: int leaseMillis
+   2: string prefix
    
 internal request ReleaseOwnership
-   1: string[] keys // pass null for ALL   
+   1: string prefix
+   2: string[] keys // pass null for ALL   
    
 internal request SubscribeOwnership
    1: string prefix // subscribes to keys starting with this prefix   
@@ -366,15 +368,17 @@ internal request UnsubscribeOwnership
 internal message Ownership.ClaimOwnership
    1: int entityId   
    2: long expiry
-   3: string[] keys
+   3: string key
        
 internal message Ownership.RetainOwnership
    1: int entityId
-   2: long expiry 
+   2: string prefix
+   3: long expiry 
     
 internal message Ownership.ReleaseOwnership
    1: int entityId
-   2: string[] keys
+   2: string prefix
+   3: string[] keys
    
    
 ##########################################          

@@ -281,16 +281,16 @@ public class TetrapodStateMachine extends StorageStateMachine<TetrapodStateMachi
    }
 
    public boolean claimOwnership(int ownerId, long leaseMillis, String key, long curTime) {
-      logger.info("CLAIM OWNERSHIP COMMAND: {} {} {}", ownerId, leaseMillis, key, curTime);
+      logger.debug("CLAIM OWNERSHIP COMMAND: {} {} {}", ownerId, leaseMillis, key, curTime);
 
       // see if there is a current owner
       final Owner owner = ownedItems.get(key);
       if (owner != null) {
          if (owner.expiry > curTime) {
-            logger.warn("Already owned by {}", owner.dump());
+            logger.debug("Already owned by {}", owner.dump());
             return false;
          } else {
-            releaseOwnership(owner, null);
+            releaseOwnership(owner, null, null);
          }
       }
 
@@ -301,12 +301,12 @@ public class TetrapodStateMachine extends StorageStateMachine<TetrapodStateMachi
       me.expiry = Math.max(me.expiry, leaseMillis + curTime);
       me.keys.add(key);
       saveOwner(me, true);
-      logger.info("**** {} CLAIMED BY {}", key, me.dump());
+      logger.debug("**** {} CLAIMED BY {}", key, me.dump());
       return true;
    }
 
    public void retainOwnership(int ownerId, int leaseMillis, long curTime) {
-      logger.info("RETAIN OWNERSHIP COMMAND: {} {} {}", ownerId, leaseMillis, curTime);
+      logger.debug("RETAIN OWNERSHIP COMMAND: {} {} {}", ownerId, leaseMillis, curTime);
       final Owner me = owners.get(ownerId);
       if (me != null) {
          me.expiry = Math.max(me.expiry, leaseMillis + curTime);
@@ -314,19 +314,21 @@ public class TetrapodStateMachine extends StorageStateMachine<TetrapodStateMachi
       }
    }
 
-   public void releaseOwnership(int ownerId, String[] keys) {
-      logger.info("RELEASE OWNERSHIP COMMAND: {} {}", ownerId, keys);
+   public void releaseOwnership(int ownerId, String prefix, String[] keys) {
+      logger.debug("RELEASE OWNERSHIP COMMAND: {} {} {}", ownerId, prefix, keys);
       final Owner owner = owners.get(ownerId);
       if (owner != null) {
-         releaseOwnership(owner, keys);
+         releaseOwnership(owner, prefix, keys);
       }
    }
 
-   private void releaseOwnership(final Owner owner, String[] keys) {
+   private void releaseOwnership(final Owner owner, String prefix, String[] keys) {
       if (keys == null) {
          for (String k : owner.keys) {
             if (ownedItems.get(k) == owner) {
-               ownedItems.remove(k);
+               if (prefix == null || k.startsWith(prefix)) {
+                  ownedItems.remove(k);
+               }
             }
          }
          removeItem(TETRAPOD_OWNER_PREFIX + owner.entityId);

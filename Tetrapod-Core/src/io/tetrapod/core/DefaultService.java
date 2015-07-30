@@ -155,12 +155,6 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
    }
 
    /**
-    * Called after registration is complete and this service has a valid entityId and is free to make requests into the cluster. Default
-    * implementation is to do nothing.
-    */
-   //public void onRegistered() {}
-
-   /**
     * Called after we've registered and dependencies are all available
     */
    public void onReadyToServe() {}

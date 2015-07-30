@@ -1194,7 +1194,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       if (ctx.header.fromType != TYPE_SERVICE)
          return new Error(ERROR_INVALID_RIGHTS);
 
-      return cluster.requestSubscribeOwnership(r, ctx);
+      return cluster.requestSubscribeOwnership(r, (SessionRequestContext)ctx);
    }
 
    @Override
