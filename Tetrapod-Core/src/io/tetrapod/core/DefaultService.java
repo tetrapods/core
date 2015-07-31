@@ -375,6 +375,10 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
       }
    }
 
+   public boolean isConnected() {
+      return clusterClient.isConnected();
+   }
+
    protected void connectToCluster(final int retrySeconds) {
       if (!isShuttingDown() && !clusterClient.isConnected()) {
          synchronized (clusterMembers) {
