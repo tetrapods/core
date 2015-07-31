@@ -5,6 +5,7 @@ define(function(require) {
    var app = require("app");
    var Service = require("service");
    var Chart = require("chart");
+   var Builder = require("./builder");
 
    return Hosts; // not using new means this returns a constructor function (ie class)
 
@@ -20,6 +21,7 @@ define(function(require) {
       self.findService = findService;
       self.clear = clear;
       self.onClearAllErrors = onClearAllErrors;
+      self.deployBuilds = deployBuilds;
 
       // Timer to update charts
       setInterval(function updateCharts() {
@@ -102,6 +104,17 @@ define(function(require) {
          self.hosts(array);
          return host;
       }
+      
+      function deployBuilds() {
+         var tetrapods = [];
+         for (var i = 0; i < self.services().length; i++) {
+            var s = self.services()[i];
+            if (s.name.indexOf("Tetrapod") == 0) {
+               tetrapods.push(s);
+            }
+         }
+         Builder.load(tetrapods);
+      }
 
       // Host Model
       function Host(hostname) {
@@ -178,7 +191,7 @@ define(function(require) {
                }
             }
             return null;
-         }
+         };
 
          self.addService = function(s) {
             var old = self.findService(s.entityId);
@@ -187,11 +200,11 @@ define(function(require) {
             }
             self.services.push(s);
             self.services.sort(compareServices);
-         }
+         };
 
          self.removeService = function(s) {
             self.services.remove(s);
-         }
+         };
 
          function compareServices(a, b) {
             return (a.entityId - b.entityId);
