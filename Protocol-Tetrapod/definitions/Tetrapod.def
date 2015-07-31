@@ -348,8 +348,9 @@ internal struct Owner
    3: string<list> keys
 
 internal request ClaimOwnership
-   1: string key
-   2: int leaseMillis
+   1: string prefix
+   2: string key
+   3: int leaseMillis
 
 internal request RetainOwnership
    1: int leaseMillis

@@ -280,7 +280,7 @@ public class TetrapodStateMachine extends StorageStateMachine<TetrapodStateMachi
       }
    }
 
-   public boolean claimOwnership(int ownerId, long leaseMillis, String key, long curTime) {
+   public boolean claimOwnership(int ownerId, String prefix, long leaseMillis, String key, long curTime) {
       logger.debug("CLAIM OWNERSHIP COMMAND: {} {} {}", ownerId, leaseMillis, key, curTime);
 
       // see if there is a current owner

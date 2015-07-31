@@ -1166,11 +1166,8 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    public Response requestClaimOwnership(ClaimOwnershipRequest r, RequestContext ctx) {
       if (ctx.header.fromType != TYPE_SERVICE)
          return new Error(ERROR_INVALID_RIGHTS);
-      try {
-         return cluster.requestClaimOwnership(r, ctx.header.fromId);
-      } finally {
-         logger.info("Returning Claim Ownership : {} ", r.dump());
-      }
+      
+      return cluster.requestClaimOwnership(r, ctx.header.fromId);
    }
 
    @Override
@@ -1194,7 +1191,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       if (ctx.header.fromType != TYPE_SERVICE)
          return new Error(ERROR_INVALID_RIGHTS);
 
-      return cluster.requestSubscribeOwnership(r, (SessionRequestContext)ctx);
+      return cluster.requestSubscribeOwnership(r, (SessionRequestContext) ctx);
    }
 
    @Override

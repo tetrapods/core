@@ -820,7 +820,7 @@ public class TetrapodCluster extends Storage implements RaftRPC<TetrapodStateMac
 
    public Response requestClaimOwnership(ClaimOwnershipRequest r, int entityId) {
       final Value<Boolean> acquired = new Value<>(false);
-      executeCommand(new ClaimOwnershipCommand(entityId, r.key, r.leaseMillis, System.currentTimeMillis()),
+      executeCommand(new ClaimOwnershipCommand(entityId, r.prefix, r.key, r.leaseMillis, System.currentTimeMillis()),
             new ClientResponseHandler<TetrapodStateMachine>() {
                @Override
                public void handleResponse(Entry<TetrapodStateMachine> e) {
@@ -862,7 +862,7 @@ public class TetrapodCluster extends Storage implements RaftRPC<TetrapodStateMac
    }
 
    public Response requestSubscribeOwnership(SubscribeOwnershipRequest r, SessionRequestContext ctx) {
-      synchronized (ownersToTopics) {
+      synchronized (topicsToOwners) {
          Set<String> topics = ownersToTopics.get(ctx.header.fromId);
          if (topics == null) {
             topics = new HashSet<String>();
@@ -896,7 +896,7 @@ public class TetrapodCluster extends Storage implements RaftRPC<TetrapodStateMac
    }
 
    private void unsubscribeOwnership(int entityId) {
-      synchronized (ownersToTopics) {
+      synchronized (topicsToOwners) {
          final Set<String> topics = ownersToTopics.remove(entityId);
          if (topics != null) {
             for (String topic : topics) {
@@ -909,7 +909,7 @@ public class TetrapodCluster extends Storage implements RaftRPC<TetrapodStateMac
    private void onReleaseOwnershipCommand(ReleaseOwnershipCommand command) {
       final Message msg = new ReleaseOwnershipMessage(command.getOwnerId(), command.getPrefix(), command.getKeys());
 
-      synchronized (ownersToTopics) {
+      synchronized (topicsToOwners) {
          final Set<Session> owners = topicsToOwners.get(command.getPrefix());
          if (owners != null) {
             for (Session ses : owners) {
@@ -921,7 +921,7 @@ public class TetrapodCluster extends Storage implements RaftRPC<TetrapodStateMac
 
    private void onRetainOwnershipCommand(RetainOwnershipCommand command) {
       final Message msg = new RetainOwnershipMessage(command.getOwnerId(), command.getPrefix(), command.getExpiry());
-      synchronized (ownersToTopics) {
+      synchronized (topicsToOwners) {
          final Set<Session> owners = topicsToOwners.get(command.getPrefix());
          if (owners != null) {
             for (Session ses : owners) {
@@ -934,20 +934,15 @@ public class TetrapodCluster extends Storage implements RaftRPC<TetrapodStateMac
 
    private void onClaimOwnershipCommand(ClaimOwnershipCommand command) {
       if (command.wasAcquired()) {
+         logger.info("**** CLAIMED : {} : {} ", command.getOwnerId(), command.getKey());
+
          final String key = command.getKey();
          final Message msg = new ClaimOwnershipMessage(command.getOwnerId(), command.getExpiry(), key);
-         synchronized (ownersToTopics) {
-            final Set<String> topics = ownersToTopics.get(command.getOwnerId());
-            if (topics != null) {
-               for (String topic : topics) {
-                  if (key.startsWith(topic)) {
-                     final Set<Session> owners = topicsToOwners.get(topic);
-                     if (owners != null) {
-                        for (Session ses : owners) {
-                           sendOwnershipMessage(msg, ses);
-                        }
-                     }
-                  }
+         synchronized (topicsToOwners) {
+            final Set<Session> owners = topicsToOwners.get(command.getPrefix());
+            if (owners != null) {
+               for (Session ses : owners) {
+                  sendOwnershipMessage(msg, ses);
                }
             }
          }
