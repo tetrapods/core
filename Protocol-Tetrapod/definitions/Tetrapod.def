@@ -351,6 +351,10 @@ internal request ClaimOwnership
    1: string prefix
    2: string key
    3: int leaseMillis
+   
+internal response ClaimOwnership   
+   1: int entityId
+   2: long expiry
 
 internal request RetainOwnership
    1: int leaseMillis

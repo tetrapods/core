@@ -396,7 +396,9 @@ public class TetrapodCluster extends Storage implements RaftRPC<TetrapodStateMac
             public void onResponse(Response res) {
                if (res.isError()) {
                   logger.error("IssueCommandRequest {}", res);
-                  handler.handleResponse(null);
+                  if (handler != null) {
+                     handler.handleResponse(null);
+                  }
                } else {
                   if (handler != null) {
                      IssueCommandResponse r = (IssueCommandResponse) res;
@@ -819,21 +821,29 @@ public class TetrapodCluster extends Storage implements RaftRPC<TetrapodStateMac
    }
 
    public Response requestClaimOwnership(ClaimOwnershipRequest r, int entityId) {
-      final Value<Boolean> acquired = new Value<>(false);
+      final Value<ClaimOwnershipCommand> result = new Value<>();
       executeCommand(new ClaimOwnershipCommand(entityId, r.prefix, r.key, r.leaseMillis, System.currentTimeMillis()),
             new ClientResponseHandler<TetrapodStateMachine>() {
                @Override
                public void handleResponse(Entry<TetrapodStateMachine> e) {
-                  if (e != null) {
-                     ClaimOwnershipCommand cmd = (ClaimOwnershipCommand) e.getCommand();
-                     acquired.set(cmd.wasAcquired());
-                  } else {
-                     acquired.set(false);
-                  }
+                  result.set(e != null ? (ClaimOwnershipCommand) e.getCommand() : null);
                }
             });
-      // FIXME: Don't block this thread, use a PENDING response
-      return acquired.waitForValue() ? Response.SUCCESS : Response.error(TetrapodContract.ERROR_ITEM_OWNED);
+      result.waitForValue(); // FIXME: Don't block this thread, use a PENDING response
+
+      ClaimOwnershipCommand c = result.get();
+      if (c != null) {
+         if (c.wasAcquired()) {
+            return new ClaimOwnershipResponse(entityId, c.getExpiry());
+         } else {
+            Owner o = state.ownedItems.get(r.key);
+            if (o != null) {
+               return new ClaimOwnershipResponse(o.entityId, o.expiry);
+            }
+         }
+      }
+
+      return Response.error(CoreContract.ERROR_UNKNOWN);
    }
 
    public Response requestRetainOwnership(RetainOwnershipRequest r, int entityId) {
