@@ -261,7 +261,8 @@ public class TetrapodStateMachine extends StorageStateMachine<TetrapodStateMachi
       // see if there is a current owner
       final Owner owner = ownedItems.get(key);
       if (owner != null) {
-         if (owner.expiry > curTime) {
+         final int graceTime = 1000; // one second of grace time to buffer against an expiry race
+         if (owner.expiry + graceTime > curTime) {
             logger.debug("Already owned by {}", owner.dump());
             return false;
          } else {
