@@ -17,15 +17,24 @@ public class Flags_long<T> {
    }
    
    @SuppressWarnings("unchecked")
-   public T set(int flags) {
+   public T set(long flags) {
       value |= flags;
       return (T)this;
    }
    
    @SuppressWarnings("unchecked")
-   final public T unset(int flags) {
+   final public T unset(long flags) {
       value &= ~flags;
       return (T)this;
    }
 
+   @SuppressWarnings("unchecked")
+   public Flags_long<T> make() {
+      try {
+         return getClass().newInstance();
+      } catch (InstantiationException | IllegalAccessException e) {
+         return null;
+      }
+   }
+   
 }

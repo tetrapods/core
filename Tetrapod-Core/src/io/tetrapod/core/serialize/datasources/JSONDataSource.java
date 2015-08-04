@@ -1,11 +1,16 @@
 package io.tetrapod.core.serialize.datasources;
 
 import io.tetrapod.core.json.*;
+import io.tetrapod.core.rpc.Enum_String;
+import io.tetrapod.core.rpc.Enum_int;
+import io.tetrapod.core.rpc.Flags_int;
+import io.tetrapod.core.rpc.Flags_long;
 import io.tetrapod.core.rpc.Structure;
 import io.tetrapod.core.serialize.*;
 
 import java.io.IOException;
 import java.lang.reflect.Array;
+import java.lang.reflect.Method;
 import java.util.*;
 
 /**
@@ -475,7 +480,127 @@ public class JSONDataSource implements DataSource {
          json.put(k, arr);
       }
    }
+   
+   @Override
+   @SuppressWarnings("unchecked")
+   public <T extends Flags_int<T>> T[] read_flags_int_array(int tag, T struct) throws IOException {
+      JSONArray arr = getJSONArrayOrNull(json, key(tag));
+      if (arr == null) return null;
+      T[] res = (T[]) Array.newInstance(struct.getClass(), arr.length());
+      for (int i = 0; i < res.length; i++) {
+         T inst = i == 0 ? struct : (T) struct.make();
+         res[i] = inst.set(arr.getInt(i));
+      }
+      return res;      
+   }
 
+   @Override
+   @SuppressWarnings("unchecked")
+   public <T extends Flags_long<T>> T[] read_flags_long_array(int tag, T struct) throws IOException {
+      JSONArray arr = getJSONArrayOrNull(json, key(tag));
+      if (arr == null) return null;
+      T[] res = (T[]) Array.newInstance(struct.getClass(), arr.length());
+      for (int i = 0; i < res.length; i++) {
+         T inst = i == 0 ? struct : (T) struct.make();
+         res[i] = inst.set(arr.getLong(i));
+      }
+      return res;
+   }
+   
+   @Override
+   public void write(int tag, Flags_int<?>[] array) throws IOException {
+      String k = key(tag);
+      if (k != null) {
+         int[] intArray = new int[array.length];
+         for(int i=0; i<array.length; i++) {
+            intArray[i] = array[i] == null ? 0 : array[i].value;
+         }
+         JSONArray arr = new JSONArray(intArray);
+         json.put(k, arr);
+      }
+   }
+   
+   @Override
+   public void write(int tag, Flags_long<?>[] array) throws IOException {
+      String k = key(tag);
+      if (k != null) {
+         long[] longArray = new long[array.length];
+         for(int i=0; i<array.length; i++) {
+            longArray[i] = array[i] == null ? 0 : array[i].value;
+         }
+         JSONArray arr = new JSONArray(longArray);
+         json.put(k, arr);
+      }
+   }
+   
+   @Override
+   @SuppressWarnings("unchecked")   
+   public <T extends Enum_int<T>> T[] read_enum_int_array(int tag, Class<T> c) throws IOException {
+      JSONArray arr = getJSONArrayOrNull(json, key(tag));
+      if (arr == null) return null;
+      T[] res = (T[]) Array.newInstance(c, arr.length());
+      try {
+         Method m = c.getMethod("from", int.class);
+         for (int i = 0; i < res.length; i++) {
+            if (arr.get(i) instanceof Integer) {
+               res[i] = (T) m.invoke(null, arr.getInt(i));         
+            }
+         }
+      } catch (Exception e) {
+         throw new IOException(e);
+      }
+      return res;        
+   }
+
+   @Override
+   @SuppressWarnings("unchecked")   
+   public <T extends Enum_String<T>> T[] read_enum_string_array(int tag, Class<T> c) throws IOException {
+      JSONArray arr = getJSONArrayOrNull(json, key(tag));
+      if (arr == null) return null;
+      T[] res = (T[]) Array.newInstance(c, arr.length());
+      try {
+         Method m = c.getMethod("from", String.class);
+         for (int i = 0; i < res.length; i++) {
+            if (arr.get(i) instanceof String) {
+               res[i] = (T) m.invoke(null, arr.getString(i));         
+            }
+         }
+      } catch (Exception e) {
+         throw new IOException(e);
+      }
+      return res;
+   }
+
+   @Override
+   public <T extends Enum_int<T>> void write(int tag, T[] array) throws IOException {
+      String k = key(tag);
+      if (k != null) {
+         Integer[] intArray = new Integer[array.length];
+         for(int i=0; i<array.length; i++) {
+            if (array[i] != null) {
+               intArray[i] = array[i].getValue();
+            }
+         }
+         JSONArray arr = new JSONArray(intArray);
+         json.put(k, arr);
+      }    
+   }
+
+   @Override
+   public <T extends Enum_String<T>> void write(int tag, T[] array) throws IOException {
+      String k = key(tag);
+      if (k != null) {
+         String[] strArray = new String[array.length];
+         for (int i = 0; i < array.length; i++) {
+            if (array[i] != null) {
+               strArray[i] = array[i].getValue();
+            }
+         }
+         JSONArray arr = new JSONArray(strArray);
+         json.put(k, arr);
+      }      
+   }
+   
    protected String key(int tag) {
       return Integer.toString(tag);
    }

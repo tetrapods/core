@@ -1,10 +1,15 @@
 package io.tetrapod.core.serialize.datasources;
 
+import io.tetrapod.core.rpc.Enum_String;
+import io.tetrapod.core.rpc.Flags_int;
+import io.tetrapod.core.rpc.Flags_long;
+import io.tetrapod.core.rpc.Enum_int;
 import io.tetrapod.core.rpc.Structure;
 import io.tetrapod.core.serialize.*;
 
 import java.io.IOException;
 import java.lang.reflect.Array;
+import java.lang.reflect.Method;
 import java.util.*;
 
 /**
@@ -91,7 +96,7 @@ abstract public class StreamDataSource implements DataSource {
       }
       return array;
    }
-   
+
    public List<Integer> read_int_list(int tag) throws IOException {
       readVarInt(); // byte length
       int len = readVarInt();
@@ -101,7 +106,7 @@ abstract public class StreamDataSource implements DataSource {
       }
       return list;
    }
-
+   
    public void write(int tag, int[] array) throws IOException {
       writeTag(tag, TYPE_LENGTH_DELIM);
       TempBufferDataSource temp = getTempBuffer();
@@ -154,7 +159,7 @@ abstract public class StreamDataSource implements DataSource {
       writeVarInt(temp.rawCount());
       writeRawBytes(temp.rawBuffer(), 0, temp.rawCount());
    }
-   
+      
    public void write_long(int tag, List<Long> list) throws IOException {
       writeTag(tag, TYPE_LENGTH_DELIM);
       TempBufferDataSource temp = getTempBuffer();
@@ -425,8 +430,145 @@ abstract public class StreamDataSource implements DataSource {
       writeVarInt(temp.rawCount());
       writeRawBytes(temp.rawBuffer(), 0, temp.rawCount());
    }
+   
+   @SuppressWarnings("unchecked")
+   public <T extends Flags_int<T>> T[] read_flags_int_array(int tag, T struct) throws IOException {
+      readVarInt(); // byte length
+      int len = readVarInt();
+      T[] array = (T[])Array.newInstance(struct.getClass(), len);
+      for (int i = 0; i < len; i++) {
+         T inst = i == 0 ? struct : (T)struct.make();         
+         array[i] = inst.set(readVarInt());
+      }
+      return array;
+   }
+   
+   @SuppressWarnings("unchecked")
+   public <T extends Flags_long<T>> T[] read_flags_long_array(int tag, T struct) throws IOException {
+      readVarInt(); // byte length
+      int len = readVarInt();
+      T[] array = (T[])Array.newInstance(struct.getClass(), len);
+      for (int i = 0; i < len; i++) {
+         T inst = i == 0 ? struct : (T)struct.make();         
+         array[i] = inst.set(readVarLong());
+      }
+      return array;
+   }
+   
+   @Override
+   public void write(int tag, Flags_int<?>[] array) throws IOException {
+      writeTag(tag, TYPE_LENGTH_DELIM);
+      TempBufferDataSource temp = getTempBuffer();
+      temp.writeVarInt(array.length);
+      for (int i = 0; i < array.length; i++) {
+         temp.writeVarInt(array[i] == null ? 0 : array[i].value);
+      }
+      writeVarInt(temp.rawCount());
+      writeRawBytes(temp.rawBuffer(), 0, temp.rawCount());
+   }
+   
+   @Override
+   public void write(int tag, Flags_long<?>[] array) throws IOException {
+      writeTag(tag, TYPE_LENGTH_DELIM);
+      TempBufferDataSource temp = getTempBuffer();
+      temp.writeVarInt(array.length);
+      for (int i = 0; i < array.length; i++) {
+         temp.writeVarLong(array[i] == null ? 0 : array[i].value);
+      }
+      writeVarInt(temp.rawCount());
+      writeRawBytes(temp.rawBuffer(), 0, temp.rawCount());
+   }
 
+   @Override
+   @SuppressWarnings("unchecked")
+   public <T extends Enum_int<T>> T[] read_enum_int_array(int tag, Class<T> c) throws IOException {
+      readVarInt(); // byte length
+      int len = readVarInt();
+      T[] array = (T[])Array.newInstance(c, len);
+      try {
+         Method m = c.getMethod("from", int.class);
+         for (int i = 0; i < len; i++) {
+            if (readVarInt() > 0) {
+               array[i] = (T) m.invoke(null, readVarInt());         
+            }
+         }
+      } catch (Exception e) {
+         throw new IOException(e);
+      }
+      return array;
+   }
+   
+   @Override
+   @SuppressWarnings("unchecked")
+   public <T extends Enum_String<T>> T[] read_enum_string_array(int tag, Class<T> c) throws IOException {
+      readVarInt(); // byte length
+      int len = readVarInt();
+      T[] array = (T[])Array.newInstance(c, len);
+      try {
+         Method m = c.getMethod("from", String.class);
+         for (int i = 0; i < len; i++) {
+            String s = readString();
+            if (s != null) {
+               array[i] = (T) m.invoke(null, s);         
+            }
+         }
+      } catch (Exception e) {
+         throw new IOException(e);
+      }
+      return array;
+   }
+   
+   @Override
+   public <T extends Enum_int<T>> void write(int tag, T[] array) throws IOException {
+      writeTag(tag, TYPE_LENGTH_DELIM);
+      TempBufferDataSource temp = getTempBuffer();
+      temp.writeVarInt(array.length);
+      for (int i = 0; i < array.length; i++) {
+         if (array[i] == null) {
+            temp.writeVarInt(0);
+         } else {
+            temp.writeVarInt(1);            
+            temp.writeVarInt(array[i].getValue());
+         }
+      }
+      writeVarInt(temp.rawCount());
+      writeRawBytes(temp.rawBuffer(), 0, temp.rawCount());
+   }
 
+   @Override
+   public <T extends Enum_String<T>> void write(int tag, T[] array) throws IOException {
+      writeTag(tag, TYPE_LENGTH_DELIM);
+      TempBufferDataSource temp = getTempBuffer();
+      temp.writeVarInt(array.length);
+      for (int i = 0; i < array.length; i++) {
+         temp.writeString(array[i] == null ? null : array[i].getValue());
+      }
+      writeVarInt(temp.rawCount());
+      writeRawBytes(temp.rawBuffer(), 0, temp.rawCount());
+   }
+
+   public String readString() throws IOException {
+      int len = readVarInt();
+      switch(len) {
+         case -1:
+            return null;
+         case 0:
+            return "";
+         default:
+            return new String(readRawBytes(len), "UTF-8");
+      }
+   }
+   
+   public void writeString(String s) throws IOException {
+      if (s == null) {
+         writeVarInt(-1);
+         return;
+      }
+      final byte[] bytes = s.getBytes("UTF-8");
+      writeVarInt(bytes.length);
+      writeRawBytes(bytes);
+   }
+   
    @Override
    public void skip(int tag) throws IOException {
       int bytesToSkip = 0;

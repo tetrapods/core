@@ -1,5 +1,9 @@
 package io.tetrapod.core.serialize;
 
+import io.tetrapod.core.rpc.Enum_String;
+import io.tetrapod.core.rpc.Flags_int;
+import io.tetrapod.core.rpc.Flags_long;
+import io.tetrapod.core.rpc.Enum_int;
 import io.tetrapod.core.rpc.Structure;
 
 import java.io.IOException;
@@ -96,6 +100,22 @@ public interface DataSource {
    public <T extends Structure> void write(int tag, T[] array) throws IOException;
 
    public <T extends Structure> void write_struct(int tag, List<T> list) throws IOException;
+   
+   public <T extends Flags_int<T>> T[] read_flags_int_array(int tag, T struct) throws IOException;
+
+   public <T extends Flags_long<T>> T[] read_flags_long_array(int tag, T struct) throws IOException;
+
+   public void write(int tag, Flags_int<?>[] array) throws IOException;
+   
+   public void write(int tag, Flags_long<?>[] array) throws IOException;
+
+   public <T extends Enum_int<T>> T[] read_enum_int_array(int tag, Class<T> c) throws IOException;
+
+   public <T extends Enum_String<T>> T[] read_enum_string_array(int tag, Class<T> c) throws IOException;
+
+   public <T extends Enum_int<T>> void write(int tag, T[] array) throws IOException;
+
+   public <T extends Enum_String<T>> void write(int tag, T[] array) throws IOException;
 
    public void skip(int tag) throws IOException;
 
