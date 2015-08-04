@@ -57,7 +57,7 @@ abstract class WebSession extends Session {
          JSONDataSource jd = new WebJSONDataSource(jo, payload.tagWebNames());
          payload.write(jd);
          return jo;
-      } catch (IOException e) {
+      } catch (Exception e) {
          logger.error("Could not make web frame for {}", header.dump());
          return null;
       }

@@ -242,6 +242,7 @@ class JavaGenerator implements LanguageGenerator {
       String descStructId = "0";
       String descType = "";
       String descArray = "";
+      String interiorTypePrim = "";
       String interiorType = "";
       if (f.collectionType != null) {
          defaultVal = "null";
@@ -287,15 +288,20 @@ class JavaGenerator implements LanguageGenerator {
             break;
       }
       if (f.interiorType != null) {
-         primTemplate = structTemplate = f.interiorType.startsWith("flag") ? "field.flags" : "field.enum";
-         interiorType = f.interiorType.substring(f.interiorType.indexOf('.')+1);
-         switch (interiorType) {
+         interiorType = f.interiorType.replace('.', '_');
+         interiorTypePrim = f.interiorType.substring(f.interiorType.indexOf('.')+1);
+         if (f.collectionType == null) {
+            primTemplate = structTemplate = f.interiorType.startsWith("flags") ? "field.flags" : "field.enum";
+         } else {
+            primTemplate = structTemplate = f.interiorType.startsWith("flag") ? "field.array.flags" : "field.array.enum";            
+         }
+         switch (interiorTypePrim) {
             case "int": descType = "TypeDescriptor.T_INT"; break;
             case "long": descType = "TypeDescriptor.T_LONG"; break;
             case "string":descType = "TypeDescriptor.T_STRING"; break;
          }
          descContractId = "0";
-         descStructId = "0";
+         descStructId = "0";            
       }
       Template t = template(info.isPrimitive ? primTemplate : structTemplate);
       t.add("tag", f.tag);
@@ -303,6 +309,7 @@ class JavaGenerator implements LanguageGenerator {
       t.add("name", f.name);
       t.add("javatype", info.base);
       t.add("interiortype", interiorType);
+      t.add("interiortypePrim", interiorTypePrim);
       t.add("type", f.type);
       t.add("boxed", info.boxed);
       t.add("descType", descType + descArray);
