@@ -178,6 +178,7 @@ public class TetrapodStateMachine extends StorageStateMachine<TetrapodStateMachi
       try {
          System.setProperty(prop.key, AESEncryptor.decryptSaltedAES(prop.val, secretKey));
       } catch (Exception e) {
+         logger.info("prop = {} : {},  keySalt = {}", prop.key, prop.val, Util.getProperty("raft.tetrapod.salt", "??!!deesault!!??"));
          logger.error(e.getMessage(), e);
       }
    }
