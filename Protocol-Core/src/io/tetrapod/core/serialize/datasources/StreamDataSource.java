@@ -44,7 +44,12 @@ abstract public class StreamDataSource implements DataSource {
    @Override
    public String read_string(int tag) throws IOException {
       int len = readVarInt();
-      return len == 0 ? "" : new String(readRawBytes(len), "UTF-8");
+      if (len == 0)
+         return "";
+      byte[] bytes = readRawBytes(len);
+      if (bytes.length == 1 && bytes[0] == 0)
+         return null;
+      return new String(bytes, "UTF-8");
    }
 
    @Override
@@ -386,6 +391,11 @@ abstract public class StreamDataSource implements DataSource {
 
    protected void writeStringNoTag(String stringval) throws IOException {
       if (stringval == null) {
+         writeVarInt(1);
+         writeRawByte(0);
+         return;
+      }
+      if (stringval.isEmpty()) {
          writeVarInt(0);
          return;
       }
@@ -507,7 +517,7 @@ abstract public class StreamDataSource implements DataSource {
       try {
          Method m = c.getMethod("from", String.class);
          for (int i = 0; i < len; i++) {
-            String s = readString();
+            String s = read_string(0);
             if (s != null) {
                array[i] = (T) m.invoke(null, s);         
             }
@@ -541,34 +551,12 @@ abstract public class StreamDataSource implements DataSource {
       TempBufferDataSource temp = getTempBuffer();
       temp.writeVarInt(array.length);
       for (int i = 0; i < array.length; i++) {
-         temp.writeString(array[i] == null ? null : array[i].getValue());
+         temp.writeStringNoTag(array[i] == null ? null : array[i].getValue());
       }
       writeVarInt(temp.rawCount());
       writeRawBytes(temp.rawBuffer(), 0, temp.rawCount());
    }
 
-   public String readString() throws IOException {
-      int len = readVarInt();
-      switch(len) {
-         case -1:
-            return null;
-         case 0:
-            return "";
-         default:
-            return new String(readRawBytes(len), "UTF-8");
-      }
-   }
-   
-   public void writeString(String s) throws IOException {
-      if (s == null) {
-         writeVarInt(-1);
-         return;
-      }
-      final byte[] bytes = s.getBytes("UTF-8");
-      writeVarInt(bytes.length);
-      writeRawBytes(bytes);
-   }
-   
    @Override
    public void skip(int tag) throws IOException {
       int bytesToSkip = 0;
