@@ -24,6 +24,14 @@ public class ByteBufDataSource extends StreamDataSource {
    @Override
    public String read_string(int tag) throws IOException {
       int len = readVarInt();
+      
+      if (len == 1) {
+         byte b = buffer.readByte();
+         if (b == 0)
+            return null;
+         return new String(new byte[] { b }, "UTF-8");
+      }
+      
       String s = buffer.toString(buffer.readerIndex(), len, Charset.forName("UTF-8"));
       buffer.skipBytes(len);
       return s;
