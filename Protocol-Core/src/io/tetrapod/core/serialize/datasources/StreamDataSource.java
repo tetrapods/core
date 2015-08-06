@@ -498,7 +498,7 @@ abstract public class StreamDataSource implements DataSource {
       try {
          Method m = c.getMethod("from", int.class);
          for (int i = 0; i < len; i++) {
-            if (readVarInt() > 0) {
+            if (readRawByte() > 0) {
                array[i] = (T) m.invoke(null, readVarInt());         
             }
          }
@@ -535,9 +535,9 @@ abstract public class StreamDataSource implements DataSource {
       temp.writeVarInt(array.length);
       for (int i = 0; i < array.length; i++) {
          if (array[i] == null) {
-            temp.writeVarInt(0);
+            temp.writeRawByte(0);
          } else {
-            temp.writeVarInt(1);            
+            temp.writeRawByte(1);            
             temp.writeVarInt(array[i].getValue());
          }
       }
