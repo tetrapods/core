@@ -831,7 +831,7 @@ public class TetrapodCluster extends Storage implements RaftRPC<TetrapodStateMac
             });
       result.waitForValue(); // FIXME: Don't block this thread, use a PENDING response
 
-      ClaimOwnershipCommand c = result.get();
+      final ClaimOwnershipCommand c = result.get();
       if (c != null) {
          if (c.wasAcquired()) {
             return new ClaimOwnershipResponse(entityId, c.getExpiry());

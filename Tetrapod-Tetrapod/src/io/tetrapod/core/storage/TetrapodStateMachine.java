@@ -178,6 +178,7 @@ public class TetrapodStateMachine extends StorageStateMachine<TetrapodStateMachi
       try {
          System.setProperty(prop.key, AESEncryptor.decryptSaltedAES(prop.val, secretKey));
       } catch (Exception e) {
+         logger.info("prop = {} : {},  keySalt = {}", prop.key, prop.val, Util.getProperty("raft.tetrapod.salt", "??!!deesault!!??"));
          logger.error(e.getMessage(), e);
       }
    }
@@ -282,7 +283,7 @@ public class TetrapodStateMachine extends StorageStateMachine<TetrapodStateMachi
    }
 
    public void retainOwnership(int ownerId, int leaseMillis, long curTime) {
-      logger.debug("RETAIN OWNERSHIP COMMAND: {} {} {}", ownerId, leaseMillis, curTime);
+      logger.trace("RETAIN OWNERSHIP COMMAND: {} {} {}", ownerId, leaseMillis, curTime);
       final Owner me = owners.get(ownerId);
       if (me != null) {
          me.expiry = Math.max(me.expiry, leaseMillis + curTime);
