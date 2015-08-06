@@ -110,6 +110,7 @@ public class TetrapodCluster extends Storage implements RaftRPC<TetrapodStateMac
       try {
          server.start().sync();
       } catch (Exception e) {
+         raft.stop();
          service.fail(e);
       }
    }
