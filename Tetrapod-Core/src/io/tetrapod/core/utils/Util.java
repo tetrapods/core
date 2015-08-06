@@ -117,6 +117,14 @@ public class Util {
       }
       return res;
    }
+   
+   public static List<Integer> toList(int[] array) {
+      List<Integer> list = new ArrayList<Integer>(array.length);
+      for (int i = 0; i < array.length; i++) {
+          list.add(array[i]);
+      }
+      return list;
+   }
 
    public static byte[] readFile(File f) throws IOException {
       return Files.readAllBytes(f.toPath());
@@ -255,6 +263,40 @@ public class Util {
       }
       for (int i = 0; i < array.length(); i++) {
          result.add(array.getInt(i));
+      }
+      return result;
+   }
+   
+
+   public static Set<String> jsonArrayToStringSet(JSONArray array) {
+      Set<String> result = new HashSet<>();
+      if (array == null) {
+         return result;
+      }
+      for (int i = 0; i < array.length(); i++) {
+         result.add(array.getString(i));
+      }
+      return result;
+   }
+
+   public static Set<Integer> jsonArrayToIntegerSet(JSONArray array) {
+      Set<Integer> result = new HashSet<>();
+      if (array == null) {
+         return result;
+      }
+      for (int i = 0; i < array.length(); i++) {
+         result.add(array.getInt(i));
+      }
+      return result;
+   }
+   
+   public static Set<Long> jsonArrayToLongSet(JSONArray array) {
+      Set<Long> result = new HashSet<>();
+      if (array == null) {
+         return result;
+      }
+      for (int i = 0; i < array.length(); i++) {
+         result.add(array.getLong(i));
       }
       return result;
    }

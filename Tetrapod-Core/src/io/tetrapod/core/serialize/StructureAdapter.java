@@ -23,7 +23,10 @@ public class StructureAdapter extends Structure {
    public void write(DataSource data) throws IOException {
       for (int i = 1; i < description.types.length; i++) {
          Object val = fields[i];
-         if (val == null)
+         // string is the only actual null value we pass through on the wire, for all other
+         // fields null is illegal and means "unset", or null is legal but must correspond to 
+         // default value since all non-primitives have default of null
+         if (val == null && (description.types[i] == null || description.types[i].type != T_STRING))
             continue;
          switch (description.types[i].type) {
             case T_BYTE_LIST:
