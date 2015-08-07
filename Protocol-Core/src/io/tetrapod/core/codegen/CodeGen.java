@@ -53,6 +53,7 @@ public class CodeGen {
          services.add("ticket");
          services.add("kpi");
          services.add("dat");
+         services.add("phone");
       }
       if (langs.isEmpty()) {
          System.out.println("using defaults for languages");
