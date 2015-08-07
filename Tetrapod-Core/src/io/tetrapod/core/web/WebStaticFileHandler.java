@@ -110,16 +110,16 @@ class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRequest> 
       String uri = request.getUri();
       FileResult result = getURI(uri);
 
-      if (result == null) {
-         sendError(ctx, NOT_FOUND);
-         return;
-      }
-
-      if (result.isDirectory) {
+      if (uri.endsWith("admin")) {
          HttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, MOVED_PERMANENTLY);
          response.headers().set(LOCATION, uri + "/");
          response.headers().set(CONNECTION, "close");
          ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
+         return;
+      }
+
+      if (result == null) {
+         sendError(ctx, NOT_FOUND);
          return;
       }
 
