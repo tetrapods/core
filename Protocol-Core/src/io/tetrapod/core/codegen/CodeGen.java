@@ -52,7 +52,6 @@ public class CodeGen {
          services.add("twitter");
          services.add("ticket");
          services.add("kpi");
-         services.add("dat");
          services.add("phone");
       }
       if (langs.isEmpty()) {
