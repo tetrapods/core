@@ -395,7 +395,13 @@ public class WebHttpSession extends WebSession {
       } else {
          if (jo.has("__httpOverride")) {
             ByteBuf buf = WebContext.makeByteBufResult(jo.optString("__httpPayload"));
-            FullHttpResponse httpResponse = new DefaultFullHttpResponse(HTTP_1_1, OK, buf);
+            HttpResponseStatus status;
+            if (jo.has("__httpStatus")) {
+               status = HttpResponseStatus.valueOf(jo.getInt("__httpStatus"));
+            } else {
+               status = OK;
+            }
+            FullHttpResponse httpResponse = new DefaultFullHttpResponse(HTTP_1_1, status, buf);
             httpResponse.headers().set(CONTENT_TYPE, jo.optString("__httpMime", "text/json"));
             httpResponse.headers().set(CONTENT_LENGTH, httpResponse.content().readableBytes());
             if (jo.has("__httpDisposition")) {
