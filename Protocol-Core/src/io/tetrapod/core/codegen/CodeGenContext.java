@@ -308,7 +308,7 @@ class CodeGenContext {
          for (Field f : c.fields) {
             ClassLike fg = flags.get(f.type);
             if (fg != null) {
-               f.interiorType = "flag." + fg.fields.get(0).type;
+               f.interiorType = "flags." + fg.fields.get(0).type;
                continue;
             }
             fg = enums.get(f.type);

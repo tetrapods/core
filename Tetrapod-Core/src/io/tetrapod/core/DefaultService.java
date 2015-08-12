@@ -155,12 +155,6 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
    }
 
    /**
-    * Called after registration is complete and this service has a valid entityId and is free to make requests into the cluster. Default
-    * implementation is to do nothing.
-    */
-   //public void onRegistered() {}
-
-   /**
     * Called after we've registered and dependencies are all available
     */
    public void onReadyToServe() {}
@@ -316,6 +310,10 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
       hitman.start();
    }
 
+   public ServiceCache getServiceCache() {
+      return services;
+   }
+
    protected String getRelaunchToken() {
       return token;
    }
@@ -375,6 +373,10 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
             }
          });
       }
+   }
+
+   public boolean isConnected() {
+      return clusterClient.isConnected();
    }
 
    protected void connectToCluster(final int retrySeconds) {

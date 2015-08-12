@@ -1,7 +1,7 @@
 public {{javatype}} {{name}};
 {{name}} = {{javatype}}.on(0);
-case {{tag}}: this.{{name}} = {{javatype}}.on(data.read_{{interiortype}}(tag)); break;
-data.write({{tag}}, this.{{name}} == null ? ({{interiortype}})0 : this.{{name}}.value);
+case {{tag}}: this.{{name}} = {{javatype}}.on(data.read_{{interiortypePrim}}(tag)); break;
+data.write({{tag}}, this.{{name}} == null ? ({{interiortypePrim}})0 : this.{{name}}.value);
 {{javatype}} {{name}}
 this.{{name}} = {{name}};
 

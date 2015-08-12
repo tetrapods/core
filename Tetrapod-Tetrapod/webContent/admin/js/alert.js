@@ -22,7 +22,8 @@ define(function(require) {
       confirm: confirm,
       confirmWarn: confirmWarn,
       prompt: prompt,
-      promptChoose: promptChoose
+      promptChoose: promptChoose,
+      progress: progress
    }
    
    function info(message, callback) {
@@ -111,6 +112,29 @@ define(function(require) {
          escapeButtonCloses: false,
          overlayClosesOnClick: false
       });
+   }
+   
+   function progress(initialContent) {
+      var $vexContent = vex.open({
+         escapeButtonCloses: false,
+         overlayClosesOnClick: false,
+         showCloseButton: false
+      });
+      $vexContent.append("<div class='dynamicvex'>" + initialContent + "</div>");
+      return {
+         replace: function(newContent) {
+            var c = "<div class='dynamicvex'>" + newContent + "</div>";
+            $vexContent.find(".dynamicvex").replaceWith(c);
+         },
+         close: function() {
+            vex.close($vexContent.data().vex.id);
+         },
+         addClose: function() {
+            var $b = vexDialog.buttonsToDOM([ makeVexButton("Close") ]);
+            $vexContent.append($b);
+            $vexContent.append("<div style='height:1.5em'></div>");
+         }
+      }
    }
    
    function makeVexButton(text, val, className) {

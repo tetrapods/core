@@ -33,7 +33,7 @@ public class Dispatcher {
    public final Meter                     messagesSentCounter    = Metrics.meter(Dispatcher.class, "messages-sent", "count");
 
    public Dispatcher() {
-      this(Util.getProperty("tetrapod.dispatcher.threads", 8));
+      this(Util.getProperty("tetrapod.dispatcher.threads", 32));
    }
 
    public Dispatcher(int maxThreads) {

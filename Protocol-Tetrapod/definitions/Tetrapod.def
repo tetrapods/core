@@ -9,6 +9,7 @@ service Tetrapod @version(1) @id(1)
 error HOSTNAME_MISMATCH
 error INVALID_CREDENTIALS
 error INVALID_UUID
+error ITEM_OWNED
 
 ################################# STRUCTURES #################################
 
@@ -39,16 +40,6 @@ public response Register
    2: int parentId
    3: string token
 
-internal request IssuePeerId
-   1: string host
-   2: int clusterPort
-   
-internal response IssuePeerId
-   1: int peerId   // our new peerId 
-   2: int entityId // of the host we are talking to
-   3: long term    // term of command that issued the peerId
-   4: long index   // index of command that issued the peerId
-
 internal request ClusterJoin
    1: int build
    2: int status
@@ -56,12 +47,7 @@ internal request ClusterJoin
    4: int entityId
    5: int servicePort
    6: int clusterPort
-   
-internal request ClusterLeave
-   1: int entityId      
-   
-internal request ClusterBootstrap
-   1: string adminToken @sensitive
+    
 
 internal request Unregister
    1: int entityId
@@ -354,3 +340,50 @@ internal request Unlock
 internal request Snapshot
    1: string adminToken @sensitive 
    
+########### OWNERSHIP SERVICES ###########    
+
+internal struct Owner
+   1: int entityId
+   2: long expiry
+   3: string<list> keys
+
+internal request ClaimOwnership
+   1: string prefix
+   2: string key
+   3: int leaseMillis
+   
+internal response ClaimOwnership   
+   1: int entityId
+   2: long expiry
+
+internal request RetainOwnership
+   1: int leaseMillis
+   2: string prefix
+   
+internal request ReleaseOwnership
+   1: string prefix
+   2: string[] keys // pass null for ALL   
+   
+internal request SubscribeOwnership
+   1: string prefix // subscribes to keys starting with this prefix   
+   
+internal request UnsubscribeOwnership
+   1: string prefix // unsubscribes to keys starting with this prefix   
+   
+internal message Ownership.ClaimOwnership
+   1: int entityId   
+   2: long expiry
+   3: string key
+       
+internal message Ownership.RetainOwnership
+   1: int entityId
+   2: string prefix
+   3: long expiry 
+    
+internal message Ownership.ReleaseOwnership
+   1: int entityId
+   2: string prefix
+   3: string[] keys
+   
+   
+##########################################          

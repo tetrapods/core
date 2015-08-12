@@ -1,4 +1,4 @@
-<h3>Cluster Hosts &amp; Services</h3>
+<h3>Cluster Hosts &amp; Services <button style="float:right" class="btn btn-sm" data-bind="click: deployBuilds">Deploy</button></h3>
 
 <div data-bind="foreach: hosts" class="host">
 
@@ -75,11 +75,7 @@
                         <li class="divider"></li>
                         <li><a href="#" data-bind="click: showErrors, visible: hasErrorsOrWarnings()">Show Errors</a></li>
                         <li><a href="#" data-bind="click: clearErrors, visible: hasErrorsOrWarnings()">Clear Errors</a></li>
-                        <li><a href="#" data-bind="click: setCommsLogLevel">Set Comms Log Level...</a>
-                        <li data-bind="visible: name=='Tetrapod'" class="divider"></li>
-                        <li><a href="#" data-bind="visible: name=='Tetrapod', click: function() { popupBuild(); }">Deploy</a>
-                        <li class="divider"></li>
-
+                        <li><a href="#" data-bind="click: setCommsLogLevel">Set Comms Log Level...</a></li>
                         <li><a href="#" data-bind="click: pause, visible: canPause()">
                               <i class="fa fa-pause fa-fw"></i>Pause
                            </a></li>

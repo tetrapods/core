@@ -117,7 +117,15 @@
             <div class="modal-body">
                <form>
                   <div class="row">
-                     <div class="col-md-6">
+                     <div class="col-md-4" data-bind="foreach: modalData().hosts">
+                        <div class="checkbox">
+                           <label>
+                              <input type="checkbox" data-bind="checked: isChecked">
+                              <span data-bind="text: name"></span>
+                           </label>
+                        </div>
+                     </div>
+                     <div class="col-md-4">
                         <div class="form-group">
                            <div class="checkbox">
                               <label>
@@ -149,13 +157,12 @@
                               placeholder="default" />
                         </div>
                      </div>
-                     <div class="col-md-6">
+                     <div class="col-md-4">
                         <div class="form-group" data-bind="foreach: modalData().services">
-                           <div class="checkbox">
+                           <div class="checkbox" data-bind="attr: { title: 'deployed: ' + current }">
                               <label>
                                  <input type="checkbox" data-bind="checked: isChecked">
                                  <span data-bind="text: name"></span>
-                                 <span data-bind="text: '(' + current + ')'" class="text-muted small"></span>
                               </label>
                            </div>
                         </div>

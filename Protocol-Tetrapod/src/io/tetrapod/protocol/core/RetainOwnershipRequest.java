@@ -12,59 +12,36 @@ import java.util.*;
 import java.util.concurrent.*;
 
 @SuppressWarnings("unused")
-public class IssuePeerIdResponse extends Response {
-   
-   public static final int STRUCT_ID = 14036188;
+public class RetainOwnershipRequest extends Request {
+
+   public static final int STRUCT_ID = 3539584;
    public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;
-    
-   public IssuePeerIdResponse() {
+   
+   public RetainOwnershipRequest() {
       defaults();
    }
 
-   public IssuePeerIdResponse(int peerId, int entityId, long term, long index) {
-      this.peerId = peerId;
-      this.entityId = entityId;
-      this.term = term;
-      this.index = index;
+   public RetainOwnershipRequest(int leaseMillis, String prefix) {
+      this.leaseMillis = leaseMillis;
+      this.prefix = prefix;
    }   
-   
-   /**
-    * our new peerId
-    */
-   public int peerId;
-   
-   /**
-    * of the host we are talking to
-    */
-   public int entityId;
-   
-   /**
-    * term of command that issued the peerId
-    */
-   public long term;
-   
-   /**
-    * index of command that issued the peerId
-    */
-   public long index;
+
+   public int leaseMillis;
+   public String prefix;
 
    public final Structure.Security getSecurity() {
       return Security.INTERNAL;
    }
 
    public final void defaults() {
-      peerId = 0;
-      entityId = 0;
-      term = 0;
-      index = 0;
+      leaseMillis = 0;
+      prefix = null;
    }
    
    @Override
    public final void write(DataSource data) throws IOException {
-      data.write(1, this.peerId);
-      data.write(2, this.entityId);
-      data.write(3, this.term);
-      data.write(4, this.index);
+      data.write(1, this.leaseMillis);
+      data.write(2, this.prefix);
       data.writeEndTag();
    }
    
@@ -74,10 +51,8 @@ public class IssuePeerIdResponse extends Response {
       while (true) {
          int tag = data.readTag();
          switch (tag) {
-            case 1: this.peerId = data.read_int(tag); break;
-            case 2: this.entityId = data.read_int(tag); break;
-            case 3: this.term = data.read_long(tag); break;
-            case 4: this.index = data.read_long(tag); break;
+            case 1: this.leaseMillis = data.read_int(tag); break;
+            case 2: this.prefix = data.read_string(tag); break;
             case Codec.END_TAG:
                return;
             default:
@@ -86,40 +61,48 @@ public class IssuePeerIdResponse extends Response {
          }
       }
    }
-  
+   
    public final int getContractId() {
-      return IssuePeerIdResponse.CONTRACT_ID;
+      return RetainOwnershipRequest.CONTRACT_ID;
    }
 
    public final int getStructId() {
-      return IssuePeerIdResponse.STRUCT_ID;
+      return RetainOwnershipRequest.STRUCT_ID;
    }
-
+   
+   @Override
+   public final Response dispatch(ServiceAPI is, RequestContext ctx) {
+      if (is instanceof Handler)
+         return ((Handler)is).requestRetainOwnership(this, ctx);
+      return is.genericRequest(this, ctx);
+   }
+   
+   public static interface Handler extends ServiceAPI {
+      Response requestRetainOwnership(RetainOwnershipRequest r, RequestContext ctx);
+   }
+   
    public final String[] tagWebNames() {
       // Note do not use this tags in long term serializations (to disk or databases) as 
       // implementors are free to rename them however they wish.  A null means the field
       // is not to participate in web serialization (remaining at default)
-      String[] result = new String[4+1];
-      result[1] = "peerId";
-      result[2] = "entityId";
-      result[3] = "term";
-      result[4] = "index";
+      String[] result = new String[2+1];
+      result[1] = "leaseMillis";
+      result[2] = "prefix";
       return result;
    }
-
+   
    public final Structure make() {
-      return new IssuePeerIdResponse();
+      return new RetainOwnershipRequest();
    }
-
+   
    public final StructDescription makeDescription() {
       StructDescription desc = new StructDescription();
       desc.tagWebNames = tagWebNames();
       desc.types = new TypeDescriptor[desc.tagWebNames.length];
       desc.types[0] = new TypeDescriptor(TypeDescriptor.T_STRUCT, getContractId(), getStructId());
       desc.types[1] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
-      desc.types[2] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
-      desc.types[3] = new TypeDescriptor(TypeDescriptor.T_LONG, 0, 0);
-      desc.types[4] = new TypeDescriptor(TypeDescriptor.T_LONG, 0, 0);
+      desc.types[2] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
       return desc;
    }
- }
+
+}
