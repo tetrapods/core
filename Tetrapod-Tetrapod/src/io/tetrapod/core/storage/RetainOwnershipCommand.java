@@ -12,13 +12,15 @@ public class RetainOwnershipCommand implements Command<TetrapodStateMachine> {
    private int             ownerId;
    private int             leaseMillis;
    private long            curTime;
+   private String          prefix;
 
    public RetainOwnershipCommand() {}
 
-   public RetainOwnershipCommand(int ownerId, int leaseMillis, long curTime) {
+   public RetainOwnershipCommand(int ownerId, String prefix, int leaseMillis, long curTime) {
       this.ownerId = ownerId;
       this.leaseMillis = leaseMillis;
       this.curTime = curTime;
+      this.prefix = prefix;
    }
 
    @Override
@@ -29,6 +31,7 @@ public class RetainOwnershipCommand implements Command<TetrapodStateMachine> {
    @Override
    public void write(DataOutputStream out) throws IOException {
       out.writeInt(ownerId);
+      out.writeUTF(prefix);
       out.writeInt(leaseMillis);
       out.writeLong(curTime);
    }
@@ -36,6 +39,7 @@ public class RetainOwnershipCommand implements Command<TetrapodStateMachine> {
    @Override
    public void read(DataInputStream in, int fileVersion) throws IOException {
       ownerId = in.readInt();
+      prefix = in.readUTF();
       leaseMillis = in.readInt();
       curTime = in.readLong();
    }
@@ -47,7 +51,7 @@ public class RetainOwnershipCommand implements Command<TetrapodStateMachine> {
 
    @Override
    public String toString() {
-      return "RetainOwnershipCommand(" + ownerId + ", " + leaseMillis + ")";
+      return "RetainOwnershipCommand(" + ownerId + ", " + prefix + ", " + leaseMillis + ")";
    }
 
    public static void register(TetrapodStateMachine state) {
@@ -61,6 +65,10 @@ public class RetainOwnershipCommand implements Command<TetrapodStateMachine> {
 
    public int getOwnerId() {
       return ownerId;
+   }
+
+   public String getPrefix() {
+      return prefix;
    }
 
    public long getExpiry() {

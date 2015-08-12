@@ -28,4 +28,13 @@ public class Flags_int<T> {
       return (T)this;
    }
 
+   @SuppressWarnings("unchecked")
+   public Flags_int<T> make() {
+      try {
+         return getClass().newInstance();
+      } catch (InstantiationException | IllegalAccessException e) {
+         return null;
+      }
+   }
+   
 }

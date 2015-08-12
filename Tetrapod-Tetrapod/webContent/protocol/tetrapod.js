@@ -99,6 +99,7 @@ function TP_Tetrapod(server) {
    server.register("request", "Tetrapod", "Snapshot", 1, 7083092);
    server.register("struct", "Tetrapod", "Owner", 1, 2276990);
    server.register("request", "Tetrapod", "ClaimOwnership", 1, 4158859);
+   server.register("response", "Tetrapod", "ClaimOwnership", 1, 16599817);
    server.register("request", "Tetrapod", "RetainOwnership", 1, 3539584);
    server.register("request", "Tetrapod", "ReleaseOwnership", 1, 3927214);
    server.register("request", "Tetrapod", "SubscribeOwnership", 1, 15739199);

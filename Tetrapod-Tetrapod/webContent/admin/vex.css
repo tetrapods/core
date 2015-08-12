@@ -703,16 +703,13 @@ body.vex-open {
   -webkit-box-shadow: inset 0 1px #a6a6a6, 0 0 0 1px rgba(0, 0, 0, 0.08);
   -moz-box-shadow: inset 0 1px #a6a6a6, 0 0 0 1px rgba(0, 0, 0, 0.08);
   box-shadow: inset 0 1px #a6a6a6, 0 0 0 1px rgba(0, 0, 0, 0.08);
-  font-family: "Helvetica Neue", sans-serif;
-  border-top: 20px solid #bbbbbb;
-  background: #f0f0f0;
+  background: #e0e0e0;
   color: #444444;
   padding: 1em;
   position: relative;
   margin: 0 auto;
   max-width: 100%;
   width: 450px;
-  font-size: 1.1em;
   line-height: 1.5em;
 }
 /* line 38, ../sass/vex-theme-os.sass */
@@ -753,8 +750,8 @@ body.vex-open {
 }
 /* line 63, ../sass/vex-theme-os.sass */
 .vex.vex-theme-os .vex-close:hover:before, .vex.vex-theme-os .vex-close:active:before {
-  color: #777777;
-  background: #e0e0e0;
+  color: #666;
+  background: #d0d0d0;
 }
 /* line 69, ../sass/vex-theme-os.sass */
 .vex.vex-theme-os .vex-dialog-form .vex-dialog-message {
@@ -847,8 +844,8 @@ body.vex-open {
 }
 /* line 122, ../sass/vex-theme-os.sass */
 .vex.vex-theme-os .vex-dialog-button.vex-dialog-button-secondary {
-  background: #e0e0e0;
-  color: #777777;
+  background: #d0d0d0;
+  color: #666;
 }
 
 /* line 126, ../sass/vex-theme-os.sass */

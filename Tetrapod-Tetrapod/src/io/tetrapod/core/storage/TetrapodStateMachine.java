@@ -10,11 +10,10 @@ import io.tetrapod.raft.StateMachine;
 import io.tetrapod.raft.storage.*;
 
 import java.io.*;
-import java.net.URL;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.crypto.SecretKey;
 
@@ -54,9 +53,7 @@ public class TetrapodStateMachine extends StorageStateMachine<TetrapodStateMachi
    public final Map<Integer, Owner>               owners                          = new ConcurrentHashMap<>();
    public final Map<String, Owner>                ownedItems                      = new ConcurrentHashMap<>();
 
-   private final Executor                         webRootSequentialExecutor       = new ThreadPoolExecutor(0, 1, 5L, TimeUnit.SECONDS,
-                                                                                        new LinkedBlockingQueue<Runnable>());
-
+   private final WebRootInstaller                 webInstaller                    = new WebRootInstaller(this);
    protected SecretKey                            secretKey;
 
    public static class Factory implements StateMachine.Factory<TetrapodStateMachine> {
@@ -199,38 +196,16 @@ public class TetrapodStateMachine extends StorageStateMachine<TetrapodStateMachi
          // store in state machine as a StorageItem
          putItem(TETRAPOD_WEBROOT_PREFIX + def.name, (byte[]) def.toRawForm(TempBufferDataSource.forWriting()));
       }
-      // add to local cache, in thread as it could take a while for downloading files
-      webRootSequentialExecutor.execute(new Runnable() {
-         public void run() {
-            try {
-               if (!Util.isEmpty(def.file) && !Util.isEmpty(def.path)) {
-                  WebRoot wr = null;
-                  if (def.file.startsWith("http")) {
-                     wr = new WebRootLocalFilesystem(def.path, new URL(def.file));
-                  } else {
-                     wr = new WebRootLocalFilesystem(def.path, new File(def.file));
-                  }
-                  webRootDefs.put(def.name, def);
-                  webRootDirs.put(def.name, wr);
-               }
-            } catch (IOException e) {
-               logger.error(e.getMessage(), e);
-            }
-         }
-      });
+      webRootDefs.put(def.name, def);
+      webInstaller.install(def);
    }
 
    public void delWebRoot(final String name) {
       logger.info(" Deleting WebRootDef = {}", name);
       // remove from backing store
       removeItem(TETRAPOD_WEBROOT_PREFIX + name);
-      // remove from local caches, needs to happen in sequence with add
-      webRootSequentialExecutor.execute(new Runnable() {
-         public void run() {
-            webRootDefs.remove(name);
-            webRootDirs.remove(name);
-         }
-      });
+      webRootDefs.remove(name);
+      webInstaller.uninstall(name);
    }
 
    public void addAdminUser(final Admin user, boolean write) {
@@ -280,17 +255,18 @@ public class TetrapodStateMachine extends StorageStateMachine<TetrapodStateMachi
       }
    }
 
-   public boolean claimOwnership(int ownerId, long leaseMillis, String key, long curTime) {
-      logger.info("CLAIM OWNERSHIP COMMAND: {} {} {}", ownerId, leaseMillis, key, curTime);
+   public boolean claimOwnership(int ownerId, String prefix, long leaseMillis, String key, long curTime) {
+      logger.debug("CLAIM OWNERSHIP COMMAND: {} {} {}", ownerId, leaseMillis, key, curTime);
 
       // see if there is a current owner
       final Owner owner = ownedItems.get(key);
       if (owner != null) {
-         if (owner.expiry > curTime) {
-            logger.warn("Already owned by {}", owner.dump());
+         final int graceTime = 1000; // one second of grace time to buffer against an expiry race
+         if (owner.expiry + graceTime > curTime) {
+            logger.debug("Already owned by {}", owner.dump());
             return false;
          } else {
-            releaseOwnership(owner, null);
+            releaseOwnership(owner, null, null);
          }
       }
 
@@ -301,12 +277,12 @@ public class TetrapodStateMachine extends StorageStateMachine<TetrapodStateMachi
       me.expiry = Math.max(me.expiry, leaseMillis + curTime);
       me.keys.add(key);
       saveOwner(me, true);
-      logger.info("**** {} CLAIMED BY {}", key, me.dump());
+      logger.debug("**** {} CLAIMED BY {}", key, me.dump());
       return true;
    }
 
    public void retainOwnership(int ownerId, int leaseMillis, long curTime) {
-      logger.info("RETAIN OWNERSHIP COMMAND: {} {} {}", ownerId, leaseMillis, curTime);
+      logger.trace("RETAIN OWNERSHIP COMMAND: {} {} {}", ownerId, leaseMillis, curTime);
       final Owner me = owners.get(ownerId);
       if (me != null) {
          me.expiry = Math.max(me.expiry, leaseMillis + curTime);
@@ -314,19 +290,21 @@ public class TetrapodStateMachine extends StorageStateMachine<TetrapodStateMachi
       }
    }
 
-   public void releaseOwnership(int ownerId, String[] keys) {
-      logger.info("RELEASE OWNERSHIP COMMAND: {} {}", ownerId, keys);
+   public void releaseOwnership(int ownerId, String prefix, String[] keys) {
+      logger.debug("RELEASE OWNERSHIP COMMAND: {} {} {}", ownerId, prefix, keys);
       final Owner owner = owners.get(ownerId);
       if (owner != null) {
-         releaseOwnership(owner, keys);
+         releaseOwnership(owner, prefix, keys);
       }
    }
 
-   private void releaseOwnership(final Owner owner, String[] keys) {
+   private void releaseOwnership(final Owner owner, String prefix, String[] keys) {
       if (keys == null) {
          for (String k : owner.keys) {
             if (ownedItems.get(k) == owner) {
-               ownedItems.remove(k);
+               if (prefix == null || k.startsWith(prefix)) {
+                  ownedItems.remove(k);
+               }
             }
          }
          removeItem(TETRAPOD_OWNER_PREFIX + owner.entityId);

@@ -10,6 +10,7 @@ public class ClaimOwnershipCommand implements Command<TetrapodStateMachine> {
    public static final int COMMAND_ID = TetrapodStateMachine.CLAIM_OWNERSHIP_COMMAND_ID;
 
    private int             ownerId;
+   private String          prefix;
    private String          key;
    private int             leaseMillis;
    private boolean         acquired;
@@ -17,8 +18,9 @@ public class ClaimOwnershipCommand implements Command<TetrapodStateMachine> {
 
    public ClaimOwnershipCommand() {}
 
-   public ClaimOwnershipCommand(int ownerId, String key, int leaseMillis, long curTime) {
+   public ClaimOwnershipCommand(int ownerId, String prefix, String key, int leaseMillis, long curTime) {
       this.ownerId = ownerId;
+      this.prefix = prefix;
       this.key = key;
       this.leaseMillis = leaseMillis;
       this.curTime = curTime;
@@ -26,12 +28,13 @@ public class ClaimOwnershipCommand implements Command<TetrapodStateMachine> {
 
    @Override
    public void applyTo(TetrapodStateMachine state) {
-      acquired = state.claimOwnership(ownerId, leaseMillis, key, curTime);
+      acquired = state.claimOwnership(ownerId, prefix, leaseMillis, key, curTime);
    }
 
    @Override
    public void write(DataOutputStream out) throws IOException {
       out.writeInt(ownerId);
+      out.writeUTF(prefix);
       out.writeUTF(key);
       out.writeInt(leaseMillis);
       out.writeLong(curTime);
@@ -41,6 +44,10 @@ public class ClaimOwnershipCommand implements Command<TetrapodStateMachine> {
    @Override
    public void read(DataInputStream in, int fileVersion) throws IOException {
       ownerId = in.readInt();
+      if (fileVersion >= 3)
+         prefix = in.readUTF();
+      else
+         prefix = "";
       key = in.readUTF();
       leaseMillis = in.readInt();
       curTime = in.readLong();
@@ -72,6 +79,10 @@ public class ClaimOwnershipCommand implements Command<TetrapodStateMachine> {
 
    public String getKey() {
       return key;
+   }
+
+   public String getPrefix() {
+      return prefix;
    }
 
    public int getOwnerId() {

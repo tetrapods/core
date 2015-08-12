@@ -276,10 +276,6 @@ define(["knockout", "jquery", "bootbox", "app", "chart", "modules/builder"], fun
          self.counterChart.updatePlot(60000, self.counter());
       }
 
-      self.popupBuild = function() {
-         builder.load(self.entityId);
-      }
-
       var LogConsts = app.server.consts["Core.ServiceLogEntry"];
 
       var levels = [LogConsts.LEVEL_ALL, LogConsts.LEVEL_TRACE, LogConsts.LEVEL_DEBUG, LogConsts.LEVEL_INFO, LogConsts.LEVEL_WARN, LogConsts.LEVEL_ERROR, LogConsts.LEVEL_OFF];

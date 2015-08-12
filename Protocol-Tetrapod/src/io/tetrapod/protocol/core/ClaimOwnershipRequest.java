@@ -21,11 +21,13 @@ public class ClaimOwnershipRequest extends Request {
       defaults();
    }
 
-   public ClaimOwnershipRequest(String key, int leaseMillis) {
+   public ClaimOwnershipRequest(String prefix, String key, int leaseMillis) {
+      this.prefix = prefix;
       this.key = key;
       this.leaseMillis = leaseMillis;
    }   
 
+   public String prefix;
    public String key;
    public int leaseMillis;
 
@@ -34,14 +36,16 @@ public class ClaimOwnershipRequest extends Request {
    }
 
    public final void defaults() {
+      prefix = null;
       key = null;
       leaseMillis = 0;
    }
    
    @Override
    public final void write(DataSource data) throws IOException {
-      data.write(1, this.key);
-      data.write(2, this.leaseMillis);
+      data.write(1, this.prefix);
+      data.write(2, this.key);
+      data.write(3, this.leaseMillis);
       data.writeEndTag();
    }
    
@@ -51,8 +55,9 @@ public class ClaimOwnershipRequest extends Request {
       while (true) {
          int tag = data.readTag();
          switch (tag) {
-            case 1: this.key = data.read_string(tag); break;
-            case 2: this.leaseMillis = data.read_int(tag); break;
+            case 1: this.prefix = data.read_string(tag); break;
+            case 2: this.key = data.read_string(tag); break;
+            case 3: this.leaseMillis = data.read_int(tag); break;
             case Codec.END_TAG:
                return;
             default:
@@ -85,9 +90,10 @@ public class ClaimOwnershipRequest extends Request {
       // Note do not use this tags in long term serializations (to disk or databases) as 
       // implementors are free to rename them however they wish.  A null means the field
       // is not to participate in web serialization (remaining at default)
-      String[] result = new String[2+1];
-      result[1] = "key";
-      result[2] = "leaseMillis";
+      String[] result = new String[3+1];
+      result[1] = "prefix";
+      result[2] = "key";
+      result[3] = "leaseMillis";
       return result;
    }
    
@@ -101,7 +107,8 @@ public class ClaimOwnershipRequest extends Request {
       desc.types = new TypeDescriptor[desc.tagWebNames.length];
       desc.types[0] = new TypeDescriptor(TypeDescriptor.T_STRUCT, getContractId(), getStructId());
       desc.types[1] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
-      desc.types[2] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
+      desc.types[2] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
+      desc.types[3] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
       return desc;
    }
 
