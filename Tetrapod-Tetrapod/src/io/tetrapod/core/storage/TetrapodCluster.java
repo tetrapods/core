@@ -577,6 +577,7 @@ public class TetrapodCluster extends Storage implements RaftRPC<TetrapodStateMac
 
    ///////////////////////////////////// STORAGE API ///////////////////////////////////////
 
+   @Deprecated
    public void executeCommand(Command<TetrapodStateMachine> cmd, ClientResponseHandler<TetrapodStateMachine> handler) {
       boolean sent = false;
       while (!sent) {
@@ -593,6 +594,43 @@ public class TetrapodCluster extends Storage implements RaftRPC<TetrapodStateMac
             sent = true;
          }
       }
+   }
+
+   public abstract class PendingClientResponseHandler<T extends StateMachine<T>> implements ClientResponseHandler<T> {
+
+      public final SessionRequestContext ctx;
+
+      public PendingClientResponseHandler(SessionRequestContext ctx) {
+         this.ctx = ctx;
+      }
+
+      public abstract Response handlePendingResponse(final Entry<T> entry);
+
+      public void handleResponse(final Entry<T> entry) {
+         Response res = Response.error(CoreContract.ERROR_UNKNOWN);
+         try {
+            res = handlePendingResponse(entry);
+         } catch (Throwable t) {
+            logger.error(t.getMessage(), t);
+         } finally {
+            ctx.session.sendResponse(res, ctx.header.requestId);
+         }
+      }
+   }
+
+   public Response executePendingCommand(final Command<TetrapodStateMachine> cmd,
+         final PendingClientResponseHandler<TetrapodStateMachine> handler) {
+
+      // if we're the leader we can execute directly
+      if (!raft.executeCommand(cmd, handler)) {
+         // else, send RPC to current leader
+         if (raft.getLeader() != 0) {
+            sendIssueCommand(raft.getLeader(), cmd, handler);
+         } else {
+            return Response.error(RaftContract.ERROR_NO_LEADER);
+         }
+      }
+      return Response.PENDING;
    }
 
    @Override
@@ -821,55 +859,46 @@ public class TetrapodCluster extends Storage implements RaftRPC<TetrapodStateMac
       }
    }
 
-   public Response requestClaimOwnership(ClaimOwnershipRequest r, int entityId) {
-      final Value<ClaimOwnershipCommand> result = new Value<>();
-      executeCommand(new ClaimOwnershipCommand(entityId, r.prefix, r.key, r.leaseMillis, System.currentTimeMillis()),
-            new ClientResponseHandler<TetrapodStateMachine>() {
+   public Response requestClaimOwnership(final ClaimOwnershipRequest r, final SessionRequestContext ctx) {
+      return executePendingCommand(
+            new ClaimOwnershipCommand(ctx.header.fromId, r.prefix, r.key, r.leaseMillis, System.currentTimeMillis()),
+            new PendingClientResponseHandler<TetrapodStateMachine>(ctx) {
                @Override
-               public void handleResponse(Entry<TetrapodStateMachine> e) {
-                  result.set(e != null ? (ClaimOwnershipCommand) e.getCommand() : null);
+               public Response handlePendingResponse(Entry<TetrapodStateMachine> e) {
+                  if (e != null) {
+                     final ClaimOwnershipCommand c = (ClaimOwnershipCommand) e.getCommand();
+                     if (c.wasAcquired()) {
+                        return new ClaimOwnershipResponse(ctx.header.fromId, c.getExpiry());
+                     } else {
+                        Owner o = state.ownedItems.get(r.key);
+                        if (o != null) {
+                           return new ClaimOwnershipResponse(o.entityId, o.expiry);
+                        }
+                     }
+                  }
+                  return Response.error(CoreContract.ERROR_UNKNOWN);
                }
             });
-      result.waitForValue(); // FIXME: Don't block this thread, use a PENDING response
-
-      final ClaimOwnershipCommand c = result.get();
-      if (c != null) {
-         if (c.wasAcquired()) {
-            return new ClaimOwnershipResponse(entityId, c.getExpiry());
-         } else {
-            Owner o = state.ownedItems.get(r.key);
-            if (o != null) {
-               return new ClaimOwnershipResponse(o.entityId, o.expiry);
-            }
-         }
-      }
-
-      return Response.error(CoreContract.ERROR_UNKNOWN);
    }
 
-   public Response requestRetainOwnership(RetainOwnershipRequest r, int entityId) {
-      final Value<Boolean> success = new Value<>(false);
-      executeCommand(new RetainOwnershipCommand(entityId, r.prefix, r.leaseMillis, System.currentTimeMillis()),
-            new ClientResponseHandler<TetrapodStateMachine>() {
+   public Response requestRetainOwnership(RetainOwnershipRequest r, final SessionRequestContext ctx) {
+      return executePendingCommand(new RetainOwnershipCommand(ctx.header.fromId, r.prefix, r.leaseMillis, System.currentTimeMillis()),
+            new PendingClientResponseHandler<TetrapodStateMachine>(ctx) {
                @Override
-               public void handleResponse(Entry<TetrapodStateMachine> e) {
-                  success.set(e != null);
+               public Response handlePendingResponse(Entry<TetrapodStateMachine> e) {
+                  return e != null ? Response.SUCCESS : Response.error(CoreContract.ERROR_UNKNOWN);
                }
             });
-      // FIXME: Don't block this thread, use a PENDING response
-      return success.waitForValue() ? Response.SUCCESS : Response.error(CoreContract.ERROR_UNKNOWN);
    }
 
-   public Response requestReleaseOwnership(ReleaseOwnershipRequest r, int entityId) {
-      final Value<Boolean> success = new Value<>(false);
-      executeCommand(new ReleaseOwnershipCommand(entityId, r.prefix, r.keys), new ClientResponseHandler<TetrapodStateMachine>() {
-         @Override
-         public void handleResponse(Entry<TetrapodStateMachine> e) {
-            success.set(e != null);
-         }
-      });
-      // FIXME: Don't block this thread, use a PENDING response
-      return success.waitForValue() ? Response.SUCCESS : Response.error(CoreContract.ERROR_UNKNOWN);
+   public Response requestReleaseOwnership(ReleaseOwnershipRequest r, final SessionRequestContext ctx) {
+      return executePendingCommand(new ReleaseOwnershipCommand(ctx.header.fromId, r.prefix, r.keys),
+            new PendingClientResponseHandler<TetrapodStateMachine>(ctx) {
+               @Override
+               public Response handlePendingResponse(Entry<TetrapodStateMachine> e) {
+                  return e != null ? Response.SUCCESS : Response.error(CoreContract.ERROR_UNKNOWN);
+               }
+            });
    }
 
    public Response requestSubscribeOwnership(SubscribeOwnershipRequest r, SessionRequestContext ctx) {

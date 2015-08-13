@@ -3,6 +3,8 @@ java outdir "../src"
  
 service Raft @version(1) @id(16)
 
+error NO_LEADER               
+ 
 
 ################################ STRUCTURES ################################
 
