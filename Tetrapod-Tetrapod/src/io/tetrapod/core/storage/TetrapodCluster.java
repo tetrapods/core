@@ -577,7 +577,6 @@ public class TetrapodCluster extends Storage implements RaftRPC<TetrapodStateMac
 
    ///////////////////////////////////// STORAGE API ///////////////////////////////////////
 
-   @Deprecated
    public void executeCommand(Command<TetrapodStateMachine> cmd, ClientResponseHandler<TetrapodStateMachine> handler) {
       boolean sent = false;
       while (!sent) {
