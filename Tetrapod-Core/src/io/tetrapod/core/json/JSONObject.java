@@ -24,6 +24,8 @@ package io.tetrapod.core.json;
  SOFTWARE.
  */
 
+import io.tetrapod.core.rpc.Enum_String;
+
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
@@ -1146,7 +1148,7 @@ public class JSONObject {
         }
         return this;
     }
-
+    
     /**
      * Put a key/value pair in the JSONObject, but only if the key and the value
      * are both non-null, and only if there is not already a member with that
@@ -1639,4 +1641,99 @@ public class JSONObject {
             throw new JSONException(exception);
         }
     }
+
+   /**
+    * Converts to a string without whitespace, leaving out all keys that
+    * start with the given prefix.
+    */
+   public String toStringWithout(String prefix) {
+      StringWriter writer = new StringWriter();
+      try {
+         boolean commanate = false;
+         writer.write('{');
+         for (Object key : this.keySet()) {
+            if (!key.toString().startsWith(prefix)) {
+               if (commanate)
+                  writer.write(',');
+               writer.write(quote(key.toString()));
+               writer.write(':');
+               writeValue(writer, this.map.get(key), 0, 0);
+               commanate = true;
+            }
+         }
+         writer.write('}');
+      } catch (IOException exception) {
+         throw new JSONException(exception);
+      }
+      return writer.toString();
+   }
+   
+   // support using Enum_String as keys
+   
+   public <T> JSONObject put(Enum_String<T> key, Object value) throws JSONException {
+      if (key == null) { throw new NullPointerException("Null key."); }
+      return put(key.getValue(), value);
+   }
+   public <T> JSONObject put(Enum_String<T> key, boolean value) throws JSONException {
+      if (key == null) { throw new NullPointerException("Null key."); }
+      return put(key.getValue(), value);
+   }
+   public <T> JSONObject put(Enum_String<T> key, double value) throws JSONException {
+      if (key == null) { throw new NullPointerException("Null key."); }
+      return put(key.getValue(), value);
+   }
+   public <T> JSONObject put(Enum_String<T> key, int value) throws JSONException {
+      if (key == null) { throw new NullPointerException("Null key."); }
+      return put(key.getValue(), value);
+   }
+   public <T> JSONObject put(Enum_String<T> key, long value) throws JSONException {
+      if (key == null) { throw new NullPointerException("Null key."); }
+      return put(key.getValue(), value);
+   }
+   public <T> JSONObject put(Enum_String<T> key, Collection value) throws JSONException {
+      if (key == null) { throw new NullPointerException("Null key."); }
+      return put(key.getValue(), new JSONArray(value));
+   }
+   public <T> JSONObject put(Enum_String<T> key, Map value) throws JSONException {
+      if (key == null) { throw new NullPointerException("Null key."); }
+      return put(key.getValue(), new JSONObject(value));
+   }
+   public <T> String optString(Enum_String<T> key, String defaultValue) {
+      return optString(key.getValue(), defaultValue);
+   }
+   public <T> boolean optBoolean(Enum_String<T> key, boolean defaultValue) {
+      return optBoolean(key.getValue(), defaultValue);
+   }
+   public <T> double optDouble(Enum_String<T> key, double defaultValue) {
+      return optDouble(key.getValue(), defaultValue);
+   }
+   public <T> int optInt(Enum_String<T> key, int defaultValue) {
+      return optInt(key.getValue(), defaultValue);
+   }
+   public <T> long optLong(Enum_String<T> key, long defaultValue) {
+      return optLong(key.getValue(), defaultValue);
+   }
+   public <T> String optString(Enum_String<T> key) {
+      return optString(key.getValue(), "");
+   }
+   public <T> boolean optBoolean(Enum_String<T> key) {
+      return optBoolean(key.getValue(), false);
+   }
+   public <T> double optDouble(Enum_String<T> key) {
+      return optDouble(key.getValue(), 0.0);
+   }
+   public <T> int optInt(Enum_String<T> key) {
+      return optInt(key.getValue(), 0);
+   }
+   public <T> long optLong(Enum_String<T> key) {
+      return optLong(key.getValue(), 0L);
+   }
+   public <T> JSONArray optJSONArray(Enum_String<T> key) {
+      return optJSONArray(key.getValue());
+   }
+   public <T> JSONObject optJSONObject(Enum_String<T> key) {
+      return optJSONObject(key.getValue());
+   }
+
+
 }
