@@ -33,9 +33,13 @@ public class AESEncryptor {
    }
 
    public static String encodeBase64(byte[] data) {
+      return encodeBase64(data, Base64Dialect.URL_SAFE);
+   }
+
+   public static String encodeBase64(byte[] data, Base64Dialect dialect) {
       ByteBuf buf = Unpooled.wrappedBuffer(data);
       try {
-         return Base64.encode(buf, Base64Dialect.URL_SAFE).toString(UTF8);
+         return Base64.encode(buf, dialect).toString(UTF8);
       } finally {
          buf.release();
       }
