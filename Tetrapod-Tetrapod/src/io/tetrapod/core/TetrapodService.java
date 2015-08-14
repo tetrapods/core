@@ -1040,9 +1040,9 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          synchronized (e) {
             final Session s = e.getSession();
             if (s != null) {
-               return new GetEntityInfoResponse(e.build, e.name, s.channel.remoteAddress().getAddress().getHostAddress());
+               return new GetEntityInfoResponse(e.build, e.name, s.channel.remoteAddress().getAddress().getHostAddress(), null);
             } else {
-               return new GetEntityInfoResponse(e.build, e.name, null);
+               return new GetEntityInfoResponse(e.build, e.name, null, null);
             }
          }
       }

@@ -152,6 +152,7 @@ internal response GetEntityInfo
    1: int build
    2: string name
    3: string host
+   4: string referrer
 
 ################################# MESSAGES #################################
 
