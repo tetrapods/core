@@ -19,7 +19,7 @@ require.config({
       "vex": "../ext/vex",
       "vex.dialog": "../ext/vex.dialog",
       "text": "../ext/text",
-      "jquery.flot": "//cdnjs.cloudflare.com/ajax/libs/flot/0.8.2/jquery.flot.min",
+      "jquery.flot": "https://cdnjs.cloudflare.com/ajax/libs/flot/0.8.2/jquery.flot.min",
       "protocol": "../../protocol"
    }
 });
