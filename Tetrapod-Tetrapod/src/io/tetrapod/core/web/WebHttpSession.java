@@ -56,6 +56,8 @@ public class WebHttpSession extends WebSession {
 
    private Map<Integer, ChannelHandlerContext> contexts;
 
+   private String                              httpReferrer      = null;
+
    public WebHttpSession(SocketChannel ch, Session.Helper helper, Map<String, WebRoot> roots, String wsLocation) {
       super(ch, helper);
 
@@ -138,6 +140,10 @@ public class WebHttpSession extends WebSession {
          synchronized (this) {
             logger.debug(String.format("%s REQUEST[%d] = %s : %s", this, ++reqCounter, ctx.channel().remoteAddress(), req.getUri()));
          }
+      }
+      // Set the http referrer for this request, if not already set
+      if (Util.isEmpty(getHttpReferrer())) {
+         setHttpReferrer(req.headers().get("Referer"));
       }
       // see if we need to start a web socket session
       if (wsLocation.equals(req.getUri())) {
@@ -259,7 +265,7 @@ public class WebHttpSession extends WebSession {
             } else {
                ctx.writeAndFlush(makeFrame(new JSONObject().put("error", "locked"), HttpHeaders.isKeepAlive(req)));
             }
-         } 
+         }
       });
    }
 
@@ -284,7 +290,7 @@ public class WebHttpSession extends WebSession {
 
          try {
             if (header.structId == WebAPIRequest.STRUCT_ID) {
-               // @webapi() generic WebAPIRequest call 
+               // @webapi() generic WebAPIRequest call
                String body = req.content().toString(CharsetUtil.UTF_8);
                if (body == null || body.trim().isEmpty()) {
                   body = req.getUri();
@@ -308,7 +314,7 @@ public class WebHttpSession extends WebSession {
                   handler.fireResponse(new Error(ERROR_SERVICE_UNAVAILABLE), header);
                }
             } else {
-               // @web() specific Request mapping 
+               // @web() specific Request mapping
                final Structure request = readRequest(header, context.getRequestParams());
                if (request != null) {
                   relayRequest(header, request, handler);
@@ -502,7 +508,7 @@ public class WebHttpSession extends WebSession {
       if (isWebSocket()) {
          super.sendResponse(res, requestId);
       } else {
-         // HACK: for http responses we need to write to the response to the correct ChannelHandlerContext 
+         // HACK: for http responses we need to write to the response to the correct ChannelHandlerContext
          if (res != Response.PENDING) {
             if (!commsLogIgnore(res))
                commsLog("%s  [%d] => %s", this, requestId, res.dump());
@@ -525,7 +531,7 @@ public class WebHttpSession extends WebSession {
       if (isWebSocket()) {
          super.sendRelayedResponse(header, payload);
       } else {
-         // HACK: for http responses we need to write to the response to the correct ChannelHandlerContext 
+         // HACK: for http responses we need to write to the response to the correct ChannelHandlerContext
          if (!commsLogIgnore(header.structId))
             commsLog("%s  [%d] ~> Response:%d", this, header.requestId, header.structId);
          ChannelHandlerContext ctx = getContext(header.requestId);
@@ -595,10 +601,17 @@ public class WebHttpSession extends WebSession {
       }
       return false;
    }
-   
+
    private boolean isGenericSuccess(Response r) {
       Response s = Response.SUCCESS;
       return s.getContractId() == r.getContractId() && s.getStructId() == r.getStructId();
    }
 
+   public String getHttpReferrer() {
+      return httpReferrer;
+   }
+
+   public void setHttpReferrer(String httpReferrer) {
+      this.httpReferrer = httpReferrer;
+   }
 }
