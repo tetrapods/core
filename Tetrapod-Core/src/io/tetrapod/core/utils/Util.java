@@ -1,6 +1,7 @@
 package io.tetrapod.core.utils;
 
 import io.tetrapod.core.json.*;
+import io.tetrapod.core.rpc.Flags_int;
 
 import java.io.*;
 import java.lang.reflect.*;
@@ -400,6 +401,9 @@ public class Util {
     * @return true if that flag is set
     */
    public static boolean hasFlag(Object o, int flag) {
+      if (o instanceof Flags_int) {
+         return hasFlag(((Flags_int<?>) o).value, flag);
+      }
       int source = 0;
       try {
          Field flagsField = o.getClass().getField("flags");
@@ -418,6 +422,9 @@ public class Util {
     * @return true if that flag is set
     */
    public static boolean hasAllFlags(Object o, int flags) {
+      if (o instanceof Flags_int) {
+         return hasAllFlags(((Flags_int<?>) o).value, flags);
+      }
       int source = 0;
       try {
          Field flagsField = o.getClass().getField("flags");
