@@ -7,8 +7,7 @@ import io.tetrapod.core.serialize.datasources.ByteBufDataSource;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.security.SecureRandom;
-import java.util.Arrays;
-import java.util.Random;
+import java.util.*;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -51,58 +50,6 @@ public class AuthToken {
             MAC_SECURE = macCoder;
             setSecretGates(secret1); // give gates original so old tokens work
             setSecretAdmin(secret3);
-         }
-         return true;
-      } catch (Exception e) {
-         return false;
-      }
-   }
-   
-   /**
-    * Sets the shared secret. Needs to be called before this class is used. Returns false if there is an error which would typically be Java
-    * not having strong crypto available.
-    */
-   public static boolean setSecretAdmin(byte[] secret) {
-      try {
-         // append NTLA so updating it will invalidate old tokens
-         byte[] ntla = Long.toHexString(NOT_THAT_LONG_AGO).getBytes();
-         byte[] secureExtra = ADMIN_EXTRA.getBytes();
-         byte[] key = new byte[secret.length + ntla.length + secureExtra.length];
-         System.arraycopy(ntla, 0, key, 0, ntla.length);
-         System.arraycopy(secret, 0, key, ntla.length, secret.length);
-         System.arraycopy(secureExtra, 0, key, ntla.length + secret.length, secureExtra.length);
-         SecretKeySpec signingKey = new SecretKeySpec(key, "HmacSHA1");
-         Mac macCoder = Mac.getInstance("HmacSHA1");
-         macCoder.init(signingKey);
-         synchronized (AuthToken.class) {
-            MAC_ADMIN = macCoder;
-         }
-         return true;
-      } catch (Exception e) {
-         return false;
-      }
-   }
-
-   /**
-    * Sets the shared secret. Needs to be called before this class is used. Returns false if there is an error which would typically be Java
-    * not having strong crypto available.
-    */
-   public static boolean setSecretGates(byte[] secret) {
-      try {
-         // append NTLA so updating it will invalidate old tokens
-         byte[] ntla = Long.toHexString(NOT_THAT_LONG_AGO).getBytes();
-         byte[] secureExtra = SECURED_EXTRA.getBytes();
-         byte[] key = new byte[secret.length + ntla.length + secureExtra.length];
-         System.arraycopy(ntla, 0, key, 0, ntla.length);
-         System.arraycopy(secret, 0, key, ntla.length, secret.length);
-         System.arraycopy(secureExtra, 0, key, ntla.length + secret.length, secureExtra.length);
-         SecretKeySpec signingKey = new SecretKeySpec(key, "HmacSHA1");
-         Mac macCoder = Mac.getInstance("HmacSHA1");
-         macCoder.init(signingKey);
-         synchronized (AuthToken.class) {
-            MAC_SECURE = macCoder;
-            setSecretGates(Arrays.copyOfRange(secret, 1, secret.length-2));
-            setSecretAdmin(Arrays.copyOfRange(secret, 1, secret.length-2));
          }
          return true;
       } catch (Exception e) {
@@ -216,6 +163,7 @@ public class AuthToken {
     * @param values the values of the token, the first numInToken elements get filled in from the token
     * @param numInToken the number of values to pull out from the token
     * @param token the base64 encoded token
+    * @param timedOut true if there is at least one value and the first value is less than the current time
     * @return true if it decodes successfully, and as a side effect fills in values with any values which were encoded in token
     */
    public static boolean decode(Mac theMac, int[] values, int numInToken, String token) {
