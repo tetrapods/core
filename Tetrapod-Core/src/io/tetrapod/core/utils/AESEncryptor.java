@@ -6,7 +6,7 @@ import io.netty.handler.codec.base64.*;
 import java.nio.charset.Charset;
 import java.security.*;
 import java.security.spec.*;
-import java.util.*;
+import java.util.Arrays;
 
 import javax.crypto.*;
 import javax.crypto.spec.*;

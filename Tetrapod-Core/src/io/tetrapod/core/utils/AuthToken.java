@@ -7,7 +7,8 @@ import io.tetrapod.core.serialize.datasources.ByteBufDataSource;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.security.SecureRandom;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Random;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -104,7 +105,6 @@ public class AuthToken {
     * @param values the values of the token, the first numInToken elements get filled in from the token
     * @param numInToken the number of values to pull out from the token
     * @param token the base64 encoded token
-    * @param timedOut true if there is at least one value and the first value is less than the current time
     * @return true if it decodes successfully, and as a side effect fills in values with any values which were encoded in token
     */
    public static boolean decode(int[] values, int numInToken, String token) {
