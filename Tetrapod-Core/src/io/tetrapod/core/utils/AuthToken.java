@@ -32,22 +32,24 @@ public class AuthToken {
     * Sets the shared secret. Needs to be called before this class is used. Returns false if there is an error which would typically be Java
     * not having strong crypto available.
     */
-   public static boolean setSecret(byte[] secret) {
+   public static boolean setSecret(byte[] secret1) {
       try {
+         byte[] secret2 = Arrays.copyOfRange(secret1, 1, secret1.length - 1);
+         byte[] secret3 = Arrays.copyOfRange(secret2, 1, secret2.length - 1);
          // append NTLA so updating it will invalidate old tokens
          byte[] ntla = Long.toHexString(NOT_THAT_LONG_AGO).getBytes();
          byte[] secureExtra = SECURED_EXTRA.getBytes();
-         byte[] key = new byte[secret.length + ntla.length + secureExtra.length];
+         byte[] key = new byte[secret2.length + ntla.length + secureExtra.length];
          System.arraycopy(ntla, 0, key, 0, ntla.length);
-         System.arraycopy(secret, 0, key, ntla.length, secret.length);
-         System.arraycopy(secureExtra, 0, key, ntla.length + secret.length, secureExtra.length);
+         System.arraycopy(secret2, 0, key, ntla.length, secret2.length);
+         System.arraycopy(secureExtra, 0, key, ntla.length + secret2.length, secureExtra.length);
          SecretKeySpec signingKey = new SecretKeySpec(key, "HmacSHA1");
          Mac macCoder = Mac.getInstance("HmacSHA1");
          macCoder.init(signingKey);
          synchronized (AuthToken.class) {
             MAC_SECURE = macCoder;
-            setSecretGates(Arrays.copyOfRange(secret, 1, secret.length-2));
-            setSecretAdmin(Arrays.copyOfRange(secret, 1, secret.length-2));
+            setSecretGates(secret1); // give gates original so old tokens work
+            setSecretAdmin(secret3);
          }
          return true;
       } catch (Exception e) {
