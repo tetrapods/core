@@ -19,41 +19,41 @@ import org.slf4j.*;
  */
 public class Registry implements TetrapodContract.Registry.API {
 
-   protected static final Logger                logger          = LoggerFactory.getLogger(Registry.class);
+   protected static final Logger logger = LoggerFactory.getLogger(Registry.class);
 
-   public static final int                      MAX_PARENTS     = 0x000007FF;
-   public static final int                      MAX_ID          = 0x000FFFFF;
+   public static final int MAX_PARENTS = 0x000007FF;
+   public static final int MAX_ID      = 0x000FFFFF;
 
-   public static final int                      PARENT_ID_SHIFT = 20;
-   public static final int                      PARENT_ID_MASK  = MAX_PARENTS << PARENT_ID_SHIFT;
-   public static final int                      BOOTSTRAP_ID    = 1 << PARENT_ID_SHIFT;
+   public static final int PARENT_ID_SHIFT = 20;
+   public static final int PARENT_ID_MASK  = MAX_PARENTS << PARENT_ID_SHIFT;
+   public static final int BOOTSTRAP_ID    = 1 << PARENT_ID_SHIFT;
 
    /**
     * A read-write lock is used to synchronize subscriptions to the registry state, and it is a little counter-intuitive. When making write
     * operations to the registry, we grab the read lock to allow concurrent writes across the registry. When we need to send the current
     * state snapshot to another cluster member, we grab the write lock for exclusive access to send a consistent state.
     */
-   public final ReadWriteLock                   lock            = new ReentrantReadWriteLock();
+   public final ReadWriteLock lock = new ReentrantReadWriteLock();
 
    /**
     * Our entityId
     */
-   private int                                  parentId;
+   private int parentId;
 
    /**
     * Our local entity id counter
     */
-   private int                                  counter;
+   private int counter;
 
    /**
     * Maps entityId => EntityInfo
     */
-   private final Map<Integer, EntityInfo>       entities        = new ConcurrentHashMap<>();
+   private final Map<Integer, EntityInfo> entities = new ConcurrentHashMap<>();
 
    /**
     * Maps contractId => List of EntityInfos that provide that service
     */
-   private final Map<Integer, List<EntityInfo>> services        = new ConcurrentHashMap<>();
+   private final Map<Integer, List<EntityInfo>> services = new ConcurrentHashMap<>();
 
    public static interface RegistryBroadcaster {
       public void broadcastRegistryMessage(Message msg);
@@ -298,7 +298,7 @@ public class Registry implements TetrapodContract.Registry.API {
    }
 
    public void unsubscribe(final EntityInfo publisher, final int topicId, final int entityId, final boolean all) {
-      assert (publisher != null);
+      assert(publisher != null);
       lock.readLock().lock();
       try {
          final Topic topic = publisher.getTopic(topicId);
@@ -313,8 +313,8 @@ public class Registry implements TetrapodContract.Registry.API {
    }
 
    public void unsubscribe(final EntityInfo publisher, Topic topic, final int entityId, final boolean all) {
-      assert (publisher != null);
-      assert (topic != null);
+      assert(publisher != null);
+      assert(topic != null);
       lock.readLock().lock();
       try {
          final EntityInfo e = getEntity(entityId);
@@ -573,5 +573,15 @@ public class Registry implements TetrapodContract.Registry.API {
       } finally {
          lock.readLock().unlock();
       }
+   }
+
+   public int getNumActiveClients() {
+      int count = 0;
+      for (EntityInfo e : entities.values()) {
+         if (e.isClient() && !e.isGone()) {
+            count++;
+         }
+      }
+      return count;
    }
 }

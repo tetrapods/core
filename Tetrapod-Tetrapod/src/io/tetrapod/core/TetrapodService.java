@@ -33,32 +33,32 @@ import org.slf4j.*;
 public class TetrapodService extends DefaultService implements TetrapodContract.API, StorageContract.API, RaftContract.API, RelayHandler,
       io.tetrapod.core.registry.Registry.RegistryBroadcaster {
 
-   public static final Logger                      logger            = LoggerFactory.getLogger(TetrapodService.class);
+   public static final Logger logger = LoggerFactory.getLogger(TetrapodService.class);
 
-   private static final String                     SHARED_SECRET_KEY = "tetrapod.shared.secret";
+   private static final String SHARED_SECRET_KEY = "tetrapod.shared.secret";
 
-   public final SecureRandom                       random            = new SecureRandom();
+   public final SecureRandom random = new SecureRandom();
 
-   public final io.tetrapod.core.registry.Registry registry          = new io.tetrapod.core.registry.Registry(this);
+   public final io.tetrapod.core.registry.Registry registry = new io.tetrapod.core.registry.Registry(this);
 
-   private Topic                                   clusterTopic;
-   private Topic                                   registryTopic;
-   private Topic                                   servicesTopic;
-   private Topic                                   adminTopic;
+   private Topic clusterTopic;
+   private Topic registryTopic;
+   private Topic servicesTopic;
+   private Topic adminTopic;
 
-   private final Object                            registryTopicLock = new Object();
-   private final Object                            servicesTopicLock = new Object();
+   private final Object registryTopicLock = new Object();
+   private final Object servicesTopicLock = new Object();
 
-   private final TetrapodWorker                    worker;
+   private final TetrapodWorker worker;
 
-   protected final TetrapodCluster                 cluster           = new TetrapodCluster(this);
+   protected final TetrapodCluster cluster = new TetrapodCluster(this);
 
-   private AdminAccounts                           adminAccounts;
+   private AdminAccounts adminAccounts;
 
-   private final List<Server>                      servers           = new ArrayList<Server>();
-   private final List<Server>                      httpServers       = new ArrayList<Server>();
+   private final List<Server> servers     = new ArrayList<Server>();
+   private final List<Server> httpServers = new ArrayList<Server>();
 
-   private long                                    lastStatsLog;
+   private long lastStatsLog;
 
    public TetrapodService() throws IOException {
       super(new TetrapodContract());
@@ -147,8 +147,8 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
    @Override
    public ServiceCommand[] getServiceCommands() {
-      return new ServiceCommand[] { new ServiceCommand("Log Registry Stats", null, LogRegistryStatsRequest.CONTRACT_ID,
-            LogRegistryStatsRequest.STRUCT_ID, false) };
+      return new ServiceCommand[] {
+            new ServiceCommand("Log Registry Stats", null, LogRegistryStatsRequest.CONTRACT_ID, LogRegistryStatsRequest.STRUCT_ID, false) };
    }
 
    public byte getEntityType() {
@@ -391,7 +391,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          }
          final EntityInfo parent = registry.getEntity(entity.parentId);
          if (parent != null) {
-            assert (parent != null);
+            assert(parent != null);
             return cluster.getSession(parent.entityId);
          } else {
             logger.warn("Could not find parent entity {} for {}", entity.parentId, entity);
@@ -653,6 +653,9 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       if (now - lastStatsLog > Util.ONE_MINUTE) {
          registry.logStats();
          lastStatsLog = System.currentTimeMillis();
+
+         // TODO: broadcast to admin sessions:
+         logger.info("Active Client Sessions: " + registry.getNumActiveClients());
       }
       for (final EntityInfo e : registry.getChildren()) {
          if (e.isGone()) {
@@ -685,15 +688,15 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
                   });
                }
             }
-
          }
       }
+
    }
 
    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
    public void subscribeToCluster(Session ses, int toEntityId) {
-      assert (clusterTopic != null);
+      assert(clusterTopic != null);
       synchronized (cluster) {
          subscribe(clusterTopic.topicId, toEntityId);
          cluster.sendClusterDetails(ses, toEntityId, clusterTopic.topicId);
@@ -710,7 +713,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    }
 
    public void subscribeToAdmin(Session ses, int toEntityId) {
-      assert (adminTopic != null);
+      assert(adminTopic != null);
       synchronized (cluster) {
          subscribe(adminTopic.topicId, toEntityId);
          cluster.sendAdminDetails(ses, toEntityId, adminTopic.topicId);
