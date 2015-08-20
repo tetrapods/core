@@ -324,7 +324,7 @@ internal message AdminUserAdded
    1: Admin admin
    
 internal message AdminUserRemoved       
-   1: int accountId
+   1: int accountId   
     
 internal request Lock
    1: string key
@@ -388,3 +388,10 @@ internal message Ownership.ReleaseOwnership
    
    
 ##########################################          
+
+
+
+internal request TetrapodClientSessions
+
+internal response TetrapodClientSessions  
+   1: int[] clientSessions

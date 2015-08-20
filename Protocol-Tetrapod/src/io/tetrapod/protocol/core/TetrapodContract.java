@@ -54,6 +54,7 @@ public class TetrapodContract extends Contract {
       , SetWebRootRequest.Handler
       , SnapshotRequest.Handler
       , SubscribeOwnershipRequest.Handler
+      , TetrapodClientSessionsRequest.Handler
       , UnlockRequest.Handler
       , UnregisterRequest.Handler
       , UnsubscribeOwnershipRequest.Handler
@@ -101,6 +102,7 @@ public class TetrapodContract extends Contract {
          new ReleaseOwnershipRequest(),
          new SubscribeOwnershipRequest(),
          new UnsubscribeOwnershipRequest(),
+         new TetrapodClientSessionsRequest(),
       };
    }
    
@@ -116,6 +118,7 @@ public class TetrapodContract extends Contract {
          new RaftStatsResponse(),
          new LockResponse(),
          new ClaimOwnershipResponse(),
+         new TetrapodClientSessionsResponse(),
       };
    }
    

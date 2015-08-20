@@ -107,5 +107,7 @@ function TP_Tetrapod(server) {
    server.register("message", "Tetrapod", "ClaimOwnership", 1, 500513);
    server.register("message", "Tetrapod", "RetainOwnership", 1, 12503106);
    server.register("message", "Tetrapod", "ReleaseOwnership", 1, 9542348);
+   server.register("request", "Tetrapod", "TetrapodClientSessions", 1, 4764379);
+   server.register("response", "Tetrapod", "TetrapodClientSessions", 1, 13660185);
 
 }

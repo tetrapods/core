@@ -2,7 +2,21 @@ package io.tetrapod.core;
 
 import static io.tetrapod.protocol.core.Core.*;
 import static io.tetrapod.protocol.core.CoreContract.*;
-import static io.tetrapod.protocol.core.TetrapodContract.*;
+import static io.tetrapod.protocol.core.TetrapodContract.ERROR_NOT_PARENT;
+import static io.tetrapod.protocol.core.TetrapodContract.ERROR_UNKNOWN_ENTITY_ID;
+
+import java.io.File;
+import java.io.IOException;
+import java.security.SecureRandom;
+import java.util.*;
+import java.util.Properties;
+import java.util.concurrent.TimeUnit;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.codahale.metrics.Counter;
+
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.base64.Base64Dialect;
@@ -11,20 +25,13 @@ import io.tetrapod.core.registry.*;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.rpc.Error;
 import io.tetrapod.core.serialize.datasources.ByteBufDataSource;
-import io.tetrapod.core.storage.*;
+import io.tetrapod.core.storage.DistributedLock;
+import io.tetrapod.core.storage.TetrapodCluster;
 import io.tetrapod.core.utils.*;
 import io.tetrapod.core.web.*;
 import io.tetrapod.protocol.core.*;
 import io.tetrapod.protocol.raft.*;
 import io.tetrapod.protocol.storage.*;
-
-import java.io.*;
-import java.security.SecureRandom;
-import java.util.*;
-import java.util.Properties;
-import java.util.concurrent.*;
-
-import org.slf4j.*;
 
 /**
  * The tetrapod service is the core cluster service which handles message routing, cluster management, service discovery, and load balancing
@@ -59,6 +66,8 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    private final List<Server> httpServers = new ArrayList<Server>();
 
    private long lastStatsLog;
+
+   private final LinkedList<Integer> clientSessionsCounter = new LinkedList<>();
 
    public TetrapodService() throws IOException {
       super(new TetrapodContract());
@@ -654,8 +663,13 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          registry.logStats();
          lastStatsLog = System.currentTimeMillis();
 
-         // TODO: broadcast to admin sessions:
-         logger.info("Active Client Sessions: " + registry.getNumActiveClients());
+         final int clients = registry.getNumActiveClients();
+         synchronized (clientSessionsCounter) {
+            clientSessionsCounter.addLast(clients);
+            if (clientSessionsCounter.size() > 60) {
+               clientSessionsCounter.removeFirst();
+            }
+         }
       }
       for (final EntityInfo e : registry.getChildren()) {
          if (e.isGone()) {
@@ -1203,6 +1217,13 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          return new Error(ERROR_INVALID_RIGHTS);
 
       return cluster.requestUnsubscribeOwnership(r, (SessionRequestContext) ctx);
+   }
+
+   @Override
+   public Response requestTetrapodClientSessions(TetrapodClientSessionsRequest r, RequestContext ctx) {
+      synchronized (clientSessionsCounter) {
+         return new TetrapodClientSessionsResponse(Util.toIntArray(clientSessionsCounter));
+      }
    }
 
 }
