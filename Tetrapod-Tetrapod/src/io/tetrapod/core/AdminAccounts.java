@@ -124,7 +124,7 @@ public class AdminAccounts {
 
    public boolean isValidAdminRequest(RequestContext ctx, String adminToken, int rightsRequired) {
       if (ctx.header.fromType == TYPE_ADMIN) {
-         final AuthToken.Decoded d = AuthToken.decodeAuthToken1(adminToken);
+         final AuthToken.Decoded d = AuthToken.decodeAuthToken1Admin(adminToken);
          if (d != null) {
             final Admin admin = getAdmin(d.accountId);
             if (admin != null) {
@@ -139,7 +139,7 @@ public class AdminAccounts {
 
    public Admin getAdmin(RequestContext ctx, String adminToken, int rightsRequired) {
       if (ctx.header.fromType == TYPE_ADMIN) {
-         final AuthToken.Decoded d = AuthToken.decodeAuthToken1(adminToken);
+         final AuthToken.Decoded d = AuthToken.decodeAuthToken1Admin(adminToken);
          if (d != null) {
             final Admin admin = getAdmin(d.accountId);
             if (admin != null) {
@@ -156,7 +156,7 @@ public class AdminAccounts {
 
    public Response requestAdminAuthorize(AdminAuthorizeRequest r, RequestContext ctxA) {
       SessionRequestContext ctx = (SessionRequestContext) ctxA;
-      AuthToken.Decoded d = AuthToken.decodeAuthToken1(r.token);
+      AuthToken.Decoded d = AuthToken.decodeAuthToken1Admin(r.token);
       if (d != null) {
          //logger.debug("TOKEN {} time left = {}", r.token, d.timeLeft);
          Admin admin = getAdmin(d.accountId);
@@ -185,7 +185,7 @@ public class AdminAccounts {
             if (PasswordHash.validatePassword(r.password, admin.hash)) {
                // mark the session as an admin
                ctx.session.theirType = Core.TYPE_ADMIN;
-               final String authtoken = AuthToken.encodeAuthToken1(admin.accountId, 0, 60 * 24 * 14);
+               final String authtoken = AuthToken.encodeAuthToken1Admin(admin.accountId, 0, 60 * 24 * 14);
                return new AdminLoginResponse(authtoken, admin.accountId);
             } else {
                return new Error(ERROR_INVALID_CREDENTIALS); // invalid password
