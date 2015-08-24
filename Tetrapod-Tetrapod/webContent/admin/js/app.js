@@ -126,7 +126,7 @@ define(["knockout", "jquery", "bootbox", "toolbox", "protocol/server", "protocol
             authToken: self.authtoken,
          }, function(result) {
             if (result.isError()) {
-               onLogout();
+               onLogout(true);
             } else if (callback) {
                self.sessionToken = result.sessionToken;
                callback();
@@ -134,9 +134,11 @@ define(["knockout", "jquery", "bootbox", "toolbox", "protocol/server", "protocol
          });
       }
 
-      function onLogout() {
-         self.authtoken = null;
-         toolbox.deleteCookie("auth-token");
+      function onLogout(keepToken) {
+         if (!keepToken) {
+            self.authtoken = null;
+            toolbox.deleteCookie("auth-token");
+         }
          $('#login-wrapper').show();
          $('#app-wrapper').hide();
          model.clear();
