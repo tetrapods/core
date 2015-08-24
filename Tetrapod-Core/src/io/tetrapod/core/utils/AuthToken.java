@@ -1,16 +1,19 @@
 package io.tetrapod.core.utils;
 
-import io.netty.buffer.*;
-import io.netty.handler.codec.base64.*;
-import io.tetrapod.core.serialize.datasources.ByteBufDataSource;
-
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.security.SecureRandom;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Random;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
+
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
+import io.netty.handler.codec.base64.Base64;
+import io.netty.handler.codec.base64.Base64Dialect;
+import io.tetrapod.core.serialize.datasources.ByteBufDataSource;
 
 /**
  * Helper class used to authenticate messages. Works by taking a message (an array of ints) and computing an HMAC using a shared secret. The
@@ -24,61 +27,26 @@ public class AuthToken {
    private static final long NOT_THAT_LONG_AGO = 1395443029600L;
    private static Mac        MAC_SECURE        = null;
    private static Mac        MAC_GATES         = null;
-   private static Mac        MAC_ADMIN         = null;
    private static String     SECURED_EXTRA     = "HkRzUvnYA5laYVkCHyFNViqLiP2GlzdMLAJnQZKqCMBQhZEhCZ"; // change if we have a breach
-   private static String     ADMIN_EXTRA       = "9TNnbodlByJPeRJuznUyel2whHoAMIKmuViLwePlOIbWuoZrkB"; // change if we have a breach
 
    /**
-    * Sets the shared secret. Needs to be called before this class is used. Returns false if there is an error which would typically be Java
-    * not having strong crypto available.
+    * Creates a MAC from a secret and some additional
     */
-   public static boolean setSecret(byte[] secret1) {
+   public static Mac createMac(byte[] secret1, byte[] secret2) {
       try {
-         byte[] secret2 = Arrays.copyOfRange(secret1, 1, secret1.length - 1);
-         byte[] secret3 = Arrays.copyOfRange(secret2, 1, secret2.length - 1);
          // append NTLA so updating it will invalidate old tokens
          byte[] ntla = Long.toHexString(NOT_THAT_LONG_AGO).getBytes();
-         byte[] secureExtra = SECURED_EXTRA.getBytes();
-         byte[] key = new byte[secret2.length + ntla.length + secureExtra.length];
+         byte[] key = new byte[secret1.length + ntla.length + secret2.length];
          System.arraycopy(ntla, 0, key, 0, ntla.length);
-         System.arraycopy(secret2, 0, key, ntla.length, secret2.length);
-         System.arraycopy(secureExtra, 0, key, ntla.length + secret2.length, secureExtra.length);
+         System.arraycopy(secret1, 0, key, ntla.length, secret1.length);
+         System.arraycopy(secret2, 0, key, ntla.length + secret1.length, secret2.length);
          SecretKeySpec signingKey = new SecretKeySpec(key, "HmacSHA1");
          Mac macCoder = Mac.getInstance("HmacSHA1");
          macCoder.init(signingKey);
-         synchronized (AuthToken.class) {
-            MAC_SECURE = macCoder;
-            setSecretGates(secret1); // give gates original so old tokens work
-            setSecretAdmin(secret3);
-         }
-         return true;
+         return macCoder;
       } catch (Exception e) {
-         return false;
-      }
-   }
-   
-   /**
-    * Sets the shared secret. Needs to be called before this class is used. Returns false if there is an error which would typically be Java
-    * not having strong crypto available.
-    */
-   public static boolean setSecretAdmin(byte[] secret) {
-      try {
-         // append NTLA so updating it will invalidate old tokens
-         byte[] ntla = Long.toHexString(NOT_THAT_LONG_AGO).getBytes();
-         byte[] secureExtra = ADMIN_EXTRA.getBytes();
-         byte[] key = new byte[secret.length + ntla.length + secureExtra.length];
-         System.arraycopy(ntla, 0, key, 0, ntla.length);
-         System.arraycopy(secret, 0, key, ntla.length, secret.length);
-         System.arraycopy(secureExtra, 0, key, ntla.length + secret.length, secureExtra.length);
-         SecretKeySpec signingKey = new SecretKeySpec(key, "HmacSHA1");
-         Mac macCoder = Mac.getInstance("HmacSHA1");
-         macCoder.init(signingKey);
-         synchronized (AuthToken.class) {
-            MAC_ADMIN = macCoder;
-         }
-         return true;
-      } catch (Exception e) {
-         return false;
+         e.printStackTrace();
+         return null;
       }
    }
 
@@ -86,24 +54,17 @@ public class AuthToken {
     * Sets the shared secret. Needs to be called before this class is used. Returns false if there is an error which would typically be Java
     * not having strong crypto available.
     */
-   public static boolean setSecretGates(byte[] secret) {
+   public static boolean setSecret(byte[] secret) {
       try {
-         // append NTLA so updating it will invalidate old tokens
-         byte[] ntla = Long.toHexString(NOT_THAT_LONG_AGO).getBytes();
-         byte[] key = Arrays.copyOf(secret, secret.length + ntla.length);
-         System.arraycopy(ntla, 0, key, secret.length, ntla.length);
-         SecretKeySpec signingKey = new SecretKeySpec(key, "HmacSHA1");
-         Mac macCoder = Mac.getInstance("HmacSHA1");
-         macCoder.init(signingKey);
          synchronized (AuthToken.class) {
-            MAC_GATES = macCoder;
+            MAC_SECURE = createMac(Arrays.copyOfRange(secret, 1, secret.length - 1), SECURED_EXTRA.getBytes());
+            MAC_GATES = createMac(secret, new byte[0]);
          }
          return true;
       } catch (Exception e) {
          return false;
       }
    }
-
 
    /**
     * Encodes a auth token with all passed in values also present in the auth token.
@@ -163,7 +124,6 @@ public class AuthToken {
     * @param values the values of the token, the first numInToken elements get filled in from the token
     * @param numInToken the number of values to pull out from the token
     * @param token the base64 encoded token
-    * @param timedOut true if there is at least one value and the first value is less than the current time
     * @return true if it decodes successfully, and as a side effect fills in values with any values which were encoded in token
     */
    public static boolean decode(Mac theMac, int[] values, int numInToken, String token) {
@@ -184,7 +144,7 @@ public class AuthToken {
       }
       return false;
    }
-   
+
    /**
     * Return the number of minutes since NOT_THAT_LONG_AGO
     */
@@ -201,16 +161,11 @@ public class AuthToken {
       return AuthToken.encode(MAC_SECURE, vals, 2);
    }
 
-   public static String encodeAuthToken1Admin(int accountId, int val1, int timeoutInMinutes) {
-      int timeout = AuthToken.timeNowInMinutes() + timeoutInMinutes;
-      return AuthToken.encode(MAC_ADMIN, timeout, val1, accountId);
-   }
-
    public static String encodeAuthToken2Secure(int accountId, int val1, int val2, int timeoutInMinutes) {
       int timeout = AuthToken.timeNowInMinutes() + timeoutInMinutes;
       return AuthToken.encode(MAC_SECURE, timeout, val1, val2, accountId);
    }
-   
+
    public static String encodeAuthToken3Secure(int accountId, int val1, int val2, int val3, int timeoutInMinutes) {
       int timeout = AuthToken.timeNowInMinutes() + timeoutInMinutes;
       return AuthToken.encode(MAC_SECURE, timeout, val1, val2, val3, accountId);
@@ -233,18 +188,6 @@ public class AuthToken {
       }
       Decoded d = new Decoded();
       d.accountId = accountId;
-      d.miscValues = new int[] { vals[1] };
-      d.timeLeft = vals[0] - timeNowInMinutes();
-      return d;
-   }
-
-   public static Decoded decodeAuthToken1Admin(String token) {
-      int[] vals = new int[3];
-      if (!decode(MAC_ADMIN, vals, 3, token)) {
-         return null;
-      }
-      Decoded d = new Decoded();
-      d.accountId = vals[2];
       d.miscValues = new int[] { vals[1] };
       d.timeLeft = vals[0] - timeNowInMinutes();
       return d;

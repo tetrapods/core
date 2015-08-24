@@ -62,7 +62,10 @@ internal response Publish
     
 internal request RegistrySubscribe
 internal request RegistryUnsubscribe
+
 internal request ServicesSubscribe
+   1: string adminToken
+   
 internal request ServicesUnsubscribe
 
 internal request ServiceStatusUpdate
@@ -91,6 +94,14 @@ public response AdminAuthorize
    1: int accountId
    2: string email
    
+// get a short-lived session token with rights encoded    
+admin request AdminSessionToken
+   1: int accountId
+   2: string authToken @sensitive  // a valid login token
+   
+admin response AdminSessionToken    
+   1: string sessionToken @sensitive // a short lived session token
+   
 internal request AdminCreate
    1: string token @sensitive
    2: string email @sensitive
@@ -109,20 +120,19 @@ internal request AdminChangePassword
 internal request AdminResetPassword
    1: string token @sensitive
    2: int accountId
-   3: string password @sensitive
- 
+   3: string password @sensitive 
    
 internal request AdminChangeRights
    1: string token @sensitive
    2: int accountId
-   3: long rights
-
+   3: long rights 
+   
 public struct Admin
    1: int accountId
    2: string email @sensitive
    3: string hash @sensitive
-   4: long rights
-   5: long[] loginAttempts
+   4: long rights      
+   5: long[] loginAttempts 
 
    const int MAX_LOGIN_ATTEMPTS    = 5
    
@@ -130,6 +140,14 @@ public struct Admin
    const int RIGHTS_CLUSTER_WRITE  = 2
    const int RIGHTS_USER_READ      = 4
    const int RIGHTS_USER_WRITE     = 8
+   const int RIGHTS_RESERVED_1     = 16
+   const int RIGHTS_RESERVED_2     = 32
+   const int RIGHTS_RESERVED_3     = 64
+   const int RIGHTS_RESERVED_4     = 128   
+   const int RIGHTS_APP_SET_1      = 256  
+   const int RIGHTS_APP_SET_2      = 512
+   const int RIGHTS_APP_SET_3      = 1024
+   const int RIGHTS_APP_SET_4      = 2048
 
 public request KeepAlive
 
@@ -386,12 +404,10 @@ internal message Ownership.ReleaseOwnership
    2: string prefix
    3: string[] keys
    
-   
 ##########################################          
-
-
-
+ 
 internal request TetrapodClientSessions
 
 internal response TetrapodClientSessions  
-   1: int[] clientSessions
+   1: int[] clientSessions   
+   

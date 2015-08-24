@@ -30,7 +30,7 @@ define(function(require) {
          var email = self.addUserEmail().trim();
          if (email && email.length > 0) {
             app.server.sendDirect("AdminCreate", {
-               token: app.authtoken,
+               token: app.sessionToken,
                email: email,
                password: email,
                rights: 0
@@ -60,7 +60,7 @@ define(function(require) {
       // called when change password dialog is submitted
       function onEditPassword() {
          app.server.sendDirect("AdminChangePassword", {
-            token: app.authtoken,
+            token: app.sessionToken,
             oldPassword: self.modalOldPassword().trim(),
             newPassword: self.modalNewPassword().trim(),
          }, function(res) {
@@ -120,6 +120,10 @@ define(function(require) {
          self.clusterWrite = ko.observable();
          self.userRead = ko.observable();
          self.userWrite = ko.observable();
+         self.app1 = ko.observable();
+         self.app2 = ko.observable();
+         self.app3 = ko.observable();
+         self.app4 = ko.observable();
 
          updateRights(def.rights);
 
@@ -129,13 +133,17 @@ define(function(require) {
             self.clusterWrite(rights & CONSTS.RIGHTS_CLUSTER_WRITE);
             self.userRead(rights & CONSTS.RIGHTS_USER_READ);
             self.userWrite(rights & CONSTS.RIGHTS_USER_WRITE);
+            self.app1(rights & CONSTS.RIGHTS_APP_SET_1);
+            self.app2(rights & CONSTS.RIGHTS_APP_SET_2);
+            self.app3(rights & CONSTS.RIGHTS_APP_SET_3);
+            self.app4(rights & CONSTS.RIGHTS_APP_SET_4);
             self.updatingRights = false;
          }
 
          function deleteUser() {
             Alert.confirm("Are you sure you want to delete '" + self.email + "'?", function() {
                app.server.sendDirect("AdminDelete", {
-                  token: app.authtoken,
+                  token: app.sessionToken,
                   accountId: self.accountId
                }, function(res) {
                   if (res.isError()) {
@@ -148,7 +156,7 @@ define(function(require) {
          function resetPassword() {
             Alert.prompt("Change password for '" + self.email + "':", function(val) {
                app.server.sendDirect("AdminResetPassword", {
-                  token: app.authtoken,
+                  token: app.sessionToken,
                   accountId: self.accountId,
                   password: val
                }, function(res) {
@@ -176,6 +184,18 @@ define(function(require) {
             if (self.userWrite()) {
                r |= CONSTS.RIGHTS_USER_WRITE
             }
+            if (self.app1()) {
+               r |= CONSTS.RIGHTS_APP_SET_1
+            }
+            if (self.app2()) {
+               r |= CONSTS.RIGHTS_APP_SET_2
+            }
+            if (self.app3()) {
+               r |= CONSTS.RIGHTS_APP_SET_3
+            }
+            if (self.app4()) {
+               r |= CONSTS.RIGHTS_APP_SET_4
+            }
             return r;
          }
 
@@ -183,12 +203,16 @@ define(function(require) {
          self.clusterWrite.subscribe(changeRights);
          self.userRead.subscribe(changeRights);
          self.userWrite.subscribe(changeRights);
+         self.app1.subscribe(changeRights);
+         self.app2.subscribe(changeRights);
+         self.app3.subscribe(changeRights);
+         self.app4.subscribe(changeRights);
 
          function changeRights() {
             if (!self.updatingRights) {
                var r = rights();
                app.server.sendDirect("AdminChangeRights", {
-                  token: app.authtoken,
+                  token: app.sessionToken,
                   accountId: self.accountId,
                   rights: r
                }, function(res) {

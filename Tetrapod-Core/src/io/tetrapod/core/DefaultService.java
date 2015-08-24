@@ -180,6 +180,9 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
                   if (startPaused) {
                      updateStatus(getStatus() | Core.STATUS_PAUSED);
                   }
+
+                  AdminAuthToken.setSecret(Util.getProperty(AdminAuthToken.SHARED_SECRET_KEY));
+                  
                   onReadyToServe();
                   if (getEntityType() != Core.TYPE_TETRAPOD) {
                      if (serviceConnector != null) {

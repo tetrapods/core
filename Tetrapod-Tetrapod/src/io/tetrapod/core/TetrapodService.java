@@ -17,7 +17,6 @@ import org.slf4j.LoggerFactory;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.socket.SocketChannel;
-import io.netty.handler.codec.base64.Base64Dialect;
 import io.tetrapod.core.Session.RelayHandler;
 import io.tetrapod.core.registry.*;
 import io.tetrapod.core.rpc.*;
@@ -39,8 +38,6 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       io.tetrapod.core.registry.Registry.RegistryBroadcaster {
 
    public static final Logger logger = LoggerFactory.getLogger(TetrapodService.class);
-
-   private static final String SHARED_SECRET_KEY = "tetrapod.shared.secret";
 
    public final SecureRandom random = new SecureRandom();
 
@@ -307,7 +304,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       if (isStartingUp()) {
          importClusterPropertiesIntoRaft();
          try {
-            AuthToken.setSecret(getSharedSecret());
+            AdminAuthToken.setSecret(getSharedSecret());
             adminAccounts = new AdminAccounts(cluster);
 
             // FIXME:
@@ -378,13 +375,13 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    /**
     * Extract a shared secret key for seeding server HMACs
     */
-   public byte[] getSharedSecret() {
-      String secret = Util.getProperty(SHARED_SECRET_KEY);
+   public String getSharedSecret() {
+      String secret = Util.getProperty(AdminAuthToken.SHARED_SECRET_KEY);
       if (secret == null) {
          secret = AuthToken.generateSharedSecret();
-         cluster.setClusterProperty(new ClusterProperty(SHARED_SECRET_KEY, true, secret));
+         cluster.setClusterProperty(new ClusterProperty(AdminAuthToken.SHARED_SECRET_KEY, true, secret));
       }
-      return AESEncryptor.decodeBase64(secret, Base64Dialect.STANDARD);
+      return secret;
    }
 
    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -886,6 +883,13 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       if (servicesTopic == null) {
          return new Error(ERROR_UNKNOWN);
       }
+
+      if (!ctx.isFromService()) {
+         if (!adminAccounts.isValidAdminRequest(ctx, r.adminToken, Admin.RIGHTS_CLUSTER_READ)) {
+            return new Error(ERROR_INVALID_RIGHTS);
+         }
+      }
+
       synchronized (servicesTopicLock) {
          subscribe(servicesTopic.topicId, ctx.header.fromId);
          // send all current entities
@@ -967,6 +971,11 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    @Override
    public Response requestAdminLogin(AdminLoginRequest r, RequestContext ctxA) {
       return adminAccounts.requestAdminLogin(r, ctxA);
+   }
+
+   @Override
+   public Response requestAdminSessionToken(AdminSessionTokenRequest r, RequestContext ctx) {
+      return adminAccounts.requestAdminSessionToken(r, ctx);
    }
 
    @Override

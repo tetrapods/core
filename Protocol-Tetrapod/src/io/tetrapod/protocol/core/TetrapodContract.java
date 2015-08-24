@@ -27,6 +27,7 @@ public class TetrapodContract extends Contract {
       , AdminDeleteRequest.Handler
       , AdminLoginRequest.Handler
       , AdminResetPasswordRequest.Handler
+      , AdminSessionTokenRequest.Handler
       , AdminSubscribeRequest.Handler
       , ClaimOwnershipRequest.Handler
       , ClusterJoinRequest.Handler
@@ -76,6 +77,7 @@ public class TetrapodContract extends Contract {
          new LogRegistryStatsRequest(),
          new AdminLoginRequest(),
          new AdminAuthorizeRequest(),
+         new AdminSessionTokenRequest(),
          new AdminCreateRequest(),
          new AdminDeleteRequest(),
          new AdminChangePasswordRequest(),
@@ -112,6 +114,7 @@ public class TetrapodContract extends Contract {
          new PublishResponse(),
          new AdminLoginResponse(),
          new AdminAuthorizeResponse(),
+         new AdminSessionTokenResponse(),
          new GetSubscriberCountResponse(),
          new GetEntityInfoResponse(),
          new GetServiceBuildInfoResponse(),

@@ -12,32 +12,35 @@ import java.util.*;
 import java.util.concurrent.*;
 
 @SuppressWarnings("unused")
-public class ServicesSubscribeRequest extends Request {
-
-   public static final int STRUCT_ID = 7048310;
-   public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;
+public class AdminSessionTokenResponse extends Response {
    
-   public ServicesSubscribeRequest() {
+   public static final int STRUCT_ID = 1057000;
+   public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;
+    
+   public AdminSessionTokenResponse() {
       defaults();
    }
 
-   public ServicesSubscribeRequest(String adminToken) {
-      this.adminToken = adminToken;
+   public AdminSessionTokenResponse(String sessionToken) {
+      this.sessionToken = sessionToken;
    }   
-
-   public String adminToken;
+   
+   /**
+    * a short lived session token
+    */
+   public String sessionToken;
 
    public final Structure.Security getSecurity() {
-      return Security.INTERNAL;
+      return Security.ADMIN;
    }
 
    public final void defaults() {
-      adminToken = null;
+      sessionToken = null;
    }
    
    @Override
    public final void write(DataSource data) throws IOException {
-      data.write(1, this.adminToken);
+      data.write(1, this.sessionToken);
       data.writeEndTag();
    }
    
@@ -47,7 +50,7 @@ public class ServicesSubscribeRequest extends Request {
       while (true) {
          int tag = data.readTag();
          switch (tag) {
-            case 1: this.adminToken = data.read_string(tag); break;
+            case 1: this.sessionToken = data.read_string(tag); break;
             case Codec.END_TAG:
                return;
             default:
@@ -56,39 +59,33 @@ public class ServicesSubscribeRequest extends Request {
          }
       }
    }
-   
+  
    public final int getContractId() {
-      return ServicesSubscribeRequest.CONTRACT_ID;
+      return AdminSessionTokenResponse.CONTRACT_ID;
    }
 
    public final int getStructId() {
-      return ServicesSubscribeRequest.STRUCT_ID;
+      return AdminSessionTokenResponse.STRUCT_ID;
    }
-   
-   @Override
-   public final Response dispatch(ServiceAPI is, RequestContext ctx) {
-      if (is instanceof Handler)
-         return ((Handler)is).requestServicesSubscribe(this, ctx);
-      return is.genericRequest(this, ctx);
-   }
-   
-   public static interface Handler extends ServiceAPI {
-      Response requestServicesSubscribe(ServicesSubscribeRequest r, RequestContext ctx);
-   }
-   
+
    public final String[] tagWebNames() {
       // Note do not use this tags in long term serializations (to disk or databases) as 
       // implementors are free to rename them however they wish.  A null means the field
       // is not to participate in web serialization (remaining at default)
       String[] result = new String[1+1];
-      result[1] = "adminToken";
+      result[1] = "sessionToken";
       return result;
    }
-   
+
    public final Structure make() {
-      return new ServicesSubscribeRequest();
+      return new AdminSessionTokenResponse();
    }
-   
+
+   protected boolean isSensitive(String fieldName) {
+      if (fieldName.equals("sessionToken")) return true;
+      return false;
+   }
+
    public final StructDescription makeDescription() {
       StructDescription desc = new StructDescription();
       desc.tagWebNames = tagWebNames();
@@ -97,5 +94,4 @@ public class ServicesSubscribeRequest extends Request {
       desc.types[1] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
       return desc;
    }
-
-}
+ }

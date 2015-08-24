@@ -103,15 +103,35 @@ define(["knockout", "jquery", "bootbox", "toolbox", "protocol/server", "protocol
                self.accountId(result.accountId);
             }
 
-            $('#login-wrapper').hide();
-            $('#app-wrapper').show();
-            server.sendDirect("ServicesSubscribe", {}, server.logResponse);
-            server.sendDirect("AdminSubscribe", {
-               adminToken: self.authtoken
-            }, server.logResponse);
+            refreshLoginToken(function() {
+               $('#login-wrapper').hide();
+               $('#app-wrapper').show();
+               server.sendDirect("ServicesSubscribe", {
+                  adminToken: self.sessionToken
+               }, server.logResponse);
+               server.sendDirect("AdminSubscribe", {
+                  adminToken: self.sessionToken
+               }, server.logResponse);
+               setInterval(refreshLoginToken, 60000 * 10); // refresh token every 10 minutes
+            });
+
          } else {
             onLogout();
          }
+      }
+
+      function refreshLoginToken(callback) {
+         server.sendDirect("AdminSessionToken", {
+            accountId: self.accountId(),
+            authToken: self.authtoken,
+         }, function(result) {
+            if (result.isError()) {
+               onLogout();
+            } else if (callback) {
+               self.sessionToken = result.sessionToken;
+               callback();
+            }
+         });
       }
 
       function onLogout() {
@@ -121,6 +141,8 @@ define(["knockout", "jquery", "bootbox", "toolbox", "protocol/server", "protocol
          $('#app-wrapper').hide();
          model.clear();
          self.email(null);
+         self.sessionToken = null;
+         self.accountId(0);
       }
 
       function changePassword() {
