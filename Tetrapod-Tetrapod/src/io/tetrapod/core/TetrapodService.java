@@ -12,6 +12,7 @@ import java.util.*;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
+import org.omg.CORBA.UNKNOWN;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -421,7 +422,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       final EntityInfo e = registry.getEntity(entityId);
       if (e != null) {
          if (e.reclaimToken == token) {
-            // HACK: as a side-effect, we update last contact time 
+            // HACK: as a side-effect, we update last contact time
             e.setLastContact(System.currentTimeMillis());
             if (e.isGone()) {
                registry.updateStatus(e, e.status & ~Core.STATUS_GONE);
@@ -480,7 +481,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
                } catch (Throwable e) {
                   logger.error(e.getMessage(), e);
                } finally {
-                  // FIXME: This is fragile -- if we delete an entity with queued work, we need to make sure we 
+                  // FIXME: This is fragile -- if we delete an entity with queued work, we need to make sure we
                   // release all the buffers in the queued work items.
                   buf.release();
                }
@@ -771,7 +772,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       info.type = ctx.session.getTheirEntityType();
       if (info.type == Core.TYPE_ANONYMOUS) {
          info.type = Core.TYPE_CLIENT;
-         // clobber their reported host with their IP 
+         // clobber their reported host with their IP
          info.host = ctx.session.getPeerHostname();
       }
 
@@ -870,7 +871,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
    @Override
    public Response requestRegistryUnsubscribe(RegistryUnsubscribeRequest r, RequestContext ctx) {
-      // TODO: validate  
+      // TODO: validate
       synchronized (registryTopicLock) {
          unsubscribe(registryTopic.topicId, ctx.header.fromId);
       }
@@ -905,7 +906,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
    @Override
    public Response requestServicesUnsubscribe(ServicesUnsubscribeRequest r, RequestContext ctx) {
-      // TODO: validate 
+      // TODO: validate
       synchronized (servicesTopicLock) {
          unsubscribe(servicesTopic.topicId, ctx.header.fromId);
       }
@@ -931,7 +932,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       //      for (WebRoute r : req.routes) {
       //         webRoutes.setRoute(r.path, r.contractId, r.structId);
       //         logger.debug("Setting Web route [{}] for {}", r.path, r.contractId);
-      //      } 
+      //      }
 
       cluster.registerContract(req.info);
 
@@ -1075,6 +1076,21 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       }
 
       return Response.error(ERROR_UNKNOWN_ENTITY_ID);
+   }
+
+   @Override
+   public Response requestSetEntityReferrer(SetEntityReferrerRequest r, RequestContext ctx) {
+      final EntityInfo e = registry.getEntity(ctx.header.fromId);
+      if (e != null) {
+         synchronized (e) {
+            final Session s = e.getSession();
+            if (s != null && s instanceof WebHttpSession) {
+               ((WebHttpSession) s).setHttpReferrer(r.referrer);
+            }
+         }
+      }
+
+      return Response.error(ERROR_UNKNOWN);
    }
 
    /////////////// RAFT ///////////////

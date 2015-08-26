@@ -161,6 +161,9 @@ internal request GetSubscriberCount
 internal response GetSubscriberCount
    1: int count
 
+public request SetEntityReferrer
+   1: string referrer
+
 internal request GetEntityInfo
    1: int entityId
 
@@ -410,4 +413,3 @@ internal request TetrapodClientSessions
 
 internal response TetrapodClientSessions  
    1: int[] clientSessions   
-   
