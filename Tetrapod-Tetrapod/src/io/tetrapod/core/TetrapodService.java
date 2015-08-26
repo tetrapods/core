@@ -35,7 +35,7 @@ import io.tetrapod.protocol.storage.*;
  * of client connections
  */
 public class TetrapodService extends DefaultService implements TetrapodContract.API, StorageContract.API, RaftContract.API, RelayHandler,
-      io.tetrapod.core.registry.Registry.RegistryBroadcaster {
+         io.tetrapod.core.registry.Registry.RegistryBroadcaster {
 
    public static final Logger logger = LoggerFactory.getLogger(TetrapodService.class);
 
@@ -104,7 +104,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          this.token = EntityToken.encode(entityId, reclaimToken);
 
          final EntityInfo e = new EntityInfo(entityId, 0, reclaimToken, Util.getHostName(), 0, Core.TYPE_TETRAPOD, getShortName(),
-               buildNumber, 0, getContractId());
+                  buildNumber, 0, getContractId());
          registry.register(e);
          logger.info(String.format("SELF-REGISTERED: 0x%08X %s", entityId, e));
 
@@ -318,7 +318,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
             // create secure port servers, if configured
             if (sslContext != null) {
                httpServer = new Server(getHTTPSPort(), new WebSessionFactory(cluster.getWebRootDirs(), "/sockets"), dispatcher, sslContext,
-                     false);
+                        false);
                servers.add((httpServer));
                httpServers.add(httpServer);
             }
@@ -528,7 +528,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    }
 
    private void broadcastTopic(final EntityInfo publisher, final Subscriber sub, final Topic topic, final MessageHeader header,
-         final ByteBuf buf) throws IOException {
+            final ByteBuf buf) throws IOException {
       final int ri = buf.readerIndex();
       final EntityInfo e = registry.getEntity(sub.entityId);
       if (e != null) {
@@ -885,6 +885,9 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       }
 
       if (!ctx.isFromService()) {
+         if (adminAccounts == null) {
+            return new Error(ERROR_SERVICE_UNAVAILABLE);
+         }
          if (!adminAccounts.isValidAdminRequest(ctx, r.adminToken, Admin.RIGHTS_CLUSTER_READ)) {
             return new Error(ERROR_INVALID_RIGHTS);
          }
