@@ -5,6 +5,7 @@ import io.tetrapod.core.Session;
 import io.tetrapod.core.rpc.Structure.Security;
 import io.tetrapod.core.utils.*;
 import io.tetrapod.core.utils.AuthToken.Decoded;
+import io.tetrapod.core.utils.LoginAuthToken.DecodedSession;
 import io.tetrapod.protocol.core.*;
 
 public class SessionRequestContext extends RequestContext {
@@ -53,7 +54,7 @@ public class SessionRequestContext extends RequestContext {
       Security senderSecurity = getSenderSecurity();
       if (senderSecurity == Security.PUBLIC) {
          // upgrade them to protected if their token is good
-         Decoded d = AuthToken.decodeUserToken(authToken, accountId, header.fromId);
+         DecodedSession d = LoginAuthToken.decodeSessionToken(authToken, accountId, header.fromId);
          if (d != null && d.timeLeft >= 0) {
             senderSecurity = Security.PROTECTED;
          } else {
