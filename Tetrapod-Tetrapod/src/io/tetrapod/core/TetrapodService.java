@@ -1085,6 +1085,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
             final Session s = e.getSession();
             if (s != null && s instanceof WebHttpSession) {
                ((WebHttpSession) s).setHttpReferrer(r.referrer);
+               return Response.SUCCESS;
             }
          }
       }
