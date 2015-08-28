@@ -35,7 +35,7 @@ import io.tetrapod.protocol.storage.*;
  * of client connections
  */
 public class TetrapodService extends DefaultService implements TetrapodContract.API, StorageContract.API, RaftContract.API, RelayHandler,
-      io.tetrapod.core.registry.Registry.RegistryBroadcaster {
+         io.tetrapod.core.registry.Registry.RegistryBroadcaster {
 
    public static final Logger logger = LoggerFactory.getLogger(TetrapodService.class);
 
@@ -104,7 +104,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          this.token = EntityToken.encode(entityId, reclaimToken);
 
          final EntityInfo e = new EntityInfo(entityId, 0, reclaimToken, Util.getHostName(), 0, Core.TYPE_TETRAPOD, getShortName(),
-               buildNumber, 0, getContractId());
+                  buildNumber, 0, getContractId());
          registry.register(e);
          logger.info(String.format("SELF-REGISTERED: 0x%08X %s", entityId, e));
 
@@ -318,7 +318,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
             // create secure port servers, if configured
             if (sslContext != null) {
                httpServer = new Server(getHTTPSPort(), new WebSessionFactory(cluster.getWebRootDirs(), "/sockets"), dispatcher, sslContext,
-                     false);
+                        false);
                servers.add((httpServer));
                httpServers.add(httpServer);
             }
@@ -421,7 +421,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       final EntityInfo e = registry.getEntity(entityId);
       if (e != null) {
          if (e.reclaimToken == token) {
-            // HACK: as a side-effect, we update last contact time 
+            // HACK: as a side-effect, we update last contact time
             e.setLastContact(System.currentTimeMillis());
             if (e.isGone()) {
                registry.updateStatus(e, e.status & ~Core.STATUS_GONE);
@@ -480,7 +480,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
                } catch (Throwable e) {
                   logger.error(e.getMessage(), e);
                } finally {
-                  // FIXME: This is fragile -- if we delete an entity with queued work, we need to make sure we 
+                  // FIXME: This is fragile -- if we delete an entity with queued work, we need to make sure we
                   // release all the buffers in the queued work items.
                   buf.release();
                }
@@ -528,7 +528,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    }
 
    private void broadcastTopic(final EntityInfo publisher, final Subscriber sub, final Topic topic, final MessageHeader header,
-         final ByteBuf buf) throws IOException {
+            final ByteBuf buf) throws IOException {
       final int ri = buf.readerIndex();
       final EntityInfo e = registry.getEntity(sub.entityId);
       if (e != null) {
@@ -771,7 +771,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       info.type = ctx.session.getTheirEntityType();
       if (info.type == Core.TYPE_ANONYMOUS) {
          info.type = Core.TYPE_CLIENT;
-         // clobber their reported host with their IP 
+         // clobber their reported host with their IP
          info.host = ctx.session.getPeerHostname();
       }
 
@@ -870,7 +870,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
    @Override
    public Response requestRegistryUnsubscribe(RegistryUnsubscribeRequest r, RequestContext ctx) {
-      // TODO: validate  
+      // TODO: validate
       synchronized (registryTopicLock) {
          unsubscribe(registryTopic.topicId, ctx.header.fromId);
       }
@@ -885,6 +885,9 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       }
 
       if (!ctx.isFromService()) {
+         if (adminAccounts == null) {
+            return new Error(ERROR_SERVICE_UNAVAILABLE);
+         }
          if (!adminAccounts.isValidAdminRequest(ctx, r.adminToken, Admin.RIGHTS_CLUSTER_READ)) {
             return new Error(ERROR_INVALID_RIGHTS);
          }
@@ -902,7 +905,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
    @Override
    public Response requestServicesUnsubscribe(ServicesUnsubscribeRequest r, RequestContext ctx) {
-      // TODO: validate 
+      // TODO: validate
       synchronized (servicesTopicLock) {
          unsubscribe(servicesTopic.topicId, ctx.header.fromId);
       }
@@ -928,7 +931,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       //      for (WebRoute r : req.routes) {
       //         webRoutes.setRoute(r.path, r.contractId, r.structId);
       //         logger.debug("Setting Web route [{}] for {}", r.path, r.contractId);
-      //      } 
+      //      }
 
       cluster.registerContract(req.info);
 
@@ -1072,6 +1075,21 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       }
 
       return Response.error(ERROR_UNKNOWN_ENTITY_ID);
+   }
+
+   @Override
+   public Response requestSetEntityReferrer(SetEntityReferrerRequest r, RequestContext ctx) {
+      final EntityInfo e = registry.getEntity(ctx.header.fromId);
+      if (e != null) {
+         synchronized (e) {
+            final Session s = e.getSession();
+            if (s != null && s instanceof WebHttpSession) {
+               ((WebHttpSession) s).setHttpReferrer(r.referrer);
+            }
+         }
+      }
+
+      return Response.error(ERROR_UNKNOWN);
    }
 
    /////////////// RAFT ///////////////

@@ -52,6 +52,7 @@ public class TetrapodContract extends Contract {
       , ServicesUnsubscribeRequest.Handler
       , SetAlternateIdRequest.Handler
       , SetClusterPropertyRequest.Handler
+      , SetEntityReferrerRequest.Handler
       , SetWebRootRequest.Handler
       , SnapshotRequest.Handler
       , SubscribeOwnershipRequest.Handler
@@ -86,6 +87,7 @@ public class TetrapodContract extends Contract {
          new KeepAliveRequest(),
          new SetAlternateIdRequest(),
          new GetSubscriberCountRequest(),
+         new SetEntityReferrerRequest(),
          new GetEntityInfoRequest(),
          new GetServiceBuildInfoRequest(),
          new ExecuteBuildCommandRequest(),

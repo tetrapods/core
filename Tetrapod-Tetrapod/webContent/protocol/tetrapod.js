@@ -65,6 +65,7 @@ function TP_Tetrapod(server) {
    server.register("request", "Tetrapod", "SetAlternateId", 1, 10499521);
    server.register("request", "Tetrapod", "GetSubscriberCount", 1, 9966915);
    server.register("response", "Tetrapod", "GetSubscriberCount", 1, 6503857);
+   server.register("request", "Tetrapod", "SetEntityReferrer", 1, 1987578);
    server.register("request", "Tetrapod", "GetEntityInfo", 1, 14891231);
    server.register("response", "Tetrapod", "GetEntityInfo", 1, 11007413);
    server.register("message", "Tetrapod", "Entity", 1, 10913291);
