@@ -60,6 +60,7 @@ public class AuthToken {
             MAC_SECURE = createMac(Arrays.copyOfRange(secret, 1, secret.length - 1), SECURED_EXTRA.getBytes());
             MAC_GATES = createMac(secret, new byte[0]);
          }
+         LoginAuthToken.setSecret(secret);
          return true;
       } catch (Exception e) {
          return false;
