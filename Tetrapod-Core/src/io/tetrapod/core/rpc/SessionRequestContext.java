@@ -1,10 +1,10 @@
 package io.tetrapod.core.rpc;
 
 import static io.tetrapod.protocol.core.CoreContract.*;
+
 import io.tetrapod.core.Session;
 import io.tetrapod.core.rpc.Structure.Security;
 import io.tetrapod.core.utils.*;
-import io.tetrapod.core.utils.AuthToken.Decoded;
 import io.tetrapod.core.utils.LoginAuthToken.DecodedSession;
 import io.tetrapod.protocol.core.*;
 
