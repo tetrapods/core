@@ -73,7 +73,7 @@ public class AuthToken {
     * @param values the values which form the basis of the token
     * @return the base64 encoded token
     */
-   public static String encode(Mac theMac, int... values) {
+   protected static String encode(Mac theMac, int... values) {
       return encode(theMac, values, values.length);
    }
 
@@ -86,7 +86,7 @@ public class AuthToken {
     * @param numInToken the number of values which will need to be encoded inside the token
     * @return the base64 encoded token
     */
-   public static String encode(Mac theMAC, int[] values, int numInToken) {
+   protected static String encode(Mac theMAC, int[] values, int numInToken) {
       ByteBuf buf = Unpooled.buffer();
       try {
          ByteBufDataSource bds = new ByteBufDataSource(buf);
@@ -127,7 +127,7 @@ public class AuthToken {
     * @param token the base64 encoded token
     * @return true if it decodes successfully, and as a side effect fills in values with any values which were encoded in token
     */
-   public static boolean decode(Mac theMac, int[] values, int numInToken, String token) {
+   protected static boolean decode(Mac theMac, int[] values, int numInToken, String token) {
       ByteBuf tokenBuf = null;
       try {
          tokenBuf = Base64.decode(Unpooled.wrappedBuffer(token.getBytes()), Base64Dialect.URL_SAFE);
@@ -156,90 +156,9 @@ public class AuthToken {
 
    // encode/decode wrappers for known auth token types
 
-   public static String encodeUserToken(int accountId, int entityId, int properties, int timeoutInMinutes) {
-      int timeout = AuthToken.timeNowInMinutes() + timeoutInMinutes;
-      int[] vals = { timeout, properties, accountId, entityId };
-      return AuthToken.encode(MAC_SECURE, vals, 2);
-   }
-
    public static String encodeAuthToken2Secure(int accountId, int val1, int val2, int timeoutInMinutes) {
       int timeout = AuthToken.timeNowInMinutes() + timeoutInMinutes;
       return AuthToken.encode(MAC_SECURE, timeout, val1, val2, accountId);
-   }
-
-   public static String encodeAuthToken3Secure(int accountId, int val1, int val2, int val3, int timeoutInMinutes) {
-      int timeout = AuthToken.timeNowInMinutes() + timeoutInMinutes;
-      return AuthToken.encode(MAC_SECURE, timeout, val1, val2, val3, accountId);
-   }
-
-   public static String encodeAuthToken2Gates(int accountId, int val1, int val2, int timeoutInMinutes) {
-      int timeout = AuthToken.timeNowInMinutes() + timeoutInMinutes;
-      return AuthToken.encode(MAC_GATES, timeout, val1, val2, accountId);
-   }
-
-   public static String encodeAuthToken3Gates(int accountId, int val1, int val2, int val3, int timeoutInMinutes) {
-      int timeout = AuthToken.timeNowInMinutes() + timeoutInMinutes;
-      return AuthToken.encode(MAC_GATES, timeout, val1, val2, val3, accountId);
-   }
-
-   public static Decoded decodeUserToken(String token, int accountId, int entityId) {
-      int[] vals = { 0, 0, accountId, entityId };
-      if (!decode(MAC_SECURE, vals, 2, token)) {
-         return null;
-      }
-      Decoded d = new Decoded();
-      d.accountId = accountId;
-      d.miscValues = new int[] { vals[1] };
-      d.timeLeft = vals[0] - timeNowInMinutes();
-      return d;
-   }
-
-   public static Decoded decodeAuthToken2Secure(String token) {
-      int[] vals = new int[4];
-      if (!decode(MAC_SECURE, vals, 4, token)) {
-         return null;
-      }
-      Decoded d = new Decoded();
-      d.accountId = vals[3];
-      d.miscValues = new int[] { vals[1], vals[2] };
-      d.timeLeft = vals[0] - timeNowInMinutes();
-      return d;
-   }
-
-   public static Decoded decodeAuthToken3Secure(String token) {
-      int[] vals = new int[5];
-      if (!decode(MAC_SECURE, vals, 5, token)) {
-         return null;
-      }
-      Decoded d = new Decoded();
-      d.accountId = vals[4];
-      d.miscValues = new int[] { vals[1], vals[2], vals[3] };
-      d.timeLeft = vals[0] - timeNowInMinutes();
-      return d;
-   }
-
-   public static Decoded decodeAuthToken2Gates(String token) {
-      int[] vals = new int[4];
-      if (!decode(MAC_GATES, vals, 4, token)) {
-         return null;
-      }
-      Decoded d = new Decoded();
-      d.accountId = vals[3];
-      d.miscValues = new int[] { vals[1], vals[2] };
-      d.timeLeft = vals[0] - timeNowInMinutes();
-      return d;
-   }
-
-   public static Decoded decodeAuthToken3Gates(String token) {
-      int[] vals = new int[5];
-      if (!decode(MAC_GATES, vals, 5, token)) {
-         return null;
-      }
-      Decoded d = new Decoded();
-      d.accountId = vals[4];
-      d.miscValues = new int[] { vals[1], vals[2], vals[3] };
-      d.timeLeft = vals[0] - timeNowInMinutes();
-      return d;
    }
 
    public static class Decoded {
