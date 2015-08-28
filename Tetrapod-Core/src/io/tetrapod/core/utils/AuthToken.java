@@ -3,16 +3,13 @@ package io.tetrapod.core.utils;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.security.SecureRandom;
-import java.util.Arrays;
 import java.util.Random;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
-import io.netty.handler.codec.base64.Base64;
-import io.netty.handler.codec.base64.Base64Dialect;
+import io.netty.buffer.*;
+import io.netty.handler.codec.base64.*;
 import io.tetrapod.core.serialize.datasources.ByteBufDataSource;
 
 /**
@@ -25,9 +22,6 @@ import io.tetrapod.core.serialize.datasources.ByteBufDataSource;
 public class AuthToken {
 
    private static final long NOT_THAT_LONG_AGO = 1395443029600L;
-   private static Mac        MAC_SECURE        = null;
-   private static Mac        MAC_GATES         = null;
-   private static String     SECURED_EXTRA     = "HkRzUvnYA5laYVkCHyFNViqLiP2GlzdMLAJnQZKqCMBQhZEhCZ"; // change if we have a breach
 
    /**
     * Creates a MAC from a secret and some additional
@@ -49,6 +43,27 @@ public class AuthToken {
          return null;
       }
    }
+   
+   /**
+    * Creates a MAC from a secret and some additional
+    */
+   public static Mac createMacLegacy(byte[] secret) {
+      try {
+         // append NTLA so updating it will invalidate old tokens
+         byte[] ntla = Long.toHexString(NOT_THAT_LONG_AGO).getBytes();
+         byte[] key = new byte[secret.length + ntla.length];
+         System.arraycopy(secret, 0, key, 0, secret.length);
+         System.arraycopy(ntla, 0, key, secret.length, ntla.length);
+         SecretKeySpec signingKey = new SecretKeySpec(key, "HmacSHA1");
+         Mac macCoder = Mac.getInstance("HmacSHA1");
+         macCoder.init(signingKey);
+         return macCoder;
+      } catch (Exception e) {
+         e.printStackTrace();
+         return null;
+      }
+   }
+
 
    /**
     * Sets the shared secret. Needs to be called before this class is used. Returns false if there is an error which would typically be Java
@@ -56,11 +71,8 @@ public class AuthToken {
     */
    public static boolean setSecret(byte[] secret) {
       try {
-         synchronized (AuthToken.class) {
-            MAC_SECURE = createMac(Arrays.copyOfRange(secret, 1, secret.length - 1), SECURED_EXTRA.getBytes());
-            MAC_GATES = createMac(secret, new byte[0]);
-         }
          LoginAuthToken.setSecret(secret);
+         LegacyAuthToken.setSecret(secret);
          return true;
       } catch (Exception e) {
          return false;
@@ -152,13 +164,6 @@ public class AuthToken {
    public static int timeNowInMinutes() {
       long delta = System.currentTimeMillis() - NOT_THAT_LONG_AGO;
       return (int) (delta / 60000);
-   }
-
-   // encode/decode wrappers for known auth token types
-
-   public static String encodeAuthToken2Secure(int accountId, int val1, int val2, int timeoutInMinutes) {
-      int timeout = AuthToken.timeNowInMinutes() + timeoutInMinutes;
-      return AuthToken.encode(MAC_SECURE, timeout, val1, val2, accountId);
    }
 
    public static class Decoded {
