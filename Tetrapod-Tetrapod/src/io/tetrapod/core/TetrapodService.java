@@ -1086,11 +1086,13 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
             if (s != null && s instanceof WebHttpSession) {
                ((WebHttpSession) s).setHttpReferrer(r.referrer);
                return Response.SUCCESS;
+            } else {
+               return Response.error(ERROR_INVALID_DATA);
             }
          }
       }
 
-      return Response.error(ERROR_UNKNOWN);
+      return Response.error(ERROR_UNKNOWN_ENTITY_ID);
    }
 
    /////////////// RAFT ///////////////
