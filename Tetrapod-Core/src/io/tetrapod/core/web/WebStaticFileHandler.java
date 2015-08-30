@@ -147,8 +147,8 @@ class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRequest> 
          response.headers().set(CONNECTION, HttpHeaders.Values.KEEP_ALIVE);
       }
       if (result.doNotCache || noCaching) {
-         // see http://stackoverflow.com/questions/49547/making-sure-a-web-page-is-not-cached-across-all-browsers
-         response.headers().set(CACHE_CONTROL, new String[] { NO_CACHE, NO_STORE, MUST_REVALIDATE });
+          // see http://stackoverflow.com/questions/49547/making-sure-a-web-page-is-not-cached-across-all-browsers
+         response.headers().set(CACHE_CONTROL, NO_CACHE + ", " + NO_STORE + ", " + MUST_REVALIDATE);
          response.headers().add(PRAGMA, NO_CACHE);
          response.headers().add(EXPIRES, 0);
       } else {
