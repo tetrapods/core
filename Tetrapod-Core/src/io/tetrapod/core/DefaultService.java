@@ -554,13 +554,26 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
          if (!dispatcher.dispatch(new Runnable() {
             public void run() {
                try {
-                  RequestContext ctx = new SessionRequestContext(header, fromSession);
+                  final RequestContext ctx = fromSession != null ? new SessionRequestContext(header, fromSession)
+                           : new InternalRequestContext(header, new ResponseHandler() {
+                     @Override
+                     public void onResponse(Response res) {
+                        try {
+                           async.setResponse(res);
+                        } catch (Throwable e) {
+                           logger.error(e.getMessage(), e);
+                           async.setResponse(new Error(ERROR_UNKNOWN));
+                        }
+                     }
+                  });
                   Response res = req.securityCheck(ctx);
                   if (res == null) {
                      res = req.dispatch(svc, ctx);
                   }
                   if (res != null) {
+                     if (res != Response.PENDING) {
                      async.setResponse(res);
+                     }
                   } else {
                      async.setResponse(new Error(ERROR_UNKNOWN));
                   }

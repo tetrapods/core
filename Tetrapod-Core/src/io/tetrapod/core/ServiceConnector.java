@@ -19,19 +19,19 @@ import org.slf4j.*;
  */
 public class ServiceConnector implements DirectConnectionRequest.Handler, ValidateConnectionRequest.Handler {
 
-   private static final Logger             logger            = LoggerFactory.getLogger(ServiceConnector.class);
+   private static final Logger logger = LoggerFactory.getLogger(ServiceConnector.class);
 
    /**
     * The number of requests sent to a specific service that triggers us to start a direct session
     */
-   private static final int                REQUEST_THRESHOLD = 100;
+   private static final int REQUEST_THRESHOLD = 100;
 
-   private Map<Integer, DirectServiceInfo> services          = new ConcurrentHashMap<>();
+   private Map<Integer, DirectServiceInfo> services = new ConcurrentHashMap<>();
 
-   private final DefaultService            service;
-   private final SSLContext                sslContext;
+   private final DefaultService service;
+   private final SSLContext     sslContext;
 
-   private Server                          server;
+   private Server server;
 
    public ServiceConnector(DefaultService service, SSLContext sslContext) {
       this.service = service;
@@ -119,16 +119,16 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
             pending = true;
             valid = false;
             service.clusterClient.getSession().sendRequest(new DirectConnectionRequest(token), entityId, (byte) 30)
-                  .handle(new ResponseHandler() {
-                     @Override
-                     public void onResponse(Response res) {
-                        if (res.isError()) {
-                           failure();
-                        } else {
-                           connect((DirectConnectionResponse) res);
+                     .handle(new ResponseHandler() {
+                        @Override
+                        public void onResponse(Response res) {
+                           if (res.isError()) {
+                              failure();
+                           } else {
+                              connect((DirectConnectionResponse) res);
+                           }
                         }
-                     }
-                  });
+                     });
          }
       }
 
@@ -194,7 +194,7 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
          if (entityId != Core.UNADDRESSED) {
             if (entityId == service.getEntityId()) {
                if (!isPending) {
-                  logger.warn("For some reason we're sending {} to ourselves", req);                  
+                  logger.warn("For some reason we're sending {} to ourselves", req);
                }
             } else {
                final DirectServiceInfo s = getDirectServiceInfo(entityId);
@@ -221,7 +221,7 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
       return service.clusterClient.getSession();
    }
 
-   public Response sendPendingRequest(final Request req, int toEntityId, final PendingResponseHandler handler) {     
+   public Response sendPendingRequest(final Request req, int toEntityId, final PendingResponseHandler handler) {
       if (toEntityId == Core.UNADDRESSED) {
          Entity e = service.services.getRandomAvailableService(req.getContractId());
          if (e != null) {
@@ -246,11 +246,7 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
                   if (pendingRes == null) {
                      pendingRes = new Error(ERROR_UNKNOWN);
                   }
-                  if (handler.session != null) {
-                     handler.session.sendResponse(pendingRes, handler.originalRequestId);
-                  } else {
-                     logger.error("I literally can't even ({})", req);
-                  }
+                  handler.sendResponse(pendingRes);
                }
             }
          });

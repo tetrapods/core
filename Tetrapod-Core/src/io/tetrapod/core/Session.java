@@ -220,11 +220,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
                if (pendingRes == null) {
                   pendingRes = new Error(ERROR_UNKNOWN);
                }
-               if (pendingHandler.session != null) {
-                  pendingHandler.session.sendResponse(pendingRes, pendingHandler.originalRequestId);
-               } else {
-                  sendResponse(pendingRes, pendingHandler.originalRequestId);
-               }
+               pendingHandler.sendResponse(pendingRes);
             }
          }
       });

@@ -14,6 +14,8 @@ abstract public class RequestContext {
 
    abstract public Response securityCheck(Request request);
 
+   abstract public void handlePendingResponse(Response res, int originalRequestId);
+
    public boolean isFromClient() {
       return header.fromType == Core.TYPE_CLIENT;
    }

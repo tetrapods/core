@@ -1,5 +1,8 @@
 package io.tetrapod.core.rpc;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import io.tetrapod.core.Session;
 
 /**
@@ -7,28 +10,45 @@ import io.tetrapod.core.Session;
  */
 public abstract class PendingResponseHandler {
 
-   public final int originalRequestId;
-   public final Session session;   
-   
+   public static final Logger logger = LoggerFactory.getLogger(PendingResponseHandler.class);
+
+   public final RequestContext context;
+   public final int            originalRequestId;
+   public final Session        session;
+
    public PendingResponseHandler(RequestContext ctx) {
-      originalRequestId = ctx.header.requestId;
+      this.context = ctx;
+      this.originalRequestId = ctx.header.requestId;
       if (ctx instanceof SessionRequestContext) {
-         session = ((SessionRequestContext) ctx).session;
+         this.session = ((SessionRequestContext) ctx).session;
       } else {
-         session = null;
+         this.session = null;
       }
    }
 
    public PendingResponseHandler(PendingResponseHandler handler) {
-      originalRequestId = handler.originalRequestId;
-      session = handler.session;
+      this.originalRequestId = handler.originalRequestId;
+      this.session = handler.session;
+      this.context = null;
    }
 
    public PendingResponseHandler(int originalRequestId) {
       this.originalRequestId = originalRequestId;
-      session = null;
+      this.session = null;
+      this.context = null;
    }
 
    abstract public Response onResponse(Response res);
+
+   // return the response we were pending on
+   public void sendResponse(Response pendingRes) {
+      if (context != null) {
+         context.handlePendingResponse(pendingRes, originalRequestId);
+      } else if (session != null) {
+         session.sendResponse(pendingRes, originalRequestId);
+      } else {
+         logger.error("I literally can't even ({{})", pendingRes);
+      }
+   }
 
 }

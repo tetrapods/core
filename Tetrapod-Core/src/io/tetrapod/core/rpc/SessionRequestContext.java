@@ -11,14 +11,19 @@ import io.tetrapod.protocol.core.*;
 public class SessionRequestContext extends RequestContext {
 
    private final static boolean USE_SECURITY = true;
-   
-   public final Session       session;
+
+   public final Session session;
 
    public SessionRequestContext(RequestHeader header, Session session) {
       super(header);
       this.session = session;
    }
-   
+
+   @Override
+   public void handlePendingResponse(Response res, int originalRequestId) {
+      session.sendResponse(res, originalRequestId);
+   }
+
    @Override
    public Response securityCheck(Request request) {
       if (USE_SECURITY) {
@@ -29,7 +34,7 @@ public class SessionRequestContext extends RequestContext {
       }
       return null;
    }
-   
+
    @Override
    public Response securityCheck(Request request, int accountId, String authToken) {
       if (USE_SECURITY) {
@@ -41,7 +46,7 @@ public class SessionRequestContext extends RequestContext {
       }
       return null;
    }
-   
+
    private Security getSenderSecurity() {
       if (header.fromType == Core.TYPE_TETRAPOD || header.fromType == Core.TYPE_SERVICE)
          return Security.INTERNAL;
@@ -63,5 +68,5 @@ public class SessionRequestContext extends RequestContext {
       }
       return senderSecurity;
    }
-   
+
 }
