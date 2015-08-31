@@ -41,13 +41,15 @@ public abstract class PendingResponseHandler {
    abstract public Response onResponse(Response res);
 
    // return the response we were pending on
-   public void sendResponse(Response pendingRes) {
+   public boolean sendResponse(Response pendingRes) {
       if (context != null) {
          context.handlePendingResponse(pendingRes, originalRequestId);
+         return true;
       } else if (session != null) {
          session.sendResponse(pendingRes, originalRequestId);
+         return true;
       } else {
-         logger.error("I literally can't even ({{})", pendingRes);
+         return false;
       }
    }
 

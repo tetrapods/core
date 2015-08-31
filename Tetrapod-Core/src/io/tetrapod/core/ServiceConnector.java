@@ -246,7 +246,9 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
                   if (pendingRes == null) {
                      pendingRes = new Error(ERROR_UNKNOWN);
                   }
-                  handler.sendResponse(pendingRes);
+                  if (!handler.sendResponse(pendingRes)) {
+                     logger.error("I literally can't even ({})", pendingRes);
+                  }
                }
             }
          });
