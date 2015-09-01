@@ -127,9 +127,10 @@ define(["knockout", "jquery", "bootbox", "toolbox", "protocol/server", "protocol
          }, function(result) {
             if (result.isError()) {
                onLogout(true);
-            } else if (callback) {
+            } else {
                self.sessionToken = result.sessionToken;
-               callback();
+               if (callback)
+                  callback();
             }
          });
       }
