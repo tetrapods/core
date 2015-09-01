@@ -11,9 +11,7 @@ public class AsyncResponder {
    }
 
    public void respondWith(Response res) {
-      if (ctx.session != null) {
-         ctx.session.sendResponse(res, ctx.header.requestId);
-      }
+      ctx.handlePendingResponse(res, ctx.header.requestId);
    }
 
 }

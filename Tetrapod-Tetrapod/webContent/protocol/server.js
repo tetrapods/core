@@ -20,6 +20,7 @@ function TP_Server() {
    var messageHandlers = [];
    var openHandlers = [];
    var closeHandlers = [];
+   var securityErrorHandlers = [];
    var socket;
    var simulator = null;
    var lastHeardFrom = 0;
@@ -333,11 +334,16 @@ function TP_Server() {
       socket.onclose = onSocketClose;
       socket.onerror = onSocketError;
       return {
-         listen: function(onOpen, onClose) {
-            openHandlers = [];
-            closeHandlers = [];
-            openHandlers.push(onOpen);
-            closeHandlers.push(onClose);
+         listen: function(onOpen, onClose, onSecurity) {
+            if (onOpen) {
+               openHandlers = [ onOpen ];
+            }
+            if (onClose) {
+               closeHandlers = [ onClose ];
+            }
+            if (onSecurity) {
+               securityErrorHandlers = [ onSecurity ];
+            }
          }
       }
    }
@@ -417,6 +423,12 @@ function TP_Server() {
 
       if (ctx.handler) {
          ctx.handler(result);
+      }
+      if (result.isError() && result.errorCode == 10) {
+         // 10 is RIGHTS_EXPIRED
+         for (var i = 0; i < securityErrorHandlers.length; i++) {
+            securityErrorHandlers[i](result);
+         }
       }
       delete requestContexts[result._requestId];
    }
