@@ -118,7 +118,7 @@ public class Server extends ChannelInitializer<SocketChannel> implements Session
    }
 
    private void startSession(final SocketChannel ch) throws Exception {
-      logger.info("Connection from {}", ch);
+      logger.debug("Connection from {}", ch);
       if (sslContext != null) {
          SSLEngine engine = sslContext.createSSLEngine();
          engine.setUseClientMode(false);
