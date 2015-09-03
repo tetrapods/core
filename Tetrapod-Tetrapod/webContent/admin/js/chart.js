@@ -2,8 +2,8 @@
  * Chart.js is a wrapper object for a small flot.js time series chart embedded in admin app views to show important
  * metrics
  */
-define(["knockout", "jquery", "bootbox", "app"], function(ko, $, bootbox, app) {
 
+define(["jquery"], function($) {
    return Chart; // not using new means this returns a constructor function (ie class)
 
    // Chart Model

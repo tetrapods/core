@@ -10,6 +10,14 @@ function TP_Tetrapod(server) {
    server.registerConst("Tetrapod", "Admin", "RIGHTS_CLUSTER_WRITE", 2);
    server.registerConst("Tetrapod", "Admin", "RIGHTS_USER_READ", 4);
    server.registerConst("Tetrapod", "Admin", "RIGHTS_USER_WRITE", 8);
+   server.registerConst("Tetrapod", "Admin", "RIGHTS_RESERVED_1", 16);
+   server.registerConst("Tetrapod", "Admin", "RIGHTS_RESERVED_2", 32);
+   server.registerConst("Tetrapod", "Admin", "RIGHTS_RESERVED_3", 64);
+   server.registerConst("Tetrapod", "Admin", "RIGHTS_RESERVED_4", 128);
+   server.registerConst("Tetrapod", "Admin", "RIGHTS_APP_SET_1", 256);
+   server.registerConst("Tetrapod", "Admin", "RIGHTS_APP_SET_2", 512);
+   server.registerConst("Tetrapod", "Admin", "RIGHTS_APP_SET_3", 1024);
+   server.registerConst("Tetrapod", "Admin", "RIGHTS_APP_SET_4", 2048);
    server.registerConst("Tetrapod", "BuildCommand", "BUILD", 1);
    server.registerConst("Tetrapod", "BuildCommand", "DEPLOY", 2);
    server.registerConst("Tetrapod", "BuildCommand", "LAUNCH", 3);
@@ -45,6 +53,8 @@ function TP_Tetrapod(server) {
    server.register("response", "Tetrapod", "AdminLogin", 1, 4213436);
    server.register("request", "Tetrapod", "AdminAuthorize", 1, 12706146);
    server.register("response", "Tetrapod", "AdminAuthorize", 1, 8072638);
+   server.register("request", "Tetrapod", "AdminSessionToken", 1, 15044284);
+   server.register("response", "Tetrapod", "AdminSessionToken", 1, 1057000);
    server.register("request", "Tetrapod", "AdminCreate", 1, 14596683);
    server.register("request", "Tetrapod", "AdminDelete", 1, 7421322);
    server.register("request", "Tetrapod", "AdminChangePassword", 1, 2877212);
@@ -55,6 +65,7 @@ function TP_Tetrapod(server) {
    server.register("request", "Tetrapod", "SetAlternateId", 1, 10499521);
    server.register("request", "Tetrapod", "GetSubscriberCount", 1, 9966915);
    server.register("response", "Tetrapod", "GetSubscriberCount", 1, 6503857);
+   server.register("request", "Tetrapod", "SetEntityReferrer", 1, 1987578);
    server.register("request", "Tetrapod", "GetEntityInfo", 1, 14891231);
    server.register("response", "Tetrapod", "GetEntityInfo", 1, 11007413);
    server.register("message", "Tetrapod", "Entity", 1, 10913291);
@@ -107,5 +118,7 @@ function TP_Tetrapod(server) {
    server.register("message", "Tetrapod", "ClaimOwnership", 1, 500513);
    server.register("message", "Tetrapod", "RetainOwnership", 1, 12503106);
    server.register("message", "Tetrapod", "ReleaseOwnership", 1, 9542348);
+   server.register("request", "Tetrapod", "TetrapodClientSessions", 1, 4764379);
+   server.register("response", "Tetrapod", "TetrapodClientSessions", 1, 13660185);
 
 }

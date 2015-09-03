@@ -50,8 +50,8 @@ public class CodeGen {
          services.add("raft");
          services.add("search");
          services.add("twitter");
-         services.add("ticket");
          services.add("kpi");
+         services.add("phone");
       }
       if (langs.isEmpty()) {
          System.out.println("using defaults for languages");

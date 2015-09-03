@@ -32,7 +32,7 @@ define(function(require) {
          Alert.prompt("Enter a new key name", function(key) {
             if (key && key.trim().length > 0) {
                app.server.sendDirect("SetClusterProperty", {
-                  adminToken: app.authtoken,
+                  adminToken: app.sessionToken,
                   property: {
                      key: key,
                      val: '',
@@ -80,7 +80,7 @@ define(function(require) {
             Alert.prompt("Enter a new value", function(val) {
                if (val && val.trim().length > 0) {
                   app.server.sendDirect("SetClusterProperty", {
-                     adminToken: app.authtoken,
+                     adminToken: app.sessionToken,
                      property: {
                         key: self.key,
                         val: val,
@@ -94,7 +94,7 @@ define(function(require) {
          function deleteProp() {
             Alert.confirm("Are you sure you want to delete '" + self.key + "'?", function() {
                app.server.sendDirect("DelClusterProperty", {
-                  adminToken: app.authtoken,
+                  adminToken: app.sessionToken,
                   key: self.key
                }, app.server.logResponse);
             });

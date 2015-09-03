@@ -1,27 +1,31 @@
 package io.tetrapod.core;
 
 import static io.tetrapod.protocol.core.Core.TYPE_ADMIN;
-import static io.tetrapod.protocol.core.CoreContract.*;
-import static io.tetrapod.protocol.core.TetrapodContract.*;
+import static io.tetrapod.protocol.core.CoreContract.ERROR_INVALID_RIGHTS;
+import static io.tetrapod.protocol.core.CoreContract.ERROR_UNKNOWN;
+import static io.tetrapod.protocol.core.TetrapodContract.ERROR_INVALID_ACCOUNT;
+import static io.tetrapod.protocol.core.TetrapodContract.ERROR_INVALID_CREDENTIALS;
+
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.rpc.Error;
 import io.tetrapod.core.storage.*;
 import io.tetrapod.core.utils.*;
 import io.tetrapod.protocol.core.*;
-import io.tetrapod.raft.*;
+import io.tetrapod.raft.Entry;
 import io.tetrapod.raft.RaftRPC.ClientResponseHandler;
-
-import java.security.NoSuchAlgorithmException;
-import java.security.spec.InvalidKeySpecException;
-
-import org.slf4j.*;
 
 /**
  * Manages tetrapod administration accounts
  */
 public class AdminAccounts {
 
-   public static final Logger    logger = LoggerFactory.getLogger(AdminAccounts.class);
+   public static final Logger logger = LoggerFactory.getLogger(AdminAccounts.class);
 
    private final TetrapodCluster cluster;
 
@@ -114,17 +118,17 @@ public class AdminAccounts {
       return true;
    }
 
-   public boolean verifyPermission(Admin admin, int rightsRequired) {
-      return (admin.rights & rightsRequired) == rightsRequired;
+   public boolean verifyPermission(Admin admin, long systemRightsRequired) {
+      return (admin.rights & systemRightsRequired) == systemRightsRequired;
    }
 
    public boolean isValidAdminRequest(RequestContext ctx, String adminToken) {
       return isValidAdminRequest(ctx, adminToken, 0);
    }
 
-   public boolean isValidAdminRequest(RequestContext ctx, String adminToken, int rightsRequired) {
+   public boolean isValidAdminRequest(RequestContext ctx, String adminToken, long rightsRequired) {
       if (ctx.header.fromType == TYPE_ADMIN) {
-         final AuthToken.Decoded d = AuthToken.decodeAuthToken1Admin(adminToken);
+         final AdminAuthToken.Decoded d = AdminAuthToken.decodeSessionToken(adminToken);
          if (d != null) {
             final Admin admin = getAdmin(d.accountId);
             if (admin != null) {
@@ -137,9 +141,9 @@ public class AdminAccounts {
       return false;
    }
 
-   public Admin getAdmin(RequestContext ctx, String adminToken, int rightsRequired) {
+   public Admin getAdmin(RequestContext ctx, String adminToken, long rightsRequired) {
       if (ctx.header.fromType == TYPE_ADMIN) {
-         final AuthToken.Decoded d = AuthToken.decodeAuthToken1Admin(adminToken);
+         final AdminAuthToken.Decoded d = AdminAuthToken.decodeSessionToken(adminToken);
          if (d != null) {
             final Admin admin = getAdmin(d.accountId);
             if (admin != null) {
@@ -156,10 +160,9 @@ public class AdminAccounts {
 
    public Response requestAdminAuthorize(AdminAuthorizeRequest r, RequestContext ctxA) {
       SessionRequestContext ctx = (SessionRequestContext) ctxA;
-      AuthToken.Decoded d = AuthToken.decodeAuthToken1Admin(r.token);
-      if (d != null) {
-         //logger.debug("TOKEN {} time left = {}", r.token, d.timeLeft);
-         Admin admin = getAdmin(d.accountId);
+      final int accountId = AdminAuthToken.decodeLoginToken(r.token);
+      if (accountId != 0) {
+         final Admin admin = getAdmin(accountId);
          if (admin != null) {
             ctx.session.theirType = Core.TYPE_ADMIN;
             return new AdminAuthorizeResponse(admin.accountId, admin.email);
@@ -185,7 +188,7 @@ public class AdminAccounts {
             if (PasswordHash.validatePassword(r.password, admin.hash)) {
                // mark the session as an admin
                ctx.session.theirType = Core.TYPE_ADMIN;
-               final String authtoken = AuthToken.encodeAuthToken1Admin(admin.accountId, 0, 60 * 24 * 14);
+               final String authtoken = AdminAuthToken.encodeLoginToken(admin.accountId, 60 * 24 * 14);
                return new AdminLoginResponse(authtoken, admin.accountId);
             } else {
                return new Error(ERROR_INVALID_CREDENTIALS); // invalid password
@@ -246,7 +249,7 @@ public class AdminAccounts {
 
    public Response requestAdminCreate(AdminCreateRequest r, RequestContext ctx) {
       final Admin admin = getAdmin(ctx, r.token, Admin.RIGHTS_USER_WRITE);
-      assert (admin != null);
+      assert(admin != null);
       try {
          final String hash = PasswordHash.createHash(r.password);
          final Admin newUser = addAdmin(r.email.trim(), hash, r.rights);
@@ -289,9 +292,12 @@ public class AdminAccounts {
 
    public Response requestAdminChangeRights(final AdminChangeRightsRequest r, RequestContext ctx) {
       final Admin admin = getAdmin(ctx, r.token, Admin.RIGHTS_USER_WRITE);
-      // don't allow changing our own rights
+      // don't allow changing our user rights to prevent accidental lockout
       if (admin.accountId == r.accountId) {
-         return new Error(ERROR_INVALID_RIGHTS);
+         final int preserve = Admin.RIGHTS_USER_READ | Admin.RIGHTS_USER_WRITE;
+         if ((r.rights & preserve) != preserve) {
+            return new Error(ERROR_INVALID_RIGHTS);
+         }
       }
       final Admin target = getAdmin(r.accountId);
       if (target != null) {
@@ -307,6 +313,26 @@ public class AdminAccounts {
          return new Error(ERROR_UNKNOWN);
       } else {
          return new Error(ERROR_INVALID_ACCOUNT);
+      }
+   }
+
+   public Response requestAdminSessionToken(AdminSessionTokenRequest r, RequestContext ctx) {
+      try {
+         final int accountId = AdminAuthToken.decodeLoginToken(r.authToken);
+         if (accountId != 0) {
+            final Admin admin = getAdmin(accountId);
+            assert(admin != null);
+            if (admin != null) {
+               return new AdminSessionTokenResponse(AdminAuthToken.encodeSessionToken(admin.accountId, 15, admin.rights));
+            } else {
+               return new Error(ERROR_INVALID_ACCOUNT);
+            }
+         } else {
+            return new Error(ERROR_INVALID_RIGHTS);
+         }
+      } catch (Exception e) {
+         logger.error(e.getMessage(), e);
+         return new Error(ERROR_UNKNOWN);
       }
    }
 }

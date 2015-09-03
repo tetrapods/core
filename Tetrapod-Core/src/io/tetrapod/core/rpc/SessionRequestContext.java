@@ -1,23 +1,29 @@
 package io.tetrapod.core.rpc;
 
 import static io.tetrapod.protocol.core.CoreContract.*;
+
 import io.tetrapod.core.Session;
 import io.tetrapod.core.rpc.Structure.Security;
 import io.tetrapod.core.utils.*;
-import io.tetrapod.core.utils.AuthToken.Decoded;
+import io.tetrapod.core.utils.LoginAuthToken.DecodedSession;
 import io.tetrapod.protocol.core.*;
 
 public class SessionRequestContext extends RequestContext {
 
    private final static boolean USE_SECURITY = true;
-   
-   public final Session       session;
+
+   public final Session session;
 
    public SessionRequestContext(RequestHeader header, Session session) {
       super(header);
       this.session = session;
    }
-   
+
+   @Override
+   public void handlePendingResponse(Response res, int originalRequestId) {
+      session.sendResponse(res, originalRequestId);
+   }
+
    @Override
    public Response securityCheck(Request request) {
       if (USE_SECURITY) {
@@ -28,7 +34,7 @@ public class SessionRequestContext extends RequestContext {
       }
       return null;
    }
-   
+
    @Override
    public Response securityCheck(Request request, int accountId, String authToken) {
       if (USE_SECURITY) {
@@ -40,7 +46,7 @@ public class SessionRequestContext extends RequestContext {
       }
       return null;
    }
-   
+
    private Security getSenderSecurity() {
       if (header.fromType == Core.TYPE_TETRAPOD || header.fromType == Core.TYPE_SERVICE)
          return Security.INTERNAL;
@@ -53,7 +59,7 @@ public class SessionRequestContext extends RequestContext {
       Security senderSecurity = getSenderSecurity();
       if (senderSecurity == Security.PUBLIC) {
          // upgrade them to protected if their token is good
-         Decoded d = AuthToken.decodeUserToken(authToken, accountId, header.fromId);
+         DecodedSession d = LoginAuthToken.decodeSessionToken(authToken, accountId, header.fromId);
          if (d != null && d.timeLeft >= 0) {
             senderSecurity = Security.PROTECTED;
          } else {
@@ -62,5 +68,5 @@ public class SessionRequestContext extends RequestContext {
       }
       return senderSecurity;
    }
-   
+
 }

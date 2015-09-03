@@ -19,6 +19,14 @@ public class Admin extends Structure {
    public static final int RIGHTS_CLUSTER_WRITE = 2; 
    public static final int RIGHTS_USER_READ = 4; 
    public static final int RIGHTS_USER_WRITE = 8; 
+   public static final int RIGHTS_RESERVED_1 = 16; 
+   public static final int RIGHTS_RESERVED_2 = 32; 
+   public static final int RIGHTS_RESERVED_3 = 64; 
+   public static final int RIGHTS_RESERVED_4 = 128; 
+   public static final int RIGHTS_APP_SET_1 = 256; 
+   public static final int RIGHTS_APP_SET_2 = 512; 
+   public static final int RIGHTS_APP_SET_3 = 1024; 
+   public static final int RIGHTS_APP_SET_4 = 2048; 
    
    public static final int STRUCT_ID = 16753598;
    public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;

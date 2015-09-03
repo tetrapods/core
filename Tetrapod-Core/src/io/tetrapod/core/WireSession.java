@@ -23,13 +23,13 @@ import org.slf4j.*;
  */
 public class WireSession extends Session {
 
-   private static final Logger logger         = LoggerFactory.getLogger(WireSession.class);
+   private static final Logger logger = LoggerFactory.getLogger(WireSession.class);
 
-   private static final int    WIRE_VERSION   = 1;
-   private static final int    WIRE_OPTIONS   = 0x00000000;
-   private static final long   LOADED_TIME    = System.currentTimeMillis();
+   private static final int  WIRE_VERSION = 1;
+   private static final int  WIRE_OPTIONS = 0x00000000;
+   private static final long LOADED_TIME  = System.currentTimeMillis();
 
-   private boolean             needsHandshake = true;
+   private boolean needsHandshake = true;
 
    public WireSession(SocketChannel channel, WireSession.Helper helper) {
       super(channel, helper);
@@ -63,7 +63,7 @@ public class WireSession extends Session {
    private void read(final ByteBuf in, final int len, final byte envelope) throws IOException {
       final long t0 = System.currentTimeMillis();
 
-      assert (len == in.readableBytes());
+      assert(len == in.readableBytes());
       logger.trace("Read message {} with {} bytes", envelope, len);
       switch (envelope) {
          case ENVELOPE_REQUEST:
@@ -90,7 +90,7 @@ public class WireSession extends Session {
             close();
       }
 
-      if (System.currentTimeMillis() - t0 > 100) {
+      if (System.currentTimeMillis() - t0 > 500) {
          if (t0 - LOADED_TIME < 30000) {
             logger.info("Something blocked in read() for {} ms env={}", System.currentTimeMillis() - t0, envelope);
          } else {
@@ -162,7 +162,8 @@ public class WireSession extends Session {
             relayResponse(header, async, in);
          }
       } else {
-         logger.warn("{} Could not find pending request for {}", this, header.dump());
+         // Typical if the request timed out earlier, and now we've finally received the actual response, it's too late 
+         logger.info("{} Could not find pending request for {}", this, header.dump());
       }
 
       if (!logged && !commsLogIgnore(header.structId))
@@ -249,7 +250,7 @@ public class WireSession extends Session {
          buffer.setInt(0, buffer.writerIndex() - 4); // go back and write message length, now that we know it
 
          if (buffer.writerIndex() > 1024 * 1024) {
-            throw new RuntimeException("Attempting to write a message > 1mb");
+            throw new RuntimeException("Attempting to write a message > 1mb (" + buffer.writerIndex() + " bytes)");
          }
 
          return buffer;

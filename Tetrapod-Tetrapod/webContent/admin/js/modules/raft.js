@@ -235,7 +235,7 @@ define(function(require) {
          //         function forceBootstrap() {
          //            Alert.confirm("Are you sure you want to bootstrap raft with leader = '" + self.entityId + "'?", function() {
          //               app.server.sendTo("ClusterBootstrap", {
-         //                  adminToken: app.authtoken,
+         //                  adminToken: app.sessionToken,
          //               }, self.entityId, function(info) {
          //                  if (info.isError()) {
          //                     console.error("ClusterBootstrap Failed");
@@ -246,7 +246,7 @@ define(function(require) {
 
          function snapshot() {
             app.server.sendTo("Snapshot", {
-               adminToken: app.authtoken,
+               adminToken: app.sessionToken,
             }, self.entityId, function(info) {
                if (info.isError()) {
                   console.error("Snapshot Failed");

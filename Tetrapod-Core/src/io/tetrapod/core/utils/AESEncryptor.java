@@ -6,7 +6,7 @@ import io.netty.handler.codec.base64.*;
 import java.nio.charset.Charset;
 import java.security.*;
 import java.security.spec.*;
-import java.util.*;
+import java.util.Arrays;
 
 import javax.crypto.*;
 import javax.crypto.spec.*;
@@ -117,4 +117,27 @@ public class AESEncryptor {
       }
    }
 
+   public static String encryptAES(String string, String key) {
+      try {
+         Key k = new SecretKeySpec(key.getBytes(), "AES");
+         Cipher c = Cipher.getInstance("AES/ECB/PKCS5Padding");
+         c.init(Cipher.ENCRYPT_MODE, k);
+         byte[] encoded = c.doFinal(string.getBytes());
+         return encodeBase64(encoded);
+      } catch (Exception e) {
+         throw new RuntimeException(e);
+      }
+   }
+
+   public static String decryptAES(String encryptedData, String key) {
+      try {
+         Key k = new SecretKeySpec(key.getBytes(), "AES");
+         Cipher c = Cipher.getInstance("AES/ECB/PKCS5Padding");
+         c.init(Cipher.DECRYPT_MODE, k);
+         byte[] decoded = c.doFinal(decodeBase64(encryptedData));
+         return new String(decoded);
+      } catch (Exception e) {
+         throw new RuntimeException(e);
+      }
+   }
 }

@@ -111,9 +111,9 @@ public class WebRootLocalFilesystem implements WebRoot {
                Path p = rr.resolve(path);
                if (Files.exists(p)) {
                   FileResult r = new FileResult();
-                  r.doNotCache = path.endsWith(".html");
                   r.modificationTime = Files.getLastModifiedTime(p).toMillis();
                   r.path = "/" + path;
+                  r.doNotCache = !r.path.startsWith("/vbf");
                   if (Files.isDirectory(p)) {
                      r.isDirectory = true;
                   } else {

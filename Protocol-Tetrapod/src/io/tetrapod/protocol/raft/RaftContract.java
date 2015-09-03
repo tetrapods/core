@@ -69,4 +69,5 @@ public class RaftContract extends Contract {
       };
    }
 
+   public static final int ERROR_NO_LEADER = 13434878; 
 }

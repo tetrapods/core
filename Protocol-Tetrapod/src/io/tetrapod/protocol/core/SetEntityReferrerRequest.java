@@ -12,44 +12,32 @@ import java.util.*;
 import java.util.concurrent.*;
 
 @SuppressWarnings("unused")
-public class GetEntityInfoResponse extends Response {
-   
-   public static final int STRUCT_ID = 11007413;
+public class SetEntityReferrerRequest extends Request {
+
+   public static final int STRUCT_ID = 1987578;
    public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;
-    
-   public GetEntityInfoResponse() {
+   
+   public SetEntityReferrerRequest() {
       defaults();
    }
 
-   public GetEntityInfoResponse(int build, String name, String host, String referrer) {
-      this.build = build;
-      this.name = name;
-      this.host = host;
+   public SetEntityReferrerRequest(String referrer) {
       this.referrer = referrer;
    }   
-   
-   public int build;
-   public String name;
-   public String host;
+
    public String referrer;
 
    public final Structure.Security getSecurity() {
-      return Security.INTERNAL;
+      return Security.PUBLIC;
    }
 
    public final void defaults() {
-      build = 0;
-      name = null;
-      host = null;
       referrer = null;
    }
    
    @Override
    public final void write(DataSource data) throws IOException {
-      data.write(1, this.build);
-      data.write(2, this.name);
-      data.write(3, this.host);
-      data.write(4, this.referrer);
+      data.write(1, this.referrer);
       data.writeEndTag();
    }
    
@@ -59,10 +47,7 @@ public class GetEntityInfoResponse extends Response {
       while (true) {
          int tag = data.readTag();
          switch (tag) {
-            case 1: this.build = data.read_int(tag); break;
-            case 2: this.name = data.read_string(tag); break;
-            case 3: this.host = data.read_string(tag); break;
-            case 4: this.referrer = data.read_string(tag); break;
+            case 1: this.referrer = data.read_string(tag); break;
             case Codec.END_TAG:
                return;
             default:
@@ -71,40 +56,46 @@ public class GetEntityInfoResponse extends Response {
          }
       }
    }
-  
+   
    public final int getContractId() {
-      return GetEntityInfoResponse.CONTRACT_ID;
+      return SetEntityReferrerRequest.CONTRACT_ID;
    }
 
    public final int getStructId() {
-      return GetEntityInfoResponse.STRUCT_ID;
+      return SetEntityReferrerRequest.STRUCT_ID;
    }
-
+   
+   @Override
+   public final Response dispatch(ServiceAPI is, RequestContext ctx) {
+      if (is instanceof Handler)
+         return ((Handler)is).requestSetEntityReferrer(this, ctx);
+      return is.genericRequest(this, ctx);
+   }
+   
+   public static interface Handler extends ServiceAPI {
+      Response requestSetEntityReferrer(SetEntityReferrerRequest r, RequestContext ctx);
+   }
+   
    public final String[] tagWebNames() {
       // Note do not use this tags in long term serializations (to disk or databases) as 
       // implementors are free to rename them however they wish.  A null means the field
       // is not to participate in web serialization (remaining at default)
-      String[] result = new String[4+1];
-      result[1] = "build";
-      result[2] = "name";
-      result[3] = "host";
-      result[4] = "referrer";
+      String[] result = new String[1+1];
+      result[1] = "referrer";
       return result;
    }
-
+   
    public final Structure make() {
-      return new GetEntityInfoResponse();
+      return new SetEntityReferrerRequest();
    }
-
+   
    public final StructDescription makeDescription() {
       StructDescription desc = new StructDescription();
       desc.tagWebNames = tagWebNames();
       desc.types = new TypeDescriptor[desc.tagWebNames.length];
       desc.types[0] = new TypeDescriptor(TypeDescriptor.T_STRUCT, getContractId(), getStructId());
-      desc.types[1] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
-      desc.types[2] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
-      desc.types[3] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
-      desc.types[4] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
+      desc.types[1] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
       return desc;
    }
- }
+
+}

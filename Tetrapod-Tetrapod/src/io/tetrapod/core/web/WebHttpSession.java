@@ -16,8 +16,7 @@ import io.netty.handler.codec.http.websocketx.*;
 import io.netty.util.CharsetUtil;
 import io.netty.util.ReferenceCountUtil;
 import io.tetrapod.core.*;
-import io.tetrapod.core.json.JSONArray;
-import io.tetrapod.core.json.JSONObject;
+import io.tetrapod.core.json.*;
 import io.tetrapod.core.registry.EntityToken;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.rpc.Error;
@@ -38,23 +37,25 @@ import com.codahale.metrics.Timer;
 import com.codahale.metrics.Timer.Context;
 
 public class WebHttpSession extends WebSession {
-   protected static final Logger               logger            = LoggerFactory.getLogger(WebHttpSession.class);
+   protected static final Logger logger = LoggerFactory.getLogger(WebHttpSession.class);
 
-   public static final Timer                   requestTimes      = Metrics.timer(WebHttpSession.class, "requests", "time");
+   public static final Timer requestTimes = Metrics.timer(WebHttpSession.class, "requests", "time");
 
-   private static final int                    FLOOD_TIME_PERIOD = 2000;
-   private static final int                    FLOOD_WARN        = 200;
-   private static final int                    FLOOD_IGNORE      = 300;
-   private static final int                    FLOOD_KILL        = 400;
+   private static final int FLOOD_TIME_PERIOD = 2000;
+   private static final int FLOOD_WARN        = 200;
+   private static final int FLOOD_IGNORE      = 300;
+   private static final int FLOOD_KILL        = 400;
 
-   private volatile long                       floodPeriod;
+   private volatile long floodPeriod;
 
-   private int                                 reqCounter        = 0;
+   private int reqCounter = 0;
 
-   private final String                        wsLocation;
-   private WebSocketServerHandshaker           handshaker;
+   private final String              wsLocation;
+   private WebSocketServerHandshaker handshaker;
 
    private Map<Integer, ChannelHandlerContext> contexts;
+
+   private String httpReferrer = null;
 
    public WebHttpSession(SocketChannel ch, Session.Helper helper, Map<String, WebRoot> roots, String wsLocation) {
       super(ch, helper);
@@ -138,6 +139,10 @@ public class WebHttpSession extends WebSession {
          synchronized (this) {
             logger.debug(String.format("%s REQUEST[%d] = %s : %s", this, ++reqCounter, ctx.channel().remoteAddress(), req.getUri()));
          }
+      }
+      // Set the http referrer for this request, if not already set
+      if (Util.isEmpty(getHttpReferrer())) {
+         setHttpReferrer(req.headers().get("Referer"));
       }
       // see if we need to start a web socket session
       if (wsLocation.equals(req.getUri())) {
@@ -230,7 +235,7 @@ public class WebHttpSession extends WebSession {
    }
 
    private void longPoll(final int millis, final LongPollQueue messages, final long startTime, final ChannelHandlerContext ctx,
-         final FullHttpRequest req) {
+            final FullHttpRequest req) {
       getDispatcher().dispatch(millis, TimeUnit.MILLISECONDS, new Runnable() {
          public void run() {
             if (messages.tryLock()) {
@@ -259,7 +264,7 @@ public class WebHttpSession extends WebSession {
             } else {
                ctx.writeAndFlush(makeFrame(new JSONObject().put("error", "locked"), HttpHeaders.isKeepAlive(req)));
             }
-         } 
+         }
       });
    }
 
@@ -284,7 +289,7 @@ public class WebHttpSession extends WebSession {
 
          try {
             if (header.structId == WebAPIRequest.STRUCT_ID) {
-               // @webapi() generic WebAPIRequest call 
+               // @webapi() generic WebAPIRequest call
                String body = req.content().toString(CharsetUtil.UTF_8);
                if (body == null || body.trim().isEmpty()) {
                   body = req.getUri();
@@ -308,7 +313,7 @@ public class WebHttpSession extends WebSession {
                   handler.fireResponse(new Error(ERROR_SERVICE_UNAVAILABLE), header);
                }
             } else {
-               // @web() specific Request mapping 
+               // @web() specific Request mapping
                final Structure request = readRequest(header, context.getRequestParams());
                if (request != null) {
                   relayRequest(header, request, handler);
@@ -349,7 +354,11 @@ public class WebHttpSession extends WebSession {
             if (resp.redirect != null && !resp.redirect.isEmpty()) {
                redirect(resp.redirect, ctx);
             } else {
-               cf = ctx.writeAndFlush(makeFrame(new JSONObject(resp.json), keepAlive));
+               if (resp.json != null) {
+                  cf = ctx.writeAndFlush(makeFrame(new JSONObject(resp.json), keepAlive));
+               } else {
+                  logger.warn("{} WebAPIResponse JSON is null: {}", this, resp.dump());
+               }
             }
          } else {
             ctx.writeAndFlush(makeFrame(res, 0));
@@ -395,7 +404,13 @@ public class WebHttpSession extends WebSession {
       } else {
          if (jo.has("__httpOverride")) {
             ByteBuf buf = WebContext.makeByteBufResult(jo.optString("__httpPayload"));
-            FullHttpResponse httpResponse = new DefaultFullHttpResponse(HTTP_1_1, OK, buf);
+            HttpResponseStatus status;
+            if (jo.has("__httpStatus")) {
+               status = HttpResponseStatus.valueOf(jo.getInt("__httpStatus"));
+            } else {
+               status = OK;
+            }
+            FullHttpResponse httpResponse = new DefaultFullHttpResponse(HTTP_1_1, status, buf);
             httpResponse.headers().set(CONTENT_TYPE, jo.optString("__httpMime", "text/json"));
             httpResponse.headers().set(CONTENT_LENGTH, httpResponse.content().readableBytes());
             if (jo.has("__httpDisposition")) {
@@ -496,7 +511,7 @@ public class WebHttpSession extends WebSession {
       if (isWebSocket()) {
          super.sendResponse(res, requestId);
       } else {
-         // HACK: for http responses we need to write to the response to the correct ChannelHandlerContext 
+         // HACK: for http responses we need to write to the response to the correct ChannelHandlerContext
          if (res != Response.PENDING) {
             if (!commsLogIgnore(res))
                commsLog("%s  [%d] => %s", this, requestId, res.dump());
@@ -519,7 +534,7 @@ public class WebHttpSession extends WebSession {
       if (isWebSocket()) {
          super.sendRelayedResponse(header, payload);
       } else {
-         // HACK: for http responses we need to write to the response to the correct ChannelHandlerContext 
+         // HACK: for http responses we need to write to the response to the correct ChannelHandlerContext
          if (!commsLogIgnore(header.structId))
             commsLog("%s  [%d] ~> Response:%d", this, header.requestId, header.structId);
          ChannelHandlerContext ctx = getContext(header.requestId);
@@ -589,10 +604,17 @@ public class WebHttpSession extends WebSession {
       }
       return false;
    }
-   
+
    private boolean isGenericSuccess(Response r) {
       Response s = Response.SUCCESS;
       return s.getContractId() == r.getContractId() && s.getStructId() == r.getStructId();
    }
 
+   public String getHttpReferrer() {
+      return httpReferrer;
+   }
+
+   public void setHttpReferrer(String httpReferrer) {
+      this.httpReferrer = httpReferrer;
+   }
 }
