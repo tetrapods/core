@@ -162,7 +162,8 @@ public class WireSession extends Session {
             relayResponse(header, async, in);
          }
       } else {
-         logger.warn("{} Could not find pending request for {}", this, header.dump());
+         // Typical if the request timed out earlier, and now we've finally received the actual response, it's too late 
+         logger.info("{} Could not find pending request for {}", this, header.dump());
       }
 
       if (!logged && !commsLogIgnore(header.structId))

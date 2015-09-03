@@ -16,8 +16,7 @@ import io.netty.handler.codec.http.websocketx.*;
 import io.netty.util.CharsetUtil;
 import io.netty.util.ReferenceCountUtil;
 import io.tetrapod.core.*;
-import io.tetrapod.core.json.JSONArray;
-import io.tetrapod.core.json.JSONObject;
+import io.tetrapod.core.json.*;
 import io.tetrapod.core.registry.EntityToken;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.rpc.Error;
@@ -38,25 +37,25 @@ import com.codahale.metrics.Timer;
 import com.codahale.metrics.Timer.Context;
 
 public class WebHttpSession extends WebSession {
-   protected static final Logger               logger            = LoggerFactory.getLogger(WebHttpSession.class);
+   protected static final Logger logger = LoggerFactory.getLogger(WebHttpSession.class);
 
-   public static final Timer                   requestTimes      = Metrics.timer(WebHttpSession.class, "requests", "time");
+   public static final Timer requestTimes = Metrics.timer(WebHttpSession.class, "requests", "time");
 
-   private static final int                    FLOOD_TIME_PERIOD = 2000;
-   private static final int                    FLOOD_WARN        = 200;
-   private static final int                    FLOOD_IGNORE      = 300;
-   private static final int                    FLOOD_KILL        = 400;
+   private static final int FLOOD_TIME_PERIOD = 2000;
+   private static final int FLOOD_WARN        = 200;
+   private static final int FLOOD_IGNORE      = 300;
+   private static final int FLOOD_KILL        = 400;
 
-   private volatile long                       floodPeriod;
+   private volatile long floodPeriod;
 
-   private int                                 reqCounter        = 0;
+   private int reqCounter = 0;
 
-   private final String                        wsLocation;
-   private WebSocketServerHandshaker           handshaker;
+   private final String              wsLocation;
+   private WebSocketServerHandshaker handshaker;
 
    private Map<Integer, ChannelHandlerContext> contexts;
 
-   private String                              httpReferrer      = null;
+   private String httpReferrer = null;
 
    public WebHttpSession(SocketChannel ch, Session.Helper helper, Map<String, WebRoot> roots, String wsLocation) {
       super(ch, helper);
@@ -236,7 +235,7 @@ public class WebHttpSession extends WebSession {
    }
 
    private void longPoll(final int millis, final LongPollQueue messages, final long startTime, final ChannelHandlerContext ctx,
-         final FullHttpRequest req) {
+            final FullHttpRequest req) {
       getDispatcher().dispatch(millis, TimeUnit.MILLISECONDS, new Runnable() {
          public void run() {
             if (messages.tryLock()) {
@@ -355,7 +354,11 @@ public class WebHttpSession extends WebSession {
             if (resp.redirect != null && !resp.redirect.isEmpty()) {
                redirect(resp.redirect, ctx);
             } else {
-               cf = ctx.writeAndFlush(makeFrame(new JSONObject(resp.json), keepAlive));
+               if (resp.json != null) {
+                  cf = ctx.writeAndFlush(makeFrame(new JSONObject(resp.json), keepAlive));
+               } else {
+                  logger.warn("{} WebAPIResponse JSON is null: {}", this, resp.dump());
+               }
             }
          } else {
             ctx.writeAndFlush(makeFrame(res, 0));

@@ -194,7 +194,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          super(TetrapodService.this, type, new Session.Listener() {
             @Override
             public void onSessionStop(Session ses) {
-               if (ses.getTheirEntityType() == Core.TYPE_CLIENT) {
+               if (ses instanceof WebHttpSession) {
                   logger.debug("Session Stopped: {}", ses);
                } else {
                   logger.info("Session Stopped: {}", ses);
