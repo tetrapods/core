@@ -143,6 +143,7 @@ public class WebHttpSession extends WebSession {
       // Set the http referrer for this request, if not already set
       if (Util.isEmpty(getHttpReferrer())) {
          setHttpReferrer(req.headers().get("Referer"));
+         logger.debug("•••• Referer: {} ", getHttpReferrer());
       }
       // see if we need to start a web socket session
       if (wsLocation.equals(req.getUri())) {
