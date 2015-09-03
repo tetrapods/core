@@ -22,39 +22,40 @@ import javax.crypto.SecretKey;
  */
 public class TetrapodStateMachine extends StorageStateMachine<TetrapodStateMachine> {
 
-   public final static int                        TETRAPOD_STATE_FILE_VERSION     = 1;
+   public final static int TETRAPOD_STATE_FILE_VERSION = 1;
 
-   private static final String                    TETRAPOD_PREF_PREFIX            = "tetrapod.prefs::";
-   private static final String                    TETRAPOD_CONTRACT_PREFIX        = "tetrapod.contract::";
-   private static final String                    TETRAPOD_WEBROOT_PREFIX         = "tetrapod.webroot::";
-   private static final String                    TETRAPOD_ADMIN_PREFIX           = "tetrapod.admin::";
-   private static final String                    TETRAPOD_ADMIN_ACCOUNT_SEQ_KEY  = "tetrapod.admin.account.seq";
-   private static final String                    TETRAPOD_OWNER_PREFIX           = "tetrapod.owner::";
+   private static final String TETRAPOD_PREF_PREFIX           = "tetrapod.prefs::";
+   private static final String TETRAPOD_CONTRACT_PREFIX       = "tetrapod.contract::";
+   private static final String TETRAPOD_WEBROOT_PREFIX        = "tetrapod.webroot::";
+   private static final String TETRAPOD_ADMIN_PREFIX          = "tetrapod.admin::";
+   private static final String TETRAPOD_ADMIN_ACCOUNT_SEQ_KEY = "tetrapod.admin.account.seq";
+   private static final String TETRAPOD_OWNER_PREFIX          = "tetrapod.owner::";
 
-   public static final int                        SET_CLUSTER_PROPERTY_COMMAND_ID = 400;
-   public static final int                        DEL_CLUSTER_PROPERTY_COMMAND_ID = 401;
-   public static final int                        REGISTER_CONTRACT_COMMAND_ID    = 402;
-   public static final int                        SET_WEB_ROUTE_COMMAND_ID        = 403;
-   public static final int                        DEL_WEB_ROUTE_COMMAND_ID        = 404;
-   public static final int                        ADD_ADMIN_COMMAND_ID            = 405;
-   public static final int                        DEL_ADMIN_COMMAND_ID            = 406;
-   public static final int                        MOD_ADMIN_COMMAND_ID            = 407;
-   public static final int                        CLAIM_OWNERSHIP_COMMAND_ID      = 408;
-   public static final int                        RETAIN_OWNERSHIP_COMMAND_ID     = 409;
-   public static final int                        RELEASE_OWNERSHIP_COMMAND_ID    = 410;
+   public static final int SET_CLUSTER_PROPERTY_COMMAND_ID = 400;
+   public static final int DEL_CLUSTER_PROPERTY_COMMAND_ID = 401;
+   public static final int REGISTER_CONTRACT_COMMAND_ID    = 402;
+   public static final int SET_WEB_ROUTE_COMMAND_ID        = 403;
+   public static final int DEL_WEB_ROUTE_COMMAND_ID        = 404;
+   public static final int ADD_ADMIN_COMMAND_ID            = 405;
+   public static final int DEL_ADMIN_COMMAND_ID            = 406;
+   public static final int MOD_ADMIN_COMMAND_ID            = 407;
+   public static final int CLAIM_OWNERSHIP_COMMAND_ID      = 408;
+   public static final int RETAIN_OWNERSHIP_COMMAND_ID     = 409;
+   public static final int RELEASE_OWNERSHIP_COMMAND_ID    = 410;
 
-   public final Map<String, ClusterProperty>      props                           = new HashMap<>();
-   public final Map<Integer, ContractDescription> contracts                       = new HashMap<>();
-   public final Map<String, WebRootDef>           webRootDefs                     = new HashMap<>();
-   public final Map<Integer, Admin>               admins                          = new HashMap<>();
-   public final WebRoutes                         webRoutes                       = new WebRoutes();
-   public final Map<String, WebRoot>              webRootDirs                     = new ConcurrentHashMap<>();
+   public final Map<String, ClusterProperty>      props       = new HashMap<>();
+   public final Map<Integer, ContractDescription> contracts   = new HashMap<>();
+   public final Map<String, WebRootDef>           webRootDefs = new HashMap<>();
+   public final Map<Integer, Admin>               admins      = new HashMap<>();
+   public final WebRoutes                         webRoutes   = new WebRoutes();
+   public final Map<String, WebRoot>              webRootDirs = new ConcurrentHashMap<>();
 
-   public final Map<Integer, Owner>               owners                          = new ConcurrentHashMap<>();
-   public final Map<String, Owner>                ownedItems                      = new ConcurrentHashMap<>();
+   // entityId+prefix => Owner
+   public final Map<String, Owner> owners     = new ConcurrentHashMap<>();
+   public final Map<String, Owner> ownedItems = new ConcurrentHashMap<>();
 
-   private final WebRootInstaller                 webInstaller                    = new WebRootInstaller(this);
-   protected SecretKey                            secretKey;
+   private final WebRootInstaller webInstaller = new WebRootInstaller(this);
+   protected SecretKey            secretKey;
 
    public static class Factory implements StateMachine.Factory<TetrapodStateMachine> {
       public TetrapodStateMachine makeStateMachine() {
@@ -132,7 +133,9 @@ public class TetrapodStateMachine extends StorageStateMachine<TetrapodStateMachi
          } else if (item.key.startsWith(TETRAPOD_OWNER_PREFIX)) {
             Owner owner = new Owner();
             owner.read(TempBufferDataSource.forReading(item.getData()));
-            saveOwner(owner, false);
+            if (owner.prefix != null) {
+               saveOwner(owner, false);
+            }
          }
       }
    }
@@ -246,10 +249,10 @@ public class TetrapodStateMachine extends StorageStateMachine<TetrapodStateMachi
    public void saveOwner(Owner owner, boolean write) {
       if (write) {
          // store in state machine as a StorageItem         
-         putItem(TETRAPOD_OWNER_PREFIX + owner.entityId, (byte[]) owner.toRawForm(TempBufferDataSource.forWriting()));
+         putItem(TETRAPOD_OWNER_PREFIX + owner.entityId + owner.prefix, (byte[]) owner.toRawForm(TempBufferDataSource.forWriting()));
       }
       // keep local caches
-      owners.put(owner.entityId, owner);
+      owners.put(owner.entityId + owner.prefix, owner);
       for (String key : owner.keys) {
          ownedItems.put(key, owner);
       }
@@ -261,18 +264,19 @@ public class TetrapodStateMachine extends StorageStateMachine<TetrapodStateMachi
       // see if there is a current owner
       final Owner owner = ownedItems.get(key);
       if (owner != null) {
+         assert(prefix.equals(owner.prefix));
          final int graceTime = 1000; // one second of grace time to buffer against an expiry race
          if (owner.expiry + graceTime > curTime) {
             logger.debug("Already owned by {}", owner.dump());
             return false;
          } else {
-            releaseOwnership(owner, null, null);
+            releaseOwnership(owner, null);
          }
       }
 
-      Owner me = owners.get(ownerId);
+      Owner me = owners.get(ownerId + prefix);
       if (me == null) {
-         me = new Owner(ownerId, leaseMillis, new ArrayList<String>());
+         me = new Owner(ownerId, leaseMillis, new ArrayList<String>(), prefix);
       }
       me.expiry = Math.max(me.expiry, leaseMillis + curTime);
       me.keys.add(key);
@@ -281,9 +285,9 @@ public class TetrapodStateMachine extends StorageStateMachine<TetrapodStateMachi
       return true;
    }
 
-   public void retainOwnership(int ownerId, int leaseMillis, long curTime) {
-      logger.trace("RETAIN OWNERSHIP COMMAND: {} {} {}", ownerId, leaseMillis, curTime);
-      final Owner me = owners.get(ownerId);
+   public void retainOwnership(int ownerId, String prefix, int leaseMillis, long curTime) {
+      logger.trace("RETAIN OWNERSHIP COMMAND: {} {} {} {}", ownerId, prefix, leaseMillis, curTime);
+      final Owner me = owners.get(ownerId + prefix);
       if (me != null) {
          me.expiry = Math.max(me.expiry, leaseMillis + curTime);
          saveOwner(me, true);
@@ -292,23 +296,22 @@ public class TetrapodStateMachine extends StorageStateMachine<TetrapodStateMachi
 
    public void releaseOwnership(int ownerId, String prefix, String[] keys) {
       logger.debug("RELEASE OWNERSHIP COMMAND: {} {} {}", ownerId, prefix, keys);
-      final Owner owner = owners.get(ownerId);
+      final Owner owner = owners.get(ownerId + prefix);
       if (owner != null) {
-         releaseOwnership(owner, prefix, keys);
+         releaseOwnership(owner, keys);
       }
    }
 
-   private void releaseOwnership(final Owner owner, String prefix, String[] keys) {
+   private void releaseOwnership(final Owner owner, String[] keys) {
       if (keys == null) {
+         // release ALL keys for this owner
          for (String k : owner.keys) {
             if (ownedItems.get(k) == owner) {
-               if (prefix == null || k.startsWith(prefix)) {
-                  ownedItems.remove(k);
-               }
+               ownedItems.remove(k);
             }
          }
-         removeItem(TETRAPOD_OWNER_PREFIX + owner.entityId);
-         owners.remove(owner.entityId);
+         removeItem(TETRAPOD_OWNER_PREFIX + owner.entityId + owner.prefix);
+         owners.remove(owner.entityId + owner.prefix);
       } else {
          for (String k : keys) {
             if (ownedItems.get(k) == owner) {
