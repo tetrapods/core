@@ -481,6 +481,9 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
    }
 
    public String getPeerHostname() {
+      if (channel != null && channel.remoteAddress() != null && channel.remoteAddress().getAddress() != null) {
+         channel.remoteAddress().getAddress().getHostAddress();
+      }
       return "Unknown";
    }
 

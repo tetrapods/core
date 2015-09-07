@@ -31,12 +31,7 @@ public abstract class PendingResponseHandler {
       this.session = handler.session;
       this.context = null;
    }
-
-   public PendingResponseHandler(int originalRequestId) {
-      this.originalRequestId = originalRequestId;
-      this.session = null;
-      this.context = null;
-   }
+ 
 
    abstract public Response onResponse(Response res);
 

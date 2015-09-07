@@ -79,7 +79,7 @@ public class AdminAccounts {
       try {
          final String key = "admin::" + presumedCurrent.accountId;
          final DistributedLock lock = cluster.getLock(key);
-         if (lock.lock(60000, 60000)) {
+         if (lock.lock(45000, 60000)) {
             try {
                Admin admin = getAdmin(presumedCurrent.accountId);
                mutator.mutate(admin);
@@ -182,7 +182,7 @@ public class AdminAccounts {
          Admin admin = getAdminByEmail(r.email);
          if (admin != null) {
             if (recordLoginAttempt(admin)) {
-               logger.info("Invalid Credentials");
+               logger.info("Invalid Credentials - brute force protection");
                return new Error(ERROR_INVALID_CREDENTIALS); // prevent brute force attack
             }
             if (PasswordHash.validatePassword(r.password, admin.hash)) {

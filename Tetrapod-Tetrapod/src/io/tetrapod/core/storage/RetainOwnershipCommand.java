@@ -25,7 +25,7 @@ public class RetainOwnershipCommand implements Command<TetrapodStateMachine> {
 
    @Override
    public void applyTo(TetrapodStateMachine state) {
-      state.retainOwnership(ownerId, leaseMillis, curTime);
+      state.retainOwnership(ownerId, prefix, leaseMillis, curTime);
    }
 
    @Override

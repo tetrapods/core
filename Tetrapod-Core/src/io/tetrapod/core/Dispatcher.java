@@ -112,6 +112,10 @@ public class Dispatcher {
       }
       return true;
    }
+   
+   public int getActiveThreads() {
+      return threadPool.getActiveCount();
+   }
 
    /**
     * Executes a task and then drains any overflow tasks

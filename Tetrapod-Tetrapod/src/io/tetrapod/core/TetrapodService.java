@@ -194,11 +194,6 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          super(TetrapodService.this, type, new Session.Listener() {
             @Override
             public void onSessionStop(Session ses) {
-               if (ses instanceof WebHttpSession) {
-                  logger.debug("Session Stopped: {}", ses);
-               } else {
-                  logger.info("Session Stopped: {}", ses);
-               }
                onEntityDisconnected(ses);
             }
 
@@ -239,7 +234,6 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          ses.addSessionListener(new Session.Listener() {
             @Override
             public void onSessionStop(Session ses) {
-               logger.info("Session Stopped: {}", ses);
                onEntityDisconnected(ses);
             }
 
@@ -251,6 +245,11 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    }
 
    public void onEntityDisconnected(Session ses) {
+      if (ses instanceof WebHttpSession) {
+         logger.debug("Session Stopped: {}", ses);
+      } else {
+         logger.info("Session Stopped: {}", ses);
+      }
       if (ses.getTheirEntityId() != 0) {
          final EntityInfo e = registry.getEntity(ses.getTheirEntityId());
          if (e != null) {
@@ -659,7 +658,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       cluster.service();
       final long now = System.currentTimeMillis();
       if (now - lastStatsLog > Util.ONE_MINUTE) {
-         registry.logStats();
+         registry.logStats(false);
          lastStatsLog = System.currentTimeMillis();
 
          final int clients = registry.getNumActiveClients();
@@ -949,7 +948,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
    @Override
    public Response requestLogRegistryStats(LogRegistryStatsRequest r, RequestContext ctx) {
-      registry.logStats();
+      registry.logStats(true);
       return Response.SUCCESS;
    }
 
@@ -1071,7 +1070,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          synchronized (e) {
             final Session s = e.getSession();
             if (s != null) {
-               return new GetEntityInfoResponse(e.build, e.name, s.channel.remoteAddress().getAddress().getHostAddress(), null);
+               return new GetEntityInfoResponse(e.build, e.name, s.getPeerHostname(), null);
             } else {
                return new GetEntityInfoResponse(e.build, e.name, null, null);
             }
@@ -1189,7 +1188,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    @Override
    public Response requestLock(LockRequest r, RequestContext ctx) {
       final DistributedLock lock = cluster.getLock(r.key);
-      if (lock.lock(r.leaseMillis, 10000)) {
+      if (lock.lock(r.leaseMillis, r.leaseMillis + 10000)) {
          return new LockResponse(lock.uuid);
       }
       return Response.error(ERROR_TIMEOUT);

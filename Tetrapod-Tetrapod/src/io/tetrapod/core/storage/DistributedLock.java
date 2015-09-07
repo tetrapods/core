@@ -14,12 +14,12 @@ import org.slf4j.*;
  */
 public class DistributedLock {
 
-   private static final Logger   logger = LoggerFactory.getLogger(DistributedLock.class);
+   private static final Logger logger = LoggerFactory.getLogger(DistributedLock.class);
 
    final private TetrapodCluster raft;
 
-   final public String           key;
-   final public String           uuid;
+   final public String key;
+   final public String uuid;
 
    public DistributedLock(String key, TetrapodCluster raft) {
       this(key, UUID.randomUUID().toString(), raft);
@@ -41,22 +41,24 @@ public class DistributedLock {
             Util.sleep(Math.min(1024, 8 * attempts * attempts));
          }
          raft.executeCommand(new LockCommand<TetrapodStateMachine>(key, uuid, leaseForMillis, System.currentTimeMillis()),
-               new ClientResponseHandler<TetrapodStateMachine>() {
-                  @Override
-                  public void handleResponse(Entry<TetrapodStateMachine> e) {
-                     if (e != null) {
-                        final LockCommand<TetrapodStateMachine> command = (LockCommand<TetrapodStateMachine>) e.getCommand();
-                        acquired.set(command.wasAcquired());
-                     } else {
-                        acquired.set(false);
+                  new ClientResponseHandler<TetrapodStateMachine>() {
+                     @Override
+                     public void handleResponse(Entry<TetrapodStateMachine> e) {
+                        if (e != null) {
+                           final LockCommand<TetrapodStateMachine> command = (LockCommand<TetrapodStateMachine>) e.getCommand();
+                           acquired.set(command.wasAcquired());
+                        } else {
+                           acquired.set(false);
+                        }
                      }
-                  }
-               });
+                  });
 
          acquired.waitForValue();
          logger.info("\tlock {} value {}", key, acquired.get());
       }
-      logger.info("LOCKED {} ", key);
+      if (acquired.get()) {
+         logger.info("LOCKED {} ", key);
+      }
       return acquired.get();
    }
 

@@ -368,6 +368,7 @@ internal struct Owner
    1: int entityId
    2: long expiry
    3: string<list> keys
+   4: string prefix
 
 internal request ClaimOwnership
    1: string prefix

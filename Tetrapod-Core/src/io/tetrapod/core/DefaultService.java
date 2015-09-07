@@ -217,7 +217,7 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
    private void checkHealth() {
       if (!isShuttingDown()) {
          if (dispatcher.workQueueSize.getCount() > 0) {
-            logger.warn("DISPATCHER QUEUE SIZE = {}", dispatcher.workQueueSize.getCount());
+            logger.warn("DISPATCHER QUEUE SIZE = {} ({} threads busy)", dispatcher.workQueueSize.getCount(), dispatcher.getActiveThreads());
          }
          if (dispatcher.workQueueSize.getCount() >= Session.DEFAULT_OVERLOAD_THRESHOLD) {
             updateStatus(getStatus() | Core.STATUS_OVERLOADED);
