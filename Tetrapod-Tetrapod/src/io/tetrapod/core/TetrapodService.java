@@ -658,7 +658,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       cluster.service();
       final long now = System.currentTimeMillis();
       if (now - lastStatsLog > Util.ONE_MINUTE) {
-         registry.logStats();
+         registry.logStats(false);
          lastStatsLog = System.currentTimeMillis();
 
          final int clients = registry.getNumActiveClients();
@@ -948,7 +948,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
    @Override
    public Response requestLogRegistryStats(LogRegistryStatsRequest r, RequestContext ctx) {
-      registry.logStats();
+      registry.logStats(true);
       return Response.SUCCESS;
    }
 
@@ -1188,7 +1188,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    @Override
    public Response requestLock(LockRequest r, RequestContext ctx) {
       final DistributedLock lock = cluster.getLock(r.key);
-      if (lock.lock(r.leaseMillis, 10000)) {
+      if (lock.lock(r.leaseMillis, r.leaseMillis + 10000)) {
          return new LockResponse(lock.uuid);
       }
       return Response.error(ERROR_TIMEOUT);

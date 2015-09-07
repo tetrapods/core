@@ -519,11 +519,12 @@ public class Registry implements TetrapodContract.Registry.API {
 
    //////////////////////////////////////////////////////////////////////////////////////////
 
-   public synchronized void logStats() {
+   public synchronized void logStats(boolean includeClients) {
       List<EntityInfo> list = new ArrayList<>(entities.values());
       Collections.sort(list);
       logger.info("========================== TETRAPOD CLUSTER REGISTRY ============================");
       for (EntityInfo e : list) {
+         if (includeClients || !e.isClient())
          logger.info(String.format(" 0x%08X 0x%08X %-15s status=%08X topics=%d subscriptions=%d", e.parentId, e.entityId, e.name, e.status,
                e.getNumTopics(), e.getNumSubscriptions()));
       }
