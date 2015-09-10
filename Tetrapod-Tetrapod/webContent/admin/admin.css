@@ -133,9 +133,14 @@
 }
 
 .service-metrics {
-	min-height: 250px;
+	text-align: left;
+	display: inline-block;
 }
-
+.service-metrics .stat {
+	margin-left: 20px;
+	margin-right: 20px;
+}
+	
 .service-metrics dt {
 	margin-top: 10px;
 	font-weight: bold;
@@ -173,9 +178,13 @@
 	white-space: pre;
 }
 
-.service-logs-options {
-	padding-left: 20px;
-	padding-right: 20px;
+.service-details-footer {
+   padding-left: 20px;
+   padding-right: 20px;
+}
+
+.service-logs-options { 
+	display: inline-block;
 }
 
 .service-error-logs-dialog {

@@ -1,4 +1,7 @@
-<h3>Cluster Hosts &amp; Services <button style="float:right" class="btn btn-sm" data-bind="click: deployBuilds">Deploy</button></h3>
+<h3>
+   Cluster Hosts &amp; Services
+   <button style="float: right" class="btn btn-sm" data-bind="click: deployBuilds">Deploy</button>
+</h3>
 
 <div data-bind="foreach: hosts" class="host">
 
@@ -43,7 +46,9 @@
                            <i class="fa fa-gear fa-fw"></i> <i class="fa fa-caret-down"></i>
                         </a>
                         <ul class="dropdown-menu dropdown-service">
-                           <li><a href="#" data-bind="click: onClearAllErrors">Clear All Errors</a></li>
+                           <li>
+                              <a href="#" data-bind="click: onClearAllErrors">Clear All Errors</a>
+                           </li>
                         </ul>
                      </div>
                   </div>
@@ -66,53 +71,71 @@
                         <i class="fa fa-gear fa-fw"></i> <i class="fa fa-caret-down"></i>
                      </a>
                      <ul class="dropdown-menu dropdown-service">
-                        <li class="disabled"><a href="#" data-bind="text: name +' '+entityString()"></a></li>
+                        <li class="disabled">
+                           <a href="#" data-bind="text: name +' '+entityString()"></a>
+                        </li>
 
                         <!-- ko foreach: commands -->
-                          <li><a href="#" data-bind="click: function() { $parent.execute($data) }, text: name"></a></li>
+                        <li>
+                           <a href="#" data-bind="click: function() { $parent.execute($data) }, text: name"></a>
+                        </li>
                         <!-- /ko -->
 
                         <li class="divider"></li>
-                        <li><a href="#" data-bind="click: showErrors, visible: hasErrorsOrWarnings()">Show Errors</a></li>
-                        <li><a href="#" data-bind="click: clearErrors, visible: hasErrorsOrWarnings()">Clear Errors</a></li>
-                        <li><a href="#" data-bind="click: setCommsLogLevel">Set Comms Log Level...</a></li>
-                        <li><a href="#" data-bind="click: pause, visible: canPause()">
+                        <li>
+                           <a href="#" data-bind="click: showErrors, visible: hasErrorsOrWarnings()">Show Errors</a>
+                        </li>
+                        <li>
+                           <a href="#" data-bind="click: clearErrors, visible: hasErrorsOrWarnings()">Clear Errors</a>
+                        </li>
+                        <li>
+                           <a href="#" data-bind="click: setCommsLogLevel">Set Comms Log Level...</a>
+                        </li>
+                        <li>
+                           <a href="#" data-bind="click: pause, visible: canPause()">
                               <i class="fa fa-pause fa-fw"></i>Pause
-                           </a></li>
-                        <li><a href="#" data-bind="click: purge, visible: canPause()">
+                           </a>
+                        </li>
+                        <li>
+                           <a href="#" data-bind="click: purge, visible: canPause()">
                               <i class="fa fa-user-times fa-fw"></i>Purge
-                           </a></li>
-                        <li><a href="#" data-bind="click: unpause, visible: canUnpause()">
+                           </a>
+                        </li>
+                        <li>
+                           <a href="#" data-bind="click: unpause, visible: canUnpause()">
                               <i class="fa fa-play fa-fw"></i>Resume
-                           </a></li>
+                           </a>
+                        </li>
 
                         <li class="divider" data-bind=" visible: !isGone()"></li>
 
-                        <li><a href="#" data-bind="click: restart, visible: !isGone()">
+                        <li>
+                           <a href="#" data-bind="click: restart, visible: !isGone()">
                               <i class="fa fa-refresh fa-fw"></i>Restart
-                           </a></li>
+                           </a>
+                        </li>
 
-                        <li><a href="#" data-bind="click: shutdown, visible: !isGone()">
+                        <li>
+                           <a href="#" data-bind="click: shutdown, visible: !isGone()">
                               <i class="fa fa-power-off fa-fw"></i>Shutdown
-                           </a></li>
-                        <li><a href="#" data-bind="click: deleteService, visible: isGone()">
+                           </a>
+                        </li>
+                        <li>
+                           <a href="#" data-bind="click: deleteService, visible: isGone()">
                               <i class="fa fa-trash-o fa-fw"></i>Delete
-                           </a></li>
+                           </a>
+                        </li>
 
                      </ul>
                   </div>
                <td>
-                  <img
-                     data-bind="attr:{src: iconURL().indexOf('fa-')==0 ? '/admin/media/lizard.png' : iconURL()}, visible: iconURL().indexOf('fa-') != 0"
-                     class="service-icon">
+                  <img data-bind="attr:{src: iconURL().indexOf('fa-')==0 ? '/admin/media/lizard.png' : iconURL()}, visible: iconURL().indexOf('fa-') != 0" class="service-icon">
                   <i class="service-fa fa fa-fw" data-bind="css:iconURL, visible: iconURL().indexOf('fa-') == 0"></i>
                   <span class="service-name" data-bind="text: name"></span>
                </td>
                <td class="centered">
-                  <i class="fa fa-warning fa-fw" style="float: left; color: orange" data-bind="visible: hasWarningsOnly()"></i>
-                  <i class="fa fa-exclamation-circle fa-fw" style="float: left; color: red" data-bind="visible: hasErrors()"></i>
-                  <i class="fa fa-exclamation-circle fa-fw" style="float: left; visibility: hidden"
-                     data-bind="visible: !hasErrorsOrWarnings()"></i>
+                  <i class="fa fa-warning fa-fw" style="float: left; color: orange" data-bind="visible: hasWarningsOnly()"></i> <i class="fa fa-exclamation-circle fa-fw" style="float: left; color: red" data-bind="visible: hasErrors()"></i> <i
+                     class="fa fa-exclamation-circle fa-fw" style="float: left; visibility: hidden" data-bind="visible: !hasErrorsOrWarnings()"></i>
                   <a data-bind="text: entityString, click: showLogs"></a>
                </td>
                <td class="centered">
@@ -144,60 +167,43 @@
                <td colspan="9" data-bind="attr: {id: 'service-details-' + entityId}">
                   <div class="service-details">
 
-                     <ul class="nav nav-tabs">
-                        <li class="active"><a data-bind="attr: {href: '#metrics-' + entityId}" data-toggle="tab">Metrics</a></li>
-                        <li><a data-bind="attr: {href: '#logs-' + entityId}" data-toggle="tab">Logs</a></li>
-                     </ul>
 
-                     <div class="tab-content">
-                        <div class="tab-pane active" data-bind="attr: {id: 'metrics-' + entityId}">
-                           <div class="service-metrics">
+                     <div class="service-logs" data-bind="attr: {id: 'service-logs-' + entityId}">
+                        <ul data-bind="foreach: logs">
+                           <li data-bind="attr: {'class':levelStyle}">
+                              <span data-bind="text: timestamp"></span>
+                              <span data-bind="text: thread"></span>
+                              <span data-bind="text: logger"></span>
+                              <span class="service-logs-msg" data-bind="text: msg"></span>
+                           </li>
+                        </ul>
+                     </div>
+                     <div class="service-details-footer" align="right">
+                        <div class="service-metrics">
+                           <span class="stat">
+                              <label>Memory Usage:</label>
+                              <span data-bind="text: memory"></span>
+                              %
+                           </span>
+                           <span class="stat">
+                              <label>Thread Count:</label>
+                              <span data-bind="text: threads"></span>
+                           </span>
+                           <span class="stat">
 
-                              <dl>
-                                 <dt>Memory Usage:</dt>
-                                 <dd>
-                                    <span data-bind="text: memory"></span>
-                                    %
-                                 </dd>
-
-                                 <dt>Thread Count:</dt>
-                                 <dd>
-                                    <span data-bind="text: threads"></span>
-                                 </dd>
-                              </dl>
-
-                           </div>
-                        </div>
-
-                        <div class="tab-pane" data-bind="attr: {id: 'logs-' + entityId}">
-                           <div class="service-logs" data-bind="attr: {id: 'service-logs-' + entityId}">
-                              <ul data-bind="foreach: logs">
-                                 <li data-bind="attr: {'class':levelStyle}"><span data-bind="text: timestamp"></span> <span
-                                       data-bind="text: thread"></span> <span data-bind="text: logger"></span> <span
-                                       class="service-logs-msg" data-bind="text: msg"></span></li>
-                              </ul>
-                           </div>
-                           <div class="service-logs-options" align="right">
-
-                              <span>
-                                 Log Level:
-                                 <select
-                                    data-bind="options:     logLevels,
+                              <label>Log Level:</label> <select
+                                 data-bind="options:     logLevels,
                                               optionsText: function(item) { return getLogLevelStyle(item);  },
                                                    value: logLevel,"></select>
-                              </span>
-                              <span>
-                                 <label>
-                                    <input type="checkbox" data-bind="checked: autoScrollLogs" name="Auto Scroll" />
-                                    Auto Scroll
-                                 </label>
-                              </span>
-                           </div>
+                           </span>
 
+                           <span class="stat">
+                              <label> <input type="checkbox" data-bind="checked: autoScrollLogs" name="Auto Scroll" /> Auto Scroll
+                              </label>
+                           </span>
                         </div>
+
                      </div>
-
-
                   </div>
                </td>
             </tr>
