@@ -5,20 +5,19 @@ import io.tetrapod.protocol.core.RequestHeader;
 import org.slf4j.*;
 
 abstract public class ResponseHandler {
-   private static final Logger         logger = LoggerFactory.getLogger(ResponseHandler.class);
+   private static final Logger logger = LoggerFactory.getLogger(ResponseHandler.class);
 
    public static final ResponseHandler LOGGER = new ResponseHandler() {
-                                                 @Override
-                                                 public void onResponse(Response res) {
-                                                    if (res.isError()) {
-                                                       RequestHeader h = getRequestHeader();
-                                                       
-                                                       logger.error("[{}] failed with error = {}", h.requestId, res.errorCode());
-                                                    }
-                                                 }
-                                              };
+      @Override
+      public void onResponse(Response res) {
+         if (res.isError()) {
+            RequestHeader h = getRequestHeader();
+            logger.error("[{}] {} failed with error = {}", h.requestId, h.dump(), res.errorCode());
+         }
+      }
+   };
 
-   private RequestHeader               header;
+   private RequestHeader header;
 
    public RequestHeader getRequestHeader() {
       return header;
