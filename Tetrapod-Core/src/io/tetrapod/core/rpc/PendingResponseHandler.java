@@ -29,7 +29,7 @@ public abstract class PendingResponseHandler {
    public PendingResponseHandler(PendingResponseHandler handler) {
       this.originalRequestId = handler.originalRequestId;
       this.session = handler.session;
-      this.context = null;
+      this.context = handler.context;
    }
  
 

@@ -403,37 +403,19 @@ public class WebHttpSession extends WebSession {
       if (isWebSocket()) {
          return new TextWebSocketFrame(jo.toString(3));
       } else {
-         if (jo.has("__httpOverride")) {
-            ByteBuf buf = WebContext.makeByteBufResult(jo.optString("__httpPayload"));
-            HttpResponseStatus status;
-            if (jo.has("__httpStatus")) {
-               status = HttpResponseStatus.valueOf(jo.getInt("__httpStatus"));
-            } else {
-               status = OK;
-            }
-            FullHttpResponse httpResponse = new DefaultFullHttpResponse(HTTP_1_1, status, buf);
-            httpResponse.headers().set(CONTENT_TYPE, jo.optString("__httpMime", "text/json"));
-            httpResponse.headers().set(CONTENT_LENGTH, httpResponse.content().readableBytes());
-            if (jo.has("__httpDisposition")) {
-               httpResponse.headers().set("Content-Disposition", jo.optString("__httpDisposition"));
-            }
-            if (keepAlive) {
-               httpResponse.headers().set(CONNECTION, HttpHeaders.Values.KEEP_ALIVE);
-            } else {
-               httpResponse.headers().set(CONNECTION, HttpHeaders.Values.CLOSE);
-            }
-            return httpResponse;
+         String payload = jo.optString("__httpPayload", null);
+         if (payload == null) {
+            payload = jo.toStringWithout("__http");
          }
-         ByteBuf buf = WebContext.makeByteBufResult(jo.toString(3));
-         FullHttpResponse httpResponse = new DefaultFullHttpResponse(HTTP_1_1, OK, buf);
-         httpResponse.headers().set(CONTENT_TYPE, "text/json");
+         ByteBuf buf = WebContext.makeByteBufResult(payload);
+         HttpResponseStatus status = HttpResponseStatus.valueOf(jo.optInt("__httpStatus", OK.code()));
+         FullHttpResponse httpResponse = new DefaultFullHttpResponse(HTTP_1_1, status, buf);
+         httpResponse.headers().set(CONTENT_TYPE, jo.optString("__httpMime", "application/json"));
          httpResponse.headers().set(CONTENT_LENGTH, httpResponse.content().readableBytes());
-         if (keepAlive) {
-            httpResponse.headers().set(CONNECTION, HttpHeaders.Values.KEEP_ALIVE);
-         } else {
-            httpResponse.headers().set(CONNECTION, HttpHeaders.Values.CLOSE);
+         httpResponse.headers().set(CONNECTION, keepAlive ? HttpHeaders.Values.KEEP_ALIVE : HttpHeaders.Values.CLOSE);
+         if (jo.has("__httpDisposition")) {
+            httpResponse.headers().set("Content-Disposition", jo.optString("__httpDisposition"));
          }
-         // logger.debug("MAKE FRAME " + jo);
          return httpResponse;
       }
    }
