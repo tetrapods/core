@@ -181,7 +181,7 @@ public class EntityInfo extends Entity implements Comparable<EntityInfo> {
       }
    }
 
-   public long getGoneSince() {
+   public synchronized long getGoneSince() {
       return goneSince;
    }
 
