@@ -39,6 +39,10 @@
 	color: white;
 }
 
+.overloaded {
+   background: orange;
+}
+
 .failed {
 	background: orange;
 	color: yellow;

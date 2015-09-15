@@ -92,7 +92,13 @@ define(["knockout", "jquery", "bootbox", "app", "chart", "modules/builder"], fun
       self.isStopping = function() {
          return (self.status() & Core.STATUS_STOPPING) != 0;
       }
+      
+      self.isOverloaded = function() {
+         return (self.status() & Core.STATUS_OVERLOADED) != 0;
+      }
 
+      
+      
       self.statusName = ko.computed(function() {
          if (self.isGone())
             return "GONE";
@@ -100,6 +106,8 @@ define(["knockout", "jquery", "bootbox", "app", "chart", "modules/builder"], fun
             return "STOPPING";
          if (self.isFailed())
             return "FAILED";
+         if (self.isOverloaded())
+            return "OVERLOADED";
          if (self.isPaused())
             return "PAUSED";
          if (self.isStarting())
