@@ -23,6 +23,8 @@ define(["knockout", "jquery", "bootbox", "app", "chart", "modules/builder"], fun
       self.load = ko.observable();
       self.threads = ko.observable();
       self.isSelected = ko.observable(false);
+      self.showRequestStats = showRequestStats;
+      self.requestStats = ko.observableArray([]);
 
       self.iconURL = ko.observable("media/gear.gif");
 
@@ -92,13 +94,11 @@ define(["knockout", "jquery", "bootbox", "app", "chart", "modules/builder"], fun
       self.isStopping = function() {
          return (self.status() & Core.STATUS_STOPPING) != 0;
       }
-      
+
       self.isOverloaded = function() {
          return (self.status() & Core.STATUS_OVERLOADED) != 0;
       }
 
-      
-      
       self.statusName = ko.computed(function() {
          if (self.isGone())
             return "GONE";
@@ -185,7 +185,7 @@ define(["knockout", "jquery", "bootbox", "app", "chart", "modules/builder"], fun
                   messages.push('<li class="' + levelStyle + '">');
                   messages.push(timestamp + "&nbsp;");
                   messages.push(error.thread + "&nbsp;");
-                  messages.push(error.logger  + "&nbsp;");
+                  messages.push(error.logger + "&nbsp;");
                   messages.push('<span class="service-logs-msg">' + error.msg + '</span>');
                   messages.push('</li>');
                }
@@ -198,6 +198,72 @@ define(["knockout", "jquery", "bootbox", "app", "chart", "modules/builder"], fun
                }).find("div.modal-dialog").addClass("service-error-logs-dialog");
             }
          });
+      }
+
+      self.reqSort = ko.observable("COUNT");
+      self.requestStatsTimeRange = ko.observable(0);
+
+      self.reqSort.subscribe(function() {
+         self.requestStats.sort(sortRequestsStats);
+      });
+
+      function sortRequestsStats(a, b) {
+         if (self.reqSort() == "NAME") {
+            return (b.name - a.name);
+         } else if (self.reqSort() == "TOTAL_TIME") {
+            return (b.time - a.time);
+         } else if (self.reqSort() == "AVG_TIME") {
+            return (b.time / b.count) - (a.time / a.count);
+         }
+         // "COUNT" / default
+         return (b.count - a.count);
+      }
+
+      function showRequestStats() {
+
+         var currentTimeMillis = new Date().getTime();
+         var minTime = currentTimeMillis - 1000 * 60 * 10;
+
+         app.server.sendTo("ServiceRequestStats", {
+            limit: 20,
+            minTime: minTime
+         }, self.entityId, function(result) {
+            if (!result.isError()) {
+               var maxCount = 0, maxTime = 0, maxAvgTime = 0;
+               for (var i = 0; i < result.requests.length; i++) {
+                  var r = result.requests[i];
+                  r.totalTime = Math.round(r.time / 1000.0);
+                  r.avgTime = ((r.time / 1000.0) / r.count);
+                  maxCount = Math.max(maxCount, r.count);
+                  maxTime = Math.max(maxTime, r.totalTime);
+                  maxAvgTime = Math.max(maxAvgTime, r.avgTime);
+               }
+
+               for (var i = 0; i < result.requests.length; i++) {
+                  var r = result.requests[i];
+                  r.countPercent = r.count / maxCount;
+                  r.totalTimePercent = r.totalTime / maxTime;
+                  r.avgTimePercent = r.avgTime / maxAvgTime;
+               }
+               self.requestStatsTimeRange(formatElapsedTime(new Date().getTime() - result.minTime))
+               self.requestStats(result.requests);
+               $('#request-stats-' + self.entityId).modal('show');
+            }
+         });
+      }
+
+      function formatElapsedTime(delta) {
+         if (delta < 60000) {
+            return Math.round(delta / 1000) + " seconds";
+         }
+         var mins = Math.round(delta / 60000);
+         var hours = Math.floor(mins / 60);
+         mins = mins - (hours * 60);
+         if (hours > 0) {
+            return hours + "hours " + mins + " minutes";
+         } else {
+            return mins + " minutes";
+         }
       }
 
       self.hasErrors = ko.pureComputed(function() {

@@ -548,10 +548,13 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
          final Context context = dispatcher.requestTimes.time();
          if (!dispatcher.dispatch(new Runnable() {
             public void run() {
+               final long dispatchTime = System.nanoTime();
                try {
 
-                  final long dispatchTime = System.nanoTime() - start;
-                  if (Util.nanosToMillis(dispatchTime) > 2500) {
+                  if (Util.nanosToMillis(dispatchTime - start) > 2500) {
+                     if ((getStatus() & Core.STATUS_OVERLOADED) == 0) {
+                        logger.warn("Service is overloaded. Dispatch time is {}ms", Util.nanosToMillis(dispatchTime - start));
+                     }
                      // If it took a while to get dispatched, so set STATUS_OVERLOADED flag as a back-pressure signal
                      updateStatus(getStatus() | Core.STATUS_OVERLOADED);
                   } else {
@@ -586,13 +589,14 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
                } catch (Throwable e) {
                   logger.error(e.getMessage(), e);
                   async.setResponse(new Error(ERROR_UNKNOWN));
-               }
-               context.stop();
-
-               final long elapsed = System.nanoTime() - start;
-               dispatcher.requestsHandledCounter.mark();
-               if (Util.nanosToMillis(elapsed) > 1000) {
-                  logger.warn("Request took {} {} millis", req, Util.nanosToMillis(elapsed));
+               } finally {
+                  final long elapsed = System.nanoTime() - dispatchTime;
+                  stats.recordRequest(header.fromId, req, elapsed);
+                  context.stop();
+                  dispatcher.requestsHandledCounter.mark();
+                  if (Util.nanosToMillis(elapsed) > 1000) {
+                     logger.warn("Request took {} {} millis", req, Util.nanosToMillis(elapsed));
+                  }
                }
             }
          }, Session.DEFAULT_OVERLOAD_THRESHOLD)) {
@@ -932,6 +936,11 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
    @Override
    public Response requestHostStats(HostStatsRequest r, RequestContext ctx) {
       return new HostStatsResponse(Metrics.getLoadAverage(), Metrics.getFreeDiskSpace());
+   }
+
+   @Override
+   public Response requestServiceRequestStats(ServiceRequestStatsRequest r, RequestContext ctx) {
+      return stats.getRequestStats(r.limit, r.minTime);
    }
 
 }

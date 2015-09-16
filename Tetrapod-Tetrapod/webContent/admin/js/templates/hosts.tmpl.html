@@ -66,6 +66,78 @@
          <tbody data-bind="foreach: services">
             <tr data-bind='attr: {"class": row_style}'>
                <td width="48" class="centered">
+
+                  <!-- ko if: requestStats().length > 0 -->
+                  <div class="modal fade" data-bind="attr: {id: 'request-stats-' + entityId}">
+                     <div class="modal-dialog">
+                        <div class="modal-content">
+                           <div class="modal-header">
+                              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                 <span aria-hidden="true">&times;</span>
+                              </button>
+                              <h4 class="modal-title">
+                                 <span data-bind="text: name"></span>
+                                 <span data-bind="text: entityId"></span>
+                                 Service Request over last
+                                 <span data-bind="text: requestStatsTimeRange"></span>                                 
+                              </h4>
+                           </div>
+                           <div class="modal-body">
+                              <table class="table table-bordered table-condensed request-stats">
+                                 <tr>
+                                    <th data-bind="click: function(){reqSort('NAME')}">
+                                       Request <i class="fa fa-fw" data-bind="css: {'fa-caret-down' : reqSort() == 'NAME'}"></i>
+                                    </th>
+                                    <th data-bind="click: function(){reqSort('COUNT')}">
+                                       Invocations <i class="fa fa-fw" data-bind="css: {'fa-caret-down' : reqSort() == 'COUNT'}"></i>
+                                    </th>
+                                    <th data-bind="click: function(){reqSort('TOTAL_TIME')}">
+                                       Total (ms) <i class="fa fa-fw" data-bind="css: {'fa-caret-down' : reqSort() == 'TOTAL_TIME'}"></i>
+                                    </th>
+                                    <th data-bind="click: function(){reqSort('AVG_TIME')}">
+                                       Avg (ms) <i class="fa fa-fw" data-bind="css: {'fa-caret-down' : reqSort() == 'AVG_TIME'}"></i>
+                                    </th>
+                                 </tr>
+                                 <tbody data-bind="foreach: requestStats">
+                                    <tr>
+                                       <td align="right">
+                                          <div class="cell-label">
+                                             <span data-bind="text: name "></span>
+                                          </div>
+                                       </td>
+                                       <td align="right">
+                                          <div class="cell-label">
+                                             <span data-bind="text: count"></span>
+                                             <meter data-bind="attr: {'value' : countPercent }"></meter>
+                                          </div>
+                                       </td>
+                                       <td align="right">
+                                          <div class="cell-label">
+                                             <span data-bind="text: totalTime"></span>
+                                             <meter data-bind="attr: {'value' : totalTimePercent }"></meter>
+                                          </div>
+                                       </td>
+                                       <td align="right">
+                                          <div class="cell-label">
+                                             <span data-bind="text: avgTime.toFixed(1)"></span>
+                                             <meter data-bind="attr: {'value' : avgTimePercent }"></meter>
+                                          </div>
+                                       </td>
+                                    </tr>
+                                 </tbody>
+                              </table>
+                           </div>
+                           <div class="modal-footer">
+                              <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                           </div>
+                        </div>
+                        <!-- /.modal-content -->
+                     </div>
+                     <!-- /.modal-dialog -->
+                  </div>
+                  <!-- /.modal -->
+                  <!-- /ko -->
+
                   <div class="dropdown" data-bind="attr: {id: 'dropdown-' + entityId}">
                      <a class="dropdown-toggle" data-toggle="dropdown" href="#">
                         <i class="fa fa-gear fa-fw"></i> <i class="fa fa-caret-down"></i>
@@ -82,12 +154,6 @@
                         <!-- /ko -->
 
                         <li class="divider"></li>
-                        <li>
-                           <a href="#" data-bind="click: showErrors, visible: hasErrorsOrWarnings()">Show Errors</a>
-                        </li>
-                        <li>
-                           <a href="#" data-bind="click: clearErrors, visible: hasErrorsOrWarnings()">Clear Errors</a>
-                        </li>
                         <li>
                            <a href="#" data-bind="click: setCommsLogLevel">Set Comms Log Level...</a>
                         </li>
@@ -133,9 +199,12 @@
                   <i class="service-fa fa fa-fw" data-bind="css:iconURL, visible: iconURL().indexOf('fa-') == 0"></i>
                   <span class="service-name" data-bind="text: name"></span>
                </td>
-               <td class="centered">
-                  <i class="fa fa-warning fa-fw" style="float: left; color: orange" data-bind="visible: hasWarningsOnly()"></i> <i class="fa fa-exclamation-circle fa-fw" style="float: left; color: red" data-bind="visible: hasErrors()"></i> <i
-                     class="fa fa-exclamation-circle fa-fw" style="float: left; visibility: hidden" data-bind="visible: !hasErrorsOrWarnings()"></i>
+               <td class="centered" style="cursor: pointer;">
+
+                  <i class="fa fa-warning fa-fw" style="float: left; color: orange" data-bind="visible: hasWarningsOnly(), click: showErrors"></i> <i class="fa fa-exclamation-circle fa-fw" style="float: left; color: red" data-bind="visible: hasErrors(), click: showErrors"></i>
+                  <i class="fa fa-exclamation-circle fa-fw" style="float: left; visibility: hidden" data-bind="visible: !hasErrorsOrWarnings(), click: showErrors"></i> <i class="fa fa-remove fa-fw clear-errors-btn"
+                     data-bind="visible: hasErrorsOrWarnings(), click: clearErrors"></i>
+
                   <a data-bind="text: entityString, click: showLogs"></a>
                </td>
                <td class="centered">
@@ -148,7 +217,7 @@
                   <div class="service-chart" data-bind="attr: {id: 'service-chart-latency-' + entityId}"></div>
                   <span class="service-chart-val" data-bind="text: latency"></span>
                </td>
-               <td class="service-chart-wrap">
+               <td class="service-chart-wrap" data-bind="click: showRequestStats">
                   <div class="service-chart" data-bind="attr: {id: 'service-chart-rps-' + entityId}"></div>
                   <span class="service-chart-val" data-bind="text: rps"></span>
                </td>
@@ -166,8 +235,6 @@
                <td></td>
                <td colspan="9" data-bind="attr: {id: 'service-details-' + entityId}">
                   <div class="service-details">
-
-
                      <div class="service-logs" data-bind="attr: {id: 'service-logs-' + entityId}">
                         <ul data-bind="foreach: logs">
                            <li data-bind="attr: {'class':levelStyle}">
@@ -210,7 +277,9 @@
 
          </tbody>
       </table>
+
    </div>
    <!-- /ko -->
+
 
 </div>

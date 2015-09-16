@@ -664,7 +664,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          final int clients = registry.getNumActiveClients();
          synchronized (clientSessionsCounter) {
             clientSessionsCounter.addLast(clients);
-            if (clientSessionsCounter.size() > 60) {
+            if (clientSessionsCounter.size() > 1440) {
                clientSessionsCounter.removeFirst();
             }
          }
