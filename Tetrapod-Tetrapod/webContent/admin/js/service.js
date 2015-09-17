@@ -246,6 +246,7 @@ define(["knockout", "jquery", "bootbox", "app", "chart", "modules/builder"], fun
                   r.avgTimePercent = r.avgTime / maxAvgTime;
                }
                self.requestStatsTimeRange(formatElapsedTime(new Date().getTime() - result.minTime))
+               self.reqSort("COUNT");
                self.requestStats(result.requests);
                $('#request-stats-' + self.entityId).modal('show');
             }
