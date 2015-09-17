@@ -205,8 +205,7 @@ define(["knockout", "jquery", "bootbox", "alert", "app", "chart", "modules/build
       self.requestStatsDomains = ko.observableArray([]);
       self.requestStatsDomain = ko.observable(null);
 
-      self.reqSort.subscribe(function() {
-         // self.requestStats.sort(sortRequestsStats);
+      self.reqSort.subscribe(function() { 
          showRequestStats();
       });
 
