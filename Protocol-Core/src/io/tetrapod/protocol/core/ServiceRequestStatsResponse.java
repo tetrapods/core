@@ -21,9 +21,10 @@ public class ServiceRequestStatsResponse extends Response {
       defaults();
    }
 
-   public ServiceRequestStatsResponse(List<RequestStat> requests, long minTime) {
+   public ServiceRequestStatsResponse(List<RequestStat> requests, long minTime, String[] domains) {
       this.requests = requests;
       this.minTime = minTime;
+      this.domains = domains;
    }   
    
    public List<RequestStat> requests;
@@ -32,6 +33,11 @@ public class ServiceRequestStatsResponse extends Response {
     * last timestamp in stats buffer
     */
    public long minTime;
+   
+   /**
+    * list of other event domains service has stats for
+    */
+   public String[] domains;
 
    public final Structure.Security getSecurity() {
       return Security.INTERNAL;
@@ -40,12 +46,14 @@ public class ServiceRequestStatsResponse extends Response {
    public final void defaults() {
       requests = null;
       minTime = 0;
+      domains = null;
    }
    
    @Override
    public final void write(DataSource data) throws IOException {
       if (this.requests != null) data.write_struct(1, this.requests);
       data.write(2, this.minTime);
+      if (this.domains != null) data.write(3, this.domains);
       data.writeEndTag();
    }
    
@@ -57,6 +65,7 @@ public class ServiceRequestStatsResponse extends Response {
          switch (tag) {
             case 1: this.requests = data.read_struct_list(tag, new RequestStat()); break;
             case 2: this.minTime = data.read_long(tag); break;
+            case 3: this.domains = data.read_string_array(tag); break;
             case Codec.END_TAG:
                return;
             default:
@@ -78,9 +87,10 @@ public class ServiceRequestStatsResponse extends Response {
       // Note do not use this tags in long term serializations (to disk or databases) as 
       // implementors are free to rename them however they wish.  A null means the field
       // is not to participate in web serialization (remaining at default)
-      String[] result = new String[2+1];
+      String[] result = new String[3+1];
       result[1] = "requests";
       result[2] = "minTime";
+      result[3] = "domains";
       return result;
    }
 
@@ -95,6 +105,7 @@ public class ServiceRequestStatsResponse extends Response {
       desc.types[0] = new TypeDescriptor(TypeDescriptor.T_STRUCT, getContractId(), getStructId());
       desc.types[1] = new TypeDescriptor(TypeDescriptor.T_STRUCT_LIST, RequestStat.CONTRACT_ID, RequestStat.STRUCT_ID);
       desc.types[2] = new TypeDescriptor(TypeDescriptor.T_LONG, 0, 0);
+      desc.types[3] = new TypeDescriptor(TypeDescriptor.T_STRING_LIST, 0, 0);
       return desc;
    }
  }

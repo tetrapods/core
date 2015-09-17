@@ -148,12 +148,20 @@ internal struct RequestStat
    3: long time   // cumulative time spent in microseconds 
  
 internal request ServiceRequestStats
-   1: int limit
-   2: long minTime   
+   1: string domain // null is default RPC domain
+   2: int limit
+   3: long minTime   
+   4: RequestStatsSort sortBy
+   
+   enum int RequestStatsSort.COUNT          = 1
+   enum int RequestStatsSort.TOTAL_TIME     = 2
+   enum int RequestStatsSort.AVERAGE_TIME   = 3
+   
    
 internal response ServiceRequestStats
    1: RequestStat<list> requests
    2: long minTime   // last timestamp in stats buffer
+   3: string[] domains // list of other event domains service has stats for
 
 // returns static information for the host
 internal request HostInfo

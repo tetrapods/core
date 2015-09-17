@@ -940,7 +940,7 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
 
    @Override
    public Response requestServiceRequestStats(ServiceRequestStatsRequest r, RequestContext ctx) {
-      return stats.getRequestStats(r.limit, r.minTime);
+      return stats.getRequestStats(r.domain, r.limit, r.minTime, r.sortBy);
    }
 
 }

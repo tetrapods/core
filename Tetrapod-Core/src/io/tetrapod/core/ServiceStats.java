@@ -1,7 +1,6 @@
 package io.tetrapod.core;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
@@ -24,9 +23,13 @@ public class ServiceStats {
 
    private final ServiceStatsMessage message = new ServiceStatsMessage();
 
+   private final RequestStats              requests = new RequestStats();
+   private final Map<String, RequestStats> domains  = new HashMap<>();
+
    public ServiceStats(DefaultService service) {
       this.service = service;
       scheduleUpdate();
+      register(requests, "Requests");
    }
 
    /**
@@ -138,76 +141,27 @@ public class ServiceStats {
       }
    }
 
-   public static class ReqSample {
-      public final String key;
-      public final long   timestamp;
-      public final long   execution;
-
-      public ReqSample(int fromEntityId, Request req, long millis) {
-         this.key = req.getClass().getSimpleName().replaceAll("Request", "");
-         this.timestamp = System.currentTimeMillis();
-         this.execution = millis;
-      }
-   }
-
-   public static final int       MAX_REQUEST_SAMPLES = 1024 * 64;
-   public final Queue<ReqSample> requests            = new ConcurrentLinkedQueue<>();
-
    public void recordRequest(int fromEntityId, Request req, long nanos) {
-      requests.add(new ReqSample(fromEntityId, req, nanos));
-      if (requests.size() > MAX_REQUEST_SAMPLES) {
-         requests.remove();
-      }
+      requests.recordRequest(fromEntityId, req.getClass().getSimpleName().replaceAll("Request", ""), nanos);
    }
 
-   public ServiceRequestStatsResponse getRequestStats(int limit, long minTime) {
-      final Map<String, Integer> counts = new HashMap<>();
-      final Map<String, Long> execution = new HashMap<>();
-      long minTimestamp = Long.MAX_VALUE;
-      for (ReqSample sample : requests) {
-         if (sample.timestamp >= minTime) {
-            minTimestamp = Math.min(minTimestamp, sample.timestamp);
-
-            // accumulate invocations count
-            Integer count = counts.get(sample.key);
-            if (count == null) {
-               count = 1;
-            } else {
-               count = count + 1;
-            }
-            counts.put(sample.key, count);
-
-            // accumulate microsecond totals
-            Long time = execution.get(sample.key);
-            if (time == null) {
-               time = sample.execution / 1000;
-            } else {
-               time = time + sample.execution / 1000;
-            }
-            execution.put(sample.key, time);
-         }
+   public ServiceRequestStatsResponse getRequestStats(String domain, int limit, long minTime, RequestStatsSort sortBy) {
+      ServiceRequestStatsResponse res = null;
+      if (domain == null || domain.isEmpty()) {
+         res = requests.getRequestStats(limit, minTime, sortBy);
+      } else {
+         res = domains.get(domain).getRequestStats(limit, minTime, sortBy);
       }
-
-      // sort by invocations
-      final List<String> sorted = new ArrayList<>(counts.keySet());
-      Collections.sort(sorted, new Comparator<String>() {
-         public int compare(String a, String b) {
-            if (counts.get(a) >= counts.get(b)) {
-               return -1;
-            } else {
-               return 1;
-            }
-         }
-      });
-
-      final List<RequestStat> stats = new ArrayList<RequestStat>();
-      for (String key : sorted) {
-         stats.add(new RequestStat(key, counts.get(key), execution.get(key)));
-         if (stats.size() >= limit)
-            break;
+      synchronized (domains) {
+         res.domains = domains.keySet().toArray(new String[domains.size()]);
       }
+      return res;
+   }
 
-      return new ServiceRequestStatsResponse(stats, minTimestamp);
+   public void register(RequestStats stats, String name) {
+      synchronized (domains) {
+         domains.put(name, stats);
+      }
    }
 
 }

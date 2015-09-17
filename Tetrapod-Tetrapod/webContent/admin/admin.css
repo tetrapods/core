@@ -1,3 +1,11 @@
+.request-stats-dialog {
+	width: 750px;
+}
+
+.request-stats {
+	margin-top: 10px;
+}
+
 .request-stats th {
 	cursor: pointer;
 	background: #666;
@@ -7,18 +15,23 @@
 
 .request-stats td {
 	vertical-align: middle;
-	white-space: nowrap;
+	font-size: 90%;
+	padding: 0px 1px;
 }
 
 .cell-label {
 	padding: 2px;
 	display: inline-block;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	max-width: 400px;
 }
 
-meter { 
+meter {
 	padding-left: 1px;
-	padding-right: 1px; 
-	width: 75px;
+	padding-right: 1px;
+	width: 50px;
 }
 
 #cluster-table {

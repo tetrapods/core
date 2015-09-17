@@ -69,7 +69,7 @@
 
                   <!-- ko if: requestStats().length > 0 -->
                   <div class="modal fade" data-bind="attr: {id: 'request-stats-' + entityId}">
-                     <div class="modal-dialog">
+                     <div class="modal-dialog request-stats-dialog"">
                         <div class="modal-content">
                            <div class="modal-header">
                               <button type="button" class="close" data-dismiss="modal" aria-label="Close">
@@ -79,10 +79,12 @@
                                  <span data-bind="text: name"></span>
                                  <span data-bind="text: entityId"></span>
                                  Service Request over last
-                                 <span data-bind="text: requestStatsTimeRange"></span>                                 
+                                 <span data-bind="text: requestStatsTimeRange"></span>
                               </h4>
                            </div>
                            <div class="modal-body">
+                              <select title="domains" data-bind="options: requestStatsDomains , value: requestStatsDomain">
+                              </select>
                               <table class="table table-bordered table-condensed request-stats">
                                  <tr>
                                     <th data-bind="click: function(){reqSort('NAME')}">
@@ -102,7 +104,7 @@
                                     <tr>
                                        <td align="right">
                                           <div class="cell-label">
-                                             <span data-bind="text: name "></span>
+                                             <a data-bind="text: name, attr: { 'title' : name }, click: statClicked"></a>
                                           </div>
                                        </td>
                                        <td align="right">
@@ -127,9 +129,6 @@
                                  </tbody>
                               </table>
                            </div>
-                      <!--      <div class="modal-footer">
-                              <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                           </div> -->
                         </div>
                         <!-- /.modal-content -->
                      </div>
