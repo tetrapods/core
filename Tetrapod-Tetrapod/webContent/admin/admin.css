@@ -15,10 +15,10 @@
 	display: inline-block;
 }
 
-meter {
-	padding: 1px;
-	height: 15px;
-	width: 60px;
+meter { 
+	padding-left: 1px;
+	padding-right: 1px; 
+	width: 75px;
 }
 
 #cluster-table {
