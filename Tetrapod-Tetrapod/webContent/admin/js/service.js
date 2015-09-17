@@ -200,13 +200,14 @@ define(["knockout", "jquery", "bootbox", "alert", "app", "chart", "modules/build
          });
       }
 
-      self.reqSort = ko.observable("COUNT");
+      self.reqSort = ko.observable(1);
       self.requestStatsTimeRange = ko.observable(0);
       self.requestStatsDomains = ko.observableArray([]);
       self.requestStatsDomain = ko.observable(null);
 
       self.reqSort.subscribe(function() {
-         self.requestStats.sort(sortRequestsStats);
+         // self.requestStats.sort(sortRequestsStats);
+         showRequestStats();
       });
 
       self.requestStatsDomain.subscribe(function() {
@@ -214,30 +215,19 @@ define(["knockout", "jquery", "bootbox", "alert", "app", "chart", "modules/build
       });
 
       function statClicked(r) {
+         console.log
          Alert.info(r.name);
-      }
-
-      function sortRequestsStats(a, b) {
-         if (self.reqSort() == "NAME") {
-            return (b.name - a.name);
-         } else if (self.reqSort() == "TOTAL_TIME") {
-            return (b.time - a.time);
-         } else if (self.reqSort() == "AVG_TIME") {
-            return (b.time / b.count) - (a.time / a.count);
-         }
-         // "COUNT" / default
-         return (b.count - a.count);
+         // TODO: If this is an RPC, call and display stats for just that request
       }
 
       function showRequestStats() {
-
          var currentTimeMillis = new Date().getTime();
-         var minTime = currentTimeMillis - 1000 * 60 * 10;
+         var minTime = currentTimeMillis - 1000 * 60 * 15;
 
          app.server.sendTo("ServiceRequestStats", {
-            limit: 20,
+            limit: 25,
             minTime: minTime,
-            sortBy: 1,
+            sortBy: self.reqSort(),
             domain: self.requestStatsDomain()
          }, self.entityId, function(result) {
             if (!result.isError()) {
@@ -259,7 +249,6 @@ define(["knockout", "jquery", "bootbox", "alert", "app", "chart", "modules/build
                   r.statClicked = statClicked;
                }
                self.requestStatsTimeRange(formatElapsedTime(new Date().getTime() - result.minTime))
-               self.reqSort("COUNT");
                self.requestStats(result.requests);
                self.requestStatsDomains(result.domains);
                $('#request-stats-' + self.entityId).modal('show');

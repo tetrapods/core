@@ -87,17 +87,17 @@
                               </select>
                               <table class="table table-bordered table-condensed request-stats">
                                  <tr>
-                                    <th data-bind="click: function(){reqSort('NAME')}">
-                                       Request <i class="fa fa-fw" data-bind="css: {'fa-caret-down' : reqSort() == 'NAME'}"></i>
+                                    <th data-bind="click: function(){reqSort(4)}">
+                                       Request <i class="fa fa-fw" data-bind="css: {'fa-caret-down' : reqSort() == 4}"></i>
                                     </th>
-                                    <th data-bind="click: function(){reqSort('COUNT')}">
-                                       Invocations <i class="fa fa-fw" data-bind="css: {'fa-caret-down' : reqSort() == 'COUNT'}"></i>
+                                    <th data-bind="click: function(){reqSort(1)}">
+                                       Invocations <i class="fa fa-fw" data-bind="css: {'fa-caret-down' : reqSort() == 1}"></i>
                                     </th>
-                                    <th data-bind="click: function(){reqSort('TOTAL_TIME')}">
-                                       Total (ms) <i class="fa fa-fw" data-bind="css: {'fa-caret-down' : reqSort() == 'TOTAL_TIME'}"></i>
+                                    <th data-bind="click: function(){reqSort(2)}">
+                                       Total (ms) <i class="fa fa-fw" data-bind="css: {'fa-caret-down' : reqSort() == 2}"></i>
                                     </th>
-                                    <th data-bind="click: function(){reqSort('AVG_TIME')}">
-                                       Avg (ms) <i class="fa fa-fw" data-bind="css: {'fa-caret-down' : reqSort() == 'AVG_TIME'}"></i>
+                                    <th data-bind="click: function(){reqSort(3)}">
+                                       Avg (ms) <i class="fa fa-fw" data-bind="css: {'fa-caret-down' : reqSort() == 3}"></i>
                                     </th>
                                  </tr>
                                  <tbody data-bind="foreach: requestStats">

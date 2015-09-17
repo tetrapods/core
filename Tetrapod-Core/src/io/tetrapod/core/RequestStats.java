@@ -41,6 +41,7 @@ public class RequestStats {
       }
    }
 
+   // TODO: Add min/max/median/stddev....
    public ServiceRequestStatsResponse getRequestStats(int limit, long minTime, final RequestStatsSort sortBy) {
       final Map<String, Integer> counts = new HashMap<>();
       final Map<String, Long> execution = new HashMap<>();
@@ -72,25 +73,27 @@ public class RequestStats {
       final List<String> sorted = new ArrayList<>(counts.keySet());
       Collections.sort(sorted, new Comparator<String>() {
          public int compare(String a, String b) {
-            switch (sortBy) {
-               case COUNT:
-                  if (counts.get(a) >= counts.get(b)) {
-                     return -1;
-                  } else {
-                     return 1;
-                  }
-               case TOTAL_TIME:
-                  if (execution.get(a) >= execution.get(b)) {
-                     return -1;
-                  } else {
-                     return 1;
-                  }
-               case AVERAGE_TIME:
-                  if (execution.get(a) / (double) counts.get(a) >= execution.get(b) / (double) counts.get(b)) {
-                     return -1;
-                  } else {
-                     return 1;
-                  }
+            if (sortBy != null) {
+               switch (sortBy) {
+                  case COUNT:
+                     if (counts.get(a) >= counts.get(b)) {
+                        return -1;
+                     } else {
+                        return 1;
+                     }
+                  case TOTAL_TIME:
+                     if (execution.get(a) >= execution.get(b)) {
+                        return -1;
+                     } else {
+                        return 1;
+                     }
+                  case AVERAGE_TIME:
+                     if (execution.get(a) / (double) counts.get(a) >= execution.get(b) / (double) counts.get(b)) {
+                        return -1;
+                     } else {
+                        return 1;
+                     }
+               }
             }
             return a.compareTo(b);
          }
