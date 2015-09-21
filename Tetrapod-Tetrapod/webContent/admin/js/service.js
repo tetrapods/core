@@ -205,7 +205,7 @@ define(["knockout", "jquery", "bootbox", "alert", "app", "chart", "modules/build
       self.requestStatsDomains = ko.observableArray([]);
       self.requestStatsDomain = ko.observable(null);
 
-      self.reqSort.subscribe(function() { 
+      self.reqSort.subscribe(function() {
          showRequestStats();
       });
 
@@ -256,6 +256,9 @@ define(["knockout", "jquery", "bootbox", "alert", "app", "chart", "modules/build
       }
 
       function formatElapsedTime(delta) {
+         if (delta < 0) {
+            return delta + "ms"; // hmm...
+         }
          if (delta < 60000) {
             return Math.round(delta / 1000) + " seconds";
          }

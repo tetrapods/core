@@ -1,3 +1,11 @@
+h3 {
+	margin: 5px;
+	padding: 2px;
+	font-size: 18px;
+	
+}
+
+
 .request-stats-dialog {
 	width: 750px;
 }

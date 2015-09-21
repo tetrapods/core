@@ -44,12 +44,16 @@
                         <i class="fa fa-caret-down"></i>
                      </a>
                      <ul class="dropdown-menu dropdown-service">
-                        <li><a href="#" data-bind="click: changePassword">
+                        <li>
+                           <a href="#" data-bind="click: changePassword">
                               <i class="fa fa-fw fa-edit"></i> Change Password
-                           </a></li>
-                        <li><a href="#" data-bind="click: onLogout">
+                           </a>
+                        </li>
+                        <li>
+                           <a href="#" data-bind="click: onLogout">
                               <i class="fa fa-sign-out fa-fw"></i> Logout
-                           </a></li>
+                           </a>
+                        </li>
                      </ul>
                   </div>
                </li>
@@ -80,16 +84,25 @@
 
                <div data-bind="css: {prod: isProd}"></div>
                <div id="cluster-view">
+                  <div class="tab-pane" id="raft-tab" data-bind="template: { name: 'raft', data: raft }"></div>
                   <ul id="cluster-tabs" class="nav nav-tabs">
-                     <li class="active"><a href="#hosts-tab" data-toggle="tab">Services</a></li>
-                     <li><a href="#raft-tab" data-toggle="tab">Raft</a></li>
-                     <li><a href="#props-tab" data-toggle="tab">Properties</a></li>
-                     <li><a href="#web-tab" data-toggle="tab">Web Roots</a></li>
-                     <li><a href="#users-tab" data-toggle="tab">Users</a></li>
+                     <li class="active">
+                        <a href="#hosts-tab" data-toggle="tab">Services</a>
+                     </li>
+                     <li>
+                        <a href="#props-tab" data-toggle="tab">Properties</a>
+                     </li>
+                     <li>
+                        <a href="#web-tab" data-toggle="tab">Web Roots</a>
+                     </li>
+                     <li>
+                        <a href="#users-tab" data-toggle="tab">Users</a>
+                     </li>
                   </ul>
                   <div class="tab-content">
-                     <div class="tab-pane active" id="hosts-tab" data-bind="template: { name: 'hosts', data: hosts }"></div>
-                     <div class="tab-pane" id="raft-tab" data-bind="template: { name: 'raft', data: raft }"></div>
+                     <div class="tab-pane active" id="hosts-tab">
+                        <div data-bind="template: { name: 'hosts', data: hosts }"></div>
+                     </div>
                      <div class="tab-pane" id="props-tab" data-bind="template: { name: 'properties', data: properties }"></div>
                      <div class="tab-pane" id="web-tab" data-bind="template: { name: 'webroots', data: webroots }"></div>
                      <div class="tab-pane" id="users-tab" data-bind="template: { name: 'users', data: users }"></div>
@@ -119,58 +132,43 @@
                   <div class="row">
                      <div class="col-md-4" data-bind="foreach: modalData().hosts">
                         <div class="checkbox">
-                           <label>
-                              <input type="checkbox" data-bind="checked: isChecked">
-                              <span data-bind="text: name"></span>
+                           <label> <input type="checkbox" data-bind="checked: isChecked"> <span data-bind="text: name"></span>
                            </label>
                         </div>
                      </div>
                      <div class="col-md-4">
                         <div class="form-group">
                            <div class="checkbox">
-                              <label>
-                                 <input type="checkbox" data-bind="checked: modalData().doDeploy">
-                                 Deploy
+                              <label> <input type="checkbox" data-bind="checked: modalData().doDeploy"> Deploy
                               </label>
                            </div>
                            <div class="checkbox">
-                              <label>
-                                 <input type="checkbox" data-bind="checked: modalData().doLaunch">
-                                 Launch
+                              <label> <input type="checkbox" data-bind="checked: modalData().doLaunch"> Launch
                               </label>
                            </div>
                            <div class="checkbox">
-                              <label>
-                                 <input type="checkbox" data-bind="checked: modalData().paused">
-                                 Start Paused
+                              <label> <input type="checkbox" data-bind="checked: modalData().paused"> Start Paused
                               </label>
                            </div>
                         </div>
                         <div class="form-group">
-                           <label>Build number</label>
-                           <input type="text" class="form-control" data-bind="value: modalData().buildNumber"
-                              placeholder="current" />
+                           <label>Build number</label> <input type="text" class="form-control" data-bind="value: modalData().buildNumber" placeholder="current" />
                         </div>
                         <div class="form-group">
-                           <label>Build Name</label>
-                           <input type="text" class="form-control" data-bind="value: modalData().buildName"
-                              placeholder="default" />
+                           <label>Build Name</label> <input type="text" class="form-control" data-bind="value: modalData().buildName" placeholder="default" />
                         </div>
                      </div>
                      <div class="col-md-4">
                         <div class="form-group" data-bind="foreach: modalData().services">
                            <div class="checkbox" data-bind="attr: { title: 'deployed: ' + current }">
-                              <label>
-                                 <input type="checkbox" data-bind="checked: isChecked">
-                                 <span data-bind="text: name"></span>
+                              <label> <input type="checkbox" data-bind="checked: isChecked"> <span data-bind="text: name"></span>
                               </label>
                            </div>
                         </div>
                      </div>
                      <div class="col-md-12 text-center">
                         <br />
-                        <button id="buildExecute" type="submit" class="btn btn-primary" data-bind="click: modalData().run"
-                           data-loading-text="Running...">Execute</button>
+                        <button id="buildExecute" type="submit" class="btn btn-primary" data-bind="click: modalData().run" data-loading-text="Running...">Execute</button>
                      </div>
                   </div>
                </form>
