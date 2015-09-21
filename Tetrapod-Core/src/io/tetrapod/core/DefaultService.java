@@ -566,6 +566,7 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
                      @Override
                      public void onResponse(Response res) {
                         try {
+                           assert res != Response.PENDING;
                            async.setResponse(res);
                         } catch (Throwable e) {
                            logger.error(e.getMessage(), e);
