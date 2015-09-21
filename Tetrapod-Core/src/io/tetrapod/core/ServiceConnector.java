@@ -242,12 +242,16 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
                } catch (Throwable e) {
                   logger.error(e.getMessage(), e);
                } finally {
-                  // finally return the pending response we were waiting on
-                  if (pendingRes == null) {
-                     pendingRes = new Error(ERROR_UNKNOWN);
-                  }
-                  if (!handler.sendResponse(pendingRes)) {
-                     logger.error("I literally can't even ({})", pendingRes);
+                  if (pendingRes != Response.PENDING) {
+                     // finally return the pending response we were waiting on
+                     if (pendingRes == null) {
+                        pendingRes = new Error(ERROR_UNKNOWN);
+                     }
+                     if (!handler.sendResponse(pendingRes)) {
+                        logger.error("I literally can't even ({})", pendingRes);
+                     }
+                  } else {
+                     logger.error("Pending response returned from pending handler for {} @ {}", req.dump(), async.header.toId);
                   }
                }
             }
