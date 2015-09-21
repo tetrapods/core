@@ -671,6 +671,9 @@ public class JSONObject {
     public boolean has(String key) {
         return this.map.containsKey(key);
     }
+    public <T> boolean has(Enum_String<T> key) {
+       return has(key.getValue());
+    }
 
     /**
      * Increment a property of a JSONObject. If there is no such property,
