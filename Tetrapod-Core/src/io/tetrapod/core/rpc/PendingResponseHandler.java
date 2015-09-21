@@ -37,6 +37,9 @@ public abstract class PendingResponseHandler {
 
    // return the response we were pending on
    public boolean sendResponse(Response pendingRes) {
+      if (pendingRes == Response.PENDING) {
+         logger.error("Pending response submitted for {}", context.header.dump());
+      }
       assert pendingRes != Response.PENDING;
       if (context != null) {
          context.handlePendingResponse(pendingRes, originalRequestId);
