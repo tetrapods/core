@@ -211,21 +211,21 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
             Response pendingRes = null;
             try {
                pendingRes = pendingHandler.onResponse(res);
-               if (pendingRes == Response.PENDING) {
-                  logger.error("Pending response returned from pending handler for {} @ {}", req.dump(), toId);
-                  return;
-               }
             } catch (ErrorResponseException e1) {
                pendingRes = Response.error(e1.errorCode);
             } catch (Throwable e) {
                logger.error(e.getMessage(), e);
             } finally {
-               // finally return the pending response we were waiting on
-               if (pendingRes == null) {
-                  pendingRes = new Error(ERROR_UNKNOWN);
-               }
-               if (!pendingHandler.sendResponse(pendingRes)) {
-                  sendResponse(pendingRes, pendingHandler.originalRequestId);
+               if (pendingRes != Response.PENDING) {
+                  // finally return the pending response we were waiting on
+                  if (pendingRes == null) {
+                     pendingRes = new Error(ERROR_UNKNOWN);
+                  }
+                  if (!pendingHandler.sendResponse(pendingRes)) {
+                     sendResponse(pendingRes, pendingHandler.originalRequestId);
+                  }
+               } else {
+                  logger.error("Pending response returned from pending handler for {} @ {}", req.dump(), toId);
                }
             }
          }
