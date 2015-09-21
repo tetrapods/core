@@ -203,7 +203,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
       });
    }
 
-   public Response sendPendingRequest(Request req, int toId, byte timeoutSeconds, final PendingResponseHandler pendingHandler) {
+   public Response sendPendingRequest(final Request req, final int toId, byte timeoutSeconds, final PendingResponseHandler pendingHandler) {
       final Async async = sendRequest(req, toId, timeoutSeconds);
       async.handle(new ResponseHandler() {
          @Override
@@ -211,6 +211,9 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
             Response pendingRes = null;
             try {
                pendingRes = pendingHandler.onResponse(res);
+               if (pendingRes == Response.PENDING) {
+                  logger.error("Pending response returned from pending handler for {} @ {}", req.dump(), toId);
+               }
             } catch (ErrorResponseException e1) {
                pendingRes = Response.error(e1.errorCode);
             } catch (Throwable e) {

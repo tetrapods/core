@@ -136,10 +136,7 @@ public class WireSession extends Session {
                   public void run() {
                      if (res instanceof StructureAdapter) {
                         async.setResponse(new ResponseAdapter(res));
-                     } else {
-                        if (res == Response.PENDING) {
-                           logger.error("WAT: Read a PENDING response off the wire, that should NEVER happen {} => {}", async.header.dump(), header.dump());
-                        }
+                     } else { 
                         async.setResponse((Response) res);
                      }
                   }
