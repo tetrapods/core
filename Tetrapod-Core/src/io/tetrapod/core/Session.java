@@ -213,6 +213,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
                pendingRes = pendingHandler.onResponse(res);
                if (pendingRes == Response.PENDING) {
                   logger.error("Pending response returned from pending handler for {} @ {}", req.dump(), toId);
+                  return;
                }
             } catch (ErrorResponseException e1) {
                pendingRes = Response.error(e1.errorCode);
