@@ -136,7 +136,7 @@ public class WireSession extends Session {
                   public void run() {
                      if (res instanceof StructureAdapter) {
                         async.setResponse(new ResponseAdapter(res));
-                     } else {
+                     } else { 
                         async.setResponse((Response) res);
                      }
                   }

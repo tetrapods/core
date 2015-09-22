@@ -1,8 +1,8 @@
 
-<h3>Raft Cluster</h3>
-<h4 data-bind="text: 'Leader: ' + leaderEntityId()"></h4>
+<h3 data-bind="text: 'Raft Cluster; Leader: ' + leaderEntityId() + '; Fault Tolerance: ' + tolerance()">Raft Cluster</h3>
+<!-- <h4 data-bind="text: 'Leader: ' + leaderEntityId()"></h4>
 <h4 data-bind="text: 'Fault Tolerance: ' + tolerance()"></h4>
-
+ -->
 <table id="raft-table" class="table table-bordered table-condensed">
    <thead>
       <tr>
@@ -22,10 +22,9 @@
                   <i class="fa fa-gear fa-fw"></i><i class="fa fa-caret-down"></i>
                </a>
                <ul class="dropdown-menu dropdown-service">
-                  <!--                   <li><a href="#" data-bind="click: leaveCluster">Leave Cluster</a></li>
-                  <li><a href="#" data-bind="click: forceBootstrap">Force Bootstrap</a></li>
- -->
-                  <li><a href="#" data-bind="click: snapshot">Snapshot</a></li>
+                  <li>
+                     <a href="#" data-bind="click: snapshot">Snapshot</a>
+                  </li>
                </ul>
             </div>
             &nbsp;

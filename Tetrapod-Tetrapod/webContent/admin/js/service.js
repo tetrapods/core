@@ -1,4 +1,4 @@
-define(["knockout", "jquery", "bootbox", "app", "chart", "modules/builder"], function(ko, $, bootbox, app, Chart, builder) {
+define(["knockout", "jquery", "bootbox", "alert", "app", "chart", "modules/builder"], function(ko, $, bootbox, Alert, app, Chart, builder) {
    // static variables
 
    var Core = app.server.consts["Core.Core"];
@@ -200,33 +200,34 @@ define(["knockout", "jquery", "bootbox", "app", "chart", "modules/builder"], fun
          });
       }
 
-      self.reqSort = ko.observable("COUNT");
+      self.reqSort = ko.observable(1);
       self.requestStatsTimeRange = ko.observable(0);
+      self.requestStatsDomains = ko.observableArray([]);
+      self.requestStatsDomain = ko.observable(null);
 
       self.reqSort.subscribe(function() {
-         self.requestStats.sort(sortRequestsStats);
+         showRequestStats();
       });
 
-      function sortRequestsStats(a, b) {
-         if (self.reqSort() == "NAME") {
-            return (b.name - a.name);
-         } else if (self.reqSort() == "TOTAL_TIME") {
-            return (b.time - a.time);
-         } else if (self.reqSort() == "AVG_TIME") {
-            return (b.time / b.count) - (a.time / a.count);
-         }
-         // "COUNT" / default
-         return (b.count - a.count);
+      self.requestStatsDomain.subscribe(function() {
+         showRequestStats();
+      });
+
+      function statClicked(r) {
+         console.log
+         Alert.info(r.name);
+         // TODO: If this is an RPC, call and display stats for just that request
       }
 
       function showRequestStats() {
-
          var currentTimeMillis = new Date().getTime();
-         var minTime = currentTimeMillis - 1000 * 60 * 10;
+         var minTime = currentTimeMillis - 1000 * 60 * 15;
 
          app.server.sendTo("ServiceRequestStats", {
-            limit: 20,
-            minTime: minTime
+            limit: 25,
+            minTime: minTime,
+            sortBy: self.reqSort(),
+            domain: self.requestStatsDomain()
          }, self.entityId, function(result) {
             if (!result.isError()) {
                var maxCount = 0, maxTime = 0, maxAvgTime = 0;
@@ -244,15 +245,20 @@ define(["knockout", "jquery", "bootbox", "app", "chart", "modules/builder"], fun
                   r.countPercent = r.count / maxCount;
                   r.totalTimePercent = r.totalTime / maxTime;
                   r.avgTimePercent = r.avgTime / maxAvgTime;
+                  r.statClicked = statClicked;
                }
                self.requestStatsTimeRange(formatElapsedTime(new Date().getTime() - result.minTime))
                self.requestStats(result.requests);
+               self.requestStatsDomains(result.domains);
                $('#request-stats-' + self.entityId).modal('show');
             }
          });
       }
 
       function formatElapsedTime(delta) {
+         if (delta < 0) {
+            return delta + "ms"; // hmm...
+         }
          if (delta < 60000) {
             return Math.round(delta / 1000) + " seconds";
          }

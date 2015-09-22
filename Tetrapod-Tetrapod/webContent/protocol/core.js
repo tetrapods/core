@@ -60,6 +60,9 @@ function TP_Core(server) {
    server.registerConst("Core", "ServiceLogEntry", "LEVEL_WARN", 40);
    server.registerConst("Core", "ServiceLogEntry", "LEVEL_ERROR", 50);
    server.registerConst("Core", "ServiceLogEntry", "LEVEL_OFF", 100);
+   server.registerEnumConst("Core", "RequestStatsSort", "COUNT", 1);
+   server.registerEnumConst("Core", "RequestStatsSort", "TOTAL_TIME", 2);
+   server.registerEnumConst("Core", "RequestStatsSort", "AVERAGE_TIME", 3);
    
    server.registerErrorConst("Core", "null", "CONNECTION_CLOSED", 7);
    server.registerErrorConst("Core", "null", "FLOOD", 12);

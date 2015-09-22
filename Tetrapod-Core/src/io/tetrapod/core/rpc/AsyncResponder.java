@@ -11,6 +11,7 @@ public class AsyncResponder {
    }
 
    public void respondWith(Response res) {
+      assert res != Response.PENDING;
       ctx.handlePendingResponse(res, ctx.header.requestId);
    }
 

@@ -566,6 +566,7 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
                      @Override
                      public void onResponse(Response res) {
                         try {
+                           assert res != Response.PENDING;
                            async.setResponse(res);
                         } catch (Throwable e) {
                            logger.error(e.getMessage(), e);
@@ -940,7 +941,7 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
 
    @Override
    public Response requestServiceRequestStats(ServiceRequestStatsRequest r, RequestContext ctx) {
-      return stats.getRequestStats(r.limit, r.minTime);
+      return stats.getRequestStats(r.domain, r.limit, r.minTime, r.sortBy);
    }
 
 }
