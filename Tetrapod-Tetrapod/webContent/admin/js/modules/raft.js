@@ -31,7 +31,7 @@ define(function(require) {
                raft.update();
             });
          }
-      }, 1000);
+      }, 2000);
 
       app.server.addMessageHandler("ServiceAdded", function(msg) {
          if (msg.entity.type == Core.TYPE_TETRAPOD) {

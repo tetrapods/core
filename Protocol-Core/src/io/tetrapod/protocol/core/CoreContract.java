@@ -32,6 +32,7 @@ public class CoreContract extends Contract {
       , ServiceDetailsRequest.Handler
       , ServiceErrorLogsRequest.Handler
       , ServiceLogsRequest.Handler
+      , ServiceRequestStatsRequest.Handler
       , ServiceStatsSubscribeRequest.Handler
       , ServiceStatsUnsubscribeRequest.Handler
       , SetCommsLogLevelRequest.Handler
@@ -54,6 +55,7 @@ public class CoreContract extends Contract {
          new ServiceStatsUnsubscribeRequest(),
          new ServiceDetailsRequest(),
          new ServiceLogsRequest(),
+         new ServiceRequestStatsRequest(),
          new HostInfoRequest(),
          new HostStatsRequest(),
          new ServiceErrorLogsRequest(),
@@ -70,6 +72,7 @@ public class CoreContract extends Contract {
       return new Structure[] {
          new ServiceDetailsResponse(),
          new ServiceLogsResponse(),
+         new ServiceRequestStatsResponse(),
          new HostInfoResponse(),
          new HostStatsResponse(),
          new ServiceErrorLogsResponse(),
@@ -93,6 +96,7 @@ public class CoreContract extends Contract {
          new MessageHeader(),
          new ServiceCommand(),
          new ServerAddress(),
+         new RequestStat(),
          new Subscriber(),
          new WebRoute(),
          new TypeDescriptor(),

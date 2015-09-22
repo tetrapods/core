@@ -1,4 +1,4 @@
-define(["knockout", "jquery", "bootbox", "app", "chart", "modules/builder"], function(ko, $, bootbox, app, Chart, builder) {
+define(["knockout", "jquery", "bootbox", "alert", "app", "chart", "modules/builder"], function(ko, $, bootbox, Alert, app, Chart, builder) {
    // static variables
 
    var Core = app.server.consts["Core.Core"];
@@ -23,6 +23,8 @@ define(["knockout", "jquery", "bootbox", "app", "chart", "modules/builder"], fun
       self.load = ko.observable();
       self.threads = ko.observable();
       self.isSelected = ko.observable(false);
+      self.showRequestStats = showRequestStats;
+      self.requestStats = ko.observableArray([]);
 
       self.iconURL = ko.observable("media/gear.gif");
 
@@ -93,6 +95,10 @@ define(["knockout", "jquery", "bootbox", "app", "chart", "modules/builder"], fun
          return (self.status() & Core.STATUS_STOPPING) != 0;
       }
 
+      self.isOverloaded = function() {
+         return (self.status() & Core.STATUS_OVERLOADED) != 0;
+      }
+
       self.statusName = ko.computed(function() {
          if (self.isGone())
             return "GONE";
@@ -100,6 +106,8 @@ define(["knockout", "jquery", "bootbox", "app", "chart", "modules/builder"], fun
             return "STOPPING";
          if (self.isFailed())
             return "FAILED";
+         if (self.isOverloaded())
+            return "OVERLOADED";
          if (self.isPaused())
             return "PAUSED";
          if (self.isStarting())
@@ -177,7 +185,7 @@ define(["knockout", "jquery", "bootbox", "app", "chart", "modules/builder"], fun
                   messages.push('<li class="' + levelStyle + '">');
                   messages.push(timestamp + "&nbsp;");
                   messages.push(error.thread + "&nbsp;");
-                  messages.push(error.logger  + "&nbsp;");
+                  messages.push(error.logger + "&nbsp;");
                   messages.push('<span class="service-logs-msg">' + error.msg + '</span>');
                   messages.push('</li>');
                }
@@ -190,6 +198,78 @@ define(["knockout", "jquery", "bootbox", "app", "chart", "modules/builder"], fun
                }).find("div.modal-dialog").addClass("service-error-logs-dialog");
             }
          });
+      }
+
+      self.reqSort = ko.observable(1);
+      self.requestStatsTimeRange = ko.observable(0);
+      self.requestStatsDomains = ko.observableArray([]);
+      self.requestStatsDomain = ko.observable(null);
+
+      self.reqSort.subscribe(function() {
+         showRequestStats();
+      });
+
+      self.requestStatsDomain.subscribe(function() {
+         showRequestStats();
+      });
+
+      function statClicked(r) {
+         console.log
+         Alert.info(r.name);
+         // TODO: If this is an RPC, call and display stats for just that request
+      }
+
+      function showRequestStats() {
+         var currentTimeMillis = new Date().getTime();
+         var minTime = currentTimeMillis - 1000 * 60 * 15;
+
+         app.server.sendTo("ServiceRequestStats", {
+            limit: 25,
+            minTime: minTime,
+            sortBy: self.reqSort(),
+            domain: self.requestStatsDomain()
+         }, self.entityId, function(result) {
+            if (!result.isError()) {
+               var maxCount = 0, maxTime = 0, maxAvgTime = 0;
+               for (var i = 0; i < result.requests.length; i++) {
+                  var r = result.requests[i];
+                  r.totalTime = Math.round(r.time / 1000.0);
+                  r.avgTime = ((r.time / 1000.0) / r.count);
+                  maxCount = Math.max(maxCount, r.count);
+                  maxTime = Math.max(maxTime, r.totalTime);
+                  maxAvgTime = Math.max(maxAvgTime, r.avgTime);
+               }
+
+               for (var i = 0; i < result.requests.length; i++) {
+                  var r = result.requests[i];
+                  r.countPercent = r.count / maxCount;
+                  r.totalTimePercent = r.totalTime / maxTime;
+                  r.avgTimePercent = r.avgTime / maxAvgTime;
+                  r.statClicked = statClicked;
+               }
+               self.requestStatsTimeRange(formatElapsedTime(new Date().getTime() - result.minTime))
+               self.requestStats(result.requests);
+               self.requestStatsDomains(result.domains);
+               $('#request-stats-' + self.entityId).modal('show');
+            }
+         });
+      }
+
+      function formatElapsedTime(delta) {
+         if (delta < 0) {
+            return delta + "ms"; // hmm...
+         }
+         if (delta < 60000) {
+            return Math.round(delta / 1000) + " seconds";
+         }
+         var mins = Math.round(delta / 60000);
+         var hours = Math.floor(mins / 60);
+         mins = mins - (hours * 60);
+         if (hours > 0) {
+            return hours + "hours " + mins + " minutes";
+         } else {
+            return mins + " minutes";
+         }
       }
 
       self.hasErrors = ko.pureComputed(function() {

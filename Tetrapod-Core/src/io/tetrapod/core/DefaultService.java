@@ -25,31 +25,31 @@ import com.codahale.metrics.Timer.Context;
 public class DefaultService implements Service, Fail.FailHandler, CoreContract.API, SessionFactory, EntityMessage.Handler,
       TetrapodContract.Cluster.API {
 
-   private static final Logger             logger          = LoggerFactory.getLogger(DefaultService.class);
+   private static final Logger logger = LoggerFactory.getLogger(DefaultService.class);
 
-   protected final Set<Integer>            dependencies    = new HashSet<>();
+   protected final Set<Integer> dependencies = new HashSet<>();
 
-   public final Dispatcher                 dispatcher;
-   protected final Client                  clusterClient;
-   protected final Contract                contract;
-   protected final ServiceCache            services;
-   protected boolean                       terminated;
-   protected int                           entityId;
-   protected int                           parentId;
-   protected String                        token;
-   private int                             status;
-   public final int                        buildNumber;
-   protected final LogBuffer               logBuffer;
-   protected SSLContext                    sslContext;
+   public final Dispatcher      dispatcher;
+   protected final Client       clusterClient;
+   protected final Contract     contract;
+   protected final ServiceCache services;
+   protected boolean            terminated;
+   protected int                entityId;
+   protected int                parentId;
+   protected String             token;
+   private int                  status;
+   public final int             buildNumber;
+   protected final LogBuffer    logBuffer;
+   protected SSLContext         sslContext;
 
-   private ServiceConnector                serviceConnector;
+   private ServiceConnector serviceConnector;
 
-   protected final ServiceStats            stats;
-   protected boolean                       startPaused;
+   protected final ServiceStats stats;
+   protected boolean            startPaused;
 
-   private final LinkedList<ServerAddress> clusterMembers  = new LinkedList<>();
+   private final LinkedList<ServerAddress> clusterMembers = new LinkedList<>();
 
-   private final MessageHandlers           messageHandlers = new MessageHandlers();
+   private final MessageHandlers messageHandlers = new MessageHandlers();
 
    public DefaultService() {
       this(null);
@@ -116,7 +116,7 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
     */
    private String getMetricsPrefix() {
       return Util.getProperty("devMode", "") + "." + Util.getProperty("product.name") + "." + Util.getHostName() + "."
-            + getClass().getSimpleName();
+               + getClass().getSimpleName();
    }
 
    public byte getEntityType() {
@@ -182,7 +182,7 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
                   }
 
                   AdminAuthToken.setSecret(Util.getProperty(AdminAuthToken.SHARED_SECRET_KEY));
-                  
+
                   onReadyToServe();
                   if (getEntityType() != Core.TYPE_TETRAPOD) {
                      if (serviceConnector != null) {
@@ -218,11 +218,6 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
       if (!isShuttingDown()) {
          if (dispatcher.workQueueSize.getCount() > 0) {
             logger.warn("DISPATCHER QUEUE SIZE = {} ({} threads busy)", dispatcher.workQueueSize.getCount(), dispatcher.getActiveThreads());
-         }
-         if (dispatcher.workQueueSize.getCount() >= Session.DEFAULT_OVERLOAD_THRESHOLD) {
-            updateStatus(getStatus() | Core.STATUS_OVERLOADED);
-         } else {
-            updateStatus(getStatus() & ~Core.STATUS_OVERLOADED);
          }
 
          if (logBuffer.hasErrors()) {
@@ -346,25 +341,25 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
    private void onConnectedToCluster() {
       sendDirectRequest(new RegisterRequest(buildNumber, token, getContractId(), getShortName(), getStatus(), Util.getHostName())).handle(
             new ResponseHandler() {
-               @Override
-               public void onResponse(Response res) {
-                  if (res.isError()) {
-                     Fail.fail("Unable to register: " + res.errorCode());
-                  } else {
-                     RegisterResponse r = (RegisterResponse) res;
-                     entityId = r.entityId;
-                     parentId = r.parentId;
-                     token = r.token;
+                  @Override
+                  public void onResponse(Response res) {
+                     if (res.isError()) {
+                        Fail.fail("Unable to register: " + res.errorCode());
+                     } else {
+                        RegisterResponse r = (RegisterResponse) res;
+                        entityId = r.entityId;
+                        parentId = r.parentId;
+                        token = r.token;
 
-                     logger.info(String.format("%s My entityId is 0x%08X", clusterClient.getSession(), r.entityId));
-                     clusterClient.getSession().setMyEntityId(r.entityId);
-                     clusterClient.getSession().setTheirEntityId(r.parentId);
-                     clusterClient.getSession().setMyEntityType(getEntityType());
-                     clusterClient.getSession().setTheirEntityType(Core.TYPE_TETRAPOD);
-                     onServiceRegistered();
+                        logger.info(String.format("%s My entityId is 0x%08X", clusterClient.getSession(), r.entityId));
+                        clusterClient.getSession().setMyEntityId(r.entityId);
+                        clusterClient.getSession().setTheirEntityId(r.parentId);
+                        clusterClient.getSession().setMyEntityType(getEntityType());
+                        clusterClient.getSession().setTheirEntityType(Core.TYPE_TETRAPOD);
+                        onServiceRegistered();
+                     }
                   }
-               }
-            });
+               });
    }
 
    public void onDisconnectedFromCluster() {
@@ -553,12 +548,25 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
          final Context context = dispatcher.requestTimes.time();
          if (!dispatcher.dispatch(new Runnable() {
             public void run() {
+               final long dispatchTime = System.nanoTime();
                try {
+
+                  if (Util.nanosToMillis(dispatchTime - start) > 2500) {
+                     if ((getStatus() & Core.STATUS_OVERLOADED) == 0) {
+                        logger.warn("Service is overloaded. Dispatch time is {}ms", Util.nanosToMillis(dispatchTime - start));
+                     }
+                     // If it took a while to get dispatched, so set STATUS_OVERLOADED flag as a back-pressure signal
+                     updateStatus(getStatus() | Core.STATUS_OVERLOADED);
+                  } else {
+                     updateStatus(getStatus() & ~Core.STATUS_OVERLOADED);
+                  }
+
                   final RequestContext ctx = fromSession != null ? new SessionRequestContext(header, fromSession)
                            : new InternalRequestContext(header, new ResponseHandler() {
                      @Override
                      public void onResponse(Response res) {
                         try {
+                           assert res != Response.PENDING;
                            async.setResponse(res);
                         } catch (Throwable e) {
                            logger.error(e.getMessage(), e);
@@ -572,7 +580,7 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
                   }
                   if (res != null) {
                      if (res != Response.PENDING) {
-                     async.setResponse(res);
+                        async.setResponse(res);
                      }
                   } else {
                      async.setResponse(new Error(ERROR_UNKNOWN));
@@ -582,17 +590,20 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
                } catch (Throwable e) {
                   logger.error(e.getMessage(), e);
                   async.setResponse(new Error(ERROR_UNKNOWN));
-               }
-               context.stop();
-
-               final long elapsed = System.nanoTime() - start;
-               dispatcher.requestsHandledCounter.mark();
-               if (Util.nanosToMillis(elapsed) > 1000) {
-                  logger.warn("Request took {} {} millis", req, Util.nanosToMillis(elapsed));
+               } finally {
+                  final long elapsed = System.nanoTime() - dispatchTime;
+                  stats.recordRequest(header.fromId, req, elapsed);
+                  context.stop();
+                  dispatcher.requestsHandledCounter.mark();
+                  if (Util.nanosToMillis(elapsed) > 1000) {
+                     logger.warn("Request took {} {} millis", req, Util.nanosToMillis(elapsed));
+                  }
                }
             }
          }, Session.DEFAULT_OVERLOAD_THRESHOLD)) {
+            // too many items queued, full-force back-pressure
             async.setResponse(new Error(ERROR_SERVICE_OVERLOADED));
+            updateStatus(getStatus() | Core.STATUS_OVERLOADED);
          }
       } else {
          logger.warn("{} No handler found for {}", this, header.dump());
@@ -926,6 +937,11 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
    @Override
    public Response requestHostStats(HostStatsRequest r, RequestContext ctx) {
       return new HostStatsResponse(Metrics.getLoadAverage(), Metrics.getFreeDiskSpace());
+   }
+
+   @Override
+   public Response requestServiceRequestStats(ServiceRequestStatsRequest r, RequestContext ctx) {
+      return stats.getRequestStats(r.domain, r.limit, r.minTime, r.sortBy);
    }
 
 }

@@ -69,7 +69,7 @@ define(["knockout", "jquery", "app", "alert"], function(ko, $, app, Alert) {
          }
       }
 
-      function run() {
+      function run() { 
          var array = [];
          var b = (self.buildName || "default") + "." + (self.buildNumber || "current");
          if (self.doDeploy) {
@@ -86,7 +86,7 @@ define(["knockout", "jquery", "app", "alert"], function(ko, $, app, Alert) {
                   continue;
                var command = {
                   serviceName: service.name,
-                  build: self.buildNumber,
+                  build: self.buildNumber.trim(),
                   name: self.buildName,
                   command: BuildCommandConsts.DEPLOY,
                   display: "Deploying "  + service.name
@@ -101,7 +101,7 @@ define(["knockout", "jquery", "app", "alert"], function(ko, $, app, Alert) {
                   continue;
                var command = {
                   serviceName: service.name,
-                  build: self.buildNumber || BuildCommandConsts.LAUNCH_DEPLOYED,
+                  build: self.buildNumber.trim() || BuildCommandConsts.LAUNCH_DEPLOYED,
                   name: self.buildName,
                   command: self.paused ? BuildCommandConsts.LAUNCH_PAUSED : BuildCommandConsts.LAUNCH,
                   display: "Launching " + service.name + " (" + b + ")"

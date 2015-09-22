@@ -1,3 +1,47 @@
+h3 {
+	margin: 5px;
+	padding: 2px;
+	font-size: 18px;
+	
+}
+
+
+.request-stats-dialog {
+	width: 750px;
+}
+
+.request-stats {
+	margin-top: 10px;
+}
+
+.request-stats th {
+	cursor: pointer;
+	background: #666;
+	color: #fff;
+	text-align: center;
+}
+
+.request-stats td {
+	vertical-align: middle;
+	font-size: 90%;
+	padding: 0px 1px;
+}
+
+.cell-label {
+	padding: 2px;
+	display: inline-block;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	max-width: 400px;
+}
+
+meter {
+	padding-left: 1px;
+	padding-right: 1px;
+	width: 50px;
+}
+
 #cluster-table {
 	margin: 5px;
 	background: white;
@@ -37,6 +81,10 @@
 .gone {
 	background: red;
 	color: white;
+}
+
+.overloaded {
+	background: orange;
 }
 
 .failed {
@@ -83,11 +131,13 @@
 }
 
 .service-chart-wrap {
+	cursor: pointer;
 	position: relative;
 	width: 80px;
 	padding: 0px;
 	padding-left: 0px;
 	padding-right: 0px;
+	position: relative;
 }
 
 .service-chart {
@@ -136,11 +186,12 @@
 	text-align: left;
 	display: inline-block;
 }
+
 .service-metrics .stat {
 	margin-left: 20px;
 	margin-right: 20px;
 }
-	
+
 .service-metrics dt {
 	margin-top: 10px;
 	font-weight: bold;
@@ -179,16 +230,25 @@
 }
 
 .service-details-footer {
-   padding-left: 20px;
-   padding-right: 20px;
+	padding-left: 20px;
+	padding-right: 20px;
 }
 
-.service-logs-options { 
+.service-logs-options {
 	display: inline-block;
 }
 
 .service-error-logs-dialog {
 	width: 80%;
+}
+
+.clear-errors-btn {
+	float: left;
+	color: #eee;
+}
+
+.clear-errors-btn:HOVER {
+	color: #aaa;
 }
 
 .tab-content {
@@ -338,26 +398,24 @@
 }
 
 #props-table .btn {
-   color: #aaa;
+	color: #aaa;
 }
 
 #props-table .btn:HOVER {
-   color: #000;
+	color: #000;
 }
-   
 
 .property {
 	font-family: monospace;
 }
 
 .webroots .btn {
-   color: #aaa;
+	color: #aaa;
 }
 
 .webroots .btn:HOVER {
-   color: #000;
+	color: #000;
 }
-   
 
 .rights label {
 	font-size: 11px;

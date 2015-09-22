@@ -60,6 +60,9 @@ function TP_Core(server) {
    server.registerConst("Core", "ServiceLogEntry", "LEVEL_WARN", 40);
    server.registerConst("Core", "ServiceLogEntry", "LEVEL_ERROR", 50);
    server.registerConst("Core", "ServiceLogEntry", "LEVEL_OFF", 100);
+   server.registerEnumConst("Core", "RequestStatsSort", "COUNT", 1);
+   server.registerEnumConst("Core", "RequestStatsSort", "TOTAL_TIME", 2);
+   server.registerEnumConst("Core", "RequestStatsSort", "AVERAGE_TIME", 3);
    
    server.registerErrorConst("Core", "null", "CONNECTION_CLOSED", 7);
    server.registerErrorConst("Core", "null", "FLOOD", 12);
@@ -97,6 +100,9 @@ function TP_Core(server) {
    server.register("response", "Core", "ServiceDetails", 1, 12435407);
    server.register("request", "Core", "ServiceLogs", 1, 13816458);
    server.register("response", "Core", "ServiceLogs", 1, 6345878);
+   server.register("struct", "Core", "RequestStat", 1, 12902770);
+   server.register("request", "Core", "ServiceRequestStats", 1, 16134423);
+   server.register("response", "Core", "ServiceRequestStats", 1, 6312573);
    server.register("request", "Core", "HostInfo", 1, 16426670);
    server.register("response", "Core", "HostInfo", 1, 7161106);
    server.register("request", "Core", "HostStats", 1, 4481593);

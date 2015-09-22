@@ -1,30 +1,35 @@
 package io.tetrapod.core;
 
-import io.tetrapod.core.rpc.*;
-import io.tetrapod.protocol.core.*;
-
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
-import org.slf4j.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import io.tetrapod.core.rpc.*;
+import io.tetrapod.protocol.core.*;
 
 /**
  * Stores basic service stats & handles stats publication
  */
 public class ServiceStats {
-   private static final Logger       logger           = LoggerFactory.getLogger(ServiceStats.class);
+   private static final Logger logger = LoggerFactory.getLogger(ServiceStats.class);
 
-   private final Set<Integer>        statsSubscribers = new HashSet<>();
+   private final Set<Integer> statsSubscribers = new HashSet<>();
 
-   private final DefaultService      service;
+   private final DefaultService service;
 
-   private Integer                   statsTopicId;
+   private Integer statsTopicId;
 
-   private final ServiceStatsMessage message          = new ServiceStatsMessage();
+   private final ServiceStatsMessage message = new ServiceStatsMessage();
+
+   private final RequestStats              requests = new RequestStats();
+   private final Map<String, RequestStats> domains  = new HashMap<>();
 
    public ServiceStats(DefaultService service) {
       this.service = service;
       scheduleUpdate();
+      register(requests, "Requests");
    }
 
    /**
@@ -133,6 +138,29 @@ public class ServiceStats {
          if (dirty) {
             service.sendBroadcastMessage(message, statsTopicId);
          }
+      }
+   }
+
+   public void recordRequest(int fromEntityId, Request req, long nanos) {
+      requests.recordRequest(fromEntityId, req.getClass().getSimpleName().replaceAll("Request", ""), nanos);
+   }
+
+   public ServiceRequestStatsResponse getRequestStats(String domain, int limit, long minTime, RequestStatsSort sortBy) {
+      ServiceRequestStatsResponse res = null;
+      if (domain == null || domain.isEmpty()) {
+         res = requests.getRequestStats(limit, minTime, sortBy);
+      } else {
+         res = domains.get(domain).getRequestStats(limit, minTime, sortBy);
+      }
+      synchronized (domains) {
+         res.domains = domains.keySet().toArray(new String[domains.size()]);
+      }
+      return res;
+   }
+
+   public void register(RequestStats stats, String name) {
+      synchronized (domains) {
+         domains.put(name, stats);
       }
    }
 
