@@ -1,4 +1,4 @@
-define(["knockout", "jquery", "bootbox", "toolbox", "protocol/server", "protocol/tetrapod", "protocol/core"], function(ko, $, bootbox, toolbox, Server, Tetrapod, CoreProt) {
+define(["knockout", "jquery", "alert", "toolbox", "protocol/server", "protocol/tetrapod", "protocol/core"], function(ko, $, Alert, toolbox, Server, Tetrapod, CoreProt) {
    return new App();
 
    function App() {
@@ -18,6 +18,7 @@ define(["knockout", "jquery", "bootbox", "toolbox", "protocol/server", "protocol
       self.name = window.location.hostname;
       self.email = ko.observable();
       self.accountId = ko.observable();
+      self.alertResponse = alertResponse
       self.isProd = self.name == "chatbox.com" || self.name == "xbox.chatbox.com" || (self.name.indexOf(".prod.") > 0);
 
       function run(clusterModel) {
@@ -82,7 +83,7 @@ define(["knockout", "jquery", "bootbox", "toolbox", "protocol/server", "protocol
             password: pwd
          }, function(result) {
             if (result.isError()) {
-               bootbox.alert('Login Failed');
+               Alert.error('Login Failed');
             } else {
                self.email(email);
             }
@@ -151,5 +152,15 @@ define(["knockout", "jquery", "bootbox", "toolbox", "protocol/server", "protocol
       function changePassword() {
          model.users.changePassword();
       }
+
+      function alertResponse(result, req) {
+         if (result.isError()) {
+            var err = server.getErrorStrings(result.errorCode);
+            err = err ? (" " + err.join(" ")) : "";
+            console.warn(err);
+            Alert.error(err);
+         }
+      }
+
    }
 });

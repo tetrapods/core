@@ -59,11 +59,11 @@ define(["knockout", "jquery", "bootbox", "alert", "app", "chart", "modules/build
                if (result !== null) {
                   app.server.sendRequest(command.contractId, command.structId, {
                      data: result
-                  }, self.entityId, app.server.logResponse);
+                  }, self.entityId, app.alertResponse);
                }
             });
          } else {
-            app.server.sendRequest(command.contractId, command.structId, {}, self.entityId, app.server.logResponse);
+            app.server.sendRequest(command.contractId, command.structId, {}, self.entityId, app.alertResponse);
          }
       }
 
