@@ -251,7 +251,7 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
                         logger.error("I literally can't even ({})", pendingRes);
                      }
                   } else {
-                     logger.error("Pending response returned from pending handler for {} @ {}", req.dump(), async.header.toId);
+                     logger.debug("Pending response returned from pending handler for {} @ {}", req, async.header.toId);
                   }
                }
             }
