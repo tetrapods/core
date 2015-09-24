@@ -42,7 +42,7 @@ public class SerializationTest {
             new TypeDescriptor(),
             null,
             new TypeDescriptor(),
-      }, null);
+      }, null, null);
       assertTrue(rinseTempBuff(t));
       assertTrue(rinseViaAdapter(t));
       assertTrue(rinseJSONBuff(t));

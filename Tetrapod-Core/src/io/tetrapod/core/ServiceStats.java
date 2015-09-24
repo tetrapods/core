@@ -86,7 +86,7 @@ public class ServiceStats {
          } catch (Throwable e) {
             logger.error(e.getMessage(), e);
          }
-         service.dispatcher.dispatch(2, TimeUnit.SECONDS, new Runnable() {
+         service.dispatcher.dispatch(3, TimeUnit.SECONDS, new Runnable() {
             public void run() {
                scheduleUpdate();
             }

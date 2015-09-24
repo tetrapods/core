@@ -46,7 +46,8 @@
                   <div>
                      <div class="dropdown">
                         <a class="dropdown-toggle" data-toggle="dropdown" style="color: white" href="#">
-                           <i class="fa fa-gear fa-fw"></i><i class="fa fa-caret-down"></i>
+                           <i class="fa fa-gear fa-fw"></i>
+                           <i class="fa fa-caret-down"></i>
                         </a>
                         <ul class="dropdown-menu dropdown-service">
                            <li>
@@ -91,16 +92,20 @@
                               <table class="table table-bordered table-condensed request-stats">
                                  <tr>
                                     <th data-bind="click: function(){reqSort(4)}">
-                                       Request <i class="fa fa-fw" data-bind="css: {'fa-caret-down' : reqSort() == 4}"></i>
+                                       Request
+                                       <i class="fa fa-fw" data-bind="css: {'fa-caret-down' : reqSort() == 4}"></i>
                                     </th>
                                     <th data-bind="click: function(){reqSort(1)}">
-                                       Invocations <i class="fa fa-fw" data-bind="css: {'fa-caret-down' : reqSort() == 1}"></i>
+                                       Invocations
+                                       <i class="fa fa-fw" data-bind="css: {'fa-caret-down' : reqSort() == 1}"></i>
                                     </th>
                                     <th data-bind="click: function(){reqSort(2)}">
-                                       Total (ms) <i class="fa fa-fw" data-bind="css: {'fa-caret-down' : reqSort() == 2}"></i>
+                                       Total (ms)
+                                       <i class="fa fa-fw" data-bind="css: {'fa-caret-down' : reqSort() == 2}"></i>
                                     </th>
                                     <th data-bind="click: function(){reqSort(3)}">
-                                       Avg (ms) <i class="fa fa-fw" data-bind="css: {'fa-caret-down' : reqSort() == 3}"></i>
+                                       Avg (ms)
+                                       <i class="fa fa-fw" data-bind="css: {'fa-caret-down' : reqSort() == 3}"></i>
                                     </th>
                                  </tr>
                                  <tbody data-bind="foreach: requestStats">
@@ -142,7 +147,8 @@
 
                   <div class="dropdown" data-bind="attr: {id: 'dropdown-' + entityId}">
                      <a class="dropdown-toggle" data-toggle="dropdown" href="#">
-                        <i class="fa fa-gear fa-fw"></i><i class="fa fa-caret-down"></i>
+                        <i class="fa fa-gear fa-fw"></i>
+                        <i class="fa fa-caret-down"></i>
                      </a>
                      <ul class="dropdown-menu dropdown-service">
                         <li class="disabled">
@@ -161,17 +167,20 @@
                         </li>
                         <li>
                            <a href="#" data-bind="click: pause, visible: canPause()">
-                              <i class="fa fa-pause fa-fw"></i>Pause
+                              <i class="fa fa-pause fa-fw"></i>
+                              Pause
                            </a>
                         </li>
                         <li>
                            <a href="#" data-bind="click: purge, visible: canPause()">
-                              <i class="fa fa-user-times fa-fw"></i>Purge
+                              <i class="fa fa-user-times fa-fw"></i>
+                              Purge
                            </a>
                         </li>
                         <li>
                            <a href="#" data-bind="click: unpause, visible: canUnpause()">
-                              <i class="fa fa-play fa-fw"></i>Resume
+                              <i class="fa fa-play fa-fw"></i>
+                              Resume
                            </a>
                         </li>
 
@@ -179,18 +188,21 @@
 
                         <li>
                            <a href="#" data-bind="click: restart, visible: !isGone()">
-                              <i class="fa fa-refresh fa-fw"></i>Restart
+                              <i class="fa fa-refresh fa-fw"></i>
+                              Restart
                            </a>
                         </li>
 
                         <li>
                            <a href="#" data-bind="click: shutdown, visible: !isGone()">
-                              <i class="fa fa-power-off fa-fw"></i>Shutdown
+                              <i class="fa fa-power-off fa-fw"></i>
+                              Shutdown
                            </a>
                         </li>
                         <li>
                            <a href="#" data-bind="click: deleteService, visible: isGone()">
-                              <i class="fa fa-trash-o fa-fw"></i>Delete
+                              <i class="fa fa-trash-o fa-fw"></i>
+                              Delete
                            </a>
                         </li>
 
@@ -203,9 +215,11 @@
                </td>
                <td class="centered" style="cursor: pointer;">
 
-                  <i class="fa fa-warning fa-fw" style="float: left; color: orange" data-bind="visible: hasWarningsOnly(), click: showErrors"></i> <i class="fa fa-exclamation-circle fa-fw" style="float: left; color: red" data-bind="visible: hasErrors(), click: showErrors"></i>
-                  <i class="fa fa-exclamation-circle fa-fw" style="float: left; visibility: hidden" data-bind="visible: !hasErrorsOrWarnings(), click: showErrors"></i> <i class="fa fa-remove fa-fw clear-errors-btn"
-                     data-bind="visible: hasErrorsOrWarnings(), click: clearErrors"></i>
+                  <i class="fa fa-warning fa-fw" style="float: left; color: orange" data-bind="visible: hasWarningsOnly(), click: showErrors"></i>
+                  <i class="fa fa-exclamation-circle fa-fw" style="float: left; color: red" data-bind="visible: hasErrors(), click: showErrors"></i>
+                  <i class="fa fa-exclamation-circle fa-fw" style="float: left; visibility: hidden" data-bind="visible: !hasErrorsOrWarnings(), click: showErrors"></i>
+                  <i class="fa fa-remove fa-fw clear-errors-btn" data-bind="visible: hasErrorsOrWarnings(), click: clearErrors"></i>
+                  <i class="fa fa-fw clear-errors-btn" data-bind="visible: !hasErrorsOrWarnings()">&nbsp;</i>
 
                   <a data-bind="text: entityString, click: showLogs"></a>
                </td>

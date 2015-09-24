@@ -162,10 +162,16 @@ public class StructureAdapter extends Structure {
       return StructureFactory.make(t.contractId, t.structId);
    }
    
+   
+   @Override
+   public String toString() {
+      return description.name;
+   }
+   
    @Override
    public String dump() {
       StringBuilder sw = new StringBuilder();
-      sw.append(getClass().getSimpleName());
+      sw.append(description.name);
       sw.append("(" + getContractId() + "," + getStructId() + ") { ");
       for (int i = 1; i < fields.length; i++) {
          if (i > 1)

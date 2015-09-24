@@ -38,7 +38,7 @@ define(function(require) {
                      val: '',
                      secret: secret
                   }
-               }, app.server.logResponse);
+               }, app.alertResponse);
             }
          });
       }
@@ -86,7 +86,7 @@ define(function(require) {
                         val: val,
                         secret: self.secret
                      }
-                  }, app.server.logResponse);
+                  }, app.alertResponse);
                }
             }, self.val());
          }
@@ -96,7 +96,7 @@ define(function(require) {
                app.server.sendDirect("DelClusterProperty", {
                   adminToken: app.sessionToken,
                   key: self.key
-               }, app.server.logResponse);
+               }, app.alertResponse);
             });
          }
       }
