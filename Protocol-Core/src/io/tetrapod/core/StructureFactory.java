@@ -1,10 +1,11 @@
 package io.tetrapod.core;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.rpc.Error;
-
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import io.tetrapod.protocol.core.CoreContract;
 
 public class StructureFactory {
 
@@ -36,10 +37,18 @@ public class StructureFactory {
    }
 
    public static synchronized String getName(int contractId, int structId) {
+      if (contractId == CoreContract.CONTRACT_ID) {
+         switch (structId) {
+            case Success.STRUCT_ID:
+               return Response.SUCCESS.toString();
+            case Pending.STRUCT_ID:
+               return Pending.SUCCESS.toString();
+         }
+      }
       long key = makeKey(contractId, structId);
       Structure c = knownStructs.get(key);
       if (c != null) {
-         return c.getClass().getSimpleName();
+         return c.toString();
       }
       return String.format("<%d,%d>", contractId, structId);
    }

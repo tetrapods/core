@@ -36,7 +36,7 @@ public abstract class PendingResponseHandler {
    abstract public Response onResponse(Response res);
 
    // return the response we were pending on
-   public boolean sendResponse(Response pendingRes) {     
+   public boolean sendResponse(Response pendingRes) {
       assert pendingRes != Response.PENDING;
       if (context != null) {
          context.handlePendingResponse(pendingRes, originalRequestId);

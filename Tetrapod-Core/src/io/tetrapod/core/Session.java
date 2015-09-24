@@ -11,6 +11,8 @@ import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.rpc.Error;
 import io.tetrapod.core.web.WebRoutes;
 import io.tetrapod.protocol.core.*;
+import io.tetrapod.protocol.raft.AppendEntriesRequest;
+import io.tetrapod.protocol.raft.AppendEntriesResponse;
 
 import java.io.IOException;
 import java.util.*;
@@ -225,7 +227,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
                      sendResponse(pendingRes, pendingHandler.originalRequestId);
                   }
                } else {
-                  logger.debug("Pending response returned from pending handler for {} @ {}", req, toId);
+                  logger.warn("Pending response returned from pending handler for {} @ {}", req, toId);
                }
             }
          }
@@ -351,7 +353,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
       int origRequestId = async.header.requestId;
       int newRequestId = addPendingRequest(async);
       if (!commsLogIgnore(header.structId))
-         commsLog("%s  [%d/%d] ~> Request:%d", this, newRequestId, origRequestId, header.structId);
+         commsLog("%s  [%d/%d] ~> Request:%s", this, newRequestId, origRequestId, StructureFactory.getName(header.contractId, header.structId));
       // making a new header lets us not worry about synchronizing the change the requestId
       RequestHeader newHeader = new RequestHeader(newRequestId, header.fromId, header.toId, header.fromType, header.timeout, header.version,
                header.contractId, header.structId);
@@ -364,7 +366,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
 
    public void sendRelayedResponse(ResponseHeader header, ByteBuf payload) {
       if (!commsLogIgnore(header.structId))
-         commsLog("%s  [%d] ~> Response:%d", this, header.requestId, header.structId);
+         commsLog("%s  [%d] ~> Response:%s", this, header.requestId, StructureFactory.getName(header.contractId, header.structId));
       writeFrame(makeFrame(header, payload, ENVELOPE_RESPONSE));
    }
 
@@ -518,6 +520,9 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
          case ServiceLogsRequest.STRUCT_ID:
          case ServiceLogsResponse.STRUCT_ID:
          case ServiceStatsMessage.STRUCT_ID:
+         case DummyRequest.STRUCT_ID:
+         case AppendEntriesRequest.STRUCT_ID:
+         case AppendEntriesResponse.STRUCT_ID:
             return true;
       }
       return !commsLog.isDebugEnabled();

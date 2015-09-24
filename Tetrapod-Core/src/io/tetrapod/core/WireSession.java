@@ -195,12 +195,12 @@ public class WireSession extends Session {
          }
       } else if (relayHandler != null) {
          if (!commsLogIgnore(header.structId))
-            logged = commsLog("%s  [%d] <- Request.%d", this, header.requestId, header.structId);
+            logged = commsLog("%s  [%d] <- Request.%s", this, header.requestId, StructureFactory.getName(header.contractId, header.structId));
          relayRequest(header, in);
       }
 
       if (!logged && !commsLogIgnore(header.structId))
-         logged = commsLog("%s  [%d] <- Request.%d", this, header.requestId, header.structId);
+         logged = commsLog("%s  [%d] <- Request.%s", this, header.requestId, StructureFactory.getName(header.contractId, header.structId));
    }
 
    private void readMessage(ByteBuf in, boolean isBroadcast) throws IOException {

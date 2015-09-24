@@ -21,10 +21,12 @@ public class RequestStat extends Structure {
       defaults();
    }
 
-   public RequestStat(String name, long count, long time) {
+   public RequestStat(String name, long count, long time, int[] entities, int[] timeline) {
       this.name = name;
       this.count = count;
       this.time = time;
+      this.entities = entities;
+      this.timeline = timeline;
    }   
    
    /**
@@ -41,6 +43,16 @@ public class RequestStat extends Structure {
     * cumulative time spent in microseconds
     */
    public long time;
+   
+   /**
+    * top callers
+    */
+   public int[] entities;
+   
+   /**
+    * histogram of calls
+    */
+   public int[] timeline;
 
    public final Structure.Security getSecurity() {
       return Security.INTERNAL;
@@ -50,6 +62,8 @@ public class RequestStat extends Structure {
       name = null;
       count = 0;
       time = 0;
+      entities = null;
+      timeline = null;
    }
    
    @Override
@@ -57,6 +71,8 @@ public class RequestStat extends Structure {
       data.write(1, this.name);
       data.write(2, this.count);
       data.write(3, this.time);
+      if (this.entities != null) data.write(4, this.entities);
+      if (this.timeline != null) data.write(5, this.timeline);
       data.writeEndTag();
    }
    
@@ -69,6 +85,8 @@ public class RequestStat extends Structure {
             case 1: this.name = data.read_string(tag); break;
             case 2: this.count = data.read_long(tag); break;
             case 3: this.time = data.read_long(tag); break;
+            case 4: this.entities = data.read_int_array(tag); break;
+            case 5: this.timeline = data.read_int_array(tag); break;
             case Codec.END_TAG:
                return;
             default:
@@ -90,10 +108,12 @@ public class RequestStat extends Structure {
       // Note do not use this tags in long term serializations (to disk or databases) as 
       // implementors are free to rename them however they wish.  A null means the field
       // is not to participate in web serialization (remaining at default)
-      String[] result = new String[3+1];
+      String[] result = new String[5+1];
       result[1] = "name";
       result[2] = "count";
       result[3] = "time";
+      result[4] = "entities";
+      result[5] = "timeline";
       return result;
    }
 
@@ -103,12 +123,15 @@ public class RequestStat extends Structure {
 
    public final StructDescription makeDescription() {
       StructDescription desc = new StructDescription();
+      desc.name = "RequestStat";
       desc.tagWebNames = tagWebNames();
       desc.types = new TypeDescriptor[desc.tagWebNames.length];
       desc.types[0] = new TypeDescriptor(TypeDescriptor.T_STRUCT, getContractId(), getStructId());
       desc.types[1] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
       desc.types[2] = new TypeDescriptor(TypeDescriptor.T_LONG, 0, 0);
       desc.types[3] = new TypeDescriptor(TypeDescriptor.T_LONG, 0, 0);
+      desc.types[4] = new TypeDescriptor(TypeDescriptor.T_INT_LIST, 0, 0);
+      desc.types[5] = new TypeDescriptor(TypeDescriptor.T_INT_LIST, 0, 0);
       return desc;
    }
 }

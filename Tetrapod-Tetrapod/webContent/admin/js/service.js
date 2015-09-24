@@ -206,11 +206,11 @@ define(["knockout", "jquery", "bootbox", "alert", "app", "chart", "modules/build
       self.requestStatsDomain = ko.observable(null);
 
       self.reqSort.subscribe(function() {
-         showRequestStats();
+         fetchRequestStats();
       });
 
       self.requestStatsDomain.subscribe(function() {
-         showRequestStats();
+         fetchRequestStats();
       });
 
       function statClicked(r) {
@@ -220,6 +220,10 @@ define(["knockout", "jquery", "bootbox", "alert", "app", "chart", "modules/build
       }
 
       function showRequestStats() {
+         fetchRequestStats();
+      }
+      
+      function fetchRequestStats() {
          var currentTimeMillis = new Date().getTime();
          var minTime = currentTimeMillis - 1000 * 60 * 15;
 

@@ -146,6 +146,8 @@ internal struct RequestStat
    1: string name // name of the request
    2: long count  // number of invocations
    3: long time   // cumulative time spent in microseconds 
+   4: int[] entities // top callers
+   5: int[] timeline // histogram of calls
  
 internal request ServiceRequestStats
    1: string domain // null is default RPC domain
@@ -162,7 +164,8 @@ internal response ServiceRequestStats
    1: RequestStat<list> requests
    2: long minTime   // last timestamp in stats buffer
    3: string[] domains // list of other event domains service has stats for
-
+   4: int[] timeline // histogram of calls
+   
 // returns static information for the host
 internal request HostInfo
 internal response HostInfo
@@ -266,6 +269,7 @@ internal struct ContractDescription
 internal struct StructDescription
    1: TypeDescriptor[] types
    2: string[] tagWebNames
+   3: string name
    
 internal struct ServiceLogEntry
    1: string msg
