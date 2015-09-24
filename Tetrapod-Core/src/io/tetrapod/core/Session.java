@@ -227,7 +227,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
                      sendResponse(pendingRes, pendingHandler.originalRequestId);
                   }
                } else {
-                  logger.warn("Pending response returned from pending handler for {} @ {}", req, toId);
+                  logger.debug("Pending response returned from pending handler for {} @ {}", req, toId);
                }
             }
          }
