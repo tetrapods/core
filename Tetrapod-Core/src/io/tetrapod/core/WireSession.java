@@ -136,7 +136,7 @@ public class WireSession extends Session {
                   public void run() {
                      if (res instanceof StructureAdapter) {
                         async.setResponse(new ResponseAdapter(res));
-                     } else { 
+                     } else {
                         async.setResponse((Response) res);
                      }
                   }
@@ -158,7 +158,8 @@ public class WireSession extends Session {
             //            }
 
             if (!commsLogIgnore(header.structId))
-               logged = commsLog("%s  [%d] <- Response.%d %s", this, header.requestId, header.structId, res == null ? "" : res.dump());
+               logged = commsLog("%s  [%d] <- Response.%s", this, header.requestId,
+                        res == null ? StructureFactory.getName(header.contractId, header.structId) : res.dump());
             relayResponse(header, async, in);
          }
       } else {
@@ -167,7 +168,7 @@ public class WireSession extends Session {
       }
 
       if (!logged && !commsLogIgnore(header.structId))
-         logged = commsLog("%s  [%d] <- Response.%d", this, header.requestId, header.structId);
+         logged = commsLog("%s  [%d] <- Response.%s", this, header.requestId, StructureFactory.getName(header.contractId, header.structId));
    }
 
    private void readRequest(final ByteBuf in) throws IOException {
@@ -195,7 +196,8 @@ public class WireSession extends Session {
          }
       } else if (relayHandler != null) {
          if (!commsLogIgnore(header.structId))
-            logged = commsLog("%s  [%d] <- Request.%s", this, header.requestId, StructureFactory.getName(header.contractId, header.structId));
+            logged = commsLog("%s  [%d] <- Request.%s", this, header.requestId,
+                     StructureFactory.getName(header.contractId, header.structId));
          relayRequest(header, in);
       }
 
@@ -214,7 +216,7 @@ public class WireSession extends Session {
       }
 
       if (!commsLogIgnore(header.structId)) {
-         commsLog("%s  [M] <- Message:%d %s (to %s:%d)", this, header.structId, getNameFor(header), TO_TYPES[header.toType], header.toId);
+         commsLog("%s  [M] <- Message: %s (to %s:%d)", this, getNameFor(header), TO_TYPES[header.toType], header.toId);
       }
       boolean selfDispatch = header.toType == MessageHeader.TO_ENTITY && (header.toId == myId || header.toId == UNADDRESSED);
       if (relayHandler == null || selfDispatch) {
