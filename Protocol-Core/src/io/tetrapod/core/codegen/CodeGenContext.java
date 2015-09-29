@@ -124,19 +124,19 @@ class CodeGenContext {
       }
    }
 
-   public ArrayList<Class>         classes         = new ArrayList<>();
-   public ArrayList<Field>         globalConstants = new ArrayList<>();
-   public String                   serviceName;
-   public String                   serviceComment;
-   public Annotations              serviceAnnotations = new Annotations();
-   public String                   defaultSecurity = "internal";
-   public Set<Err>                 allErrors       = new TreeSet<>();
-   public Set<String>              subscriptions   = new TreeSet<>();
-   public boolean                  inGlobalScope   = true;
-   public Map<String,ClassLike>    enums           = new HashMap<>();
-   public Map<String,ClassLike>    flags           = new HashMap<>();
+   public ArrayList<Class> classes         = new ArrayList<>();
+   public ArrayList<Field> globalConstants = new ArrayList<>();
+   public String serviceName;
+   public String serviceComment;
+   public Annotations            serviceAnnotations = new Annotations();
+   public String                 defaultSecurity    = "internal";
+   public Set<Err>               allErrors          = new TreeSet<>();
+   public Set<String>            subscriptions      = new TreeSet<>();
+   public boolean                inGlobalScope      = true;
+   public Map<String, ClassLike> enums              = new TreeMap<>();
+   public Map<String, ClassLike> flags              = new TreeMap<>();
 
-   private Map<String, Set<Class>> classesByType   = new HashMap<>();
+   private Map<String, Set<Class>> classesByType = new HashMap<>();
 
    public void parseClass(TokenizedLine line) throws ParseException {
       ArrayList<String> parts = line.parts;
@@ -186,7 +186,7 @@ class CodeGenContext {
          set = new TreeSet<Class>();
          classesByType.put(c.type, set);
       }
-      for (Class other : set) 
+      for (Class other : set)
          if (other.name.equals(c.name))
             throw new ParseException("duplicate class name: " + c.name);
       set.add(c);
@@ -216,7 +216,7 @@ class CodeGenContext {
          if (m.matches()) {
             String a = m.group(1).isEmpty() ? "2" : m.group(1);
             String b = m.group(2);
-            defaultValue = Integer.toString((int)Math.pow(Integer.parseInt(a), Integer.parseInt(b)));
+            defaultValue = Integer.toString((int) Math.pow(Integer.parseInt(a), Integer.parseInt(b)));
             if (line.comment == null || line.comment.isEmpty())
                line.comment = a + "^" + b;
          }

@@ -486,6 +486,18 @@ public class Util {
       }
    }
 
+   /**
+    * Returns a sha-256 hash string for this file
+    */
+   public static String sha256(String string) {
+      try {
+         MessageDigest md = MessageDigest.getInstance("SHA-256");
+         return DatatypeConverter.printHexBinary(md.digest(string.getBytes("UTF-8"))).toUpperCase();
+      } catch (Exception e) {
+         throw new RuntimeException(e);
+      }
+   }
+
    public static String camelCaseUnderscores(String str) {
       Matcher m = Pattern.compile("_([a-z])").matcher(str);
       StringBuffer sb = new StringBuffer();
