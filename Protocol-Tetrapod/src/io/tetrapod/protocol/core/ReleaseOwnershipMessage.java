@@ -103,7 +103,8 @@ public class ReleaseOwnershipMessage extends Message {
    }
    
    public final StructDescription makeDescription() {
-      StructDescription desc = new StructDescription();
+      StructDescription desc = new StructDescription();     
+      desc.name = "ReleaseOwnershipMessage";
       desc.tagWebNames = tagWebNames();
       desc.types = new TypeDescriptor[desc.tagWebNames.length];
       desc.types[0] = new TypeDescriptor(TypeDescriptor.T_STRUCT, getContractId(), getStructId());

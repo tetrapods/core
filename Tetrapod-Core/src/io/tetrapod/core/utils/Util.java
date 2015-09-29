@@ -1,33 +1,38 @@
 package io.tetrapod.core.utils;
 
-import io.tetrapod.core.json.*;
-import io.tetrapod.core.rpc.Flags_int;
-
 import java.io.*;
-import java.lang.reflect.*;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.net.*;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.security.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.regex.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+import javax.naming.NamingException;
+import javax.naming.directory.*;
 import javax.net.ssl.*;
 import javax.xml.bind.DatatypeConverter;
+
+import io.tetrapod.core.json.JSONArray;
+import io.tetrapod.core.json.JSONObject;
+import io.tetrapod.core.rpc.Flags_int;
 
 /**
  * A random collection of useful static utility methods
  */
 public class Util {
 
-   public static final SecureRandom random     = new SecureRandom();
+   public static final SecureRandom random = new SecureRandom();
 
-   public static final long         ONE_SECOND = 1000;
-   public static final long         ONE_MINUTE = ONE_SECOND * 60;
-   public static final long         ONE_HOUR   = ONE_MINUTE * 60;
-   public static final long         ONE_DAY    = ONE_HOUR * 24;
-   public static final long         ONE_WEEK   = ONE_DAY * 7;
+   public static final long ONE_SECOND = 1000;
+   public static final long ONE_MINUTE = ONE_SECOND * 60;
+   public static final long ONE_HOUR   = ONE_MINUTE * 60;
+   public static final long ONE_DAY    = ONE_HOUR * 24;
+   public static final long ONE_WEEK   = ONE_DAY * 7;
 
    /**
     * Sleeps the current thread for a number of milliseconds, ignores interrupts.
@@ -118,11 +123,11 @@ public class Util {
       }
       return res;
    }
-   
+
    public static List<Integer> toList(int[] array) {
       List<Integer> list = new ArrayList<Integer>(array.length);
       for (int i = 0; i < array.length; i++) {
-          list.add(array[i]);
+         list.add(array[i]);
       }
       return list;
    }
@@ -267,7 +272,6 @@ public class Util {
       }
       return result;
    }
-   
 
    public static Set<String> jsonArrayToStringSet(JSONArray array) {
       Set<String> result = new HashSet<>();
@@ -290,7 +294,7 @@ public class Util {
       }
       return result;
    }
-   
+
    public static Set<Long> jsonArrayToLongSet(JSONArray array) {
       Set<Long> result = new HashSet<>();
       if (array == null) {
@@ -384,7 +388,7 @@ public class Util {
    public static <T extends Object> boolean isEmpty(T[] array) {
       return array == null || array.length == 0;
    }
-   
+
    public static boolean isEmpty(Collection<?> coll) {
       return coll == null ? true : coll.isEmpty();
    }
@@ -482,6 +486,18 @@ public class Util {
       }
    }
 
+   /**
+    * Returns a sha-256 hash string for this file
+    */
+   public static String sha256(String string) {
+      try {
+         MessageDigest md = MessageDigest.getInstance("SHA-256");
+         return DatatypeConverter.printHexBinary(md.digest(string.getBytes("UTF-8"))).toUpperCase();
+      } catch (Exception e) {
+         throw new RuntimeException(e);
+      }
+   }
+
    public static String camelCaseUnderscores(String str) {
       Matcher m = Pattern.compile("_([a-z])").matcher(str);
       StringBuffer sb = new StringBuffer();
@@ -525,4 +541,18 @@ public class Util {
          return macaroonDateTimeFormat.format(new Date(millis));
       }
    }
+
+   /**
+    * Query DNS server for a TXT record
+    */
+   public static String getTxtRecord(String domain) throws NamingException {
+      DirContext ctx = new InitialDirContext();
+      Attributes attrs = ctx.getAttributes("dns:/" + domain, new String[] { "TXT" });
+      Attribute attr = attrs.get("TXT");
+      if (attr != null) {
+         return attr.get().toString();
+      }
+      return null;
+   }
+
 }

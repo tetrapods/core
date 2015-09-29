@@ -38,7 +38,7 @@ define(function(require) {
                      path: '',
                      location: '',
                   }
-               }, app.server.logResponse);
+               }, app.alertResponse);
             }
          });
       }
@@ -81,7 +81,7 @@ define(function(require) {
                         path: val.trim(),
                         file: self.file()
                      }
-                  }, app.server.logResponse);
+                  }, app.alertResponse);
                }
             }, self.path);
          }
@@ -96,7 +96,7 @@ define(function(require) {
                         path: self.path,
                         file: val.trim()
                      }
-                  }, app.server.logResponse);
+                  }, app.alertResponse);
                }
             }, self.file());
          }
@@ -106,7 +106,7 @@ define(function(require) {
                app.server.sendDirect("DelWebRoot", {
                   adminToken: app.sessionToken,
                   name: self.name
-               }, app.server.logResponse);
+               }, app.alertResponse);
             });
          }
       }

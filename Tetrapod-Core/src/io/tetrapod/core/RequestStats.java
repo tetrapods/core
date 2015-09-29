@@ -14,6 +14,9 @@ public class RequestStats {
 
    public final Queue<ReqSample> requests = new ConcurrentLinkedQueue<>();
 
+   private static final int GLOBAL_HISTOGRAM_BUCKETS = 120;
+   private static final int LOCAL_HISTOGRAM_BUCKETS  = 30;
+
    public RequestStats() {
       this(1024 * 64);
    }
@@ -46,6 +49,9 @@ public class RequestStats {
       final Map<String, Integer> counts = new HashMap<>();
       final Map<String, Long> execution = new HashMap<>();
       long minTimestamp = Long.MAX_VALUE;
+
+      final int[] histogram = new int[GLOBAL_HISTOGRAM_BUCKETS];
+
       for (ReqSample sample : requests) {
          if (sample.timestamp >= minTime) {
             minTimestamp = Math.min(minTimestamp, sample.timestamp);
@@ -67,6 +73,14 @@ public class RequestStats {
                time = time + sample.execution / 1000;
             }
             execution.put(sample.key, time);
+         }
+      }
+
+      final long interval = System.currentTimeMillis() - minTimestamp;
+      for (ReqSample sample : requests) {
+         if (sample.timestamp >= minTime) {
+            final int bucket = Math.round((sample.timestamp - minTimestamp) / interval);
+            histogram[bucket]++;
          }
       }
 
@@ -101,12 +115,12 @@ public class RequestStats {
 
       final List<RequestStat> stats = new ArrayList<RequestStat>();
       for (String key : sorted) {
-         stats.add(new RequestStat(key, counts.get(key), execution.get(key)));
+         stats.add(new RequestStat(key, counts.get(key), execution.get(key), null, null));
          if (stats.size() >= limit)
             break;
       }
 
-      return new ServiceRequestStatsResponse(stats, minTimestamp, null);
+      return new ServiceRequestStatsResponse(stats, minTimestamp, null, histogram);
    }
 
 }
