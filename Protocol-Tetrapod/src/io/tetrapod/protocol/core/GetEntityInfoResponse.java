@@ -21,17 +21,35 @@ public class GetEntityInfoResponse extends Response {
       defaults();
    }
 
-   public GetEntityInfoResponse(int build, String name, String host, String referrer) {
+   public GetEntityInfoResponse(int build, String name, String host, String referrer, String domain) {
       this.build = build;
       this.name = name;
       this.host = host;
       this.referrer = referrer;
+      this.domain = domain;
    }   
    
    public int build;
+   
+   /**
+    * entity name
+    */
    public String name;
+   
+   /**
+    * host/ip of the entity
+    */
    public String host;
+   
+   /**
+    * referrer of first request (clients only)
+    */
    public String referrer;
+   
+   /**
+    * domain request was sent to (clients only)
+    */
+   public String domain;
 
    public final Structure.Security getSecurity() {
       return Security.INTERNAL;
@@ -42,6 +60,7 @@ public class GetEntityInfoResponse extends Response {
       name = null;
       host = null;
       referrer = null;
+      domain = null;
    }
    
    @Override
@@ -50,6 +69,7 @@ public class GetEntityInfoResponse extends Response {
       data.write(2, this.name);
       data.write(3, this.host);
       data.write(4, this.referrer);
+      data.write(5, this.domain);
       data.writeEndTag();
    }
    
@@ -63,6 +83,7 @@ public class GetEntityInfoResponse extends Response {
             case 2: this.name = data.read_string(tag); break;
             case 3: this.host = data.read_string(tag); break;
             case 4: this.referrer = data.read_string(tag); break;
+            case 5: this.domain = data.read_string(tag); break;
             case Codec.END_TAG:
                return;
             default:
@@ -84,11 +105,12 @@ public class GetEntityInfoResponse extends Response {
       // Note do not use this tags in long term serializations (to disk or databases) as 
       // implementors are free to rename them however they wish.  A null means the field
       // is not to participate in web serialization (remaining at default)
-      String[] result = new String[4+1];
+      String[] result = new String[5+1];
       result[1] = "build";
       result[2] = "name";
       result[3] = "host";
       result[4] = "referrer";
+      result[5] = "domain";
       return result;
    }
 
@@ -106,6 +128,7 @@ public class GetEntityInfoResponse extends Response {
       desc.types[2] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
       desc.types[3] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
       desc.types[4] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
+      desc.types[5] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
       return desc;
    }
  }

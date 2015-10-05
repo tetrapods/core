@@ -56,6 +56,7 @@ public class WebHttpSession extends WebSession {
    private Map<Integer, ChannelHandlerContext> contexts;
 
    private String httpReferrer = null;
+   private String domain       = null;
 
    public WebHttpSession(SocketChannel ch, Session.Helper helper, Map<String, WebRoot> roots, String wsLocation) {
       super(ch, helper);
@@ -144,7 +145,15 @@ public class WebHttpSession extends WebSession {
       if (Util.isEmpty(getHttpReferrer())) {
          setHttpReferrer(req.headers().get("Referer"));
          logger.debug("•••• Referer: {} ", getHttpReferrer());
+      } 
+      // Set the domain for this request, if not already set
+      if (Util.isEmpty(getDomain())) {
+         setDomain(req.headers().get("Host"));
+         logger.debug("•••• Domain: {} ", getDomain());
       }
+
+      // req.getUri()
+
       // see if we need to start a web socket session
       if (wsLocation.equals(req.getUri())) {
          WebSocketServerHandshakerFactory wsFactory = new WebSocketServerHandshakerFactory(wsLocation, null, false);
@@ -295,8 +304,8 @@ public class WebHttpSession extends WebSession {
                if (body == null || body.trim().isEmpty()) {
                   body = req.getUri();
                }
-               final WebAPIRequest request = new WebAPIRequest(route.path, getHeaders(req).toString(), context.getRequestParams()
-                     .toString(), body);
+               final WebAPIRequest request = new WebAPIRequest(route.path, getHeaders(req).toString(), context.getRequestParams().toString(),
+                        body);
                final int toEntityId = relayHandler.getAvailableService(header.contractId);
                if (toEntityId != 0) {
                   final Session ses = relayHandler.getRelaySession(toEntityId, header.contractId);
@@ -599,5 +608,13 @@ public class WebHttpSession extends WebSession {
 
    public void setHttpReferrer(String httpReferrer) {
       this.httpReferrer = httpReferrer;
+   }
+
+   public String getDomain() {
+      return domain;
+   }
+
+   public void setDomain(String domain) {
+      this.domain = domain;
    }
 }
