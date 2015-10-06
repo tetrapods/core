@@ -1070,9 +1070,13 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          synchronized (e) {
             final Session s = e.getSession();
             if (s != null) {
-               return new GetEntityInfoResponse(e.build, e.name, s.getPeerHostname(), null);
+               if (e.isClient() && s instanceof WebHttpSession) {
+                  WebHttpSession ws = (WebHttpSession) s;
+                  return new GetEntityInfoResponse(e.build, e.name, s.getPeerHostname(), ws.getHttpReferrer(), ws.getDomain());
+               }
+               return new GetEntityInfoResponse(e.build, e.name, s.getPeerHostname(), null, null);
             } else {
-               return new GetEntityInfoResponse(e.build, e.name, null, null);
+               return new GetEntityInfoResponse(e.build, e.name, null, null, null);
             }
          }
       }

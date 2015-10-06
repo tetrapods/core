@@ -170,10 +170,11 @@ internal request GetEntityInfo
    error UNKNOWN_ENTITY_ID
 
 internal response GetEntityInfo
-   1: int build
-   2: string name
-   3: string host
-   4: string referrer
+   1: int build   
+   2: string name     // entity name
+   3: string host     // host/ip of the entity
+   4: string referrer // referrer of first request (clients only)
+   5: string domain   // domain request was sent to (clients only)
 
 ################################# MESSAGES #################################
 
