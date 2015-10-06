@@ -97,16 +97,6 @@ class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRequest> 
          return;
       }
 
-      if (autoRedirectToHome(request)) {
-         String protocol = ctx.pipeline().get("ssl") != null ? "https" : "http";
-         String newLoc = String.format("%s://%s/home/", protocol, host);
-         HttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, FOUND);
-         response.headers().set(LOCATION, newLoc);
-         response.headers().set(CONNECTION, "close");
-         ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
-         return;
-      }
-
       String uri = request.getUri();
       FileResult result = getURI(uri);
 
@@ -163,28 +153,6 @@ class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRequest> 
       }
    }
 
-   private boolean autoRedirectToHome(FullHttpRequest request) {
-      //      String uri = request.getUri();
-      //
-      //      outer:
-      //      if (uri.isEmpty() || uri.equals("/")) {
-      //         String cookieString = request.headers().get(COOKIE);
-      //
-      //         if (!Util.isEmpty(cookieString)) {
-      //            Set<Cookie> cookies = CookieDecoder.decode(cookieString);
-      //
-      //            for (Cookie c : cookies) {
-      //               if ((c.getName().equals("auth") && !Util.isEmpty(c.getValue())) || (c.getName().equals("zdauth") && !Util.isEmpty(c.getValue()))) {
-      //                  if (logger.isDebugEnabled()) logger.debug("Login Cookie Detected: {}:{}", c.getName(), c.getValue());
-      //                  break outer;
-      //               }
-      //            }
-      //         }
-      //         return true;
-      //      }
-      return false;
-   }
-
    @Override
    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
       cause.printStackTrace();
@@ -209,14 +177,16 @@ class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRequest> 
       }
       if (VALID_URI.matcher(uri).matches() && !INVALID_URI.matcher(uri).matches()) {
          uri = mangle(uri);
-         for (WebRoot root : roots.values()) {
-            try {
-               FileResult r = root.getFile(uri);
-               if (r != null)
-                  return r;
-            } catch (IOException e) {
-               logger.warn("io error accessing web file", e);
+         try {
+            if (uri.startsWith("/home") && roots.containsKey("override"))
+               return roots.get("override").getFile(uri);
+            for (WebRoot root : roots.values()) {
+                  FileResult r = root.getFile(uri);
+                  if (r != null)
+                     return r;
             }
+         } catch (IOException e) {
+            logger.warn("io error accessing web file", e);
          }
       }
       return null;
