@@ -17,6 +17,7 @@ define(function(require) {
       self.leaderEntityId = ko.pureComputed(leaderEntityId);
       self.tolerance = ko.pureComputed(tolerance);
       self.maxTerm = 0;
+      self.commitIndex = 0;
       self.ensurePeer = ensurePeer;
       self.isNodeInCluster = isNodeInCluster;
 
@@ -116,6 +117,9 @@ define(function(require) {
             var raft = self.rafts()[i];
             if (raft.curTerm() > self.maxTerm) {
                self.maxTerm = raft.curTerm();
+            }
+            if (raft.commitIndex() > self.commitIndex) {
+               self.commitIndex = raft.commitIndex();
             }
          }
          for (var i = 0; i < self.rafts().length; i++) {
@@ -257,6 +261,8 @@ define(function(require) {
          // return true if this node is part of the cluster. 
          // FIXME: this should probably have better logic
          function isHealthy() {
+            if (self.lastIndex < cluster.commitIndex) 
+               return false;
             if (self.curTerm() < cluster.maxTerm)
                return false;
             return self.role() == 2 || self.role() == 3 || self.role() == 4;
