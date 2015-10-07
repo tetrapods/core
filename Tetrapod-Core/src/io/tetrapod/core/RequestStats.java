@@ -15,7 +15,6 @@ public class RequestStats {
    public final Queue<ReqSample> requests = new ConcurrentLinkedQueue<>();
 
    private static final int GLOBAL_HISTOGRAM_BUCKETS = 120;
-   private static final int LOCAL_HISTOGRAM_BUCKETS  = 30;
 
    public RequestStats() {
       this(1024 * 64);
