@@ -371,7 +371,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    public void onShutdown(boolean restarting) {
       logger.info("Shutting Down Tetrapod");
       // sleep a bit so other services getting a kill signal can shutdown cleanly
-      Util.sleep(2000);
+      Util.sleep(1500);
       if (cluster != null) {
          cluster.shutdown();
       }
