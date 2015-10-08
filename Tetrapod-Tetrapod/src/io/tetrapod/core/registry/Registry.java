@@ -134,7 +134,7 @@ public class Registry implements TetrapodContract.Registry.API {
    /**
     * @return a new unused ID. If we hit our local maximum, we will reset and find the next currently unused id
     */
-   private synchronized int issueId() {
+   public synchronized int issueId() {
       while (true) {
          int id = parentId | (++counter % MAX_ID);
          if (!entities.containsKey(id)) {
@@ -143,33 +143,33 @@ public class Registry implements TetrapodContract.Registry.API {
       }
    }
 
-   public void register(EntityInfo entity) {
-      lock.readLock().lock();
-      try {
-
-         if (entity.entityId <= 0) {
-            if (entity.isTetrapod()) {
-               throw new RuntimeException("Tetrapod needs an assigned entityId");
-            } else {
-               entity.entityId = issueId();
-            }
-         }
-
-         entities.put(entity.entityId, entity);
-         if (entity.isService()) {
-            // register their service in our services list
-            ensureServicesList(entity.contractId).add(entity);
-         }
-         if (entity.parentId == parentId && entity.entityId != parentId && broadcaster != null) {
-            broadcaster.broadcastRegistryMessage(new EntityRegisteredMessage(entity));
-         }
-         if (entity.isService()) {
-            broadcaster.broadcastServicesMessage(new ServiceAddedMessage(entity));
-         }
-      } finally {
-         lock.readLock().unlock();
-      }
-   }
+   //   public void register(EntityInfo entity) {
+   //      lock.readLock().lock();
+   //      try {
+   //
+   //         if (entity.entityId <= 0) {
+   //            if (entity.isTetrapod()) {
+   //               throw new RuntimeException("Tetrapod needs an assigned entityId");
+   //            } else {
+   //               entity.entityId = issueId();
+   //            }
+   //         }
+   //
+   //         entities.put(entity.entityId, entity);
+   //         if (entity.isService()) {
+   //            // register their service in our services list
+   //            ensureServicesList(entity.contractId).add(entity);
+   //         }
+   //         if (entity.parentId == parentId && entity.entityId != parentId && broadcaster != null) {
+   //            broadcaster.broadcastRegistryMessage(new EntityRegisteredMessage(entity));
+   //         }
+   //         if (entity.isService()) {
+   //            broadcaster.broadcastServicesMessage(new ServiceAddedMessage(entity));
+   //         }
+   //      } finally {
+   //         lock.readLock().unlock();
+   //      }
+   //   }
 
    private void clearAllTopicsAndSubscriptions(final EntityInfo e) {
       // Unpublish all their topics
@@ -341,68 +341,68 @@ public class Registry implements TetrapodContract.Registry.API {
 
    @Override
    public void messageEntityRegistered(EntityRegisteredMessage m, MessageContext ctx) {
-      // TODO: validate sender    
-      if (ctx.header.fromId != parentId) {
-         lock.readLock().lock();
-         try {
-            EntityInfo info = entities.get(m.entity.entityId);
-            if (info != null) {
-               info.parentId = m.entity.parentId;
-               info.reclaimToken = m.entity.reclaimToken;
-               info.host = m.entity.host;
-               info.status = m.entity.status;
-               info.build = m.entity.build;
-               info.name = m.entity.name;
-               info.version = m.entity.version;
-               info.contractId = m.entity.contractId;
-               final EntityInfo e = info;
-               info.queue(new Runnable() {
-                  public void run() {
-                     clearAllTopicsAndSubscriptions(e);
-                  }
-               });
-            } else {
-               info = new EntityInfo(m.entity);
-            }
-            register(info);
-         } finally {
-            lock.readLock().unlock();
-         }
-      }
+      //      // TODO: validate sender    
+      //      if (ctx.header.fromId != parentId) {
+      //         lock.readLock().lock();
+      //         try {
+      //            EntityInfo info = entities.get(m.entity.entityId);
+      //            if (info != null) {
+      //               info.parentId = m.entity.parentId;
+      //               info.reclaimToken = m.entity.reclaimToken;
+      //               info.host = m.entity.host;
+      //               info.status = m.entity.status;
+      //               info.build = m.entity.build;
+      //               info.name = m.entity.name;
+      //               info.version = m.entity.version;
+      //               info.contractId = m.entity.contractId;
+      //               final EntityInfo e = info;
+      //               info.queue(new Runnable() {
+      //                  public void run() {
+      //                     clearAllTopicsAndSubscriptions(e);
+      //                  }
+      //               });
+      //            } else {
+      //               info = new EntityInfo(m.entity);
+      //            }
+      //            register(info);
+      //         } finally {
+      //            lock.readLock().unlock();
+      //         }
+      //      }
    }
 
    @Override
    public void messageEntityUnregistered(EntityUnregisteredMessage m, MessageContext ctx) {
       // TODO: validate sender           
-      if (ctx.header.fromId != parentId) {
-         final EntityInfo e = getEntity(m.entityId);
-         if (e != null) {
-            e.queue(new Runnable() {
-               public void run() {
-                  unregister(e);
-               }
-            });
-         } else {
-            logger.error("Could not find entity {} to unregister", m.entityId);
-         }
-      }
+      //      if (ctx.header.fromId != parentId) {
+      //         final EntityInfo e = getEntity(m.entityId);
+      //         if (e != null) {
+      //            e.queue(new Runnable() {
+      //               public void run() {
+      //                  unregister(e);
+      //               }
+      //            });
+      //         } else {
+      //            logger.error("Could not find entity {} to unregister", m.entityId);
+      //         }
+      //      }
    }
 
    @Override
    public void messageEntityUpdated(final EntityUpdatedMessage m, MessageContext ctx) {
       // TODO: validate sender           
-      if (ctx.header.fromId != parentId) {
-         final EntityInfo e = getEntity(m.entityId);
-         if (e != null) {
-            e.queue(new Runnable() {
-               public void run() {
-                  updateStatus(e, m.status);
-               }
-            });
-         } else {
-            logger.error("Could not find entity {} to update", m.entityId);
-         }
-      }
+      //      if (ctx.header.fromId != parentId) {
+      //         final EntityInfo e = getEntity(m.entityId);
+      //         if (e != null) {
+      //            e.queue(new Runnable() {
+      //               public void run() {
+      //                  updateStatus(e, m.status);
+      //               }
+      //            });
+      //         } else {
+      //            logger.error("Could not find entity {} to update", m.entityId);
+      //         }
+      //      }
    }
 
    @Override
@@ -525,8 +525,8 @@ public class Registry implements TetrapodContract.Registry.API {
       logger.info("========================== TETRAPOD CLUSTER REGISTRY ============================");
       for (EntityInfo e : list) {
          if (includeClients || !e.isClient())
-         logger.info(String.format(" 0x%08X 0x%08X %-15s status=%08X topics=%d subscriptions=%d", e.parentId, e.entityId, e.name, e.status,
-               e.getNumTopics(), e.getNumSubscriptions()));
+            logger.info(String.format(" 0x%08X 0x%08X %-15s status=%08X topics=%d subscriptions=%d", e.parentId, e.entityId, e.name,
+                     e.status, e.getNumTopics(), e.getNumSubscriptions()));
       }
       logger.info("=================================================================================\n");
    }
@@ -584,5 +584,50 @@ public class Registry implements TetrapodContract.Registry.API {
          }
       }
       return count;
+   }
+
+   public void addEntity(final EntityInfo entity) {
+      lock.readLock().lock();
+      try {
+         if (entities.containsKey(entity.entityId)) {
+            entity.queue(new Runnable() {
+               public void run() {
+                  clearAllTopicsAndSubscriptions(entity);
+               }
+            });
+         }
+
+         entities.put(entity.entityId, entity);
+
+         if (entity.isService()) {
+            // register their service in our services list
+            ensureServicesList(entity.contractId).add(entity);
+         }
+         if (entity.parentId == parentId && entity.entityId != parentId && broadcaster != null) {
+            broadcaster.broadcastRegistryMessage(new EntityRegisteredMessage(entity));
+         }
+         if (entity.isService()) {
+            broadcaster.broadcastServicesMessage(new ServiceAddedMessage(entity));
+         }
+
+      } finally {
+         lock.readLock().unlock();
+      }
+   }
+
+   public void updateEntity(final EntityInfo entity) {
+      entity.queue(new Runnable() {
+         public void run() {
+            updateStatus(entity, entity.status);
+         }
+      });
+   }
+
+   public void delEntity(final EntityInfo entity) {
+      entity.queue(new Runnable() {
+         public void run() {
+            unregister(entity);
+         }
+      });
    }
 }

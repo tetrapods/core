@@ -25,37 +25,37 @@ import org.slf4j.*;
 public class TetrapodCluster extends Storage
          implements RaftRPC<TetrapodStateMachine>, RaftContract.API, StateMachine.Listener<TetrapodStateMachine>, SessionFactory {
 
-   private static final Logger logger = LoggerFactory.getLogger(TetrapodCluster.class);
+   private static final Logger                    logger         = LoggerFactory.getLogger(TetrapodCluster.class);
 
-   private final Server server;
+   private final Server                           server;
 
    /**
     * Maps EntityId to TetrapodPeer
     */
-   private final Map<Integer, TetrapodPeer> cluster = new ConcurrentHashMap<>();
+   private final Map<Integer, TetrapodPeer>       cluster        = new ConcurrentHashMap<>();
 
-   private final TetrapodService service;
+   private final TetrapodService                  service;
 
    private final RaftEngine<TetrapodStateMachine> raft;
 
-   private final TetrapodStateMachine state;
+   private final TetrapodStateMachine             state;
 
-   private final Config cfg;
+   private final Config                           cfg;
 
    /**
     * The index of the command we joined the cluster
     */
-   private AtomicLong joinIndex = new AtomicLong(-1);
+   private AtomicLong                             joinIndex      = new AtomicLong(-1);
 
    /**
     * Maps key prefixes to Topics
     */
-   private final Map<Integer, Set<String>> ownersToTopics = new ConcurrentHashMap<>();
+   private final Map<Integer, Set<String>>        ownersToTopics = new ConcurrentHashMap<>();
 
    /**
     * Maps topics to sessions
     */
-   private final Map<String, Set<Session>> topicsToOwners = new ConcurrentHashMap<>();
+   private final Map<String, Set<Session>>        topicsToOwners = new ConcurrentHashMap<>();
 
    public TetrapodCluster(TetrapodService service) {
       this.service = service;
@@ -128,6 +128,7 @@ public class TetrapodCluster extends Storage
       return ses;
    }
 
+   // FIXME: Add a cleaner listener interface based on command type so we don't need a fugly switch
    @Override
    public void onLogEntryApplied(Entry<TetrapodStateMachine> entry) {
       final Command<TetrapodStateMachine> command = entry.getCommand();
@@ -159,6 +160,16 @@ public class TetrapodCluster extends Storage
          case ReleaseOwnershipCommand.COMMAND_ID:
             onReleaseOwnershipCommand((ReleaseOwnershipCommand) command);
             break;
+         case AddEntityCommand.COMMAND_ID:
+            onAddEntityCommand((AddEntityCommand) command);
+            break;
+         case ModEntityCommand.COMMAND_ID:
+            onModEntityCommand((ModEntityCommand) command);
+            break;
+         case DelEntityCommand.COMMAND_ID:
+            onDelEntityCommand((DelEntityCommand) command);
+            break;
+
       }
    }
 
@@ -295,6 +306,11 @@ public class TetrapodCluster extends Storage
    }
 
    public boolean addMember(int entityId, String host, int servicePort, int clusterPort, Session ses) {
+      final Entity e = new Entity(entityId, entityId, 0, Util.getHostName(), 0, Core.TYPE_TETRAPOD, service.getShortName(),
+               service.buildNumber, 0, service.getContractId());
+      state.addEntity(e, true);
+      onAddEntityCommand(new AddEntityCommand(e));
+
       // ignore ourselves
       if (entityId == service.getEntityId()) {
          return false;
@@ -470,7 +486,8 @@ public class TetrapodCluster extends Storage
       if (entity == null) {
          entity = new EntityInfo(req.entityId, req.entityId, 0L, req.host, req.status, Core.TYPE_TETRAPOD, "Tetrapod*", req.build,
                   TetrapodContract.VERSION, TetrapodContract.CONTRACT_ID);
-         service.registry.register(entity);
+         executeCommand(new AddEntityCommand(entity), null);
+         //service.registry.register(entity);
       } else {
          // reconnecting with a pre-existing peerId
          final int peerId = req.entityId >> Registry.PARENT_ID_SHIFT;
@@ -584,12 +601,26 @@ public class TetrapodCluster extends Storage
    ///////////////////////////////////// STORAGE API ///////////////////////////////////////
 
    public void executeCommand(Command<TetrapodStateMachine> cmd, ClientResponseHandler<TetrapodStateMachine> handler) {
+      executeCommand(cmd, handler, false);
+   }
+
+   public void executeCommand(Command<TetrapodStateMachine> cmd, ClientResponseHandler<TetrapodStateMachine> handler, boolean waitForLocal) {
       boolean sent = false;
       while (!sent) {
          // if we're the leader we can execute directly
          if (!raft.executeCommand(cmd, handler)) {
             // else, send RPC to current leader
             if (raft.getLeader() != 0) {
+
+               if (waitForLocal) {
+                  final ClientResponseHandler<TetrapodStateMachine> origHandler = handler;
+                  handler = new ClientResponseHandler<TetrapodStateMachine>() {
+                     @Override
+                     public void handleResponse(Entry<TetrapodStateMachine> entry) {
+                        origHandler.handleResponse(entry);
+                     }
+                  };
+               }
                sendIssueCommand(raft.getLeader(), cmd, handler);
                sent = true; // FIXME
             } else {
@@ -601,7 +632,7 @@ public class TetrapodCluster extends Storage
       }
    }
 
-   public abstract class PendingClientResponseHandler<T extends StateMachine<T>> implements ClientResponseHandler<T> {
+   public static abstract class PendingClientResponseHandler<T extends StateMachine<T>> implements ClientResponseHandler<T> {
 
       public final SessionRequestContext ctx;
 
@@ -1000,4 +1031,21 @@ public class TetrapodCluster extends Storage
          unsubscribeOwnership(ses.getTheirEntityId());
       }
    }
+
+   public EntityInfo getEntity(int entityId) {
+      return state.entities.get(entityId);
+   }
+
+   private void onAddEntityCommand(AddEntityCommand command) {
+      service.registry.addEntity(state.entities.get(command.getEntity().entityId));
+   }
+
+   private void onModEntityCommand(ModEntityCommand command) {
+      service.registry.updateEntity(state.entities.get(command.getEntityId()));
+   }
+
+   private void onDelEntityCommand(DelEntityCommand command) {
+      service.registry.delEntity(state.entities.get(command.getEntityId()));
+   }
+
 }

@@ -22,13 +22,13 @@ import io.tetrapod.core.registry.*;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.rpc.Error;
 import io.tetrapod.core.serialize.datasources.ByteBufDataSource;
-import io.tetrapod.core.storage.DistributedLock;
-import io.tetrapod.core.storage.TetrapodCluster;
+import io.tetrapod.core.storage.*;
 import io.tetrapod.core.utils.*;
 import io.tetrapod.core.web.*;
 import io.tetrapod.protocol.core.*;
 import io.tetrapod.protocol.raft.*;
 import io.tetrapod.protocol.storage.*;
+import io.tetrapod.raft.Entry;
 
 /**
  * The tetrapod service is the core cluster service which handles message routing, cluster management, service discovery, and load balancing
@@ -37,32 +37,32 @@ import io.tetrapod.protocol.storage.*;
 public class TetrapodService extends DefaultService implements TetrapodContract.API, StorageContract.API, RaftContract.API, RelayHandler,
          io.tetrapod.core.registry.Registry.RegistryBroadcaster {
 
-   public static final Logger logger = LoggerFactory.getLogger(TetrapodService.class);
+   public static final Logger                      logger                = LoggerFactory.getLogger(TetrapodService.class);
 
-   public final SecureRandom random = new SecureRandom();
+   public final SecureRandom                       random                = new SecureRandom();
 
-   public final io.tetrapod.core.registry.Registry registry = new io.tetrapod.core.registry.Registry(this);
+   public final io.tetrapod.core.registry.Registry registry              = new io.tetrapod.core.registry.Registry(this);
 
-   private Topic clusterTopic;
-   private Topic registryTopic;
-   private Topic servicesTopic;
-   private Topic adminTopic;
+   private Topic                                   clusterTopic;
+   private Topic                                   registryTopic;
+   private Topic                                   servicesTopic;
+   private Topic                                   adminTopic;
 
-   private final Object registryTopicLock = new Object();
-   private final Object servicesTopicLock = new Object();
+   private final Object                            registryTopicLock     = new Object();
+   private final Object                            servicesTopicLock     = new Object();
 
-   private final TetrapodWorker worker;
+   private final TetrapodWorker                    worker;
 
-   protected final TetrapodCluster cluster = new TetrapodCluster(this);
+   protected final TetrapodCluster                 cluster               = new TetrapodCluster(this);
 
-   private AdminAccounts adminAccounts;
+   private AdminAccounts                           adminAccounts;
 
-   private final List<Server> servers     = new ArrayList<Server>();
-   private final List<Server> httpServers = new ArrayList<Server>();
+   private final List<Server>                      servers               = new ArrayList<Server>();
+   private final List<Server>                      httpServers           = new ArrayList<Server>();
 
-   private long lastStatsLog;
+   private long                                    lastStatsLog;
 
-   private final LinkedList<Integer> clientSessionsCounter = new LinkedList<>();
+   private final LinkedList<Integer>               clientSessionsCounter = new LinkedList<>();
 
    public TetrapodService() throws IOException {
       super(new TetrapodContract());
@@ -103,10 +103,18 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          this.parentId = this.entityId = myEntityId;
          this.token = EntityToken.encode(entityId, reclaimToken);
 
-         final EntityInfo e = new EntityInfo(entityId, 0, reclaimToken, Util.getHostName(), 0, Core.TYPE_TETRAPOD, getShortName(),
-                  buildNumber, 0, getContractId());
-         registry.register(e);
-         logger.info(String.format("SELF-REGISTERED: 0x%08X %s", entityId, e));
+         EntityInfo me = cluster.getEntity(entityId);
+         if (me == null) {
+            //            me = new EntityInfo(entityId, 0, reclaimToken, Util.getHostName(), 0, Core.TYPE_TETRAPOD, getShortName(), buildNumber, 0,
+            //                     getContractId());
+            //cluster.executeCommand(new AddEntityCommand(), null); // FIXME
+            //            logger.info(String.format("SELF-REGISTERED: 0x%08X %s", entityId, me));
+            throw new RuntimeException("Not in registry");
+         } else {
+            this.token = EntityToken.encode(entityId, me.reclaimToken);
+            logger.info(String.format("SELF-REGISTERED: 0x%08X %s", entityId, me));
+            // update status?
+         }
 
          clusterTopic = registry.publish(entityId);
          registryTopic = registry.publish(entityId);
@@ -400,7 +408,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          }
          final EntityInfo parent = registry.getEntity(entity.parentId);
          if (parent != null) {
-            assert(parent != null);
+            assert (parent != null);
             return cluster.getSession(parent.entityId);
          } else {
             logger.warn("Could not find parent entity {} for {}", entity.parentId, entity);
@@ -590,7 +598,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
    @Override
    public void broadcastRegistryMessage(Message msg) {
-      if (registryTopic.getNumSubscribers() > 0) {
+      if (registryTopic != null && registryTopic.getNumSubscribers() > 0) {
          broadcast(msg, registryTopic);
       }
       cluster.broadcast(msg);
@@ -710,7 +718,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
    public void subscribeToCluster(Session ses, int toEntityId) {
-      assert(clusterTopic != null);
+      assert (clusterTopic != null);
       synchronized (cluster) {
          subscribe(clusterTopic.topicId, toEntityId);
          cluster.sendClusterDetails(ses, toEntityId, clusterTopic.topicId);
@@ -727,7 +735,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    }
 
    public void subscribeToAdmin(Session ses, int toEntityId) {
-      assert(adminTopic != null);
+      assert (adminTopic != null);
       synchronized (cluster) {
          subscribe(adminTopic.topicId, toEntityId);
          cluster.sendAdminDetails(ses, toEntityId, adminTopic.topicId);
@@ -743,13 +751,10 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
    @Override
    public Response requestRegister(RegisterRequest r, final RequestContext ctxA) {
-      SessionRequestContext ctx = (SessionRequestContext) ctxA;
+      final SessionRequestContext ctx = (SessionRequestContext) ctxA;
       if (getEntityId() == 0) {
          return new Error(ERROR_SERVICE_UNAVAILABLE);
       }
-      //      if (ctx.session.getTheirEntityType() == Core.TYPE_TETRAPOD) {
-      //         return new Error(ERROR_UNSUPPORTED);
-      //      }
 
       EntityInfo info = null;
       final EntityToken t = EntityToken.decode(r.token);
@@ -781,28 +786,62 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       }
 
       // register/reclaim
-      registry.register(info);
+      //registry.register(info);
 
-      logger.info("Registering: {} type={}", info, info.type);
+      if (info.entityId == 0) {
+         info.entityId = registry.issueId();
+      }
 
       if (info.type == Core.TYPE_TETRAPOD) {
          info.parentId = info.entityId;
+
+         ////////// HACK //////////
+         if (cluster.getEntity(info.entityId) != null) {
+            // update & store session
+            ctx.session.setTheirEntityId(info.entityId);
+            ctx.session.setTheirEntityType(info.type);
+            info.setSession(ctx.session);
+            // deliver them their entityId immediately to avoid some race conditions with the response
+            ctx.session.sendMessage(new EntityMessage(info.entityId), MessageHeader.TO_ENTITY, Core.UNADDRESSED);
+            return new RegisterResponse(info.entityId, getEntityId(), EntityToken.encode(info.entityId, info.reclaimToken));
+         }
+
       }
 
-      // update & store session
-      ctx.session.setTheirEntityId(info.entityId);
-      ctx.session.setTheirEntityType(info.type);
+      final int entityId = info.entityId;
 
-      info.setSession(ctx.session);
+      final AsyncResponder responder = new AsyncResponder(ctx);
 
-      // deliver them their entityId immediately to avoid some race conditions with the response
-      ctx.session.sendMessage(new EntityMessage(info.entityId), MessageHeader.TO_ENTITY, Core.UNADDRESSED);
+      logger.info("Registering: {} type={}", info, info.type);
+      // execute a raft registration command
+      cluster.executeCommand(new AddEntityCommand(info), new TetrapodCluster.ClientResponseHandler<TetrapodStateMachine>() {
+         @Override
+         public void handleResponse(Entry<TetrapodStateMachine> entry) {
+            if (entry != null) {
 
-      if (info.isService() && info.entityId != entityId) {
-         subscribeToCluster(ctx.session, info.entityId);
-      }
+               // get the real entity object after we've processed the command
+               final EntityInfo entity = cluster.getEntity(entityId);
 
-      return new RegisterResponse(info.entityId, getEntityId(), EntityToken.encode(info.entityId, info.reclaimToken));
+               // update & store session
+               ctx.session.setTheirEntityId(entity.entityId);
+               ctx.session.setTheirEntityType(entity.type);
+
+               entity.setSession(ctx.session);
+
+               // deliver them their entityId immediately to avoid some race conditions with the response
+               ctx.session.sendMessage(new EntityMessage(entity.entityId), MessageHeader.TO_ENTITY, Core.UNADDRESSED);
+
+               if (entity.isService() && entity.entityId != getEntityId()) {
+                  subscribeToCluster(ctx.session, entity.entityId);
+               }
+               responder.respondWith(
+                        new RegisterResponse(entity.entityId, getEntityId(), EntityToken.encode(entity.entityId, entity.reclaimToken)));
+            } else {
+               responder.respondWith(Response.error(ERROR_UNKNOWN));
+            }
+         }
+      }, true);
+      return Response.PENDING;
    }
 
    @Override

@@ -22,34 +22,34 @@ import ch.qos.logback.classic.LoggerContext;
 
 import com.codahale.metrics.Timer.Context;
 
-public class DefaultService implements Service, Fail.FailHandler, CoreContract.API, SessionFactory, EntityMessage.Handler,
-      TetrapodContract.Cluster.API {
+public class DefaultService
+         implements Service, Fail.FailHandler, CoreContract.API, SessionFactory, EntityMessage.Handler, TetrapodContract.Cluster.API {
 
-   private static final Logger logger = LoggerFactory.getLogger(DefaultService.class);
+   private static final Logger             logger          = LoggerFactory.getLogger(DefaultService.class);
 
-   protected final Set<Integer> dependencies = new HashSet<>();
+   protected final Set<Integer>            dependencies    = new HashSet<>();
 
-   public final Dispatcher      dispatcher;
-   protected final Client       clusterClient;
-   protected final Contract     contract;
-   protected final ServiceCache services;
-   protected boolean            terminated;
-   protected int                entityId;
-   protected int                parentId;
-   protected String             token;
-   private int                  status;
-   public final int             buildNumber;
-   protected final LogBuffer    logBuffer;
-   protected SSLContext         sslContext;
+   public final Dispatcher                 dispatcher;
+   protected final Client                  clusterClient;
+   protected final Contract                contract;
+   protected final ServiceCache            services;
+   protected boolean                       terminated;
+   protected int                           entityId;
+   protected int                           parentId;
+   protected String                        token;
+   private int                             status;
+   public final int                        buildNumber;
+   protected final LogBuffer               logBuffer;
+   protected SSLContext                    sslContext;
 
-   private ServiceConnector serviceConnector;
+   private ServiceConnector                serviceConnector;
 
-   protected final ServiceStats stats;
-   protected boolean            startPaused;
+   protected final ServiceStats            stats;
+   protected boolean                       startPaused;
 
-   private final LinkedList<ServerAddress> clusterMembers = new LinkedList<>();
+   private final LinkedList<ServerAddress> clusterMembers  = new LinkedList<>();
 
-   private final MessageHandlers messageHandlers = new MessageHandlers();
+   private final MessageHandlers           messageHandlers = new MessageHandlers();
 
    public DefaultService() {
       this(null);
@@ -75,8 +75,8 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
 
       try {
          if (Util.getProperty("tetrapod.tls", true)) {
-            sslContext = Util.createSSLContext(new FileInputStream(Util.getProperty("tetrapod.jks.file", "cfg/tetrapod.jks")), System
-                  .getProperty("tetrapod.jks.pwd", "4pod.dop4").toCharArray());
+            sslContext = Util.createSSLContext(new FileInputStream(Util.getProperty("tetrapod.jks.file", "cfg/tetrapod.jks")),
+                     System.getProperty("tetrapod.jks.pwd", "4pod.dop4").toCharArray());
          }
       } catch (Exception e) {
          fail(e);
@@ -339,27 +339,27 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
    }
 
    private void onConnectedToCluster() {
-      sendDirectRequest(new RegisterRequest(buildNumber, token, getContractId(), getShortName(), getStatus(), Util.getHostName())).handle(
-            new ResponseHandler() {
-                  @Override
-                  public void onResponse(Response res) {
-                     if (res.isError()) {
-                        Fail.fail("Unable to register: " + res.errorCode());
-                     } else {
-                        RegisterResponse r = (RegisterResponse) res;
-                        entityId = r.entityId;
-                        parentId = r.parentId;
-                        token = r.token;
+      final Request req = new RegisterRequest(buildNumber, token, getContractId(), getShortName(), getStatus(), Util.getHostName());
+      sendDirectRequest(req).handle(new ResponseHandler() {
+         @Override
+         public void onResponse(Response res) {
+            if (res.isError()) {
+               Fail.fail("Unable to register: " + req.dump() + " ==> " + res);
+            } else {
+               RegisterResponse r = (RegisterResponse) res;
+               entityId = r.entityId;
+               parentId = r.parentId;
+               token = r.token;
 
-                        logger.info(String.format("%s My entityId is 0x%08X", clusterClient.getSession(), r.entityId));
-                        clusterClient.getSession().setMyEntityId(r.entityId);
-                        clusterClient.getSession().setTheirEntityId(r.parentId);
-                        clusterClient.getSession().setMyEntityType(getEntityType());
-                        clusterClient.getSession().setTheirEntityType(Core.TYPE_TETRAPOD);
-                        onServiceRegistered();
-                     }
-                  }
-               });
+               clusterClient.getSession().setMyEntityId(r.entityId);
+               clusterClient.getSession().setTheirEntityId(r.parentId);
+               clusterClient.getSession().setMyEntityType(getEntityType());
+               clusterClient.getSession().setTheirEntityType(Core.TYPE_TETRAPOD);
+               logger.info(String.format("%s My entityId is 0x%08X", clusterClient.getSession(), r.entityId));
+               onServiceRegistered();
+            }
+         }
+      });
    }
 
    public void onDisconnectedFromCluster() {
@@ -501,7 +501,7 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
       return null;
    }
 
-   protected String getShortName() {
+   public String getShortName() {
       if (contract == null) {
          return null;
       }
@@ -857,8 +857,8 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
    }
 
    protected String getStartLoggingMessage() {
-      return "*** Start Service ***" + "\n   *** Service name: " + Util.getProperty("APPNAME") + "\n   *** Options: "
-            + Launcher.getAllOpts() + "\n   *** VM Args: " + ManagementFactory.getRuntimeMXBean().getInputArguments().toString();
+      return "*** Start Service ***" + "\n   *** Service name: " + Util.getProperty("APPNAME") + "\n   *** Options: " + Launcher.getAllOpts()
+               + "\n   *** VM Args: " + ManagementFactory.getRuntimeMXBean().getInputArguments().toString();
    }
 
    @Override

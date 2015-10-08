@@ -1,6 +1,7 @@
 package io.tetrapod.core.storage;
 
 import io.tetrapod.core.StructureFactory;
+import io.tetrapod.core.registry.EntityInfo;
 import io.tetrapod.core.serialize.StructureAdapter;
 import io.tetrapod.core.serialize.datasources.TempBufferDataSource;
 import io.tetrapod.core.utils.*;
@@ -24,6 +25,7 @@ public class TetrapodStateMachine extends StorageStateMachine<TetrapodStateMachi
 
    public final static int TETRAPOD_STATE_FILE_VERSION = 1;
 
+   private static final String TETRAPOD_ENTITY_PREFIX         = "tetrapod.entity::";
    private static final String TETRAPOD_PREF_PREFIX           = "tetrapod.prefs::";
    private static final String TETRAPOD_CONTRACT_PREFIX       = "tetrapod.contract::";
    private static final String TETRAPOD_WEBROOT_PREFIX        = "tetrapod.webroot::";
@@ -42,6 +44,9 @@ public class TetrapodStateMachine extends StorageStateMachine<TetrapodStateMachi
    public static final int CLAIM_OWNERSHIP_COMMAND_ID      = 408;
    public static final int RETAIN_OWNERSHIP_COMMAND_ID     = 409;
    public static final int RELEASE_OWNERSHIP_COMMAND_ID    = 410;
+   public static final int ADD_ENTITY_COMMAND_ID           = 411;
+   public static final int MOD_ENTITY_COMMAND_ID           = 412;
+   public static final int DEL_ENTITY_COMMAND_ID           = 413;
 
    public final Map<String, ClusterProperty>      props       = new HashMap<>();
    public final Map<Integer, ContractDescription> contracts   = new HashMap<>();
@@ -49,8 +54,9 @@ public class TetrapodStateMachine extends StorageStateMachine<TetrapodStateMachi
    public final Map<Integer, Admin>               admins      = new HashMap<>();
    public final WebRoutes                         webRoutes   = new WebRoutes();
    public final Map<String, WebRoot>              webRootDirs = new ConcurrentHashMap<>();
+   public final Map<Integer, EntityInfo>          entities    = new ConcurrentHashMap<>();
 
-   // entityId+prefix => Owner
+   // entityId + prefix => Owner
    public final Map<String, Owner> owners     = new ConcurrentHashMap<>();
    public final Map<String, Owner> ownedItems = new ConcurrentHashMap<>();
 
@@ -76,6 +82,9 @@ public class TetrapodStateMachine extends StorageStateMachine<TetrapodStateMachi
       ClaimOwnershipCommand.register(this);
       RetainOwnershipCommand.register(this);
       ReleaseOwnershipCommand.register(this);
+      AddEntityCommand.register(this);
+      DelEntityCommand.register(this);
+      ModEntityCommand.register(this);
       initSecretKey();
    }
 
@@ -136,6 +145,10 @@ public class TetrapodStateMachine extends StorageStateMachine<TetrapodStateMachi
             if (owner.prefix != null) {
                saveOwner(owner, false);
             }
+         } else if (item.key.startsWith(TETRAPOD_ENTITY_PREFIX)) {
+            Entity e = new Entity();
+            e.read(TempBufferDataSource.forReading(item.getData()));
+            addEntity(e, false);
          }
       }
    }
@@ -322,4 +335,39 @@ public class TetrapodStateMachine extends StorageStateMachine<TetrapodStateMachi
          saveOwner(owner, true);
       }
    }
+
+   public void addEntity(Entity entity, boolean write) {      
+      assert entity.entityId > 0;
+      if (write) {
+         // store in state machine as a StorageItem
+         putItem(TETRAPOD_ENTITY_PREFIX + entity.entityId, (byte[]) entity.toRawForm(TempBufferDataSource.forWriting()));
+      }
+      final EntityInfo info = new EntityInfo(entity);
+      entities.put(entity.entityId, info);
+      logger.info(" Add Entity = {}", info);
+   }
+
+   public void updateEntity(int entityId, int status, int build, int version) {
+      final EntityInfo info = entities.get(entityId);
+      if (info != null) {
+         // update fields
+         info.status = status;
+         info.build = build;
+         info.version = version;
+
+         // store in state machine as a StorageItem
+         putItem(TETRAPOD_ADMIN_PREFIX + entityId, (byte[]) info.toRawForm(TempBufferDataSource.forWriting()));
+      } else {
+         throw new RuntimeException("Entity not found " + entityId);
+      }
+   }
+
+   public void delEntity(int entityId) {
+      logger.info(" Deleting Entity = {}", entityId);
+      // remove from backing store
+      removeItem(TETRAPOD_ENTITY_PREFIX + entityId);
+      // remove from local caches
+      entities.remove(entityId);
+   }
+
 }
