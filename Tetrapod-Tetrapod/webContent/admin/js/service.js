@@ -1,7 +1,7 @@
 define(["knockout", "jquery", "bootbox", "alert", "app", "chart", "modules/builder"], function(ko, $, bootbox, Alert, app, Chart, builder) {
    // static variables
 
-   var Core = app.server.consts["Core.Core"];
+   var Core = app.coreConsts;
 
    return Service; // not using new means this returns a constructor function (ie class)
 
@@ -27,20 +27,24 @@ define(["knockout", "jquery", "bootbox", "alert", "app", "chart", "modules/build
       self.requestStats = ko.observableArray([]);
 
       self.iconURL = ko.observable("media/gear.gif");
+      subscribe();
 
-      app.server.sendTo("ServiceStatsSubscribe", {}, self.entityId, app.server.logResponse)
-
-      app.server.sendTo("ServiceDetails", {}, self.entityId, function(result) {
-         if (!result.isError()) {
-            self.iconURL(result.iconURL);
-            self.metadata = result.metadata;
-            if (result.commands) {
-               for (var i = 0; i < result.commands.length; i++) {
-                  self.commands.push(result.commands[i]);
+      function subscribe() {
+         app.server.sendTo("ServiceDetails", {}, self.entityId, function(result) {
+            if (!result.isError()) {
+               self.iconURL(result.iconURL);
+               self.metadata = result.metadata;
+               if (result.commands) {
+                  for (var i = 0; i < result.commands.length; i++) {
+                     self.commands.push(result.commands[i]);
+                  }
                }
+               app.server.sendTo("ServiceStatsSubscribe", {}, self.entityId, app.server.logResponse)
+            } else if (result.errorCode == Core.SERVICE_UNAVAILABLE) {
+               setTimeout(1000, subscribe());
             }
-         }
-      });
+         });
+      }
 
       // we need to run this after KO is done binding, or jquery can't find the element by id
       setTimeout(function() {
@@ -222,7 +226,7 @@ define(["knockout", "jquery", "bootbox", "alert", "app", "chart", "modules/build
       function showRequestStats() {
          fetchRequestStats();
       }
-      
+
       function fetchRequestStats() {
          var currentTimeMillis = new Date().getTime();
          var minTime = currentTimeMillis - 1000 * 60 * 15;
