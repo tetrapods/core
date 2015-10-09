@@ -41,8 +41,6 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
    public final SecureRandom                       random                = new SecureRandom();
 
-   public final io.tetrapod.core.registry.Registry registry              = new io.tetrapod.core.registry.Registry(this);
-
    private Topic                                   clusterTopic;
    private Topic                                   registryTopic;
    private Topic                                   servicesTopic;
@@ -54,6 +52,8 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    private final TetrapodWorker                    worker;
 
    protected final TetrapodCluster                 cluster               = new TetrapodCluster(this);
+
+   public final io.tetrapod.core.registry.Registry registry              = new io.tetrapod.core.registry.Registry(this, cluster);
 
    private AdminAccounts                           adminAccounts;
 
@@ -571,7 +571,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
             }
          }
       } else {
-         logger.error("Could not find subscriber {} for topic {}", sub, topic);
+         logger.error("Could not find subscriber {} for topic {}", sub.entityId, topic);
       }
    }
 
@@ -708,6 +708,9 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
                         }
                      }
                   });
+               }
+               if (ses == null) {
+                  registry.setGone(e);
                }
             }
          }

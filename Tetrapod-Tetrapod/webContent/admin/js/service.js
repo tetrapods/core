@@ -27,9 +27,9 @@ define(["knockout", "jquery", "bootbox", "alert", "app", "chart", "modules/build
       self.requestStats = ko.observableArray([]);
 
       self.iconURL = ko.observable("media/gear.gif");
-      subscribe();
+      subscribe(1);
 
-      function subscribe() {
+      function subscribe(attempt) {
          app.server.sendTo("ServiceDetails", {}, self.entityId, function(result) {
             if (!result.isError()) {
                self.iconURL(result.iconURL);
@@ -41,7 +41,7 @@ define(["knockout", "jquery", "bootbox", "alert", "app", "chart", "modules/build
                }
                app.server.sendTo("ServiceStatsSubscribe", {}, self.entityId, app.server.logResponse)
             } else if (result.errorCode == Core.SERVICE_UNAVAILABLE) {
-               setTimeout(1000, subscribe());
+               setTimeout(subscribe(attempt + 1), 1000 * attempt);
             }
          });
       }

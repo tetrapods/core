@@ -89,6 +89,7 @@ public class TetrapodCluster extends Storage
 
          if (host.equals(Util.getHostName()) && port == service.getClusterPort()) {
             myPeerId = peerId;
+            service.registry.setParentId(entityId);
          }
 
          addMember(entityId, host, service.getServicePort(), port, null);
@@ -1036,16 +1037,21 @@ public class TetrapodCluster extends Storage
       return state.entities.get(entityId);
    }
 
+   public Collection<EntityInfo> getEntities() {
+      return state.entities.values();
+   }
+
+
    private void onAddEntityCommand(AddEntityCommand command) {
-      service.registry.addEntity(state.entities.get(command.getEntity().entityId));
+      service.registry.onAddEntityCommand(state.entities.get(command.getEntity().entityId));
    }
 
    private void onModEntityCommand(ModEntityCommand command) {
-      service.registry.updateEntity(state.entities.get(command.getEntityId()));
+      service.registry.onModEntityCommand(state.entities.get(command.getEntityId()));
    }
 
    private void onDelEntityCommand(DelEntityCommand command) {
-      service.registry.delEntity(state.entities.get(command.getEntityId()));
+      service.registry.onDelEntityCommand(command.getEntityId());
    }
 
 }

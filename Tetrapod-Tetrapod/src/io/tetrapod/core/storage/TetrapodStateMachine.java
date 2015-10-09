@@ -23,45 +23,45 @@ import javax.crypto.SecretKey;
  */
 public class TetrapodStateMachine extends StorageStateMachine<TetrapodStateMachine> {
 
-   public final static int TETRAPOD_STATE_FILE_VERSION = 1;
+   public final static int                        TETRAPOD_STATE_FILE_VERSION     = 1;
 
-   private static final String TETRAPOD_ENTITY_PREFIX         = "tetrapod.entity::";
-   private static final String TETRAPOD_PREF_PREFIX           = "tetrapod.prefs::";
-   private static final String TETRAPOD_CONTRACT_PREFIX       = "tetrapod.contract::";
-   private static final String TETRAPOD_WEBROOT_PREFIX        = "tetrapod.webroot::";
-   private static final String TETRAPOD_ADMIN_PREFIX          = "tetrapod.admin::";
-   private static final String TETRAPOD_ADMIN_ACCOUNT_SEQ_KEY = "tetrapod.admin.account.seq";
-   private static final String TETRAPOD_OWNER_PREFIX          = "tetrapod.owner::";
+   private static final String                    TETRAPOD_ENTITY_PREFIX          = "tetrapod.entity::";
+   private static final String                    TETRAPOD_PREF_PREFIX            = "tetrapod.prefs::";
+   private static final String                    TETRAPOD_CONTRACT_PREFIX        = "tetrapod.contract::";
+   private static final String                    TETRAPOD_WEBROOT_PREFIX         = "tetrapod.webroot::";
+   private static final String                    TETRAPOD_ADMIN_PREFIX           = "tetrapod.admin::";
+   private static final String                    TETRAPOD_ADMIN_ACCOUNT_SEQ_KEY  = "tetrapod.admin.account.seq";
+   private static final String                    TETRAPOD_OWNER_PREFIX           = "tetrapod.owner::";
 
-   public static final int SET_CLUSTER_PROPERTY_COMMAND_ID = 400;
-   public static final int DEL_CLUSTER_PROPERTY_COMMAND_ID = 401;
-   public static final int REGISTER_CONTRACT_COMMAND_ID    = 402;
-   public static final int SET_WEB_ROUTE_COMMAND_ID        = 403;
-   public static final int DEL_WEB_ROUTE_COMMAND_ID        = 404;
-   public static final int ADD_ADMIN_COMMAND_ID            = 405;
-   public static final int DEL_ADMIN_COMMAND_ID            = 406;
-   public static final int MOD_ADMIN_COMMAND_ID            = 407;
-   public static final int CLAIM_OWNERSHIP_COMMAND_ID      = 408;
-   public static final int RETAIN_OWNERSHIP_COMMAND_ID     = 409;
-   public static final int RELEASE_OWNERSHIP_COMMAND_ID    = 410;
-   public static final int ADD_ENTITY_COMMAND_ID           = 411;
-   public static final int MOD_ENTITY_COMMAND_ID           = 412;
-   public static final int DEL_ENTITY_COMMAND_ID           = 413;
+   public static final int                        SET_CLUSTER_PROPERTY_COMMAND_ID = 400;
+   public static final int                        DEL_CLUSTER_PROPERTY_COMMAND_ID = 401;
+   public static final int                        REGISTER_CONTRACT_COMMAND_ID    = 402;
+   public static final int                        SET_WEB_ROUTE_COMMAND_ID        = 403;
+   public static final int                        DEL_WEB_ROUTE_COMMAND_ID        = 404;
+   public static final int                        ADD_ADMIN_COMMAND_ID            = 405;
+   public static final int                        DEL_ADMIN_COMMAND_ID            = 406;
+   public static final int                        MOD_ADMIN_COMMAND_ID            = 407;
+   public static final int                        CLAIM_OWNERSHIP_COMMAND_ID      = 408;
+   public static final int                        RETAIN_OWNERSHIP_COMMAND_ID     = 409;
+   public static final int                        RELEASE_OWNERSHIP_COMMAND_ID    = 410;
+   public static final int                        ADD_ENTITY_COMMAND_ID           = 411;
+   public static final int                        MOD_ENTITY_COMMAND_ID           = 412;
+   public static final int                        DEL_ENTITY_COMMAND_ID           = 413;
 
-   public final Map<String, ClusterProperty>      props       = new HashMap<>();
-   public final Map<Integer, ContractDescription> contracts   = new HashMap<>();
-   public final Map<String, WebRootDef>           webRootDefs = new HashMap<>();
-   public final Map<Integer, Admin>               admins      = new HashMap<>();
-   public final WebRoutes                         webRoutes   = new WebRoutes();
-   public final Map<String, WebRoot>              webRootDirs = new ConcurrentHashMap<>();
-   public final Map<Integer, EntityInfo>          entities    = new ConcurrentHashMap<>();
+   public final Map<String, ClusterProperty>      props                           = new HashMap<>();
+   public final Map<Integer, ContractDescription> contracts                       = new HashMap<>();
+   public final Map<String, WebRootDef>           webRootDefs                     = new HashMap<>();
+   public final Map<Integer, Admin>               admins                          = new HashMap<>();
+   public final WebRoutes                         webRoutes                       = new WebRoutes();
+   public final Map<String, WebRoot>              webRootDirs                     = new ConcurrentHashMap<>();
+   public final Map<Integer, EntityInfo>          entities                        = new ConcurrentHashMap<>();
 
    // entityId + prefix => Owner
-   public final Map<String, Owner> owners     = new ConcurrentHashMap<>();
-   public final Map<String, Owner> ownedItems = new ConcurrentHashMap<>();
+   public final Map<String, Owner>                owners                          = new ConcurrentHashMap<>();
+   public final Map<String, Owner>                ownedItems                      = new ConcurrentHashMap<>();
 
-   private final WebRootInstaller webInstaller = new WebRootInstaller(this);
-   protected SecretKey            secretKey;
+   private final WebRootInstaller                 webInstaller                    = new WebRootInstaller(this);
+   protected SecretKey                            secretKey;
 
    public static class Factory implements StateMachine.Factory<TetrapodStateMachine> {
       public TetrapodStateMachine makeStateMachine() {
@@ -138,7 +138,7 @@ public class TetrapodStateMachine extends StorageStateMachine<TetrapodStateMachi
          } else if (item.key.startsWith(TETRAPOD_ADMIN_PREFIX)) {
             Admin admin = new Admin();
             admin.read(TempBufferDataSource.forReading(item.getData()));
-            addAdminUser(admin, false);
+           addAdminUser(admin, false);
          } else if (item.key.startsWith(TETRAPOD_OWNER_PREFIX)) {
             Owner owner = new Owner();
             owner.read(TempBufferDataSource.forReading(item.getData()));
@@ -277,7 +277,7 @@ public class TetrapodStateMachine extends StorageStateMachine<TetrapodStateMachi
       // see if there is a current owner
       final Owner owner = ownedItems.get(key);
       if (owner != null) {
-         assert(prefix.equals(owner.prefix));
+         assert (prefix.equals(owner.prefix));
          final int graceTime = 1000; // one second of grace time to buffer against an expiry race
          if (owner.expiry + graceTime > curTime) {
             logger.debug("Already owned by {}", owner.dump());
@@ -336,7 +336,7 @@ public class TetrapodStateMachine extends StorageStateMachine<TetrapodStateMachi
       }
    }
 
-   public void addEntity(Entity entity, boolean write) {      
+   public void addEntity(Entity entity, boolean write) {
       assert entity.entityId > 0;
       if (write) {
          // store in state machine as a StorageItem
@@ -356,9 +356,19 @@ public class TetrapodStateMachine extends StorageStateMachine<TetrapodStateMachi
          info.version = version;
 
          // store in state machine as a StorageItem
-         putItem(TETRAPOD_ADMIN_PREFIX + entityId, (byte[]) info.toRawForm(TempBufferDataSource.forWriting()));
+         putItem(TETRAPOD_ENTITY_PREFIX + entityId, (byte[]) info.toRawForm(TempBufferDataSource.forWriting()));
+
+         if ((info.status & Core.STATUS_GONE) != 0 && info.isTetrapod()) {
+            for (EntityInfo child : entities.values()) {
+               if (child.parentId == info.entityId && (child.status & Core.STATUS_GONE) == 0) {
+                  child.setStatus(child.status | Core.STATUS_GONE);
+                  // store in state machine as a StorageItem
+                  putItem(TETRAPOD_ENTITY_PREFIX + child.entityId, (byte[]) child.toRawForm(TempBufferDataSource.forWriting()));
+               }
+            }
+         }
       } else {
-         throw new RuntimeException("Entity not found " + entityId);
+         logger.warn("Entity not found " + entityId);
       }
    }
 

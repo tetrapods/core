@@ -7,19 +7,22 @@ import io.tetrapod.raft.StateMachine.CommandFactory;
 
 public class ModEntityCommand implements Command<TetrapodStateMachine> {
 
-   public static final int COMMAND_ID = TetrapodStateMachine.MOD_ENTITY_COMMAND_ID;
+   public static final int COMMAND_ID     = TetrapodStateMachine.MOD_ENTITY_COMMAND_ID;
 
-   private final byte commandVersion = 1;
+   private final byte      commandVersion = 1;
 
-   private int entityId;
-   private int status;
-   private int build;
-   private int version;
+   private int             entityId;
+   private int             status;
+   private int             build;
+   private int             version;
 
    public ModEntityCommand() {}
 
    public ModEntityCommand(int entityId, int status, int build, int version) {
       this.entityId = entityId;
+      this.status = status;
+      this.build = build;
+      this.version = version;
    }
 
    @Override

@@ -182,6 +182,9 @@ public class EntityInfo extends Entity implements Comparable<EntityInfo> {
    }
 
    public synchronized long getGoneSince() {
+      if (goneSince == null) {
+         goneSince = System.currentTimeMillis();
+      }
       return goneSince;
    }
 

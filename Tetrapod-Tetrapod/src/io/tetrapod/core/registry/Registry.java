@@ -1,59 +1,68 @@
 package io.tetrapod.core.registry;
 
 import static io.tetrapod.protocol.core.MessageHeader.TO_ENTITY;
-import io.tetrapod.core.Session;
-import io.tetrapod.core.rpc.*;
-import io.tetrapod.core.web.LongPollQueue;
-import io.tetrapod.protocol.core.*;
 
 import java.util.*;
-import java.util.concurrent.*;
-import java.util.concurrent.locks.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import org.slf4j.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import io.tetrapod.core.Session;
+import io.tetrapod.core.rpc.Message;
+import io.tetrapod.core.rpc.MessageContext;
+import io.tetrapod.core.storage.*;
+import io.tetrapod.core.web.LongPollQueue;
+import io.tetrapod.protocol.core.*;
+import io.tetrapod.raft.Entry;
+import io.tetrapod.raft.RaftRPC.ClientResponseHandler;
 
 /**
  * The global registry of all current actors in the system and their published topics and subscriptions
  * 
  * Each tetrapod service owns a shard of the registry and has a full replica of all other shards.
  */
+@Deprecated
 public class Registry implements TetrapodContract.Registry.API {
 
-   protected static final Logger logger = LoggerFactory.getLogger(Registry.class);
+   protected static final Logger                logger          = LoggerFactory.getLogger(Registry.class);
 
-   public static final int MAX_PARENTS = 0x000007FF;
-   public static final int MAX_ID      = 0x000FFFFF;
+   public static final int                      MAX_PARENTS     = 0x000007FF;
+   public static final int                      MAX_ID          = 0x000FFFFF;
 
-   public static final int PARENT_ID_SHIFT = 20;
-   public static final int PARENT_ID_MASK  = MAX_PARENTS << PARENT_ID_SHIFT;
-   public static final int BOOTSTRAP_ID    = 1 << PARENT_ID_SHIFT;
+   public static final int                      PARENT_ID_SHIFT = 20;
+   public static final int                      PARENT_ID_MASK  = MAX_PARENTS << PARENT_ID_SHIFT;
+   public static final int                      BOOTSTRAP_ID    = 1 << PARENT_ID_SHIFT;
 
    /**
     * A read-write lock is used to synchronize subscriptions to the registry state, and it is a little counter-intuitive. When making write
     * operations to the registry, we grab the read lock to allow concurrent writes across the registry. When we need to send the current
     * state snapshot to another cluster member, we grab the write lock for exclusive access to send a consistent state.
     */
-   public final ReadWriteLock lock = new ReentrantReadWriteLock();
+   public final ReadWriteLock                   lock            = new ReentrantReadWriteLock();
 
    /**
     * Our entityId
     */
-   private int parentId;
+   private int                                  parentId;
 
    /**
     * Our local entity id counter
     */
-   private int counter;
+   private int                                  counter;
 
    /**
     * Maps entityId => EntityInfo
     */
-   private final Map<Integer, EntityInfo> entities = new ConcurrentHashMap<>();
+   private final Map<Integer, EntityInfo>       entities        = new ConcurrentHashMap<>();
 
    /**
     * Maps contractId => List of EntityInfos that provide that service
     */
-   private final Map<Integer, List<EntityInfo>> services = new ConcurrentHashMap<>();
+   private final Map<Integer, List<EntityInfo>> services        = new ConcurrentHashMap<>();
 
    public static interface RegistryBroadcaster {
       public void broadcastRegistryMessage(Message msg);
@@ -62,9 +71,11 @@ public class Registry implements TetrapodContract.Registry.API {
    }
 
    private final RegistryBroadcaster broadcaster;
+   private final TetrapodCluster     cluster;
 
-   public Registry(RegistryBroadcaster broadcaster) {
+   public Registry(RegistryBroadcaster broadcaster, TetrapodCluster cluster) {
       this.broadcaster = broadcaster;
+      this.cluster = cluster;
    }
 
    public synchronized void setParentId(int id) {
@@ -76,12 +87,13 @@ public class Registry implements TetrapodContract.Registry.API {
    }
 
    public Collection<EntityInfo> getEntities() {
+      //return cluster.getEntities();
       return entities.values();
    }
 
    public List<EntityInfo> getChildren() {
       final List<EntityInfo> children = new ArrayList<>();
-      for (EntityInfo e : entities.values()) {
+      for (EntityInfo e : getEntities()) {
          if (e.parentId == parentId && e.entityId != parentId) {
             children.add(e);
          }
@@ -91,7 +103,7 @@ public class Registry implements TetrapodContract.Registry.API {
 
    public List<EntityInfo> getServices() {
       final List<EntityInfo> list = new ArrayList<>();
-      for (EntityInfo e : entities.values()) {
+      for (EntityInfo e : getEntities()) {
          if (e.isService()) {
             list.add(e);
          }
@@ -101,6 +113,7 @@ public class Registry implements TetrapodContract.Registry.API {
 
    public EntityInfo getEntity(int entityId) {
       return entities.get(entityId);
+      //return cluster.getEntity(entityId);
    }
 
    public EntityInfo getFirstAvailableService(int contractId) {
@@ -137,7 +150,7 @@ public class Registry implements TetrapodContract.Registry.API {
    public synchronized int issueId() {
       while (true) {
          int id = parentId | (++counter % MAX_ID);
-         if (!entities.containsKey(id)) {
+         if (getEntity(id) == null) {
             return id;
          }
       }
@@ -172,6 +185,7 @@ public class Registry implements TetrapodContract.Registry.API {
    //   }
 
    private void clearAllTopicsAndSubscriptions(final EntityInfo e) {
+      logger.debug("clearAllTopicsAndSubscriptions: {}", e);
       // Unpublish all their topics
       for (Topic topic : e.getTopics()) {
          unpublish(e, topic.topicId);
@@ -190,45 +204,30 @@ public class Registry implements TetrapodContract.Registry.API {
    }
 
    public void unregister(final EntityInfo e) {
-      lock.readLock().lock();
-      try {
-         clearAllTopicsAndSubscriptions(e);
-
-         entities.remove(e.entityId);
-
-         if (e.parentId == parentId) {
-            broadcaster.broadcastRegistryMessage(new EntityUnregisteredMessage(e.entityId));
-         }
-         if (e.isService()) {
-            broadcaster.broadcastServicesMessage(new ServiceRemovedMessage(e.entityId));
-         }
-
-         if (e.isService()) {
-            List<EntityInfo> list = services.get(e.contractId);
-            if (list != null)
-               list.remove(e);
-         }
-      } finally {
-         lock.readLock().unlock();
-      }
-      // HACK -- would be 'cleaner' as a listener interface
-      LongPollQueue.clearEntity(e.entityId);
+      cluster.executeCommand(new DelEntityCommand(e.entityId), new ClientResponseHandler<TetrapodStateMachine>() {
+         @Override
+         public void handleResponse(Entry<TetrapodStateMachine> entry) {}
+      });
    }
 
-   public void updateStatus(final EntityInfo e, int status) {
-      lock.readLock().lock();
-      try {
-         e.setStatus(status);
-         if (e.parentId == parentId) {
-            broadcaster.broadcastRegistryMessage(new EntityUpdatedMessage(e.entityId, status));
-         }
-         if (e.isService()) {
-            broadcaster.broadcastServicesMessage(new ServiceUpdatedMessage(e.entityId, status));
-         }
-      } finally {
-         lock.readLock().unlock();
-      }
+   public void updateStatus(EntityInfo e, int status) {
+      cluster.executeCommand(new ModEntityCommand(e.entityId, status, e.build, e.version), null);
    }
+
+   //   public void updateStatus(final EntityInfo e, int status) {
+   //      lock.readLock().lock();
+   //      try {
+   //         e.setStatus(status);
+   //         if (e.parentId == parentId) {
+   //            broadcaster.broadcastRegistryMessage(new EntityUpdatedMessage(e.entityId, status));
+   //         }
+   //         if (e.isService()) {
+   //            broadcaster.broadcastServicesMessage(new ServiceUpdatedMessage(e.entityId, status));
+   //         }
+   //      } finally {
+   //         lock.readLock().unlock();
+   //      }
+   //   }
 
    public Topic publish(int entityId) {
       lock.readLock().lock();
@@ -298,7 +297,7 @@ public class Registry implements TetrapodContract.Registry.API {
    }
 
    public void unsubscribe(final EntityInfo publisher, final int topicId, final int entityId, final boolean all) {
-      assert(publisher != null);
+      assert (publisher != null);
       lock.readLock().lock();
       try {
          final Topic topic = publisher.getTopic(topicId);
@@ -313,8 +312,8 @@ public class Registry implements TetrapodContract.Registry.API {
    }
 
    public void unsubscribe(final EntityInfo publisher, Topic topic, final int entityId, final boolean all) {
-      assert(publisher != null);
-      assert(topic != null);
+      assert (publisher != null);
+      assert (topic != null);
       lock.readLock().lock();
       try {
          final EntityInfo e = getEntity(entityId);
@@ -520,7 +519,7 @@ public class Registry implements TetrapodContract.Registry.API {
    //////////////////////////////////////////////////////////////////////////////////////////
 
    public synchronized void logStats(boolean includeClients) {
-      List<EntityInfo> list = new ArrayList<>(entities.values());
+      List<EntityInfo> list = new ArrayList<>(getEntities());
       Collections.sort(list);
       logger.info("========================== TETRAPOD CLUSTER REGISTRY ============================");
       for (EntityInfo e : list) {
@@ -550,35 +549,27 @@ public class Registry implements TetrapodContract.Registry.API {
          return;
       }
 
-      lock.readLock().lock();
-      try {
-         updateStatus(e, e.status | Core.STATUS_GONE);
-         e.setSession(null);
-         if (e.isTetrapod()) {
-            for (EntityInfo child : entities.values()) {
-               if (child.parentId == e.entityId) {
-                  updateStatus(child, child.status | Core.STATUS_GONE);
-               }
-            }
-         }
-      } finally {
-         lock.readLock().unlock();
-      }
+      cluster.executeCommand(new ModEntityCommand(e.entityId, e.status | Core.STATUS_GONE, e.build, e.version), null);
+      //         updateStatus(e, e.status | Core.STATUS_GONE);
+      e.setSession(null);
+      //         if (e.isTetrapod()) {
+      //            for (EntityInfo child : entities.values()) {
+      //               if (child.parentId == e.entityId) {
+      //                  updateStatus(child, child.status | Core.STATUS_GONE);
+      //               }
+      //            }
+      //         }
    }
 
    public void clearGone(EntityInfo e, Session ses) {
-      lock.readLock().lock();
-      try {
-         updateStatus(e, e.status & ~Core.STATUS_GONE);
-         e.setSession(ses);
-      } finally {
-         lock.readLock().unlock();
-      }
+      cluster.executeCommand(new ModEntityCommand(e.entityId, e.status & ~Core.STATUS_GONE, e.build, e.version), null);
+      // updateStatus(e, e.status & ~Core.STATUS_GONE);
+      e.setSession(ses);
    }
 
    public int getNumActiveClients() {
       int count = 0;
-      for (EntityInfo e : entities.values()) {
+      for (EntityInfo e : getEntities()) {
          if (e.isClient() && !e.isGone()) {
             count++;
          }
@@ -586,48 +577,63 @@ public class Registry implements TetrapodContract.Registry.API {
       return count;
    }
 
-   public void addEntity(final EntityInfo entity) {
+   public void onAddEntityCommand(final EntityInfo entity) {
       lock.readLock().lock();
       try {
-         if (entities.containsKey(entity.entityId)) {
+         if (getEntity(entity.entityId) != null && entity.entityId != parentId) {
             entity.queue(new Runnable() {
                public void run() {
                   clearAllTopicsAndSubscriptions(entity);
                }
             });
          }
-
          entities.put(entity.entityId, entity);
-
          if (entity.isService()) {
             // register their service in our services list
             ensureServicesList(entity.contractId).add(entity);
          }
-         if (entity.parentId == parentId && entity.entityId != parentId && broadcaster != null) {
-            broadcaster.broadcastRegistryMessage(new EntityRegisteredMessage(entity));
-         }
          if (entity.isService()) {
             broadcaster.broadcastServicesMessage(new ServiceAddedMessage(entity));
          }
-
       } finally {
          lock.readLock().unlock();
       }
    }
 
-   public void updateEntity(final EntityInfo entity) {
-      entity.queue(new Runnable() {
-         public void run() {
-            updateStatus(entity, entity.status);
-         }
-      });
+   public void onModEntityCommand(final EntityInfo entity) {
+      if (entity != null) {
+         entity.queue(new Runnable() {
+            public void run() {
+               lock.readLock().lock();
+               try {
+                  if (entity.isService()) {
+                     broadcaster.broadcastServicesMessage(new ServiceUpdatedMessage(entity.entityId, entity.status));
+                  }
+               } finally {
+                  lock.readLock().unlock();
+               }
+            }
+         });
+      }
    }
 
-   public void delEntity(final EntityInfo entity) {
-      entity.queue(new Runnable() {
-         public void run() {
-            unregister(entity);
+   public void onDelEntityCommand(final int entityId) {
+      final EntityInfo e = entities.remove(entityId);
+      clearAllTopicsAndSubscriptions(e); // might need to do this elsewhere...
+      if (e.isService()) {
+         e.queue(new Runnable() {
+            public void run() {
+               broadcaster.broadcastServicesMessage(new ServiceRemovedMessage(e.entityId));
+               // HACK -- would be 'cleaner' as a listener interface
+               LongPollQueue.clearEntity(e.entityId);
+            }
+         });
+         List<EntityInfo> list = services.get(e.contractId);
+         if (list != null) {
+            list.remove(e);
          }
-      });
+      }
+
    }
+
 }
