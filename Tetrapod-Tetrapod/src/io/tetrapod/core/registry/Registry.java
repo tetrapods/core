@@ -156,34 +156,6 @@ public class Registry implements TetrapodContract.Registry.API {
       }
    }
 
-   //   public void register(EntityInfo entity) {
-   //      lock.readLock().lock();
-   //      try {
-   //
-   //         if (entity.entityId <= 0) {
-   //            if (entity.isTetrapod()) {
-   //               throw new RuntimeException("Tetrapod needs an assigned entityId");
-   //            } else {
-   //               entity.entityId = issueId();
-   //            }
-   //         }
-   //
-   //         entities.put(entity.entityId, entity);
-   //         if (entity.isService()) {
-   //            // register their service in our services list
-   //            ensureServicesList(entity.contractId).add(entity);
-   //         }
-   //         if (entity.parentId == parentId && entity.entityId != parentId && broadcaster != null) {
-   //            broadcaster.broadcastRegistryMessage(new EntityRegisteredMessage(entity));
-   //         }
-   //         if (entity.isService()) {
-   //            broadcaster.broadcastServicesMessage(new ServiceAddedMessage(entity));
-   //         }
-   //      } finally {
-   //         lock.readLock().unlock();
-   //      }
-   //   }
-
    private void clearAllTopicsAndSubscriptions(final EntityInfo e) {
       logger.debug("clearAllTopicsAndSubscriptions: {}", e);
       // Unpublish all their topics
@@ -213,21 +185,6 @@ public class Registry implements TetrapodContract.Registry.API {
    public void updateStatus(EntityInfo e, int status) {
       cluster.executeCommand(new ModEntityCommand(e.entityId, status, e.build, e.version), null);
    }
-
-   //   public void updateStatus(final EntityInfo e, int status) {
-   //      lock.readLock().lock();
-   //      try {
-   //         e.setStatus(status);
-   //         if (e.parentId == parentId) {
-   //            broadcaster.broadcastRegistryMessage(new EntityUpdatedMessage(e.entityId, status));
-   //         }
-   //         if (e.isService()) {
-   //            broadcaster.broadcastServicesMessage(new ServiceUpdatedMessage(e.entityId, status));
-   //         }
-   //      } finally {
-   //         lock.readLock().unlock();
-   //      }
-   //   }
 
    public Topic publish(int entityId) {
       lock.readLock().lock();
@@ -580,7 +537,7 @@ public class Registry implements TetrapodContract.Registry.API {
    public void onAddEntityCommand(final EntityInfo entity) {
       lock.readLock().lock();
       try {
-         if (getEntity(entity.entityId) != null && entity.entityId != parentId) {
+         if (getEntity(entity.entityId) != null && entity.parentId != parentId) {
             entity.queue(new Runnable() {
                public void run() {
                   clearAllTopicsAndSubscriptions(entity);
@@ -619,7 +576,6 @@ public class Registry implements TetrapodContract.Registry.API {
 
    public void onDelEntityCommand(final int entityId) {
       final EntityInfo e = entities.remove(entityId);
-      clearAllTopicsAndSubscriptions(e); // might need to do this elsewhere...
       if (e.isService()) {
          e.queue(new Runnable() {
             public void run() {
@@ -634,6 +590,7 @@ public class Registry implements TetrapodContract.Registry.API {
          }
       }
 
+      clearAllTopicsAndSubscriptions(e); // might need to do this elsewhere...
    }
 
 }
