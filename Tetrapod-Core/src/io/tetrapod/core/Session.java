@@ -64,33 +64,33 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
 
    }
 
-   protected static final Logger logger   = LoggerFactory.getLogger(Session.class);
-   protected static final Logger commsLog = LoggerFactory.getLogger("comms");
+   protected static final Logger        logger                     = LoggerFactory.getLogger(Session.class);
+   protected static final Logger        commsLog                   = LoggerFactory.getLogger("comms");
 
-   public static final byte DEFAULT_REQUEST_TIMEOUT    = 30;
-   public static final int  DEFAULT_OVERLOAD_THRESHOLD = 1024 * 128;
+   public static final byte             DEFAULT_REQUEST_TIMEOUT    = 30;
+   public static final int              DEFAULT_OVERLOAD_THRESHOLD = 1024 * 128;
 
-   protected static final AtomicInteger sessionCounter = new AtomicInteger();
+   protected static final AtomicInteger sessionCounter             = new AtomicInteger();
 
-   protected final int sessionNum = sessionCounter.incrementAndGet();
+   protected final int                  sessionNum                 = sessionCounter.incrementAndGet();
 
-   protected final List<Listener>      listeners       = new LinkedList<Listener>();
-   protected final Map<Integer, Async> pendingRequests = new ConcurrentHashMap<>();
-   protected final AtomicInteger       requestCounter  = new AtomicInteger();
-   protected final Session.Helper      helper;
-   protected final SocketChannel       channel;
-   protected final AtomicLong          lastHeardFrom   = new AtomicLong(System.currentTimeMillis());
-   protected final AtomicLong          lastSentTo      = new AtomicLong(System.currentTimeMillis());
+   protected final List<Listener>       listeners                  = new LinkedList<Listener>();
+   protected final Map<Integer, Async>  pendingRequests            = new ConcurrentHashMap<>();
+   protected final AtomicInteger        requestCounter             = new AtomicInteger();
+   protected final Session.Helper       helper;
+   protected final SocketChannel        channel;
+   protected final AtomicLong           lastHeardFrom              = new AtomicLong(System.currentTimeMillis());
+   protected final AtomicLong           lastSentTo                 = new AtomicLong(System.currentTimeMillis());
 
-   protected RelayHandler relayHandler;
+   protected RelayHandler               relayHandler;
 
-   protected int  myId   = 0;
-   protected byte myType = Core.TYPE_ANONYMOUS;
+   protected int                        myId                       = 0;
+   protected byte                       myType                     = Core.TYPE_ANONYMOUS;
 
-   protected int  theirId   = 0;
-   protected byte theirType = Core.TYPE_ANONYMOUS;
+   protected int                        theirId                    = 0;
+   protected byte                       theirType                  = Core.TYPE_ANONYMOUS;
 
-   protected int myContractId;
+   protected int                        myContractId;
 
    public Session(SocketChannel channel, Session.Helper helper) {
       this.channel = channel;
@@ -286,11 +286,12 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
       return makeFrame(new ResponseHeader(requestId, res.getContractId(), res.getStructId()), res, ENVELOPE_RESPONSE);
    }
 
-   public void sendBroadcastMessage(Message msg, byte toType, int toId) {
+   public void sendAltBroadcastMessage(Message msg, int toId) {
       if (getMyEntityId() != 0) {
          if (!commsLogIgnore(msg))
-            commsLog("%s  [B] => %s (to %s:%d)", this, msg.dump(), TO_TYPES[toType], toId);
-         final Object buffer = makeFrame(new MessageHeader(getMyEntityId(), toType, toId, msg.getContractId(), msg.getStructId()), msg,
+            commsLog("%s  [A] => %s (to altId-%d)", this, msg.dump(), toId);
+         final Object buffer = makeFrame(
+                  new MessageHeader(getMyEntityId(), 0, toId, msg.getContractId(), msg.getStructId(), MessageHeader.FLAGS_ALTERNATE), msg,
                   ENVELOPE_BROADCAST);
          if (buffer != null) {
             writeFrame(buffer);
@@ -299,11 +300,24 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
       }
    }
 
-   public void sendMessage(Message msg, byte toType, int toId) {
+   public void sendTopicBroadcastMessage(Message msg, int toId, int topicId) {
       if (getMyEntityId() != 0) {
          if (!commsLogIgnore(msg))
-            commsLog("%s  [M] => %s (to %s:%d)", this, msg.dump(), TO_TYPES[toType], toId);
-         final Object buffer = makeFrame(new MessageHeader(getMyEntityId(), toType, toId, msg.getContractId(), msg.getStructId()), msg,
+            commsLog("%s  [B] => %s (to TOPIC:%d-#%d)", this, msg.dump(), toId, topicId);
+         final Object buffer = makeFrame(new MessageHeader(getMyEntityId(), topicId, toId, msg.getContractId(), msg.getStructId(), (byte) 0),
+                  msg, ENVELOPE_BROADCAST);
+         if (buffer != null) {
+            writeFrame(buffer);
+            getDispatcher().messagesSentCounter.mark();
+         }
+      }
+   }
+
+   public void sendMessage(Message msg, int toId) {
+      if (getMyEntityId() != 0) {
+         if (!commsLogIgnore(msg))
+            commsLog("%s  [M] => %s (to %d)", this, msg.dump(), toId);
+         final Object buffer = makeFrame(new MessageHeader(getMyEntityId(), 0, toId, msg.getContractId(), msg.getStructId(), (byte) 0), msg,
                   ENVELOPE_MESSAGE);
          if (buffer != null) {
             writeFrame(buffer);
@@ -338,11 +352,9 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
       return null;
    }
 
-   public static final String[] TO_TYPES = { "Unknown", "Topic", "Entity", "Alt" };
-
    public void sendRelayedMessage(MessageHeader header, ByteBuf payload, boolean broadcast) {
       if (!commsLogIgnore(header.structId)) {
-         commsLog("%s  [M] ~> Message:%d %s (to %s:%d)", this, header.structId, getNameFor(header), TO_TYPES[header.toType], header.toId);
+         commsLog("%s  [M] ~> Message:%d %s (to%d)", this, header.structId, getNameFor(header), header.toId);
       }
       byte envelope = broadcast ? ENVELOPE_BROADCAST : ENVELOPE_MESSAGE;
       writeFrame(makeFrame(header, payload, envelope));
@@ -353,7 +365,8 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
       int origRequestId = async.header.requestId;
       int newRequestId = addPendingRequest(async);
       if (!commsLogIgnore(header.structId))
-         commsLog("%s  [%d/%d] ~> Request:%s", this, newRequestId, origRequestId, StructureFactory.getName(header.contractId, header.structId));
+         commsLog("%s  [%d/%d] ~> Request:%s", this, newRequestId, origRequestId,
+                  StructureFactory.getName(header.contractId, header.structId));
       // making a new header lets us not worry about synchronizing the change the requestId
       RequestHeader newHeader = new RequestHeader(newRequestId, header.fromId, header.toId, header.fromType, header.timeout, header.version,
                header.contractId, header.structId);

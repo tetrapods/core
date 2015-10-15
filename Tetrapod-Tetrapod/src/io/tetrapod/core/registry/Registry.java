@@ -1,7 +1,5 @@
 package io.tetrapod.core.registry;
 
-import static io.tetrapod.protocol.core.MessageHeader.TO_ENTITY;
-
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -186,16 +184,12 @@ public class Registry implements TetrapodContract.Registry.API {
       cluster.executeCommand(new ModEntityCommand(e.entityId, status, e.build, e.version), null);
    }
 
-   public Topic publish(int entityId) {
+   public Topic publish(int entityId, int topicId) {
       lock.readLock().lock();
       try {
          final EntityInfo e = getEntity(entityId);
          if (e != null) {
-            Topic topic = e.publish();
-            if (e.parentId == parentId) {
-               broadcaster.broadcastRegistryMessage(new TopicPublishedMessage(e.entityId, topic.topicId));
-            }
-            return topic;
+            return e.publish(topicId);
          } else {
             logger.error("Could not find entity {}", e);
          }
@@ -216,9 +210,6 @@ public class Registry implements TetrapodContract.Registry.API {
                   unsubscribe(e, topic, sub.entityId, true);
                }
             }
-            if (e.parentId == parentId) {
-               broadcaster.broadcastRegistryMessage(new TopicUnpublishedMessage(e.entityId, topicId));
-            }
             return true;
          } else {
             logger.info("Could not find topic {} for entity {}", topicId, e);
@@ -236,12 +227,8 @@ public class Registry implements TetrapodContract.Registry.API {
          if (topic != null) {
             final EntityInfo e = getEntity(entityId);
             if (e != null) {
-               topic.subscribe(publisher, e, parentId, once);
+               topic.subscribe(publisher, e, once);
                e.subscribe(topic);
-
-               if (publisher.parentId == parentId) {
-                  broadcaster.broadcastRegistryMessage(new TopicSubscribedMessage(topic.ownerId, topic.topicId, e.entityId, once));
-               }
             } else {
                logger.info("Could not find subscriber {} for topic {}", entityId, topicId);
             }
@@ -273,17 +260,11 @@ public class Registry implements TetrapodContract.Registry.API {
       assert (topic != null);
       lock.readLock().lock();
       try {
-         final EntityInfo e = getEntity(entityId);
-         if (e != null) {
-            final boolean isProxy = !e.isTetrapod() && e.parentId != parentId;
-            if (topic.unsubscribe(e.entityId, e.parentId, isProxy, all)) {
+         if (topic.unsubscribe(entityId, all)) {
+            final EntityInfo e = getEntity(entityId);
+            if (e != null) {
                e.unsubscribe(topic);
             }
-            if (publisher.parentId == parentId) {
-               broadcaster.broadcastRegistryMessage(new TopicUnsubscribedMessage(publisher.entityId, topic.topicId, entityId));
-            }
-         } else {
-            logger.info("Could not find subscriber {} for topic {}", entityId, topic.topicId);
          }
       } finally {
          lock.readLock().unlock();
@@ -296,137 +277,74 @@ public class Registry implements TetrapodContract.Registry.API {
    public void genericMessage(Message message, MessageContext ctx) {}
 
    @Override
-   public void messageEntityRegistered(EntityRegisteredMessage m, MessageContext ctx) {
-      //      // TODO: validate sender    
-      //      if (ctx.header.fromId != parentId) {
-      //         lock.readLock().lock();
-      //         try {
-      //            EntityInfo info = entities.get(m.entity.entityId);
-      //            if (info != null) {
-      //               info.parentId = m.entity.parentId;
-      //               info.reclaimToken = m.entity.reclaimToken;
-      //               info.host = m.entity.host;
-      //               info.status = m.entity.status;
-      //               info.build = m.entity.build;
-      //               info.name = m.entity.name;
-      //               info.version = m.entity.version;
-      //               info.contractId = m.entity.contractId;
-      //               final EntityInfo e = info;
-      //               info.queue(new Runnable() {
-      //                  public void run() {
-      //                     clearAllTopicsAndSubscriptions(e);
-      //                  }
-      //               });
-      //            } else {
-      //               info = new EntityInfo(m.entity);
-      //            }
-      //            register(info);
-      //         } finally {
-      //            lock.readLock().unlock();
-      //         }
-      //      }
-   }
+   public void messageEntityRegistered(EntityRegisteredMessage m, MessageContext ctx) {}
 
    @Override
-   public void messageEntityUnregistered(EntityUnregisteredMessage m, MessageContext ctx) {
-      // TODO: validate sender           
-      //      if (ctx.header.fromId != parentId) {
-      //         final EntityInfo e = getEntity(m.entityId);
-      //         if (e != null) {
-      //            e.queue(new Runnable() {
-      //               public void run() {
-      //                  unregister(e);
-      //               }
-      //            });
-      //         } else {
-      //            logger.error("Could not find entity {} to unregister", m.entityId);
-      //         }
-      //      }
-   }
+   public void messageEntityUnregistered(EntityUnregisteredMessage m, MessageContext ctx) {}
 
    @Override
-   public void messageEntityUpdated(final EntityUpdatedMessage m, MessageContext ctx) {
-      // TODO: validate sender           
-      //      if (ctx.header.fromId != parentId) {
-      //         final EntityInfo e = getEntity(m.entityId);
-      //         if (e != null) {
-      //            e.queue(new Runnable() {
-      //               public void run() {
-      //                  updateStatus(e, m.status);
-      //               }
-      //            });
-      //         } else {
-      //            logger.error("Could not find entity {} to update", m.entityId);
-      //         }
-      //      }
-   }
+   public void messageEntityUpdated(final EntityUpdatedMessage m, MessageContext ctx) {}
 
    @Override
    public void messageTopicPublished(final TopicPublishedMessage m, MessageContext ctx) {
       // TODO: validate sender
-      if (ctx.header.fromId != parentId) {
-         final EntityInfo owner = getEntity(m.ownerId);
-         if (owner != null) {
-            owner.queue(new Runnable() {
-               public void run() {
-                  owner.nextTopicId();// increment our topic counter
-                  owner.publish(m.topicId);
-               }
-            }); // TODO: kick()
-         } else {
-            logger.info("Could not find publisher entity {}", m.ownerId);
-         }
+      logger.info("******* {}", m.dump());
+      final EntityInfo owner = getEntity(m.ownerId);
+      if (owner != null) {
+         owner.queue(new Runnable() {
+            public void run() {
+               owner.publish(m.topicId);
+            }
+         }); // TODO: kick()
+      } else {
+         logger.info("Could not find publisher entity {}", m.ownerId);
       }
    }
 
    @Override
    public void messageTopicUnpublished(final TopicUnpublishedMessage m, MessageContext ctx) {
-      // TODO: validate sender
-      if (ctx.header.fromId != parentId) {
-         final EntityInfo owner = getEntity(m.ownerId);
-         if (owner != null) {
-            owner.queue(new Runnable() {
-               public void run() {
-                  unpublish(owner, m.topicId);
-               }
-            }); // TODO: kick()
-         } else {
-            logger.info("Could not find publisher entity {}", m.ownerId);
-         }
+      logger.info("******* {}", m.dump());
+      final EntityInfo owner = getEntity(m.ownerId);
+      if (owner != null) {
+         owner.queue(new Runnable() {
+            public void run() {
+               unpublish(owner, m.topicId);
+            }
+         }); // TODO: kick()
+      } else {
+         logger.info("Could not find publisher entity {}", m.ownerId);
       }
    }
 
    @Override
    public void messageTopicSubscribed(final TopicSubscribedMessage m, MessageContext ctx) {
-      // TODO: validate sender 
-      if (ctx.header.fromId != parentId) {
-         final EntityInfo owner = getEntity(m.ownerId);
-         if (owner != null) {
-            owner.queue(new Runnable() {
-               public void run() {
-                  subscribe(owner, m.topicId, m.entityId, m.once);
-               }
-            }); // TODO: kick() 
-         } else {
-            logger.info("Could not find publisher entity {}", m.ownerId);
-         }
+      logger.info("******* {}", m.dump());
+
+      final EntityInfo owner = getEntity(m.ownerId);
+      if (owner != null) {
+         owner.queue(new Runnable() {
+            public void run() {
+               subscribe(owner, m.topicId, m.entityId, m.once);
+            }
+         }); // TODO: kick() 
+      } else {
+         logger.info("Could not find publisher entity {}", m.ownerId);
       }
    }
 
    @Override
    public void messageTopicUnsubscribed(final TopicUnsubscribedMessage m, MessageContext ctx) {
-      if (ctx.header.fromId != parentId) {
-         // TODO: validate sender           
-         final EntityInfo owner = getEntity(m.ownerId);
-         if (owner != null) {
-            owner.queue(new Runnable() {
-               public void run() {
-                  unsubscribe(owner, m.topicId, m.entityId, false);
-               }
-            }); // TODO: kick()
-         } else {
-            logger.info("Could not find publisher entity {}", m.ownerId);
-         }
+      logger.info("******* {}", m.dump());
+
+      final EntityInfo owner = getEntity(m.ownerId);
+      if (owner != null) {
+         owner.queue(new Runnable() {
+            public void run() {
+               unsubscribe(owner, m.topicId, m.entityId, false);
+            }
+         }); // TODO: kick()
+      } else {
+         logger.info("Could not find publisher entity {}", m.ownerId);
       }
    }
 
@@ -437,41 +355,42 @@ public class Registry implements TetrapodContract.Registry.API {
 
    //////////////////////////////////////////////////////////////////////////////////////////
 
+   @Deprecated
    public void sendRegistryState(final Session session, final int toEntityId, final int topicId) {
       lock.writeLock().lock();
       try {
          // Sends all current entities -- ourselves, and our children
-         final EntityInfo me = getEntity(parentId);
-         session.sendMessage(new EntityRegisteredMessage(me), TO_ENTITY, toEntityId);
-         for (Topic t : me.getTopics()) {
-            session.sendMessage(new TopicPublishedMessage(me.entityId, t.topicId), TO_ENTITY, toEntityId);
-         }
-
-         for (EntityInfo e : getChildren()) {
-            session.sendMessage(new EntityRegisteredMessage(e), TO_ENTITY, toEntityId);
-            for (Topic t : e.getTopics()) {
-               session.sendMessage(new TopicPublishedMessage(e.entityId, t.topicId), TO_ENTITY, toEntityId);
-            }
-         }
-         // send topic info
-         // OPTIMIZE: could be optimized greatly with custom messages, but this is very simple
-         sendSubscribers(me, session, toEntityId, topicId);
-         for (EntityInfo e : getChildren()) {
-            sendSubscribers(e, session, toEntityId, topicId);
-         }
-         session.sendMessage(new EntityListCompleteMessage(), TO_ENTITY, toEntityId);
+         //         final EntityInfo me = getEntity(parentId);
+         //         session.sendMessage(new EntityRegisteredMessage(me), TO_ENTITY, toEntityId);
+         //         for (Topic t : me.getTopics()) {
+         //            session.sendMessage(new TopicPublishedMessage(me.entityId, t.topicId), TO_ENTITY, toEntityId);
+         //         }
+         //
+         //         for (EntityInfo e : getChildren()) {
+         //            session.sendMessage(new EntityRegisteredMessage(e), TO_ENTITY, toEntityId);
+         //            for (Topic t : e.getTopics()) {
+         //               session.sendMessage(new TopicPublishedMessage(e.entityId, t.topicId), TO_ENTITY, toEntityId);
+         //            }
+         //         }
+         //         // send topic info
+         //         // OPTIMIZE: could be optimized greatly with custom messages, but this is very simple
+         //         sendSubscribers(me, session, toEntityId, topicId);
+         //         for (EntityInfo e : getChildren()) {
+         //            sendSubscribers(e, session, toEntityId, topicId);
+         //         }
+         session.sendMessage(new EntityListCompleteMessage(), toEntityId);
       } finally {
          lock.writeLock().unlock();
       }
    }
 
-   private void sendSubscribers(final EntityInfo e, final Session session, final int toEntityId, final int topicId) {
-      for (Topic t : e.getTopics()) {
-         for (Subscriber s : t.getSubscribers()) {
-            session.sendMessage(new TopicSubscribedMessage(t.ownerId, t.topicId, s.entityId, false), TO_ENTITY, toEntityId);
-         }
-      }
-   }
+   //   private void sendSubscribers(final EntityInfo e, final Session session, final int toEntityId, final int topicId) {
+   //      for (Topic t : e.getTopics()) {
+   //         for (Subscriber s : t.getSubscribers()) {
+   //            session.sendMessage(new TopicSubscribedMessage(t.ownerId, t.topicId, s.entityId, false), TO_ENTITY, toEntityId);
+   //         }
+   //      }
+   //   }
 
    //////////////////////////////////////////////////////////////////////////////////////////
 
@@ -576,21 +495,23 @@ public class Registry implements TetrapodContract.Registry.API {
 
    public void onDelEntityCommand(final int entityId) {
       final EntityInfo e = entities.remove(entityId);
-      if (e.isService()) {
-         e.queue(new Runnable() {
-            public void run() {
-               broadcaster.broadcastServicesMessage(new ServiceRemovedMessage(e.entityId));
-               // HACK -- would be 'cleaner' as a listener interface
-               LongPollQueue.clearEntity(e.entityId);
+      if (e != null) {
+         if (e.isService()) {
+            e.queue(new Runnable() {
+               public void run() {
+                  broadcaster.broadcastServicesMessage(new ServiceRemovedMessage(e.entityId));
+                  // HACK -- would be 'cleaner' as a listener interface
+                  LongPollQueue.clearEntity(e.entityId);
+               }
+            });
+            List<EntityInfo> list = services.get(e.contractId);
+            if (list != null) {
+               list.remove(e);
             }
-         });
-         List<EntityInfo> list = services.get(e.contractId);
-         if (list != null) {
-            list.remove(e);
          }
-      }
 
-      clearAllTopicsAndSubscriptions(e); // might need to do this elsewhere...
+         clearAllTopicsAndSubscriptions(e); // might need to do this elsewhere...
+      }
    }
 
 }

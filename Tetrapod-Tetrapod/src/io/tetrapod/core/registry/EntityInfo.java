@@ -1,23 +1,23 @@
 package io.tetrapod.core.registry;
 
-import io.tetrapod.core.*;
-import io.tetrapod.protocol.core.*;
-
 import java.util.*;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.locks.*;
 
-import org.slf4j.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import io.tetrapod.core.ServiceCache;
+import io.tetrapod.core.Session;
+import io.tetrapod.core.utils.SequentialWorkQueue;
+import io.tetrapod.protocol.core.Core;
+import io.tetrapod.protocol.core.Entity;
 
 /**
  * All the meta data associated with a tetrapod entity
  */
 public class EntityInfo extends Entity implements Comparable<EntityInfo> {
 
-   public static final Logger logger = LoggerFactory.getLogger(EntityInfo.class);
-
-   protected int topicCounter;
+   public static final Logger    logger      = LoggerFactory.getLogger(EntityInfo.class);
 
    /**
     * This entity's published topics
@@ -31,9 +31,9 @@ public class EntityInfo extends Entity implements Comparable<EntityInfo> {
     * 
     * Maps topic key => Topic
     */
-   protected Map<Long, Topic> subscriptions;
+   protected Map<Long, Topic>    subscriptions;
 
-   protected Session session;
+   protected Session             session;
 
    /**
     * An alternate not-necessarily-unique ID. This can be set by a service and used as a broadcast target. This is only set on the tetrapod
@@ -41,11 +41,10 @@ public class EntityInfo extends Entity implements Comparable<EntityInfo> {
     */
    protected final AtomicInteger alternateId = new AtomicInteger(0);
 
-   protected Long lastContact;
-   protected Long goneSince;
+   protected Long                lastContact;
+   protected Long                goneSince;
 
-   protected Lock            consumerLock;
-   protected Queue<Runnable> queue;
+   protected SequentialWorkQueue queue;
 
    public EntityInfo() {}
 
@@ -54,7 +53,7 @@ public class EntityInfo extends Entity implements Comparable<EntityInfo> {
    }
 
    public EntityInfo(int entityId, int parentId, long reclaimToken, String host, int status, byte type, String name, int build, int version,
-         int contractId) {
+            int contractId) {
       super(entityId, parentId, reclaimToken, host, status, type, name, build, version, contractId);
    }
 
@@ -95,21 +94,7 @@ public class EntityInfo extends Entity implements Comparable<EntityInfo> {
       return topics == null ? null : topics.get(topicId);
    }
 
-   public synchronized Topic publish() {
-      return publish(nextTopicId());
-   }
-
-   public synchronized int nextTopicId() {
-      return ++topicCounter;
-   }
-
    public synchronized Topic publish(int topicId) {
-      if (topicCounter != topicId) {
-         //assert (false);
-         logger.warn("TopicIds don't match! {} != {}", topicCounter, topicId);
-         topicCounter = topicId;
-      }
-
       final Topic topic = new Topic(entityId, topicId);
       if (topics == null) {
          topics = new HashMap<>();
@@ -212,14 +197,13 @@ public class EntityInfo extends Entity implements Comparable<EntityInfo> {
 
    public synchronized void queue(final Runnable task) {
       if (queue == null) {
-         queue = new ConcurrentLinkedQueue<>();
-         consumerLock = new ReentrantLock();
+         queue = new SequentialWorkQueue();
       }
-      queue.add(task);
+      queue.queue(task);
    }
 
    public synchronized boolean isQueueEmpty() {
-      return queue == null ? true : queue.isEmpty();
+      return queue == null ? true : queue.isQueueEmpty();
    }
 
    /**
@@ -233,26 +217,7 @@ public class EntityInfo extends Entity implements Comparable<EntityInfo> {
             return false;
          }
       }
-      boolean processedSomething = false;
-      if (consumerLock.tryLock()) {
-         try {
-            Runnable task = null;
-            do {
-               task = queue.poll();
-               if (task != null) {
-                  processedSomething = true;
-                  try {
-                     task.run();
-                  } catch (Throwable e) {
-                     logger.error(e.getMessage(), e);
-                  }
-               }
-            } while (task != null);
-         } finally {
-            consumerLock.unlock();
-         }
-      }
-      return processedSomething;
+      return queue.process();
    }
 
    public synchronized int getAlternateId() {

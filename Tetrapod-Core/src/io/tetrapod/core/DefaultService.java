@@ -1,12 +1,6 @@
 package io.tetrapod.core;
 
-import static io.tetrapod.protocol.core.Core.UNADDRESSED;
 import static io.tetrapod.protocol.core.CoreContract.*;
-import io.netty.channel.socket.SocketChannel;
-import io.tetrapod.core.rpc.*;
-import io.tetrapod.core.rpc.Error;
-import io.tetrapod.core.utils.*;
-import io.tetrapod.protocol.core.*;
 
 import java.io.*;
 import java.lang.management.ManagementFactory;
@@ -16,11 +10,19 @@ import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.SSLContext;
 
-import org.slf4j.*;
-
-import ch.qos.logback.classic.LoggerContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.Timer.Context;
+
+import ch.qos.logback.classic.LoggerContext;
+import io.netty.channel.socket.SocketChannel;
+import io.tetrapod.core.pubsub.Publisher;
+import io.tetrapod.core.pubsub.Topic;
+import io.tetrapod.core.rpc.*;
+import io.tetrapod.core.rpc.Error;
+import io.tetrapod.core.utils.*;
+import io.tetrapod.protocol.core.*;
 
 public class DefaultService
          implements Service, Fail.FailHandler, CoreContract.API, SessionFactory, EntityMessage.Handler, TetrapodContract.Cluster.API {
@@ -50,6 +52,8 @@ public class DefaultService
    private final LinkedList<ServerAddress> clusterMembers  = new LinkedList<>();
 
    private final MessageHandlers           messageHandlers = new MessageHandlers();
+
+   private final Publisher                 publisher       = new Publisher(this);
 
    public DefaultService() {
       this(null);
@@ -649,22 +653,38 @@ public class DefaultService
    }
 
    public void sendMessage(Message msg, int toEntityId) {
-      clusterClient.getSession().sendMessage(msg, MessageHeader.TO_ENTITY, toEntityId);
+      if (serviceConnector != null) {
+         serviceConnector.sendMessage(msg, toEntityId);
+      } else {
+         clusterClient.getSession().sendMessage(msg, toEntityId);
+      }
    }
-
-   public void sendBroadcastMessage(Message msg, int topicId) {
-      clusterClient.getSession().sendBroadcastMessage(msg, MessageHeader.TO_TOPIC, topicId);
-   }
+//
+//   public void sendBroadcastMessage(Message msg, int topicId) {
+//      publisher.broadcast(msg, topicId);
+//   }
 
    public void sendAltBroadcastMessage(Message msg, int altId) {
-      clusterClient.getSession().sendBroadcastMessage(msg, MessageHeader.TO_ALTERNATE, altId);
+      clusterClient.getSession().sendAltBroadcastMessage(msg, altId);
+   }
+
+   public void sendBroadcastMessage(Message msg, int toEntityId, int topicId) {
+      if (serviceConnector != null) {
+         serviceConnector.sendBroadcastMessage(msg, toEntityId, topicId);
+      } else {
+         clusterClient.getSession().sendTopicBroadcastMessage(msg, toEntityId, topicId);
+      }
+   }
+
+   public Topic publishTopic() {
+      return publisher.publish();
    }
 
    /**
     * Subscribe an entity to the given topic. If once is true, tetrapod won't subscribe them a second time
     */
    public void subscribe(int topicId, int entityId, boolean once) {
-      sendMessage(new TopicSubscribedMessage(getEntityId(), topicId, entityId, once), UNADDRESSED);
+      publisher.subscribe(topicId, entityId, once);
    }
 
    public void subscribe(int topicId, int entityId) {
@@ -672,11 +692,11 @@ public class DefaultService
    }
 
    public void unsubscribe(int topicId, int entityId) {
-      sendMessage(new TopicUnsubscribedMessage(getEntityId(), topicId, entityId), UNADDRESSED);
+      publisher.unsubscribe(topicId, entityId);
    }
 
    public void unpublish(int topicId) {
-      sendMessage(new TopicUnpublishedMessage(getEntityId(), topicId), UNADDRESSED);
+      publisher.unpublish(topicId);
    }
 
    // Generic handlers for all request/subscriptions

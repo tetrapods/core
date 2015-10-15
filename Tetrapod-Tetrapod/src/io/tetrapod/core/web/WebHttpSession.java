@@ -37,26 +37,26 @@ import com.codahale.metrics.Timer;
 import com.codahale.metrics.Timer.Context;
 
 public class WebHttpSession extends WebSession {
-   protected static final Logger logger = LoggerFactory.getLogger(WebHttpSession.class);
+   protected static final Logger               logger            = LoggerFactory.getLogger(WebHttpSession.class);
 
-   public static final Timer requestTimes = Metrics.timer(WebHttpSession.class, "requests", "time");
+   public static final Timer                   requestTimes      = Metrics.timer(WebHttpSession.class, "requests", "time");
 
-   private static final int FLOOD_TIME_PERIOD = 2000;
-   private static final int FLOOD_WARN        = 200;
-   private static final int FLOOD_IGNORE      = 300;
-   private static final int FLOOD_KILL        = 400;
+   private static final int                    FLOOD_TIME_PERIOD = 2000;
+   private static final int                    FLOOD_WARN        = 200;
+   private static final int                    FLOOD_IGNORE      = 300;
+   private static final int                    FLOOD_KILL        = 400;
 
-   private volatile long floodPeriod;
+   private volatile long                       floodPeriod;
 
-   private int reqCounter = 0;
+   private int                                 reqCounter        = 0;
 
-   private final String              wsLocation;
-   private WebSocketServerHandshaker handshaker;
+   private final String                        wsLocation;
+   private WebSocketServerHandshaker           handshaker;
 
    private Map<Integer, ChannelHandlerContext> contexts;
 
-   private String httpReferrer = null;
-   private String domain       = null;
+   private String                              httpReferrer      = null;
+   private String                              domain            = null;
 
    public WebHttpSession(SocketChannel ch, Session.Helper helper, Map<String, WebRoot> roots, String wsLocation) {
       super(ch, helper);
@@ -136,16 +136,16 @@ public class WebHttpSession extends WebSession {
    }
 
    private void handleHttpRequest(final ChannelHandlerContext ctx, final FullHttpRequest req) throws Exception {
-      if (logger.isDebugEnabled()) {
+      if (logger.isTraceEnabled()) {
          synchronized (this) {
-            logger.debug(String.format("%s REQUEST[%d] = %s : %s", this, ++reqCounter, ctx.channel().remoteAddress(), req.getUri()));
+            logger.trace(String.format("%s REQUEST[%d] = %s : %s", this, ++reqCounter, ctx.channel().remoteAddress(), req.getUri()));
          }
       }
       // Set the http referrer for this request, if not already set
       if (Util.isEmpty(getHttpReferrer())) {
          setHttpReferrer(req.headers().get("Referer"));
          logger.debug("•••• Referer: {} ", getHttpReferrer());
-      } 
+      }
       // Set the domain for this request, if not already set
       if (Util.isEmpty(getDomain())) {
          setDomain(req.headers().get("Host"));
@@ -557,7 +557,7 @@ public class WebHttpSession extends WebSession {
       } else {
          // queue the message for long poller to retrieve later
          if (!commsLogIgnore(header.structId)) {
-            commsLog("%s  [M] ~] Message:%d %s (to %s:%d)", this, header.structId, getNameFor(header), TO_TYPES[header.toType], header.toId);
+            commsLog("%s  [M] ~] Message:%d %s (to %d)", this, header.structId, getNameFor(header), header.toId);
          }
          final LongPollQueue messages = LongPollQueue.getQueue(getTheirEntityId());
          // FIXME: Need a sensible way to protect against memory gobbling if this queue isn't cleared fast enough

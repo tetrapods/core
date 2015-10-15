@@ -80,14 +80,13 @@ public struct ResponseHeader
    
 public struct MessageHeader
    1: int fromId
-   2: byte toType       
+   2: int topicId
    3: int toId
    4: int contractId
    5: int structId
+   6: byte flags       
    
-   const byte TO_TOPIC     = 1
-   const byte TO_ENTITY    = 2
-   const byte TO_ALTERNATE = 3
+   const byte FLAGS_ALTERNATE = 1
    
    
 ################################ STRUCTURES ###################

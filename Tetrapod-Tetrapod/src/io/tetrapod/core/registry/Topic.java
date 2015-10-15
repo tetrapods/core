@@ -14,8 +14,6 @@ public class Topic {
    public final int                       ownerId;
 
    private final Map<Integer, Subscriber> subscribers = new HashMap<>();
-   private final Map<Integer, Subscriber> parents     = new HashMap<>();
-   private final Map<Integer, Subscriber> children    = new HashMap<>();
 
    public Topic(int ownerId, int topicId) {
       this.topicId = topicId;
@@ -27,32 +25,12 @@ public class Topic {
     * 
     * @return true if the client was not already subscribed
     */
-   public synchronized boolean subscribe(final EntityInfo publisher, final EntityInfo e, final int parentId, final boolean once) {
+   public synchronized boolean subscribe(final EntityInfo publisher, final EntityInfo e, final boolean once) {
       Subscriber sub = subscribers.get(e.entityId);
       if (sub == null) {
          sub = new Subscriber(e.entityId, 1);
          subscribers.put(e.entityId, sub);
-
-         if (e.isTetrapod()) {
-            if (publisher.parentId == parentId) {
-               // if they are a tetrapod and this topic is owned by us, we can deliver directly
-               children.put(e.entityId, sub);
-            }
-         } else {
-            if (e.parentId != parentId) {
-               // if we aren't their parent, add them to a proxy subscription for their parent
-               Subscriber psub = parents.get(e.parentId);
-               if (psub == null) {
-                  psub = new Subscriber(e.parentId, 0);
-                  parents.put(e.parentId, psub);
-               }
-               psub.counter++;
-            } else {
-               // we are their parent, so we can deliver messages directly
-               children.put(e.entityId, sub);
-            }
-         }
-      } else if (!once) {  
+      } else if (!once) {
          sub.counter++;
       }
 
@@ -64,22 +42,12 @@ public class Topic {
     * 
     * @return true if we fully unsubscribed the client
     */
-   public synchronized boolean unsubscribe(int entityId, int parentId, boolean proxy, boolean all) {
+   public synchronized boolean unsubscribe(int entityId, boolean all) {
       final Subscriber sub = subscribers.get(entityId);
       if (sub != null) {
          sub.counter--;
          if (sub.counter == 0 || all) {
             subscribers.remove(entityId);
-            children.remove(entityId);
-            if (proxy) {
-               Subscriber psub = parents.get(parentId);
-               if (psub != null) {
-                  psub.counter--;
-                  if (psub.counter == 0) {
-                     parents.remove(parentId);
-                  }
-               }
-            }
             return true;
          }
       }
@@ -96,14 +64,6 @@ public class Topic {
     */
    public synchronized int getNumSubscribers() {
       return subscribers.size();
-   }
-
-   public synchronized Collection<Subscriber> getChildSubscribers() {
-      return children.values();
-   }
-
-   public synchronized Collection<Subscriber> getProxySubscribers() {
-      return parents.values();
    }
 
    public synchronized Collection<Subscriber> getSubscribers() {

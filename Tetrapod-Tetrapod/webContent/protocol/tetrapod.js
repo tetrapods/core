@@ -25,14 +25,16 @@ function TP_Tetrapod(server) {
    server.registerConst("Tetrapod", "BuildCommand", "LAUNCH_PAUSED", 5);
    server.registerConst("Tetrapod", "BuildCommand", "DEPLOY_LATEST", -1);
    server.registerConst("Tetrapod", "BuildCommand", "LAUNCH_DEPLOYED", -1);
+   server.registerConst("Tetrapod", "null", "MAX_PARENTS", 0x000007FF);
+   server.registerConst("Tetrapod", "null", "MAX_ID", 0x000FFFFF);
+   server.registerConst("Tetrapod", "null", "PARENT_ID_SHIFT", 20);
+   server.registerConst("Tetrapod", "null", "PARENT_ID_MASK", 0x7FF00000);
    
    server.registerErrorConst("Tetrapod", "null", "HOSTNAME_MISMATCH", 12239905);
    server.registerErrorConst("Tetrapod", "null", "INVALID_ACCOUNT", 14623816);
    server.registerErrorConst("Tetrapod", "null", "INVALID_CREDENTIALS", 8845805);
    server.registerErrorConst("Tetrapod", "null", "INVALID_UUID", 398174);
    server.registerErrorConst("Tetrapod", "null", "ITEM_OWNED", 10331576);
-   server.registerErrorConst("Tetrapod", "null", "NOT_PARENT", 2219555);
-   server.registerErrorConst("Tetrapod", "null", "NOT_READY", 12438466);
    server.registerErrorConst("Tetrapod", "null", "UNKNOWN_ENTITY_ID", 15576171);
    
    server.register("struct", "Tetrapod", "Entity", 1, 10171140);
@@ -40,8 +42,6 @@ function TP_Tetrapod(server) {
    server.register("response", "Tetrapod", "Register", 1, 13376201);
    server.register("request", "Tetrapod", "ClusterJoin", 1, 8294880);
    server.register("request", "Tetrapod", "Unregister", 1, 3896262);
-   server.register("request", "Tetrapod", "Publish", 1, 3171651);
-   server.register("response", "Tetrapod", "Publish", 1, 2698673);
    server.register("request", "Tetrapod", "RegistrySubscribe", 1, 2572089);
    server.register("request", "Tetrapod", "RegistryUnsubscribe", 1, 6168014);
    server.register("request", "Tetrapod", "ServicesSubscribe", 1, 7048310);

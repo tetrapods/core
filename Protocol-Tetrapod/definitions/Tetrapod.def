@@ -11,6 +11,11 @@ error INVALID_CREDENTIALS
 error INVALID_UUID
 error ITEM_OWNED
 
+const int  MAX_PARENTS       = 0x000007FF     // Supports up to 2047 tetrapods
+const int  MAX_ID            = 0x000FFFFF     // Supports up to 1048575 entities per tetrapod
+const int  PARENT_ID_SHIFT   = 20             // bits to shift to get parentId
+const int  PARENT_ID_MASK    = 0x7FF00000     // mask to get parentId
+
 ################################# STRUCTURES #################################
 
 public struct Entity
@@ -51,14 +56,6 @@ internal request ClusterJoin
 
 internal request Unregister
    1: int entityId
-
-internal request Publish 
-   1: int numTopics
-   error NOT_READY
-   error NOT_PARENT 
-
-internal response Publish 
-   1: int[] topicIds
     
 internal request RegistrySubscribe
 internal request RegistryUnsubscribe

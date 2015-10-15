@@ -1,23 +1,25 @@
 package io.tetrapod.core.storage;
 
-import io.netty.channel.socket.SocketChannel;
-import io.tetrapod.core.*;
-import io.tetrapod.core.registry.*;
-import io.tetrapod.core.rpc.*;
-import io.tetrapod.core.utils.*;
-import io.tetrapod.core.web.*;
-import io.tetrapod.protocol.core.*;
-import io.tetrapod.protocol.raft.*;
-import io.tetrapod.raft.*;
-import io.tetrapod.raft.RaftEngine.Role;
-import io.tetrapod.raft.storage.*;
-
 import java.io.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.slf4j.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import io.netty.channel.socket.SocketChannel;
+import io.tetrapod.core.*;
+import io.tetrapod.core.registry.*;
+import io.tetrapod.core.rpc.*;
+import io.tetrapod.core.utils.*;
+import io.tetrapod.core.web.WebRoot;
+import io.tetrapod.core.web.WebRoutes;
+import io.tetrapod.protocol.core.*;
+import io.tetrapod.protocol.raft.*;
+import io.tetrapod.raft.*;
+import io.tetrapod.raft.RaftEngine.Role;
+import io.tetrapod.raft.storage.*;
 
 /**
  * Wraps a RaftEngine in our Tetrapod-RPC and implements the StorageContract via TetrapodStateMachine
@@ -223,7 +225,7 @@ public class TetrapodCluster extends Storage
          if (pod.entityId != service.getEntityId()) {
             if (pod.isConnected()) {
                Session ses = pod.getSession();
-               ses.sendMessage(msg, MessageHeader.TO_ENTITY, ses.getTheirEntityId());
+               ses.sendMessage(msg, ses.getTheirEntityId());
             }
          }
       }
@@ -267,11 +269,10 @@ public class TetrapodCluster extends Storage
       // send ourselves
       ses.sendMessage(
                new ClusterMemberMessage(service.getEntityId(), Util.getHostName(), service.getServicePort(), service.getClusterPort(), null),
-               MessageHeader.TO_ENTITY, toEntityId);
+               toEntityId);
       // send all current members
       for (TetrapodPeer pod : cluster.values()) {
-         ses.sendMessage(new ClusterMemberMessage(pod.entityId, pod.host, pod.servicePort, pod.clusterPort, pod.uuid),
-                  MessageHeader.TO_ENTITY, toEntityId);
+         ses.sendMessage(new ClusterMemberMessage(pod.entityId, pod.host, pod.servicePort, pod.clusterPort, pod.uuid), toEntityId);
       }
       // non-tetrapods need to get some cluster details sent
       if (ses.getTheirEntityType() != Core.TYPE_TETRAPOD) {
@@ -280,12 +281,12 @@ public class TetrapodCluster extends Storage
             for (ClusterProperty prop : state.props.values()) {
                prop = new ClusterProperty(prop.key, prop.secret, prop.val);
                prop.val = AESEncryptor.decryptSaltedAES(prop.val, state.secretKey);
-               ses.sendMessage(new ClusterPropertyAddedMessage(prop), MessageHeader.TO_ENTITY, toEntityId);
+               ses.sendMessage(new ClusterPropertyAddedMessage(prop), toEntityId);
             }
          }
       }
       // tell them they are up to date
-      ses.sendMessage(new ClusterSyncedMessage(), MessageHeader.TO_ENTITY, toEntityId);
+      ses.sendMessage(new ClusterSyncedMessage(), toEntityId);
    }
 
    public void sendAdminDetails(Session ses, int toEntityId, int topicId) {
@@ -295,13 +296,13 @@ public class TetrapodCluster extends Storage
             // blank out values for protected properties sent to admins
             prop = new ClusterProperty(prop.key, prop.secret, prop.val);
             prop.val = prop.secret ? "" : AESEncryptor.decryptSaltedAES(prop.val, state.secretKey);
-            ses.sendMessage(new ClusterPropertyAddedMessage(prop), MessageHeader.TO_ENTITY, toEntityId);
+            ses.sendMessage(new ClusterPropertyAddedMessage(prop), toEntityId);
          }
          for (WebRootDef def : state.webRootDefs.values()) {
-            ses.sendMessage(new WebRootAddedMessage(def), MessageHeader.TO_ENTITY, toEntityId);
+            ses.sendMessage(new WebRootAddedMessage(def), toEntityId);
          }
          for (Admin def : state.admins.values()) {
-            ses.sendMessage(new AdminUserAddedMessage(def), MessageHeader.TO_ENTITY, toEntityId);
+            ses.sendMessage(new AdminUserAddedMessage(def), toEntityId);
          }
       }
    }
@@ -618,9 +619,11 @@ public class TetrapodCluster extends Storage
                   handler = new ClientResponseHandler<TetrapodStateMachine>() {
                      @Override
                      public void handleResponse(Entry<TetrapodStateMachine> entry) {
-                        origHandler.handleResponse(entry);
+                        logger.info("Waiting for local : {} : {}", entry, getCommitIndex());
+                        raft.executeAfterCommandProcessed(entry, origHandler);
                      }
                   };
+
                }
                sendIssueCommand(raft.getLeader(), cmd, handler);
                sent = true; // FIXME
@@ -956,8 +959,7 @@ public class TetrapodCluster extends Storage
          for (Owner owner : state.owners.values()) {
             for (String key : owner.keys) {
                if (key.startsWith(r.prefix)) {
-                  ctx.session.sendMessage(new ClaimOwnershipMessage(owner.entityId, owner.expiry, key), MessageHeader.TO_ENTITY,
-                           ctx.header.fromId);
+                  ctx.session.sendMessage(new ClaimOwnershipMessage(owner.entityId, owner.expiry, key), ctx.header.fromId);
                }
             }
          }
@@ -1027,7 +1029,7 @@ public class TetrapodCluster extends Storage
 
    private void sendOwnershipMessage(Message msg, Session ses) {
       if (ses.isConnected()) {
-         ses.sendMessage(msg, MessageHeader.TO_ENTITY, ses.getTheirEntityId());
+         ses.sendMessage(msg, ses.getTheirEntityId());
       } else {
          unsubscribeOwnership(ses.getTheirEntityId());
       }
@@ -1041,7 +1043,6 @@ public class TetrapodCluster extends Storage
       return state.entities.values();
    }
 
-
    private void onAddEntityCommand(AddEntityCommand command) {
       service.registry.onAddEntityCommand(state.entities.get(command.getEntity().entityId));
    }
@@ -1052,6 +1053,10 @@ public class TetrapodCluster extends Storage
 
    private void onDelEntityCommand(DelEntityCommand command) {
       service.registry.onDelEntityCommand(command.getEntityId());
+   }
+
+   public long getCommitIndex() {
+      return raft.getLog().getCommitIndex();
    }
 
 }

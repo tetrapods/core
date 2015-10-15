@@ -23,13 +23,13 @@ import org.slf4j.*;
  */
 public class WireSession extends Session {
 
-   private static final Logger logger = LoggerFactory.getLogger(WireSession.class);
+   private static final Logger logger         = LoggerFactory.getLogger(WireSession.class);
 
-   private static final int  WIRE_VERSION = 1;
-   private static final int  WIRE_OPTIONS = 0x00000000;
-   private static final long LOADED_TIME  = System.currentTimeMillis();
+   private static final int    WIRE_VERSION   = 1;
+   private static final int    WIRE_OPTIONS   = 0x00000000;
+   private static final long   LOADED_TIME    = System.currentTimeMillis();
 
-   private boolean needsHandshake = true;
+   private boolean             needsHandshake = true;
 
    public WireSession(SocketChannel channel, WireSession.Helper helper) {
       super(channel, helper);
@@ -63,7 +63,7 @@ public class WireSession extends Session {
    private void read(final ByteBuf in, final int len, final byte envelope) throws IOException {
       final long t0 = System.currentTimeMillis();
 
-      assert(len == in.readableBytes());
+      assert (len == in.readableBytes());
       logger.trace("Read message {} with {} bytes", envelope, len);
       switch (envelope) {
          case ENVELOPE_REQUEST:
@@ -216,9 +216,11 @@ public class WireSession extends Session {
       }
 
       if (!commsLogIgnore(header.structId)) {
-         commsLog("%s  [M] <- Message: %s (to %s:%d)", this, getNameFor(header), TO_TYPES[header.toType], header.toId);
+         commsLog("%s  [M] <- Message: %s (to %d f%d)", this, getNameFor(header), header.toId, header.flags);
       }
-      boolean selfDispatch = header.toType == MessageHeader.TO_ENTITY && (header.toId == myId || header.toId == UNADDRESSED);
+
+      boolean selfDispatch = header.topicId == 0 && ((header.flags & MessageHeader.FLAGS_ALTERNATE) == 0)
+               && (header.toId == myId || header.toId == UNADDRESSED);
       if (relayHandler == null || selfDispatch) {
          dispatchMessage(header, reader);
       } else {

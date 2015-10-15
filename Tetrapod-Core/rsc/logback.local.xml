@@ -48,6 +48,7 @@
       <appender-ref ref="COMMSFILEPID" />
    </logger>
    
+   <logger name="io.tetrapod.core.web.WebStaticFileHandler" level="INFO" />
    <logger name="io.netty" level="INFO" />
    <logger name="com.hazelcast" level="WARN" />
    <logger name="NodeMulticastListener" level="WARN" />

@@ -2,36 +2,45 @@ package io.tetrapod.core;
 
 import static io.tetrapod.protocol.core.Core.DEFAULT_DIRECT_PORT;
 import static io.tetrapod.protocol.core.CoreContract.ERROR_UNKNOWN;
-import io.tetrapod.core.rpc.*;
-import io.tetrapod.core.rpc.Error;
-import io.tetrapod.core.utils.Util;
-import io.tetrapod.protocol.core.*;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.net.ssl.SSLContext;
 
-import org.slf4j.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import io.netty.channel.socket.SocketChannel;
+import io.tetrapod.core.Session.RelayHandler;
+import io.tetrapod.core.rpc.*;
+import io.tetrapod.core.rpc.Error;
+import io.tetrapod.core.utils.SequentialWorkQueue;
+import io.tetrapod.core.utils.Util;
+import io.tetrapod.protocol.core.*;
 
 /**
  * Allows a service to spawn direct connections with one another for faster RPC
  */
 public class ServiceConnector implements DirectConnectionRequest.Handler, ValidateConnectionRequest.Handler {
-
-   private static final Logger logger = LoggerFactory.getLogger(ServiceConnector.class);
-
    /**
     * The number of requests sent to a specific service that triggers us to start a direct session
     */
-   private static final int REQUEST_THRESHOLD = 100;
+   private static final int                REQUEST_THRESHOLD = 100;
 
-   private Map<Integer, DirectServiceInfo> services = new ConcurrentHashMap<>();
+   private static final Logger             logger            = LoggerFactory.getLogger(ServiceConnector.class);
 
-   private final DefaultService service;
-   private final SSLContext     sslContext;
+   private Map<Integer, DirectServiceInfo> services          = new ConcurrentHashMap<>();
 
-   private Server server;
+   private final DefaultService            service;
+   private final SSLContext                sslContext;
+
+   private Server                          server;
+
+   /**
+    * Work queue for this connection -- typically writing of sequential messages stored while disconnected
+    */
+   protected final SequentialWorkQueue     queue             = new SequentialWorkQueue();
 
    public ServiceConnector(DefaultService service, SSLContext sslContext) {
       this.service = service;
@@ -65,24 +74,38 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
       private DirectSessionFactory(byte type, Session.Listener listener) {
          super(service, type, listener);
       }
+
+      /**
+       * Session factory for our sessions from clients and services
+       */
+      @Override
+      public Session makeSession(SocketChannel ch) {
+         final Session ses = super.makeSession(ch);
+         if (service instanceof RelayHandler) {
+            ses.setRelayHandler((RelayHandler) service);
+         }
+         return ses;
+      }
    }
 
    /**
     * This is a wrapper class for managing a single direct connection
     */
    private class DirectServiceInfo implements Session.Listener {
-      public final int    entityId;
-      public final String token = String.format("%016x%016x", Util.random.nextLong(), Util.random.nextLong());
-      public int          requests;
-      public int          failures;
-      public boolean      pending;
-      public boolean      valid;
-      public String       theirToken;
-      public Session      ses;
-      public long         restUntil;
+      public final int      entityId;
+      public final String   token = String.format("%016x%016x", Util.random.nextLong(), Util.random.nextLong());
+      public int            requests;
+      public int            failures;
+      public boolean        pending;
+      public boolean        valid;
+      public String         theirToken;
+      public Session        ses;
+      public long           restUntil;
+      private final boolean isTetrapod;
 
       public DirectServiceInfo(int entityId) {
          this.entityId = entityId;
+         this.isTetrapod = (entityId & TetrapodContract.PARENT_ID_MASK) == entityId;
       }
 
       public synchronized void close() {
@@ -175,6 +198,15 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
          }
       }
 
+      public synchronized void considerConnecting() {
+         if (entityId != service.parentId && (isTetrapod || requests > REQUEST_THRESHOLD) && !pending) {
+            service.dispatcher.dispatch(new Runnable() {
+               public void run() {
+                  handshake();
+               }
+            });
+         }
+      }
    }
 
    public DirectServiceInfo getDirectServiceInfo(int entityId) {
@@ -188,14 +220,11 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
       }
    }
 
-   private Session getSession(Request req, int entityId, boolean isPending) {
+   private Session getSession(Request req, int entityId) {
       if (entityId != Core.DIRECT) {
-
          if (entityId != Core.UNADDRESSED) {
             if (entityId == service.getEntityId()) {
-               if (!isPending) {
-                  logger.warn("For some reason we're sending {} to ourselves", req);
-               }
+               logger.warn("For some reason we're sending {} to ourselves", req);
             } else {
                final DirectServiceInfo s = getDirectServiceInfo(entityId);
                synchronized (s) {
@@ -206,18 +235,30 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
                         return s.ses;
                      }
                   } else {
-                     if (s.requests > REQUEST_THRESHOLD && !s.pending) {
-                        service.dispatcher.dispatch(new Runnable() {
-                           public void run() {
-                              s.handshake();
-                           }
-                        });
-                     }
+                     s.considerConnecting();
                   }
                }
             }
          }
       }
+      return service.clusterClient.getSession();
+   }
+
+   private Session getSession(int entityId) {
+      if (entityId != Core.UNADDRESSED && entityId != service.getEntityId() && entityId != service.getParentId()) {
+         final DirectServiceInfo s = getDirectServiceInfo(entityId);
+         synchronized (s) {
+            s.requests++;
+            if (s.ses != null) {
+               if (s.valid && s.ses.isConnected()) {
+                  return s.ses;
+               }
+            } else {
+               s.considerConnecting();
+            }
+         }
+      }
+      // default route through our tetrapod
       return service.clusterClient.getSession();
    }
 
@@ -229,7 +270,7 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
          }
       }
 
-      final Session ses = handler.session != null ? getSession(req, toEntityId, true) : service.clusterClient.getSession();
+      final Session ses = handler.session != null ? getSession(req, toEntityId) : service.clusterClient.getSession();
       if (ses != service.clusterClient.getSession()) {
          logger.debug("Dispatching pending {} to {} returning on {}", req, ses, handler.session);
          final Async async = ses.sendRequest(req, toEntityId, (byte) 30);
@@ -283,8 +324,19 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
          return service.dispatchRequest(header, req, null);
       }
 
-      final Session ses = getSession(req, toEntityId, false);
+      final Session ses = getSession(req, toEntityId);
       return ses.sendRequest(req, toEntityId, (byte) 30);
+   }
+
+   public void sendMessage(Message msg, int toEntityId) {
+      getSession(toEntityId).sendMessage(msg, toEntityId);
+   }
+
+   /**
+    * Sends a topic message for broadcast to toEntityId
+    */
+   public void sendBroadcastMessage(Message msg, int toEntityId, int topicId) {
+      getSession(toEntityId).sendTopicBroadcastMessage(msg, toEntityId, topicId);
    }
 
    @Override

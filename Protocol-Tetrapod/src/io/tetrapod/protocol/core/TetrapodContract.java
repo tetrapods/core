@@ -18,6 +18,26 @@ public class TetrapodContract extends Contract {
    public static final String NAME = "Tetrapod";
    public static final int CONTRACT_ID = 1;
    
+   /**
+    * Supports up to 2047 tetrapods
+    */
+   public static final int MAX_PARENTS = 0x000007FF; 
+   
+   /**
+    * Supports up to 1048575 entities per tetrapod
+    */
+   public static final int MAX_ID = 0x000FFFFF; 
+   
+   /**
+    * bits to shift to get parentId
+    */
+   public static final int PARENT_ID_SHIFT = 20; 
+   
+   /**
+    * mask to get parentId
+    */
+   public static final int PARENT_ID_MASK = 0x7FF00000; 
+   
    public static interface API extends APIHandler
       , AddServiceInformationRequest.Handler
       , AdminAuthorizeRequest.Handler
@@ -40,7 +60,6 @@ public class TetrapodContract extends Contract {
       , KeepAliveRequest.Handler
       , LockRequest.Handler
       , LogRegistryStatsRequest.Handler
-      , PublishRequest.Handler
       , RaftStatsRequest.Handler
       , RegisterRequest.Handler
       , RegistrySubscribeRequest.Handler
@@ -68,7 +87,6 @@ public class TetrapodContract extends Contract {
          new RegisterRequest(),
          new ClusterJoinRequest(),
          new UnregisterRequest(),
-         new PublishRequest(),
          new RegistrySubscribeRequest(),
          new RegistryUnsubscribeRequest(),
          new ServicesSubscribeRequest(),
@@ -113,7 +131,6 @@ public class TetrapodContract extends Contract {
    public Structure[] getResponses() {
       return new Structure[] {
          new RegisterResponse(),
-         new PublishResponse(),
          new AdminLoginResponse(),
          new AdminAuthorizeResponse(),
          new AdminSessionTokenResponse(),
@@ -319,7 +336,5 @@ public class TetrapodContract extends Contract {
    public static final int ERROR_INVALID_CREDENTIALS = 8845805; 
    public static final int ERROR_INVALID_UUID = 398174; 
    public static final int ERROR_ITEM_OWNED = 10331576; 
-   public static final int ERROR_NOT_PARENT = 2219555; 
-   public static final int ERROR_NOT_READY = 12438466; 
    public static final int ERROR_UNKNOWN_ENTITY_ID = 15576171; 
 }
