@@ -590,14 +590,6 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    }
 
    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-   //
-   //   @Override
-   //   public void broadcastRegistryMessage(Message msg) {
-   //      if (registryTopic != null && registryTopic.getNumSubscribers() > 0) {
-   //         broadcast(msg, registryTopic);
-   //      }
-   //      cluster.broadcast(msg);
-   //   }
 
    @Override
    public void broadcastServicesMessage(Message msg) {
@@ -856,42 +848,6 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       registry.unregister(info);
       return Response.SUCCESS;
    }
-   //
-   //   /**
-   //    * Lock registryTopic and send our current registry state to the subscriber
-   //    */
-   //   public void registrySubscribe(final Session session, final int toEntityId, boolean clusterMode) {
-   //      if (registryTopic != null) {
-   //         synchronized (registryTopicLock) {
-   //            // cluster members are not subscribed through this subscription, due to chicken-and-egg issues
-   //            // synchronizing registries using topics. Cluster members are implicitly auto-subscribed without
-   //            // an entry in the topic.
-   //            if (!clusterMode) {
-   //               subscribe(registryTopic.topicId, toEntityId);
-   //            }
-   //            registry.sendRegistryState(session, toEntityId, registryTopic.topicId);
-   //         }
-   //      }
-   //   }
-   //
-   //   @Override
-   //   public Response requestRegistrySubscribe(RegistrySubscribeRequest r, RequestContext ctxA) {
-   //      SessionRequestContext ctx = (SessionRequestContext) ctxA;
-   //      if (registryTopic == null) {
-   //         return new Error(ERROR_UNKNOWN);
-   //      }
-   //      registrySubscribe(ctx.session, ctx.header.fromId, false);
-   //      return Response.SUCCESS;
-   //   }
-   //
-   //   @Override
-   //   public Response requestRegistryUnsubscribe(RegistryUnsubscribeRequest r, RequestContext ctx) {
-   //      // TODO: validate
-   //      synchronized (registryTopicLock) {
-   //         unsubscribe(registryTopic.topicId, ctx.header.fromId);
-   //      }
-   //      return Response.SUCCESS;
-   //   }
 
    @Override
    public Response requestServicesSubscribe(ServicesSubscribeRequest r, RequestContext ctxA) {
