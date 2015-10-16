@@ -149,12 +149,6 @@ internal request SetAlternateId
    1: int entityId
    2: int alternateId
    
-internal request GetSubscriberCount
-   1: int topicId
-   
-internal response GetSubscriberCount
-   1: int count
-
 public request SetEntityReferrer
    1: string referrer
 
@@ -175,9 +169,9 @@ internal response GetEntityInfo
 // a special message to avoid race conditions on the Register response
 public message Entity 
    1: int entityId
-    
+  
 ##### Registry Topic Messages #####  
-	
+
 internal message Registry.TopicPublished
    1: int topicId
 

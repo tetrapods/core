@@ -56,7 +56,6 @@ public class TetrapodContract extends Contract {
       , ExecuteBuildCommandRequest.Handler
       , GetEntityInfoRequest.Handler
       , GetServiceBuildInfoRequest.Handler
-      , GetSubscriberCountRequest.Handler
       , KeepAliveRequest.Handler
       , LockRequest.Handler
       , LogRegistryStatsRequest.Handler
@@ -100,7 +99,6 @@ public class TetrapodContract extends Contract {
          new AdminChangeRightsRequest(),
          new KeepAliveRequest(),
          new SetAlternateIdRequest(),
-         new GetSubscriberCountRequest(),
          new SetEntityReferrerRequest(),
          new GetEntityInfoRequest(),
          new GetServiceBuildInfoRequest(),
@@ -130,7 +128,6 @@ public class TetrapodContract extends Contract {
          new AdminLoginResponse(),
          new AdminAuthorizeResponse(),
          new AdminSessionTokenResponse(),
-         new GetSubscriberCountResponse(),
          new GetEntityInfoResponse(),
          new GetServiceBuildInfoResponse(),
          new RaftStatsResponse(),

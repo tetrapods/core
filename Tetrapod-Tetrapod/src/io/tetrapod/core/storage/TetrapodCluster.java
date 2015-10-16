@@ -10,7 +10,8 @@ import org.slf4j.LoggerFactory;
 
 import io.netty.channel.socket.SocketChannel;
 import io.tetrapod.core.*;
-import io.tetrapod.core.registry.*;
+import io.tetrapod.core.pubsub.Topic;
+import io.tetrapod.core.registry.EntityInfo;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.utils.*;
 import io.tetrapod.core.web.WebRoot;
@@ -499,11 +500,11 @@ public class TetrapodCluster extends Storage
             //executeCommand(cmd, null);
          }
       }
-      entity.setSession(ctx.session); 
+      entity.setSession(ctx.session);
 
       // subscribe them to our cluster and registry views
       logger.info("**************************** SYNC TO {} {}", ctx.session, req.entityId);
- 
+
       service.subscribeToCluster(ctx.session, req.entityId);
 
       return Response.SUCCESS;

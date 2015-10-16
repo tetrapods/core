@@ -9,13 +9,13 @@ import java.util.*;
  * subscribes to the topic multiple times, we increment a reference counter. A subscription is fully unsubscribed if the counter drops to
  * zero.
  */
-public class Topic {
+public class RegistryTopic {
    public final int                       topicId;
    public final int                       ownerId;
 
    private final Map<Integer, Subscriber> subscribers = new HashMap<>();
 
-   public Topic(int ownerId, int topicId) {
+   public RegistryTopic(int ownerId, int topicId) {
       this.topicId = topicId;
       this.ownerId = ownerId;
    }

@@ -24,14 +24,14 @@ public class EntityInfo extends Entity implements Comparable<EntityInfo> {
     * 
     * Maps topicId => Topic
     */
-   protected Map<Integer, Topic> topics;
+   protected Map<Integer, RegistryTopic> topics;
 
    /**
     * This entity's subscriptions
     * 
     * Maps topic key => Topic
     */
-   protected Map<Long, Topic>    subscriptions;
+   protected Map<Long, RegistryTopic>    subscriptions;
 
    protected Session             session;
 
@@ -90,12 +90,12 @@ public class EntityInfo extends Entity implements Comparable<EntityInfo> {
       return (status & Core.STATUS_GONE) != 0;
    }
 
-   public synchronized Topic getTopic(int topicId) {
+   public synchronized RegistryTopic getTopic(int topicId) {
       return topics == null ? null : topics.get(topicId);
    }
 
-   public synchronized Topic publish(int topicId) {
-      final Topic topic = new Topic(entityId, topicId);
+   public synchronized RegistryTopic publish(int topicId) {
+      final RegistryTopic topic = new RegistryTopic(entityId, topicId);
       if (topics == null) {
          topics = new HashMap<>();
       }
@@ -104,7 +104,7 @@ public class EntityInfo extends Entity implements Comparable<EntityInfo> {
       return topic;
    }
 
-   public synchronized Topic unpublish(int topicId) {
+   public synchronized RegistryTopic unpublish(int topicId) {
       if (topics != null) {
          return topics.remove(topicId);
       } else {
@@ -112,7 +112,7 @@ public class EntityInfo extends Entity implements Comparable<EntityInfo> {
       }
    }
 
-   public synchronized void subscribe(Topic topic) {
+   public synchronized void subscribe(RegistryTopic topic) {
       if (subscriptions == null) {
          subscriptions = new HashMap<>();
       }
@@ -120,22 +120,22 @@ public class EntityInfo extends Entity implements Comparable<EntityInfo> {
       //logger.debug("======= SUBSCRIBED {} to {}", this, topic);
    }
 
-   public synchronized void unsubscribe(Topic topic) {
+   public synchronized void unsubscribe(RegistryTopic topic) {
       if (subscriptions != null) {
          subscriptions.remove(topic.key());
       }
    }
 
-   public synchronized List<Topic> getTopics() {
-      final List<Topic> list = new ArrayList<Topic>();
+   public synchronized List<RegistryTopic> getTopics() {
+      final List<RegistryTopic> list = new ArrayList<RegistryTopic>();
       if (topics != null) {
          list.addAll(topics.values());
       }
       return list;
    }
 
-   public synchronized List<Topic> getSubscriptions() {
-      final List<Topic> list = new ArrayList<Topic>();
+   public synchronized List<RegistryTopic> getSubscriptions() {
+      final List<RegistryTopic> list = new ArrayList<RegistryTopic>();
       if (subscriptions != null) {
          list.addAll(subscriptions.values());
       }

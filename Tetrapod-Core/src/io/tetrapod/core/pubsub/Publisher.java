@@ -1,8 +1,8 @@
 package io.tetrapod.core.pubsub;
 
 import io.tetrapod.core.DefaultService;
-import io.tetrapod.core.rpc.Message;
-import io.tetrapod.protocol.core.Core;
+import io.tetrapod.core.rpc.*;
+import io.tetrapod.protocol.core.*;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -25,7 +25,7 @@ import org.slf4j.*;
  * <li>Unit tests & documentation
  * </ul>
  */
-public class Publisher {
+public class Publisher implements TopicUnsubscribedMessage.Handler {
    private static final Logger       logger       = LoggerFactory.getLogger(Publisher.class);
 
    private final DefaultService      service;
@@ -47,14 +47,18 @@ public class Publisher {
    public void subscribe(int topicId, int entityId, boolean once) {
       final Topic topic = topics.get(topicId);
       if (topic == null) {
-         logger.warn("subscribe: Could not find topic for {}");
+         logger.warn("subscribe: Could not find topic for {}", topicId);
       }
       topic.subscribe(entityId, once);
    }
 
    public void unsubscribe(int topicId, int entityId) {
       final Topic topic = topics.get(topicId);
-      topic.unsubscribe(entityId);
+      if (topic != null) {
+         topic.unsubscribe(entityId);
+      } else {
+         logger.warn("unsubscribe: Could not find topic for {} ", topicId);
+      }
    }
 
    public int getEntityId() {
@@ -72,7 +76,7 @@ public class Publisher {
    public void unpublish(int topicId) {
       final Topic topic = topics.remove(topicId);
       if (topic == null) {
-         logger.warn("unpublish: Could not find topic for {}");
+         logger.warn("unpublish: Could not find topic for {}", topicId);
       }
       topic.unpublish();
    }
@@ -80,7 +84,7 @@ public class Publisher {
    public void broadcast(Message msg, int topicId) {
       final Topic topic = topics.get(topicId);
       if (topic == null) {
-         logger.warn("broadcast: Could not find topic for {}");
+         logger.warn("broadcast: Could not find topic for {}", topicId);
       }
       topic.broadcast(msg);
    }
@@ -88,6 +92,15 @@ public class Publisher {
    protected void broadcastMessage(Message msg, int parentEntityId, int topicId) {
       // FIXME: handle allow-direct based on initial state...
       service.sendBroadcastMessage(msg, parentEntityId, topicId);
+   }
+
+   @Override
+   public void genericMessage(Message message, MessageContext ctx) {}
+
+   @Override
+   public void messageTopicUnsubscribed(TopicUnsubscribedMessage m, MessageContext ctx) {
+      logger.info("******** {}", m.dump());
+      unsubscribe(m.topicId, m.entityId);
    }
 
 }

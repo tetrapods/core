@@ -3,8 +3,6 @@ package io.tetrapod.core.registry;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,13 +27,6 @@ public class Registry implements TetrapodContract.Registry.API {
    protected static final Logger                logger   = LoggerFactory.getLogger(Registry.class);
 
    /**
-    * A read-write lock is used to synchronize subscriptions to the registry state, and it is a little counter-intuitive. When making write
-    * operations to the registry, we grab the read lock to allow concurrent writes across the registry. When we need to send the current
-    * state snapshot to another cluster member, we grab the write lock for exclusive access to send a consistent state.
-    */
-   public final ReadWriteLock                   lock     = new ReentrantReadWriteLock();
-
-   /**
     * Our entityId
     */
    private int                                  parentId;
@@ -55,8 +46,9 @@ public class Registry implements TetrapodContract.Registry.API {
     */
    private final Map<Integer, List<EntityInfo>> services = new ConcurrentHashMap<>();
 
-   public static interface RegistryBroadcaster { 
+   public static interface RegistryBroadcaster {
       public void broadcastServicesMessage(Message msg);
+      public void sendMessage(Message msg, int toEntity);
    }
 
    private final RegistryBroadcaster broadcaster;
@@ -75,8 +67,7 @@ public class Registry implements TetrapodContract.Registry.API {
       return parentId;
    }
 
-   public Collection<EntityInfo> getEntities() {
-      //return cluster.getEntities();
+   public Collection<EntityInfo> getEntities() { 
       return entities.values();
    }
 
@@ -101,8 +92,7 @@ public class Registry implements TetrapodContract.Registry.API {
    }
 
    public EntityInfo getEntity(int entityId) {
-      return entities.get(entityId);
-      //return cluster.getEntity(entityId);
+      return entities.get(entityId); 
    }
 
    public EntityInfo getFirstAvailableService(int contractId) {
@@ -148,15 +138,19 @@ public class Registry implements TetrapodContract.Registry.API {
    private void clearAllTopicsAndSubscriptions(final EntityInfo e) {
       logger.debug("clearAllTopicsAndSubscriptions: {}", e);
       // Unpublish all their topics
-      for (Topic topic : e.getTopics()) {
+      for (RegistryTopic topic : e.getTopics()) {
          unpublish(e, topic.topicId);
       }
       // Unsubscribe from all subscriptions
-      for (Topic topic : e.getSubscriptions()) {
+      for (RegistryTopic topic : e.getSubscriptions()) {
          EntityInfo owner = getEntity(topic.ownerId);
          // assert (owner != null); 
          if (owner != null) {
             unsubscribe(owner, topic.topicId, e.entityId, true);
+            
+            // notify the publisher that this client's subscription is now dead
+            broadcaster.sendMessage(new TopicUnsubscribedMessage(topic.topicId, e.entityId), owner.entityId);
+            
          } else {
             // bug here cleaning up topics on unreg, I think...
             logger.warn("clearAllTopicsAndSubscriptions: Couldn't find {} owner {}", topic, topic.ownerId);
@@ -175,90 +169,65 @@ public class Registry implements TetrapodContract.Registry.API {
       cluster.executeCommand(new ModEntityCommand(e.entityId, status, e.build, e.version), null);
    }
 
-   public Topic publish(int entityId, int topicId) {
-      lock.readLock().lock();
-      try {
-         final EntityInfo e = getEntity(entityId);
-         if (e != null) {
-            return e.publish(topicId);
-         } else {
-            logger.error("Could not find entity {}", e);
-         }
-      } finally {
-         lock.readLock().unlock();
+   public RegistryTopic publish(int entityId, int topicId) {
+      final EntityInfo e = getEntity(entityId);
+      if (e != null) {
+         return e.publish(topicId);
+      } else {
+         logger.error("Could not find entity {}", e);
       }
       return null;
    }
 
    public boolean unpublish(EntityInfo e, int topicId) {
-      lock.readLock().lock();
-      try {
-         final Topic topic = e.unpublish(topicId);
-         if (topic != null) {
-            // clean up all the subscriptions to this topic
-            synchronized (topic) {
-               for (Subscriber sub : topic.getSubscribers().toArray(new Subscriber[0])) {
-                  unsubscribe(e, topic, sub.entityId, true);
-               }
+      final RegistryTopic topic = e.unpublish(topicId);
+      if (topic != null) {
+         // clean up all the subscriptions to this topic
+         synchronized (topic) {
+            for (Subscriber sub : topic.getSubscribers().toArray(new Subscriber[0])) {
+               unsubscribe(e, topic, sub.entityId, true);
             }
-            return true;
-         } else {
-            logger.info("Could not find topic {} for entity {}", topicId, e);
          }
-      } finally {
-         lock.readLock().unlock();
+         return true;
+      } else {
+         logger.info("Could not find topic {} for entity {}", topicId, e);
       }
       return false;
    }
 
    public void subscribe(final EntityInfo publisher, final int topicId, final int entityId, final boolean once) {
-      lock.readLock().lock();
-      try {
-         final Topic topic = publisher.getTopic(topicId);
-         if (topic != null) {
-            final EntityInfo e = getEntity(entityId);
-            if (e != null) {
-               topic.subscribe(publisher, e, once);
-               e.subscribe(topic);
-            } else {
-               logger.info("Could not find subscriber {} for topic {}", entityId, topicId);
-            }
+      final RegistryTopic topic = publisher.getTopic(topicId);
+      if (topic != null) {
+         final EntityInfo e = getEntity(entityId);
+         if (e != null) {
+            topic.subscribe(publisher, e, once);
+            e.subscribe(topic);
          } else {
-            logger.info("Could not find topic {} for {}", topicId, publisher);
+            logger.info("Could not find subscriber {} for topic {}", entityId, topicId);
          }
-      } finally {
-         lock.readLock().unlock();
+      } else {
+         logger.info("Could not find topic {} for {}", topicId, publisher);
       }
    }
 
    public void unsubscribe(final EntityInfo publisher, final int topicId, final int entityId, final boolean all) {
       assert (publisher != null);
-      lock.readLock().lock();
-      try {
-         final Topic topic = publisher.getTopic(topicId);
-         if (topic != null) {
-            unsubscribe(publisher, topic, entityId, all);
-         } else {
-            logger.info("Could not find topic {} for {}", topicId, publisher);
-         }
-      } finally {
-         lock.readLock().unlock();
+      final RegistryTopic topic = publisher.getTopic(topicId);
+      if (topic != null) {
+         unsubscribe(publisher, topic, entityId, all);
+      } else {
+         logger.info("Could not find topic {} for {}", topicId, publisher);
       }
    }
 
-   public void unsubscribe(final EntityInfo publisher, Topic topic, final int entityId, final boolean all) {
+   public void unsubscribe(final EntityInfo publisher, RegistryTopic topic, final int entityId, final boolean all) {
       assert (publisher != null);
       assert (topic != null);
-      lock.readLock().lock();
-      try {
-         if (topic.unsubscribe(entityId, all)) {
-            final EntityInfo e = getEntity(entityId);
-            if (e != null) {
-               e.unsubscribe(topic);
-            }
+      if (topic.unsubscribe(entityId, all)) {
+         final EntityInfo e = getEntity(entityId);
+         if (e != null) {
+            e.unsubscribe(topic);
          }
-      } finally {
-         lock.readLock().unlock();
       }
    }
 
@@ -390,25 +359,20 @@ public class Registry implements TetrapodContract.Registry.API {
    }
 
    public void onAddEntityCommand(final EntityInfo entity) {
-      lock.readLock().lock();
-      try {
-         if (getEntity(entity.entityId) != null && entity.parentId != parentId) {
-            entity.queue(new Runnable() {
-               public void run() {
-                  clearAllTopicsAndSubscriptions(entity);
-               }
-            });
-         }
-         entities.put(entity.entityId, entity);
-         if (entity.isService()) {
-            // register their service in our services list
-            ensureServicesList(entity.contractId).add(entity);
-         }
-         if (entity.isService()) {
-            broadcaster.broadcastServicesMessage(new ServiceAddedMessage(entity));
-         }
-      } finally {
-         lock.readLock().unlock();
+      if (getEntity(entity.entityId) != null && entity.parentId != parentId) {
+         entity.queue(new Runnable() {
+            public void run() {
+               clearAllTopicsAndSubscriptions(entity);
+            }
+         });
+      }
+      entities.put(entity.entityId, entity);
+      if (entity.isService()) {
+         // register their service in our services list
+         ensureServicesList(entity.contractId).add(entity);
+      }
+      if (entity.isService()) {
+         broadcaster.broadcastServicesMessage(new ServiceAddedMessage(entity));
       }
    }
 
@@ -416,13 +380,8 @@ public class Registry implements TetrapodContract.Registry.API {
       if (entity != null) {
          entity.queue(new Runnable() {
             public void run() {
-               lock.readLock().lock();
-               try {
-                  if (entity.isService()) {
-                     broadcaster.broadcastServicesMessage(new ServiceUpdatedMessage(entity.entityId, entity.status));
-                  }
-               } finally {
-                  lock.readLock().unlock();
+               if (entity.isService()) {
+                  broadcaster.broadcastServicesMessage(new ServiceUpdatedMessage(entity.entityId, entity.status));
                }
             }
          });

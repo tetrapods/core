@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.socket.SocketChannel;
 import io.tetrapod.core.Session.RelayHandler;
+import io.tetrapod.core.pubsub.Topic;
 import io.tetrapod.core.registry.*;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.rpc.Error;
@@ -43,8 +44,6 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    private Topic                                   clusterTopic;
    private Topic                                   servicesTopic;
    private Topic                                   adminTopic;
-
-   private final Object                            servicesTopicLock     = new Object();
 
    private final TetrapodWorker                    worker;
 
@@ -113,9 +112,9 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
             // update status?
          }
 
-         clusterTopic = registry.publish(entityId, -1);
-         servicesTopic = registry.publish(entityId, -2);
-         adminTopic = registry.publish(entityId, -3);
+         clusterTopic = publishTopic();//registry.publish(entityId, -1);
+         servicesTopic = publishTopic();//registry.publish(entityId, -2);
+         adminTopic = publishTopic();//registry.publish(entityId, -3);
 
          //   cluster.startListening();
          // Establish a special loopback connection to ourselves
@@ -497,7 +496,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
    private void broadcastTopic(final EntityInfo publisher, final MessageHeader header, final ByteBuf buf) throws IOException {
       if (header.toId == UNADDRESSED || header.toId == getEntityId()) {
-         final Topic topic = publisher.getTopic(header.topicId);
+         final RegistryTopic topic = publisher.getTopic(header.topicId);
          if (topic != null) {
             synchronized (topic) {
                for (final Subscriber s : topic.getSubscribers()) {
@@ -535,7 +534,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       }
    }
 
-   private void broadcastTopic(final EntityInfo publisher, final Subscriber sub, final Topic topic, final MessageHeader header,
+   private void broadcastTopic(final EntityInfo publisher, final Subscriber sub, final RegistryTopic topic, final MessageHeader header,
             final ByteBuf buf) throws IOException {
       final int ri = buf.readerIndex();
       final EntityInfo e = registry.getEntity(sub.entityId);
@@ -593,14 +592,18 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
    @Override
    public void broadcastServicesMessage(Message msg) {
-      broadcast(msg, servicesTopic);
+      if (servicesTopic != null) {
+         servicesTopic.broadcast(msg);
+      }
    }
 
    public void broadcastClusterMessage(Message msg) {
-      broadcast(msg, clusterTopic);
+      if (clusterTopic != null) {
+         clusterTopic.broadcast(msg);
+      }
    }
 
-   public void broadcast(Message msg, Topic topic) {
+   public void broadcast(Message msg, RegistryTopic topic) {
       logger.trace("BROADCASTING {} {}", topic, msg.dump());
       if (topic != null) {
          synchronized (topic) {
@@ -616,7 +619,9 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    }
 
    public void broadcastAdminMessage(Message msg) {
-      broadcast(msg, adminTopic);
+      if (adminTopic != null) {
+         adminTopic.broadcast(msg);
+      }
    }
 
    @Override
@@ -795,7 +800,18 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
             ctx.session.sendMessage(new EntityMessage(info.entityId), Core.UNADDRESSED);
             return new RegisterResponse(info.entityId, getEntityId(), EntityToken.encode(info.entityId, info.reclaimToken));
          }
+      }
 
+      // for a client, we don't use raft to sync them, as they are a locally issued, non-replicated client
+      if (info.type == Core.TYPE_CLIENT) {
+         // update & store session
+         ctx.session.setTheirEntityId(info.entityId);
+         ctx.session.setTheirEntityType(info.type);
+         info.setSession(ctx.session);
+         // deliver them their entityId immediately to avoid some race conditions with the response
+         ctx.session.sendMessage(new EntityMessage(info.entityId), Core.UNADDRESSED);
+         registry.onAddEntityCommand(info);
+         return new RegisterResponse(info.entityId, getEntityId(), EntityToken.encode(info.entityId, info.reclaimToken));
       }
 
       final int entityId = info.entityId;
@@ -865,7 +881,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          }
       }
 
-      synchronized (servicesTopicLock) {
+      synchronized (servicesTopic) {
          subscribe(servicesTopic.topicId, ctx.header.fromId);
          // send all current entities
          for (EntityInfo e : registry.getServices()) {
@@ -878,7 +894,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    @Override
    public Response requestServicesUnsubscribe(ServicesUnsubscribeRequest r, RequestContext ctx) {
       // TODO: validate
-      synchronized (servicesTopicLock) {
+      synchronized (servicesTopic) {
          unsubscribe(servicesTopic.topicId, ctx.header.fromId);
       }
       return Response.SUCCESS;
@@ -1003,18 +1019,6 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          return Response.SUCCESS;
       }
       return Response.error(ERROR_INVALID_ENTITY);
-   }
-
-   @Override
-   public Response requestGetSubscriberCount(GetSubscriberCountRequest r, RequestContext ctx) {
-      EntityInfo ei = registry.getEntity(ctx.header.fromId);
-      if (ei != null) {
-         Topic t = ei.getTopic(r.topicId);
-         if (t != null) {
-            return new GetSubscriberCountResponse(t.getNumSubscribers());
-         }
-      }
-      return Response.error(ERROR_UNKNOWN);
    }
 
    @Override

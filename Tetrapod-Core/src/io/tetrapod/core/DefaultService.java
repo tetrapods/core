@@ -75,6 +75,7 @@ public class DefaultService
       addContracts(new CoreContract());
       addPeerContracts(new TetrapodContract());
       addMessageHandler(new EntityMessage(), this);
+      addMessageHandler(new TopicUnsubscribedMessage(), publisher);
       addSubscriptionHandler(new TetrapodContract.Cluster(), this);
 
       try {
