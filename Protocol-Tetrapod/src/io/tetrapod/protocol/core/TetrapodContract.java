@@ -62,8 +62,6 @@ public class TetrapodContract extends Contract {
       , LogRegistryStatsRequest.Handler
       , RaftStatsRequest.Handler
       , RegisterRequest.Handler
-      , RegistrySubscribeRequest.Handler
-      , RegistryUnsubscribeRequest.Handler
       , ReleaseOwnershipRequest.Handler
       , RetainOwnershipRequest.Handler
       , ServiceStatusUpdateRequest.Handler
@@ -87,8 +85,6 @@ public class TetrapodContract extends Contract {
          new RegisterRequest(),
          new ClusterJoinRequest(),
          new UnregisterRequest(),
-         new RegistrySubscribeRequest(),
-         new RegistryUnsubscribeRequest(),
          new ServicesSubscribeRequest(),
          new ServicesUnsubscribeRequest(),
          new ServiceStatusUpdateRequest(),
@@ -147,14 +143,10 @@ public class TetrapodContract extends Contract {
    public Structure[] getMessages() {
       return new Structure[] {
          new EntityMessage(),
-         new EntityRegisteredMessage(),
-         new EntityUnregisteredMessage(),
-         new EntityUpdatedMessage(),
          new TopicPublishedMessage(),
          new TopicUnpublishedMessage(),
          new TopicSubscribedMessage(),
          new TopicUnsubscribedMessage(),
-         new EntityListCompleteMessage(),
          new BuildCommandProgressMessage(),
          new ServiceAddedMessage(),
          new ServiceRemovedMessage(),
@@ -265,10 +257,6 @@ public class TetrapodContract extends Contract {
       
    public static class Registry extends Contract {
       public static interface API extends
-         EntityListCompleteMessage.Handler,
-         EntityRegisteredMessage.Handler,
-         EntityUnregisteredMessage.Handler,
-         EntityUpdatedMessage.Handler,
          TopicPublishedMessage.Handler,
          TopicSubscribedMessage.Handler,
          TopicUnpublishedMessage.Handler,
@@ -277,10 +265,6 @@ public class TetrapodContract extends Contract {
          
       public Structure[] getMessages() {
          return new Structure[] {
-            new EntityListCompleteMessage(),
-            new EntityRegisteredMessage(),
-            new EntityUnregisteredMessage(),
-            new EntityUpdatedMessage(),
             new TopicPublishedMessage(),
             new TopicSubscribedMessage(),
             new TopicUnpublishedMessage(),

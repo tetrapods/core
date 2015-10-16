@@ -63,8 +63,7 @@ public class SessionTest {
       Util.sleep(2000);
 
       svc2.sendMessage(new ServiceAddedMessage(), svc1.getEntityId());
-
-      pod.broadcastRegistryMessage(new EntityUpdatedMessage(svc2.getEntityId(), 0));
+ 
 
       Util.sleep(2000);
 

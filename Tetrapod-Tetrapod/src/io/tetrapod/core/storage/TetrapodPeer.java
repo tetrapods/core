@@ -39,7 +39,7 @@ public class TetrapodPeer implements Session.Listener, SessionFactory {
       this.host = host;
       this.clusterPort = clusterPort;
       this.servicePort = servicePort;
-      this.peerId = entityId >> Registry.PARENT_ID_SHIFT;
+      this.peerId = entityId >> TetrapodContract.PARENT_ID_SHIFT;
       scheduleReconnect(0);
    }
 

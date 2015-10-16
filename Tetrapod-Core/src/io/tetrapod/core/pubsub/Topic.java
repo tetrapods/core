@@ -42,17 +42,17 @@ public class Topic {
             tetrapods.put(parentId, tetrapod);
 
             // publish the topic on the new tetrapod
-            publisher.sendMessage(new TopicPublishedMessage(publisher.getEntityId(), topicId), tetrapod.entityId);
+            publisher.sendMessage(new TopicPublishedMessage(topicId), tetrapod.entityId);
          }
          // register the new subscriber for their parent tetrapod
-         publisher.sendMessage(new TopicSubscribedMessage(publisher.getEntityId(), topicId, sub.entityId, once), tetrapod.entityId);
+         publisher.sendMessage(new TopicSubscribedMessage(topicId, sub.entityId, once), tetrapod.entityId);
       }
    }
 
    public synchronized void unsubscribe(int entityId) {
       final Subscriber tetrapod = subscribers.get(entityId & PARENT_ID_MASK);
       if (tetrapod != null) {
-         publisher.sendMessage(new TopicUnsubscribedMessage(publisher.getEntityId(), topicId, entityId), tetrapod.entityId);
+         publisher.sendMessage(new TopicUnsubscribedMessage(topicId, entityId), tetrapod.entityId);
       }
    }
 
@@ -62,10 +62,14 @@ public class Topic {
          publisher.broadcastMessage(msg, tetrapod.entityId, topicId);
       }
    }
+   
+   public synchronized void sendMessage(Message msg, int toEntityId) {
+      publisher.sendMessage(msg, toEntityId);
+   }
 
    public synchronized void unpublish() {
       for (Subscriber tetrapod : tetrapods.values()) {
-         publisher.sendMessage(new TopicUnpublishedMessage(publisher.getEntityId(), topicId), tetrapod.entityId);
+         publisher.sendMessage(new TopicUnpublishedMessage(topicId), tetrapod.entityId);
       }
    }
 

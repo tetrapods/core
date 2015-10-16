@@ -26,21 +26,14 @@ import io.tetrapod.raft.RaftRPC.ClientResponseHandler;
 @Deprecated
 public class Registry implements TetrapodContract.Registry.API {
 
-   protected static final Logger                logger          = LoggerFactory.getLogger(Registry.class);
-
-   public static final int                      MAX_PARENTS     = 0x000007FF;
-   public static final int                      MAX_ID          = 0x000FFFFF;
-
-   public static final int                      PARENT_ID_SHIFT = 20;
-   public static final int                      PARENT_ID_MASK  = MAX_PARENTS << PARENT_ID_SHIFT;
-   public static final int                      BOOTSTRAP_ID    = 1 << PARENT_ID_SHIFT;
+   protected static final Logger                logger   = LoggerFactory.getLogger(Registry.class);
 
    /**
     * A read-write lock is used to synchronize subscriptions to the registry state, and it is a little counter-intuitive. When making write
     * operations to the registry, we grab the read lock to allow concurrent writes across the registry. When we need to send the current
     * state snapshot to another cluster member, we grab the write lock for exclusive access to send a consistent state.
     */
-   public final ReadWriteLock                   lock            = new ReentrantReadWriteLock();
+   public final ReadWriteLock                   lock     = new ReentrantReadWriteLock();
 
    /**
     * Our entityId
@@ -55,16 +48,14 @@ public class Registry implements TetrapodContract.Registry.API {
    /**
     * Maps entityId => EntityInfo
     */
-   private final Map<Integer, EntityInfo>       entities        = new ConcurrentHashMap<>();
+   private final Map<Integer, EntityInfo>       entities = new ConcurrentHashMap<>();
 
    /**
     * Maps contractId => List of EntityInfos that provide that service
     */
-   private final Map<Integer, List<EntityInfo>> services        = new ConcurrentHashMap<>();
+   private final Map<Integer, List<EntityInfo>> services = new ConcurrentHashMap<>();
 
-   public static interface RegistryBroadcaster {
-      public void broadcastRegistryMessage(Message msg);
-
+   public static interface RegistryBroadcaster { 
       public void broadcastServicesMessage(Message msg);
    }
 
@@ -147,7 +138,7 @@ public class Registry implements TetrapodContract.Registry.API {
     */
    public synchronized int issueId() {
       while (true) {
-         int id = parentId | (++counter % MAX_ID);
+         int id = parentId | (++counter % TetrapodContract.MAX_ID);
          if (getEntity(id) == null) {
             return id;
          }
@@ -277,19 +268,10 @@ public class Registry implements TetrapodContract.Registry.API {
    public void genericMessage(Message message, MessageContext ctx) {}
 
    @Override
-   public void messageEntityRegistered(EntityRegisteredMessage m, MessageContext ctx) {}
-
-   @Override
-   public void messageEntityUnregistered(EntityUnregisteredMessage m, MessageContext ctx) {}
-
-   @Override
-   public void messageEntityUpdated(final EntityUpdatedMessage m, MessageContext ctx) {}
-
-   @Override
    public void messageTopicPublished(final TopicPublishedMessage m, MessageContext ctx) {
       // TODO: validate sender
       logger.info("******* {}", m.dump());
-      final EntityInfo owner = getEntity(m.ownerId);
+      final EntityInfo owner = getEntity(ctx.header.fromId);
       if (owner != null) {
          owner.queue(new Runnable() {
             public void run() {
@@ -297,14 +279,14 @@ public class Registry implements TetrapodContract.Registry.API {
             }
          }); // TODO: kick()
       } else {
-         logger.info("Could not find publisher entity {}", m.ownerId);
+         logger.info("Could not find publisher entity {}", ctx.header.fromId);
       }
    }
 
    @Override
    public void messageTopicUnpublished(final TopicUnpublishedMessage m, MessageContext ctx) {
       logger.info("******* {}", m.dump());
-      final EntityInfo owner = getEntity(m.ownerId);
+      final EntityInfo owner = getEntity(ctx.header.fromId);
       if (owner != null) {
          owner.queue(new Runnable() {
             public void run() {
@@ -312,15 +294,14 @@ public class Registry implements TetrapodContract.Registry.API {
             }
          }); // TODO: kick()
       } else {
-         logger.info("Could not find publisher entity {}", m.ownerId);
+         logger.info("Could not find publisher entity {}", ctx.header.fromId);
       }
    }
 
    @Override
    public void messageTopicSubscribed(final TopicSubscribedMessage m, MessageContext ctx) {
       logger.info("******* {}", m.dump());
-
-      final EntityInfo owner = getEntity(m.ownerId);
+      final EntityInfo owner = getEntity(ctx.header.fromId);
       if (owner != null) {
          owner.queue(new Runnable() {
             public void run() {
@@ -328,15 +309,14 @@ public class Registry implements TetrapodContract.Registry.API {
             }
          }); // TODO: kick() 
       } else {
-         logger.info("Could not find publisher entity {}", m.ownerId);
+         logger.info("Could not find publisher entity {}", ctx.header.fromId);
       }
    }
 
    @Override
    public void messageTopicUnsubscribed(final TopicUnsubscribedMessage m, MessageContext ctx) {
       logger.info("******* {}", m.dump());
-
-      final EntityInfo owner = getEntity(m.ownerId);
+      final EntityInfo owner = getEntity(ctx.header.fromId);
       if (owner != null) {
          owner.queue(new Runnable() {
             public void run() {
@@ -344,53 +324,9 @@ public class Registry implements TetrapodContract.Registry.API {
             }
          }); // TODO: kick()
       } else {
-         logger.info("Could not find publisher entity {}", m.ownerId);
+         logger.info("Could not find publisher entity {}", ctx.header.fromId);
       }
    }
-
-   @Override
-   public void messageEntityListComplete(EntityListCompleteMessage m, MessageContext ctx) {
-      logger.info("====================== SYNCED {} ======================", ctx.header.fromId);
-   }
-
-   //////////////////////////////////////////////////////////////////////////////////////////
-
-   @Deprecated
-   public void sendRegistryState(final Session session, final int toEntityId, final int topicId) {
-      lock.writeLock().lock();
-      try {
-         // Sends all current entities -- ourselves, and our children
-         //         final EntityInfo me = getEntity(parentId);
-         //         session.sendMessage(new EntityRegisteredMessage(me), TO_ENTITY, toEntityId);
-         //         for (Topic t : me.getTopics()) {
-         //            session.sendMessage(new TopicPublishedMessage(me.entityId, t.topicId), TO_ENTITY, toEntityId);
-         //         }
-         //
-         //         for (EntityInfo e : getChildren()) {
-         //            session.sendMessage(new EntityRegisteredMessage(e), TO_ENTITY, toEntityId);
-         //            for (Topic t : e.getTopics()) {
-         //               session.sendMessage(new TopicPublishedMessage(e.entityId, t.topicId), TO_ENTITY, toEntityId);
-         //            }
-         //         }
-         //         // send topic info
-         //         // OPTIMIZE: could be optimized greatly with custom messages, but this is very simple
-         //         sendSubscribers(me, session, toEntityId, topicId);
-         //         for (EntityInfo e : getChildren()) {
-         //            sendSubscribers(e, session, toEntityId, topicId);
-         //         }
-         session.sendMessage(new EntityListCompleteMessage(), toEntityId);
-      } finally {
-         lock.writeLock().unlock();
-      }
-   }
-
-   //   private void sendSubscribers(final EntityInfo e, final Session session, final int toEntityId, final int topicId) {
-   //      for (Topic t : e.getTopics()) {
-   //         for (Subscriber s : t.getSubscribers()) {
-   //            session.sendMessage(new TopicSubscribedMessage(t.ownerId, t.topicId, s.entityId, false), TO_ENTITY, toEntityId);
-   //         }
-   //      }
-   //   }
 
    //////////////////////////////////////////////////////////////////////////////////////////
 

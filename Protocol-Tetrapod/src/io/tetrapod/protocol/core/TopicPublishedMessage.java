@@ -21,12 +21,10 @@ public class TopicPublishedMessage extends Message {
       defaults();
    }
 
-   public TopicPublishedMessage(int ownerId, int topicId) {
-      this.ownerId = ownerId;
+   public TopicPublishedMessage(int topicId) {
       this.topicId = topicId;
    }   
    
-   public int ownerId;
    public int topicId;
 
    public final Structure.Security getSecurity() {
@@ -34,14 +32,12 @@ public class TopicPublishedMessage extends Message {
    }
 
    public final void defaults() {
-      ownerId = 0;
       topicId = 0;
    }
    
    @Override
    public final void write(DataSource data) throws IOException {
-      data.write(1, this.ownerId);
-      data.write(2, this.topicId);
+      data.write(1, this.topicId);
       data.writeEndTag();
    }
    
@@ -51,8 +47,7 @@ public class TopicPublishedMessage extends Message {
       while (true) {
          int tag = data.readTag();
          switch (tag) {
-            case 1: this.ownerId = data.read_int(tag); break;
-            case 2: this.topicId = data.read_int(tag); break;
+            case 1: this.topicId = data.read_int(tag); break;
             case Codec.END_TAG:
                return;
             default:
@@ -86,9 +81,8 @@ public class TopicPublishedMessage extends Message {
       // Note do not use this tags in long term serializations (to disk or databases) as 
       // implementors are free to rename them however they wish.  A null means the field
       // is not to participate in web serialization (remaining at default)
-      String[] result = new String[2+1];
-      result[1] = "ownerId";
-      result[2] = "topicId";
+      String[] result = new String[1+1];
+      result[1] = "topicId";
       return result;
    }
    
@@ -103,7 +97,6 @@ public class TopicPublishedMessage extends Message {
       desc.types = new TypeDescriptor[desc.tagWebNames.length];
       desc.types[0] = new TypeDescriptor(TypeDescriptor.T_STRUCT, getContractId(), getStructId());
       desc.types[1] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
-      desc.types[2] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
       return desc;
    }
 }

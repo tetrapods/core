@@ -41,6 +41,7 @@ public class ServiceStats {
     */
    protected synchronized void subscribe(int entityId) {
       statsTopic.subscribe(entityId, true);
+      statsTopic.sendMessage(message, entityId);
    }
 
    /**
@@ -109,7 +110,7 @@ public class ServiceStats {
             dirty = true;
          }
 
-         if (dirty || true) {
+         if (dirty) {
             statsTopic.broadcast(message);
          }
       }

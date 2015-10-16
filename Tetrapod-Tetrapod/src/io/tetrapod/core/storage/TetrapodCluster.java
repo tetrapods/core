@@ -87,7 +87,7 @@ public class TetrapodCluster extends Storage
          String[] node = Util.getProperty("raft.node." + peerId, Util.getHostName() + ":" + service.getClusterPort()).split(":");
          String host = node[0];
          int port = Integer.parseInt(node[1]);
-         int entityId = peerId << Registry.PARENT_ID_SHIFT;
+         int entityId = peerId << TetrapodContract.PARENT_ID_SHIFT;
 
          if (host.equals(Util.getHostName()) && port == service.getClusterPort()) {
             myPeerId = peerId;
@@ -97,7 +97,7 @@ public class TetrapodCluster extends Storage
          addMember(entityId, host, service.getServicePort(), port, null);
       }
       if (myPeerId != 0) {
-         service.registerSelf(myPeerId << Registry.PARENT_ID_SHIFT, service.random.nextLong());
+         service.registerSelf(myPeerId << TetrapodContract.PARENT_ID_SHIFT, service.random.nextLong());
          raft.start(myPeerId);
          service.dispatcher.dispatch(new Runnable() {
             public void run() {
@@ -199,7 +199,7 @@ public class TetrapodCluster extends Storage
    }
 
    private Session getSessionForPeer(int peerId) {
-      final TetrapodPeer pod = cluster.get(peerId << Registry.PARENT_ID_SHIFT);
+      final TetrapodPeer pod = cluster.get(peerId << TetrapodContract.PARENT_ID_SHIFT);
       if (pod != null) {
          return pod.getSession();
       }
@@ -492,24 +492,18 @@ public class TetrapodCluster extends Storage
          //service.registry.register(entity);
       } else {
          // reconnecting with a pre-existing peerId
-         final int peerId = req.entityId >> Registry.PARENT_ID_SHIFT;
+         final int peerId = req.entityId >> TetrapodContract.PARENT_ID_SHIFT;
          if (!raft.isValidPeer(peerId)) {
             // we must have bootstrapped again, so re-add the peer
             //final AddPeerCommand<TetrapodStateMachine> cmd = new AddPeerCommand<>(req.host, req.clusterPort);
             //executeCommand(cmd, null);
          }
       }
-      entity.setSession(ctx.session);
-
-      // add them to the cluster list
-      //if (addMember(req.entityId, req.host, req.servicePort, req.clusterPort, ctx.session)) {
-      //   service.broadcast(new ClusterMemberMessage(req.entityId, req.host, req.servicePort, req.clusterPort, null), clusterTopic);
-      // }
+      entity.setSession(ctx.session); 
 
       // subscribe them to our cluster and registry views
       logger.info("**************************** SYNC TO {} {}", ctx.session, req.entityId);
-
-      service.registrySubscribe(ctx.session, req.entityId, true);
+ 
       service.subscribeToCluster(ctx.session, req.entityId);
 
       return Response.SUCCESS;
@@ -755,7 +749,7 @@ public class TetrapodCluster extends Storage
          int i = 0;
          int[] peers = new int[raft.getPeers().size()];
          for (RaftEngine.Peer p : raft.getPeers()) {
-            peers[i++] = p.peerId << Registry.PARENT_ID_SHIFT;
+            peers[i++] = p.peerId << TetrapodContract.PARENT_ID_SHIFT;
          }
 
          return new RaftStatsResponse((byte) raft.getRole().ordinal(), raft.getCurrentTerm(), raft.getLog().getLastTerm(),

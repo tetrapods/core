@@ -57,9 +57,6 @@ internal request ClusterJoin
 internal request Unregister
    1: int entityId
     
-internal request RegistrySubscribe
-internal request RegistryUnsubscribe
-
 internal request ServicesSubscribe
    1: string adminToken
    
@@ -179,39 +176,23 @@ internal response GetEntityInfo
 public message Entity 
    1: int entityId
     
-##### Registry Topic Messages ##### 
-
-internal message Registry.EntityRegistered
-	1: Entity entity 
-	 
-internal message Registry.EntityUnregistered
-	1: int entityId;
-	
-internal message Registry.EntityUpdated
-	1: int entityId;
-	2: int status;	 
+##### Registry Topic Messages #####  
 	
 internal message Registry.TopicPublished
-   1: int ownerId
-   2: int topicId
+   1: int topicId
 
 internal message Registry.TopicUnpublished
-   1: int ownerId
-   2: int topicId
+   1: int topicId
 
 internal message Registry.TopicSubscribed
-   1: int ownerId
-   2: int topicId
-   3: int entityId
-   4: boolean once
+   1: int topicId
+   2: int entityId
+   3: boolean once
 
 internal message Registry.TopicUnsubscribed
-   1: int ownerId
-   2: int topicId
-   3: int entityId
+   1: int topicId
+   2: int entityId
    
-internal message Registry.EntityListComplete
-
 ##### Building #############
 
 admin request GetServiceBuildInfo
