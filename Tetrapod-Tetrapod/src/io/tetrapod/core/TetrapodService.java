@@ -373,8 +373,10 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    @Override
    public void onShutdown(boolean restarting) {
       logger.info("Shutting Down Tetrapod");
-      // sleep a bit so other services getting a kill signal can shutdown cleanly
-      Util.sleep(1500);
+      if (!Util.isLocal()) {
+         // sleep a bit so other services getting a kill signal can shutdown cleanly
+         Util.sleep(1500);
+      }
       if (cluster != null) {
          cluster.shutdown();
       }
@@ -448,7 +450,12 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       } else {
          entity = registry.getEntity(entityId);
          if (entity == null) {
-            logger.debug("Could not find an entity for {}", entityId);
+            int parentEntity = entityId & TetrapodContract.PARENT_ID_MASK;
+            if (parentEntity != entityId && parentEntity != getEntityId()) {
+               return getRelaySession(parentEntity, contractId);
+            } else {
+               logger.debug("Could not find an entity for {}", entityId);
+            }
          }
       }
       if (entity != null) {
@@ -604,7 +611,6 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    }
 
    public void broadcast(Message msg, RegistryTopic topic) {
-      logger.trace("BROADCASTING {} {}", topic, msg.dump());
       if (topic != null) {
          synchronized (topic) {
             // OPTIMIZE: call broadcast() directly instead of through loop-back
@@ -623,18 +629,6 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          adminTopic.broadcast(msg);
       }
    }
-
-   @Override
-   public void subscribe(int topicId, int entityId) {
-      registry.subscribe(registry.getEntity(getEntityId()), topicId, entityId, false);
-   }
-
-   @Override
-   public void unsubscribe(int topicId, int entityId) {
-      registry.unsubscribe(registry.getEntity(getEntityId()), topicId, entityId, false);
-   }
-
-   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

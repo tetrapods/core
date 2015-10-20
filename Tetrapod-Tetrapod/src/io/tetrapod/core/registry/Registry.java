@@ -48,6 +48,7 @@ public class Registry implements TetrapodContract.Registry.API {
 
    public static interface RegistryBroadcaster {
       public void broadcastServicesMessage(Message msg);
+
       public void sendMessage(Message msg, int toEntity);
    }
 
@@ -67,7 +68,7 @@ public class Registry implements TetrapodContract.Registry.API {
       return parentId;
    }
 
-   public Collection<EntityInfo> getEntities() { 
+   public Collection<EntityInfo> getEntities() {
       return entities.values();
    }
 
@@ -92,7 +93,7 @@ public class Registry implements TetrapodContract.Registry.API {
    }
 
    public EntityInfo getEntity(int entityId) {
-      return entities.get(entityId); 
+      return entities.get(entityId);
    }
 
    public EntityInfo getFirstAvailableService(int contractId) {
@@ -147,10 +148,10 @@ public class Registry implements TetrapodContract.Registry.API {
          // assert (owner != null); 
          if (owner != null) {
             unsubscribe(owner, topic.topicId, e.entityId, true);
-            
+
             // notify the publisher that this client's subscription is now dead
             broadcaster.sendMessage(new TopicUnsubscribedMessage(topic.topicId, e.entityId), owner.entityId);
-            
+
          } else {
             // bug here cleaning up topics on unreg, I think...
             logger.warn("clearAllTopicsAndSubscriptions: Couldn't find {} owner {}", topic, topic.ownerId);
@@ -159,14 +160,25 @@ public class Registry implements TetrapodContract.Registry.API {
    }
 
    public void unregister(final EntityInfo e) {
-      cluster.executeCommand(new DelEntityCommand(e.entityId), new ClientResponseHandler<TetrapodStateMachine>() {
-         @Override
-         public void handleResponse(Entry<TetrapodStateMachine> entry) {}
-      });
+      if (e.isClient()) {
+         entities.remove(e.entityId);
+         // HACK -- would be 'cleaner' as a listener interface
+         LongPollQueue.clearEntity(e.entityId);
+         clearAllTopicsAndSubscriptions(e);
+      } else {
+         cluster.executeCommand(new DelEntityCommand(e.entityId), new ClientResponseHandler<TetrapodStateMachine>() {
+            @Override
+            public void handleResponse(Entry<TetrapodStateMachine> entry) {}
+         });
+      }
    }
 
    public void updateStatus(EntityInfo e, int status) {
-      cluster.executeCommand(new ModEntityCommand(e.entityId, status, e.build, e.version), null);
+      if (e.isClient()) {
+         e.status = status;
+      } else {
+         cluster.executeCommand(new ModEntityCommand(e.entityId, status, e.build, e.version), null);
+      }
    }
 
    public RegistryTopic publish(int entityId, int topicId) {
@@ -330,8 +342,7 @@ public class Registry implements TetrapodContract.Registry.API {
          return;
       }
 
-      cluster.executeCommand(new ModEntityCommand(e.entityId, e.status | Core.STATUS_GONE, e.build, e.version), null);
-      //         updateStatus(e, e.status | Core.STATUS_GONE);
+      updateStatus(e, e.status | Core.STATUS_GONE);
       e.setSession(null);
       //         if (e.isTetrapod()) {
       //            for (EntityInfo child : entities.values()) {
