@@ -333,7 +333,6 @@ public class Registry implements TetrapodContract.Registry.API {
    }
 
    public void setGone(EntityInfo e) {
-
       if (e.getLastContact() != null) {
          // we set this value to non-null only for web-polling sessions, 
          // which need to be handled differently since multiple sessions can 
@@ -351,11 +350,11 @@ public class Registry implements TetrapodContract.Registry.API {
       //               }
       //            }
       //         }
+      clearAllTopicsAndSubscriptions(e);
    }
 
    public void clearGone(EntityInfo e, Session ses) {
-      cluster.executeCommand(new ModEntityCommand(e.entityId, e.status & ~Core.STATUS_GONE, e.build, e.version), null);
-      // updateStatus(e, e.status & ~Core.STATUS_GONE);
+      updateStatus(e, e.status & ~Core.STATUS_GONE);
       e.setSession(ses);
    }
 

@@ -99,7 +99,6 @@ public class Publisher implements TopicUnsubscribedMessage.Handler {
 
    @Override
    public void messageTopicUnsubscribed(TopicUnsubscribedMessage m, MessageContext ctx) {
-      logger.info("******** {}", m.dump());
       unsubscribe(m.topicId, m.entityId);
    }
 

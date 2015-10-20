@@ -53,8 +53,8 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
    private AdminAccounts                           adminAccounts;
 
-   private final List<Server>                      servers               = new ArrayList<Server>();
-   private final List<Server>                      httpServers           = new ArrayList<Server>();
+   private final List<Server>                      servers               = new ArrayList<>();
+   private final List<Server>                      httpServers           = new ArrayList<>();
 
    private long                                    lastStatsLog;
 
@@ -101,10 +101,6 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
          EntityInfo me = cluster.getEntity(entityId);
          if (me == null) {
-            //            me = new EntityInfo(entityId, 0, reclaimToken, Util.getHostName(), 0, Core.TYPE_TETRAPOD, getShortName(), buildNumber, 0,
-            //                     getContractId());
-            //cluster.executeCommand(new AddEntityCommand(), null); // FIXME
-            //            logger.info(String.format("SELF-REGISTERED: 0x%08X %s", entityId, me));
             throw new RuntimeException("Not in registry");
          } else {
             this.token = EntityToken.encode(entityId, me.reclaimToken);
@@ -112,15 +108,13 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
             // update status?
          }
 
-         clusterTopic = publishTopic();//registry.publish(entityId, -1);
-         servicesTopic = publishTopic();//registry.publish(entityId, -2);
-         adminTopic = publishTopic();//registry.publish(entityId, -3);
+         clusterTopic = publishTopic();
+         servicesTopic = publishTopic();
+         adminTopic = publishTopic();
 
-         //   cluster.startListening();
          // Establish a special loopback connection to ourselves
          // connects to self on localhost on our clusterport
          clusterClient.connect("localhost", getClusterPort(), dispatcher).sync();
-
       } catch (Exception ex) {
          fail(ex);
       }

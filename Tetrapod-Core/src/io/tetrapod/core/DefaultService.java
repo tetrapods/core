@@ -660,10 +660,6 @@ public class DefaultService
          clusterClient.getSession().sendMessage(msg, toEntityId);
       }
    }
-//
-//   public void sendBroadcastMessage(Message msg, int topicId) {
-//      publisher.broadcast(msg, topicId);
-//   }
 
    public void sendAltBroadcastMessage(Message msg, int altId) {
       clusterClient.getSession().sendAltBroadcastMessage(msg, altId);
