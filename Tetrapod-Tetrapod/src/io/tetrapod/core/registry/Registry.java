@@ -250,8 +250,7 @@ public class Registry implements TetrapodContract.Registry.API {
 
    @Override
    public void messageTopicPublished(final TopicPublishedMessage m, MessageContext ctx) {
-      // TODO: validate sender
-      logger.info("******* {}", m.dump());
+      logger.debug("******* {} {}", ctx.header.dump(), m.dump());
       final EntityInfo owner = getEntity(ctx.header.fromId);
       if (owner != null) {
          owner.queue(new Runnable() {
@@ -266,7 +265,7 @@ public class Registry implements TetrapodContract.Registry.API {
 
    @Override
    public void messageTopicUnpublished(final TopicUnpublishedMessage m, MessageContext ctx) {
-      logger.info("******* {}", m.dump());
+      logger.debug("******* {} {}", ctx.header.dump(), m.dump());
       final EntityInfo owner = getEntity(ctx.header.fromId);
       if (owner != null) {
          owner.queue(new Runnable() {
@@ -281,7 +280,7 @@ public class Registry implements TetrapodContract.Registry.API {
 
    @Override
    public void messageTopicSubscribed(final TopicSubscribedMessage m, MessageContext ctx) {
-      logger.info("******* {}", m.dump());
+      logger.debug("******* {} {}", ctx.header.dump(), m.dump());
       final EntityInfo owner = getEntity(ctx.header.fromId);
       if (owner != null) {
          owner.queue(new Runnable() {
@@ -296,7 +295,7 @@ public class Registry implements TetrapodContract.Registry.API {
 
    @Override
    public void messageTopicUnsubscribed(final TopicUnsubscribedMessage m, MessageContext ctx) {
-      logger.info("******* {}", m.dump());
+      logger.debug("******* {} {}", ctx.header.dump(), m.dump());
       final EntityInfo owner = getEntity(ctx.header.fromId);
       if (owner != null) {
          owner.queue(new Runnable() {

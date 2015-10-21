@@ -26,7 +26,7 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
    /**
     * The number of requests sent to a specific service that triggers us to start a direct session
     */
-   private static final int                REQUEST_THRESHOLD = 100;
+   private static final int                REQUEST_THRESHOLD = 1;
 
    private static final Logger             logger            = LoggerFactory.getLogger(ServiceConnector.class);
 
@@ -138,7 +138,7 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
        * Attempt to initiate handshake for a direct connection
        */
       protected synchronized void handshake() {
-         if (System.currentTimeMillis() > restUntil) {
+         if (System.currentTimeMillis() > restUntil) {            
             pending = true;
             valid = false;
             service.clusterClient.getSession().sendRequest(new DirectConnectionRequest(token), entityId, (byte) 30)
@@ -146,6 +146,7 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
                         @Override
                         public void onResponse(Response res) {
                            if (res.isError()) {
+                              logger.error("{}", res);
                               failure();
                            } else {
                               connect((DirectConnectionResponse) res);

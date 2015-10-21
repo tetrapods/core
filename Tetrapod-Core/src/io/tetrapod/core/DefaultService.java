@@ -189,12 +189,10 @@ public class DefaultService
                   AdminAuthToken.setSecret(Util.getProperty(AdminAuthToken.SHARED_SECRET_KEY));
 
                   onReadyToServe();
-                  if (getEntityType() != Core.TYPE_TETRAPOD) {
-                     if (serviceConnector != null) {
-                        serviceConnector.shutdown();
-                     }
-                     serviceConnector = new ServiceConnector(this, sslContext);
+                  if (serviceConnector != null) {
+                     serviceConnector.shutdown();
                   }
+                  serviceConnector = new ServiceConnector(this, sslContext);
                } catch (Throwable t) {
                   fail(t);
                }
