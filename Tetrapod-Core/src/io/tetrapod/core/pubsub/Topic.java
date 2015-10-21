@@ -27,6 +27,11 @@ public class Topic {
          this.entityId = entityId;
       }
    }
+   
+   public void reset() {
+      subscribers.clear();
+      tetrapods.clear();
+   }
 
    // FIXME: Implement once/counting?
    public synchronized void subscribe(int entityId, boolean once) {

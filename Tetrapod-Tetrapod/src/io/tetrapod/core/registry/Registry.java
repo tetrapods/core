@@ -332,6 +332,7 @@ public class Registry implements TetrapodContract.Registry.API {
    }
 
    public void setGone(EntityInfo e) {
+      logger.info("Setting {} as GONE", e);
       if (e.getLastContact() != null) {
          // we set this value to non-null only for web-polling sessions, 
          // which need to be handled differently since multiple sessions can 
@@ -341,7 +342,7 @@ public class Registry implements TetrapodContract.Registry.API {
       }
 
       updateStatus(e, e.status | Core.STATUS_GONE);
-      e.setSession(null);
+    //  e.setSession(null);
       //         if (e.isTetrapod()) {
       //            for (EntityInfo child : entities.values()) {
       //               if (child.parentId == e.entityId) {
@@ -352,9 +353,9 @@ public class Registry implements TetrapodContract.Registry.API {
       clearAllTopicsAndSubscriptions(e);
    }
 
-   public void clearGone(EntityInfo e, Session ses) {
+   public void clearGone(EntityInfo e) {
+      logger.info("Setting {} as BACK", e);
       updateStatus(e, e.status & ~Core.STATUS_GONE);
-      e.setSession(ses);
    }
 
    public int getNumActiveClients() {
@@ -378,7 +379,13 @@ public class Registry implements TetrapodContract.Registry.API {
       entities.put(entity.entityId, entity);
       if (entity.isService()) {
          // register their service in our services list
-         ensureServicesList(entity.contractId).add(entity);
+         List<EntityInfo> list = ensureServicesList(entity.contractId);
+         for (EntityInfo e : new ArrayList<>(list)) {
+            if (e.entityId == entity.entityId) {
+               list.remove(e);
+            }
+         }
+         list.add(entity);
       }
       if (entity.isService()) {
          broadcaster.broadcastServicesMessage(new ServiceAddedMessage(entity));

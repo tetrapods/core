@@ -102,4 +102,10 @@ public class Publisher implements TopicUnsubscribedMessage.Handler {
       unsubscribe(m.topicId, m.entityId);
    }
 
+   public void resetTopics() {
+      for (Topic t : topics.values()) {
+         t.reset();
+      }
+   }
+
 }

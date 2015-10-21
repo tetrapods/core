@@ -660,42 +660,46 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          }
       }
       for (final EntityInfo e : registry.getChildren()) {
-         if (e.isGone()) {
-            if (now - e.getGoneSince() > Util.ONE_MINUTE) {
-               logger.info("Reaping: {}", e);
-               registry.unregister(e);
-            }
-         } else {
-            // special check for long-polling clients
-            if (e.getLastContact() != null) {
-               if (now - e.getLastContact() > Util.ONE_MINUTE) {
-                  e.setLastContact(null);
-                  registry.setGone(e);
-               }
-            }
+         healthCheck(e);
+      }
+   }
 
-            // push through a dummy request to help keep dispatch pool metrics fresh
-            if (e.isService()) {
-               final Session ses = e.getSession();
-               if (ses != null && now - ses.getLastHeardFrom() > 1153) {
-                  final long t0 = System.currentTimeMillis();
-                  sendRequest(new DummyRequest(), e.entityId).handle(new ResponseHandler() {
-                     @Override
-                     public void onResponse(Response res) {
-                        final long tf = System.currentTimeMillis() - t0;
-                        if (tf > 1000) {
-                           logger.warn("Round trip to dispatch {} took {} ms", e, tf);
-                        }
+   private void healthCheck(final EntityInfo e) {
+      final long now = System.currentTimeMillis();
+      if (e.isGone()) {
+         if (now - e.getGoneSince() > Util.ONE_MINUTE) {
+            logger.info("Reaping: {}", e);
+            registry.unregister(e);
+         }
+      } else {
+         // special check for long-polling clients
+         if (e.getLastContact() != null) {
+            if (now - e.getLastContact() > Util.ONE_MINUTE) {
+               e.setLastContact(null);
+               registry.setGone(e);
+            }
+         }
+
+         // push through a dummy request to help keep dispatch pool metrics fresh
+         if (e.isService()) {
+            final Session ses = e.getSession();
+            if (ses != null && now - ses.getLastHeardFrom() > 1153) {
+               final long t0 = System.currentTimeMillis();
+               sendRequest(new DummyRequest(), e.entityId).handle(new ResponseHandler() {
+                  @Override
+                  public void onResponse(Response res) {
+                     final long tf = System.currentTimeMillis() - t0;
+                     if (tf > 1000) {
+                        logger.warn("Round trip to dispatch {} took {} ms", e, tf);
                      }
-                  });
-               }
-               if (ses == null) {
-                  registry.setGone(e);
-               }
+                  }
+               });
+            }
+            if (ses == null && !e.isPendingRegistration()) {
+               registry.setGone(e);
             }
          }
       }
-
    }
 
    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -812,9 +816,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          @Override
          public void handleResponse(Entry<TetrapodStateMachine> entry) {
             if (entry != null) {
-
-               logger.info("Waited for local : {} : {}", entry, cluster.getCommitIndex());
-
+               logger.info("Waited for local entityId-{} : {} : {}", entityId, entry, cluster.getCommitIndex());
                // get the real entity object after we've processed the command
                final EntityInfo entity = cluster.getEntity(entityId);
 

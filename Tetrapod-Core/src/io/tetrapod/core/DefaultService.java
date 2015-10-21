@@ -366,6 +366,7 @@ public class DefaultService
    }
 
    public void onDisconnectedFromCluster() {
+      publisher.resetTopics();
       if (!isShuttingDown()) {
          logger.info("Connection to tetrapod closed");
          dispatcher.dispatch(3, TimeUnit.SECONDS, new Runnable() {

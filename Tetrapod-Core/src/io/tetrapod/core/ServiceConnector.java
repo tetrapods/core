@@ -138,7 +138,7 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
        * Attempt to initiate handshake for a direct connection
        */
       protected synchronized void handshake() {
-         if (System.currentTimeMillis() > restUntil) {            
+         if (System.currentTimeMillis() > restUntil) {
             pending = true;
             valid = false;
             service.clusterClient.getSession().sendRequest(new DirectConnectionRequest(token), entityId, (byte) 30)
@@ -146,7 +146,7 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
                         @Override
                         public void onResponse(Response res) {
                            if (res.isError()) {
-                              logger.error("{}", res);
+                              logger.error("DirectConnectionRequest to {} =  {}", entityId, res);
                               failure();
                            } else {
                               connect((DirectConnectionResponse) res);
