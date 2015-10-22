@@ -2,7 +2,7 @@ package io.tetrapod.core.storage;
 
 import io.netty.channel.socket.SocketChannel;
 import io.tetrapod.core.*;
-import io.tetrapod.core.registry.Registry;
+import io.tetrapod.core.registry.EntityRegistry;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.utils.Util;
 import io.tetrapod.protocol.core.*;

@@ -7,7 +7,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.tetrapod.core.Session;
 import io.tetrapod.core.rpc.Message;
 import io.tetrapod.core.rpc.MessageContext;
 import io.tetrapod.core.storage.*;
@@ -21,10 +20,9 @@ import io.tetrapod.raft.RaftRPC.ClientResponseHandler;
  * 
  * Each tetrapod service owns a shard of the registry and has a full replica of all other shards.
  */
-@Deprecated
-public class Registry implements TetrapodContract.Registry.API {
+public class EntityRegistry implements TetrapodContract.Registry.API {
 
-   protected static final Logger                logger   = LoggerFactory.getLogger(Registry.class);
+   protected static final Logger                logger   = LoggerFactory.getLogger(EntityRegistry.class);
 
    /**
     * Our entityId
@@ -55,7 +53,7 @@ public class Registry implements TetrapodContract.Registry.API {
    private final RegistryBroadcaster broadcaster;
    private final TetrapodCluster     cluster;
 
-   public Registry(RegistryBroadcaster broadcaster, TetrapodCluster cluster) {
+   public EntityRegistry(RegistryBroadcaster broadcaster, TetrapodCluster cluster) {
       this.broadcaster = broadcaster;
       this.cluster = cluster;
    }
@@ -342,7 +340,7 @@ public class Registry implements TetrapodContract.Registry.API {
       }
 
       updateStatus(e, e.status | Core.STATUS_GONE);
-    //  e.setSession(null);
+      //  e.setSession(null);
       //         if (e.isTetrapod()) {
       //            for (EntityInfo child : entities.values()) {
       //               if (child.parentId == e.entityId) {

@@ -35,7 +35,7 @@ import io.tetrapod.raft.Entry;
  * of client connections
  */
 public class TetrapodService extends DefaultService implements TetrapodContract.API, StorageContract.API, RaftContract.API, RelayHandler,
-         io.tetrapod.core.registry.Registry.RegistryBroadcaster {
+         EntityRegistry.RegistryBroadcaster {
 
    public static final Logger                      logger                = LoggerFactory.getLogger(TetrapodService.class);
 
@@ -49,7 +49,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
    protected final TetrapodCluster                 cluster               = new TetrapodCluster(this);
 
-   public final io.tetrapod.core.registry.Registry registry              = new io.tetrapod.core.registry.Registry(this, cluster);
+   public final EntityRegistry registry              = new EntityRegistry(this, cluster);
 
    private AdminAccounts                           adminAccounts;
 
