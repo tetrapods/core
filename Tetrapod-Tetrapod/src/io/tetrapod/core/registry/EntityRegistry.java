@@ -237,6 +237,8 @@ public class EntityRegistry implements TetrapodContract.Registry.API {
          final EntityInfo e = getEntity(entityId);
          if (e != null) {
             e.unsubscribe(topic);
+            // notify the subscriber that they have been unsubscribed from this topic
+            broadcaster.sendMessage(new TopicUnsubscribedMessage(topic.topicId, publisher.entityId), entityId);
          }
       }
    }
@@ -406,20 +408,15 @@ public class EntityRegistry implements TetrapodContract.Registry.API {
       final EntityInfo e = entities.remove(entityId);
       if (e != null) {
          if (e.isService()) {
-            e.queue(new Runnable() {
-               public void run() {
-                  broadcaster.broadcastServicesMessage(new ServiceRemovedMessage(e.entityId));
-                  // HACK -- would be 'cleaner' as a listener interface
-                  LongPollQueue.clearEntity(e.entityId);
-               }
-            });
-            List<EntityInfo> list = services.get(e.contractId);
+            broadcaster.broadcastServicesMessage(new ServiceRemovedMessage(e.entityId));
+            final List<EntityInfo> list = services.get(e.contractId);
             if (list != null) {
                list.remove(e);
             }
          }
-
          clearAllTopicsAndSubscriptions(e); // might need to do this elsewhere...
+      } else {
+         logger.error("onDelEntityCommand Couldn't find {}", entityId);
       }
    }
 

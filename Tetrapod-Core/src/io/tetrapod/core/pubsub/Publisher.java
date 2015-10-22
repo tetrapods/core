@@ -99,7 +99,9 @@ public class Publisher implements TopicUnsubscribedMessage.Handler {
 
    @Override
    public void messageTopicUnsubscribed(TopicUnsubscribedMessage m, MessageContext ctx) {
-      unsubscribe(m.topicId, m.entityId);
+      if (m.entityId != service.getEntityId()) {
+         unsubscribe(m.topicId, m.entityId);
+      }
    }
 
    public void resetTopics() {

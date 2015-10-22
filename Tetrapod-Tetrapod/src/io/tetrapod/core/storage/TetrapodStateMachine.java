@@ -18,10 +18,15 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import javax.crypto.SecretKey;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * Tetrapod state machine adds cluster properties, service protocols, and tetrapod web routes
  */
 public class TetrapodStateMachine extends StorageStateMachine<TetrapodStateMachine> {
+
+   public static final Logger                     logger                          = LoggerFactory.getLogger(TetrapodStateMachine.class);
 
    public final static int                        TETRAPOD_STATE_FILE_VERSION     = 1;
 
@@ -138,7 +143,7 @@ public class TetrapodStateMachine extends StorageStateMachine<TetrapodStateMachi
          } else if (item.key.startsWith(TETRAPOD_ADMIN_PREFIX)) {
             Admin admin = new Admin();
             admin.read(TempBufferDataSource.forReading(item.getData()));
-           addAdminUser(admin, false);
+            addAdminUser(admin, false);
          } else if (item.key.startsWith(TETRAPOD_OWNER_PREFIX)) {
             Owner owner = new Owner();
             owner.read(TempBufferDataSource.forReading(item.getData()));

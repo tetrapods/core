@@ -34,31 +34,31 @@ import io.tetrapod.raft.Entry;
  * The tetrapod service is the core cluster service which handles message routing, cluster management, service discovery, and load balancing
  * of client connections
  */
-public class TetrapodService extends DefaultService implements TetrapodContract.API, StorageContract.API, RaftContract.API, RelayHandler,
-         EntityRegistry.RegistryBroadcaster {
+public class TetrapodService extends DefaultService
+         implements TetrapodContract.API, StorageContract.API, RaftContract.API, RelayHandler, EntityRegistry.RegistryBroadcaster {
 
-   public static final Logger                      logger                = LoggerFactory.getLogger(TetrapodService.class);
+   public static final Logger        logger                = LoggerFactory.getLogger(TetrapodService.class);
 
-   public final SecureRandom                       random                = new SecureRandom();
+   public final SecureRandom         random                = new SecureRandom();
 
-   private Topic                                   clusterTopic;
-   private Topic                                   servicesTopic;
-   private Topic                                   adminTopic;
+   private Topic                     clusterTopic;
+   private Topic                     servicesTopic;
+   private Topic                     adminTopic;
 
-   private final TetrapodWorker                    worker;
+   private final TetrapodWorker      worker;
 
-   protected final TetrapodCluster                 cluster               = new TetrapodCluster(this);
+   protected final TetrapodCluster   cluster               = new TetrapodCluster(this);
 
-   public final EntityRegistry registry              = new EntityRegistry(this, cluster);
+   public final EntityRegistry       registry              = new EntityRegistry(this, cluster);
 
-   private AdminAccounts                           adminAccounts;
+   private AdminAccounts             adminAccounts;
 
-   private final List<Server>                      servers               = new ArrayList<>();
-   private final List<Server>                      httpServers           = new ArrayList<>();
+   private final List<Server>        servers               = new ArrayList<>();
+   private final List<Server>        httpServers           = new ArrayList<>();
 
-   private long                                    lastStatsLog;
+   private long                      lastStatsLog;
 
-   private final LinkedList<Integer>               clientSessionsCounter = new LinkedList<>();
+   private final LinkedList<Integer> clientSessionsCounter = new LinkedList<>();
 
    public TetrapodService() throws IOException {
       super(new TetrapodContract());
@@ -415,6 +415,15 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          return entity.entityId;
       }
       return 0;
+   }
+
+   @Override
+   public boolean isServiceExistant(int entityId) {
+      EntityInfo info = registry.getEntity(entityId);
+      if (info != null) {
+         return info.isService();
+      }
+      return false;
    }
 
    /**

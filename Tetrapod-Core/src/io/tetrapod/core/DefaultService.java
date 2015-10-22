@@ -652,8 +652,12 @@ public class DefaultService
       return clusterClient.getSession().sendRequest(req, Core.DIRECT, (byte) 30);
    }
 
+   public boolean isServiceExistant(int entityId) {
+      return services.isServiceExistant(entityId);
+   }
+   
    public void sendMessage(Message msg, int toEntityId) {
-      if (serviceConnector != null) {
+      if (serviceConnector != null && isServiceExistant(toEntityId)) {
          serviceConnector.sendMessage(msg, toEntityId);
       } else {
          clusterClient.getSession().sendMessage(msg, toEntityId);
