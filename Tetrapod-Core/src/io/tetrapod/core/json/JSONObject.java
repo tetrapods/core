@@ -1737,6 +1737,27 @@ public class JSONObject {
    public <T> JSONObject optJSONObject(Enum_String<T> key) {
       return optJSONObject(key.getValue());
    }
+   public <T> String getString(Enum_String<T> key) {
+      return getString(key.getValue());
+   }
+   public <T> boolean getBoolean(Enum_String<T> key) {
+      return getBoolean(key.getValue());
+   }
+   public <T> double getDouble(Enum_String<T> key) {
+      return getDouble(key.getValue());
+   }
+   public <T> int getInt(Enum_String<T> key) {
+      return getInt(key.getValue());
+   }
+   public <T> long getLong(Enum_String<T> key) {
+      return getLong(key.getValue());
+   }
+   public <T> JSONArray getJSONArray(Enum_String<T> key) {
+      return getJSONArray(key.getValue());
+   }
+   public <T> JSONObject getJSONObject(Enum_String<T> key) {
+      return getJSONObject(key.getValue());
+   }
 
 
 }
