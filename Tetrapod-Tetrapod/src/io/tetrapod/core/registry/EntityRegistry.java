@@ -164,10 +164,14 @@ public class EntityRegistry implements TetrapodContract.Registry.API {
          LongPollQueue.clearEntity(e.entityId);
          clearAllTopicsAndSubscriptions(e);
       } else {
-         cluster.executeCommand(new DelEntityCommand(e.entityId), new ClientResponseHandler<TetrapodStateMachine>() {
-            @Override
-            public void handleResponse(Entry<TetrapodStateMachine> entry) {}
-         });
+         if (e.isTetrapod() && cluster.isValidPeer(e.entityId)) {
+            setGone(e);
+         } else {
+            cluster.executeCommand(new DelEntityCommand(e.entityId), new ClientResponseHandler<TetrapodStateMachine>() {
+               @Override
+               public void handleResponse(Entry<TetrapodStateMachine> entry) {}
+            });
+         }
       }
    }
 
@@ -212,6 +216,10 @@ public class EntityRegistry implements TetrapodContract.Registry.API {
          if (e != null) {
             topic.subscribe(publisher, e, once);
             e.subscribe(topic);
+
+            // ... temp ...
+            broadcaster.sendMessage(new TopicSubscribedMessage(topic.topicId, publisher.entityId, false), entityId);
+
          } else {
             logger.info("Could not find subscriber {} for topic {}", entityId, topicId);
          }

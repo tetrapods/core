@@ -479,34 +479,19 @@ public class TetrapodCluster extends Storage
       if (peer == null) {
          return Response.error(CoreContract.ERROR_INVALID_ENTITY);
       }
-
       peer.servicePort = req.servicePort;
-
-      ctx.session.setTheirEntityId(req.entityId);
 
       // register them in our registry
       EntityInfo entity = service.registry.getEntity(req.entityId);
-      if (entity == null) {
-         entity = new EntityInfo(req.entityId, req.entityId, 0L, req.host, req.status, Core.TYPE_TETRAPOD, "Tetrapod*", req.build,
-                  TetrapodContract.VERSION, TetrapodContract.CONTRACT_ID);
-         executeCommand(new AddEntityCommand(entity), null);
-         //service.registry.register(entity);
-      } else {
-         // reconnecting with a pre-existing peerId
-         final int peerId = req.entityId >> TetrapodContract.PARENT_ID_SHIFT;
-         if (!raft.isValidPeer(peerId)) {
-            // we must have bootstrapped again, so re-add the peer
-            //final AddPeerCommand<TetrapodStateMachine> cmd = new AddPeerCommand<>(req.host, req.clusterPort);
-            //executeCommand(cmd, null);
-         }
+      // reconnecting with a pre-existing peerId
+      final int peerId = req.entityId >> TetrapodContract.PARENT_ID_SHIFT;
+      if (raft.isValidPeer(peerId)) {
+         ctx.session.setTheirEntityId(req.entityId);
+         entity.setSession(ctx.session);
+         // subscribe them to our cluster and registry views
+         logger.info("**************************** SYNC TO {} {}", ctx.session, req.entityId);
+         service.subscribeToCluster(ctx.session, req.entityId);
       }
-      entity.setSession(ctx.session);
-
-      // subscribe them to our cluster and registry views
-      logger.info("**************************** SYNC TO {} {}", ctx.session, req.entityId);
-
-      service.subscribeToCluster(ctx.session, req.entityId);
-
       return Response.SUCCESS;
    }
 
@@ -1052,6 +1037,11 @@ public class TetrapodCluster extends Storage
 
    public long getCommitIndex() {
       return raft.getLog().getCommitIndex();
+   }
+
+   public boolean isValidPeer(int entityId) {
+      final int peerId = entityId >> TetrapodContract.PARENT_ID_SHIFT;
+      return peerId == raft.getPeerId() || raft.isValidPeer(peerId);
    }
 
 }
