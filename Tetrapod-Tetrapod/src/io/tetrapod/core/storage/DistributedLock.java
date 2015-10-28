@@ -1,12 +1,14 @@
 package io.tetrapod.core.storage;
 
-import io.tetrapod.core.utils.*;
-import io.tetrapod.raft.*;
-import io.tetrapod.raft.storage.*;
-
 import java.util.UUID;
 
-import org.slf4j.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import io.tetrapod.core.utils.Util;
+import io.tetrapod.core.utils.Value;
+import io.tetrapod.raft.storage.LockCommand;
+import io.tetrapod.raft.storage.UnlockCommand;
 
 /**
  * Convenience wrapper for a Distributed Lock via raft
