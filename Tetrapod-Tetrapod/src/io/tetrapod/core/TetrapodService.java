@@ -459,36 +459,34 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       final EntityInfo sender = registry.getEntity(header.fromId);
       if (sender != null) {
          buf.retain();
-         sender.queue(new Runnable() {
-            public void run() {
-               try {
-                  switch (header.toType) {
-                     case MessageHeader.TO_TOPIC:
-                        if (isBroadcast) {
-                           broadcastTopic(sender, header, buf);
-                        }
-                        break;
+         sender.queue(() -> {
+            try {
+               switch (header.toType) {
+                  case MessageHeader.TO_TOPIC:
+                     if (isBroadcast) {
+                        broadcastTopic(sender, header, buf);
+                     }
+                     break;
 
-                     case MessageHeader.TO_ENTITY:
-                        final Session ses = getRelaySession(header.toId, header.contractId);
-                        if (ses != null) {
-                           ses.sendRelayedMessage(header, buf, false);
-                        }
-                        break;
+                  case MessageHeader.TO_ENTITY:
+                     final Session ses = getRelaySession(header.toId, header.contractId);
+                     if (ses != null) {
+                        ses.sendRelayedMessage(header, buf, false);
+                     }
+                     break;
 
-                     case MessageHeader.TO_ALTERNATE:
-                        if (isBroadcast) {
-                           broadcastAlt(sender, header, buf);
-                        }
-                        break;
-                  }
-               } catch (Throwable e) {
-                  logger.error(e.getMessage(), e);
-               } finally {
-                  // FIXME: This is fragile -- if we delete an entity with queued work, we need to make sure we
-                  // release all the buffers in the queued work items.
-                  buf.release();
+                  case MessageHeader.TO_ALTERNATE:
+                     if (isBroadcast) {
+                        broadcastAlt(sender, header, buf);
+                     }
+                     break;
                }
+            } catch (Throwable e) {
+               logger.error(e.getMessage(), e);
+            } finally {
+               // FIXME: This is fragile -- if we delete an entity with queued work, we need to make sure we
+               // release all the buffers in the queued work items.
+               buf.release();
             }
          });
          worker.kick();
@@ -640,16 +638,14 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
    private void scheduleHealthCheck() {
       if (!isShuttingDown()) {
-         dispatcher.dispatch(1, TimeUnit.SECONDS, new Runnable() {
-            public void run() {
-               if (dispatcher.isRunning()) {
-                  try {
-                     healthCheck();
-                  } catch (Throwable e) {
-                     logger.error(e.getMessage(), e);
-                  } finally {
-                     scheduleHealthCheck();
-                  }
+         dispatcher.dispatch(1, TimeUnit.SECONDS, () -> {
+            if (dispatcher.isRunning()) {
+               try {
+                  healthCheck();
+               } catch (Throwable e) {
+                  logger.error(e.getMessage(), e);
+               } finally {
+                  scheduleHealthCheck();
                }
             }
          });

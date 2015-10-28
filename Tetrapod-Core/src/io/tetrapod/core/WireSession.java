@@ -23,13 +23,13 @@ import org.slf4j.*;
  */
 public class WireSession extends Session {
 
-   private static final Logger logger = LoggerFactory.getLogger(WireSession.class);
+   private static final Logger logger         = LoggerFactory.getLogger(WireSession.class);
 
-   private static final int  WIRE_VERSION = 1;
-   private static final int  WIRE_OPTIONS = 0x00000000;
-   private static final long LOADED_TIME  = System.currentTimeMillis();
+   private static final int    WIRE_VERSION   = 1;
+   private static final int    WIRE_OPTIONS   = 0x00000000;
+   private static final long   LOADED_TIME    = System.currentTimeMillis();
 
-   private boolean needsHandshake = true;
+   private boolean             needsHandshake = true;
 
    public WireSession(SocketChannel channel, WireSession.Helper helper) {
       super(channel, helper);
@@ -63,7 +63,7 @@ public class WireSession extends Session {
    private void read(final ByteBuf in, final int len, final byte envelope) throws IOException {
       final long t0 = System.currentTimeMillis();
 
-      assert(len == in.readableBytes());
+      assert (len == in.readableBytes());
       logger.trace("Read message {} with {} bytes", envelope, len);
       switch (envelope) {
          case ENVELOPE_REQUEST:
@@ -132,13 +132,11 @@ public class WireSession extends Session {
                res.read(reader);
                if (!commsLogIgnore(header.structId))
                   logged = commsLog("%s  [%d] <- %s", this, header.requestId, res.dump());
-               getDispatcher().dispatch(new Runnable() {
-                  public void run() {
-                     if (res instanceof StructureAdapter) {
-                        async.setResponse(new ResponseAdapter(res));
-                     } else {
-                        async.setResponse((Response) res);
-                     }
+               getDispatcher().dispatch(() -> {
+                  if (res instanceof StructureAdapter) {
+                     async.setResponse(new ResponseAdapter(res));
+                  } else {
+                     async.setResponse((Response) res);
                   }
                });
             } else {

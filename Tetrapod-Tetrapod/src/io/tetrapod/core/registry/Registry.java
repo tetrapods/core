@@ -19,41 +19,41 @@ import org.slf4j.*;
  */
 public class Registry implements TetrapodContract.Registry.API {
 
-   protected static final Logger logger = LoggerFactory.getLogger(Registry.class);
+   protected static final Logger                logger          = LoggerFactory.getLogger(Registry.class);
 
-   public static final int MAX_PARENTS = 0x000007FF;
-   public static final int MAX_ID      = 0x000FFFFF;
+   public static final int                      MAX_PARENTS     = 0x000007FF;
+   public static final int                      MAX_ID          = 0x000FFFFF;
 
-   public static final int PARENT_ID_SHIFT = 20;
-   public static final int PARENT_ID_MASK  = MAX_PARENTS << PARENT_ID_SHIFT;
-   public static final int BOOTSTRAP_ID    = 1 << PARENT_ID_SHIFT;
+   public static final int                      PARENT_ID_SHIFT = 20;
+   public static final int                      PARENT_ID_MASK  = MAX_PARENTS << PARENT_ID_SHIFT;
+   public static final int                      BOOTSTRAP_ID    = 1 << PARENT_ID_SHIFT;
 
    /**
     * A read-write lock is used to synchronize subscriptions to the registry state, and it is a little counter-intuitive. When making write
     * operations to the registry, we grab the read lock to allow concurrent writes across the registry. When we need to send the current
     * state snapshot to another cluster member, we grab the write lock for exclusive access to send a consistent state.
     */
-   public final ReadWriteLock lock = new ReentrantReadWriteLock();
+   public final ReadWriteLock                   lock            = new ReentrantReadWriteLock();
 
    /**
     * Our entityId
     */
-   private int parentId;
+   private int                                  parentId;
 
    /**
     * Our local entity id counter
     */
-   private int counter;
+   private int                                  counter;
 
    /**
     * Maps entityId => EntityInfo
     */
-   private final Map<Integer, EntityInfo> entities = new ConcurrentHashMap<>();
+   private final Map<Integer, EntityInfo>       entities        = new ConcurrentHashMap<>();
 
    /**
     * Maps contractId => List of EntityInfos that provide that service
     */
-   private final Map<Integer, List<EntityInfo>> services = new ConcurrentHashMap<>();
+   private final Map<Integer, List<EntityInfo>> services        = new ConcurrentHashMap<>();
 
    public static interface RegistryBroadcaster {
       public void broadcastRegistryMessage(Message msg);
@@ -298,7 +298,7 @@ public class Registry implements TetrapodContract.Registry.API {
    }
 
    public void unsubscribe(final EntityInfo publisher, final int topicId, final int entityId, final boolean all) {
-      assert(publisher != null);
+      assert (publisher != null);
       lock.readLock().lock();
       try {
          final Topic topic = publisher.getTopic(topicId);
@@ -313,8 +313,8 @@ public class Registry implements TetrapodContract.Registry.API {
    }
 
    public void unsubscribe(final EntityInfo publisher, Topic topic, final int entityId, final boolean all) {
-      assert(publisher != null);
-      assert(topic != null);
+      assert (publisher != null);
+      assert (topic != null);
       lock.readLock().lock();
       try {
          final EntityInfo e = getEntity(entityId);
@@ -356,11 +356,7 @@ public class Registry implements TetrapodContract.Registry.API {
                info.version = m.entity.version;
                info.contractId = m.entity.contractId;
                final EntityInfo e = info;
-               info.queue(new Runnable() {
-                  public void run() {
-                     clearAllTopicsAndSubscriptions(e);
-                  }
-               });
+               info.queue(() -> clearAllTopicsAndSubscriptions(e));
             } else {
                info = new EntityInfo(m.entity);
             }
@@ -377,11 +373,7 @@ public class Registry implements TetrapodContract.Registry.API {
       if (ctx.header.fromId != parentId) {
          final EntityInfo e = getEntity(m.entityId);
          if (e != null) {
-            e.queue(new Runnable() {
-               public void run() {
-                  unregister(e);
-               }
-            });
+            e.queue(() -> unregister(e));
          } else {
             logger.error("Could not find entity {} to unregister", m.entityId);
          }
@@ -394,11 +386,7 @@ public class Registry implements TetrapodContract.Registry.API {
       if (ctx.header.fromId != parentId) {
          final EntityInfo e = getEntity(m.entityId);
          if (e != null) {
-            e.queue(new Runnable() {
-               public void run() {
-                  updateStatus(e, m.status);
-               }
-            });
+            e.queue(() -> updateStatus(e, m.status));
          } else {
             logger.error("Could not find entity {} to update", m.entityId);
          }
@@ -411,11 +399,9 @@ public class Registry implements TetrapodContract.Registry.API {
       if (ctx.header.fromId != parentId) {
          final EntityInfo owner = getEntity(m.ownerId);
          if (owner != null) {
-            owner.queue(new Runnable() {
-               public void run() {
-                  owner.nextTopicId();// increment our topic counter
-                  owner.publish(m.topicId);
-               }
+            owner.queue(() -> {
+               owner.nextTopicId();// increment our topic counter
+               owner.publish(m.topicId);
             }); // TODO: kick()
          } else {
             logger.info("Could not find publisher entity {}", m.ownerId);
@@ -429,11 +415,7 @@ public class Registry implements TetrapodContract.Registry.API {
       if (ctx.header.fromId != parentId) {
          final EntityInfo owner = getEntity(m.ownerId);
          if (owner != null) {
-            owner.queue(new Runnable() {
-               public void run() {
-                  unpublish(owner, m.topicId);
-               }
-            }); // TODO: kick()
+            owner.queue(() -> unpublish(owner, m.topicId)); // TODO: kick()
          } else {
             logger.info("Could not find publisher entity {}", m.ownerId);
          }
@@ -446,11 +428,7 @@ public class Registry implements TetrapodContract.Registry.API {
       if (ctx.header.fromId != parentId) {
          final EntityInfo owner = getEntity(m.ownerId);
          if (owner != null) {
-            owner.queue(new Runnable() {
-               public void run() {
-                  subscribe(owner, m.topicId, m.entityId, m.once);
-               }
-            }); // TODO: kick() 
+            owner.queue(() -> subscribe(owner, m.topicId, m.entityId, m.once)); // TODO: kick() 
          } else {
             logger.info("Could not find publisher entity {}", m.ownerId);
          }
@@ -463,11 +441,7 @@ public class Registry implements TetrapodContract.Registry.API {
          // TODO: validate sender           
          final EntityInfo owner = getEntity(m.ownerId);
          if (owner != null) {
-            owner.queue(new Runnable() {
-               public void run() {
-                  unsubscribe(owner, m.topicId, m.entityId, false);
-               }
-            }); // TODO: kick()
+            owner.queue(() -> unsubscribe(owner, m.topicId, m.entityId, false)); // TODO: kick()
          } else {
             logger.info("Could not find publisher entity {}", m.ownerId);
          }
@@ -525,8 +499,8 @@ public class Registry implements TetrapodContract.Registry.API {
       logger.info("========================== TETRAPOD CLUSTER REGISTRY ============================");
       for (EntityInfo e : list) {
          if (includeClients || !e.isClient())
-         logger.info(String.format(" 0x%08X 0x%08X %-15s status=%08X topics=%d subscriptions=%d", e.parentId, e.entityId, e.name, e.status,
-               e.getNumTopics(), e.getNumSubscriptions()));
+            logger.info(String.format(" 0x%08X 0x%08X %-15s status=%08X topics=%d subscriptions=%d", e.parentId, e.entityId, e.name,
+                     e.status, e.getNumTopics(), e.getNumSubscriptions()));
       }
       logger.info("=================================================================================\n");
    }

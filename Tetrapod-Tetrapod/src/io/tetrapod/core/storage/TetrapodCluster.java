@@ -25,37 +25,37 @@ import org.slf4j.*;
 public class TetrapodCluster extends Storage
          implements RaftRPC<TetrapodStateMachine>, RaftContract.API, StateMachine.Listener<TetrapodStateMachine>, SessionFactory {
 
-   private static final Logger logger = LoggerFactory.getLogger(TetrapodCluster.class);
+   private static final Logger                    logger         = LoggerFactory.getLogger(TetrapodCluster.class);
 
-   private final Server server;
+   private final Server                           server;
 
    /**
     * Maps EntityId to TetrapodPeer
     */
-   private final Map<Integer, TetrapodPeer> cluster = new ConcurrentHashMap<>();
+   private final Map<Integer, TetrapodPeer>       cluster        = new ConcurrentHashMap<>();
 
-   private final TetrapodService service;
+   private final TetrapodService                  service;
 
    private final RaftEngine<TetrapodStateMachine> raft;
 
-   private final TetrapodStateMachine state;
+   private final TetrapodStateMachine             state;
 
-   private final Config cfg;
+   private final Config                           cfg;
 
    /**
     * The index of the command we joined the cluster
     */
-   private AtomicLong joinIndex = new AtomicLong(-1);
+   private AtomicLong                             joinIndex      = new AtomicLong(-1);
 
    /**
     * Maps key prefixes to Topics
     */
-   private final Map<Integer, Set<String>> ownersToTopics = new ConcurrentHashMap<>();
+   private final Map<Integer, Set<String>>        ownersToTopics = new ConcurrentHashMap<>();
 
    /**
     * Maps topics to sessions
     */
-   private final Map<String, Set<Session>> topicsToOwners = new ConcurrentHashMap<>();
+   private final Map<String, Set<Session>>        topicsToOwners = new ConcurrentHashMap<>();
 
    public TetrapodCluster(TetrapodService service) {
       this.service = service;
@@ -96,11 +96,7 @@ public class TetrapodCluster extends Storage
       if (myPeerId != 0) {
          service.registerSelf(myPeerId << Registry.PARENT_ID_SHIFT, service.random.nextLong());
          raft.start(myPeerId);
-         service.dispatcher.dispatch(new Runnable() {
-            public void run() {
-               service.checkDependencies();
-            }
-         });
+         service.dispatcher.dispatch(() -> service.checkDependencies());
       } else {
          service.fail("Could not find my peerId for " + Util.getHostName() + ":" + service.getClusterPort());
       }

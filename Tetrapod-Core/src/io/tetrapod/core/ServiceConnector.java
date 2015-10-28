@@ -19,19 +19,19 @@ import org.slf4j.*;
  */
 public class ServiceConnector implements DirectConnectionRequest.Handler, ValidateConnectionRequest.Handler {
 
-   private static final Logger logger = LoggerFactory.getLogger(ServiceConnector.class);
+   private static final Logger             logger            = LoggerFactory.getLogger(ServiceConnector.class);
 
    /**
     * The number of requests sent to a specific service that triggers us to start a direct session
     */
-   private static final int REQUEST_THRESHOLD = 100;
+   private static final int                REQUEST_THRESHOLD = 100;
 
-   private Map<Integer, DirectServiceInfo> services = new ConcurrentHashMap<>();
+   private Map<Integer, DirectServiceInfo> services          = new ConcurrentHashMap<>();
 
-   private final DefaultService service;
-   private final SSLContext     sslContext;
+   private final DefaultService            service;
+   private final SSLContext                sslContext;
 
-   private Server server;
+   private Server                          server;
 
    public ServiceConnector(DefaultService service, SSLContext sslContext) {
       this.service = service;
@@ -207,11 +207,7 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
                      }
                   } else {
                      if (s.requests > REQUEST_THRESHOLD && !s.pending) {
-                        service.dispatcher.dispatch(new Runnable() {
-                           public void run() {
-                              s.handshake();
-                           }
-                        });
+                        service.dispatcher.dispatch(() -> s.handshake());
                      }
                   }
                }

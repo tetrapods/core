@@ -37,26 +37,26 @@ import com.codahale.metrics.Timer;
 import com.codahale.metrics.Timer.Context;
 
 public class WebHttpSession extends WebSession {
-   protected static final Logger logger = LoggerFactory.getLogger(WebHttpSession.class);
+   protected static final Logger               logger            = LoggerFactory.getLogger(WebHttpSession.class);
 
-   public static final Timer requestTimes = Metrics.timer(WebHttpSession.class, "requests", "time");
+   public static final Timer                   requestTimes      = Metrics.timer(WebHttpSession.class, "requests", "time");
 
-   private static final int FLOOD_TIME_PERIOD = 2000;
-   private static final int FLOOD_WARN        = 200;
-   private static final int FLOOD_IGNORE      = 300;
-   private static final int FLOOD_KILL        = 400;
+   private static final int                    FLOOD_TIME_PERIOD = 2000;
+   private static final int                    FLOOD_WARN        = 200;
+   private static final int                    FLOOD_IGNORE      = 300;
+   private static final int                    FLOOD_KILL        = 400;
 
-   private volatile long floodPeriod;
+   private volatile long                       floodPeriod;
 
-   private int reqCounter = 0;
+   private int                                 reqCounter        = 0;
 
-   private final String              wsLocation;
-   private WebSocketServerHandshaker handshaker;
+   private final String                        wsLocation;
+   private WebSocketServerHandshaker           handshaker;
 
    private Map<Integer, ChannelHandlerContext> contexts;
 
-   private String httpReferrer = null;
-   private String domain       = null;
+   private String                              httpReferrer      = null;
+   private String                              domain            = null;
 
    public WebHttpSession(SocketChannel ch, Session.Helper helper, Map<String, WebRoot> roots, String wsLocation) {
       super(ch, helper);
@@ -145,7 +145,7 @@ public class WebHttpSession extends WebSession {
       if (Util.isEmpty(getHttpReferrer())) {
          setHttpReferrer(req.headers().get("Referer"));
          logger.debug("•••• Referer: {} ", getHttpReferrer());
-      } 
+      }
       // Set the domain for this request, if not already set
       if (Util.isEmpty(getDomain())) {
          setDomain(req.headers().get("Host"));
@@ -231,49 +231,45 @@ public class WebHttpSession extends WebSession {
          readAndDispatchRequest(header, params);
 
       } else {
-         getDispatcher().dispatch(new Runnable() {
-            public void run() {
-               final LongPollQueue messages = LongPollQueue.getQueue(getTheirEntityId());
-               final long startTime = System.currentTimeMillis();
-               // long poll -- wait until there are messages in queue, and return them
-               assert messages != null;
-               // we grab a lock so only one poll request processes at a time
-               longPoll(25, messages, startTime, ctx, req);
-            }
+         getDispatcher().dispatch(() -> {
+            final LongPollQueue messages = LongPollQueue.getQueue(getTheirEntityId());
+            final long startTime = System.currentTimeMillis();
+            // long poll -- wait until there are messages in queue, and return them
+            assert messages != null;
+            // we grab a lock so only one poll request processes at a time
+            longPoll(25, messages, startTime, ctx, req);
          });
       }
    }
 
    private void longPoll(final int millis, final LongPollQueue messages, final long startTime, final ChannelHandlerContext ctx,
             final FullHttpRequest req) {
-      getDispatcher().dispatch(millis, TimeUnit.MILLISECONDS, new Runnable() {
-         public void run() {
-            if (messages.tryLock()) {
-               try {
-                  if (messages.size() > 0) {
-                     final JSONArray arr = new JSONArray();
-                     while (!messages.isEmpty()) {
-                        JSONObject jo = messages.poll();
-                        if (jo != null) {
-                           arr.put(jo);
-                        }
-                     }
-                     logger.debug("{} long poll {} has {} items\n", this, messages.getEntityId(), messages.size());
-                     ctx.writeAndFlush(makeFrame(new JSONObject().put("messages", arr), HttpHeaders.isKeepAlive(req)));
-                  } else {
-                     if (System.currentTimeMillis() - startTime > Util.ONE_SECOND * 10) {
-                        ctx.writeAndFlush(makeFrame(new JSONObject().put("messages", new JSONArray()), HttpHeaders.isKeepAlive(req)));
-                     } else {
-                        // wait a bit and check again
-                        longPoll(50, messages, startTime, ctx, req);
+      getDispatcher().dispatch(millis, TimeUnit.MILLISECONDS, () -> {
+         if (messages.tryLock()) {
+            try {
+               if (messages.size() > 0) {
+                  final JSONArray arr = new JSONArray();
+                  while (!messages.isEmpty()) {
+                     JSONObject jo = messages.poll();
+                     if (jo != null) {
+                        arr.put(jo);
                      }
                   }
-               } finally {
-                  messages.unlock();
+                  logger.debug("{} long poll {} has {} items\n", this, messages.getEntityId(), messages.size());
+                  ctx.writeAndFlush(makeFrame(new JSONObject().put("messages", arr), HttpHeaders.isKeepAlive(req)));
+               } else {
+                  if (System.currentTimeMillis() - startTime > Util.ONE_SECOND * 10) {
+                     ctx.writeAndFlush(makeFrame(new JSONObject().put("messages", new JSONArray()), HttpHeaders.isKeepAlive(req)));
+                  } else {
+                     // wait a bit and check again
+                     longPoll(50, messages, startTime, ctx, req);
+                  }
                }
-            } else {
-               ctx.writeAndFlush(makeFrame(new JSONObject().put("error", "locked"), HttpHeaders.isKeepAlive(req)));
+            } finally {
+               messages.unlock();
             }
+         } else {
+            ctx.writeAndFlush(makeFrame(new JSONObject().put("error", "locked"), HttpHeaders.isKeepAlive(req)));
          }
       });
    }

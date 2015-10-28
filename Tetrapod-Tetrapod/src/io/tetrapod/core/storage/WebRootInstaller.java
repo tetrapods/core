@@ -12,10 +12,10 @@ import java.util.concurrent.*;
 import org.slf4j.*;
 
 public class WebRootInstaller {
-   private static final Logger logger = LoggerFactory.getLogger(WebRootInstaller.class);
+   private static final Logger           logger                    = LoggerFactory.getLogger(WebRootInstaller.class);
 
    private final Executor                webRootSequentialExecutor = new ThreadPoolExecutor(0, 1, 5L, TimeUnit.SECONDS,
-                                                                         new LinkedBlockingQueue<Runnable>());
+            new LinkedBlockingQueue<>());
    private final TetrapodStateMachine    stateMachine;
    private final Map<String, WebRootDef> pending                   = new HashMap<>();
 
@@ -27,25 +27,14 @@ public class WebRootInstaller {
       synchronized (pending) {
          pending.put(def.name, def);
       }
-      webRootSequentialExecutor.execute(new Runnable() {
-         @Override
-         public void run() {
-            doInstall(def);
-         }
-      });
+      webRootSequentialExecutor.execute(() -> doInstall(def));
    }
 
    public void uninstall(final String name) {
       synchronized (pending) {
          pending.remove(name);
       }
-      webRootSequentialExecutor.execute(new Runnable() {
-         @Override
-         public void run() {
-            doUninstall(name);
-         }
-      });
-      
+      webRootSequentialExecutor.execute(() -> doUninstall(name));
    }
 
    private void doInstall(WebRootDef def) {
@@ -71,7 +60,7 @@ public class WebRootInstaller {
          logger.error(e.getMessage(), e);
       }
    }
-   
+
    private void doUninstall(String name) {
       logger.debug("Uninstalling WebRoot {} ", name);
       stateMachine.webRootDirs.remove(name);
