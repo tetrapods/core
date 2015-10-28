@@ -694,13 +694,10 @@ public class TetrapodService extends DefaultService
             final Session ses = e.getSession();
             if (ses != null && now - ses.getLastHeardFrom() > 1153) {
                final long t0 = System.currentTimeMillis();
-               sendRequest(new DummyRequest(), e.entityId).handle(new ResponseHandler() {
-                  @Override
-                  public void onResponse(Response res) {
-                     final long tf = System.currentTimeMillis() - t0;
-                     if (tf > 1000) {
-                        logger.warn("Round trip to dispatch {} took {} ms", e, tf);
-                     }
+               sendRequest(new DummyRequest(), e.entityId).handle((res) -> {
+                  final long tf = System.currentTimeMillis() - t0;
+                  if (tf > 1000) {
+                     logger.warn("Round trip to dispatch {} took {} ms", e, tf);
                   }
                });
             }
