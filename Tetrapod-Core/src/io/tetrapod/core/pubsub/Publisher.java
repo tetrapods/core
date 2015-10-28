@@ -1,14 +1,16 @@
 package io.tetrapod.core.pubsub;
 
-import io.tetrapod.core.DefaultService;
-import io.tetrapod.core.rpc.*;
-import io.tetrapod.protocol.core.*;
-
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.slf4j.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import io.tetrapod.core.DefaultService;
+import io.tetrapod.core.rpc.Message;
+import io.tetrapod.core.rpc.MessageContext;
+import io.tetrapod.protocol.core.*;
 
 /**
  * Manages the pub-sub layer for a service
@@ -103,6 +105,22 @@ public class Publisher implements TopicUnsubscribedMessage.Handler {
          unsubscribe(m.topicId, m.entityId);
       }
    }
+   //
+   //   @Override
+   //   public void messageTopicUnpublished(TopicUnpublishedMessage m, MessageContext ctx) {
+   //      if (m.publisherId == service.getEntityId()) {
+   //         // call topic unpublish listener
+   //         // re-publish
+   //         final Topic orig = topics.get(m.topicId);
+   //         if (orig != null) {
+   //            final Topic topic = new Topic(this, orig.topicId);
+   //            for (Topic.Subscriber s : orig.getSubscribers()) {
+   //               topic.subscribe(s.entityId, true);
+   //            }
+   //            topics.put(topic.topicId, topic);
+   //         }
+   //      }
+   //   }
 
    public void resetTopics() {
       for (Topic t : topics.values()) {

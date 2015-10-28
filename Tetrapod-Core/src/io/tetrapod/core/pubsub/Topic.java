@@ -1,19 +1,25 @@
 package io.tetrapod.core.pubsub;
 
+import static io.tetrapod.protocol.core.TetrapodContract.PARENT_ID_MASK;
+
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+
 import io.tetrapod.core.rpc.Message;
 import io.tetrapod.protocol.core.*;
-import static io.tetrapod.protocol.core.TetrapodContract.*;
-
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class Topic {
 
-   public final Publisher                 publisher;
-   public final int                       topicId;
+   public final Publisher                   publisher;
+   public final int                         topicId;
 
-   private final Map<Integer, Subscriber> subscribers = new ConcurrentHashMap<>();
-   private final Map<Integer, Subscriber> tetrapods   = new ConcurrentHashMap<>();
+   private final Map<Integer, Subscriber>   subscribers = new ConcurrentHashMap<>();
+   private final Map<Integer, Subscriber>   tetrapods   = new ConcurrentHashMap<>();
+   private final List<SubscriptionListener> listeners   = new ArrayList<>();
+
+   public interface SubscriptionListener {
+      public void onTopicSubscribed(int entityId);
+   }
 
    public Topic(Publisher publisher, int topicId) {
       this.publisher = publisher;
@@ -27,10 +33,30 @@ public class Topic {
          this.entityId = entityId;
       }
    }
-   
+
    public void reset() {
       subscribers.clear();
       tetrapods.clear();
+   }
+
+   public void addListener(SubscriptionListener listener) {
+      synchronized (listeners) {
+         listeners.add(listener);
+      }
+   }
+
+   public void removeListener(SubscriptionListener listener) {
+      synchronized (listeners) {
+         listeners.remove(listener);
+      }
+   }
+   
+   protected void fireTopicSubscribedEvent(int entityId) {
+      synchronized (listeners) {
+         for (SubscriptionListener sl : listeners) {
+            sl.onTopicSubscribed(entityId);
+         }
+      }
    }
 
    // FIXME: Implement once/counting?
@@ -51,6 +77,7 @@ public class Topic {
          }
          // register the new subscriber for their parent tetrapod
          publisher.sendMessage(new TopicSubscribedMessage(topicId, sub.entityId, once), tetrapod.entityId);
+         fireTopicSubscribedEvent(entityId);
       }
    }
 
@@ -67,7 +94,7 @@ public class Topic {
          publisher.broadcastMessage(msg, tetrapod.entityId, topicId);
       }
    }
-   
+
    public synchronized void sendMessage(Message msg, int toEntityId) {
       publisher.sendMessage(msg, toEntityId);
    }
@@ -80,6 +107,10 @@ public class Topic {
 
    public synchronized int numSubscribers() {
       return subscribers.size();
+   }
+
+   public synchronized Collection<Subscriber> getSubscribers() {
+      return subscribers.values();
    }
 
 }

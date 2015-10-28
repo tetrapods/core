@@ -13,7 +13,7 @@ import io.tetrapod.protocol.core.*;
 /**
  * Stores basic service stats & handles stats publication
  */
-public class ServiceStats {
+public class ServiceStats implements TopicUnsubscribedMessage.Handler {
    private static final Logger             logger   = LoggerFactory.getLogger(ServiceStats.class);
 
    private final DefaultService            service;
@@ -27,8 +27,12 @@ public class ServiceStats {
       this.statsTopic = service.publishTopic();
       scheduleUpdate();
       register(requests, "Requests");
+
+   //   service.addMessageHandler(new TopicUnsubscribedMessage(), this);
    }
 
+   
+   
    /**
     * publish the service stats, and subscribe any pending subscribers
     */
@@ -137,6 +141,18 @@ public class ServiceStats {
       synchronized (domains) {
          domains.put(name, stats);
       }
+   }
+
+   @Override
+   public void genericMessage(Message message, MessageContext ctx) {
+      // TODO Auto-generated method stub
+      
+   }
+
+   @Override
+   public void messageTopicUnsubscribed(TopicUnsubscribedMessage m, MessageContext ctx) {
+      // TODO Auto-generated method stub
+      
    }
 
 }
