@@ -1,16 +1,17 @@
 package io.tetrapod.core.storage;
 
-import io.netty.channel.socket.SocketChannel;
-import io.tetrapod.core.*;
-import io.tetrapod.core.registry.Registry;
-import io.tetrapod.core.rpc.*;
-import io.tetrapod.core.utils.Util;
-import io.tetrapod.protocol.core.*;
-
 import java.net.ConnectException;
 import java.util.concurrent.TimeUnit;
 
-import org.slf4j.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import io.netty.channel.socket.SocketChannel;
+import io.tetrapod.core.*;
+import io.tetrapod.core.registry.Registry;
+import io.tetrapod.core.utils.Util;
+import io.tetrapod.protocol.core.ClusterJoinRequest;
+import io.tetrapod.protocol.core.Core;
 
 /**
  * Represents another Tetrapod in the cluster. This maintains a persistent connection with that tetrapod and transmits RPC for Raft
