@@ -175,7 +175,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
    }
 
    protected void dispatchRequest(final RequestHeader header, final Request req) {
-      helper.dispatchRequest(header, req, this).handle((res) -> sendResponse(res, header.requestId));
+      helper.dispatchRequest(header, req, this).handle(res -> sendResponse(res, header.requestId));
    }
 
    protected void dispatchMessage(final MessageHeader header, final Message msg) {
@@ -198,7 +198,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
 
    public Response sendPendingRequest(final Request req, final int toId, byte timeoutSeconds, final PendingResponseHandler pendingHandler) {
       final Async async = sendRequest(req, toId, timeoutSeconds);
-      async.handle((res) -> {
+      async.handle(res -> {
          Response pendingRes = null;
          try {
             pendingRes = pendingHandler.onResponse(res);

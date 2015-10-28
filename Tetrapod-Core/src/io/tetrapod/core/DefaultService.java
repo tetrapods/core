@@ -279,7 +279,7 @@ public class DefaultService
          }
       } else {
          if (getEntityId() != 0 && clusterClient.getSession() != null) {
-            sendDirectRequest(new UnregisterRequest(getEntityId())).handle((res) -> {
+            sendDirectRequest(new UnregisterRequest(getEntityId())).handle(res -> {
                clusterClient.close();
                dispatcher.shutdown();
                setTerminated(true);
@@ -336,7 +336,7 @@ public class DefaultService
 
    private void onConnectedToCluster() {
       sendDirectRequest(new RegisterRequest(buildNumber, token, getContractId(), getShortName(), getStatus(), Util.getHostName()))
-               .handle((res) -> {
+               .handle(res -> {
                   if (res.isError()) {
                      Fail.fail("Unable to register: " + res.errorCode());
                   } else {

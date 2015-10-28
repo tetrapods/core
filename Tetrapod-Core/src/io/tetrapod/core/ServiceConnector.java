@@ -118,7 +118,7 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
          if (System.currentTimeMillis() > restUntil) {
             pending = true;
             valid = false;
-            service.clusterClient.getSession().sendRequest(new DirectConnectionRequest(token), entityId, (byte) 30).handle((res) -> {
+            service.clusterClient.getSession().sendRequest(new DirectConnectionRequest(token), entityId, (byte) 30).handle(res -> {
                if (res.isError()) {
                   failure();
                } else {
@@ -146,7 +146,7 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
       }
 
       private synchronized void validate(String theirToken) {
-         ses.sendRequest(new ValidateConnectionRequest(service.getEntityId(), theirToken), Core.DIRECT).handle((res) -> {
+         ses.sendRequest(new ValidateConnectionRequest(service.getEntityId(), theirToken), Core.DIRECT).handle(res -> {
             if (res.isError()) {
                failure();
             } else {
@@ -222,7 +222,7 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
       if (ses != service.clusterClient.getSession()) {
          logger.debug("Dispatching pending {} to {} returning on {}", req, ses, handler.session);
          final Async async = ses.sendRequest(req, toEntityId, (byte) 30);
-         async.handle((res) -> {
+         async.handle(res -> {
             Response pendingRes = null;
             try {
                pendingRes = handler.onResponse(res);

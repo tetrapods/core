@@ -155,6 +155,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
             new ServiceCommand("Log Registry Stats", null, LogRegistryStatsRequest.CONTRACT_ID, LogRegistryStatsRequest.STRUCT_ID, false) };
    }
 
+   @Override
    public byte getEntityType() {
       return Core.TYPE_TETRAPOD;
    }
@@ -181,11 +182,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
    @Override
    public long getCounter() {
-      long count = cluster.getNumSessions();
-      for (Server s : servers) {
-         count += s.getNumSessions();
-      }
-      return count;
+      return cluster.getNumSessions() + servers.stream().mapToInt(Server::getNumSessions).sum();
    }
 
    private class TypedSessionFactory extends WireSessionFactory {
@@ -687,7 +684,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
                final Session ses = e.getSession();
                if (ses != null && now - ses.getLastHeardFrom() > 1153) {
                   final long t0 = System.currentTimeMillis();
-                  sendRequest(new DummyRequest(), e.entityId).handle((res) -> {
+                  sendRequest(new DummyRequest(), e.entityId).handle(res -> {
                      final long tf = System.currentTimeMillis() - t0;
                      if (tf > 1000) {
                         logger.warn("Round trip to dispatch {} took {} ms", e, tf);
@@ -1245,7 +1242,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       if (ctx.header.fromType != TYPE_SERVICE)
          return new Error(ERROR_INVALID_RIGHTS);
 
-      return cluster.requestUnsubscribeOwnership(r, (SessionRequestContext) ctx);
+      return cluster.requestUnsubscribeOwnership(r, ctx);
    }
 
    @Override
