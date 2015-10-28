@@ -3,6 +3,7 @@ package io.tetrapod.core;
 import static io.tetrapod.protocol.core.Core.UNADDRESSED;
 import static io.tetrapod.protocol.core.CoreContract.*;
 import io.netty.channel.socket.SocketChannel;
+import io.tetrapod.core.pubsub.Topic;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.rpc.Error;
 import io.tetrapod.core.utils.*;
@@ -25,31 +26,31 @@ import com.codahale.metrics.Timer.Context;
 public class DefaultService implements Service, Fail.FailHandler, CoreContract.API, SessionFactory, EntityMessage.Handler,
       TetrapodContract.Cluster.API {
 
-   private static final Logger logger = LoggerFactory.getLogger(DefaultService.class);
+   private static final Logger             logger          = LoggerFactory.getLogger(DefaultService.class);
 
-   protected final Set<Integer> dependencies = new HashSet<>();
+   protected final Set<Integer>            dependencies    = new HashSet<>();
 
-   public final Dispatcher      dispatcher;
-   protected final Client       clusterClient;
-   protected final Contract     contract;
-   protected final ServiceCache services;
-   protected boolean            terminated;
-   protected int                entityId;
-   protected int                parentId;
-   protected String             token;
-   private int                  status;
-   public final int             buildNumber;
-   protected final LogBuffer    logBuffer;
-   protected SSLContext         sslContext;
+   public final Dispatcher                 dispatcher;
+   protected final Client                  clusterClient;
+   protected final Contract                contract;
+   protected final ServiceCache            services;
+   protected boolean                       terminated;
+   protected int                           entityId;
+   protected int                           parentId;
+   protected String                        token;
+   private int                             status;
+   public final int                        buildNumber;
+   protected final LogBuffer               logBuffer;
+   protected SSLContext                    sslContext;
 
-   private ServiceConnector serviceConnector;
+   private ServiceConnector                serviceConnector;
 
-   protected final ServiceStats stats;
-   protected boolean            startPaused;
+   protected final ServiceStats            stats;
+   protected boolean                       startPaused;
 
-   private final LinkedList<ServerAddress> clusterMembers = new LinkedList<>();
+   private final LinkedList<ServerAddress> clusterMembers  = new LinkedList<>();
 
-   private final MessageHandlers messageHandlers = new MessageHandlers();
+   private final MessageHandlers           messageHandlers = new MessageHandlers();
 
    public DefaultService() {
       this(null);
@@ -109,6 +110,14 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
       if (mainContract != null)
          addContracts(mainContract);
       this.contract = mainContract;
+   }
+
+   // HACK compatability for upcoming raft-registry
+   public Topic publishTopic() {
+      Topic.service = this;
+      Response res = sendDirectRequest(new PublishRequest(1)).waitForResponse();
+      Topic topic = new Topic(((PublishResponse) res).topicIds[0]);
+      return topic;
    }
 
    /**
