@@ -37,12 +37,9 @@ public class ServiceStats {
     */
    protected void publishTopic() {
       message.entityId = service.getEntityId();
-      service.sendDirectRequest(new PublishRequest(1)).handle(new ResponseHandler() {
-         @Override
-         public void onResponse(Response res) {
-            if (!res.isError()) {
-               setTopic(((PublishResponse) res).topicIds[0]);
-            }
+      service.sendDirectRequest(new PublishRequest(1)).handle((res) -> {
+         if (!res.isError()) {
+            setTopic(((PublishResponse) res).topicIds[0]);
          }
       });
    }

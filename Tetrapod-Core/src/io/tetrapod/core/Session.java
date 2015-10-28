@@ -175,12 +175,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
    }
 
    protected void dispatchRequest(final RequestHeader header, final Request req) {
-      helper.dispatchRequest(header, req, this).handle(new ResponseHandler() {
-         @Override
-         public void onResponse(Response res) {
-            sendResponse(res, header.requestId);
-         }
-      });
+      helper.dispatchRequest(header, req, this).handle((res) -> sendResponse(res, header.requestId));
    }
 
    protected void dispatchMessage(final MessageHeader header, final Message msg) {
@@ -203,28 +198,25 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
 
    public Response sendPendingRequest(final Request req, final int toId, byte timeoutSeconds, final PendingResponseHandler pendingHandler) {
       final Async async = sendRequest(req, toId, timeoutSeconds);
-      async.handle(new ResponseHandler() {
-         @Override
-         public void onResponse(Response res) {
-            Response pendingRes = null;
-            try {
-               pendingRes = pendingHandler.onResponse(res);
-            } catch (ErrorResponseException e1) {
-               pendingRes = Response.error(e1.errorCode);
-            } catch (Throwable e) {
-               logger.error(e.getMessage(), e);
-            } finally {
-               if (pendingRes != Response.PENDING) {
-                  // finally return the pending response we were waiting on
-                  if (pendingRes == null) {
-                     pendingRes = new Error(ERROR_UNKNOWN);
-                  }
-                  if (!pendingHandler.sendResponse(pendingRes)) {
-                     sendResponse(pendingRes, pendingHandler.originalRequestId);
-                  }
-               } else {
-                  logger.debug("Pending response returned from pending handler for {} @ {}", req, toId);
+      async.handle((res) -> {
+         Response pendingRes = null;
+         try {
+            pendingRes = pendingHandler.onResponse(res);
+         } catch (ErrorResponseException e1) {
+            pendingRes = Response.error(e1.errorCode);
+         } catch (Throwable e) {
+            logger.error(e.getMessage(), e);
+         } finally {
+            if (pendingRes != Response.PENDING) {
+               // finally return the pending response we were waiting on
+               if (pendingRes == null) {
+                  pendingRes = new Error(ERROR_UNKNOWN);
                }
+               if (!pendingHandler.sendResponse(pendingRes)) {
+                  sendResponse(pendingRes, pendingHandler.originalRequestId);
+               }
+            } else {
+               logger.debug("Pending response returned from pending handler for {} @ {}", req, toId);
             }
          }
       });

@@ -319,17 +319,13 @@ public class TetrapodCluster extends Storage
    @Override
    public void sendRequestVote(String clusterName, int peerId, long term, int candidateId, long lastLogIndex, long lastLogTerm,
             final VoteResponseHandler handler) {
-
-      sendPeerRequest(new VoteRequest(clusterName, term, candidateId, lastLogIndex, lastLogTerm), peerId).handle(new ResponseHandler() {
-         @Override
-         public void onResponse(Response res) {
-            if (res.isError()) {
-               logger.error("VoteRequest {}", res);
-            } else {
-               VoteResponse r = (VoteResponse) res;
-               if (handler != null) {
-                  handler.handleResponse(r.term, r.voteGranted);
-               }
+      sendPeerRequest(new VoteRequest(clusterName, term, candidateId, lastLogIndex, lastLogTerm), peerId).handle((res) -> {
+         if (res.isError()) {
+            logger.error("VoteRequest {}", res);
+         } else {
+            VoteResponse r = (VoteResponse) res;
+            if (handler != null) {
+               handler.handleResponse(r.term, r.voteGranted);
             }
          }
       });
@@ -352,36 +348,28 @@ public class TetrapodCluster extends Storage
          }
       }
 
-      sendPeerRequest(new AppendEntriesRequest(term, leaderId, prevLogIndex, prevLogTerm, entryList, leaderCommit), peerId)
-               .handle(new ResponseHandler() {
-                  @Override
-                  public void onResponse(Response res) {
-                     if (res.isError()) {
-                        logger.error("AppendEntriesRequest {}", res);
-                     } else {
-                        AppendEntriesResponse r = (AppendEntriesResponse) res;
-                        if (handler != null) {
-                           handler.handleResponse(r.term, r.success, r.lastLogIndex);
-                        }
-                     }
-                  }
-               });
-
+      sendPeerRequest(new AppendEntriesRequest(term, leaderId, prevLogIndex, prevLogTerm, entryList, leaderCommit), peerId).handle((res) -> {
+         if (res.isError()) {
+            logger.error("AppendEntriesRequest {}", res);
+         } else {
+            AppendEntriesResponse r = (AppendEntriesResponse) res;
+            if (handler != null) {
+               handler.handleResponse(r.term, r.success, r.lastLogIndex);
+            }
+         }
+      });
    }
 
    @Override
    public void sendInstallSnapshot(int peerId, long term, long index, long length, int partSize, int part, byte[] data,
             final InstallSnapshotResponseHandler handler) {
-      sendPeerRequest(new InstallSnapshotRequest(term, index, length, partSize, part, data), peerId).handle(new ResponseHandler() {
-         @Override
-         public void onResponse(Response res) {
-            if (res.isError()) {
-               logger.error("InstallSnapshotRequest {}", res);
-            } else {
-               InstallSnapshotResponse r = (InstallSnapshotResponse) res;
-               if (handler != null) {
-                  handler.handleResponse(r.success);
-               }
+      sendPeerRequest(new InstallSnapshotRequest(term, index, length, partSize, part, data), peerId).handle((res) -> {
+         if (res.isError()) {
+            logger.error("InstallSnapshotRequest {}", res);
+         } else {
+            InstallSnapshotResponse r = (InstallSnapshotResponse) res;
+            if (handler != null) {
+               handler.handleResponse(r.success);
             }
          }
       });
@@ -394,23 +382,20 @@ public class TetrapodCluster extends Storage
             final ClientResponseHandler<TetrapodStateMachine> handler) {
       try {
          final byte[] data = commandToBytes(command);
-         sendPeerRequest(new IssueCommandRequest(command.getCommandType(), data), peerId).handle(new ResponseHandler() {
-            @Override
-            public void onResponse(Response res) {
-               if (res.isError()) {
-                  logger.error("IssueCommandRequest {}", res);
-                  if (handler != null) {
-                     handler.handleResponse(null);
-                  }
-               } else {
-                  if (handler != null) {
-                     IssueCommandResponse r = (IssueCommandResponse) res;
-                     try {
-                        handler.handleResponse(
-                                 new Entry<TetrapodStateMachine>(r.term, r.index, bytesToCommand(r.command, command.getCommandType())));
-                     } catch (IOException e) {
-                        logger.error(e.getMessage(), e);
-                     }
+         sendPeerRequest(new IssueCommandRequest(command.getCommandType(), data), peerId).handle((res) -> {
+            if (res.isError()) {
+               logger.error("IssueCommandRequest {}", res);
+               if (handler != null) {
+                  handler.handleResponse(null);
+               }
+            } else {
+               if (handler != null) {
+                  IssueCommandResponse r = (IssueCommandResponse) res;
+                  try {
+                     handler.handleResponse(
+                              new Entry<TetrapodStateMachine>(r.term, r.index, bytesToCommand(r.command, command.getCommandType())));
+                  } catch (IOException e) {
+                     logger.error(e.getMessage(), e);
                   }
                }
             }

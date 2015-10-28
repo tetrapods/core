@@ -129,17 +129,14 @@ public class TetrapodPeer implements Session.Listener, SessionFactory {
    private synchronized void joinCluster() {
       joined = true;
       session.sendRequest(new ClusterJoinRequest(service.buildNumber, service.getStatus(), Util.getHostName(), service.getEntityId(),
-               service.getServicePort(), service.getClusterPort()), Core.DIRECT).handle(new ResponseHandler() {
-                  @Override
-                  public void onResponse(Response res) {
-                     if (res.isError()) {
-                        logger.error("ClusterJoinRequest Failed {}", res);
-                        synchronized (TetrapodPeer.this) {
-                           joined = false;
-                        }
-                     } else {
-                        logger.info("ClusterJoinRequest Succeeded");
+               service.getServicePort(), service.getClusterPort()), Core.DIRECT).handle((res) -> {
+                  if (res.isError()) {
+                     logger.error("ClusterJoinRequest Failed {}", res);
+                     synchronized (TetrapodPeer.this) {
+                        joined = false;
                      }
+                  } else {
+                     logger.info("ClusterJoinRequest Succeeded");
                   }
                });
    }

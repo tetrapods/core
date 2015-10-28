@@ -279,13 +279,10 @@ public class DefaultService
          }
       } else {
          if (getEntityId() != 0 && clusterClient.getSession() != null) {
-            sendDirectRequest(new UnregisterRequest(getEntityId())).handle(new ResponseHandler() {
-               @Override
-               public void onResponse(Response res) {
-                  clusterClient.close();
-                  dispatcher.shutdown();
-                  setTerminated(true);
-               }
+            sendDirectRequest(new UnregisterRequest(getEntityId())).handle((res) -> {
+               clusterClient.close();
+               dispatcher.shutdown();
+               setTerminated(true);
             });
          } else {
             dispatcher.shutdown();
@@ -339,24 +336,21 @@ public class DefaultService
 
    private void onConnectedToCluster() {
       sendDirectRequest(new RegisterRequest(buildNumber, token, getContractId(), getShortName(), getStatus(), Util.getHostName()))
-               .handle(new ResponseHandler() {
-                  @Override
-                  public void onResponse(Response res) {
-                     if (res.isError()) {
-                        Fail.fail("Unable to register: " + res.errorCode());
-                     } else {
-                        RegisterResponse r = (RegisterResponse) res;
-                        entityId = r.entityId;
-                        parentId = r.parentId;
-                        token = r.token;
+               .handle((res) -> {
+                  if (res.isError()) {
+                     Fail.fail("Unable to register: " + res.errorCode());
+                  } else {
+                     RegisterResponse r = (RegisterResponse) res;
+                     entityId = r.entityId;
+                     parentId = r.parentId;
+                     token = r.token;
 
-                        logger.info(String.format("%s My entityId is 0x%08X", clusterClient.getSession(), r.entityId));
-                        clusterClient.getSession().setMyEntityId(r.entityId);
-                        clusterClient.getSession().setTheirEntityId(r.parentId);
-                        clusterClient.getSession().setMyEntityType(getEntityType());
-                        clusterClient.getSession().setTheirEntityType(Core.TYPE_TETRAPOD);
-                        onServiceRegistered();
-                     }
+                     logger.info(String.format("%s My entityId is 0x%08X", clusterClient.getSession(), r.entityId));
+                     clusterClient.getSession().setMyEntityId(r.entityId);
+                     clusterClient.getSession().setTheirEntityId(r.parentId);
+                     clusterClient.getSession().setMyEntityType(getEntityType());
+                     clusterClient.getSession().setTheirEntityType(Core.TYPE_TETRAPOD);
+                     onServiceRegistered();
                   }
                });
    }
