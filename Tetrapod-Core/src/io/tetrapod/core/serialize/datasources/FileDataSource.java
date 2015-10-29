@@ -46,7 +46,7 @@ public class FileDataSource extends StreamDataSource {
    protected int readRawByte() throws IOException {
       channel.read(single);
       single.rewind();
-      return (int)single.get(0) & 0xFF;
+      return single.get(0) & 0xFF;
    }
 
    @Override

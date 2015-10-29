@@ -3,7 +3,6 @@ package io.tetrapod.core.storage;
 import java.io.*;
 
 import io.tetrapod.raft.Command;
-import io.tetrapod.raft.StateMachine.CommandFactory;
 
 public class DelEntityCommand implements Command<TetrapodStateMachine> {
 
@@ -43,12 +42,7 @@ public class DelEntityCommand implements Command<TetrapodStateMachine> {
    }
 
    public static void register(TetrapodStateMachine state) {
-      state.registerCommand(COMMAND_ID, new CommandFactory<TetrapodStateMachine>() {
-         @Override
-         public Command<TetrapodStateMachine> makeCommand() {
-            return new DelEntityCommand();
-         }
-      });
+      state.registerCommand(COMMAND_ID, () -> new DelEntityCommand());
    }
 
    public int getEntityId() {

@@ -156,8 +156,7 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
          }
       }
 
-      private synchronized void connect(final DirectConnectionResponse res) {
-         DirectConnectionResponse r = (DirectConnectionResponse) res;
+      private synchronized void connect(final DirectConnectionResponse r) {
          Client c = new Client(new DirectSessionFactory(Core.TYPE_SERVICE, this));
          try {
             if (sslContext != null) {
@@ -198,11 +197,7 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
 
       public synchronized void considerConnecting() {
          if (entityId != service.parentId && (isTetrapod || requests > REQUEST_THRESHOLD) && !pending) {
-            service.dispatcher.dispatch(new Runnable() {
-               public void run() {
-                  handshake();
-               }
-            });
+            service.dispatcher.dispatch(() -> handshake());
          }
       }
    }

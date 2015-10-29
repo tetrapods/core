@@ -24,13 +24,16 @@ public class TetrapodClient implements SessionFactory, Session.Helper {
     * FIXME -- only used for test bots right now, but this should be fixed if we ever need for serious use
     */
    private static final TrustManager DUMMY_TRUST_MANAGER = new X509TrustManager() {
+                                                            @Override
                                                             public X509Certificate[] getAcceptedIssuers() {
                                                                return new X509Certificate[0];
                                                             }
 
+                                                            @Override
                                                             public void checkClientTrusted(X509Certificate[] chain, String authType)
                                                                      throws CertificateException {}
 
+                                                            @Override
                                                             public void checkServerTrusted(X509Certificate[] chain, String authType)
                                                                      throws CertificateException {}
                                                          };

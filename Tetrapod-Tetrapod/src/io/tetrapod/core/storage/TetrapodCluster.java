@@ -563,12 +563,9 @@ public class TetrapodCluster extends Storage
 
                if (waitForLocal) {
                   final ClientResponseHandler<TetrapodStateMachine> origHandler = handler;
-                  handler = new ClientResponseHandler<TetrapodStateMachine>() {
-                     @Override
-                     public void handleResponse(Entry<TetrapodStateMachine> entry) {
-                        logger.info("Waiting for local : {} : {}", entry, getCommitIndex());
-                        raft.executeAfterCommandProcessed(entry, origHandler);
-                     }
+                  handler = entry -> {
+                     logger.info("Waiting for local : {} : {}", entry, getCommitIndex());
+                     raft.executeAfterCommandProcessed(entry, origHandler);
                   };
 
                }

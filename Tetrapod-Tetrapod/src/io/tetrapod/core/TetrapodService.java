@@ -28,7 +28,6 @@ import io.tetrapod.core.web.*;
 import io.tetrapod.protocol.core.*;
 import io.tetrapod.protocol.raft.*;
 import io.tetrapod.protocol.storage.*;
-import io.tetrapod.raft.Entry;
 
 /**
  * The tetrapod service is the core cluster service which handles message routing, cluster management, service discovery, and load balancing
@@ -469,30 +468,28 @@ public class TetrapodService extends DefaultService
       final EntityInfo sender = registry.getEntity(header.fromId);
       if (sender != null) {
          buf.retain();
-         sender.queue(new Runnable() {
-            public void run() {
-               try {
-                  if (header.topicId != 0) {
-                     if (isBroadcast) {
-                        broadcastTopic(sender, header, buf);
-                     }
-                  } else if ((header.flags & MessageHeader.FLAGS_ALTERNATE) != 0) {
-                     if (isBroadcast) {
-                        broadcastAlt(sender, header, buf);
-                     }
-                  } else {
-                     final Session ses = getRelaySession(header.toId, header.contractId);
-                     if (ses != null) {
-                        ses.sendRelayedMessage(header, buf, false);
-                     }
+         sender.queue(() -> {
+            try {
+               if (header.topicId != 0) {
+                  if (isBroadcast) {
+                     broadcastTopic(sender, header, buf);
                   }
-               } catch (Throwable e) {
-                  logger.error(e.getMessage(), e);
-               } finally {
-                  // FIXME: This is fragile -- if we delete an entity with queued work, we need to make sure we
-                  // release all the buffers in the queued work items.
-                  buf.release();
+               } else if ((header.flags & MessageHeader.FLAGS_ALTERNATE) != 0) {
+                  if (isBroadcast) {
+                     broadcastAlt(sender, header, buf);
+                  }
+               } else {
+                  final Session ses = getRelaySession(header.toId, header.contractId);
+                  if (ses != null) {
+                     ses.sendRelayedMessage(header, buf, false);
+                  }
                }
+            } catch (Throwable e) {
+               logger.error(e.getMessage(), e);
+            } finally {
+               // FIXME: This is fragile -- if we delete an entity with queued work, we need to make sure we
+               // release all the buffers in the queued work items.
+               buf.release();
             }
          });
          worker.kick();
@@ -813,31 +810,28 @@ public class TetrapodService extends DefaultService
 
       logger.info("Registering: {} type={}", info, info.type);
       // execute a raft registration command
-      cluster.executeCommand(new AddEntityCommand(info), new TetrapodCluster.ClientResponseHandler<TetrapodStateMachine>() {
-         @Override
-         public void handleResponse(Entry<TetrapodStateMachine> entry) {
-            if (entry != null) {
-               logger.info("Waited for local entityId-{} : {} : {}", entityId, entry, cluster.getCommitIndex());
-               // get the real entity object after we've processed the command
-               final EntityInfo entity = cluster.getEntity(entityId);
+      cluster.executeCommand(new AddEntityCommand(info), entry -> {
+         if (entry != null) {
+            logger.info("Waited for local entityId-{} : {} : {}", entityId, entry, cluster.getCommitIndex());
+            // get the real entity object after we've processed the command
+            final EntityInfo entity = cluster.getEntity(entityId);
 
-               // update & store session
-               ctx.session.setTheirEntityId(entity.entityId);
-               ctx.session.setTheirEntityType(entity.type);
+            // update & store session
+            ctx.session.setTheirEntityId(entity.entityId);
+            ctx.session.setTheirEntityType(entity.type);
 
-               entity.setSession(ctx.session);
+            entity.setSession(ctx.session);
 
-               // deliver them their entityId immediately to avoid some race conditions with the response
-               ctx.session.sendMessage(new EntityMessage(entity.entityId), Core.UNADDRESSED);
+            // deliver them their entityId immediately to avoid some race conditions with the response
+            ctx.session.sendMessage(new EntityMessage(entity.entityId), Core.UNADDRESSED);
 
-               if (entity.isService() && entity.entityId != getEntityId()) {
-                  subscribeToCluster(ctx.session, entity.entityId);
-               }
-               responder.respondWith(
-                        new RegisterResponse(entity.entityId, getEntityId(), EntityToken.encode(entity.entityId, entity.reclaimToken)));
-            } else {
-               responder.respondWith(Response.error(ERROR_UNKNOWN));
+            if (entity.isService() && entity.entityId != getEntityId()) {
+               subscribeToCluster(ctx.session, entity.entityId);
             }
+            responder.respondWith(
+                     new RegisterResponse(entity.entityId, getEntityId(), EntityToken.encode(entity.entityId, entity.reclaimToken)));
+         } else {
+            responder.respondWith(Response.error(ERROR_UNKNOWN));
          }
       }, true);
       return Response.PENDING;

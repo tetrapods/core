@@ -5,7 +5,6 @@ import java.io.*;
 import io.tetrapod.core.serialize.datasources.IOStreamDataSource;
 import io.tetrapod.protocol.core.Entity;
 import io.tetrapod.raft.Command;
-import io.tetrapod.raft.StateMachine.CommandFactory;
 
 public class AddEntityCommand implements Command<TetrapodStateMachine> {
 
@@ -46,12 +45,7 @@ public class AddEntityCommand implements Command<TetrapodStateMachine> {
    }
 
    public static void register(TetrapodStateMachine state) {
-      state.registerCommand(COMMAND_ID, new CommandFactory<TetrapodStateMachine>() {
-         @Override
-         public Command<TetrapodStateMachine> makeCommand() {
-            return new AddEntityCommand();
-         }
-      });
+      state.registerCommand(COMMAND_ID, () -> new AddEntityCommand());
    }
 
    public Entity getEntity() {

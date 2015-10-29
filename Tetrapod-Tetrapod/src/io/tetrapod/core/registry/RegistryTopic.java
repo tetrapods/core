@@ -71,6 +71,6 @@ public class RegistryTopic {
    }
 
    public long key() {
-      return ((long) (ownerId) << 32) | (long) topicId;
+      return ((long) (ownerId) << 32) | topicId;
    }
 }

@@ -12,8 +12,6 @@ import io.tetrapod.core.rpc.MessageContext;
 import io.tetrapod.core.storage.*;
 import io.tetrapod.core.web.LongPollQueue;
 import io.tetrapod.protocol.core.*;
-import io.tetrapod.raft.Entry;
-import io.tetrapod.raft.RaftRPC.ClientResponseHandler;
 
 /**
  * The global registry of all current actors in the system and their published topics and subscriptions
@@ -167,10 +165,7 @@ public class EntityRegistry implements TetrapodContract.Registry.API {
          if (e.isTetrapod() && cluster.isValidPeer(e.entityId)) {
             setGone(e);
          } else {
-            cluster.executeCommand(new DelEntityCommand(e.entityId), new ClientResponseHandler<TetrapodStateMachine>() {
-               @Override
-               public void handleResponse(Entry<TetrapodStateMachine> entry) {}
-            });
+            cluster.executeCommand(new DelEntityCommand(e.entityId), entry -> {});
          }
       }
    }
@@ -261,11 +256,7 @@ public class EntityRegistry implements TetrapodContract.Registry.API {
       logger.debug("******* {} {}", ctx.header.dump(), m.dump());
       final EntityInfo owner = getEntity(ctx.header.fromId);
       if (owner != null) {
-         owner.queue(new Runnable() {
-            public void run() {
-               owner.publish(m.topicId);
-            }
-         }); // TODO: kick()
+         owner.queue(() -> owner.publish(m.topicId)); // TODO: kick()
       } else {
          logger.info("Could not find publisher entity {}", ctx.header.fromId);
       }
@@ -276,11 +267,7 @@ public class EntityRegistry implements TetrapodContract.Registry.API {
       logger.debug("******* {} {}", ctx.header.dump(), m.dump());
       final EntityInfo owner = getEntity(ctx.header.fromId);
       if (owner != null) {
-         owner.queue(new Runnable() {
-            public void run() {
-               unpublish(owner, m.topicId);
-            }
-         }); // TODO: kick()
+         owner.queue(() -> unpublish(owner, m.topicId)); // TODO: kick()
       } else {
          logger.info("Could not find publisher entity {}", ctx.header.fromId);
       }
@@ -291,11 +278,7 @@ public class EntityRegistry implements TetrapodContract.Registry.API {
       logger.debug("******* {} {}", ctx.header.dump(), m.dump());
       final EntityInfo owner = getEntity(ctx.header.fromId);
       if (owner != null) {
-         owner.queue(new Runnable() {
-            public void run() {
-               subscribe(owner, m.topicId, m.entityId, m.once);
-            }
-         }); // TODO: kick() 
+         owner.queue(() -> subscribe(owner, m.topicId, m.entityId, m.once)); // TODO: kick() 
       } else {
          logger.info("Could not find publisher entity {}", ctx.header.fromId);
       }
@@ -306,11 +289,7 @@ public class EntityRegistry implements TetrapodContract.Registry.API {
       logger.debug("******* {} {}", ctx.header.dump(), m.dump());
       final EntityInfo owner = getEntity(ctx.header.fromId);
       if (owner != null) {
-         owner.queue(new Runnable() {
-            public void run() {
-               unsubscribe(owner, m.topicId, m.entityId, false);
-            }
-         }); // TODO: kick()
+         owner.queue(() -> unsubscribe(owner, m.topicId, m.entityId, false)); // TODO: kick()
       } else {
          logger.info("Could not find publisher entity {}", ctx.header.fromId);
       }
@@ -378,11 +357,7 @@ public class EntityRegistry implements TetrapodContract.Registry.API {
 
    public void onAddEntityCommand(final EntityInfo entity) {
       if (getEntity(entity.entityId) != null && entity.parentId != parentId) {
-         entity.queue(new Runnable() {
-            public void run() {
-               clearAllTopicsAndSubscriptions(entity);
-            }
-         });
+         entity.queue(() -> clearAllTopicsAndSubscriptions(entity));
       }
       entities.put(entity.entityId, entity);
       if (entity.isService()) {
@@ -402,11 +377,9 @@ public class EntityRegistry implements TetrapodContract.Registry.API {
 
    public void onModEntityCommand(final EntityInfo entity) {
       if (entity != null) {
-         entity.queue(new Runnable() {
-            public void run() {
-               if (entity.isService()) {
-                  broadcaster.broadcastServicesMessage(new ServiceUpdatedMessage(entity.entityId, entity.status));
-               }
+         entity.queue(() -> {
+            if (entity.isService()) {
+               broadcaster.broadcastServicesMessage(new ServiceUpdatedMessage(entity.entityId, entity.status));
             }
          });
       }

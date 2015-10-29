@@ -95,6 +95,7 @@ public class DefaultService
       }
 
       Runtime.getRuntime().addShutdownHook(new Thread("Shutdown Hook") {
+         @Override
          public void run() {
             logger.info("Shutdown Hook");
             if (!isShuttingDown()) {
@@ -678,6 +679,7 @@ public class DefaultService
 
    // Generic handlers for all request/subscriptions
 
+   @Override
    public Response genericRequest(Request r, RequestContext ctx) {
       logger.error("unhandled request " + r.dump());
       return new Error(CoreContract.ERROR_UNKNOWN_REQUEST);
@@ -859,12 +861,7 @@ public class DefaultService
       final List<ServiceLogEntry> list = new ArrayList<ServiceLogEntry>();
       list.addAll(logBuffer.getErrors());
       list.addAll(logBuffer.getWarnings());
-      Collections.sort(list, new Comparator<ServiceLogEntry>() {
-         @Override
-         public int compare(ServiceLogEntry e1, ServiceLogEntry e2) {
-            return ((Long) e1.timestamp).compareTo(e2.timestamp);
-         }
-      });
+      Collections.sort(list, (e1, e2) -> ((Long) e1.timestamp).compareTo(e2.timestamp));
 
       return new ServiceErrorLogsResponse(list);
    }
