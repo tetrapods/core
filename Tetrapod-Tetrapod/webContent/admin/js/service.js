@@ -25,6 +25,7 @@ define(["knockout", "jquery", "bootbox", "alert", "app", "chart", "modules/build
       self.isSelected = ko.observable(false);
       self.showRequestStats = showRequestStats;
       self.requestStats = ko.observableArray([]);
+      self.subscribe = subscribe;
 
       self.iconURL = ko.observable("media/gear.gif");
       subscribe(1);

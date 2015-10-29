@@ -65,7 +65,12 @@ define(function(require) {
       app.server.addMessageHandler("ServiceUpdated", function(msg) {
          var s = self.findService(msg.entityId);
          if (s) {
+            var wasGone = s.isGone();
             s.status(msg.status);
+            // resub when service returns
+            if (wasGone && !s.isGone()) {
+               s.subscribe(1); 
+            }
          }
       });
 
