@@ -152,6 +152,7 @@ public class TetrapodService extends DefaultService
             new ServiceCommand("Log Registry Stats", null, LogRegistryStatsRequest.CONTRACT_ID, LogRegistryStatsRequest.STRUCT_ID, false) };
    }
 
+   @Override
    public byte getEntityType() {
       return Core.TYPE_TETRAPOD;
    }
@@ -178,11 +179,7 @@ public class TetrapodService extends DefaultService
 
    @Override
    public long getCounter() {
-      long count = cluster.getNumSessions();
-      for (Server s : servers) {
-         count += s.getNumSessions();
-      }
-      return count;
+      return cluster.getNumSessions() + servers.stream().mapToInt(Server::getNumSessions).sum();
    }
 
    private class TypedSessionFactory extends WireSessionFactory {
@@ -637,16 +634,14 @@ public class TetrapodService extends DefaultService
 
    private void scheduleHealthCheck() {
       if (!isShuttingDown()) {
-         dispatcher.dispatch(1, TimeUnit.SECONDS, new Runnable() {
-            public void run() {
-               if (dispatcher.isRunning()) {
-                  try {
-                     healthCheck();
-                  } catch (Throwable e) {
-                     logger.error(e.getMessage(), e);
-                  } finally {
-                     scheduleHealthCheck();
-                  }
+         dispatcher.dispatch(1, TimeUnit.SECONDS, () -> {
+            if (dispatcher.isRunning()) {
+               try {
+                  healthCheck();
+               } catch (Throwable e) {
+                  logger.error(e.getMessage(), e);
+               } finally {
+                  scheduleHealthCheck();
                }
             }
          });
@@ -1220,7 +1215,7 @@ public class TetrapodService extends DefaultService
       if (ctx.header.fromType != TYPE_SERVICE)
          return new Error(ERROR_INVALID_RIGHTS);
 
-      return cluster.requestUnsubscribeOwnership(r, (SessionRequestContext) ctx);
+      return cluster.requestUnsubscribeOwnership(r, ctx);
    }
 
    @Override

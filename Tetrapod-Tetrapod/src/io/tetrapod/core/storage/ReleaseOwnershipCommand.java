@@ -1,7 +1,6 @@
 package io.tetrapod.core.storage;
 
 import io.tetrapod.raft.*;
-import io.tetrapod.raft.StateMachine.CommandFactory;
 
 import java.io.*;
 
@@ -64,12 +63,7 @@ public class ReleaseOwnershipCommand implements Command<TetrapodStateMachine> {
    }
 
    public static void register(TetrapodStateMachine state) {
-      state.registerCommand(COMMAND_ID, new CommandFactory<TetrapodStateMachine>() {
-         @Override
-         public Command<TetrapodStateMachine> makeCommand() {
-            return new ReleaseOwnershipCommand();
-         }
-      });
+      state.registerCommand(COMMAND_ID, () -> new ReleaseOwnershipCommand());
    }
 
    public int getOwnerId() {

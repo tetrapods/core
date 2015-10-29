@@ -69,6 +69,7 @@ public class TetrapodStateMachine extends StorageStateMachine<TetrapodStateMachi
    protected SecretKey                            secretKey;
 
    public static class Factory implements StateMachine.Factory<TetrapodStateMachine> {
+      @Override
       public TetrapodStateMachine makeStateMachine() {
          return new TetrapodStateMachine();
       }

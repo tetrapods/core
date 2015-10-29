@@ -100,11 +100,7 @@ public class TetrapodCluster extends Storage
       if (myPeerId != 0) {
          service.registerSelf(myPeerId << TetrapodContract.PARENT_ID_SHIFT, service.random.nextLong());
          raft.start(myPeerId);
-         service.dispatcher.dispatch(new Runnable() {
-            public void run() {
-               service.checkDependencies();
-            }
-         });
+         service.dispatcher.dispatch(() -> service.checkDependencies());
       } else {
          service.fail("Could not find my peerId for " + Util.getHostName() + ":" + service.getClusterPort());
       }
@@ -342,17 +338,13 @@ public class TetrapodCluster extends Storage
    @Override
    public void sendRequestVote(String clusterName, int peerId, long term, int candidateId, long lastLogIndex, long lastLogTerm,
             final VoteResponseHandler handler) {
-
-      sendPeerRequest(new VoteRequest(clusterName, term, candidateId, lastLogIndex, lastLogTerm), peerId).handle(new ResponseHandler() {
-         @Override
-         public void onResponse(Response res) {
-            if (res.isError()) {
-               logger.error("VoteRequest {}", res);
-            } else {
-               VoteResponse r = (VoteResponse) res;
-               if (handler != null) {
-                  handler.handleResponse(r.term, r.voteGranted);
-               }
+      sendPeerRequest(new VoteRequest(clusterName, term, candidateId, lastLogIndex, lastLogTerm), peerId).handle(res -> {
+         if (res.isError()) {
+            logger.error("VoteRequest {}", res);
+         } else {
+            VoteResponse r = (VoteResponse) res;
+            if (handler != null) {
+               handler.handleResponse(r.term, r.voteGranted);
             }
          }
       });
@@ -375,36 +367,28 @@ public class TetrapodCluster extends Storage
          }
       }
 
-      sendPeerRequest(new AppendEntriesRequest(term, leaderId, prevLogIndex, prevLogTerm, entryList, leaderCommit), peerId)
-               .handle(new ResponseHandler() {
-                  @Override
-                  public void onResponse(Response res) {
-                     if (res.isError()) {
-                        logger.error("AppendEntriesRequest {}", res);
-                     } else {
-                        AppendEntriesResponse r = (AppendEntriesResponse) res;
-                        if (handler != null) {
-                           handler.handleResponse(r.term, r.success, r.lastLogIndex);
-                        }
-                     }
-                  }
-               });
-
+      sendPeerRequest(new AppendEntriesRequest(term, leaderId, prevLogIndex, prevLogTerm, entryList, leaderCommit), peerId).handle(res -> {
+         if (res.isError()) {
+            logger.error("AppendEntriesRequest {}", res);
+         } else {
+            AppendEntriesResponse r = (AppendEntriesResponse) res;
+            if (handler != null) {
+               handler.handleResponse(r.term, r.success, r.lastLogIndex);
+            }
+         }
+      });
    }
 
    @Override
    public void sendInstallSnapshot(int peerId, long term, long index, long length, int partSize, int part, byte[] data,
             final InstallSnapshotResponseHandler handler) {
-      sendPeerRequest(new InstallSnapshotRequest(term, index, length, partSize, part, data), peerId).handle(new ResponseHandler() {
-         @Override
-         public void onResponse(Response res) {
-            if (res.isError()) {
-               logger.error("InstallSnapshotRequest {}", res);
-            } else {
-               InstallSnapshotResponse r = (InstallSnapshotResponse) res;
-               if (handler != null) {
-                  handler.handleResponse(r.success);
-               }
+      sendPeerRequest(new InstallSnapshotRequest(term, index, length, partSize, part, data), peerId).handle(res -> {
+         if (res.isError()) {
+            logger.error("InstallSnapshotRequest {}", res);
+         } else {
+            InstallSnapshotResponse r = (InstallSnapshotResponse) res;
+            if (handler != null) {
+               handler.handleResponse(r.success);
             }
          }
       });
@@ -417,23 +401,20 @@ public class TetrapodCluster extends Storage
             final ClientResponseHandler<TetrapodStateMachine> handler) {
       try {
          final byte[] data = commandToBytes(command);
-         sendPeerRequest(new IssueCommandRequest(command.getCommandType(), data), peerId).handle(new ResponseHandler() {
-            @Override
-            public void onResponse(Response res) {
-               if (res.isError()) {
-                  logger.error("IssueCommandRequest {}", res);
-                  if (handler != null) {
-                     handler.handleResponse(null);
-                  }
-               } else {
-                  if (handler != null) {
-                     IssueCommandResponse r = (IssueCommandResponse) res;
-                     try {
-                        handler.handleResponse(
-                                 new Entry<TetrapodStateMachine>(r.term, r.index, bytesToCommand(r.command, command.getCommandType())));
-                     } catch (IOException e) {
-                        logger.error(e.getMessage(), e);
-                     }
+         sendPeerRequest(new IssueCommandRequest(command.getCommandType(), data), peerId).handle(res -> {
+            if (res.isError()) {
+               logger.error("IssueCommandRequest {}", res);
+               if (handler != null) {
+                  handler.handleResponse(null);
+               }
+            } else {
+               if (handler != null) {
+                  IssueCommandResponse r = (IssueCommandResponse) res;
+                  try {
+                     handler.handleResponse(
+                              new Entry<TetrapodStateMachine>(r.term, r.index, bytesToCommand(r.command, command.getCommandType())));
+                  } catch (IOException e) {
+                     logger.error(e.getMessage(), e);
                   }
                }
             }
@@ -457,7 +438,7 @@ public class TetrapodCluster extends Storage
    private Command<TetrapodStateMachine> bytesToCommand(byte[] data, int type) throws IOException {
       if (data == null)
          return null;
-      Command<TetrapodStateMachine> cmd = (Command<TetrapodStateMachine>) state.makeCommandById(type);
+      Command<TetrapodStateMachine> cmd = state.makeCommandById(type);
       try (ByteArrayInputStream buf = new ByteArrayInputStream(data)) {
          try (DataInputStream in = new DataInputStream(buf)) {
             cmd.read(in, Log.LOG_FILE_VERSION);
@@ -498,12 +479,9 @@ public class TetrapodCluster extends Storage
    @Override
    public Response requestVote(VoteRequest r, RequestContext ctx) {
       final VoteResponse res = new VoteResponse();
-      raft.handleVoteRequest(r.clusterName, r.term, r.candidateId, r.lastLogIndex, r.lastLogTerm, new VoteResponseHandler() {
-         @Override
-         public void handleResponse(long term, boolean voteGranted) {
-            res.term = term;
-            res.voteGranted = voteGranted;
-         }
+      raft.handleVoteRequest(r.clusterName, r.term, r.candidateId, r.lastLogIndex, r.lastLogTerm, (term, voteGranted) -> {
+         res.term = term;
+         res.voteGranted = voteGranted;
       });
       return res;
    }
@@ -527,13 +505,10 @@ public class TetrapodCluster extends Storage
       }
 
       raft.handleAppendEntriesRequest(r.term, r.leaderId, r.prevLogIndex, r.prevLogTerm, entries, r.leaderCommit,
-               new AppendEntriesResponseHandler() {
-                  @Override
-                  public void handleResponse(long term, boolean success, long lastLogIndex) {
-                     res.term = term;
-                     res.success = success;
-                     res.lastLogIndex = lastLogIndex;
-                  }
+               (term, success, lastLogIndex) -> {
+                  res.term = term;
+                  res.success = success;
+                  res.lastLogIndex = lastLogIndex;
                });
       return res;
    }
@@ -541,32 +516,24 @@ public class TetrapodCluster extends Storage
    @Override
    public Response requestInstallSnapshot(InstallSnapshotRequest r, RequestContext ctx) {
       final InstallSnapshotResponse res = new InstallSnapshotResponse();
-      raft.handleInstallSnapshotRequest(r.term, r.index, r.length, r.partSize, r.part, r.data, new InstallSnapshotResponseHandler() {
-         @Override
-         public void handleResponse(boolean success) {
-            res.success = success;
-         }
-      });
+      raft.handleInstallSnapshotRequest(r.term, r.index, r.length, r.partSize, r.part, r.data, success -> res.success = success);
       return res;
    }
 
    @Override
    public Response requestIssueCommand(IssueCommandRequest r, final RequestContext ctx) {
       try {
-         raft.handleClientRequest(bytesToCommand(r.command, r.type), new ClientResponseHandler<TetrapodStateMachine>() {
-            @Override
-            public void handleResponse(Entry<TetrapodStateMachine> e) {
-               final Session ses = ((SessionRequestContext) ctx).session;
-               Response res = Response.error(CoreContract.ERROR_UNKNOWN);
-               try {
-                  if (e != null) {
-                     res = new IssueCommandResponse(e.getTerm(), e.getIndex(), commandToBytes(e.getCommand()));
-                  }
-               } catch (IOException ex) {
-                  logger.error(ex.getMessage(), ex);
-               } finally {
-                  ses.sendResponse(res, ctx.header.requestId);
+         raft.handleClientRequest(bytesToCommand(r.command, r.type), e -> {
+            final Session ses = ((SessionRequestContext) ctx).session;
+            Response res = Response.error(CoreContract.ERROR_UNKNOWN);
+            try {
+               if (e != null) {
+                  res = new IssueCommandResponse(e.getTerm(), e.getIndex(), commandToBytes(e.getCommand()));
                }
+            } catch (IOException ex) {
+               logger.error(ex.getMessage(), ex);
+            } finally {
+               ses.sendResponse(res, ctx.header.requestId);
             }
          });
          return Response.PENDING;
@@ -626,6 +593,7 @@ public class TetrapodCluster extends Storage
 
       public abstract Response handlePendingResponse(final Entry<T> entry);
 
+      @Override
       public void handleResponse(final Entry<T> entry) {
          Response res = Response.error(CoreContract.ERROR_UNKNOWN);
          try {
@@ -708,15 +676,12 @@ public class TetrapodCluster extends Storage
    @Override
    public long increment(String key) {
       final Value<Long> val = new Value<Long>();
-      executeCommand(new IncrementCommand<TetrapodStateMachine>(key), new ClientResponseHandler<TetrapodStateMachine>() {
-         @Override
-         public void handleResponse(Entry<TetrapodStateMachine> e) {
-            if (e != null) {
-               IncrementCommand<TetrapodStateMachine> cmd = (IncrementCommand<TetrapodStateMachine>) e.getCommand();
-               val.set(cmd.getResult());
-            } else {
-               val.set(null);
-            }
+      executeCommand(new IncrementCommand<TetrapodStateMachine>(key), e -> {
+         if (e != null) {
+            IncrementCommand<TetrapodStateMachine> cmd = (IncrementCommand<TetrapodStateMachine>) e.getCommand();
+            val.set(cmd.getResult());
+         } else {
+            val.set(null);
          }
       });
       return val.waitForValue();
@@ -817,15 +782,12 @@ public class TetrapodCluster extends Storage
       } else {
          if (joinIndex.get() == -1) {
             joinIndex.set(0);
-            executeCommand(new HealthCheckCommand<TetrapodStateMachine>(), new ClientResponseHandler<TetrapodStateMachine>() {
-               @Override
-               public void handleResponse(Entry<TetrapodStateMachine> entry) {
-                  if (entry != null) {
-                     joinIndex.set(entry.getIndex());
-                     logger.info("Join Index = {}", joinIndex);
-                  } else {
-                     joinIndex.set(-1);
-                  }
+            executeCommand(new HealthCheckCommand<TetrapodStateMachine>(), entry -> {
+               if (entry != null) {
+                  joinIndex.set(entry.getIndex());
+                  logger.info("Join Index = {}", joinIndex);
+               } else {
+                  joinIndex.set(-1);
                }
             });
          }
@@ -836,15 +798,12 @@ public class TetrapodCluster extends Storage
    public Admin addAdmin(String email, String hash, long rights) {
       final Value<Admin> val = new Value<Admin>();
       final Admin admin = new Admin(0, email, hash, rights, new long[Admin.MAX_LOGIN_ATTEMPTS]);
-      executeCommand(new AddAdminUserCommand(admin), new ClientResponseHandler<TetrapodStateMachine>() {
-         @Override
-         public void handleResponse(Entry<TetrapodStateMachine> e) {
-            if (e != null) {
-               AddAdminUserCommand cmd = (AddAdminUserCommand) e.getCommand();
-               val.set(cmd.getAdminUser());
-            } else {
-               val.set(null);
-            }
+      executeCommand(new AddAdminUserCommand(admin), e -> {
+         if (e != null) {
+            AddAdminUserCommand cmd = (AddAdminUserCommand) e.getCommand();
+            val.set(cmd.getAdminUser());
+         } else {
+            val.set(null);
          }
       });
       return val.waitForValue();
@@ -862,12 +821,7 @@ public class TetrapodCluster extends Storage
 
    public boolean modify(Admin admin) {
       final Value<Boolean> val = new Value<Boolean>();
-      executeCommand(new ModAdminUserCommand(admin), new ClientResponseHandler<TetrapodStateMachine>() {
-         @Override
-         public void handleResponse(Entry<TetrapodStateMachine> e) {
-            val.set(e != null);
-         }
-      });
+      executeCommand(new ModAdminUserCommand(admin), e -> val.set(e != null));
       return val.waitForValue();
    }
 

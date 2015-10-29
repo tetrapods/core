@@ -174,14 +174,11 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
       }
 
       private synchronized void validate(String theirToken) {
-         ses.sendRequest(new ValidateConnectionRequest(service.getEntityId(), theirToken), Core.DIRECT).handle(new ResponseHandler() {
-            @Override
-            public void onResponse(Response res) {
-               if (res.isError()) {
-                  failure();
-               } else {
-                  finish(((ValidateConnectionResponse) res).token);
-               }
+         ses.sendRequest(new ValidateConnectionRequest(service.getEntityId(), theirToken), Core.DIRECT).handle(res -> {
+            if (res.isError()) {
+               failure();
+            } else {
+               finish(((ValidateConnectionResponse) res).token);
             }
          });
       }
@@ -275,26 +272,23 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
       if (ses != service.clusterClient.getSession()) {
          logger.debug("Dispatching pending {} to {} returning on {}", req, ses, handler.session);
          final Async async = ses.sendRequest(req, toEntityId, (byte) 30);
-         async.handle(new ResponseHandler() {
-            @Override
-            public void onResponse(Response res) {
-               Response pendingRes = null;
-               try {
-                  pendingRes = handler.onResponse(res);
-               } catch (Throwable e) {
-                  logger.error(e.getMessage(), e);
-               } finally {
-                  if (pendingRes != Response.PENDING) {
-                     // finally return the pending response we were waiting on
-                     if (pendingRes == null) {
-                        pendingRes = new Error(ERROR_UNKNOWN);
-                     }
-                     if (!handler.sendResponse(pendingRes)) {
-                        logger.error("I literally can't even ({})", pendingRes);
-                     }
-                  } else {
-                     logger.debug("Pending response returned from pending handler for {} @ {}", req, async.header.toId);
+         async.handle(res -> {
+            Response pendingRes = null;
+            try {
+               pendingRes = handler.onResponse(res);
+            } catch (Throwable e) {
+               logger.error(e.getMessage(), e);
+            } finally {
+               if (pendingRes != Response.PENDING) {
+                  // finally return the pending response we were waiting on
+                  if (pendingRes == null) {
+                     pendingRes = new Error(ERROR_UNKNOWN);
                   }
+                  if (!handler.sendResponse(pendingRes)) {
+                     logger.error("I literally can't even ({})", pendingRes);
+                  }
+               } else {
+                  logger.debug("Pending response returned from pending handler for {} @ {}", req, async.header.toId);
                }
             }
          });

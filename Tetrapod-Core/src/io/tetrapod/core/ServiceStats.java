@@ -65,11 +65,7 @@ public class ServiceStats implements TopicUnsubscribedMessage.Handler {
          } catch (Throwable e) {
             logger.error(e.getMessage(), e);
          }
-         service.dispatcher.dispatch(3, TimeUnit.SECONDS, new Runnable() {
-            public void run() {
-               scheduleUpdate();
-            }
-         });
+         service.dispatcher.dispatch(3, TimeUnit.SECONDS, () -> scheduleUpdate());
       }
    }
 

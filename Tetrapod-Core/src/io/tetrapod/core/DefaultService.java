@@ -51,8 +51,8 @@ public class DefaultService
 
    private final LinkedList<ServerAddress> clusterMembers  = new LinkedList<>();
 
-   private final MessageHandlers           messageHandlers = new MessageHandlers();
-
+   private final MessageHandlers           messageHandlers = new MessageHandlers(); 
+   
    private final Publisher                 publisher       = new Publisher(this);
 
    public DefaultService() {
@@ -204,11 +204,7 @@ public class DefaultService
                   startPaused = false; // only start paused once
                }
             } else {
-               dispatcher.dispatch(1, TimeUnit.SECONDS, new Runnable() {
-                  public void run() {
-                     checkDependencies();
-                  }
-               });
+               dispatcher.dispatch(1, TimeUnit.SECONDS, () -> checkDependencies());
             }
          }
       }
@@ -234,11 +230,7 @@ public class DefaultService
             updateStatus(getStatus() & ~Core.STATUS_WARNINGS);
          }
 
-         dispatcher.dispatch(1, TimeUnit.SECONDS, new Runnable() {
-            public void run() {
-               checkHealth();
-            }
-         });
+         dispatcher.dispatch(1, TimeUnit.SECONDS, () -> checkHealth());
       }
    }
 
@@ -281,13 +273,10 @@ public class DefaultService
          }
       } else {
          if (getEntityId() != 0 && clusterClient.getSession() != null) {
-            sendDirectRequest(new UnregisterRequest(getEntityId())).handle(new ResponseHandler() {
-               @Override
-               public void onResponse(Response res) {
-                  clusterClient.close();
-                  dispatcher.shutdown();
-                  setTerminated(true);
-               }
+            sendDirectRequest(new UnregisterRequest(getEntityId())).handle(res -> {
+               clusterClient.close();
+               dispatcher.shutdown();
+               setTerminated(true);
             });
          } else {
             dispatcher.shutdown();
@@ -296,17 +285,15 @@ public class DefaultService
       }
 
       // If JVM doesn't gracefully terminate after 1 minute, explicitly kill the process
-      final Thread hitman = new Thread(new Runnable() {
-         public void run() {
-            Util.sleep(Util.ONE_MINUTE);
-            logger.warn("Service did not complete graceful termination. Force Killing JVM.");
-            final Map<Thread, StackTraceElement[]> map = Thread.getAllStackTraces();
-            for (Thread t : map.keySet()) {
-               logger.warn("{}", t);
-            }
-            System.exit(1);
+      final Thread hitman = new Thread(() -> {
+         Util.sleep(Util.ONE_MINUTE);
+         logger.warn("Service did not complete graceful termination. Force Killing JVM.");
+         final Map<Thread, StackTraceElement[]> map = Thread.getAllStackTraces();
+         for (Thread t : map.keySet()) {
+            logger.warn("{}", t);
          }
-      }, "Hitman");
+         System.exit(1);
+      } , "Hitman");
       hitman.setDaemon(true);
       hitman.start();
    }
@@ -362,18 +349,14 @@ public class DefaultService
                onServiceRegistered();
             }
          }
-      });
+      }); 
    }
 
    public void onDisconnectedFromCluster() {
       publisher.resetTopics();
       if (!isShuttingDown()) {
          logger.info("Connection to tetrapod closed");
-         dispatcher.dispatch(3, TimeUnit.SECONDS, new Runnable() {
-            public void run() {
-               connectToCluster(1);
-            }
-         });
+         dispatcher.dispatch(3, TimeUnit.SECONDS, () -> connectToCluster(1));
       }
    }
 
@@ -405,11 +388,7 @@ public class DefaultService
          }
 
          // schedule a retry
-         dispatcher.dispatch(retrySeconds, TimeUnit.SECONDS, new Runnable() {
-            public void run() {
-               connectToCluster(retrySeconds);
-            }
-         });
+         dispatcher.dispatch(retrySeconds, TimeUnit.SECONDS, () -> connectToCluster(retrySeconds));
       }
    }
 
@@ -550,61 +529,59 @@ public class DefaultService
       if (svc != null) {
          final long start = System.nanoTime();
          final Context context = dispatcher.requestTimes.time();
-         if (!dispatcher.dispatch(new Runnable() {
-            public void run() {
-               final long dispatchTime = System.nanoTime();
-               try {
+         if (!dispatcher.dispatch(() -> {
+            final long dispatchTime = System.nanoTime();
+            try {
 
-                  if (Util.nanosToMillis(dispatchTime - start) > 2500) {
-                     if ((getStatus() & Core.STATUS_OVERLOADED) == 0) {
-                        logger.warn("Service is overloaded. Dispatch time is {}ms", Util.nanosToMillis(dispatchTime - start));
-                     }
-                     // If it took a while to get dispatched, so set STATUS_OVERLOADED flag as a back-pressure signal
-                     updateStatus(getStatus() | Core.STATUS_OVERLOADED);
-                  } else {
-                     updateStatus(getStatus() & ~Core.STATUS_OVERLOADED);
+               if (Util.nanosToMillis(dispatchTime - start) > 2500) {
+                  if ((getStatus() & Core.STATUS_OVERLOADED) == 0) {
+                     logger.warn("Service is overloaded. Dispatch time is {}ms", Util.nanosToMillis(dispatchTime - start));
                   }
+                  // If it took a while to get dispatched, so set STATUS_OVERLOADED flag as a back-pressure signal
+                  updateStatus(getStatus() | Core.STATUS_OVERLOADED);
+               } else {
+                  updateStatus(getStatus() & ~Core.STATUS_OVERLOADED);
+               }
 
-                  final RequestContext ctx = fromSession != null ? new SessionRequestContext(header, fromSession)
-                           : new InternalRequestContext(header, new ResponseHandler() {
-                     @Override
-                     public void onResponse(Response res) {
-                        try {
-                           assert res != Response.PENDING;
-                           async.setResponse(res);
-                        } catch (Throwable e) {
-                           logger.error(e.getMessage(), e);
-                           async.setResponse(new Error(ERROR_UNKNOWN));
-                        }
-                     }
-                  });
-                  Response res = req.securityCheck(ctx);
-                  if (res == null) {
-                     res = req.dispatch(svc, ctx);
-                  }
-                  if (res != null) {
-                     if (res != Response.PENDING) {
+               final RequestContext ctx = fromSession != null ? new SessionRequestContext(header, fromSession)
+                        : new InternalRequestContext(header, new ResponseHandler() {
+                  @Override
+                  public void onResponse(Response res) {
+                     try {
+                        assert res != Response.PENDING;
                         async.setResponse(res);
+                     } catch (Throwable e) {
+                        logger.error(e.getMessage(), e);
+                        async.setResponse(new Error(ERROR_UNKNOWN));
                      }
-                  } else {
-                     async.setResponse(new Error(ERROR_UNKNOWN));
                   }
-               } catch (ErrorResponseException e) {
-                  async.setResponse(new Error(e.errorCode));
-               } catch (Throwable e) {
-                  logger.error(e.getMessage(), e);
+               });
+               Response res = req.securityCheck(ctx);
+               if (res == null) {
+                  res = req.dispatch(svc, ctx);
+               }
+               if (res != null) {
+                  if (res != Response.PENDING) {
+                     async.setResponse(res);
+                  }
+               } else {
                   async.setResponse(new Error(ERROR_UNKNOWN));
-               } finally {
-                  final long elapsed = System.nanoTime() - dispatchTime;
-                  stats.recordRequest(header.fromId, req, elapsed);
-                  context.stop();
-                  dispatcher.requestsHandledCounter.mark();
-                  if (Util.nanosToMillis(elapsed) > 1000) {
-                     logger.warn("Request took {} {} millis", req, Util.nanosToMillis(elapsed));
-                  }
+               }
+            } catch (ErrorResponseException e) {
+               async.setResponse(new Error(e.errorCode));
+            } catch (Throwable e) {
+               logger.error(e.getMessage(), e);
+               async.setResponse(new Error(ERROR_UNKNOWN));
+            } finally {
+               final long elapsed = System.nanoTime() - dispatchTime;
+               stats.recordRequest(header.fromId, req, elapsed);
+               context.stop();
+               dispatcher.requestsHandledCounter.mark();
+               if (Util.nanosToMillis(elapsed) > 1000) {
+                  logger.warn("Request took {} {} millis", req, Util.nanosToMillis(elapsed));
                }
             }
-         }, Session.DEFAULT_OVERLOAD_THRESHOLD)) {
+         } , Session.DEFAULT_OVERLOAD_THRESHOLD)) {
             // too many items queued, full-force back-pressure
             async.setResponse(new Error(ERROR_SERVICE_OVERLOADED));
             updateStatus(getStatus() | Core.STATUS_OVERLOADED);
@@ -830,22 +807,14 @@ public class DefaultService
    @Override
    public Response requestRestart(RestartRequest r, RequestContext ctx) {
       // TODO: Check admin rights or macaroon
-      dispatcher.dispatch(new Runnable() {
-         public void run() {
-            shutdown(true);
-         }
-      });
+      dispatcher.dispatch(() -> shutdown(true));
       return Response.SUCCESS;
    }
 
    @Override
    public Response requestShutdown(ShutdownRequest r, RequestContext ctx) {
       // TODO: Check admin rights or macaroon
-      dispatcher.dispatch(new Runnable() {
-         public void run() {
-            shutdown(false);
-         }
-      });
+      dispatcher.dispatch(() -> shutdown(false));
       return Response.SUCCESS;
    }
 

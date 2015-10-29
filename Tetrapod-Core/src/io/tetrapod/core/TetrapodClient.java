@@ -29,10 +29,10 @@ public class TetrapodClient implements SessionFactory, Session.Helper {
                                                             }
 
                                                             public void checkClientTrusted(X509Certificate[] chain, String authType)
-                                                                  throws CertificateException {}
+                                                                     throws CertificateException {}
 
                                                             public void checkServerTrusted(X509Certificate[] chain, String authType)
-                                                                  throws CertificateException {}
+                                                                     throws CertificateException {}
                                                          };
    public static final Logger        logger              = LoggerFactory.getLogger(TetrapodClient.class);
 
@@ -116,24 +116,20 @@ public class TetrapodClient implements SessionFactory, Session.Helper {
    }
 
    private void register() {
-      sendDirectRequest(new RegisterRequest(0, token, getContractId(), getClientName(), 0, Util.getHostName())).handle(
-            new ResponseHandler() {
-               @Override
-               public void onResponse(Response res) {
-                  if (res.isError()) {
-                     logger.error("Unable to register {}", res.errorCode());
-                  } else {
-                     RegisterResponse r = (RegisterResponse) res;
-                     TetrapodClient.this.token = r.token;
-                     logger.info(String.format("%s My entityId is 0x%08X", client.getSession(), r.entityId));
-                     client.getSession().setMyEntityId(r.entityId);
-                     client.getSession().setTheirEntityId(r.parentId);
-                     client.getSession().setMyEntityType(Core.TYPE_CLIENT);
-                     client.getSession().setTheirEntityType(Core.TYPE_TETRAPOD);
-                     onRegistered();
-                  }
-               }
-            });
+      sendDirectRequest(new RegisterRequest(0, token, getContractId(), getClientName(), 0, Util.getHostName())).handle(res -> {
+         if (res.isError()) {
+            logger.error("Unable to register {}", res.errorCode());
+         } else {
+            RegisterResponse r = (RegisterResponse) res;
+            TetrapodClient.this.token = r.token;
+            logger.info(String.format("%s My entityId is 0x%08X", client.getSession(), r.entityId));
+            client.getSession().setMyEntityId(r.entityId);
+            client.getSession().setTheirEntityId(r.parentId);
+            client.getSession().setMyEntityType(Core.TYPE_CLIENT);
+            client.getSession().setTheirEntityType(Core.TYPE_TETRAPOD);
+            onRegistered();
+         }
+      });
    }
 
    public boolean isConnected() {
@@ -171,17 +167,15 @@ public class TetrapodClient implements SessionFactory, Session.Helper {
    }
 
    private void scheduleReconnect(final int seconds) {
-      dispatcher.dispatch(seconds, TimeUnit.SECONDS, new Runnable() {
-         public void run() {
-            try {
-               if (!isConnected()) {
-                  logger.debug("Reconnecting");
-                  connect();
-               }
-            } catch (Exception e) {
-               logger.error(e.getMessage(), e);
-               scheduleReconnect(seconds * 2);
+      dispatcher.dispatch(seconds, TimeUnit.SECONDS, () -> {
+         try {
+            if (!isConnected()) {
+               logger.debug("Reconnecting");
+               connect();
             }
+         } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+            scheduleReconnect(seconds * 2);
          }
       });
    }

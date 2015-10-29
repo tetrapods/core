@@ -132,13 +132,11 @@ public class WireSession extends Session {
                res.read(reader);
                if (!commsLogIgnore(header.structId))
                   logged = commsLog("%s  [%d] <- %s", this, header.requestId, res.dump());
-               getDispatcher().dispatch(new Runnable() {
-                  public void run() {
-                     if (res instanceof StructureAdapter) {
-                        async.setResponse(new ResponseAdapter(res));
-                     } else {
-                        async.setResponse((Response) res);
-                     }
+               getDispatcher().dispatch(() -> {
+                  if (res instanceof StructureAdapter) {
+                     async.setResponse(new ResponseAdapter(res));
+                  } else {
+                     async.setResponse((Response) res);
                   }
                });
             } else {
