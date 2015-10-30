@@ -78,6 +78,7 @@ public class Builder {
 
    private static class MyCallback implements Callback<String> {
 
+      @Override
       public void call(String data) throws Exception {
          // TODO: send BuildCommandProgress message
          logger.info(data);

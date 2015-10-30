@@ -13,18 +13,18 @@ import io.tetrapod.protocol.core.*;
  * Stores basic service stats & handles stats publication
  */
 public class ServiceStats {
-   private static final Logger logger = LoggerFactory.getLogger(ServiceStats.class);
+   private static final Logger             logger           = LoggerFactory.getLogger(ServiceStats.class);
 
-   private final Set<Integer> statsSubscribers = new HashSet<>();
+   private final Set<Integer>              statsSubscribers = new HashSet<>();
 
-   private final DefaultService service;
+   private final DefaultService            service;
 
-   private Integer statsTopicId;
+   private Integer                         statsTopicId;
 
-   private final ServiceStatsMessage message = new ServiceStatsMessage();
+   private final ServiceStatsMessage       message          = new ServiceStatsMessage();
 
-   private final RequestStats              requests = new RequestStats();
-   private final Map<String, RequestStats> domains  = new HashMap<>();
+   private final RequestStats              requests         = new RequestStats();
+   private final Map<String, RequestStats> domains          = new HashMap<>();
 
    public ServiceStats(DefaultService service) {
       this.service = service;
@@ -37,12 +37,9 @@ public class ServiceStats {
     */
    protected void publishTopic() {
       message.entityId = service.getEntityId();
-      service.sendDirectRequest(new PublishRequest(1)).handle(new ResponseHandler() {
-         @Override
-         public void onResponse(Response res) {
-            if (!res.isError()) {
-               setTopic(((PublishResponse) res).topicIds[0]);
-            }
+      service.sendDirectRequest(new PublishRequest(1)).handle(res -> {
+         if (!res.isError()) {
+            setTopic(((PublishResponse) res).topicIds[0]);
          }
       });
    }
@@ -86,11 +83,7 @@ public class ServiceStats {
          } catch (Throwable e) {
             logger.error(e.getMessage(), e);
          }
-         service.dispatcher.dispatch(3, TimeUnit.SECONDS, new Runnable() {
-            public void run() {
-               scheduleUpdate();
-            }
-         });
+         service.dispatcher.dispatch(3, TimeUnit.SECONDS, () -> scheduleUpdate());
       }
    }
 

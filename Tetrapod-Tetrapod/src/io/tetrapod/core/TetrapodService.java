@@ -37,32 +37,32 @@ import io.tetrapod.protocol.storage.*;
 public class TetrapodService extends DefaultService implements TetrapodContract.API, StorageContract.API, RaftContract.API, RelayHandler,
          io.tetrapod.core.registry.Registry.RegistryBroadcaster {
 
-   public static final Logger logger = LoggerFactory.getLogger(TetrapodService.class);
+   public static final Logger                      logger                = LoggerFactory.getLogger(TetrapodService.class);
 
-   public final SecureRandom random = new SecureRandom();
+   public final SecureRandom                       random                = new SecureRandom();
 
-   public final io.tetrapod.core.registry.Registry registry = new io.tetrapod.core.registry.Registry(this);
+   public final io.tetrapod.core.registry.Registry registry              = new io.tetrapod.core.registry.Registry(this);
 
-   private Topic clusterTopic;
-   private Topic registryTopic;
-   private Topic servicesTopic;
-   private Topic adminTopic;
+   private Topic                                   clusterTopic;
+   private Topic                                   registryTopic;
+   private Topic                                   servicesTopic;
+   private Topic                                   adminTopic;
 
-   private final Object registryTopicLock = new Object();
-   private final Object servicesTopicLock = new Object();
+   private final Object                            registryTopicLock     = new Object();
+   private final Object                            servicesTopicLock     = new Object();
 
-   private final TetrapodWorker worker;
+   private final TetrapodWorker                    worker;
 
-   protected final TetrapodCluster cluster = new TetrapodCluster(this);
+   protected final TetrapodCluster                 cluster               = new TetrapodCluster(this);
 
-   private AdminAccounts adminAccounts;
+   private AdminAccounts                           adminAccounts;
 
-   private final List<Server> servers     = new ArrayList<Server>();
-   private final List<Server> httpServers = new ArrayList<Server>();
+   private final List<Server>                      servers               = new ArrayList<Server>();
+   private final List<Server>                      httpServers           = new ArrayList<Server>();
 
-   private long lastStatsLog;
+   private long                                    lastStatsLog;
 
-   private final LinkedList<Integer> clientSessionsCounter = new LinkedList<>();
+   private final LinkedList<Integer>               clientSessionsCounter = new LinkedList<>();
 
    public TetrapodService() throws IOException {
       super(new TetrapodContract());
@@ -155,6 +155,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
             new ServiceCommand("Log Registry Stats", null, LogRegistryStatsRequest.CONTRACT_ID, LogRegistryStatsRequest.STRUCT_ID, false) };
    }
 
+   @Override
    public byte getEntityType() {
       return Core.TYPE_TETRAPOD;
    }
@@ -181,11 +182,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
    @Override
    public long getCounter() {
-      long count = cluster.getNumSessions();
-      for (Server s : servers) {
-         count += s.getNumSessions();
-      }
-      return count;
+      return cluster.getNumSessions() + servers.stream().mapToInt(Server::getNumSessions).sum();
    }
 
    private class TypedSessionFactory extends WireSessionFactory {
@@ -370,6 +367,8 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    @Override
    public void onShutdown(boolean restarting) {
       logger.info("Shutting Down Tetrapod");
+      // sleep a bit so other services getting a kill signal can shutdown cleanly
+      Util.sleep(1500);
       if (cluster != null) {
          cluster.shutdown();
       }
@@ -398,7 +397,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          }
          final EntityInfo parent = registry.getEntity(entity.parentId);
          if (parent != null) {
-            assert(parent != null);
+            assert (parent != null);
             return cluster.getSession(parent.entityId);
          } else {
             logger.warn("Could not find parent entity {} for {}", entity.parentId, entity);
@@ -457,36 +456,34 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       final EntityInfo sender = registry.getEntity(header.fromId);
       if (sender != null) {
          buf.retain();
-         sender.queue(new Runnable() {
-            public void run() {
-               try {
-                  switch (header.toType) {
-                     case MessageHeader.TO_TOPIC:
-                        if (isBroadcast) {
-                           broadcastTopic(sender, header, buf);
-                        }
-                        break;
+         sender.queue(() -> {
+            try {
+               switch (header.toType) {
+                  case MessageHeader.TO_TOPIC:
+                     if (isBroadcast) {
+                        broadcastTopic(sender, header, buf);
+                     }
+                     break;
 
-                     case MessageHeader.TO_ENTITY:
-                        final Session ses = getRelaySession(header.toId, header.contractId);
-                        if (ses != null) {
-                           ses.sendRelayedMessage(header, buf, false);
-                        }
-                        break;
+                  case MessageHeader.TO_ENTITY:
+                     final Session ses = getRelaySession(header.toId, header.contractId);
+                     if (ses != null) {
+                        ses.sendRelayedMessage(header, buf, false);
+                     }
+                     break;
 
-                     case MessageHeader.TO_ALTERNATE:
-                        if (isBroadcast) {
-                           broadcastAlt(sender, header, buf);
-                        }
-                        break;
-                  }
-               } catch (Throwable e) {
-                  logger.error(e.getMessage(), e);
-               } finally {
-                  // FIXME: This is fragile -- if we delete an entity with queued work, we need to make sure we
-                  // release all the buffers in the queued work items.
-                  buf.release();
+                  case MessageHeader.TO_ALTERNATE:
+                     if (isBroadcast) {
+                        broadcastAlt(sender, header, buf);
+                     }
+                     break;
                }
+            } catch (Throwable e) {
+               logger.error(e.getMessage(), e);
+            } finally {
+               // FIXME: This is fragile -- if we delete an entity with queued work, we need to make sure we
+               // release all the buffers in the queued work items.
+               buf.release();
             }
          });
          worker.kick();
@@ -638,16 +635,14 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
 
    private void scheduleHealthCheck() {
       if (!isShuttingDown()) {
-         dispatcher.dispatch(1, TimeUnit.SECONDS, new Runnable() {
-            public void run() {
-               if (dispatcher.isRunning()) {
-                  try {
-                     healthCheck();
-                  } catch (Throwable e) {
-                     logger.error(e.getMessage(), e);
-                  } finally {
-                     scheduleHealthCheck();
-                  }
+         dispatcher.dispatch(1, TimeUnit.SECONDS, () -> {
+            if (dispatcher.isRunning()) {
+               try {
+                  healthCheck();
+               } catch (Throwable e) {
+                  logger.error(e.getMessage(), e);
+               } finally {
+                  scheduleHealthCheck();
                }
             }
          });
@@ -689,26 +684,22 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
                final Session ses = e.getSession();
                if (ses != null && now - ses.getLastHeardFrom() > 1153) {
                   final long t0 = System.currentTimeMillis();
-                  sendRequest(new DummyRequest(), e.entityId).handle(new ResponseHandler() {
-                     @Override
-                     public void onResponse(Response res) {
-                        final long tf = System.currentTimeMillis() - t0;
-                        if (tf > 1000) {
-                           logger.warn("Round trip to dispatch {} took {} ms", e, tf);
-                        }
+                  sendRequest(new DummyRequest(), e.entityId).handle(res -> {
+                     final long tf = System.currentTimeMillis() - t0;
+                     if (tf > 1000) {
+                        logger.warn("Round trip to dispatch {} took {} ms", e, tf);
                      }
                   });
                }
             }
          }
       }
-
    }
 
    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
    public void subscribeToCluster(Session ses, int toEntityId) {
-      assert(clusterTopic != null);
+      assert (clusterTopic != null);
       synchronized (cluster) {
          subscribe(clusterTopic.topicId, toEntityId);
          cluster.sendClusterDetails(ses, toEntityId, clusterTopic.topicId);
@@ -725,7 +716,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    }
 
    public void subscribeToAdmin(Session ses, int toEntityId) {
-      assert(adminTopic != null);
+      assert (adminTopic != null);
       synchronized (cluster) {
          subscribe(adminTopic.topicId, toEntityId);
          cluster.sendAdminDetails(ses, toEntityId, adminTopic.topicId);
@@ -1251,7 +1242,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       if (ctx.header.fromType != TYPE_SERVICE)
          return new Error(ERROR_INVALID_RIGHTS);
 
-      return cluster.requestUnsubscribeOwnership(r, (SessionRequestContext) ctx);
+      return cluster.requestUnsubscribeOwnership(r, ctx);
    }
 
    @Override

@@ -78,8 +78,70 @@ import java.util.Map;
  * @version 2013-04-18
  */
 @SuppressWarnings({ "unchecked", "rawtypes" })
-public class JSONArray {
+public class JSONArray implements Iterable<JSONArray.JSONElement> {
 
+   public static class JSONElement {
+      private int ix = 0;
+      private final JSONArray array;
+      
+      public JSONElement(JSONArray array) {
+         this.array = array;
+      }
+      
+      public int asInt() {
+         return array.optInt(ix, 0);
+      }
+
+      public long asLong() {
+         return array.optLong(ix, 0);
+      }
+      
+      public double asDouble() {
+         return array.optDouble(ix, 0);
+      }
+
+      public boolean asBoolean() {
+         return array.optBoolean(ix, false);
+      }
+      
+      public String asString() {
+         return array.optString(ix, null);
+      }
+      
+      public JSONObject asJSONObject() {
+         return array.optJSONObject(ix);
+      }
+
+      public JSONArray asJSONArray() {
+         return array.optJSONArray(ix);
+      }
+   }
+   
+   private static class JSONIterator implements Iterator<JSONArray.JSONElement> {
+      private final JSONElement elem;
+
+      public JSONIterator(JSONArray array) {
+         elem = new JSONElement(array);
+      }
+
+      @Override
+      public boolean hasNext() {
+         return elem.ix < elem.array.length() - 1;
+      }
+
+      @Override
+      public JSONElement next() {
+         elem.ix++;
+         return elem;
+      }
+
+      @Override
+      public void remove() {
+         throw new UnsupportedOperationException();
+      }
+   };
+   
+   
     /**
      * The arrayList where the JSONArray's properties are kept.
      */
@@ -946,4 +1008,9 @@ public class JSONArray {
             throw new JSONException(e);
         }
     }
+
+   @Override
+   public Iterator<JSONElement> iterator() {
+      return new JSONIterator(this);
+   }
 }

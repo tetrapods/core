@@ -3,6 +3,7 @@ package io.tetrapod.core;
 import static io.tetrapod.protocol.core.Core.UNADDRESSED;
 import static io.tetrapod.protocol.core.CoreContract.*;
 import io.netty.channel.socket.SocketChannel;
+import io.tetrapod.core.pubsub.Topic;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.rpc.Error;
 import io.tetrapod.core.utils.*;
@@ -22,34 +23,34 @@ import ch.qos.logback.classic.LoggerContext;
 
 import com.codahale.metrics.Timer.Context;
 
-public class DefaultService implements Service, Fail.FailHandler, CoreContract.API, SessionFactory, EntityMessage.Handler,
-      TetrapodContract.Cluster.API {
+public class DefaultService
+         implements Service, Fail.FailHandler, CoreContract.API, SessionFactory, EntityMessage.Handler, TetrapodContract.Cluster.API {
 
-   private static final Logger logger = LoggerFactory.getLogger(DefaultService.class);
+   private static final Logger             logger          = LoggerFactory.getLogger(DefaultService.class);
 
-   protected final Set<Integer> dependencies = new HashSet<>();
+   protected final Set<Integer>            dependencies    = new HashSet<>();
 
-   public final Dispatcher      dispatcher;
-   protected final Client       clusterClient;
-   protected final Contract     contract;
-   protected final ServiceCache services;
-   protected boolean            terminated;
-   protected int                entityId;
-   protected int                parentId;
-   protected String             token;
-   private int                  status;
-   public final int             buildNumber;
-   protected final LogBuffer    logBuffer;
-   protected SSLContext         sslContext;
+   public final Dispatcher                 dispatcher;
+   protected final Client                  clusterClient;
+   protected final Contract                contract;
+   protected final ServiceCache            services;
+   protected boolean                       terminated;
+   protected int                           entityId;
+   protected int                           parentId;
+   protected String                        token;
+   private int                             status;
+   public final int                        buildNumber;
+   protected final LogBuffer               logBuffer;
+   protected SSLContext                    sslContext;
 
-   private ServiceConnector serviceConnector;
+   private ServiceConnector                serviceConnector;
 
-   protected final ServiceStats stats;
-   protected boolean            startPaused;
+   protected final ServiceStats            stats;
+   protected boolean                       startPaused;
 
-   private final LinkedList<ServerAddress> clusterMembers = new LinkedList<>();
+   private final LinkedList<ServerAddress> clusterMembers  = new LinkedList<>();
 
-   private final MessageHandlers messageHandlers = new MessageHandlers();
+   private final MessageHandlers           messageHandlers = new MessageHandlers();
 
    public DefaultService() {
       this(null);
@@ -75,8 +76,8 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
 
       try {
          if (Util.getProperty("tetrapod.tls", true)) {
-            sslContext = Util.createSSLContext(new FileInputStream(Util.getProperty("tetrapod.jks.file", "cfg/tetrapod.jks")), System
-                  .getProperty("tetrapod.jks.pwd", "4pod.dop4").toCharArray());
+            sslContext = Util.createSSLContext(new FileInputStream(Util.getProperty("tetrapod.jks.file", "cfg/tetrapod.jks")),
+                     System.getProperty("tetrapod.jks.pwd", "4pod.dop4").toCharArray());
          }
       } catch (Exception e) {
          fail(e);
@@ -109,6 +110,14 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
       if (mainContract != null)
          addContracts(mainContract);
       this.contract = mainContract;
+   }
+
+   // HACK compatability for upcoming raft-registry
+   public Topic publishTopic() {
+      Topic.service = this;
+      Response res = sendDirectRequest(new PublishRequest(1)).waitForResponse();
+      Topic topic = new Topic(((PublishResponse) res).topicIds[0]);
+      return topic;
    }
 
    /**
@@ -201,11 +210,7 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
                   startPaused = false; // only start paused once
                }
             } else {
-               dispatcher.dispatch(1, TimeUnit.SECONDS, new Runnable() {
-                  public void run() {
-                     checkDependencies();
-                  }
-               });
+               dispatcher.dispatch(1, TimeUnit.SECONDS, () -> checkDependencies());
             }
          }
       }
@@ -231,11 +236,7 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
             updateStatus(getStatus() & ~Core.STATUS_WARNINGS);
          }
 
-         dispatcher.dispatch(1, TimeUnit.SECONDS, new Runnable() {
-            public void run() {
-               checkHealth();
-            }
-         });
+         dispatcher.dispatch(1, TimeUnit.SECONDS, () -> checkHealth());
       }
    }
 
@@ -278,13 +279,10 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
          }
       } else {
          if (getEntityId() != 0 && clusterClient.getSession() != null) {
-            sendDirectRequest(new UnregisterRequest(getEntityId())).handle(new ResponseHandler() {
-               @Override
-               public void onResponse(Response res) {
-                  clusterClient.close();
-                  dispatcher.shutdown();
-                  setTerminated(true);
-               }
+            sendDirectRequest(new UnregisterRequest(getEntityId())).handle(res -> {
+               clusterClient.close();
+               dispatcher.shutdown();
+               setTerminated(true);
             });
          } else {
             dispatcher.shutdown();
@@ -293,17 +291,15 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
       }
 
       // If JVM doesn't gracefully terminate after 1 minute, explicitly kill the process
-      final Thread hitman = new Thread(new Runnable() {
-         public void run() {
-            Util.sleep(Util.ONE_MINUTE);
-            logger.warn("Service did not complete graceful termination. Force Killing JVM.");
-            final Map<Thread, StackTraceElement[]> map = Thread.getAllStackTraces();
-            for (Thread t : map.keySet()) {
-               logger.warn("{}", t);
-            }
-            System.exit(1);
+      final Thread hitman = new Thread(() -> {
+         Util.sleep(Util.ONE_MINUTE);
+         logger.warn("Service did not complete graceful termination. Force Killing JVM.");
+         final Map<Thread, StackTraceElement[]> map = Thread.getAllStackTraces();
+         for (Thread t : map.keySet()) {
+            logger.warn("{}", t);
          }
-      }, "Hitman");
+         System.exit(1);
+      } , "Hitman");
       hitman.setDaemon(true);
       hitman.start();
    }
@@ -339,25 +335,22 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
    }
 
    private void onConnectedToCluster() {
-      sendDirectRequest(new RegisterRequest(buildNumber, token, getContractId(), getShortName(), getStatus(), Util.getHostName())).handle(
-            new ResponseHandler() {
-                  @Override
-                  public void onResponse(Response res) {
-                     if (res.isError()) {
-                        Fail.fail("Unable to register: " + res.errorCode());
-                     } else {
-                        RegisterResponse r = (RegisterResponse) res;
-                        entityId = r.entityId;
-                        parentId = r.parentId;
-                        token = r.token;
+      sendDirectRequest(new RegisterRequest(buildNumber, token, getContractId(), getShortName(), getStatus(), Util.getHostName()))
+               .handle(res -> {
+                  if (res.isError()) {
+                     Fail.fail("Unable to register: " + res.errorCode());
+                  } else {
+                     RegisterResponse r = (RegisterResponse) res;
+                     entityId = r.entityId;
+                     parentId = r.parentId;
+                     token = r.token;
 
-                        logger.info(String.format("%s My entityId is 0x%08X", clusterClient.getSession(), r.entityId));
-                        clusterClient.getSession().setMyEntityId(r.entityId);
-                        clusterClient.getSession().setTheirEntityId(r.parentId);
-                        clusterClient.getSession().setMyEntityType(getEntityType());
-                        clusterClient.getSession().setTheirEntityType(Core.TYPE_TETRAPOD);
-                        onServiceRegistered();
-                     }
+                     logger.info(String.format("%s My entityId is 0x%08X", clusterClient.getSession(), r.entityId));
+                     clusterClient.getSession().setMyEntityId(r.entityId);
+                     clusterClient.getSession().setTheirEntityId(r.parentId);
+                     clusterClient.getSession().setMyEntityType(getEntityType());
+                     clusterClient.getSession().setTheirEntityType(Core.TYPE_TETRAPOD);
+                     onServiceRegistered();
                   }
                });
    }
@@ -365,11 +358,7 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
    public void onDisconnectedFromCluster() {
       if (!isShuttingDown()) {
          logger.info("Connection to tetrapod closed");
-         dispatcher.dispatch(3, TimeUnit.SECONDS, new Runnable() {
-            public void run() {
-               connectToCluster(1);
-            }
-         });
+         dispatcher.dispatch(3, TimeUnit.SECONDS, () -> connectToCluster(1));
       }
    }
 
@@ -401,11 +390,7 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
          }
 
          // schedule a retry
-         dispatcher.dispatch(retrySeconds, TimeUnit.SECONDS, new Runnable() {
-            public void run() {
-               connectToCluster(retrySeconds);
-            }
-         });
+         dispatcher.dispatch(retrySeconds, TimeUnit.SECONDS, () -> connectToCluster(retrySeconds));
       }
    }
 
@@ -546,61 +531,59 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
       if (svc != null) {
          final long start = System.nanoTime();
          final Context context = dispatcher.requestTimes.time();
-         if (!dispatcher.dispatch(new Runnable() {
-            public void run() {
-               final long dispatchTime = System.nanoTime();
-               try {
+         if (!dispatcher.dispatch(() -> {
+            final long dispatchTime = System.nanoTime();
+            try {
 
-                  if (Util.nanosToMillis(dispatchTime - start) > 2500) {
-                     if ((getStatus() & Core.STATUS_OVERLOADED) == 0) {
-                        logger.warn("Service is overloaded. Dispatch time is {}ms", Util.nanosToMillis(dispatchTime - start));
-                     }
-                     // If it took a while to get dispatched, so set STATUS_OVERLOADED flag as a back-pressure signal
-                     updateStatus(getStatus() | Core.STATUS_OVERLOADED);
-                  } else {
-                     updateStatus(getStatus() & ~Core.STATUS_OVERLOADED);
+               if (Util.nanosToMillis(dispatchTime - start) > 2500) {
+                  if ((getStatus() & Core.STATUS_OVERLOADED) == 0) {
+                     logger.warn("Service is overloaded. Dispatch time is {}ms", Util.nanosToMillis(dispatchTime - start));
                   }
+                  // If it took a while to get dispatched, so set STATUS_OVERLOADED flag as a back-pressure signal
+                  updateStatus(getStatus() | Core.STATUS_OVERLOADED);
+               } else {
+                  updateStatus(getStatus() & ~Core.STATUS_OVERLOADED);
+               }
 
-                  final RequestContext ctx = fromSession != null ? new SessionRequestContext(header, fromSession)
-                           : new InternalRequestContext(header, new ResponseHandler() {
-                     @Override
-                     public void onResponse(Response res) {
-                        try {
-                           assert res != Response.PENDING;
-                           async.setResponse(res);
-                        } catch (Throwable e) {
-                           logger.error(e.getMessage(), e);
-                           async.setResponse(new Error(ERROR_UNKNOWN));
-                        }
-                     }
-                  });
-                  Response res = req.securityCheck(ctx);
-                  if (res == null) {
-                     res = req.dispatch(svc, ctx);
-                  }
-                  if (res != null) {
-                     if (res != Response.PENDING) {
+               final RequestContext ctx = fromSession != null ? new SessionRequestContext(header, fromSession)
+                        : new InternalRequestContext(header, new ResponseHandler() {
+                  @Override
+                  public void onResponse(Response res) {
+                     try {
+                        assert res != Response.PENDING;
                         async.setResponse(res);
+                     } catch (Throwable e) {
+                        logger.error(e.getMessage(), e);
+                        async.setResponse(new Error(ERROR_UNKNOWN));
                      }
-                  } else {
-                     async.setResponse(new Error(ERROR_UNKNOWN));
                   }
-               } catch (ErrorResponseException e) {
-                  async.setResponse(new Error(e.errorCode));
-               } catch (Throwable e) {
-                  logger.error(e.getMessage(), e);
+               });
+               Response res = req.securityCheck(ctx);
+               if (res == null) {
+                  res = req.dispatch(svc, ctx);
+               }
+               if (res != null) {
+                  if (res != Response.PENDING) {
+                     async.setResponse(res);
+                  }
+               } else {
                   async.setResponse(new Error(ERROR_UNKNOWN));
-               } finally {
-                  final long elapsed = System.nanoTime() - dispatchTime;
-                  stats.recordRequest(header.fromId, req, elapsed);
-                  context.stop();
-                  dispatcher.requestsHandledCounter.mark();
-                  if (Util.nanosToMillis(elapsed) > 1000) {
-                     logger.warn("Request took {} {} millis", req, Util.nanosToMillis(elapsed));
-                  }
+               }
+            } catch (ErrorResponseException e) {
+               async.setResponse(new Error(e.errorCode));
+            } catch (Throwable e) {
+               logger.error(e.getMessage(), e);
+               async.setResponse(new Error(ERROR_UNKNOWN));
+            } finally {
+               final long elapsed = System.nanoTime() - dispatchTime;
+               stats.recordRequest(header.fromId, req, elapsed);
+               context.stop();
+               dispatcher.requestsHandledCounter.mark();
+               if (Util.nanosToMillis(elapsed) > 1000) {
+                  logger.warn("Request took {} {} millis", req, Util.nanosToMillis(elapsed));
                }
             }
-         }, Session.DEFAULT_OVERLOAD_THRESHOLD)) {
+         } , Session.DEFAULT_OVERLOAD_THRESHOLD)) {
             // too many items queued, full-force back-pressure
             async.setResponse(new Error(ERROR_SERVICE_OVERLOADED));
             updateStatus(getStatus() | Core.STATUS_OVERLOADED);
@@ -810,22 +793,14 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
    @Override
    public Response requestRestart(RestartRequest r, RequestContext ctx) {
       // TODO: Check admin rights or macaroon
-      dispatcher.dispatch(new Runnable() {
-         public void run() {
-            shutdown(true);
-         }
-      });
+      dispatcher.dispatch(() -> shutdown(true));
       return Response.SUCCESS;
    }
 
    @Override
    public Response requestShutdown(ShutdownRequest r, RequestContext ctx) {
       // TODO: Check admin rights or macaroon
-      dispatcher.dispatch(new Runnable() {
-         public void run() {
-            shutdown(false);
-         }
-      });
+      dispatcher.dispatch(() -> shutdown(false));
       return Response.SUCCESS;
    }
 
@@ -857,8 +832,8 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
    }
 
    protected String getStartLoggingMessage() {
-      return "*** Start Service ***" + "\n   *** Service name: " + Util.getProperty("APPNAME") + "\n   *** Options: "
-            + Launcher.getAllOpts() + "\n   *** VM Args: " + ManagementFactory.getRuntimeMXBean().getInputArguments().toString();
+      return "*** Start Service ***" + "\n   *** Service name: " + Util.getProperty("APPNAME") + "\n   *** Options: " + Launcher.getAllOpts()
+               + "\n   *** VM Args: " + ManagementFactory.getRuntimeMXBean().getInputArguments().toString();
    }
 
    @Override

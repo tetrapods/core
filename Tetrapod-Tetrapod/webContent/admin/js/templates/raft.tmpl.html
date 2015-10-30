@@ -35,8 +35,9 @@
          <td>
             <i class="fa" data-bind="css: roleIcon"></i>
             <span data-bind="text: roleName"></span>
+            <i class="fa fa-exclamation-circle fa-fw" data-bind="visible: !isHealthy()" style="float:right;"></i>
          </td>
-         <td>
+         <td>            
             <span data-bind="text: curTerm"></span>
          </td>
          <td>

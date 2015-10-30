@@ -5,6 +5,12 @@ h3 {
 	
 }
 
+li.disabled {
+   margin-top: -5px;
+   margin-bottom: 10px;
+   font-size: 0.8em;
+   background-color: #d5d5d5;
+}
 
 .request-stats-dialog {
 	width: 750px;

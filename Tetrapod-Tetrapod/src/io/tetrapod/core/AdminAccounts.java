@@ -17,8 +17,6 @@ import io.tetrapod.core.rpc.Error;
 import io.tetrapod.core.storage.*;
 import io.tetrapod.core.utils.*;
 import io.tetrapod.protocol.core.*;
-import io.tetrapod.raft.Entry;
-import io.tetrapod.raft.RaftRPC.ClientResponseHandler;
 
 /**
  * Manages tetrapod administration accounts
@@ -56,15 +54,12 @@ public class AdminAccounts {
    public Admin addAdmin(String email, String hash, long rights) {
       final Value<Admin> val = new Value<Admin>();
       final Admin admin = new Admin(0, email, hash, rights, new long[Admin.MAX_LOGIN_ATTEMPTS]);
-      cluster.executeCommand(new AddAdminUserCommand(admin), new ClientResponseHandler<TetrapodStateMachine>() {
-         @Override
-         public void handleResponse(Entry<TetrapodStateMachine> e) {
-            if (e != null) {
-               AddAdminUserCommand cmd = (AddAdminUserCommand) e.getCommand();
-               val.set(cmd.getAdminUser());
-            } else {
-               val.set(null);
-            }
+      cluster.executeCommand(new AddAdminUserCommand(admin), e -> {
+         if (e != null) {
+            AddAdminUserCommand cmd = (AddAdminUserCommand) e.getCommand();
+            val.set(cmd.getAdminUser());
+         } else {
+            val.set(null);
          }
       });
       return val.waitForValue();
@@ -100,17 +95,14 @@ public class AdminAccounts {
     * Records a login attempt and returns true if we trip the flood alarm
     */
    public boolean recordLoginAttempt(Admin admin) {
-      admin = mutate(admin, new AdminMutator() {
-         @Override
-         public void mutate(Admin admin) {
-            if (admin.loginAttempts == null) {
-               admin.loginAttempts = new long[Admin.MAX_LOGIN_ATTEMPTS];
-            }
-            for (int j = admin.loginAttempts.length - 1; j > 0; j--) {
-               admin.loginAttempts[j] = admin.loginAttempts[j - 1];
-            }
-            admin.loginAttempts[0] = System.currentTimeMillis();
+      admin = mutate(admin, admin1 -> {
+         if (admin1.loginAttempts == null) {
+            admin1.loginAttempts = new long[Admin.MAX_LOGIN_ATTEMPTS];
          }
+         for (int j = admin1.loginAttempts.length - 1; j > 0; j--) {
+            admin1.loginAttempts[j] = admin1.loginAttempts[j - 1];
+         }
+         admin1.loginAttempts[0] = System.currentTimeMillis();
       });
       if (admin != null) {
          return ((System.currentTimeMillis() - admin.loginAttempts[admin.loginAttempts.length - 1]) < 5000);
@@ -207,12 +199,7 @@ public class AdminAccounts {
       try {
          if (PasswordHash.validatePassword(r.oldPassword, admin.hash)) {
             final String newHash = PasswordHash.createHash(r.newPassword);
-            admin = mutate(admin, new AdminMutator() {
-               @Override
-               public void mutate(Admin a) {
-                  a.hash = newHash;
-               }
-            });
+            admin = mutate(admin, a -> a.hash = newHash);
             if (admin != null) {
                return Response.SUCCESS;
             }
@@ -231,12 +218,7 @@ public class AdminAccounts {
          Admin target = getAdmin(r.accountId);
          if (target != null) {
             final String newHash = PasswordHash.createHash(r.password);
-            target = mutate(target, new AdminMutator() {
-               @Override
-               public void mutate(Admin a) {
-                  a.hash = newHash;
-               }
-            });
+            target = mutate(target, a -> a.hash = newHash);
             if (target != null) {
                return Response.SUCCESS;
             }
@@ -274,12 +256,7 @@ public class AdminAccounts {
       final Admin target = getAdmin(r.accountId);
       if (target != null) {
          final Value<Boolean> val = new Value<Boolean>();
-         cluster.executeCommand(new DelAdminUserCommand(r.accountId), new ClientResponseHandler<TetrapodStateMachine>() {
-            @Override
-            public void handleResponse(Entry<TetrapodStateMachine> e) {
-               val.set(e != null);
-            }
-         });
+         cluster.executeCommand(new DelAdminUserCommand(r.accountId), e -> val.set(e != null));
          if (val.waitForValue()) {
             return Response.SUCCESS;
          } else {
@@ -301,12 +278,7 @@ public class AdminAccounts {
       }
       final Admin target = getAdmin(r.accountId);
       if (target != null) {
-         Admin mutated = mutate(target, new AdminMutator() {
-            @Override
-            public void mutate(Admin a) {
-               a.rights = r.rights;
-            }
-         });
+         Admin mutated = mutate(target, a -> a.rights = r.rights);
          if (mutated != null) {
             return Response.SUCCESS;
          }

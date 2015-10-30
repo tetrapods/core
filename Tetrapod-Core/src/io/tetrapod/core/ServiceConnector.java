@@ -19,19 +19,19 @@ import org.slf4j.*;
  */
 public class ServiceConnector implements DirectConnectionRequest.Handler, ValidateConnectionRequest.Handler {
 
-   private static final Logger logger = LoggerFactory.getLogger(ServiceConnector.class);
+   private static final Logger             logger            = LoggerFactory.getLogger(ServiceConnector.class);
 
    /**
     * The number of requests sent to a specific service that triggers us to start a direct session
     */
-   private static final int REQUEST_THRESHOLD = 100;
+   private static final int                REQUEST_THRESHOLD = 100;
 
-   private Map<Integer, DirectServiceInfo> services = new ConcurrentHashMap<>();
+   private Map<Integer, DirectServiceInfo> services          = new ConcurrentHashMap<>();
 
-   private final DefaultService service;
-   private final SSLContext     sslContext;
+   private final DefaultService            service;
+   private final SSLContext                sslContext;
 
-   private Server server;
+   private Server                          server;
 
    public ServiceConnector(DefaultService service, SSLContext sslContext) {
       this.service = service;
@@ -118,17 +118,13 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
          if (System.currentTimeMillis() > restUntil) {
             pending = true;
             valid = false;
-            service.clusterClient.getSession().sendRequest(new DirectConnectionRequest(token), entityId, (byte) 30)
-                     .handle(new ResponseHandler() {
-                        @Override
-                        public void onResponse(Response res) {
-                           if (res.isError()) {
-                              failure();
-                           } else {
-                              connect((DirectConnectionResponse) res);
-                           }
-                        }
-                     });
+            service.clusterClient.getSession().sendRequest(new DirectConnectionRequest(token), entityId, (byte) 30).handle(res -> {
+               if (res.isError()) {
+                  failure();
+               } else {
+                  connect((DirectConnectionResponse) res);
+               }
+            });
          }
       }
 
@@ -150,14 +146,11 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
       }
 
       private synchronized void validate(String theirToken) {
-         ses.sendRequest(new ValidateConnectionRequest(service.getEntityId(), theirToken), Core.DIRECT).handle(new ResponseHandler() {
-            @Override
-            public void onResponse(Response res) {
-               if (res.isError()) {
-                  failure();
-               } else {
-                  finish(((ValidateConnectionResponse) res).token);
-               }
+         ses.sendRequest(new ValidateConnectionRequest(service.getEntityId(), theirToken), Core.DIRECT).handle(res -> {
+            if (res.isError()) {
+               failure();
+            } else {
+               finish(((ValidateConnectionResponse) res).token);
             }
          });
       }
@@ -207,11 +200,7 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
                      }
                   } else {
                      if (s.requests > REQUEST_THRESHOLD && !s.pending) {
-                        service.dispatcher.dispatch(new Runnable() {
-                           public void run() {
-                              s.handshake();
-                           }
-                        });
+                        service.dispatcher.dispatch(() -> s.handshake());
                      }
                   }
                }
@@ -233,26 +222,23 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
       if (ses != service.clusterClient.getSession()) {
          logger.debug("Dispatching pending {} to {} returning on {}", req, ses, handler.session);
          final Async async = ses.sendRequest(req, toEntityId, (byte) 30);
-         async.handle(new ResponseHandler() {
-            @Override
-            public void onResponse(Response res) {
-               Response pendingRes = null;
-               try {
-                  pendingRes = handler.onResponse(res);
-               } catch (Throwable e) {
-                  logger.error(e.getMessage(), e);
-               } finally {
-                  if (pendingRes != Response.PENDING) {
-                     // finally return the pending response we were waiting on
-                     if (pendingRes == null) {
-                        pendingRes = new Error(ERROR_UNKNOWN);
-                     }
-                     if (!handler.sendResponse(pendingRes)) {
-                        logger.error("I literally can't even ({})", pendingRes);
-                     }
-                  } else {
-                     logger.debug("Pending response returned from pending handler for {} @ {}", req, async.header.toId);
+         async.handle(res -> {
+            Response pendingRes = null;
+            try {
+               pendingRes = handler.onResponse(res);
+            } catch (Throwable e) {
+               logger.error(e.getMessage(), e);
+            } finally {
+               if (pendingRes != Response.PENDING) {
+                  // finally return the pending response we were waiting on
+                  if (pendingRes == null) {
+                     pendingRes = new Error(ERROR_UNKNOWN);
                   }
+                  if (!handler.sendResponse(pendingRes)) {
+                     logger.error("I literally can't even ({})", pendingRes);
+                  }
+               } else {
+                  logger.debug("Pending response returned from pending handler for {} @ {}", req, async.header.toId);
                }
             }
          });

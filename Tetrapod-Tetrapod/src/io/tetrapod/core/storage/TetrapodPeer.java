@@ -1,16 +1,17 @@
 package io.tetrapod.core.storage;
 
-import io.netty.channel.socket.SocketChannel;
-import io.tetrapod.core.*;
-import io.tetrapod.core.registry.Registry;
-import io.tetrapod.core.rpc.*;
-import io.tetrapod.core.utils.Util;
-import io.tetrapod.protocol.core.*;
-
 import java.net.ConnectException;
 import java.util.concurrent.TimeUnit;
 
-import org.slf4j.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import io.netty.channel.socket.SocketChannel;
+import io.tetrapod.core.*;
+import io.tetrapod.core.registry.Registry;
+import io.tetrapod.core.utils.Util;
+import io.tetrapod.protocol.core.ClusterJoinRequest;
+import io.tetrapod.protocol.core.Core;
 
 /**
  * Represents another Tetrapod in the cluster. This maintains a persistent connection with that tetrapod and transmits RPC for Raft
@@ -107,11 +108,7 @@ public class TetrapodPeer implements Session.Listener, SessionFactory {
 
    private synchronized void scheduleReconnect(int delayInSeconds) {
       if (!service.isShuttingDown()) {
-         service.getDispatcher().dispatch(delayInSeconds, TimeUnit.SECONDS, new Runnable() {
-            public void run() {
-               connect();
-            }
-         });
+         service.getDispatcher().dispatch(delayInSeconds, TimeUnit.SECONDS, () -> connect());
       }
    }
 
@@ -132,21 +129,17 @@ public class TetrapodPeer implements Session.Listener, SessionFactory {
 
    private synchronized void joinCluster() {
       joined = true;
-      session.sendRequest(
-            new ClusterJoinRequest(service.buildNumber, service.getStatus(), Util.getHostName(), service.getEntityId(),
-                  service.getServicePort(), service.getClusterPort()), Core.DIRECT).handle(new ResponseHandler() {
-         @Override
-         public void onResponse(Response res) {
-            if (res.isError()) {
-               logger.error("ClusterJoinRequest Failed {}", res);
-               synchronized (TetrapodPeer.this) {
-                  joined = false;
-               }
-            } else {
-               logger.info("ClusterJoinRequest Succeeded");
-            }
-         }
-      });
+      session.sendRequest(new ClusterJoinRequest(service.buildNumber, service.getStatus(), Util.getHostName(), service.getEntityId(),
+               service.getServicePort(), service.getClusterPort()), Core.DIRECT).handle(res -> {
+                  if (res.isError()) {
+                     logger.error("ClusterJoinRequest Failed {}", res);
+                     synchronized (TetrapodPeer.this) {
+                        joined = false;
+                     }
+                  } else {
+                     logger.info("ClusterJoinRequest Succeeded");
+                  }
+               });
    }
 
 }

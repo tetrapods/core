@@ -71,7 +71,7 @@ public class Dispatcher {
          workerGroup = new NioEventLoopGroup();
       }
       assert (!workerGroup.isShutdown());
-      assert (!workerGroup.isShuttingDown()); 
+      assert (!workerGroup.isShuttingDown());
       return workerGroup;
    }
 
@@ -80,7 +80,7 @@ public class Dispatcher {
          bossGroup = new NioEventLoopGroup();
       }
       assert (!bossGroup.isShutdown());
-      assert (!bossGroup.isShuttingDown()); 
+      assert (!bossGroup.isShuttingDown());
       return bossGroup;
    }
 
@@ -98,11 +98,7 @@ public class Dispatcher {
    public boolean dispatch(final Runnable r, final int overloadThreshold) {
       assert r != null;
       try {
-         threadPool.submit(new Runnable() {
-            public void run() {
-               processTask(r);
-            }
-         });
+         threadPool.submit(() -> processTask(r));
       } catch (RejectedExecutionException e) {
          if (overflow.size() < overloadThreshold && overflow.offer(r)) {
             workQueueSize.inc();
@@ -112,7 +108,7 @@ public class Dispatcher {
       }
       return true;
    }
-   
+
    public int getActiveThreads() {
       return threadPool.getActiveCount();
    }
@@ -169,11 +165,8 @@ public class Dispatcher {
     */
    public ScheduledFuture<?> dispatch(int delay, TimeUnit unit, final Runnable r) {
       assert (!scheduled.isShutdown());
-      return scheduled.schedule(new Runnable() {
-         public void run() {
-            dispatch(r);
-         }
-      }, delay, unit);
+      return scheduled.schedule(() -> dispatch(r), delay, unit);
+
    }
 
    /**

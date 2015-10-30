@@ -16,7 +16,8 @@ define(function(require) {
       self.clear = clear;
       self.leaderEntityId = ko.pureComputed(leaderEntityId);
       self.tolerance = ko.pureComputed(tolerance);
-      self.maxTerm = 0;
+      self.maxTerm = ko.observable(0);
+      self.commitIndex = ko.observable(0);
       self.ensurePeer = ensurePeer;
       self.isNodeInCluster = isNodeInCluster;
 
@@ -114,8 +115,11 @@ define(function(require) {
          var nodes = 0;
          for (var i = 0; i < self.rafts().length; i++) {
             var raft = self.rafts()[i];
-            if (raft.curTerm() > self.maxTerm) {
-               self.maxTerm = raft.curTerm();
+            if (raft.curTerm() > self.maxTerm()) {
+               self.maxTerm(raft.curTerm());
+            }
+            if (raft.commitIndex() > self.commitIndex()) {
+               self.commitIndex(raft.commitIndex());
             }
          }
          for (var i = 0; i < self.rafts().length; i++) {
@@ -152,7 +156,6 @@ define(function(require) {
 
          self.update = update;
          //   self.leaveCluster = leaveCluster;
-         self.isHealthy = isHealthy;
          self.hasPeer = hasPeer;
          //self.forceBootstrap = forceBootstrap;
          self.snapshot = snapshot;
@@ -222,28 +225,6 @@ define(function(require) {
             return 'fa-question';
          });
 
-         //         function leaveCluster() {
-         //            app.server.sendTo("ClusterLeave", {
-         //               entityId: self.entityId
-         //            }, cluster.leaderEntityId(), function(info) {
-         //               if (info.isError()) {
-         //                  console.error("Cluster Leave Failed");
-         //               }
-         //            });
-         //         }
-         //
-         //         function forceBootstrap() {
-         //            Alert.confirm("Are you sure you want to bootstrap raft with leader = '" + self.entityId + "'?", function() {
-         //               app.server.sendTo("ClusterBootstrap", {
-         //                  adminToken: app.sessionToken,
-         //               }, self.entityId, function(info) {
-         //                  if (info.isError()) {
-         //                     console.error("ClusterBootstrap Failed");
-         //                  }
-         //               });
-         //            });
-         //         }
-
          function snapshot() {
             app.server.sendTo("Snapshot", {
                adminToken: app.sessionToken,
@@ -256,11 +237,13 @@ define(function(require) {
 
          // return true if this node is part of the cluster. 
          // FIXME: this should probably have better logic
-         function isHealthy() {
-            if (self.curTerm() < cluster.maxTerm)
+         self.isHealthy = ko.pureComputed(function() {
+            if (self.lastIndex() < cluster.commitIndex())
+               return false;
+            if (self.curTerm() < cluster.maxTerm())
                return false;
             return self.role() == 2 || self.role() == 3 || self.role() == 4;
-         }
+         });
 
          function hasPeer(entityId) {
             for (var i = 0; i < self.peers().length; i++) {

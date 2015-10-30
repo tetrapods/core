@@ -64,33 +64,33 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
 
    }
 
-   protected static final Logger logger   = LoggerFactory.getLogger(Session.class);
-   protected static final Logger commsLog = LoggerFactory.getLogger("comms");
+   protected static final Logger        logger                     = LoggerFactory.getLogger(Session.class);
+   protected static final Logger        commsLog                   = LoggerFactory.getLogger("comms");
 
-   public static final byte DEFAULT_REQUEST_TIMEOUT    = 30;
-   public static final int  DEFAULT_OVERLOAD_THRESHOLD = 1024 * 128;
+   public static final byte             DEFAULT_REQUEST_TIMEOUT    = 30;
+   public static final int              DEFAULT_OVERLOAD_THRESHOLD = 1024 * 128;
 
-   protected static final AtomicInteger sessionCounter = new AtomicInteger();
+   protected static final AtomicInteger sessionCounter             = new AtomicInteger();
 
-   protected final int sessionNum = sessionCounter.incrementAndGet();
+   protected final int                  sessionNum                 = sessionCounter.incrementAndGet();
 
-   protected final List<Listener>      listeners       = new LinkedList<Listener>();
-   protected final Map<Integer, Async> pendingRequests = new ConcurrentHashMap<>();
-   protected final AtomicInteger       requestCounter  = new AtomicInteger();
-   protected final Session.Helper      helper;
-   protected final SocketChannel       channel;
-   protected final AtomicLong          lastHeardFrom   = new AtomicLong(System.currentTimeMillis());
-   protected final AtomicLong          lastSentTo      = new AtomicLong(System.currentTimeMillis());
+   protected final List<Listener>       listeners                  = new LinkedList<Listener>();
+   protected final Map<Integer, Async>  pendingRequests            = new ConcurrentHashMap<>();
+   protected final AtomicInteger        requestCounter             = new AtomicInteger();
+   protected final Session.Helper       helper;
+   protected final SocketChannel        channel;
+   protected final AtomicLong           lastHeardFrom              = new AtomicLong(System.currentTimeMillis());
+   protected final AtomicLong           lastSentTo                 = new AtomicLong(System.currentTimeMillis());
 
-   protected RelayHandler relayHandler;
+   protected RelayHandler               relayHandler;
 
-   protected int  myId   = 0;
-   protected byte myType = Core.TYPE_ANONYMOUS;
+   protected int                        myId                       = 0;
+   protected byte                       myType                     = Core.TYPE_ANONYMOUS;
 
-   protected int  theirId   = 0;
-   protected byte theirType = Core.TYPE_ANONYMOUS;
+   protected int                        theirId                    = 0;
+   protected byte                       theirType                  = Core.TYPE_ANONYMOUS;
 
-   protected int myContractId;
+   protected int                        myContractId;
 
    public Session(SocketChannel channel, Session.Helper helper) {
       this.channel = channel;
@@ -154,11 +154,9 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
 
    protected void scheduleHealthCheck() {
       if (isConnected() || !pendingRequests.isEmpty()) {
-         getDispatcher().dispatch(1, TimeUnit.SECONDS, new Runnable() {
-            public void run() {
-               checkHealth();
-               scheduleHealthCheck();
-            }
+         getDispatcher().dispatch(1, TimeUnit.SECONDS, () -> {
+            checkHealth();
+            scheduleHealthCheck();
          });
       }
    }
@@ -177,12 +175,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
    }
 
    protected void dispatchRequest(final RequestHeader header, final Request req) {
-      helper.dispatchRequest(header, req, this).handle(new ResponseHandler() {
-         @Override
-         public void onResponse(Response res) {
-            sendResponse(res, header.requestId);
-         }
-      });
+      helper.dispatchRequest(header, req, this).handle(res -> sendResponse(res, header.requestId));
    }
 
    protected void dispatchMessage(final MessageHeader header, final Message msg) {
@@ -196,39 +189,34 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
 
       // OPTIMIZE: use senderId to queue instead of using this single threaded queue
       final MessageContext ctx = new SessionMessageContext(header, this);
-      getDispatcher().dispatchSequential(new Runnable() {
-         public void run() {
-            for (SubscriptionAPI handler : helper.getMessageHandlers(header.contractId, header.structId)) {
-               msg.dispatch(handler, ctx);
-            }
+      getDispatcher().dispatchSequential(() -> {
+         for (SubscriptionAPI handler : helper.getMessageHandlers(header.contractId, header.structId)) {
+            msg.dispatch(handler, ctx);
          }
       });
    }
 
    public Response sendPendingRequest(final Request req, final int toId, byte timeoutSeconds, final PendingResponseHandler pendingHandler) {
       final Async async = sendRequest(req, toId, timeoutSeconds);
-      async.handle(new ResponseHandler() {
-         @Override
-         public void onResponse(Response res) {
-            Response pendingRes = null;
-            try {
-               pendingRes = pendingHandler.onResponse(res);
-            } catch (ErrorResponseException e1) {
-               pendingRes = Response.error(e1.errorCode);
-            } catch (Throwable e) {
-               logger.error(e.getMessage(), e);
-            } finally {
-               if (pendingRes != Response.PENDING) {
-                  // finally return the pending response we were waiting on
-                  if (pendingRes == null) {
-                     pendingRes = new Error(ERROR_UNKNOWN);
-                  }
-                  if (!pendingHandler.sendResponse(pendingRes)) {
-                     sendResponse(pendingRes, pendingHandler.originalRequestId);
-                  }
-               } else {
-                  logger.debug("Pending response returned from pending handler for {} @ {}", req, toId);
+      async.handle(res -> {
+         Response pendingRes = null;
+         try {
+            pendingRes = pendingHandler.onResponse(res);
+         } catch (ErrorResponseException e1) {
+            pendingRes = Response.error(e1.errorCode);
+         } catch (Throwable e) {
+            logger.error(e.getMessage(), e);
+         } finally {
+            if (pendingRes != Response.PENDING) {
+               // finally return the pending response we were waiting on
+               if (pendingRes == null) {
+                  pendingRes = new Error(ERROR_UNKNOWN);
                }
+               if (!pendingHandler.sendResponse(pendingRes)) {
+                  sendResponse(pendingRes, pendingHandler.originalRequestId);
+               }
+            } else {
+               logger.debug("Pending response returned from pending handler for {} @ {}", req, toId);
             }
          }
       });
@@ -353,7 +341,8 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
       int origRequestId = async.header.requestId;
       int newRequestId = addPendingRequest(async);
       if (!commsLogIgnore(header.structId))
-         commsLog("%s  [%d/%d] ~> Request:%s", this, newRequestId, origRequestId, StructureFactory.getName(header.contractId, header.structId));
+         commsLog("%s  [%d/%d] ~> Request:%s", this, newRequestId, origRequestId,
+                  StructureFactory.getName(header.contractId, header.structId));
       // making a new header lets us not worry about synchronizing the change the requestId
       RequestHeader newHeader = new RequestHeader(newRequestId, header.fromId, header.toId, header.fromType, header.timeout, header.version,
                header.contractId, header.structId);

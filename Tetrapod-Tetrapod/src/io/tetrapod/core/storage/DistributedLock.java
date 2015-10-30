@@ -1,13 +1,14 @@
 package io.tetrapod.core.storage;
 
-import io.tetrapod.core.utils.*;
-import io.tetrapod.raft.*;
-import io.tetrapod.raft.RaftRPC.ClientResponseHandler;
-import io.tetrapod.raft.storage.*;
-
 import java.util.UUID;
 
-import org.slf4j.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import io.tetrapod.core.utils.Util;
+import io.tetrapod.core.utils.Value;
+import io.tetrapod.raft.storage.LockCommand;
+import io.tetrapod.raft.storage.UnlockCommand;
 
 /**
  * Convenience wrapper for a Distributed Lock via raft
@@ -41,15 +42,12 @@ public class DistributedLock {
             Util.sleep(Math.min(1024, 8 * attempts * attempts));
          }
          raft.executeCommand(new LockCommand<TetrapodStateMachine>(key, uuid, leaseForMillis, System.currentTimeMillis()),
-                  new ClientResponseHandler<TetrapodStateMachine>() {
-                     @Override
-                     public void handleResponse(Entry<TetrapodStateMachine> e) {
-                        if (e != null) {
-                           final LockCommand<TetrapodStateMachine> command = (LockCommand<TetrapodStateMachine>) e.getCommand();
-                           acquired.set(command.wasAcquired());
-                        } else {
-                           acquired.set(false);
-                        }
+                  e -> {
+                     if (e != null) {
+                        final LockCommand<TetrapodStateMachine> command = (LockCommand<TetrapodStateMachine>) e.getCommand();
+                        acquired.set(command.wasAcquired());
+                     } else {
+                        acquired.set(false);
                      }
                   });
 
@@ -64,12 +62,9 @@ public class DistributedLock {
 
    public void unlock() {
       logger.info("UNLOCKING {} ", key);
-      raft.executeCommand(new UnlockCommand<TetrapodStateMachine>(key), new ClientResponseHandler<TetrapodStateMachine>() {
-         @Override
-         public void handleResponse(Entry<TetrapodStateMachine> e) {
-            if (e != null) {
-               logger.info("UNLOCKED {} ", key);
-            }
+      raft.executeCommand(new UnlockCommand<TetrapodStateMachine>(key), e -> {
+         if (e != null) {
+            logger.info("UNLOCKED {} ", key);
          }
       });
    }
