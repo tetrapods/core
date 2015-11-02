@@ -146,7 +146,7 @@ public class EntityRegistry implements TetrapodContract.Registry.API {
             unsubscribe(owner, topic.topicId, e.entityId, true);
 
             // notify the publisher that this client's subscription is now dead
-            broadcaster.sendMessage(new TopicUnsubscribedMessage(topic.topicId, e.entityId), owner.entityId);
+            broadcaster.sendMessage(new TopicUnsubscribedMessage(owner.entityId, topic.topicId, e.entityId), owner.entityId);
 
          } else {
             // bug here cleaning up topics on unreg, I think...
@@ -211,10 +211,6 @@ public class EntityRegistry implements TetrapodContract.Registry.API {
          if (e != null) {
             topic.subscribe(publisher, e, once);
             e.subscribe(topic);
-
-            // ... temp ...
-            broadcaster.sendMessage(new TopicSubscribedMessage(topic.topicId, publisher.entityId, false), entityId);
-
          } else {
             logger.info("Could not find subscriber {} for topic {}", entityId, topicId);
          }
@@ -241,7 +237,7 @@ public class EntityRegistry implements TetrapodContract.Registry.API {
          if (e != null) {
             e.unsubscribe(topic);
             // notify the subscriber that they have been unsubscribed from this topic
-            broadcaster.sendMessage(new TopicUnsubscribedMessage(topic.topicId, publisher.entityId), entityId);
+            broadcaster.sendMessage(new TopicUnsubscribedMessage(publisher.entityId, topic.topicId, entityId), entityId);
          }
       }
    }

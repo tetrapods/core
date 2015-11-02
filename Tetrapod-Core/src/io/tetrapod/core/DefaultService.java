@@ -51,8 +51,8 @@ public class DefaultService
 
    private final LinkedList<ServerAddress> clusterMembers  = new LinkedList<>();
 
-   private final MessageHandlers           messageHandlers = new MessageHandlers(); 
-   
+   private final MessageHandlers           messageHandlers = new MessageHandlers();
+
    private final Publisher                 publisher       = new Publisher(this);
 
    public DefaultService() {
@@ -75,7 +75,6 @@ public class DefaultService
       addContracts(new CoreContract());
       addPeerContracts(new TetrapodContract());
       addMessageHandler(new EntityMessage(), this);
-      addMessageHandler(new TopicUnsubscribedMessage(), publisher);
       addSubscriptionHandler(new TetrapodContract.Cluster(), this);
 
       try {
@@ -168,7 +167,8 @@ public class DefaultService
    private void onServiceRegistered() {
       registerServiceInformation();
       stats.publishTopic();
-      sendDirectRequest(new ServicesSubscribeRequest());
+      logger.info("@@@@@ ServicesSubscribeRequest");
+      sendDirectRequest(new ServicesSubscribeRequest()).handle(res -> logger.info("{}", res.dump()));
    }
 
    public boolean dependenciesReady() {
@@ -350,7 +350,7 @@ public class DefaultService
                onServiceRegistered();
             }
          }
-      }); 
+      });
    }
 
    public void onDisconnectedFromCluster() {
@@ -633,7 +633,7 @@ public class DefaultService
    public boolean isServiceExistant(int entityId) {
       return services.isServiceExistant(entityId);
    }
-   
+
    public void sendMessage(Message msg, int toEntityId) {
       if (serviceConnector != null && isServiceExistant(toEntityId)) {
          serviceConnector.sendMessage(msg, toEntityId);

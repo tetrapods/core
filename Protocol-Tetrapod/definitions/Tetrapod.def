@@ -173,19 +173,23 @@ public message Entity
 ##### Registry Topic Messages #####  
 
 internal message Registry.TopicPublished
-   1: int topicId
+   1: int publisherId
+   2: int topicId
 
 internal message Registry.TopicUnpublished
-   1: int topicId
+   1: int publisherId
+   2: int topicId
 
 internal message Registry.TopicSubscribed
-   1: int topicId
-   2: int entityId
-   3: boolean once
+   1: int publisherId
+   2: int topicId
+   3: int entityId
+   4: boolean once
 
 internal message Registry.TopicUnsubscribed
-   1: int topicId
-   2: int entityId
+   1: int publisherId
+   2: int topicId
+   3: int entityId
    
 ##### Building #############
 

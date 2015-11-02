@@ -27,7 +27,7 @@ import io.tetrapod.protocol.core.*;
  * <li>Unit tests & documentation
  * </ul>
  */
-public class Publisher implements TopicUnsubscribedMessage.Handler {
+public class Publisher implements TopicUnsubscribedMessage.Handler, TopicUnpublishedMessage.Handler {
    private static final Logger       logger       = LoggerFactory.getLogger(Publisher.class);
 
    private final DefaultService      service;
@@ -38,6 +38,8 @@ public class Publisher implements TopicUnsubscribedMessage.Handler {
 
    public Publisher(DefaultService service) {
       this.service = service;
+      service.addMessageHandler(new TopicUnsubscribedMessage(), this);
+      service.addMessageHandler(new TopicUnpublishedMessage(), this);
    }
 
    public Topic publish() {
@@ -96,35 +98,39 @@ public class Publisher implements TopicUnsubscribedMessage.Handler {
       service.sendBroadcastMessage(msg, parentEntityId, topicId);
    }
 
+   public void resetTopics() {
+      for (Topic t : topics.values()) {
+         t.reset();
+      }
+   }
+
    @Override
    public void genericMessage(Message message, MessageContext ctx) {}
 
    @Override
    public void messageTopicUnsubscribed(TopicUnsubscribedMessage m, MessageContext ctx) {
-      if (m.entityId != service.getEntityId()) {
+      //logger.info("@@@@@ {} {}", m.dump(), ctx.header.dump());
+      if (m.publisherId == service.getEntityId()) {
+         logger.info("@@@@@ UNSUBSCRIBING DISCONNECTED SUBSCRIBER {}", m.dump());
          unsubscribe(m.topicId, m.entityId);
       }
    }
-   //
-   //   @Override
-   //   public void messageTopicUnpublished(TopicUnpublishedMessage m, MessageContext ctx) {
-   //      if (m.publisherId == service.getEntityId()) {
-   //         // call topic unpublish listener
-   //         // re-publish
-   //         final Topic orig = topics.get(m.topicId);
-   //         if (orig != null) {
-   //            final Topic topic = new Topic(this, orig.topicId);
-   //            for (Topic.Subscriber s : orig.getSubscribers()) {
-   //               topic.subscribe(s.entityId, true);
-   //            }
-   //            topics.put(topic.topicId, topic);
-   //         }
-   //      }
-   //   }
 
-   public void resetTopics() {
-      for (Topic t : topics.values()) {
-         t.reset();
+   @Override
+   public void messageTopicUnpublished(TopicUnpublishedMessage m, MessageContext ctx) {
+      //logger.info("@@@@@ {} {}", m.dump(), ctx.header.dump());
+      if (m.publisherId == service.getEntityId()) {
+         // call topic unpublish listener
+         // re-publish
+         final Topic orig = topics.get(m.topicId);
+         if (orig != null) {
+            logger.info("@@@@@ REPUBLISHING {}", orig);
+            final Topic topic = new Topic(this, orig.topicId);
+            for (Topic.Subscriber s : orig.getSubscribers()) {
+               topic.subscribe(s.entityId, true);
+            }
+            topics.put(topic.topicId, topic);
+         }
       }
    }
 
