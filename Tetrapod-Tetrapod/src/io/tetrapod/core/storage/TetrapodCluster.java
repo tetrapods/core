@@ -46,7 +46,7 @@ public class TetrapodCluster extends Storage
 
    private final Config                           cfg;
 
-   private final Meter                            commands       = Metrics.meter(this, "raft", "command");
+   private final Meter                            commands       = Metrics.meter(this, "commands");
 
    /**
     * The index of the command we joined the cluster

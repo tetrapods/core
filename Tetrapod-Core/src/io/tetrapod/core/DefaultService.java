@@ -62,7 +62,6 @@ public class DefaultService
       logger.info(m);
       Session.commsLog.info(m);
       Fail.handler = this;
-      Metrics.init(getMetricsPrefix());
       synchronized (this) {
          status |= Core.STATUS_STARTING;
       }
@@ -724,6 +723,7 @@ public class DefaultService
 
    @Override
    public void messageClusterSynced(ClusterSyncedMessage m, MessageContext ctx) {
+      Metrics.init(getMetricsPrefix());
       checkDependencies();
    }
 
