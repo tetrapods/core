@@ -8,7 +8,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.codahale.metrics.Gauge;
+import com.codahale.metrics.Meter;
 
 import io.netty.channel.socket.SocketChannel;
 import io.tetrapod.core.*;
@@ -46,16 +46,7 @@ public class TetrapodCluster extends Storage
 
    private final Config                           cfg;
 
-   // private final Meter                            tolerance      = Metrics.meter(this, "raft", "tolerance");
-   //  private final Meter                          lastCommand    = Metrics.meter(this, "raft", "lastcommand");
-
-   @SuppressWarnings({ "unchecked" })
-   public final Gauge<Long>                       lastCommand    = (Gauge<Long>) Metrics.register(new Gauge<Long>() {
-                                                                    @Override
-                                                                    public Long getValue() {
-                                                                       return System.currentTimeMillis() - state.getLastCommandAppliedMillis();
-                                                                    }
-                                                                 }, this, "raft", "lastcommand");
+   private final Meter                            commands       = Metrics.meter(this, "raft", "command");
 
    /**
     * The index of the command we joined the cluster
@@ -141,7 +132,7 @@ public class TetrapodCluster extends Storage
 
    @Override
    public void onLogEntryApplied(Entry<TetrapodStateMachine> entry) {
-
+      commands.mark();
       final Command<TetrapodStateMachine> command = entry.getCommand();
       switch (command.getCommandType()) {
          case SetClusterPropertyCommand.COMMAND_ID:
