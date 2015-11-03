@@ -53,7 +53,7 @@ public class TetrapodCluster extends Storage
    public final Gauge<Long>                       lastCommand    = (Gauge<Long>) Metrics.register(new Gauge<Long>() {
                                                                     @Override
                                                                     public Long getValue() {
-                                                                       return state.getLastCommandAppliedMillis();
+                                                                       return System.currentTimeMillis() - state.getLastCommandAppliedMillis();
                                                                     }
                                                                  }, this, "raft", "lastcommand");
 
