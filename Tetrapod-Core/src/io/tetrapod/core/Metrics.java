@@ -27,10 +27,10 @@ public class Metrics {
 
    public static GraphiteReporter          graphiteReporter;
 
-   public static GarbageCollectorMetricSet gc;
-   public static MemoryUsageGaugeSet       memory;
-   public static ThreadStatesGaugeSet      threadStats;
-   public static FileDescriptorRatioGauge  fdUsage;
+   public final static GarbageCollectorMetricSet gc = metrics.register(MetricRegistry.name("jvm", "gc"), new GarbageCollectorMetricSet());
+   public final static MemoryUsageGaugeSet       memory = metrics.register(MetricRegistry.name("jvm", "memory"), new MemoryUsageGaugeSet());
+   public final static ThreadStatesGaugeSet      threadStats = metrics.register(MetricRegistry.name("jvm", "thread-states"), new ThreadStatesGaugeSet());
+   public final static FileDescriptorRatioGauge  fdUsage = metrics.register(MetricRegistry.name("jvm", "fd", "usage"), new FileDescriptorRatioGauge());
 
    public static Counter counter(Object o, String... names) {
       return metrics.counter(MetricRegistry.name(o.getClass(), names));
@@ -59,16 +59,12 @@ public class Metrics {
    public static Metric register(Metric metric, Object o, String... names) {
       return metrics.register(MetricRegistry.name(o.getClass(), names), metric);
    }
-   
+
    public static Metric register(Metric metric, Class<?> c, String... names) {
       return metrics.register(MetricRegistry.name(c, names), metric);
    }
 
    public static void init(String prefix) {
-      gc = metrics.register(MetricRegistry.name("jvm", "gc"), new GarbageCollectorMetricSet());
-      memory = metrics.register(MetricRegistry.name("jvm", "memory"), new MemoryUsageGaugeSet());
-      threadStats = metrics.register(MetricRegistry.name("jvm", "thread-states"), new ThreadStatesGaugeSet());
-      fdUsage = metrics.register(MetricRegistry.name("jvm", "fd", "usage"), new FileDescriptorRatioGauge());
 
       if (Util.getProperty("graphite.enabled", false)) {
          startGraphite(new ServerAddress(Util.getProperty("graphite.host", "localhost"), Util.getProperty("graphite.port", 2003)), prefix);
@@ -87,8 +83,8 @@ public class Metrics {
       assert (graphiteReporter == null);
       logger.info("Starting Graphite reporting on {} as {}", graphite.dump(), prefix);
       graphiteReporter = GraphiteReporter.forRegistry(metrics).prefixedWith(prefix).convertRatesTo(TimeUnit.SECONDS)
-            .convertDurationsTo(TimeUnit.MILLISECONDS).filter(MetricFilter.ALL)
-            .build(new Graphite(new InetSocketAddress(graphite.host, graphite.port)));
+               .convertDurationsTo(TimeUnit.MILLISECONDS).filter(MetricFilter.ALL)
+               .build(new Graphite(new InetSocketAddress(graphite.host, graphite.port)));
       graphiteReporter.start(1, TimeUnit.MINUTES);
    }
 
@@ -120,5 +116,5 @@ public class Metrics {
    public static int getNumCores() {
       return ManagementFactory.getOperatingSystemMXBean().getAvailableProcessors();
    }
- 
+
 }
