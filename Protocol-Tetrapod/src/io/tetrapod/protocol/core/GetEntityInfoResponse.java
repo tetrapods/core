@@ -21,7 +21,7 @@ public class GetEntityInfoResponse extends Response {
       defaults();
    }
 
-   public GetEntityInfoResponse(int build, String name, String host, String referrer, String domain) {
+   public GetEntityInfoResponse(String build, String name, String host, String referrer, String domain) {
       this.build = build;
       this.name = name;
       this.host = host;
@@ -29,7 +29,7 @@ public class GetEntityInfoResponse extends Response {
       this.domain = domain;
    }   
    
-   public int build;
+   public String build;
    
    /**
     * entity name
@@ -56,7 +56,7 @@ public class GetEntityInfoResponse extends Response {
    }
 
    public final void defaults() {
-      build = 0;
+      build = null;
       name = null;
       host = null;
       referrer = null;
@@ -79,7 +79,7 @@ public class GetEntityInfoResponse extends Response {
       while (true) {
          int tag = data.readTag();
          switch (tag) {
-            case 1: this.build = data.read_int(tag); break;
+            case 1: this.build = data.read_string(tag); break;
             case 2: this.name = data.read_string(tag); break;
             case 3: this.host = data.read_string(tag); break;
             case 4: this.referrer = data.read_string(tag); break;
@@ -124,7 +124,7 @@ public class GetEntityInfoResponse extends Response {
       desc.tagWebNames = tagWebNames();
       desc.types = new TypeDescriptor[desc.tagWebNames.length];
       desc.types[0] = new TypeDescriptor(TypeDescriptor.T_STRUCT, getContractId(), getStructId());
-      desc.types[1] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
+      desc.types[1] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
       desc.types[2] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
       desc.types[3] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
       desc.types[4] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);

@@ -104,7 +104,7 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
          this.token = EntityToken.encode(entityId, reclaimToken);
 
          final EntityInfo e = new EntityInfo(entityId, 0, reclaimToken, Util.getHostName(), 0, Core.TYPE_TETRAPOD, getShortName(),
-                  buildNumber, 0, getContractId());
+                  0, getContractId(), buildName);
          registry.register(e);
          logger.info(String.format("SELF-REGISTERED: 0x%08X %s", entityId, e));
 

@@ -449,8 +449,8 @@ public class TetrapodCluster extends Storage
       // register them in our registry
       EntityInfo entity = service.registry.getEntity(req.entityId);
       if (entity == null) {
-         entity = new EntityInfo(req.entityId, req.entityId, 0L, req.host, req.status, Core.TYPE_TETRAPOD, "Tetrapod*", req.build,
-                  TetrapodContract.VERSION, TetrapodContract.CONTRACT_ID);
+         entity = new EntityInfo(req.entityId, req.entityId, 0L, req.host, req.status, Core.TYPE_TETRAPOD, "Tetrapod*",
+                  TetrapodContract.VERSION, TetrapodContract.CONTRACT_ID, req.build);
          service.registry.register(entity);
       } else {
          // reconnecting with a pre-existing peerId

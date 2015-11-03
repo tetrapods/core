@@ -39,7 +39,7 @@ public class DefaultService
    protected int                           parentId;
    protected String                        token;
    private int                             status;
-   public final int                        buildNumber;
+   public final String                     buildName;
    protected final LogBuffer               logBuffer;
    protected SSLContext                    sslContext;
 
@@ -99,12 +99,11 @@ public class DefaultService
          }
       });
 
-      int num = 1;
+      String build = "Unknown";
       try {
-         String b = Util.readFileAsString(new File("build_number.txt"));
-         num = Integer.parseInt(b.trim());
+         build = Util.readFileAsString(new File("build_name.txt"));
       } catch (IOException e) {}
-      buildNumber = num;
+      buildName = build;
 
       checkHealth();
       if (mainContract != null)
@@ -335,7 +334,7 @@ public class DefaultService
    }
 
    private void onConnectedToCluster() {
-      sendDirectRequest(new RegisterRequest(buildNumber, token, getContractId(), getShortName(), getStatus(), Util.getHostName()))
+      sendDirectRequest(new RegisterRequest(token, getContractId(), getShortName(), getStatus(), Util.getHostName(), buildName))
                .handle(res -> {
                   if (res.isError()) {
                      Fail.fail("Unable to register: " + res.errorCode());
