@@ -331,24 +331,21 @@ public class DefaultService
 
    private void onConnectedToCluster() {
       final Request req = new RegisterRequest(buildNumber, token, getContractId(), getShortName(), getStatus(), Util.getHostName());
-      sendDirectRequest(req).handle(new ResponseHandler() {
-         @Override
-         public void onResponse(Response res) {
-            if (res.isError()) {
-               Fail.fail("Unable to register: " + req.dump() + " ==> " + res);
-            } else {
-               RegisterResponse r = (RegisterResponse) res;
-               entityId = r.entityId;
-               parentId = r.parentId;
-               token = r.token;
+      sendDirectRequest(req).handle(res -> {
+         if (res.isError()) {
+            Fail.fail("Unable to register: " + req.dump() + " ==> " + res);
+         } else {
+            RegisterResponse r = (RegisterResponse) res;
+            entityId = r.entityId;
+            parentId = r.parentId;
+            token = r.token;
 
-               clusterClient.getSession().setMyEntityId(r.entityId);
-               clusterClient.getSession().setTheirEntityId(r.parentId);
-               clusterClient.getSession().setMyEntityType(getEntityType());
-               clusterClient.getSession().setTheirEntityType(Core.TYPE_TETRAPOD);
-               logger.info(String.format("%s My entityId is 0x%08X", clusterClient.getSession(), r.entityId));
-               onServiceRegistered();
-            }
+            clusterClient.getSession().setMyEntityId(r.entityId);
+            clusterClient.getSession().setTheirEntityId(r.parentId);
+            clusterClient.getSession().setMyEntityType(getEntityType());
+            clusterClient.getSession().setTheirEntityType(Core.TYPE_TETRAPOD);
+            logger.info(String.format("%s My entityId is 0x%08X", clusterClient.getSession(), r.entityId));
+            onServiceRegistered();
          }
       });
    }

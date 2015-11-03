@@ -141,18 +141,14 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
          if (System.currentTimeMillis() > restUntil) {
             pending = true;
             valid = false;
-            service.clusterClient.getSession().sendRequest(new DirectConnectionRequest(token), entityId, (byte) 30)
-                     .handle(new ResponseHandler() {
-                        @Override
-                        public void onResponse(Response res) {
-                           if (res.isError()) {
-                              logger.error("DirectConnectionRequest to {} =  {}", entityId, res);
-                              failure();
-                           } else {
-                              connect((DirectConnectionResponse) res);
-                           }
-                        }
-                     });
+            service.clusterClient.getSession().sendRequest(new DirectConnectionRequest(token), entityId, (byte) 30).handle(res -> {
+               if (res.isError()) {
+                  logger.error("DirectConnectionRequest to {} =  {}", entityId, res);
+                  failure();
+               } else {
+                  connect((DirectConnectionResponse) res);
+               }
+            });
          }
       }
 

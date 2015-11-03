@@ -12,7 +12,7 @@ import io.tetrapod.protocol.core.*;
 
 public class ServiceCache implements TetrapodContract.Services.API {
 
-   private static final Logger                        logger       = LoggerFactory.getLogger(ServiceCache.class);
+   public static final Logger                         logger       = LoggerFactory.getLogger(ServiceCache.class);
 
    /**
     * Maps entityId => Entity
