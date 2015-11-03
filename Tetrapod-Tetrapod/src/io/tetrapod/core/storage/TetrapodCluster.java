@@ -1,23 +1,27 @@
 package io.tetrapod.core.storage;
 
-import io.netty.channel.socket.SocketChannel;
-import io.tetrapod.core.*;
-import io.tetrapod.core.registry.*;
-import io.tetrapod.core.rpc.*;
-import io.tetrapod.core.utils.*;
-import io.tetrapod.core.web.*;
-import io.tetrapod.protocol.core.*;
-import io.tetrapod.protocol.raft.*;
-import io.tetrapod.raft.*;
-import io.tetrapod.raft.RaftEngine.Role;
-import io.tetrapod.raft.storage.*;
-
 import java.io.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.slf4j.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.codahale.metrics.Gauge;
+
+import io.netty.channel.socket.SocketChannel;
+import io.tetrapod.core.*;
+import io.tetrapod.core.registry.*;
+import io.tetrapod.core.rpc.*;
+import io.tetrapod.core.utils.*;
+import io.tetrapod.core.web.WebRoot;
+import io.tetrapod.core.web.WebRoutes;
+import io.tetrapod.protocol.core.*;
+import io.tetrapod.protocol.raft.*;
+import io.tetrapod.raft.*;
+import io.tetrapod.raft.RaftEngine.Role;
+import io.tetrapod.raft.storage.*;
 
 /**
  * Wraps a RaftEngine in our Tetrapod-RPC and implements the StorageContract via TetrapodStateMachine
@@ -41,6 +45,17 @@ public class TetrapodCluster extends Storage
    private final TetrapodStateMachine             state;
 
    private final Config                           cfg;
+
+   // private final Meter                            tolerance      = Metrics.meter(this, "raft", "tolerance");
+   //  private final Meter                          lastCommand    = Metrics.meter(this, "raft", "lastcommand");
+
+   @SuppressWarnings({ "unchecked" })
+   public final Gauge<Long>                       lastCommand    = (Gauge<Long>) Metrics.register(new Gauge<Long>() {
+                                                                    @Override
+                                                                    public Long getValue() {
+                                                                       return state.getLastCommandAppliedMillis();
+                                                                    }
+                                                                 }, this, "raft", "lastcommand");
 
    /**
     * The index of the command we joined the cluster
@@ -126,6 +141,7 @@ public class TetrapodCluster extends Storage
 
    @Override
    public void onLogEntryApplied(Entry<TetrapodStateMachine> entry) {
+
       final Command<TetrapodStateMachine> command = entry.getCommand();
       switch (command.getCommandType()) {
          case SetClusterPropertyCommand.COMMAND_ID:
@@ -219,6 +235,7 @@ public class TetrapodCluster extends Storage
     * Scan our list of known tetrapods and establish a connection to any we are missing
     */
    public void service() {
+      //lastCommand.getValue();
       if (service.getEntityId() != 0) {
          for (TetrapodPeer pod : cluster.values()) {
             if (pod.entityId != service.getEntityId()) {
@@ -245,6 +262,7 @@ public class TetrapodCluster extends Storage
       if (!raft.getLog().isRunning() && !service.isShuttingDown()) {
          service.fail("Raft Log Stopped");
       }
+
    }
 
    public void sendClusterDetails(Session ses, int toEntityId, int topicId) {
