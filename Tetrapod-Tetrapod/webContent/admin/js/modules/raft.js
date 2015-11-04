@@ -147,6 +147,7 @@ define(function(require) {
          self.lastContact = ko.observable(0);
          self.leaderId = ko.observable(0);
          self.peers = ko.observableArray([]);
+         self.lastCommandTime = ko.observable();
          self.leaderEntityId = ko.pureComputed(function() {
             return self.leaderId() << 20; /* Registry.PARENT_ID_SHIFT */
          });
@@ -165,6 +166,9 @@ define(function(require) {
          function update() {
             app.server.sendTo("RaftStats", {}, self.entityId, function(info) {
                if (!info.isError()) {
+                  if (info.lastIndex != self.lastIndex()) {
+                     self.lastCommandTime(new Date().getTime());
+                  }
                   self.role(info.role);
                   self.curTerm(info.curTerm);
                   self.lastTerm(info.lastTerm);
@@ -235,13 +239,15 @@ define(function(require) {
             });
          }
 
-         // return true if this node is part of the cluster. 
-         // FIXME: this should probably have better logic
+         // return true if this node is part of the cluster and is reasonably synced.  
          self.isHealthy = ko.pureComputed(function() {
-            if (self.lastIndex() < cluster.commitIndex())
-               return false;
             if (self.curTerm() < cluster.maxTerm())
                return false;
+            if (new Date().getTime() - self.lastCommandTime() > 10000)
+               return false;
+            if (self.lastIndex() < cluster.commitIndex() - 10)
+               return false;
+
             return self.role() == 2 || self.role() == 3 || self.role() == 4;
          });
 

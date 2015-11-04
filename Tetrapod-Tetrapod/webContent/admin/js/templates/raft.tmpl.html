@@ -19,7 +19,8 @@
          <td>
             <div class="dropdown" style="display: inline-block;">
                <a class="dropdown-toggle" data-toggle="dropdown" href="#">
-                  <i class="fa fa-gear fa-fw"></i><i class="fa fa-caret-down"></i>
+                  <i class="fa fa-gear fa-fw"></i>
+                  <i class="fa fa-caret-down"></i>
                </a>
                <ul class="dropdown-menu dropdown-service">
                   <li>
@@ -35,9 +36,10 @@
          <td>
             <i class="fa" data-bind="css: roleIcon"></i>
             <span data-bind="text: roleName"></span>
-            <i class="fa fa-exclamation-circle fa-fw" data-bind="visible: !isHealthy()" style="float:right;"></i>
+            <i class="fa fa-exclamation-circle fa-fw" data-bind="visible: !isHealthy()" style="float: right;"></i>
+            <i class="fa fa-fw" data-bind="visible: isHealthy()" style="float: right;"></i>
          </td>
-         <td>            
+         <td>
             <span data-bind="text: curTerm"></span>
          </td>
          <td>
