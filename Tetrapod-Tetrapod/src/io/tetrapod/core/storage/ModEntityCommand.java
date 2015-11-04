@@ -12,12 +12,12 @@ public class ModEntityCommand implements Command<TetrapodStateMachine> {
 
    private int             entityId;
    private int             status;
-   private int             build;
+   private String          build;
    private int             version;
 
    public ModEntityCommand() {}
 
-   public ModEntityCommand(int entityId, int status, int build, int version) {
+   public ModEntityCommand(int entityId, int status, String build, int version) {
       this.entityId = entityId;
       this.status = status;
       this.build = build;
@@ -34,7 +34,7 @@ public class ModEntityCommand implements Command<TetrapodStateMachine> {
       out.writeByte(commandVersion);
       out.writeInt(entityId);
       out.writeInt(status);
-      out.writeInt(build);
+      out.writeUTF(build);
       out.writeInt(version);
    }
 
@@ -44,7 +44,7 @@ public class ModEntityCommand implements Command<TetrapodStateMachine> {
       assert commandVersion == this.commandVersion;
       entityId = in.readInt();
       status = in.readInt();
-      build = in.readInt();
+      build = in.readUTF();
       version = in.readInt();
    }
 

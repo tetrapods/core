@@ -40,7 +40,7 @@ public class DefaultService
    protected int                           parentId;
    protected String                        token;
    private int                             status;
-   public final int                        buildNumber;
+   public final String                     buildName;
    protected final LogBuffer               logBuffer;
    protected SSLContext                    sslContext;
 
@@ -65,7 +65,6 @@ public class DefaultService
       logger.info(m);
       Session.commsLog.info(m);
       Fail.handler = this;
-      Metrics.init(getMetricsPrefix());
       synchronized (this) {
          status |= Core.STATUS_STARTING;
       }
@@ -103,12 +102,11 @@ public class DefaultService
          }
       });
 
-      int num = 1;
+      String build = "Unknown";
       try {
-         String b = Util.readFileAsString(new File("build_number.txt"));
-         num = Integer.parseInt(b.trim());
+         build = Util.readFileAsString(new File("build_name.txt"));
       } catch (IOException e) {}
-      buildNumber = num;
+      buildName = build;
 
       checkHealth();
       if (mainContract != null)
@@ -329,8 +327,8 @@ public class DefaultService
       return ses;
    }
 
-   private void onConnectedToCluster() {
-      final Request req = new RegisterRequest(buildNumber, token, getContractId(), getShortName(), getStatus(), Util.getHostName());
+   private void onConnectedToCluster() { 
+      final Request req = new RegisterRequest(token, getContractId(), getShortName(), getStatus(), Util.getHostName(), buildName);
       sendDirectRequest(req).handle(res -> {
          if (res.isError()) {
             Fail.fail("Unable to register: " + req.dump() + " ==> " + res);
@@ -347,7 +345,7 @@ public class DefaultService
             logger.info(String.format("%s My entityId is 0x%08X", clusterClient.getSession(), r.entityId));
             onServiceRegistered();
          }
-      });
+      }); 
    }
 
    public void onDisconnectedFromCluster() {
@@ -738,6 +736,7 @@ public class DefaultService
 
    @Override
    public void messageClusterSynced(ClusterSyncedMessage m, MessageContext ctx) {
+      Metrics.init(getMetricsPrefix());
       checkDependencies();
    }
 

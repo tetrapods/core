@@ -119,7 +119,7 @@ public class TetrapodClient implements SessionFactory, Session.Helper {
    }
 
    private void register() {
-      sendDirectRequest(new RegisterRequest(0, token, getContractId(), getClientName(), 0, Util.getHostName())).handle(res -> {
+      sendDirectRequest(new RegisterRequest(token, getContractId(), getClientName(), 0, Util.getHostName(), "build")).handle(res -> {
          if (res.isError()) {
             logger.error("Unable to register {}", res.errorCode());
          } else {

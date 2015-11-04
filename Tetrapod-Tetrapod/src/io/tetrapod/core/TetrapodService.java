@@ -97,7 +97,7 @@ public class TetrapodService extends DefaultService
 
          this.parentId = this.entityId = myEntityId;
          this.token = EntityToken.encode(entityId, reclaimToken);
-
+ 
          EntityInfo me = cluster.getEntity(entityId);
          if (me == null) {
             throw new RuntimeException("Not in registry");

@@ -26,19 +26,19 @@ public struct Entity
    5: int status
    6: byte type
    7: string name
-   8: int build  
    9: int version
   10: int contractId  
+  11: string build  
   
 ################################# REQUESTS #################################
 
 public request Register
-   1: int build
    2: string token
    3: int contractId
    4: string name
    5: int status
    6: string host
+   7: string build
 
 public response Register 
    1: int entityId
@@ -46,12 +46,12 @@ public response Register
    3: string token
 
 internal request ClusterJoin
-   1: int build
    2: int status
    3: string host
    4: int entityId
    5: int servicePort
    6: int clusterPort
+   7: string build
     
 
 internal request Unregister
@@ -158,7 +158,7 @@ internal request GetEntityInfo
    error UNKNOWN_ENTITY_ID
 
 internal response GetEntityInfo
-   1: int build   
+   1: string build   
    2: string name     // entity name
    3: string host     // host/ip of the entity
    4: string referrer // referrer of first request (clients only)

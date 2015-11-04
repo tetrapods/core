@@ -1,15 +1,5 @@
 package io.tetrapod.core.storage;
 
-import io.tetrapod.core.StructureFactory;
-import io.tetrapod.core.registry.EntityInfo;
-import io.tetrapod.core.serialize.StructureAdapter;
-import io.tetrapod.core.serialize.datasources.TempBufferDataSource;
-import io.tetrapod.core.utils.*;
-import io.tetrapod.core.web.*;
-import io.tetrapod.protocol.core.*;
-import io.tetrapod.raft.StateMachine;
-import io.tetrapod.raft.storage.*;
-
 import java.io.*;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
@@ -20,6 +10,18 @@ import javax.crypto.SecretKey;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import io.tetrapod.core.StructureFactory;
+import io.tetrapod.core.registry.EntityInfo;
+import io.tetrapod.core.serialize.StructureAdapter;
+import io.tetrapod.core.serialize.datasources.TempBufferDataSource;
+import io.tetrapod.core.utils.*;
+import io.tetrapod.core.web.WebRoot;
+import io.tetrapod.core.web.WebRoutes;
+import io.tetrapod.protocol.core.*;
+import io.tetrapod.raft.StateMachine;
+import io.tetrapod.raft.storage.StorageItem;
+import io.tetrapod.raft.storage.StorageStateMachine;
 
 /**
  * Tetrapod state machine adds cluster properties, service protocols, and tetrapod web routes
@@ -91,6 +93,7 @@ public class TetrapodStateMachine extends StorageStateMachine<TetrapodStateMachi
       AddEntityCommand.register(this);
       DelEntityCommand.register(this);
       ModEntityCommand.register(this);
+
       initSecretKey();
    }
 
@@ -353,7 +356,7 @@ public class TetrapodStateMachine extends StorageStateMachine<TetrapodStateMachi
       logger.info(" Add Entity = {}", info);
    }
 
-   public void updateEntity(int entityId, int status, int build, int version) {
+   public void updateEntity(int entityId, int status, String build, int version) {
       final EntityInfo info = entities.get(entityId);
       if (info != null) {
          // update fields

@@ -8,6 +8,8 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.codahale.metrics.Meter;
+
 import io.netty.channel.socket.SocketChannel;
 import io.tetrapod.core.*;
 import io.tetrapod.core.pubsub.Topic;
@@ -44,6 +46,8 @@ public class TetrapodCluster extends Storage
    private final TetrapodStateMachine             state;
 
    private final Config                           cfg;
+
+   private final Meter                            commands       = Metrics.meter(this, "commands");
 
    /**
     * The index of the command we joined the cluster
@@ -131,6 +135,7 @@ public class TetrapodCluster extends Storage
    // FIXME: Add a cleaner listener interface based on command type so we don't need a fugly switch
    @Override
    public void onLogEntryApplied(Entry<TetrapodStateMachine> entry) {
+      commands.mark();
       final Command<TetrapodStateMachine> command = entry.getCommand();
       switch (command.getCommandType()) {
          case SetClusterPropertyCommand.COMMAND_ID:
@@ -305,8 +310,8 @@ public class TetrapodCluster extends Storage
    }
 
    public boolean addMember(int entityId, String host, int servicePort, int clusterPort, Session ses) {
-      final Entity e = new Entity(entityId, entityId, 0, Util.getHostName(), 0, Core.TYPE_TETRAPOD, service.getShortName(),
-               service.buildNumber, 0, service.getContractId());
+      final Entity e = new Entity(entityId, entityId, 0, Util.getHostName(), 0, Core.TYPE_TETRAPOD, service.getShortName(), 0,
+               service.getContractId(), service.buildName);
       state.addEntity(e, true);
       onAddEntityCommand(new AddEntityCommand(e));
 
@@ -464,6 +469,7 @@ public class TetrapodCluster extends Storage
 
       // register them in our registry
       EntityInfo entity = service.registry.getEntity(req.entityId);
+
       // reconnecting with a pre-existing peerId
       final int peerId = req.entityId >> TetrapodContract.PARENT_ID_SHIFT;
       if (raft.isValidPeer(peerId)) {
@@ -472,6 +478,7 @@ public class TetrapodCluster extends Storage
          // subscribe them to our cluster and registry views
          logger.info("**************************** SYNC TO {} {}", ctx.session, req.entityId);
          service.subscribeToCluster(ctx.session, req.entityId);
+
       }
       return Response.SUCCESS;
    }
