@@ -85,7 +85,6 @@ public class TetrapodService extends DefaultService
       cluster.startListening();
       cluster.loadProperties();
       scheduleHealthCheck();
-
    }
 
    /**

@@ -310,7 +310,7 @@ public class TetrapodCluster extends Storage
    }
 
    public boolean addMember(int entityId, String host, int servicePort, int clusterPort, Session ses) {
-      final Entity e = new Entity(entityId, entityId, 0, Util.getHostName(), 0, Core.TYPE_TETRAPOD, service.getShortName(), 0,
+      final Entity e = new Entity(entityId, entityId, 0, host, 0, Core.TYPE_TETRAPOD, service.getShortName(), 0,
                service.getContractId(), service.buildName);
       state.addEntity(e, true);
       onAddEntityCommand(new AddEntityCommand(e));
