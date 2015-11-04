@@ -327,11 +327,12 @@ public class DefaultService
       return ses;
    }
 
-   private void onConnectedToCluster() { 
+   private void onConnectedToCluster() {
       final Request req = new RegisterRequest(token, getContractId(), getShortName(), getStatus(), Util.getHostName(), buildName);
       sendDirectRequest(req).handle(res -> {
          if (res.isError()) {
-            Fail.fail("Unable to register: " + req.dump() + " ==> " + res);
+            logger.error("Unable to register: " + req.dump() + " ==> " + res);
+            clusterClient.close();
          } else {
             RegisterResponse r = (RegisterResponse) res;
             entityId = r.entityId;
@@ -345,7 +346,7 @@ public class DefaultService
             logger.info(String.format("%s My entityId is 0x%08X", clusterClient.getSession(), r.entityId));
             onServiceRegistered();
          }
-      }); 
+      });
    }
 
    public void onDisconnectedFromCluster() {
