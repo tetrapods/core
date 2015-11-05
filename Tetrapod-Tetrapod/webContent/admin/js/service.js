@@ -258,7 +258,12 @@ define(["knockout", "jquery", "bootbox", "alert", "app", "chart", "modules/build
                   r.avgTimePercent = r.avgTime / maxAvgTime;
                   r.statClicked = statClicked;
                }
-               self.requestStatsTimeRange(formatElapsedTime(new Date().getTime() - result.minTime))
+               var now = new Date().getTime();
+               if (now > result.minTime) {
+                  self.requestStatsTimeRange(formatElapsedTime(now - result.minTime))
+               } else {
+                  self.requestStatsTimeRange('?');
+               }
                self.requestStats(result.requests);
                self.requestStatsDomains(result.domains);
                $('#request-stats-' + self.entityId).modal('show');

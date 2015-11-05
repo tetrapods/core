@@ -316,7 +316,12 @@ public class DefaultService
       ses.addSessionListener(new Session.Listener() {
          @Override
          public void onSessionStop(Session ses) {
+            logger.info("Connection to tetrapod closed");
             onDisconnectedFromCluster();
+            if (!isShuttingDown()) {
+               dispatcher.dispatch(3, TimeUnit.SECONDS, () -> connectToCluster(1));
+            }
+            publisher.resetTopics();
          }
 
          @Override
@@ -350,11 +355,7 @@ public class DefaultService
    }
 
    public void onDisconnectedFromCluster() {
-      publisher.resetTopics();
-      if (!isShuttingDown()) {
-         logger.info("Connection to tetrapod closed");
-         dispatcher.dispatch(3, TimeUnit.SECONDS, () -> connectToCluster(1));
-      }
+      // override
    }
 
    public boolean isConnected() {
