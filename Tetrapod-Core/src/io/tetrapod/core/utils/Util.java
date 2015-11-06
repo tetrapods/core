@@ -555,4 +555,22 @@ public class Util {
       return null;
    }
 
+   /**
+    * Return a comma separated list of the collection, with no outside
+    * delimiters.  Empty string if collection is null or empty.
+    */
+   public static String commaSeparated(Collection<?> coll) {
+      if (isEmpty(coll)) return "";
+      StringBuilder sb = new StringBuilder();
+      boolean first = true;
+      for (Object obj : coll) {
+         if (first)
+            first = false;
+         else
+            sb.append(',');
+         sb.append(obj.toString());
+      }
+      return sb.toString();
+   }
+
 }
