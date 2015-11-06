@@ -17,7 +17,7 @@ import io.tetrapod.protocol.core.Entity;
  */
 public class EntityInfo extends Entity implements Comparable<EntityInfo> {
 
-   public static final Logger            logger              = LoggerFactory.getLogger(EntityInfo.class);
+   public static final Logger            logger      = LoggerFactory.getLogger(EntityInfo.class);
 
    /**
     * This entity's published topics
@@ -39,11 +39,10 @@ public class EntityInfo extends Entity implements Comparable<EntityInfo> {
     * An alternate not-necessarily-unique ID. This can be set by a service and used as a broadcast target. This is only set on the tetrapod
     * that owns the entity.
     */
-   protected final AtomicInteger         alternateId         = new AtomicInteger(0);
+   protected final AtomicInteger         alternateId = new AtomicInteger(0);
 
    protected Long                        lastContact;
    protected Long                        goneSince;
-   private boolean                       pendingRegistration = true;
 
    protected SequentialWorkQueue         queue;
 
@@ -51,6 +50,7 @@ public class EntityInfo extends Entity implements Comparable<EntityInfo> {
 
    public EntityInfo(Entity e) {
       this(e.entityId, e.parentId, e.reclaimToken, e.host, e.status, e.type, e.name, e.version, e.contractId, e.build);
+      lastContact = System.currentTimeMillis();
    }
 
    public EntityInfo(int entityId, int parentId, long reclaimToken, String host, int status, byte type, String name, int version,
@@ -181,7 +181,7 @@ public class EntityInfo extends Entity implements Comparable<EntityInfo> {
 
    public void setSession(Session ses) {
       this.session = ses;
-      this.pendingRegistration = false;
+      this.lastContact = null;
    }
 
    public Session getSession() {
@@ -239,7 +239,7 @@ public class EntityInfo extends Entity implements Comparable<EntityInfo> {
    }
 
    public boolean isPendingRegistration() {
-      return pendingRegistration;
+      return session == null && lastContact != null && !isGone();
    }
 
 }
