@@ -357,7 +357,6 @@ public class EntityRegistry implements TetrapodContract.Registry.API {
    }
 
    public void onAddEntityCommand(final EntityInfo entity) {
-      logger.error("onAddEntityCommand {}", entity);
       if (getEntity(entity.entityId) != null && entity.parentId != parentId) {
          entity.queue(() -> clearAllTopicsAndSubscriptions(entity));
       }
@@ -390,7 +389,6 @@ public class EntityRegistry implements TetrapodContract.Registry.API {
    public void onDelEntityCommand(final int entityId) {
       final EntityInfo e = entities.remove(entityId);
       if (e != null) {
-         logger.error("onDelEntityCommand {}", e);
          if (e.isService()) {
             broadcaster.broadcastServicesMessage(new ServiceRemovedMessage(e.entityId));
             final List<EntityInfo> list = services.get(e.contractId);
