@@ -681,6 +681,9 @@ public class TetrapodService extends DefaultService
 
          // push through a dummy request to help keep dispatch pool metrics fresh
          if (e.isService()) {
+            if (!e.isAvailable()) {
+               logger.info("Checking health on {} : {} : {}", e, e.getSession(), e.isPendingRegistration());
+            }
             final Session ses = e.getSession();
             if (ses != null && now - ses.getLastHeardFrom() > 1153) {
                final long t0 = System.currentTimeMillis();
@@ -917,6 +920,7 @@ public class TetrapodService extends DefaultService
    @Override
    public Response requestLogRegistryStats(LogRegistryStatsRequest r, RequestContext ctx) {
       registry.logStats(true);
+      cluster.logRegistry();
       return Response.SUCCESS;
    }
 
