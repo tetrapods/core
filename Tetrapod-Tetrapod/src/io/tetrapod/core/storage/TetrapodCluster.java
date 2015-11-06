@@ -83,6 +83,8 @@ public class TetrapodCluster extends Storage
    }
 
    public void init() throws IOException {
+      startListening();
+      loadProperties();
       // add the initial set of entities from the state, then listen for subsequent changes
       synchronized (this.raft) {
          for (EntityInfo info : state.entities.values()) {
@@ -90,8 +92,6 @@ public class TetrapodCluster extends Storage
          }
          this.state.addListener(this);
       }
-      startListening();
-      loadProperties();
    }
 
    public void loadProperties() {
