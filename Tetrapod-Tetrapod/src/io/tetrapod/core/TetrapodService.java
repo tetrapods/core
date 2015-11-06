@@ -82,8 +82,7 @@ public class TetrapodService extends DefaultService
       logger.info("Joining Cluster: {} {}", address.dump(), otherOpts);
       this.startPaused = otherOpts.get("paused").equals("true");
       this.token = token;
-      cluster.startListening();
-      cluster.loadProperties();
+      cluster.init();
       scheduleHealthCheck();
    }
 
@@ -96,7 +95,7 @@ public class TetrapodService extends DefaultService
 
          this.parentId = this.entityId = myEntityId;
          this.token = EntityToken.encode(entityId, reclaimToken);
- 
+
          EntityInfo me = cluster.getEntity(entityId);
          if (me == null) {
             throw new RuntimeException("Not in registry");
@@ -832,7 +831,7 @@ public class TetrapodService extends DefaultService
          } else {
             responder.respondWith(Response.error(ERROR_UNKNOWN));
          }
-      }, true);
+      } , true);
       return Response.PENDING;
    }
 

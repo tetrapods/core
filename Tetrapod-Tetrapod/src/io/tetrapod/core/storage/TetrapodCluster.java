@@ -80,7 +80,18 @@ public class TetrapodCluster extends Storage
       }
       this.raft = raftEngine;
       this.state = this.raft.getStateMachine();
-      this.state.addListener(this);
+   }
+
+   public void init() throws IOException {
+      // add the initial set of entities from the state, then listen for subsequent changes
+      synchronized (this.raft) {
+         for (EntityInfo info : state.entities.values()) {
+            service.registry.onAddEntityCommand(info);
+         }
+         this.state.addListener(this);
+      }
+      startListening();
+      loadProperties();
    }
 
    public void loadProperties() {
@@ -310,8 +321,8 @@ public class TetrapodCluster extends Storage
    }
 
    public boolean addMember(int entityId, String host, int servicePort, int clusterPort, Session ses) {
-      final Entity e = new Entity(entityId, entityId, 0, host, 0, Core.TYPE_TETRAPOD, service.getShortName(), 0,
-               service.getContractId(), service.buildName);
+      final Entity e = new Entity(entityId, entityId, 0, host, 0, Core.TYPE_TETRAPOD, service.getShortName(), 0, service.getContractId(),
+               service.buildName);
       state.addEntity(e, true);
       onAddEntityCommand(new AddEntityCommand(e));
 
@@ -1000,6 +1011,17 @@ public class TetrapodCluster extends Storage
    public boolean isValidPeer(int entityId) {
       final int peerId = entityId >> TetrapodContract.PARENT_ID_SHIFT;
       return peerId == raft.getPeerId() || raft.isValidPeer(peerId);
+   }
+
+   public void logRegistry() {
+      List<EntityInfo> list = new ArrayList<>(getEntities());
+      Collections.sort(list);
+      logger.info("=========================@ TETRAPOD CLUSTER REGISTRY @===========================");
+      for (EntityInfo e : list) {
+         logger.info(String.format(" 0x%08X 0x%08X %-15s status=%08X topics=%d subscriptions=%d", e.parentId, e.entityId, e.name, e.status,
+                  e.getNumTopics(), e.getNumSubscriptions()));
+      }
+      logger.info("=================================================================================\n");
    }
 
 }

@@ -68,9 +68,14 @@ public class EntityRegistry implements TetrapodContract.Registry.API {
       return entities.values();
    }
 
-   public List<EntityInfo> getChildren() {
-      final List<EntityInfo> children = new ArrayList<>();
+   public Set<EntityInfo> getChildren() {
+      final Set<EntityInfo> children = new HashSet<>();
       for (EntityInfo e : getEntities()) {
+         if (e.parentId == parentId && e.entityId != parentId) {
+            children.add(e);
+         }
+      }
+      for (EntityInfo e : cluster.getEntities()) {
          if (e.parentId == parentId && e.entityId != parentId) {
             children.add(e);
          }
@@ -352,6 +357,7 @@ public class EntityRegistry implements TetrapodContract.Registry.API {
    }
 
    public void onAddEntityCommand(final EntityInfo entity) {
+      logger.error("onAddEntityCommand {}", entity);
       if (getEntity(entity.entityId) != null && entity.parentId != parentId) {
          entity.queue(() -> clearAllTopicsAndSubscriptions(entity));
       }
@@ -384,6 +390,7 @@ public class EntityRegistry implements TetrapodContract.Registry.API {
    public void onDelEntityCommand(final int entityId) {
       final EntityInfo e = entities.remove(entityId);
       if (e != null) {
+         logger.error("onDelEntityCommand {}", e);
          if (e.isService()) {
             broadcaster.broadcastServicesMessage(new ServiceRemovedMessage(e.entityId));
             final List<EntityInfo> list = services.get(e.contractId);
