@@ -6,7 +6,9 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.tetrapod.core.rpc.*;
+import com.codahale.metrics.Gauge;
+
+import io.tetrapod.core.rpc.Request;
 import io.tetrapod.protocol.core.*;
 
 /**
@@ -30,6 +32,13 @@ public class ServiceStats {
       this.service = service;
       scheduleUpdate();
       register(requests, "Requests");
+
+      Metrics.register(new Gauge<Double>() {
+         @Override
+         public Double getValue() {
+            return requests.getErrorRate();
+         }
+      }, this, "errors");
    }
 
    /**
@@ -134,8 +143,8 @@ public class ServiceStats {
       }
    }
 
-   public void recordRequest(int fromEntityId, Request req, long nanos) {
-      requests.recordRequest(fromEntityId, req.getClass().getSimpleName().replaceAll("Request", ""), nanos);
+   public void recordRequest(int fromEntityId, Request req, long nanos, int result) {
+      requests.recordRequest(fromEntityId, req.getClass().getSimpleName().replaceAll("Request", ""), nanos, result);
    }
 
    public ServiceRequestStatsResponse getRequestStats(String domain, int limit, long minTime, RequestStatsSort sortBy) {

@@ -89,6 +89,12 @@
                            <div class="modal-body">
                               <select title="domains" data-bind="options: requestStatsDomains , value: requestStatsDomain">
                               </select>
+                              
+                              
+                              <div class="service-histogram-wrap">
+                                 <div class="service-histogram" id="service-stat-histogram"></div>
+                              </div>
+                              
                               <table class="table table-bordered table-condensed request-stats">
                                  <tr>
                                     <th data-bind="click: function(){reqSort(4)}">
@@ -136,6 +142,7 @@
                                     </tr>
                                  </tbody>
                               </table>
+
                            </div>
                         </div>
                         <!-- /.modal-content -->

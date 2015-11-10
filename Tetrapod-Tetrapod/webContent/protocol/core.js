@@ -103,6 +103,7 @@ function TP_Core(server) {
    server.register("struct", "Core", "RequestStat", 1, 12902770);
    server.register("request", "Core", "ServiceRequestStats", 1, 16134423);
    server.register("response", "Core", "ServiceRequestStats", 1, 6312573);
+   server.register("response", "Core", "ServiceRequestDetailedStats", 1, 9733533);
    server.register("request", "Core", "HostInfo", 1, 16426670);
    server.register("response", "Core", "HostInfo", 1, 7161106);
    server.register("request", "Core", "HostStats", 1, 4481593);

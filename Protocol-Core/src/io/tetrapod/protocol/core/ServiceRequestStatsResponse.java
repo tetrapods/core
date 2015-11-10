@@ -21,11 +21,12 @@ public class ServiceRequestStatsResponse extends Response {
       defaults();
    }
 
-   public ServiceRequestStatsResponse(List<RequestStat> requests, long minTime, String[] domains, int[] timeline) {
+   public ServiceRequestStatsResponse(List<RequestStat> requests, long minTime, String[] domains, int[] timeline, long curTime) {
       this.requests = requests;
       this.minTime = minTime;
       this.domains = domains;
       this.timeline = timeline;
+      this.curTime = curTime;
    }   
    
    public List<RequestStat> requests;
@@ -44,6 +45,11 @@ public class ServiceRequestStatsResponse extends Response {
     * histogram of calls
     */
    public int[] timeline;
+   
+   /**
+    * current server time when stats collected
+    */
+   public long curTime;
 
    public final Structure.Security getSecurity() {
       return Security.INTERNAL;
@@ -54,6 +60,7 @@ public class ServiceRequestStatsResponse extends Response {
       minTime = 0;
       domains = null;
       timeline = null;
+      curTime = 0;
    }
    
    @Override
@@ -62,6 +69,7 @@ public class ServiceRequestStatsResponse extends Response {
       data.write(2, this.minTime);
       if (this.domains != null) data.write(3, this.domains);
       if (this.timeline != null) data.write(4, this.timeline);
+      data.write(5, this.curTime);
       data.writeEndTag();
    }
    
@@ -75,6 +83,7 @@ public class ServiceRequestStatsResponse extends Response {
             case 2: this.minTime = data.read_long(tag); break;
             case 3: this.domains = data.read_string_array(tag); break;
             case 4: this.timeline = data.read_int_array(tag); break;
+            case 5: this.curTime = data.read_long(tag); break;
             case Codec.END_TAG:
                return;
             default:
@@ -96,11 +105,12 @@ public class ServiceRequestStatsResponse extends Response {
       // Note do not use this tags in long term serializations (to disk or databases) as 
       // implementors are free to rename them however they wish.  A null means the field
       // is not to participate in web serialization (remaining at default)
-      String[] result = new String[4+1];
+      String[] result = new String[5+1];
       result[1] = "requests";
       result[2] = "minTime";
       result[3] = "domains";
       result[4] = "timeline";
+      result[5] = "curTime";
       return result;
    }
 
@@ -118,6 +128,7 @@ public class ServiceRequestStatsResponse extends Response {
       desc.types[2] = new TypeDescriptor(TypeDescriptor.T_LONG, 0, 0);
       desc.types[3] = new TypeDescriptor(TypeDescriptor.T_STRING_LIST, 0, 0);
       desc.types[4] = new TypeDescriptor(TypeDescriptor.T_INT_LIST, 0, 0);
+      desc.types[5] = new TypeDescriptor(TypeDescriptor.T_LONG, 0, 0);
       return desc;
    }
  }

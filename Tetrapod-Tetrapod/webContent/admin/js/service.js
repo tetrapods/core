@@ -1,7 +1,7 @@
 define(["knockout", "jquery", "bootbox", "alert", "app", "chart", "modules/builder"], function(ko, $, bootbox, Alert, app, Chart, builder) {
    // static variables
 
-   var Core = app.server.consts["Core.Core"];
+   var Core = app.coreConsts;
 
    return Service; // not using new means this returns a constructor function (ie class)
 
@@ -25,22 +25,29 @@ define(["knockout", "jquery", "bootbox", "alert", "app", "chart", "modules/build
       self.isSelected = ko.observable(false);
       self.showRequestStats = showRequestStats;
       self.requestStats = ko.observableArray([]);
+      self.subscribe = subscribe;
 
       self.iconURL = ko.observable("media/gear.gif");
+      subscribe(1);
 
-      app.server.sendTo("ServiceStatsSubscribe", {}, self.entityId, app.server.logResponse)
-
-      app.server.sendTo("ServiceDetails", {}, self.entityId, function(result) {
-         if (!result.isError()) {
-            self.iconURL(result.iconURL);
-            self.metadata = result.metadata;
-            if (result.commands) {
-               for (var i = 0; i < result.commands.length; i++) {
-                  self.commands.push(result.commands[i]);
+      function subscribe(attempt) {
+         app.server.sendTo("ServiceDetails", {}, self.entityId, function(result) {
+            if (!result.isError()) {
+               self.iconURL(result.iconURL);
+               self.metadata = result.metadata;
+               if (result.commands) {
+                  for (var i = 0; i < result.commands.length; i++) {
+                     self.commands.push(result.commands[i]);
+                  }
                }
+               app.server.sendTo("ServiceStatsSubscribe", {}, self.entityId, app.server.logResponse)
+            } else if (result.errorCode == Core.SERVICE_UNAVAILABLE) {
+               setTimeout(function() {
+                  subscribe(attempt + 1);
+               }, 1000 * attempt);
             }
-         }
-      });
+         });
+      }
 
       // we need to run this after KO is done binding, or jquery can't find the element by id
       setTimeout(function() {
@@ -214,15 +221,21 @@ define(["knockout", "jquery", "bootbox", "alert", "app", "chart", "modules/build
       });
 
       function statClicked(r) {
-         console.log
+         console.log(r.name);
          Alert.info(r.name);
          // TODO: If this is an RPC, call and display stats for just that request
+
+         // r.timeline 
+         // r.entities
+         // r.errors
       }
 
       function showRequestStats() {
          fetchRequestStats();
       }
-      
+
+      self.reqChart = new Chart("service-stat-histogram");
+
       function fetchRequestStats() {
          var currentTimeMillis = new Date().getTime();
          var minTime = currentTimeMillis - 1000 * 60 * 15;
@@ -251,10 +264,15 @@ define(["knockout", "jquery", "bootbox", "alert", "app", "chart", "modules/build
                   r.avgTimePercent = r.avgTime / maxAvgTime;
                   r.statClicked = statClicked;
                }
-               self.requestStatsTimeRange(formatElapsedTime(new Date().getTime() - result.minTime))
+               self.requestStatsTimeRange(formatElapsedTime(result.curTime - result.minTime))
                self.requestStats(result.requests);
                self.requestStatsDomains(result.domains);
-               $('#request-stats-' + self.entityId).modal('show');
+               self.reqChart.setPlotData('Timeline', result.timeline);
+               var d = $('#request-stats-' + self.entityId);
+               d.modal('show');
+               d.on('shown.bs.modal', function() {
+                  self.reqChart.render();
+               });
             }
          });
       }
