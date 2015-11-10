@@ -1,10 +1,13 @@
 package io.tetrapod.core;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.codahale.metrics.Gauge;
 
 import io.tetrapod.core.pubsub.Topic;
 import io.tetrapod.core.rpc.*;
@@ -28,11 +31,16 @@ public class ServiceStats implements TopicUnsubscribedMessage.Handler {
       scheduleUpdate();
       register(requests, "Requests");
 
-   //   service.addMessageHandler(new TopicUnsubscribedMessage(), this);
+      Metrics.register(new Gauge<Double>() {
+         @Override
+         public Double getValue() {
+            return requests.getErrorRate();
+         }
+      }, this, "errors");
+
+      service.addMessageHandler(new TopicUnsubscribedMessage(), this);
    }
 
-   
-   
    /**
     * publish the service stats, and subscribe any pending subscribers
     */
@@ -116,8 +124,8 @@ public class ServiceStats implements TopicUnsubscribedMessage.Handler {
       }
    }
 
-   public void recordRequest(int fromEntityId, Request req, long nanos) {
-      requests.recordRequest(fromEntityId, req.getClass().getSimpleName().replaceAll("Request", ""), nanos);
+   public void recordRequest(int fromEntityId, Request req, long nanos, int result) {
+      requests.recordRequest(fromEntityId, req.getClass().getSimpleName().replaceAll("Request", ""), nanos, result);
    }
 
    public ServiceRequestStatsResponse getRequestStats(String domain, int limit, long minTime, RequestStatsSort sortBy) {
@@ -140,15 +148,13 @@ public class ServiceStats implements TopicUnsubscribedMessage.Handler {
    }
 
    @Override
-   public void genericMessage(Message message, MessageContext ctx) {
-      // TODO Auto-generated method stub
-      
-   }
+   public void genericMessage(Message message, MessageContext ctx) {}
 
    @Override
    public void messageTopicUnsubscribed(TopicUnsubscribedMessage m, MessageContext ctx) {
-      // TODO Auto-generated method stub
-      
+      if (m.publisherId == service.getEntityId()) {
+         statsTopic.unsubscribe(m.entityId);
+      }
    }
 
 }

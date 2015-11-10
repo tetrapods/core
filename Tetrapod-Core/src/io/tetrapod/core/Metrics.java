@@ -1,18 +1,20 @@
 package io.tetrapod.core;
 
-import io.tetrapod.core.utils.Util;
-import io.tetrapod.protocol.core.ServerAddress;
-
 import java.io.File;
 import java.lang.management.ManagementFactory;
 import java.net.InetSocketAddress;
 import java.util.concurrent.TimeUnit;
 
-import org.slf4j.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.*;
-import com.codahale.metrics.graphite.*;
+import com.codahale.metrics.graphite.Graphite;
+import com.codahale.metrics.graphite.GraphiteReporter;
 import com.codahale.metrics.jvm.*;
+
+import io.tetrapod.core.utils.Util;
+import io.tetrapod.protocol.core.ServerAddress;
 
 /**
  * Service metrics instrumentation
@@ -63,6 +65,11 @@ public class Metrics {
    public static Metric register(Metric metric, Class<?> c, String... names) {
       return metrics.register(MetricRegistry.name(c, names), metric);
    }
+
+   public static Gauge<?> gauge(Gauge<?> metric, Object o, String... names) {
+      return metrics.register(MetricRegistry.name(o.getClass(), names), metric);
+   }
+   
 
    public static void init(String prefix) {
 

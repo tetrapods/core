@@ -73,6 +73,7 @@ public class CoreContract extends Contract {
          new ServiceDetailsResponse(),
          new ServiceLogsResponse(),
          new ServiceRequestStatsResponse(),
+         new ServiceRequestDetailedStatsResponse(),
          new HostInfoResponse(),
          new HostStatsResponse(),
          new ServiceErrorLogsResponse(),

@@ -572,7 +572,7 @@ public class DefaultService
                async.setResponse(new Error(ERROR_UNKNOWN));
             } finally {
                final long elapsed = System.nanoTime() - dispatchTime;
-               stats.recordRequest(header.fromId, req, elapsed);
+               stats.recordRequest(header.fromId, req, elapsed, async.getErrorCode());
                context.stop();
                dispatcher.requestsHandledCounter.mark();
                if (Util.nanosToMillis(elapsed) > 1000) {
@@ -588,6 +588,7 @@ public class DefaultService
          logger.warn("{} No handler found for {}", this, header.dump());
          async.setResponse(new Error(ERROR_UNKNOWN_REQUEST));
       }
+
       return async;
    }
 

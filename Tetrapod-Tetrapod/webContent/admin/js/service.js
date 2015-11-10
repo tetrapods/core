@@ -221,14 +221,20 @@ define(["knockout", "jquery", "bootbox", "alert", "app", "chart", "modules/build
       });
 
       function statClicked(r) {
-         console.log
+         console.log(r.name);
          Alert.info(r.name);
          // TODO: If this is an RPC, call and display stats for just that request
+
+         // r.timeline 
+         // r.entities
+         // r.errors
       }
 
       function showRequestStats() {
          fetchRequestStats();
       }
+
+      self.reqChart = new Chart("service-stat-histogram");
 
       function fetchRequestStats() {
          var currentTimeMillis = new Date().getTime();
@@ -258,15 +264,15 @@ define(["knockout", "jquery", "bootbox", "alert", "app", "chart", "modules/build
                   r.avgTimePercent = r.avgTime / maxAvgTime;
                   r.statClicked = statClicked;
                }
-               var now = new Date().getTime();
-               if (now > result.minTime) {
-                  self.requestStatsTimeRange(formatElapsedTime(now - result.minTime))
-               } else {
-                  self.requestStatsTimeRange('?');
-               }
+               self.requestStatsTimeRange(formatElapsedTime(result.curTime - result.minTime))
                self.requestStats(result.requests);
                self.requestStatsDomains(result.domains);
-               $('#request-stats-' + self.entityId).modal('show');
+               self.reqChart.setPlotData('Timeline', result.timeline);
+               var d = $('#request-stats-' + self.entityId);
+               d.modal('show');
+               d.on('shown.bs.modal', function() {
+                  self.reqChart.render();
+               });
             }
          });
       }

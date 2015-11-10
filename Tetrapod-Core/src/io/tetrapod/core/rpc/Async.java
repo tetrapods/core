@@ -85,6 +85,10 @@ public class Async {
       return response;
    }
 
+   public synchronized int getErrorCode() {
+      return response == null ? -1 : response.errorCode();
+   }
+
    public void log() {
       handle(ResponseHandler.LOGGER);
    }

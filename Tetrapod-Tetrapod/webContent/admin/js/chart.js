@@ -72,6 +72,28 @@ define(["jquery"], function($) {
             console.error(e.message);
          }
       }
+      
+      self.setPlotData = function(name, values) {
+         var s = self.series[name];
+         if (s) {
+            s.data = [];
+         } else {
+            self.series[name] = s = {
+               label: name,
+               data: [],
+               lines: {
+                  lineWidth: 1,
+                  fill: true
+               },
+               shadowSize: 1,
+               order: self.series.length
+            };
+         }
+         $.each(values, function(i, val) {
+            s.data.push([i, val])
+         });
+         self.render();
+      }
 
       self.getPlot = function() {
          if (self.plot) {
@@ -79,17 +101,45 @@ define(["jquery"], function($) {
          }
 
          var container = document.getElementById(tag);
-         if (!container)
+         if (!container) {
+            console.warn("Could not find element #" + tag);
             return;
+         }
 
-         if (container.clientWidth == 0)
+         if (container.clientWidth == 0) { 
             return;
+         }
 
          self.plot = $.plot(container, [], chartOptions);
 
          return self.plot;
       }
 
+      self.render = function() {
+         try {
+            var plot = self.getPlot();
+            if (plot) {
+               var arr = [];
+               for ( var key in self.series) {
+                  arr.push(self.series[key]);
+               }
+               arr.sort(function(a, b) {
+                  return (a.order - b.order);
+               });
+
+               plot.setData(arr);
+               plot.setupGrid();
+               plot.draw();
+            }
+         } catch (e) {
+            console.error(e.message);
+         }
+      }
+
+      self.resize = function() {
+         self.plot = null;
+         self.render();
+      }
    }
 
 });
