@@ -11,6 +11,7 @@ import com.codahale.metrics.Gauge;
 
 import io.tetrapod.core.pubsub.Topic;
 import io.tetrapod.core.rpc.*;
+import io.tetrapod.core.rpc.Request;
 import io.tetrapod.protocol.core.*;
 
 /**
