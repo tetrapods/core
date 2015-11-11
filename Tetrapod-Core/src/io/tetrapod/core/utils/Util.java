@@ -556,11 +556,11 @@ public class Util {
    }
 
    /**
-    * Return a comma separated list of the collection, with no outside
-    * delimiters.  Empty string if collection is null or empty.
+    * Return a comma separated list of the collection, with no outside delimiters. Empty string if collection is null or empty.
     */
    public static String commaSeparated(Collection<?> coll) {
-      if (isEmpty(coll)) return "";
+      if (isEmpty(coll))
+         return "";
       StringBuilder sb = new StringBuilder();
       boolean first = true;
       for (Object obj : coll) {
@@ -571,6 +571,19 @@ public class Util {
          sb.append(obj.toString());
       }
       return sb.toString();
+   }
+
+   public interface ValueMaker<K, V> {
+      public V make();
+   }
+
+   public static <K, V> V getOrMake(Map<K, V> map, K key, ValueMaker<K, V> maker) {
+      V val = map.get(key);
+      if (val == null) {
+         val = maker.make();
+         map.put(key, val);
+      }
+      return val;
    }
 
 }
