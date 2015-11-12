@@ -117,7 +117,7 @@ public class EntityRegistry implements TetrapodContract.Registry.API {
          final List<EntityInfo> shuffled = new ArrayList<>(list);
          Collections.shuffle(shuffled);
          for (EntityInfo info : shuffled) {
-            if (info != null && info.isAvailable()) {
+            if (info != null && info.isAvailable() && info.getSession() != null) {
                return info;
             }
          }
@@ -377,11 +377,9 @@ public class EntityRegistry implements TetrapodContract.Registry.API {
    }
 
    public void onModEntityCommand(final EntityInfo entity) {
-      if (entity != null) {
+      if (entity != null && entity.isService()) {
          entity.queue(() -> {
-            if (entity.isService()) {
-               broadcaster.broadcastServicesMessage(new ServiceUpdatedMessage(entity.entityId, entity.status));
-            }
+            broadcaster.broadcastServicesMessage(new ServiceUpdatedMessage(entity.entityId, entity.status));
          });
       }
    }
