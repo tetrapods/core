@@ -21,7 +21,7 @@ public class RequestStat extends Structure {
       defaults();
    }
 
-   public RequestStat(String name, long count, long time, int[] entities, int[] errors, int[] timeline) {
+   public RequestStat(String name, long count, long time, StatPair[] entities, StatPair[] errors, int[] timeline) {
       this.name = name;
       this.count = count;
       this.time = time;
@@ -48,12 +48,12 @@ public class RequestStat extends Structure {
    /**
     * top callers
     */
-   public int[] entities;
+   public StatPair[] entities;
    
    /**
     * top errors
     */
-   public int[] errors;
+   public StatPair[] errors;
    
    /**
     * histogram of calls
@@ -93,8 +93,8 @@ public class RequestStat extends Structure {
             case 1: this.name = data.read_string(tag); break;
             case 2: this.count = data.read_long(tag); break;
             case 3: this.time = data.read_long(tag); break;
-            case 4: this.entities = data.read_int_array(tag); break;
-            case 5: this.errors = data.read_int_array(tag); break;
+            case 4: this.entities = data.read_struct_array(tag, new StatPair()); break;
+            case 5: this.errors = data.read_struct_array(tag, new StatPair()); break;
             case 6: this.timeline = data.read_int_array(tag); break;
             case Codec.END_TAG:
                return;
@@ -140,8 +140,8 @@ public class RequestStat extends Structure {
       desc.types[1] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
       desc.types[2] = new TypeDescriptor(TypeDescriptor.T_LONG, 0, 0);
       desc.types[3] = new TypeDescriptor(TypeDescriptor.T_LONG, 0, 0);
-      desc.types[4] = new TypeDescriptor(TypeDescriptor.T_INT_LIST, 0, 0);
-      desc.types[5] = new TypeDescriptor(TypeDescriptor.T_INT_LIST, 0, 0);
+      desc.types[4] = new TypeDescriptor(TypeDescriptor.T_STRUCT_LIST, StatPair.CONTRACT_ID, StatPair.STRUCT_ID);
+      desc.types[5] = new TypeDescriptor(TypeDescriptor.T_STRUCT_LIST, StatPair.CONTRACT_ID, StatPair.STRUCT_ID);
       desc.types[6] = new TypeDescriptor(TypeDescriptor.T_INT_LIST, 0, 0);
       return desc;
    }

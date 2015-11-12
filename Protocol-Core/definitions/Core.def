@@ -141,13 +141,17 @@ internal response ServiceLogs
    2: ServiceLogEntry<list> items
    
    error NOT_CONFIGURED
- 
+
+internal struct StatPair 
+   1: int id
+   2: int count
+
 internal struct RequestStat
    1: string name // name of the request
    2: long count  // number of invocations
    3: long time   // cumulative time spent in microseconds 
-   4: int[] entities // top callers
-   5: int[] errors // top errors
+   4: StatPair[] entities // top callers
+   5: StatPair[] errors // top errors
    6: int[] timeline // histogram of calls
  
 internal request ServiceRequestStats

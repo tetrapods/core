@@ -100,6 +100,7 @@ function TP_Core(server) {
    server.register("response", "Core", "ServiceDetails", 1, 12435407);
    server.register("request", "Core", "ServiceLogs", 1, 13816458);
    server.register("response", "Core", "ServiceLogs", 1, 6345878);
+   server.register("struct", "Core", "StatPair", 1, 10082177);
    server.register("struct", "Core", "RequestStat", 1, 12902770);
    server.register("request", "Core", "ServiceRequestStats", 1, 16134423);
    server.register("response", "Core", "ServiceRequestStats", 1, 6312573);

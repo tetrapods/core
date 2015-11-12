@@ -15,7 +15,7 @@ public class RequestStats {
 
    public final Queue<ReqSample> requests                 = new ConcurrentLinkedQueue<>();
 
-   private static final int      GLOBAL_HISTOGRAM_BUCKETS = 120;
+   private static final int      HISTOGRAM_BUCKETS = 100;
 
    public RequestStats() {
       this(1024 * 64);
@@ -55,46 +55,38 @@ public class RequestStats {
       final Map<String, Long> execution = new HashMap<>();
       final Map<String, Map<Integer, Integer>> entities = new HashMap<>();
       final Map<String, Map<Integer, Integer>> errors = new HashMap<>();
-      //final Map<String, Integer[]> timelines = new HashMap<>();
-      long minTimestamp = Long.MAX_VALUE;
+      final Map<String, int[]> timelines = new HashMap<>();
+      long minTimestamp = now;
 
-      final int[] histogram = new int[GLOBAL_HISTOGRAM_BUCKETS];
+      final int[] histogram = new int[HISTOGRAM_BUCKETS];
 
       for (ReqSample sample : requests) {
          if (sample.timestamp >= minTime) {
             minTimestamp = Math.min(minTimestamp, sample.timestamp);
 
             // accumulate invocations count
-            Integer count = counts.get(sample.key);
-            if (count == null) {
-               count = 1;
-            } else {
-               count = count + 1;
-            }
-            counts.put(sample.key, count);
+            Integer count = Util.getOrMake(counts, sample.key, () -> {
+               return 0;
+            });
+            counts.put(sample.key, count + 1);
 
             // accumulate microsecond totals
-            Long time = execution.get(sample.key);
-            if (time == null) {
-               time = sample.execution / 1000;
-            } else {
-               time = time + sample.execution / 1000;
-            }
-            execution.put(sample.key, time);
+            Long time = Util.getOrMake(execution, sample.key, () -> {
+               return 0L;
+            });
+            execution.put(sample.key, time + sample.execution / 1000);
 
-            Map<Integer, Integer> entityMap = entities.get(sample.key);
-            if (entityMap == null) {
-               entityMap = new HashMap<>();
-               entities.put(sample.key, entityMap);
-            }
+            // most common request entities
+            Map<Integer, Integer> entityMap = Util.getOrMake(entities, sample.key, () -> {
+               return new HashMap<>();
+            });
             entityMap.putIfAbsent(sample.fromEntityId, 0);
             entityMap.put(sample.fromEntityId, entityMap.get(sample.fromEntityId) + 1);
 
-            Map<Integer, Integer> errorMap = errors.get(sample.key);
-            if (errorMap == null) {
-               errorMap = new HashMap<>();
-               errors.put(sample.key, errorMap);
-            }
+            // most common results
+            Map<Integer, Integer> errorMap = Util.getOrMake(errors, sample.key, () -> {
+               return new HashMap<>();
+            });
             errorMap.putIfAbsent(sample.result, 0);
             errorMap.put(sample.result, errorMap.get(sample.result) + 1);
          }
@@ -107,6 +99,12 @@ public class RequestStats {
             final int bucket = Math.min((int) (delta / interval), histogram.length - 1);
 
             histogram[bucket]++;
+
+            int[] hist = Util.getOrMake(timelines, sample.key, () -> {
+               return new int[HISTOGRAM_BUCKETS];
+            }); 
+            hist[bucket]++;
+
          }
       }
 
@@ -141,18 +139,28 @@ public class RequestStats {
 
       final List<RequestStat> stats = new ArrayList<RequestStat>();
       for (String key : sorted) {
-         final int[] entitiesArr = Util.toIntArray(topN(entities.get(key), (a, b) -> {
+         final StatPair[] entitiesArr = toStatPair(entities.get(key), topN(entities.get(key), (a, b) -> {
             return a.compareTo(b);
          } , 10));
-         final int[] errorsArr = Util.toIntArray(topN(errors.get(key), (a, b) -> {
+         final StatPair[] errorsArr = toStatPair(errors.get(key), topN(errors.get(key), (a, b) -> {
             return a.compareTo(b);
          } , 10));
-         stats.add(new RequestStat(key, counts.get(key), execution.get(key), entitiesArr, errorsArr, null));
+
+         stats.add(new RequestStat(key, counts.get(key), execution.get(key), entitiesArr, errorsArr, timelines.get(key)));
          if (stats.size() >= limit)
             break;
       }
 
       return new ServiceRequestStatsResponse(stats, minTimestamp, null, histogram, now);
+   }
+
+   private StatPair[] toStatPair(Map<Integer, Integer> map, List<Integer> top) {
+      StatPair[] items = new StatPair[top.size()];
+      int i = 0;
+      for (Integer key : top) {
+         items[i++] = new StatPair(key, map.get(key));
+      }
+      return items;
    }
 
    public static <T, V extends Comparable<V>> List<T> topN(Map<T, V> map, Comparator<V> comp, int n) {

@@ -41,6 +41,11 @@ li.disabled {
 	max-width: 400px;
 }
 
+.cell-label a {
+   cursor: pointer;	
+}
+
+
 meter {
 	padding-left: 1px;
 	padding-right: 1px;
@@ -440,4 +445,12 @@ meter {
 	height: 100px;
    width: 700px;
 	padding: 0px;
+}
+
+.stats-column {
+	vertical-align: top;
+}
+
+.rpc-selected-stat {
+	white-space: normal;
 }
