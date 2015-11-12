@@ -97,6 +97,7 @@ public class CoreContract extends Contract {
          new MessageHeader(),
          new ServiceCommand(),
          new ServerAddress(),
+         new StatPair(),
          new RequestStat(),
          new Subscriber(),
          new WebRoute(),

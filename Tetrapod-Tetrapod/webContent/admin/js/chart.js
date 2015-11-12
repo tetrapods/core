@@ -140,6 +140,12 @@ define(["jquery"], function($) {
          self.plot = null;
          self.render();
       }
+      
+      $(window).resize(function () {
+         self.resize();
+      });
+
+      
    }
 
 });

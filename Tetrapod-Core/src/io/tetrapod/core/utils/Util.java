@@ -577,6 +577,9 @@ public class Util {
       public V make();
    }
 
+   /**
+    * Helpful method to get an existing value from a map or lazy-init when value is missing.
+    */
    public static <K, V> V getOrMake(Map<K, V> map, K key, ValueMaker<K, V> maker) {
       V val = map.get(key);
       if (val == null) {

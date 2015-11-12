@@ -89,12 +89,12 @@
                            <div class="modal-body">
                               <select title="domains" data-bind="options: requestStatsDomains , value: requestStatsDomain">
                               </select>
-                              
-                              
+
+
                               <div class="service-histogram-wrap">
-                                 <div class="service-histogram" id="service-stat-histogram"></div>
+                                 <div class="service-histogram" data-bind="attr: {id: 'service-stat-histogram-' + entityId}"></div>
                               </div>
-                              
+
                               <table class="table table-bordered table-condensed request-stats">
                                  <tr>
                                     <th data-bind="click: function(){reqSort(4)}">
@@ -142,6 +142,65 @@
                                     </tr>
                                  </tbody>
                               </table>
+
+                              <!-- ko if: rpcStat() != null -->
+                              <div class="rpc-selected-stat">
+                                 <span data-bind="text: rpcStat().name"></span>
+                                 <table class="table table-condensed">
+                                    <tr class="stats-column">
+                                       <td class="stats-column">
+                                          <h4>Top Results</h4>
+                                          <table class="table table-bordered table-condensed request-stats">
+                                             <tr>
+                                                <th>Result Code</th>
+                                                <th>Count</th>
+                                             </tr>
+                                             <tbody data-bind="foreach: { data: rpcStat().errors, as: 'err' }">
+                                                <tr>
+                                                   <td align="right">
+                                                      <div class="cell-label">
+                                                         <span data-bind="text:  err.id"></span>
+                                                      </div>
+                                                   </td>
+                                                   <td align="right">
+                                                      <div class="cell-label">
+                                                         <span data-bind="text: err.count"></span>
+                                                         <!-- <meter data-bind="attr: {'value' : countPercent }"></meter> -->
+                                                      </div>
+                                                   </td>
+                                                </tr>
+                                             </tbody>
+                                          </table>
+                                       </td>
+
+                                       <td class="stats-column">
+                                          <h4>Top Callers</h4>
+                                          <table class="table table-bordered table-condensed request-stats">
+                                             <tr>
+                                                <th>Entity</th>
+                                                <th>Count</th>
+                                             </tr>
+                                             <tbody data-bind="foreach: { data: rpcStat().entities, as: 'e' }">
+                                                <tr>
+                                                   <td align="right">
+                                                      <div class="cell-label">
+                                                         <span data-bind="text: e.id"></span>
+                                                      </div>
+                                                   </td>
+                                                   <td align="right">
+                                                      <div class="cell-label">
+                                                         <span data-bind="text: e.count"></span>
+                                                         <!-- <meter data-bind="attr: {'value' : countPercent }"></meter> -->
+                                                      </div>
+                                                   </td>
+                                                </tr>
+                                             </tbody>
+                                          </table>
+                                       </td>
+                                    </tr>
+                                 </table>
+                              </div>
+                              <!-- /ko -->
 
                            </div>
                         </div>
@@ -221,14 +280,13 @@
                   <span class="service-name" data-bind="text: name"></span>
                </td>
                <td class="centered" style="cursor: pointer;">
-
                   <i class="fa fa-warning fa-fw" style="float: left; color: orange" data-bind="visible: hasWarningsOnly(), click: showErrors"></i>
                   <i class="fa fa-exclamation-circle fa-fw" style="float: left; color: red" data-bind="visible: hasErrors(), click: showErrors"></i>
                   <i class="fa fa-exclamation-circle fa-fw" style="float: left; visibility: hidden" data-bind="visible: !hasErrorsOrWarnings(), click: showErrors"></i>
                   <i class="fa fa-remove fa-fw clear-errors-btn" data-bind="visible: hasErrorsOrWarnings(), click: clearErrors"></i>
                   <i class="fa fa-fw clear-errors-btn" data-bind="visible: !hasErrorsOrWarnings()">&nbsp;</i>
-
                   <a data-bind="text: entityString, click: showLogs"></a>
+                  <i class="fa fa-area-chart fa-fw" style="float: right; color: #aaa" data-bind="visible: !isGone(), click: showRequestStats"></i>
                </td>
                <td class="centered">
                   <span data-bind="text: build"></span>

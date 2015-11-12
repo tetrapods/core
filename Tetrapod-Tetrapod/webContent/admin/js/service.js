@@ -207,10 +207,12 @@ define(["knockout", "jquery", "bootbox", "alert", "app", "chart", "modules/build
          });
       }
 
+      self.rpcStat = ko.observable();
       self.reqSort = ko.observable(1);
       self.requestStatsTimeRange = ko.observable(0);
       self.requestStatsDomains = ko.observableArray([]);
       self.requestStatsDomain = ko.observable(null);
+      self.reqChart = new Chart("service-stat-histogram-" + self.entityId); 
 
       self.reqSort.subscribe(function() {
          fetchRequestStats();
@@ -222,23 +224,24 @@ define(["knockout", "jquery", "bootbox", "alert", "app", "chart", "modules/build
 
       function statClicked(r) {
          console.log(r.name);
-         Alert.info(r.name);
+         //Alert.info(r.name);
          // TODO: If this is an RPC, call and display stats for just that request
 
-         // r.timeline 
-         // r.entities
-         // r.errors
+         self.rpcStat(r);
+         
+         self.reqChart.setPlotData('Selection', r.timeline);
       }
 
       function showRequestStats() {
          fetchRequestStats();
       }
 
-      self.reqChart = new Chart("service-stat-histogram");
 
       function fetchRequestStats() {
          var currentTimeMillis = new Date().getTime();
          var minTime = currentTimeMillis - 1000 * 60 * 15;
+         self.rpcStat(null);
+         self.reqChart.setPlotData('Selection', []);
 
          app.server.sendTo("ServiceRequestStats", {
             limit: 25,
@@ -273,6 +276,8 @@ define(["knockout", "jquery", "bootbox", "alert", "app", "chart", "modules/build
                d.on('shown.bs.modal', function() {
                   self.reqChart.render();
                });
+            } else {
+               self.requestStats(null);
             }
          });
       }
