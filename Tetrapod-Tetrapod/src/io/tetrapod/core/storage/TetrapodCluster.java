@@ -88,6 +88,9 @@ public class TetrapodCluster extends Storage
       // add the initial set of entities from the state, then listen for subsequent changes
       synchronized (this.raft) {
          for (EntityInfo info : state.entities.values()) {
+            if (info.parentId == service.getEntityId()) {
+               info.status |= Core.STATUS_GONE;
+            }
             service.registry.onAddEntityCommand(info);
          }
          this.state.addListener(this);
