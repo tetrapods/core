@@ -27,6 +27,7 @@ define(["knockout", "jquery", "bootbox", "alert", "app", "chart", "modules/build
       self.requestStats = ko.observableArray([]);
       self.subscribe = subscribe;
 
+      
       self.iconURL = ko.observable("media/gear.gif");
       subscribe(1);
 
@@ -41,7 +42,7 @@ define(["knockout", "jquery", "bootbox", "alert", "app", "chart", "modules/build
                   }
                }
                app.server.sendTo("ServiceStatsSubscribe", {}, self.entityId, app.server.logResponse)
-            } else if (result.errorCode == Core.SERVICE_UNAVAILABLE) {
+            } else if (result.errorCode == Core.SERVICE_UNAVAILABLE && !s.removed) {
                setTimeout(function() {
                   subscribe(attempt + 1);
                }, 1000 * attempt);

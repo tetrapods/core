@@ -79,6 +79,7 @@ define(function(require) {
          if (s) {
             self.services.remove(s);
             self.getHost(s.host).removeService(s);
+            s.removed = true;
          }
       });
 
