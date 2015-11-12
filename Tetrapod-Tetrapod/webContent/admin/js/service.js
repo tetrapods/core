@@ -42,7 +42,7 @@ define(["knockout", "jquery", "bootbox", "alert", "app", "chart", "modules/build
                   }
                }
                app.server.sendTo("ServiceStatsSubscribe", {}, self.entityId, app.server.logResponse)
-            } else if (result.errorCode == Core.SERVICE_UNAVAILABLE && !s.removed) {
+            } else if (result.errorCode == Core.SERVICE_UNAVAILABLE && !self.removed) {
                setTimeout(function() {
                   subscribe(attempt + 1);
                }, 1000 * attempt);
