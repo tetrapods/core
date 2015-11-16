@@ -27,11 +27,11 @@ define(["knockout", "jquery", "bootbox", "alert", "app", "chart", "modules/build
       self.requestStats = ko.observableArray([]);
       self.subscribe = subscribe;
 
-      
       self.iconURL = ko.observable("media/gear.gif");
-      subscribe(1);
-
+      
       function subscribe(attempt) {
+         if (self.isGone())
+            return;
          app.server.sendTo("ServiceDetails", {}, self.entityId, function(result) {
             if (!result.isError()) {
                self.iconURL(result.iconURL);
@@ -213,7 +213,7 @@ define(["knockout", "jquery", "bootbox", "alert", "app", "chart", "modules/build
       self.requestStatsTimeRange = ko.observable(0);
       self.requestStatsDomains = ko.observableArray([]);
       self.requestStatsDomain = ko.observable(null);
-      self.reqChart = new Chart("service-stat-histogram-" + self.entityId); 
+      self.reqChart = new Chart("service-stat-histogram-" + self.entityId);
 
       self.reqSort.subscribe(function() {
          fetchRequestStats();
@@ -229,14 +229,13 @@ define(["knockout", "jquery", "bootbox", "alert", "app", "chart", "modules/build
          // TODO: If this is an RPC, call and display stats for just that request
 
          self.rpcStat(r);
-         
+
          self.reqChart.setPlotData('Selection', r.timeline);
       }
 
       function showRequestStats() {
          fetchRequestStats();
       }
-
 
       function fetchRequestStats() {
          var currentTimeMillis = new Date().getTime();
@@ -378,10 +377,12 @@ define(["knockout", "jquery", "bootbox", "alert", "app", "chart", "modules/build
 
       // updates all charts for this service
       self.chart = function() {
-         self.latencyChart.updatePlot(60000, self.latency());
-         self.rpsChart.updatePlot(60000, self.rps());
-         self.mpsChart.updatePlot(60000, self.mps());
-         self.counterChart.updatePlot(60000, self.counter());
+         if (!self.removed) {
+            self.latencyChart.updatePlot(60000, self.latency());
+            self.rpsChart.updatePlot(60000, self.rps());
+            self.mpsChart.updatePlot(60000, self.mps());
+            self.counterChart.updatePlot(60000, self.counter());
+         }
       }
 
       var LogConsts = app.server.consts["Core.ServiceLogEntry"];

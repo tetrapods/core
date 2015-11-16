@@ -145,11 +145,11 @@
 
                               <!-- ko if: rpcStat() != null -->
                               <div class="rpc-selected-stat">
-                                 <span data-bind="text: rpcStat().name"></span>
+                                 <h4 data-bind="text: rpcStat().name"></h4>
                                  <table class="table table-condensed">
                                     <tr class="stats-column">
                                        <td class="stats-column">
-                                          <h4>Top Results</h4>
+                                          <span>Top Results</span>
                                           <table class="table table-bordered table-condensed request-stats">
                                              <tr>
                                                 <th>Result Code</th>
@@ -174,7 +174,7 @@
                                        </td>
 
                                        <td class="stats-column">
-                                          <h4>Top Callers</h4>
+                                          <span>Top Callers</span>
                                           <table class="table table-bordered table-condensed request-stats">
                                              <tr>
                                                 <th>Entity</th>

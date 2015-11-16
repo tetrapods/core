@@ -60,6 +60,7 @@ define(function(require) {
          self.services.push(s);
          self.services.sort(compareServices);
          self.getHost(msg.entity.host).addService(s);
+         s.subscribe(1);
       });
 
       app.server.addMessageHandler("ServiceUpdated", function(msg) {
