@@ -146,6 +146,10 @@ public class TetrapodCluster extends Storage
       return ses;
    }
 
+   public Dispatcher getDispatcher() {
+      return service.dispatcher;
+   }
+   
    // FIXME: Add a cleaner listener interface based on command type so we don't need a fugly switch
    @Override
    public void onLogEntryApplied(Entry<TetrapodStateMachine> entry) {

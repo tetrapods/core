@@ -372,7 +372,7 @@ public class EntityRegistry implements TetrapodContract.Registry.API {
          list.add(entity);
       }
       if (entity.isService()) {
-         broadcaster.broadcastServicesMessage(new ServiceAddedMessage(entity));
+         entity.queue(() -> broadcaster.broadcastServicesMessage(new ServiceAddedMessage(entity)));
       }
    }
 
@@ -385,16 +385,19 @@ public class EntityRegistry implements TetrapodContract.Registry.API {
    }
 
    public void onDelEntityCommand(final int entityId) {
-      final EntityInfo e = entities.remove(entityId);
+      final EntityInfo e = entities.get(entityId);
       if (e != null) {
-         if (e.isService()) {
-            broadcaster.broadcastServicesMessage(new ServiceRemovedMessage(e.entityId));
-            final List<EntityInfo> list = services.get(e.contractId);
-            if (list != null) {
-               list.remove(e);
+         e.queue(() -> {
+            entities.remove(entityId);
+            if (e.isService()) {
+               broadcaster.broadcastServicesMessage(new ServiceRemovedMessage(e.entityId));
+               final List<EntityInfo> list = services.get(e.contractId);
+               if (list != null) {
+                  list.remove(e);
+               }
             }
-         }
-         clearAllTopicsAndSubscriptions(e); // might need to do this elsewhere...
+            clearAllTopicsAndSubscriptions(e); // might need to do this elsewhere...
+         });
       } else {
          logger.error("onDelEntityCommand Couldn't find {}", entityId);
       }
