@@ -149,7 +149,7 @@ public class TetrapodCluster extends Storage
    public Dispatcher getDispatcher() {
       return service.dispatcher;
    }
-   
+
    // FIXME: Add a cleaner listener interface based on command type so we don't need a fugly switch
    @Override
    public void onLogEntryApplied(Entry<TetrapodStateMachine> entry) {
@@ -392,7 +392,11 @@ public class TetrapodCluster extends Storage
 
       sendPeerRequest(new AppendEntriesRequest(term, leaderId, prevLogIndex, prevLogTerm, entryList, leaderCommit), peerId).handle(res -> {
          if (res.isError()) {
-            logger.error("AppendEntriesRequest {}", res);
+            if (res.errorCode() == CoreContract.ERROR_CONNECTION_CLOSED) {
+               logger.info("AppendEntriesRequest {}", res);
+            } else {
+               logger.error("AppendEntriesRequest {}", res);
+            }
          } else {
             AppendEntriesResponse r = (AppendEntriesResponse) res;
             if (handler != null) {
