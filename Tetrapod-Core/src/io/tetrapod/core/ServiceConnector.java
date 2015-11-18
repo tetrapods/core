@@ -15,7 +15,6 @@ import io.netty.channel.socket.SocketChannel;
 import io.tetrapod.core.Session.RelayHandler;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.rpc.Error;
-import io.tetrapod.core.utils.SequentialWorkQueue;
 import io.tetrapod.core.utils.Util;
 import io.tetrapod.protocol.core.*;
 
@@ -26,7 +25,7 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
    /**
     * The number of requests sent to a specific service that triggers us to start a direct session
     */
-   private static final int                REQUEST_THRESHOLD = 1;
+   private static final int                REQUEST_THRESHOLD = 0;
 
    private static final Logger             logger            = LoggerFactory.getLogger(ServiceConnector.class);
 
@@ -36,11 +35,6 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
    private final SSLContext                sslContext;
 
    private Server                          server;
-
-   /**
-    * Work queue for this connection -- typically writing of sequential messages stored while disconnected
-    */
-   protected final SequentialWorkQueue     queue             = new SequentialWorkQueue();
 
    public ServiceConnector(DefaultService service, SSLContext sslContext) {
       this.service = service;
@@ -91,7 +85,7 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
    /**
     * This is a wrapper class for managing a single direct connection
     */
-   private class DirectServiceInfo implements Session.Listener {
+   public class DirectServiceInfo implements Session.Listener {
       public final int      entityId;
       public final String   token = String.format("%016x%016x", Util.random.nextLong(), Util.random.nextLong());
       public int            requests;
@@ -143,7 +137,9 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
             valid = false;
             service.clusterClient.getSession().sendRequest(new DirectConnectionRequest(token), entityId, (byte) 30).handle(res -> {
                if (res.isError()) {
-                  logger.error("DirectConnectionRequest to {} =  {}", entityId, res);
+                  if (res.errorCode() != CoreContract.ERROR_NOT_CONFIGURED) {
+                     logger.error("DirectConnectionRequest to {} =  {}", entityId, res);
+                  }
                   failure();
                } else {
                   connect((DirectConnectionResponse) res);
@@ -192,9 +188,13 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
       }
 
       public synchronized void considerConnecting() {
-         if (entityId != service.parentId && (isTetrapod || requests > REQUEST_THRESHOLD) && !pending) {
+         if (entityId != service.parentId && (isTetrapod || requests >= REQUEST_THRESHOLD) && !pending && ses == null) {
             service.dispatcher.dispatch(() -> handshake());
          }
+      }
+
+      public synchronized Session getSession() {
+         return ses;
       }
    }
 
@@ -213,7 +213,7 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
       if (entityId != Core.DIRECT) {
          if (entityId != Core.UNADDRESSED) {
             if (entityId == service.getEntityId()) {
-               logger.warn("For some reason we're sending {} to ourselves", req);
+               logger.info("For some reason we're sending {} to ourselves", req);
             } else {
                final DirectServiceInfo s = getDirectServiceInfo(entityId);
                synchronized (s) {
@@ -322,7 +322,11 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
     * Sends a topic message for broadcast to toEntityId
     */
    public void sendBroadcastMessage(Message msg, int toEntityId, int topicId) {
-      getSession(toEntityId).sendTopicBroadcastMessage(msg, toEntityId, topicId);
+      Session ses = getSession(toEntityId);
+      if (ses.getMyEntityId() == 0) {
+         logger.error("My Session has invalid entityId {}", ses);
+      }
+      ses.sendTopicBroadcastMessage(msg, toEntityId, topicId);
    }
 
    @Override
@@ -336,6 +340,7 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
       synchronized (s) {
          if (s.token.equals(r.token)) {
             s.ses = ((SessionRequestContext) ctx).session;
+            s.ses.setMyEntityId(service.getEntityId());
             s.ses.setTheirEntityId(r.entityId);
             s.ses.setTheirEntityType(Core.TYPE_SERVICE);
             s.valid = true;

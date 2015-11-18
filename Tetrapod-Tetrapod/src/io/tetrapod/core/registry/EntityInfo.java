@@ -242,4 +242,8 @@ public class EntityInfo extends Entity implements Comparable<EntityInfo> {
       return session == null && lastContact != null && !isGone();
    }
 
+   public boolean hasConnectedSession() {
+      return session != null && session.isConnected();
+   }
+
 }
