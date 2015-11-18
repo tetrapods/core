@@ -37,4 +37,9 @@ public class Flags_long<T> {
       }
    }
    
+   public String toString() {
+      return this.getClass().getSimpleName() + ":" + Long.toString(value);
+   }
+
+   
 }

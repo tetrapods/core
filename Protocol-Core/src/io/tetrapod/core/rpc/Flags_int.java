@@ -37,4 +37,8 @@ public class Flags_int<T> {
       }
    }
    
+   public String toString() {
+      return this.getClass().getSimpleName() + ":" + Integer.toString(value);
+   }
+   
 }
