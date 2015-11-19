@@ -71,6 +71,9 @@ internal request AddServiceInformation
    
 internal request LogRegistryStats 
 
+internal request CloseClientConnection
+   1: string data
+
 public request AdminLogin
    1: string email @sensitive
    2: string password @sensitive
