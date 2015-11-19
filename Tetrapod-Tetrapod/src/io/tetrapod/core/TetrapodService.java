@@ -152,7 +152,9 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
    @Override
    public ServiceCommand[] getServiceCommands() {
       return new ServiceCommand[] {
-            new ServiceCommand("Log Registry Stats", null, LogRegistryStatsRequest.CONTRACT_ID, LogRegistryStatsRequest.STRUCT_ID, false) };
+         new ServiceCommand("Log Registry Stats", null, LogRegistryStatsRequest.CONTRACT_ID, LogRegistryStatsRequest.STRUCT_ID, false),
+         new ServiceCommand("Close Client Connection", null, CloseClientConnectionRequest.CONTRACT_ID, CloseClientConnectionRequest.STRUCT_ID, true),
+      };
    }
 
    @Override
@@ -1250,6 +1252,21 @@ public class TetrapodService extends DefaultService implements TetrapodContract.
       synchronized (clientSessionsCounter) {
          return new TetrapodClientSessionsResponse(Util.toIntArray(clientSessionsCounter));
       }
+   }
+   
+   @Override
+   public Response requestCloseClientConnection(CloseClientConnectionRequest r, RequestContext ctx) {
+      int accountId = Integer.parseInt(r.data);
+      for (EntityInfo e : registry.getEntities()) {
+         if (!e.isService() && e.getAlternateId() == accountId && !e.isGone()) {
+            Session session = findSession(e);
+            if (session != null) {
+               session.close();
+               return Response.SUCCESS;
+            }
+         }
+      }
+      return Response.error(ERROR_INVALID_ENTITY);
    }
 
 }

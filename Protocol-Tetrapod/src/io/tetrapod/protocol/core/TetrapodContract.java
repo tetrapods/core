@@ -30,6 +30,7 @@ public class TetrapodContract extends Contract {
       , AdminSessionTokenRequest.Handler
       , AdminSubscribeRequest.Handler
       , ClaimOwnershipRequest.Handler
+      , CloseClientConnectionRequest.Handler
       , ClusterJoinRequest.Handler
       , DelClusterPropertyRequest.Handler
       , DelWebRootRequest.Handler
@@ -76,6 +77,7 @@ public class TetrapodContract extends Contract {
          new ServiceStatusUpdateRequest(),
          new AddServiceInformationRequest(),
          new LogRegistryStatsRequest(),
+         new CloseClientConnectionRequest(),
          new AdminLoginRequest(),
          new AdminAuthorizeRequest(),
          new AdminSessionTokenRequest(),
