@@ -13,7 +13,7 @@ public class RequestStats {
 
    public final int              bufferSize;
 
-   public final Queue<ReqSample> requests                 = new ConcurrentLinkedQueue<>();
+   public final Queue<ReqSample> requests          = new ConcurrentLinkedQueue<>();
 
    private static final int      HISTOGRAM_BUCKETS = 100;
 
@@ -52,6 +52,7 @@ public class RequestStats {
    public ServiceRequestStatsResponse getRequestStats(int limit, long minTime, final RequestStatsSort sortBy) {
       final long now = System.currentTimeMillis();
       final Map<String, Integer> counts = new HashMap<>();
+      final Map<String, Integer> errorCounts = new HashMap<>();
       final Map<String, Long> execution = new HashMap<>();
       final Map<String, Map<Integer, Integer>> entities = new HashMap<>();
       final Map<String, Map<Integer, Integer>> errors = new HashMap<>();
@@ -65,15 +66,17 @@ public class RequestStats {
             minTimestamp = Math.min(minTimestamp, sample.timestamp);
 
             // accumulate invocations count
-            Integer count = Util.getOrMake(counts, sample.key, () -> {
-               return 0;
-            });
+            Integer count = Util.getOrMake(counts, sample.key, 0);
             counts.put(sample.key, count + 1);
 
+            if (sample.result != 0) {
+               // accumulate errors count
+               Integer errCount = Util.getOrMake(errorCounts, sample.key, 0);
+               errorCounts.put(sample.key, errCount + 1);
+            }
+
             // accumulate microsecond totals
-            Long time = Util.getOrMake(execution, sample.key, () -> {
-               return 0L;
-            });
+            Long time = Util.getOrMake(execution, sample.key, 0L);
             execution.put(sample.key, time + sample.execution / 1000);
 
             // most common request entities
@@ -102,39 +105,50 @@ public class RequestStats {
 
             int[] hist = Util.getOrMake(timelines, sample.key, () -> {
                return new int[HISTOGRAM_BUCKETS];
-            }); 
+            });
             hist[bucket]++;
 
          }
       }
 
       final List<String> sorted = new ArrayList<>(counts.keySet());
-      Collections.sort(sorted, new Comparator<String>() {
-         public int compare(String a, String b) {
-            if (sortBy != null) {
-               switch (sortBy) {
-                  case COUNT:
-                     if (counts.get(a) >= counts.get(b)) {
-                        return -1;
-                     } else {
-                        return 1;
-                     }
-                  case TOTAL_TIME:
-                     if (execution.get(a) >= execution.get(b)) {
-                        return -1;
-                     } else {
-                        return 1;
-                     }
-                  case AVERAGE_TIME:
-                     if (execution.get(a) / (double) counts.get(a) >= execution.get(b) / (double) counts.get(b)) {
-                        return -1;
-                     } else {
-                        return 1;
-                     }
-               }
+      Collections.sort(sorted, (a, b) -> {
+         if (sortBy != null) {
+            switch (sortBy) {
+               case COUNT:
+                  if (counts.get(a) >= counts.get(b)) {
+                     return -1;
+                  } else {
+                     return 1;
+                  }
+               case TOTAL_TIME:
+                  if (execution.get(a) >= execution.get(b)) {
+                     return -1;
+                  } else {
+                     return 1;
+                  }
+               case AVERAGE_TIME:
+                  if (execution.get(a) / (double) counts.get(a) >= execution.get(b) / (double) counts.get(b)) {
+                     return -1;
+                  } else {
+                     return 1;
+                  }
+               case ERRORS:
+                  double errA = 0, errB = 0;
+                  if (counts.get(a) != 0 && errorCounts.get(a) != null) {
+                     errA = errorCounts.get(a) / (double) counts.get(a);
+                  } 
+                  if (counts.get(b) != 0 && errorCounts.get(b) != null) {
+                     errB = errorCounts.get(b) / (double) counts.get(b);
+                  }
+                  if (errA >= errB) {
+                     return -1;
+                  } else {
+                     return 1;
+                  }
             }
-            return a.compareTo(b);
          }
+         return a.compareTo(b);
       });
 
       final List<RequestStat> stats = new ArrayList<RequestStat>();

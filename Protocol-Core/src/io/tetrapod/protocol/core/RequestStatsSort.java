@@ -11,6 +11,7 @@ public enum RequestStatsSort implements Enum_int<RequestStatsSort> {
    COUNT(1), 
    TOTAL_TIME(2), 
    AVERAGE_TIME(3), 
+   ERRORS(4), 
    ;
    
    public static RequestStatsSort from(int val) {
