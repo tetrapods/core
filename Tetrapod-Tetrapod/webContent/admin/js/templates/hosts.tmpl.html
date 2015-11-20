@@ -113,6 +113,10 @@
                                        Avg (ms)
                                        <i class="fa fa-fw" data-bind="css: {'fa-caret-down' : reqSort() == 3}"></i>
                                     </th>
+                                      <th data-bind="click: function(){reqSort(4)}">
+                                       Errors
+                                       <i class="fa fa-fw" data-bind="css: {'fa-caret-down' : reqSort() == 4}"></i>
+                                    </th>
                                  </tr>
                                  <tbody data-bind="foreach: requestStats">
                                     <tr>
@@ -137,6 +141,12 @@
                                           <div class="cell-label">
                                              <span data-bind="text: avgTime.toFixed(1)"></span>
                                              <meter data-bind="attr: {'value' : avgTimePercent }"></meter>
+                                          </div>
+                                       </td>
+                                         <td align="right">
+                                          <div class="cell-label">
+                                             <span data-bind="text: (errorRate.toFixed(1) *100) +'%'"></span>
+                                             <meter data-bind="attr: {'value' : errorRate }"></meter>
                                           </div>
                                        </td>
                                     </tr>

@@ -162,6 +162,7 @@ internal request ServiceRequestStats
    enum int RequestStatsSort.COUNT          = 1
    enum int RequestStatsSort.TOTAL_TIME     = 2
    enum int RequestStatsSort.AVERAGE_TIME   = 3
+   enum int RequestStatsSort.ERRORS         = 4
    
    
 internal response ServiceRequestStats

@@ -258,6 +258,15 @@ define(["knockout", "jquery", "bootbox", "alert", "app", "chart", "modules/build
                   maxCount = Math.max(maxCount, r.count);
                   maxTime = Math.max(maxTime, r.totalTime);
                   maxAvgTime = Math.max(maxAvgTime, r.avgTime);
+                  
+                  r.numErrors = 0;
+                  for (var j = 0; j < r.errors.length; j++) {
+                     var error = r.errors[j];
+                     if (error.id != 0) {
+                        r.numErrors += error.count;
+                     }
+                  }
+                  
                }
 
                for (var i = 0; i < result.requests.length; i++) {
@@ -265,6 +274,7 @@ define(["knockout", "jquery", "bootbox", "alert", "app", "chart", "modules/build
                   r.countPercent = r.count / maxCount;
                   r.totalTimePercent = r.totalTime / maxTime;
                   r.avgTimePercent = r.avgTime / maxAvgTime;
+                  r.errorRate = r.numErrors / r.count;
                   r.statClicked = statClicked;
                }
                self.requestStatsTimeRange(formatElapsedTime(result.curTime - result.minTime))
