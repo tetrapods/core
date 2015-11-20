@@ -593,7 +593,7 @@ public class Util {
    /**
     * Helpful method to get an existing value from a map or lazy-init when value is missing.
     */
-   public static <K, V> V getOrMake(Map<K, V> map, K key, V defaultVal) {
+   public static <K, V> V getOrDefault(Map<K, V> map, K key, V defaultVal) {
       V val = map.get(key);
       if (val == null) {
          val = defaultVal;
