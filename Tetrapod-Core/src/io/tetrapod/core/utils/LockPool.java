@@ -7,35 +7,35 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 public class LockPool {
 
-   private final ClosableLock[] locks;
+   private final ReentrantLock[] locks;
 
    public LockPool() {
       this(256);
    }
 
    public LockPool(int size) {
-      locks = new ClosableLock[size];
+      locks = new ReentrantLock[size];
       for (int i = 0; i < size; i++)
-         locks[i] = new ClosableLock(new ReentrantLock());
+         locks[i] = new ReentrantLock();
    }
 
-   public synchronized ClosableLock getLock(int i) {
+   public synchronized ReentrantLock getLock(int i) {
       i = Math.abs(i % locks.length);
       return locks[i];
    }
 
-   public synchronized ClosableLock getLock(String str) {
+   public synchronized ReentrantLock getLock(String str) {
       return getLock(str.hashCode());
    }
 
    public ClosableLock acquire(int i) {
-      ClosableLock lock = getLock(i);
+      ClosableLock lock = new ClosableLock(getLock(i));
       lock.close();
       return lock;
    }
 
    public ClosableLock acquire(String str) {
-      ClosableLock lock = getLock(str);
+      ClosableLock lock = new ClosableLock(getLock(str));
       lock.close();
       return lock;
    }
