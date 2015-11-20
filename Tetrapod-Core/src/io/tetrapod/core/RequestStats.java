@@ -66,17 +66,17 @@ public class RequestStats {
             minTimestamp = Math.min(minTimestamp, sample.timestamp);
 
             // accumulate invocations count
-            Integer count = Util.getOrMake(counts, sample.key, 0);
+            Integer count = Util.getOrDefault(counts, sample.key, 0);
             counts.put(sample.key, count + 1);
 
             if (sample.result != 0) {
                // accumulate errors count
-               Integer errCount = Util.getOrMake(errorCounts, sample.key, 0);
+               Integer errCount = Util.getOrDefault(errorCounts, sample.key, 0);
                errorCounts.put(sample.key, errCount + 1);
             }
 
             // accumulate microsecond totals
-            Long time = Util.getOrMake(execution, sample.key, 0L);
+            Long time = Util.getOrDefault(execution, sample.key, 0L);
             execution.put(sample.key, time + sample.execution / 1000);
 
             // most common request entities
