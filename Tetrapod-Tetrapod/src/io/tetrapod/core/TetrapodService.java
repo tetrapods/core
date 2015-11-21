@@ -661,23 +661,17 @@ public class TetrapodService extends DefaultService
          }
       }
 
+      // for all of our clients:
       for (final EntityInfo e : registry.getChildren()) {
          if (!e.isService()) {
             healthCheckClient(e);
          }
       }
 
-      if (cluster.isLeader()) {
-         for (final EntityInfo e : cluster.getEntities()) {
+      // for all services in the registry
+      for (final EntityInfo e : cluster.getEntities()) {
+         if (e.isService()) {
             healthCheckService(e);
-            if (serviceConnector != null && e.isGone() && e.getSession() == null) {
-               DirectServiceInfo info = serviceConnector.getDirectServiceInfo(e.entityId);
-               if (info.getSession() != null) {
-                  e.setSession(info.getSession());
-               } else {
-                  info.considerConnecting();
-               }
-            }
          }
       }
    }
@@ -703,30 +697,46 @@ public class TetrapodService extends DefaultService
    private void healthCheckService(final EntityInfo e) {
       final long now = System.currentTimeMillis();
       if (e.isGone()) {
-         final Session ses = e.getSession();
-         if (ses != null && ses.isConnected()) {
-            registry.clearGone(e);
-         } else if (now - e.getGoneSince() > Util.ONE_MINUTE) {
-            logger.info("Reaping: {}", e);
-            registry.unregister(e);
+         // only the leader can change the registry status
+         if (cluster.isLeader()) {
+            final Session ses = e.getSession();
+            if (ses != null && ses.isConnected()) {
+               registry.clearGone(e);
+            } else if (now - e.getGoneSince() > Util.ONE_MINUTE) {
+               logger.info("Reaping: {}", e);
+               registry.unregister(e);
+            }
          }
       } else {
 
          // push through a dummy request to help keep dispatch pool metrics fresh
-         if (e.isService()) {
-            final Session ses = e.getSession();
-            if (ses != null && now - ses.getLastHeardFrom() > 1153) {
-               final long t0 = System.currentTimeMillis();
-               sendRequest(new DummyRequest(), e.entityId).handle((res) -> {
-                  final long tf = System.currentTimeMillis() - t0;
-                  if (tf > 1000) {
-                     logger.warn("Round trip to dispatch {} took {} ms", e, tf);
-                  }
-               });
-            }
+
+         final Session ses = e.getSession();
+         if (ses != null && now - ses.getLastHeardFrom() > 1153) {
+            final long t0 = System.currentTimeMillis();
+            sendRequest(new DummyRequest(), e.entityId).handle((res) -> {
+               final long tf = System.currentTimeMillis() - t0;
+               if (tf > 1000) {
+                  logger.warn("Round trip to dispatch {} took {} ms", e, tf);
+               }
+            });
+         }
+
+         // only the leader can change the registry status
+         if (cluster.isLeader()) {
             if (ses == null && !e.isPendingRegistration()) {
                registry.setGone(e);
             }
+         }
+      }
+
+      // if we don't have a connection to the service, try to spawn one
+      if (serviceConnector != null && e.getSession() == null) {
+         DirectServiceInfo info = serviceConnector.getDirectServiceInfo(e.entityId);
+         if (info.getSession() != null) {
+            e.setSession(info.getSession());
+         } else {
+            info.considerConnecting();
          }
       }
    }
