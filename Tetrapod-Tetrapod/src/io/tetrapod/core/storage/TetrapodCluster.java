@@ -1035,4 +1035,5 @@ public class TetrapodCluster extends Storage
       logger.info("=================================================================================\n");
    }
 
+   public boolean isLeader() {
 }

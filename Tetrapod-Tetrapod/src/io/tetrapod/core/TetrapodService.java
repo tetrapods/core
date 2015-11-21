@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.socket.SocketChannel;
+import io.tetrapod.core.ServiceConnector.DirectServiceInfo;
 import io.tetrapod.core.Session.RelayHandler;
 import io.tetrapod.core.pubsub.Topic;
 import io.tetrapod.core.registry.*;
@@ -146,9 +147,9 @@ public class TetrapodService extends DefaultService
    @Override
    public ServiceCommand[] getServiceCommands() {
       return new ServiceCommand[] {
-         new ServiceCommand("Log Registry Stats", null, LogRegistryStatsRequest.CONTRACT_ID, LogRegistryStatsRequest.STRUCT_ID, false),
-         new ServiceCommand("Close Client Connection", null, CloseClientConnectionRequest.CONTRACT_ID, CloseClientConnectionRequest.STRUCT_ID, true),
-      };
+            new ServiceCommand("Log Registry Stats", null, LogRegistryStatsRequest.CONTRACT_ID, LogRegistryStatsRequest.STRUCT_ID, false),
+            new ServiceCommand("Close Client Connection", null, CloseClientConnectionRequest.CONTRACT_ID,
+                     CloseClientConnectionRequest.STRUCT_ID, true), };
    }
 
    @Override
@@ -328,7 +329,6 @@ public class TetrapodService extends DefaultService
          } catch (Exception e) {
             fail(e);
          }
-         // scheduleHealthCheck();
       }
    }
 
@@ -660,12 +660,29 @@ public class TetrapodService extends DefaultService
             }
          }
       }
+
       for (final EntityInfo e : registry.getChildren()) {
-         healthCheck(e);
+         if (!e.isService()) {
+            healthCheckClient(e);
+         }
+      }
+
+      if (cluster.isLeader()) {
+         for (final EntityInfo e : cluster.getEntities()) {
+            healthCheckService(e);
+            if (serviceConnector != null && e.isGone() && e.getSession() == null) {
+               DirectServiceInfo info = serviceConnector.getDirectServiceInfo(e.entityId);
+               if (info.getSession() != null) {
+                  e.setSession(info.getSession());
+               } else {
+                  info.considerConnecting();
+               }
+            }
+         }
       }
    }
 
-   private void healthCheck(final EntityInfo e) {
+   private void healthCheckClient(final EntityInfo e) {
       final long now = System.currentTimeMillis();
       if (e.isGone()) {
          if (now - e.getGoneSince() > Util.ONE_MINUTE) {
@@ -680,6 +697,20 @@ public class TetrapodService extends DefaultService
                registry.setGone(e);
             }
          }
+      }
+   }
+
+   private void healthCheckService(final EntityInfo e) {
+      final long now = System.currentTimeMillis();
+      if (e.isGone()) {
+         final Session ses = e.getSession();
+         if (ses != null && ses.isConnected()) {
+            registry.clearGone(e);
+         } else if (now - e.getGoneSince() > Util.ONE_MINUTE) {
+            logger.info("Reaping: {}", e);
+            registry.unregister(e);
+         }
+      } else {
 
          // push through a dummy request to help keep dispatch pool metrics fresh
          if (e.isService()) {
@@ -1219,7 +1250,7 @@ public class TetrapodService extends DefaultService
          return new TetrapodClientSessionsResponse(Util.toIntArray(clientSessionsCounter));
       }
    }
-   
+
    @Override
    public Response requestCloseClientConnection(CloseClientConnectionRequest r, RequestContext ctx) {
       int accountId = Integer.parseInt(r.data);
