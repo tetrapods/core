@@ -1036,4 +1036,9 @@ public class TetrapodCluster extends Storage
    }
 
    public boolean isLeader() {
+      synchronized (raft) {
+         return raft.getRole() == Role.Leader;
+      }
+   }
+
 }
