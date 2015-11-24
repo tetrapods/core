@@ -30,13 +30,13 @@ public class LockPool {
 
    public ClosableLock acquire(int i) {
       ClosableLock lock = new ClosableLock(getLock(i));
-      lock.close();
+      lock.lock();
       return lock;
    }
 
    public ClosableLock acquire(String str) {
       ClosableLock lock = new ClosableLock(getLock(str));
-      lock.close();
+      lock.lock();
       return lock;
    }
 
