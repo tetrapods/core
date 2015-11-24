@@ -697,20 +697,24 @@ public class TetrapodService extends DefaultService
    private void healthCheckService(final EntityInfo e) {
       final long now = System.currentTimeMillis();
       final Session ses = e.getSession();
+      
+      if (cluster.isLeader()) {
+         logger.info("HEALTH CHECK {} gone={} ses={} [{}]", e, e.isGone(), ses, ses != null ? ses.isConnected() : false);
+      }
+      
       if (e.isGone()) {
          // only the leader can change the registry status
          if (cluster.isLeader()) {
-            logger.info("HEALTH CHECK {} {} {}", e, ses, ses != null ? ses.isConnected() : false);
-
             if (ses != null && ses.isConnected()) {
                registry.clearGone(e);
             } else if (now - e.getGoneSince() > Util.ONE_MINUTE) {
                logger.info("Reaping: {}", e);
-               registry.unregister(e);
+               if (!e.isTetrapod()) {
+                  registry.unregister(e);
+               }
             }
          }
       } else {
-
          // push through a dummy request to help keep dispatch pool metrics fresh
 
          if (ses != null && now - ses.getLastHeardFrom() > 1153) {
@@ -734,7 +738,7 @@ public class TetrapodService extends DefaultService
       // if we don't have a connection to the service, try to spawn one
       if (serviceConnector != null && (ses == null || !ses.isConnected())) {
          DirectServiceInfo info = serviceConnector.getDirectServiceInfo(e.entityId);
-         if (info.getSession() != null) {
+         if (info.getSession() != null && info.getSession().isConnected()) {
             e.setSession(info.getSession());
          } else {
             info.considerConnecting();

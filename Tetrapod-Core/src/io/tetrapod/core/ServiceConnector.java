@@ -22,14 +22,10 @@ import io.tetrapod.protocol.core.*;
  * Allows a service to spawn direct connections with one another for faster RPC
  */
 public class ServiceConnector implements DirectConnectionRequest.Handler, ValidateConnectionRequest.Handler {
-   /**
-    * The number of requests sent to a specific service that triggers us to start a direct session
-    */
-   private static final int                REQUEST_THRESHOLD = 0;
 
-   private static final Logger             logger            = LoggerFactory.getLogger(ServiceConnector.class);
+   private static final Logger             logger   = LoggerFactory.getLogger(ServiceConnector.class);
 
-   private Map<Integer, DirectServiceInfo> services          = new ConcurrentHashMap<>();
+   private Map<Integer, DirectServiceInfo> services = new ConcurrentHashMap<>();
 
    private final DefaultService            service;
    private final SSLContext                sslContext;
@@ -86,20 +82,18 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
     * This is a wrapper class for managing a single direct connection
     */
    public class DirectServiceInfo implements Session.Listener {
-      public final int      entityId;
-      public final String   token = String.format("%016x%016x", Util.random.nextLong(), Util.random.nextLong());
-      public int            requests;
-      public int            failures;
-      public boolean        pending;
-      public boolean        valid;
-      public String         theirToken;
-      public Session        ses;
-      public long           restUntil;
-      private final boolean isTetrapod;
+      public final int    entityId;
+      public final String token = String.format("%016x%016x", Util.random.nextLong(), Util.random.nextLong());
+      public int          requests;
+      public int          failures;
+      public boolean      pending;
+      public boolean      valid;
+      public String       theirToken;
+      public Session      ses;
+      public long         restUntil;
 
       public DirectServiceInfo(int entityId) {
          this.entityId = entityId;
-         this.isTetrapod = (entityId & TetrapodContract.PARENT_ID_MASK) == entityId;
       }
 
       public synchronized void close() {
