@@ -71,7 +71,7 @@
             <tr data-bind='attr: {"class": row_style}'>
                <td width="48" class="centered">
 
-                  <!-- ko if: requestStats() != null -->
+                  <!-- ko if: requestStats() -->
                   <div class="modal fade" data-bind="attr: {id: 'request-stats-' + entityId}">
                      <div class="modal-dialog request-stats-dialog">
                         <div class="modal-content">

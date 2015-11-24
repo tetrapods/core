@@ -496,6 +496,7 @@ public class TetrapodCluster extends Storage
       if (raft.isValidPeer(peerId)) {
          ctx.session.setTheirEntityId(req.entityId);
          entity.setSession(ctx.session);
+         entity.build = req.build;
          // subscribe them to our cluster and registry views
          logger.info("**************************** SYNC TO {} {}", ctx.session, req.entityId);
          service.subscribeToCluster(ctx.session, req.entityId);
