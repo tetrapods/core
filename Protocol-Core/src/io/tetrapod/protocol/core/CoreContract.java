@@ -193,6 +193,11 @@ public class CoreContract extends Contract {
    public static final int ERROR_RIGHTS_EXPIRED = 10; 
    
    /**
+    * for any sort of generic security violation
+    */
+   public static final int ERROR_SECURITY = 16; 
+   
+   /**
     * Unable to deserialize the request
     */
    public static final int ERROR_SERIALIZATION = 4; 
