@@ -156,6 +156,13 @@ public class ServiceStats {
       }
       synchronized (domains) {
          res.domains = domains.keySet().toArray(new String[domains.size()]);
+         Arrays.sort(res.domains, (a, b) -> {
+            if (a.equals("Requests"))
+               return -1;
+            if (b.equals("Requests"))
+               return 1;
+            return a.compareTo(b);
+         });
       }
       return res;
    }
