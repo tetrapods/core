@@ -64,7 +64,7 @@ public class SessionRequestContext extends RequestContext {
          if (d != null && d.timeLeft >= 0) {
             senderSecurity = Security.PROTECTED;
          } else {
-            errorCode.set((d != null && d.timeLeft < 0) ? ERROR_RIGHTS_EXPIRED : ERROR_UNKNOWN);
+            errorCode.set((d != null && d.timeLeft < 0) ? ERROR_RIGHTS_EXPIRED : ERROR_SECURITY);
          }
       }
       return senderSecurity;

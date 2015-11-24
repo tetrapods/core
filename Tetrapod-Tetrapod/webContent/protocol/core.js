@@ -74,6 +74,7 @@ function TP_Core(server) {
    server.registerErrorConst("Core", "null", "NOT_CONFIGURED", 2718243);
    server.registerErrorConst("Core", "null", "PROTOCOL_MISMATCH", 5);
    server.registerErrorConst("Core", "null", "RIGHTS_EXPIRED", 10);
+   server.registerErrorConst("Core", "null", "SECURITY", 16);
    server.registerErrorConst("Core", "null", "SERIALIZATION", 4);
    server.registerErrorConst("Core", "null", "SERVICE_OVERLOADED", 11);
    server.registerErrorConst("Core", "null", "SERVICE_UNAVAILABLE", 2);
