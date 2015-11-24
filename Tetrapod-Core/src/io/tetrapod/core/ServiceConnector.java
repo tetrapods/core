@@ -131,7 +131,7 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
             valid = false;
             service.clusterClient.getSession().sendRequest(new DirectConnectionRequest(token), entityId, (byte) 30).handle(res -> {
                if (res.isError()) {
-                  if (res.errorCode() != CoreContract.ERROR_NOT_CONFIGURED) {
+                  if (res.errorCode() != CoreContract.ERROR_NOT_CONFIGURED && res.errorCode() != CoreContract.ERROR_SERVICE_UNAVAILABLE) {
                      logger.error("DirectConnectionRequest to {} =  {}", entityId, res);
                   }
                   failure();
