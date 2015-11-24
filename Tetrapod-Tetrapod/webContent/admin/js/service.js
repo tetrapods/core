@@ -208,7 +208,7 @@ define(["knockout", "jquery", "bootbox", "alert", "app", "chart", "modules/build
          });
       }
 
-      self.requestStats(null);
+      self.requestStats([]);
       self.rpcStat = ko.observable();
       self.reqSort = ko.observable(1);
       self.requestStatsTimeRange = ko.observable(0);
@@ -231,7 +231,7 @@ define(["knockout", "jquery", "bootbox", "alert", "app", "chart", "modules/build
 
       function showRequestStats() {
          self.requestStatsDomain('Requests');
-         self.requestStats(null);
+         self.requestStats([]);
          fetchRequestStats();
       }
 
@@ -285,7 +285,7 @@ define(["knockout", "jquery", "bootbox", "alert", "app", "chart", "modules/build
                   self.reqChart.render();
                });
             } else {
-               self.requestStats(null);
+               self.requestStats([]);
             }
          });
       }
