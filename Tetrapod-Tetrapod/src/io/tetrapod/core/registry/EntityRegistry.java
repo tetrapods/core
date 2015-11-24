@@ -143,7 +143,7 @@ public class EntityRegistry implements TetrapodContract.Registry.API {
       for (RegistryTopic topic : e.getTopics()) {
          unpublish(e, topic.topicId);
       }
-      // Unsubscribe from all subscriptions
+      // Unsubscribe from all subscriptions we're managing
       for (RegistryTopic topic : e.getSubscriptions()) {
          EntityInfo owner = getEntity(topic.ownerId);
          // assert (owner != null); 
@@ -158,6 +158,7 @@ public class EntityRegistry implements TetrapodContract.Registry.API {
             logger.warn("clearAllTopicsAndSubscriptions: Couldn't find {} owner {}", topic, topic.ownerId);
          }
       }
+      cluster.getPublisher().unsubscribeFromAllTopics(e.entityId);
    }
 
    public void unregister(final EntityInfo e) {
@@ -304,8 +305,8 @@ public class EntityRegistry implements TetrapodContract.Registry.API {
       logger.info("========================== TETRAPOD CLUSTER REGISTRY ============================");
       for (EntityInfo e : list) {
          if (includeClients || !e.isClient())
-            logger.info(String.format(" 0x%08X 0x%08X %-15s status=%08X topics=%d subscriptions=%d", e.parentId, e.entityId, e.name,
-                     e.status, e.getNumTopics(), e.getNumSubscriptions()));
+            logger.info(String.format(" 0x%08X 0x%08X %-15s status=%08X topics=%d subscriptions=%d [%s]", e.parentId, e.entityId, e.name,
+                     e.status, e.getNumTopics(), e.getNumSubscriptions(), e.hasConnectedSession() ? "CONNECTED" : "*"));
       }
       logger.info("=================================================================================\n");
    }
@@ -379,6 +380,7 @@ public class EntityRegistry implements TetrapodContract.Registry.API {
    public void onModEntityCommand(final EntityInfo entity) {
       if (entity != null && entity.isService()) {
          entity.queue(() -> {
+            logger.info("onModEntityCommand {} gone={}", entity, entity.isGone());
             broadcaster.broadcastServicesMessage(new ServiceUpdatedMessage(entity.entityId, entity.status));
          });
       }

@@ -188,7 +188,7 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
       }
 
       public synchronized void considerConnecting() {
-         if (entityId != service.parentId && (isTetrapod || requests >= REQUEST_THRESHOLD) && !pending && ses == null) {
+         if (entityId != service.parentId && !pending) {
             service.dispatcher.dispatch(() -> handshake());
          }
       }

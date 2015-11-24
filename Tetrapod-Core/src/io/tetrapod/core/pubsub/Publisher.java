@@ -82,7 +82,7 @@ public class Publisher implements TopicUnsubscribedMessage.Handler, TopicUnpubli
       if (topic == null) {
          logger.warn("unpublish: Could not find topic for {}", topicId);
       }
-      topic.unpublish();
+      topic.unpublishAll();
    }
 
    public void broadcast(Message msg, int topicId) {
@@ -109,7 +109,7 @@ public class Publisher implements TopicUnsubscribedMessage.Handler, TopicUnpubli
 
    @Override
    public void messageTopicUnsubscribed(TopicUnsubscribedMessage m, MessageContext ctx) {
-      //logger.info("@@@@@ {} {}", m.dump(), ctx.header.dump());
+      logger.info("@@@@@ {} {}", m.dump(), ctx.header.dump());
       if (m.publisherId == service.getEntityId()) {
          logger.info("@@@@@ UNSUBSCRIBING DISCONNECTED SUBSCRIBER {}", m.dump());
          unsubscribe(m.topicId, m.entityId);
@@ -131,6 +131,12 @@ public class Publisher implements TopicUnsubscribedMessage.Handler, TopicUnpubli
             }
             topics.put(topic.topicId, topic);
          }
+      }
+   }
+
+   public void unsubscribeFromAllTopics(int entityId) {
+      for (Topic t : topics.values()) {
+         t.unsubscribe(entityId);
       }
    }
 

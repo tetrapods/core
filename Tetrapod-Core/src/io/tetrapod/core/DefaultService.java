@@ -167,6 +167,9 @@ public class DefaultService
       stats.publishTopic();
       logger.info("@@@@@ ServicesSubscribeRequest");
       sendDirectRequest(new ServicesSubscribeRequest()).handle(res -> logger.info("{}", res.dump()));
+      if (!isStartingUp()) {
+         resetServiceConnector(true);
+      }
    }
 
    public boolean dependenciesReady() {
@@ -188,10 +191,7 @@ public class DefaultService
                   AdminAuthToken.setSecret(Util.getProperty(AdminAuthToken.SHARED_SECRET_KEY));
 
                   onReadyToServe();
-                  if (serviceConnector != null) {
-                     serviceConnector.shutdown();
-                  }
-                  serviceConnector = new ServiceConnector(this, sslContext);
+                  resetServiceConnector(true);
                } catch (Throwable t) {
                   fail(t);
                }
@@ -206,6 +206,17 @@ public class DefaultService
                dispatcher.dispatch(1, TimeUnit.SECONDS, () -> checkDependencies());
             }
          }
+      }
+   }
+
+   private void resetServiceConnector(boolean start) {
+      logger.info("resetServiceConnector({})", start);
+      if (serviceConnector != null) {
+         serviceConnector.shutdown();
+         serviceConnector = null;
+      }
+      if (start) {
+         serviceConnector = new ServiceConnector(this, sslContext);
       }
    }
 
@@ -302,6 +313,10 @@ public class DefaultService
       return services;
    }
 
+   public Publisher getPublisher() {
+      return publisher;
+   }
+
    protected String getRelaunchToken() {
       return token;
    }
@@ -319,6 +334,7 @@ public class DefaultService
          public void onSessionStop(Session ses) {
             logger.info("Connection to tetrapod closed");
             onDisconnectedFromCluster();
+            resetServiceConnector(false);
             if (!isShuttingDown()) {
                dispatcher.dispatch(3, TimeUnit.SECONDS, () -> connectToCluster(1));
             }

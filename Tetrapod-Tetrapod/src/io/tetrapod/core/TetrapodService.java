@@ -696,10 +696,12 @@ public class TetrapodService extends DefaultService
 
    private void healthCheckService(final EntityInfo e) {
       final long now = System.currentTimeMillis();
+      final Session ses = e.getSession();
       if (e.isGone()) {
          // only the leader can change the registry status
          if (cluster.isLeader()) {
-            final Session ses = e.getSession();
+            logger.info("HEALTH CHECK {} {} {}", e, ses, ses != null ? ses.isConnected() : false);
+
             if (ses != null && ses.isConnected()) {
                registry.clearGone(e);
             } else if (now - e.getGoneSince() > Util.ONE_MINUTE) {
@@ -711,7 +713,6 @@ public class TetrapodService extends DefaultService
 
          // push through a dummy request to help keep dispatch pool metrics fresh
 
-         final Session ses = e.getSession();
          if (ses != null && now - ses.getLastHeardFrom() > 1153) {
             final long t0 = System.currentTimeMillis();
             sendRequest(new DummyRequest(), e.entityId).handle((res) -> {
@@ -724,14 +725,14 @@ public class TetrapodService extends DefaultService
 
          // only the leader can change the registry status
          if (cluster.isLeader()) {
-            if (ses == null && !e.isPendingRegistration()) {
+            if ((ses == null && !e.isPendingRegistration()) || (ses != null && !ses.isConnected())) {
                registry.setGone(e);
             }
          }
       }
 
       // if we don't have a connection to the service, try to spawn one
-      if (serviceConnector != null && e.getSession() == null) {
+      if (serviceConnector != null && (ses == null || !ses.isConnected())) {
          DirectServiceInfo info = serviceConnector.getDirectServiceInfo(e.entityId);
          if (info.getSession() != null) {
             e.setSession(info.getSession());
@@ -787,7 +788,7 @@ public class TetrapodService extends DefaultService
       if (t != null) {
          info = registry.getEntity(t.entityId);
          if (info != null) {
-            if (info.reclaimToken != t.nonce) {
+            if (info.reclaimToken != t.nonce || info.parentId != getEntityId()) {
                info = null; // return error instead?
             }
          }

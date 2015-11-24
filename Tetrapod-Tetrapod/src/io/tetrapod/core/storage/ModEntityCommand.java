@@ -66,4 +66,8 @@ public class ModEntityCommand implements Command<TetrapodStateMachine> {
       return entityId;
    }
 
+   public int getStatus() {
+      return status;
+   }
+
 }

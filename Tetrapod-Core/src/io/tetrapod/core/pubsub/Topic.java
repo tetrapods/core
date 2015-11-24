@@ -82,9 +82,12 @@ public class Topic {
    }
 
    public synchronized void unsubscribe(int entityId) {
-      final Subscriber tetrapod = subscribers.get(entityId & PARENT_ID_MASK);
-      if (tetrapod != null) {
-         publisher.sendMessage(new TopicUnsubscribedMessage(publisher.getEntityId(), topicId, entityId), tetrapod.entityId);
+      Subscriber sub = subscribers.remove(entityId);
+      if (sub != null) {
+         final Subscriber tetrapod = subscribers.get(entityId & PARENT_ID_MASK);
+         if (tetrapod != null) {
+            publisher.sendMessage(new TopicUnsubscribedMessage(publisher.getEntityId(), topicId, entityId), tetrapod.entityId);
+         }
       }
    }
 
@@ -100,6 +103,11 @@ public class Topic {
    }
 
    public synchronized void unpublish() {
+      publisher.unpublish(topicId);
+   }
+
+   // Called by Publisher.unpublish()
+   protected synchronized void unpublishAll() {
       for (Subscriber tetrapod : tetrapods.values()) {
          publisher.sendMessage(new TopicUnpublishedMessage(publisher.getEntityId(), topicId), tetrapod.entityId);
       }

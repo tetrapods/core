@@ -360,9 +360,9 @@ public class TetrapodStateMachine extends StorageStateMachine<TetrapodStateMachi
       final EntityInfo info = entities.get(entityId);
       if (info != null) {
          // update fields
-         info.status = status;
          info.build = build;
          info.version = version;
+         info.setStatus(status);
 
          // store in state machine as a StorageItem
          putItem(TETRAPOD_ENTITY_PREFIX + entityId, (byte[]) info.toRawForm(TempBufferDataSource.forWriting()));

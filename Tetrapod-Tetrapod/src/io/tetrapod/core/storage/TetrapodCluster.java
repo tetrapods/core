@@ -12,6 +12,7 @@ import com.codahale.metrics.Meter;
 
 import io.netty.channel.socket.SocketChannel;
 import io.tetrapod.core.*;
+import io.tetrapod.core.pubsub.Publisher;
 import io.tetrapod.core.pubsub.Topic;
 import io.tetrapod.core.registry.EntityInfo;
 import io.tetrapod.core.rpc.*;
@@ -88,7 +89,7 @@ public class TetrapodCluster extends Storage
       // add the initial set of entities from the state, then listen for subsequent changes
       synchronized (this.raft) {
          for (EntityInfo info : state.entities.values()) {
-            info.status |= Core.STATUS_GONE;
+            //info.status |= Core.STATUS_GONE;
             service.registry.onAddEntityCommand(info);
          }
          this.state.addListener(this);
@@ -1005,7 +1006,8 @@ public class TetrapodCluster extends Storage
       service.registry.onAddEntityCommand(state.entities.get(command.getEntity().entityId));
    }
 
-   private void onModEntityCommand(ModEntityCommand command) {
+   private void onModEntityCommand(ModEntityCommand command) { 
+      logger.info("onModEntityCommand {} gone={}", command.getEntityId(), command.getStatus());
       service.registry.onModEntityCommand(state.entities.get(command.getEntityId()));
    }
 
@@ -1027,8 +1029,8 @@ public class TetrapodCluster extends Storage
       Collections.sort(list);
       logger.info("=========================@ TETRAPOD CLUSTER REGISTRY @===========================");
       for (EntityInfo e : list) {
-         logger.info(String.format(" 0x%08X 0x%08X %-15s status=%08X topics=%d subscriptions=%d", e.parentId, e.entityId, e.name, e.status,
-                  e.getNumTopics(), e.getNumSubscriptions()));
+         logger.info(String.format(" 0x%08X 0x%08X %-15s status=%08X topics=%d subscriptions=%d [%s]", e.parentId, e.entityId, e.name, e.status,
+                  e.getNumTopics(), e.getNumSubscriptions(), e.hasConnectedSession() ? "CONNECTED" : "*"));
       }
       logger.info("=================================================================================\n");
    }
@@ -1037,6 +1039,10 @@ public class TetrapodCluster extends Storage
       synchronized (raft) {
          return raft.getRole() == Role.Leader;
       }
+   }
+
+   public Publisher getPublisher() {
+      return service.getPublisher();
    }
 
 }
