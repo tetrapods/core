@@ -547,8 +547,18 @@ public class DefaultService
          final Context context = dispatcher.requestTimes.time();
          if (!dispatcher.dispatch(() -> {
             final long dispatchTime = System.nanoTime();
-            try {
 
+            Runnable onResult = () -> {
+               final long elapsed = System.nanoTime() - dispatchTime;
+               stats.recordRequest(header.fromId, req, elapsed, async.getErrorCode());
+               context.stop();
+               dispatcher.requestsHandledCounter.mark();
+               if (Util.nanosToMillis(elapsed) > 1000) {
+                  logger.warn("Request took {} {} millis", req, Util.nanosToMillis(elapsed));
+               }
+            };
+
+            try {
                if (Util.nanosToMillis(dispatchTime - start) > 2500) {
                   if ((getStatus() & Core.STATUS_OVERLOADED) == 0) {
                      logger.warn("Service is overloaded. Dispatch time is {}ms", Util.nanosToMillis(dispatchTime - start));
@@ -565,6 +575,7 @@ public class DefaultService
                   public void onResponse(Response res) {
                      try {
                         assert res != Response.PENDING;
+                        onResult.run();
                         async.setResponse(res);
                      } catch (Throwable e) {
                         logger.error(e.getMessage(), e);
@@ -589,12 +600,8 @@ public class DefaultService
                logger.error(e.getMessage(), e);
                async.setResponse(new Error(ERROR_UNKNOWN));
             } finally {
-               final long elapsed = System.nanoTime() - dispatchTime;
-               stats.recordRequest(header.fromId, req, elapsed, async.getErrorCode());
-               context.stop();
-               dispatcher.requestsHandledCounter.mark();
-               if (Util.nanosToMillis(elapsed) > 1000) {
-                  logger.warn("Request took {} {} millis", req, Util.nanosToMillis(elapsed));
+               if (async.getErrorCode() != -1) {
+                  onResult.run();
                }
             }
          } , Session.DEFAULT_OVERLOAD_THRESHOLD)) {
