@@ -1,7 +1,6 @@
 package io.tetrapod.core;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
@@ -138,6 +137,13 @@ public class ServiceStats implements TopicUnsubscribedMessage.Handler {
       }
       synchronized (domains) {
          res.domains = domains.keySet().toArray(new String[domains.size()]);
+         Arrays.sort(res.domains, (a, b) -> {
+            if (a.equals("Requests"))
+               return -1;
+            if (b.equals("Requests"))
+               return 1;
+            return a.compareTo(b);
+         });
       }
       return res;
    }
