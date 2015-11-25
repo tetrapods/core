@@ -39,11 +39,11 @@ public class DefaultService
    protected int                           parentId;
    protected String                        token;
    private int                             status;
-   public final int                        buildNumber;
+   public final String                     buildName;
    protected final LogBuffer               logBuffer;
    protected SSLContext                    sslContext;
 
-   private ServiceConnector                serviceConnector;
+   protected ServiceConnector              serviceConnector;
 
    protected final ServiceStats            stats;
    protected boolean                       startPaused;
@@ -62,7 +62,6 @@ public class DefaultService
       logger.info(m);
       Session.commsLog.info(m);
       Fail.handler = this;
-      Metrics.init(getMetricsPrefix());
       synchronized (this) {
          status |= Core.STATUS_STARTING;
       }
@@ -99,12 +98,11 @@ public class DefaultService
          }
       });
 
-      int num = 1;
+      String build = "Unknown";
       try {
-         String b = Util.readFileAsString(new File("build_number.txt"));
-         num = Integer.parseInt(b.trim());
+         build = Util.readFileAsString(new File("build_name.txt"));
       } catch (IOException e) {}
-      buildNumber = num;
+      buildName = build;
 
       checkHealth();
       if (mainContract != null)
@@ -187,7 +185,7 @@ public class DefaultService
             if (dependenciesReady()) {
                try {
                   if (startPaused) {
-                     updateStatus(getStatus() | Core.STATUS_PAUSED);
+                     setStatus(Core.STATUS_PAUSED);
                   }
 
                   AdminAuthToken.setSecret(Util.getProperty(AdminAuthToken.SHARED_SECRET_KEY));
@@ -203,7 +201,7 @@ public class DefaultService
                   fail(t);
                }
                // ok, we're good to go
-               updateStatus(getStatus() & ~Core.STATUS_STARTING);
+               clearStatus(Core.STATUS_STARTING);
                onStarted();
                if (startPaused) {
                   onPaused();
@@ -221,22 +219,23 @@ public class DefaultService
     */
    private void checkHealth() {
       if (!isShuttingDown()) {
-         if (dispatcher.workQueueSize.getCount() > 0) {
-            logger.warn("DISPATCHER QUEUE SIZE = {} ({} threads busy)", dispatcher.workQueueSize.getCount(), dispatcher.getActiveThreads());
-         }
+         try {
+            if (dispatcher.workQueueSize.getCount() > 0) {
+               logger.warn("DISPATCHER QUEUE SIZE = {} ({} threads busy)", dispatcher.workQueueSize.getCount(),
+                        dispatcher.getActiveThreads());
+            }
 
-         if (logBuffer.hasErrors()) {
-            updateStatus(getStatus() | Core.STATUS_ERRORS);
-         } else {
-            updateStatus(getStatus() & ~Core.STATUS_ERRORS);
+            int status = 0;
+            if (logBuffer.hasErrors()) {
+               status |= Core.STATUS_ERRORS;
+            }
+            if (logBuffer.hasWarnings()) {
+               status |= Core.STATUS_WARNINGS;
+            }
+            setStatus(status, Core.STATUS_ERRORS | Core.STATUS_WARNINGS);
+         } finally {
+            dispatcher.dispatch(1, TimeUnit.SECONDS, () -> checkHealth());
          }
-         if (logBuffer.hasWarnings()) {
-            updateStatus(getStatus() | Core.STATUS_WARNINGS);
-         } else {
-            updateStatus(getStatus() & ~Core.STATUS_WARNINGS);
-         }
-
-         dispatcher.dispatch(1, TimeUnit.SECONDS, () -> checkHealth());
       }
    }
 
@@ -261,7 +260,7 @@ public class DefaultService
    public void onStarted() {}
 
    public void shutdown(boolean restarting) {
-      updateStatus(getStatus() | Core.STATUS_STOPPING);
+      setStatus(Core.STATUS_STOPPING);
       try {
          onShutdown(restarting);
       } catch (Exception e) {
@@ -335,7 +334,7 @@ public class DefaultService
    }
 
    private void onConnectedToCluster() {
-      sendDirectRequest(new RegisterRequest(buildNumber, token, getContractId(), getShortName(), getStatus(), Util.getHostName()))
+      sendDirectRequest(new RegisterRequest(token, getContractId(), getShortName(), getStatus(), Util.getHostName(), buildName))
                .handle(res -> {
                   if (res.isError()) {
                      Fail.fail("Unable to register: " + res.errorCode());
@@ -442,9 +441,24 @@ public class DefaultService
       terminated = val;
    }
 
-   protected void updateStatus(int status) {
+   /**
+    * Sets these status bits to true
+    */
+   protected void setStatus(int bits) {
+      setStatus(bits, bits);
+   }
+
+   /**
+    * Clear these status bits
+    */
+   protected void clearStatus(int bits) {
+      setStatus(0, bits);
+   }
+
+   protected void setStatus(int bits, int mask) {
       boolean changed = false;
       synchronized (this) {
+         int status = (this.status & ~mask) | bits;
          changed = this.status != status;
          this.status = status;
       }
@@ -456,13 +470,13 @@ public class DefaultService
    @Override
    public void fail(Throwable error) {
       logger.error(error.getMessage(), error);
-      updateStatus(status | Core.STATUS_FAILED);
+      setStatus(Core.STATUS_FAILED);
    }
 
    @Override
    public void fail(String reason) {
       logger.error("FAIL: {}", reason);
-      updateStatus(status | Core.STATUS_FAILED);
+      setStatus(Core.STATUS_FAILED);
    }
 
    /**
@@ -533,16 +547,26 @@ public class DefaultService
          final Context context = dispatcher.requestTimes.time();
          if (!dispatcher.dispatch(() -> {
             final long dispatchTime = System.nanoTime();
-            try {
 
+            Runnable onResult = () -> {
+               final long elapsed = System.nanoTime() - dispatchTime;
+               stats.recordRequest(header.fromId, req, elapsed, async.getErrorCode());
+               context.stop();
+               dispatcher.requestsHandledCounter.mark();
+               if (Util.nanosToMillis(elapsed) > 1000) {
+                  logger.warn("Request took {} {} millis", req, Util.nanosToMillis(elapsed));
+               }
+            };
+
+            try {
                if (Util.nanosToMillis(dispatchTime - start) > 2500) {
                   if ((getStatus() & Core.STATUS_OVERLOADED) == 0) {
                      logger.warn("Service is overloaded. Dispatch time is {}ms", Util.nanosToMillis(dispatchTime - start));
                   }
                   // If it took a while to get dispatched, so set STATUS_OVERLOADED flag as a back-pressure signal
-                  updateStatus(getStatus() | Core.STATUS_OVERLOADED);
+                  setStatus(Core.STATUS_OVERLOADED);
                } else {
-                  updateStatus(getStatus() & ~Core.STATUS_OVERLOADED);
+                  clearStatus(Core.STATUS_OVERLOADED);
                }
 
                final RequestContext ctx = fromSession != null ? new SessionRequestContext(header, fromSession)
@@ -551,6 +575,7 @@ public class DefaultService
                   public void onResponse(Response res) {
                      try {
                         assert res != Response.PENDING;
+                        onResult.run();
                         async.setResponse(res);
                      } catch (Throwable e) {
                         logger.error(e.getMessage(), e);
@@ -575,23 +600,20 @@ public class DefaultService
                logger.error(e.getMessage(), e);
                async.setResponse(new Error(ERROR_UNKNOWN));
             } finally {
-               final long elapsed = System.nanoTime() - dispatchTime;
-               stats.recordRequest(header.fromId, req, elapsed);
-               context.stop();
-               dispatcher.requestsHandledCounter.mark();
-               if (Util.nanosToMillis(elapsed) > 1000) {
-                  logger.warn("Request took {} {} millis", req, Util.nanosToMillis(elapsed));
+               if (async.getErrorCode() != -1) {
+                  onResult.run();
                }
             }
          } , Session.DEFAULT_OVERLOAD_THRESHOLD)) {
             // too many items queued, full-force back-pressure
             async.setResponse(new Error(ERROR_SERVICE_OVERLOADED));
-            updateStatus(getStatus() | Core.STATUS_OVERLOADED);
+            setStatus(Core.STATUS_OVERLOADED);
          }
       } else {
          logger.warn("{} No handler found for {}", this, header.dump());
          async.setResponse(new Error(ERROR_UNKNOWN_REQUEST));
       }
+
       return async;
    }
 
@@ -725,6 +747,7 @@ public class DefaultService
 
    @Override
    public void messageClusterSynced(ClusterSyncedMessage m, MessageContext ctx) {
+      Metrics.init(getMetricsPrefix());
       checkDependencies();
    }
 
@@ -759,7 +782,7 @@ public class DefaultService
    @Override
    public Response requestPause(PauseRequest r, RequestContext ctx) {
       // TODO: Check admin rights or macaroon
-      updateStatus(getStatus() | Core.STATUS_PAUSED);
+      setStatus(Core.STATUS_PAUSED);
       onPaused();
       return Response.SUCCESS;
    }
@@ -785,7 +808,7 @@ public class DefaultService
    @Override
    public Response requestUnpause(UnpauseRequest r, RequestContext ctx) {
       // TODO: Check admin rights or macaroon
-      updateStatus(getStatus() & ~Core.STATUS_PAUSED);
+      clearStatus(Core.STATUS_PAUSED);
       onUnpaused();
       return Response.SUCCESS;
    }

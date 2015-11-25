@@ -73,6 +73,7 @@ public class CoreContract extends Contract {
          new ServiceDetailsResponse(),
          new ServiceLogsResponse(),
          new ServiceRequestStatsResponse(),
+         new ServiceRequestDetailedStatsResponse(),
          new HostInfoResponse(),
          new HostStatsResponse(),
          new ServiceErrorLogsResponse(),
@@ -96,6 +97,7 @@ public class CoreContract extends Contract {
          new MessageHeader(),
          new ServiceCommand(),
          new ServerAddress(),
+         new StatPair(),
          new RequestStat(),
          new Subscriber(),
          new WebRoute(),
@@ -189,6 +191,11 @@ public class CoreContract extends Contract {
     * rights token has expired, need to login again
     */
    public static final int ERROR_RIGHTS_EXPIRED = 10; 
+   
+   /**
+    * for any sort of generic security violation
+    */
+   public static final int ERROR_SECURITY = 16; 
    
    /**
     * Unable to deserialize the request

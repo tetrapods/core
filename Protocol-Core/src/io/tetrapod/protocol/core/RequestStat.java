@@ -21,11 +21,12 @@ public class RequestStat extends Structure {
       defaults();
    }
 
-   public RequestStat(String name, long count, long time, int[] entities, int[] timeline) {
+   public RequestStat(String name, long count, long time, StatPair[] entities, StatPair[] errors, int[] timeline) {
       this.name = name;
       this.count = count;
       this.time = time;
       this.entities = entities;
+      this.errors = errors;
       this.timeline = timeline;
    }   
    
@@ -47,7 +48,12 @@ public class RequestStat extends Structure {
    /**
     * top callers
     */
-   public int[] entities;
+   public StatPair[] entities;
+   
+   /**
+    * top errors
+    */
+   public StatPair[] errors;
    
    /**
     * histogram of calls
@@ -63,6 +69,7 @@ public class RequestStat extends Structure {
       count = 0;
       time = 0;
       entities = null;
+      errors = null;
       timeline = null;
    }
    
@@ -72,7 +79,8 @@ public class RequestStat extends Structure {
       data.write(2, this.count);
       data.write(3, this.time);
       if (this.entities != null) data.write(4, this.entities);
-      if (this.timeline != null) data.write(5, this.timeline);
+      if (this.errors != null) data.write(5, this.errors);
+      if (this.timeline != null) data.write(6, this.timeline);
       data.writeEndTag();
    }
    
@@ -85,8 +93,9 @@ public class RequestStat extends Structure {
             case 1: this.name = data.read_string(tag); break;
             case 2: this.count = data.read_long(tag); break;
             case 3: this.time = data.read_long(tag); break;
-            case 4: this.entities = data.read_int_array(tag); break;
-            case 5: this.timeline = data.read_int_array(tag); break;
+            case 4: this.entities = data.read_struct_array(tag, new StatPair()); break;
+            case 5: this.errors = data.read_struct_array(tag, new StatPair()); break;
+            case 6: this.timeline = data.read_int_array(tag); break;
             case Codec.END_TAG:
                return;
             default:
@@ -108,12 +117,13 @@ public class RequestStat extends Structure {
       // Note do not use this tags in long term serializations (to disk or databases) as 
       // implementors are free to rename them however they wish.  A null means the field
       // is not to participate in web serialization (remaining at default)
-      String[] result = new String[5+1];
+      String[] result = new String[6+1];
       result[1] = "name";
       result[2] = "count";
       result[3] = "time";
       result[4] = "entities";
-      result[5] = "timeline";
+      result[5] = "errors";
+      result[6] = "timeline";
       return result;
    }
 
@@ -130,8 +140,9 @@ public class RequestStat extends Structure {
       desc.types[1] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
       desc.types[2] = new TypeDescriptor(TypeDescriptor.T_LONG, 0, 0);
       desc.types[3] = new TypeDescriptor(TypeDescriptor.T_LONG, 0, 0);
-      desc.types[4] = new TypeDescriptor(TypeDescriptor.T_INT_LIST, 0, 0);
-      desc.types[5] = new TypeDescriptor(TypeDescriptor.T_INT_LIST, 0, 0);
+      desc.types[4] = new TypeDescriptor(TypeDescriptor.T_STRUCT_LIST, StatPair.CONTRACT_ID, StatPair.STRUCT_ID);
+      desc.types[5] = new TypeDescriptor(TypeDescriptor.T_STRUCT_LIST, StatPair.CONTRACT_ID, StatPair.STRUCT_ID);
+      desc.types[6] = new TypeDescriptor(TypeDescriptor.T_INT_LIST, 0, 0);
       return desc;
    }
 }

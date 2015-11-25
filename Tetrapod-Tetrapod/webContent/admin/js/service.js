@@ -1,7 +1,7 @@
 define(["knockout", "jquery", "bootbox", "alert", "app", "chart", "modules/builder"], function(ko, $, bootbox, Alert, app, Chart, builder) {
    // static variables
 
-   var Core = app.server.consts["Core.Core"];
+   var Core = app.coreConsts;
 
    return Service; // not using new means this returns a constructor function (ie class)
 
@@ -25,22 +25,29 @@ define(["knockout", "jquery", "bootbox", "alert", "app", "chart", "modules/build
       self.isSelected = ko.observable(false);
       self.showRequestStats = showRequestStats;
       self.requestStats = ko.observableArray([]);
+      self.subscribe = subscribe;
 
       self.iconURL = ko.observable("media/gear.gif");
+      subscribe(1);
 
-      app.server.sendTo("ServiceStatsSubscribe", {}, self.entityId, app.server.logResponse)
-
-      app.server.sendTo("ServiceDetails", {}, self.entityId, function(result) {
-         if (!result.isError()) {
-            self.iconURL(result.iconURL);
-            self.metadata = result.metadata;
-            if (result.commands) {
-               for (var i = 0; i < result.commands.length; i++) {
-                  self.commands.push(result.commands[i]);
+      function subscribe(attempt) {
+         app.server.sendTo("ServiceDetails", {}, self.entityId, function(result) {
+            if (!result.isError()) {
+               self.iconURL(result.iconURL);
+               self.metadata = result.metadata;
+               if (result.commands) {
+                  for (var i = 0; i < result.commands.length; i++) {
+                     self.commands.push(result.commands[i]);
+                  }
                }
+               app.server.sendTo("ServiceStatsSubscribe", {}, self.entityId, app.server.logResponse)
+            } else if (result.errorCode == Core.SERVICE_UNAVAILABLE) {
+               setTimeout(function() {
+                  subscribe(attempt + 1);
+               }, 1000 * attempt);
             }
-         }
-      });
+         });
+      }
 
       // we need to run this after KO is done binding, or jquery can't find the element by id
       setTimeout(function() {
@@ -200,10 +207,13 @@ define(["knockout", "jquery", "bootbox", "alert", "app", "chart", "modules/build
          });
       }
 
+      self.requestStats(null);
+      self.rpcStat = ko.observable();
       self.reqSort = ko.observable(1);
       self.requestStatsTimeRange = ko.observable(0);
       self.requestStatsDomains = ko.observableArray([]);
       self.requestStatsDomain = ko.observable(null);
+      self.reqChart = new Chart("service-stat-histogram-" + self.entityId); 
 
       self.reqSort.subscribe(function() {
          fetchRequestStats();
@@ -214,18 +224,22 @@ define(["knockout", "jquery", "bootbox", "alert", "app", "chart", "modules/build
       });
 
       function statClicked(r) {
-         console.log
-         Alert.info(r.name);
-         // TODO: If this is an RPC, call and display stats for just that request
+         self.rpcStat(r);
+         self.reqChart.setPlotData('Selection', r.timeline);
       }
 
       function showRequestStats() {
+         self.requestStatsDomain('Requests');
+         self.requestStats(null);
          fetchRequestStats();
       }
-      
+
+
       function fetchRequestStats() {
          var currentTimeMillis = new Date().getTime();
          var minTime = currentTimeMillis - 1000 * 60 * 15;
+         self.rpcStat(null);
+         self.reqChart.setPlotData('Selection', []);
 
          app.server.sendTo("ServiceRequestStats", {
             limit: 25,
@@ -242,6 +256,15 @@ define(["knockout", "jquery", "bootbox", "alert", "app", "chart", "modules/build
                   maxCount = Math.max(maxCount, r.count);
                   maxTime = Math.max(maxTime, r.totalTime);
                   maxAvgTime = Math.max(maxAvgTime, r.avgTime);
+
+                  r.numErrors = 0;
+                  for (var j = 0; j < r.errors.length; j++) {
+                     var error = r.errors[j];
+                     if (error.id != 0) {
+                        r.numErrors += error.count;
+                     }
+                  }
+
                }
 
                for (var i = 0; i < result.requests.length; i++) {
@@ -249,12 +272,20 @@ define(["knockout", "jquery", "bootbox", "alert", "app", "chart", "modules/build
                   r.countPercent = r.count / maxCount;
                   r.totalTimePercent = r.totalTime / maxTime;
                   r.avgTimePercent = r.avgTime / maxAvgTime;
+                  r.errorRate = r.numErrors / r.count;
                   r.statClicked = statClicked;
                }
-               self.requestStatsTimeRange(formatElapsedTime(new Date().getTime() - result.minTime))
+               self.requestStatsTimeRange(formatElapsedTime(result.curTime - result.minTime))
                self.requestStats(result.requests);
                self.requestStatsDomains(result.domains);
-               $('#request-stats-' + self.entityId).modal('show');
+               self.reqChart.setPlotData('Timeline', result.timeline);
+               var d = $('#request-stats-' + self.entityId);
+               d.modal('show');
+               d.on('shown.bs.modal', function() {
+                  self.reqChart.render();
+               });
+            } else {
+               self.requestStats(null);
             }
          });
       }

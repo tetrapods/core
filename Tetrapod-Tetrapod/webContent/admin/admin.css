@@ -2,14 +2,13 @@ h3 {
 	margin: 5px;
 	padding: 2px;
 	font-size: 18px;
-	
 }
 
 li.disabled {
-   margin-top: -5px;
-   margin-bottom: 10px;
-   font-size: 0.8em;
-   background-color: #d5d5d5;
+	margin-top: -5px;
+	margin-bottom: 10px;
+	font-size: 0.8em;
+	background-color: #d5d5d5;
 }
 
 .request-stats-dialog {
@@ -39,8 +38,13 @@ li.disabled {
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
-	max-width: 400px;
+	max-width: 300px;
 }
+
+.cell-label a {
+   cursor: pointer;	
+}
+
 
 meter {
 	padding-left: 1px;
@@ -428,4 +432,25 @@ meter {
 	font-style: normal;
 	padding-right: 10px;
 	padding-left: 10px;
+}
+
+.service-histogram-wrap {
+	text-align: center;
+	border: 1px solid #eee;  
+	margin: 10px;
+	cursor: pointer;
+}
+
+.service-histogram {
+	height: 100px;
+   width: 700px;
+	padding: 0px;
+}
+
+.stats-column {
+	vertical-align: top;
+}
+
+.rpc-selected-stat {
+	white-space: normal;
 }

@@ -4,10 +4,11 @@ define(["knockout", "jquery", "alert", "toolbox", "protocol/server", "protocol/t
    function App() {
       var self = this;
       var server = new Server(Tetrapod, CoreProt);
-      var Core = server.consts["Core.Core"];
+      var Core = $.extend({}, server.consts["Core"] || {}, server.consts["Core.Core"] || {});
       var token = null;
       var model;
 
+      self.coreConsts = Core;
       self.leaderEntityId;
       self.server = server;
       self.run = run;

@@ -5,7 +5,7 @@ import io.tetrapod.protocol.core.StructDescription;
 
 import java.io.IOException;
 import java.lang.reflect.*;
-import java.util.List;
+import java.util.*;
 
 abstract public class Structure {
 
@@ -101,10 +101,23 @@ abstract public class Structure {
    @SuppressWarnings("rawtypes")
    protected Object dumpValue(Object val, boolean expandSubTypes) {
       if (val != null && val instanceof List) {
-         val = "[len=" + ((List) val).size() + "]";
+         List list = ((List) val);
+         if (list.size() <= 3) {
+            val = list.toString();
+         } else {
+            val = "[len=" + list.size() + "]";
+         }
       }
       if (val != null && val.getClass().isArray()) {
-         val = "[len=" + Array.getLength(val) + "]";
+         int n = Array.getLength(val);
+         switch (n) {
+            case 0: return "[]";
+            case 1: return "[" + Array.get(val, 0).toString() + "]";
+            case 2: return "[" + Array.get(val, 0).toString() + "," + Array.get(val, 1).toString() + "]";
+            case 3: return "[" + Array.get(val, 0).toString() + "," + Array.get(val, 1).toString() + "," + Array.get(val, 2).toString() + "]";
+            default:
+               return "[len=" + n + "]";
+         }
       }
       if (expandSubTypes && val != null && val instanceof Structure) {
          val = ((Structure) val).dump(false, false);

@@ -21,43 +21,43 @@ public class ClusterJoinRequest extends Request {
       defaults();
    }
 
-   public ClusterJoinRequest(int build, int status, String host, int entityId, int servicePort, int clusterPort) {
-      this.build = build;
+   public ClusterJoinRequest(int status, String host, int entityId, int servicePort, int clusterPort, String build) {
       this.status = status;
       this.host = host;
       this.entityId = entityId;
       this.servicePort = servicePort;
       this.clusterPort = clusterPort;
+      this.build = build;
    }   
 
-   public int build;
    public int status;
    public String host;
    public int entityId;
    public int servicePort;
    public int clusterPort;
+   public String build;
 
    public final Structure.Security getSecurity() {
       return Security.INTERNAL;
    }
 
    public final void defaults() {
-      build = 0;
       status = 0;
       host = null;
       entityId = 0;
       servicePort = 0;
       clusterPort = 0;
+      build = null;
    }
    
    @Override
    public final void write(DataSource data) throws IOException {
-      data.write(1, this.build);
       data.write(2, this.status);
       data.write(3, this.host);
       data.write(4, this.entityId);
       data.write(5, this.servicePort);
       data.write(6, this.clusterPort);
+      data.write(7, this.build);
       data.writeEndTag();
    }
    
@@ -67,12 +67,12 @@ public class ClusterJoinRequest extends Request {
       while (true) {
          int tag = data.readTag();
          switch (tag) {
-            case 1: this.build = data.read_int(tag); break;
             case 2: this.status = data.read_int(tag); break;
             case 3: this.host = data.read_string(tag); break;
             case 4: this.entityId = data.read_int(tag); break;
             case 5: this.servicePort = data.read_int(tag); break;
             case 6: this.clusterPort = data.read_int(tag); break;
+            case 7: this.build = data.read_string(tag); break;
             case Codec.END_TAG:
                return;
             default:
@@ -105,13 +105,13 @@ public class ClusterJoinRequest extends Request {
       // Note do not use this tags in long term serializations (to disk or databases) as 
       // implementors are free to rename them however they wish.  A null means the field
       // is not to participate in web serialization (remaining at default)
-      String[] result = new String[6+1];
-      result[1] = "build";
+      String[] result = new String[7+1];
       result[2] = "status";
       result[3] = "host";
       result[4] = "entityId";
       result[5] = "servicePort";
       result[6] = "clusterPort";
+      result[7] = "build";
       return result;
    }
    
@@ -125,12 +125,12 @@ public class ClusterJoinRequest extends Request {
       desc.tagWebNames = tagWebNames();
       desc.types = new TypeDescriptor[desc.tagWebNames.length];
       desc.types[0] = new TypeDescriptor(TypeDescriptor.T_STRUCT, getContractId(), getStructId());
-      desc.types[1] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
       desc.types[2] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
       desc.types[3] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
       desc.types[4] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
       desc.types[5] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
       desc.types[6] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
+      desc.types[7] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
       return desc;
    }
 

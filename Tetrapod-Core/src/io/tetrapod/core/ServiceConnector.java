@@ -226,6 +226,8 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
             Response pendingRes = null;
             try {
                pendingRes = handler.onResponse(res);
+            } catch (ErrorResponseException e1) {
+               pendingRes = Response.error(e1.errorCode);
             } catch (Throwable e) {
                logger.error(e.getMessage(), e);
             } finally {
@@ -283,7 +285,8 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
       final DirectServiceInfo s = getDirectServiceInfo(r.entityId);
       synchronized (s) {
          if (s.token.equals(r.token)) {
-            s.ses = ((SessionRequestContext) ctx).session;
+            s.ses = ((SessionRequestContext) ctx).session;         
+            s.ses.setMyEntityId(service.getEntityId());
             s.ses.setTheirEntityId(r.entityId);
             s.ses.setTheirEntityType(Core.TYPE_SERVICE);
             s.valid = true;
