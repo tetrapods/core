@@ -207,6 +207,7 @@ define(["knockout", "jquery", "bootbox", "alert", "app", "chart", "modules/build
          });
       }
 
+      self.requestStats(null);
       self.rpcStat = ko.observable();
       self.reqSort = ko.observable(1);
       self.requestStatsTimeRange = ko.observable(0);
@@ -223,16 +224,13 @@ define(["knockout", "jquery", "bootbox", "alert", "app", "chart", "modules/build
       });
 
       function statClicked(r) {
-         console.log(r.name);
-         //Alert.info(r.name);
-         // TODO: If this is an RPC, call and display stats for just that request
-
          self.rpcStat(r);
-         
          self.reqChart.setPlotData('Selection', r.timeline);
       }
 
       function showRequestStats() {
+         self.requestStatsDomain('Requests');
+         self.requestStats(null);
          fetchRequestStats();
       }
 
