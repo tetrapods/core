@@ -136,22 +136,24 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
                   }
                   failure();
                } else {
-                  connect((DirectConnectionResponse) res);
+                  service.dispatcher.dispatch(() -> connect((DirectConnectionResponse) res));
                }
             });
          }
       }
 
-      private synchronized void connect(final DirectConnectionResponse r) {
-         Client c = new Client(new DirectSessionFactory(Core.TYPE_SERVICE, this));
+      private void connect(final DirectConnectionResponse r) {
+         final Client c = new Client(new DirectSessionFactory(Core.TYPE_SERVICE, this));
          try {
             if (sslContext != null) {
                c.enableTLS(sslContext);
             }
-            c.connect(r.address.host, r.address.port, service.getDispatcher()).sync(); // FIXME: not good to be calling this while holding synchronized block
-            ses = c.getSession();
-            ses.setMyEntityId(service.getEntityId());
-            validate(r.token);
+            c.connect(r.address.host, r.address.port, service.getDispatcher()).sync();
+            synchronized (this) {
+               ses = c.getSession();
+               ses.setMyEntityId(service.getEntityId());
+               validate(r.token);
+            }
          } catch (Exception e) {
             logger.error(e.getMessage(), e);
             failure();
