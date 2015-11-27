@@ -195,7 +195,7 @@ public class TetrapodContract extends Contract {
    
    public WebRoute[] getWebRoutes() {
       return new WebRoute[] {
-         new WebRoute("/tetrapod/raft", RaftLeaderRequest.STRUCT_ID, TetrapodContract.CONTRACT_ID),
+         
       };
    }
 

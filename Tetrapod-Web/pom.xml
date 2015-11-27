@@ -1,0 +1,46 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+   <modelVersion>4.0.0</modelVersion>
+
+   <artifactId>tetrapod-web</artifactId>
+   <name>Tetrapod-Web</name>
+
+   <parent>
+      <groupId>io.tetrapod.private</groupId>
+      <artifactId>root</artifactId>
+      <version>0.0.1-SNAPSHOT</version>
+      <relativePath>../../build/pom.xml</relativePath>
+   </parent>
+
+   <repositories>
+      <repository>
+         <id>central</id>
+         <url>http://repo1.maven.org/maven2/</url>
+      </repository>
+      <repository>
+         <id>apache.snapshots</id>
+         <url>http://repository.apache.org/snapshots/</url>
+      </repository>
+   </repositories>
+   
+   <dependencies>
+      <dependency>
+         <artifactId>tetrapod-core</artifactId>
+         <groupId>io.tetrapod.platform</groupId>
+         <version>${project.version}</version>
+      </dependency>
+      <dependency>
+         <artifactId>protocol-web</artifactId>
+         <groupId>${project.groupId}</groupId>
+         <version>${project.version}</version>
+      </dependency>
+   </dependencies>
+
+   <build>
+      <plugins>
+         <plugin>
+            <artifactId>maven-assembly-plugin</artifactId>
+         </plugin>
+      </plugins>
+   </build>
+
+</project>

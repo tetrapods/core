@@ -5,6 +5,7 @@ import static io.tetrapod.protocol.core.CoreContract.*;
 import java.io.*;
 import java.lang.management.ManagementFactory;
 import java.net.ConnectException;
+import java.security.SecureRandom;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -48,6 +49,7 @@ public class DefaultService
 
    protected final ServiceStats            stats;
    protected boolean                       startPaused;
+   public final SecureRandom               random          = new SecureRandom();
 
    private final LinkedList<ServerAddress> clusterMembers  = new LinkedList<>();
 

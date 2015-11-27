@@ -1,0 +1,730 @@
+2015-11-27 15:50:05,560 INFO                      main -   DefaultService - *** Start Service ***
+   *** Service name: web
+   *** Options: paused=false port=null host=null token=null 
+   *** VM Args: [-agentlib:jdwp=transport=dt_socket,suspend=y,address=localhost:62841, -ea, -Dio.netty.leakDetectionLevel=advanced, -Dfile.encoding=UTF-8]
+2015-11-27 15:50:05,601 INFO                      main -       Dispatcher - Dispatcher starting with 32 threads
+2015-11-27 15:50:06,219 DEBUG    nioEventLoopGroup-2-1 -          Session - WebHttpSession #1 [0x00000000] Session Start
+2015-11-27 15:50:26,264 DEBUG    nioEventLoopGroup-2-1 -          Session - WebHttpSession #1 [0x00000000] Session Stop
+2015-11-27 15:50:26,264 DEBUG    nioEventLoopGroup-2-1 -       WebService - Session Stopped: WebHttpSession #1 [0x00000000]
+2015-11-27 15:51:47,578 INFO                      main -   DefaultService - *** Start Service ***
+   *** Service name: web
+   *** Options: paused=false port=null host=null token=null 
+   *** VM Args: [-agentlib:jdwp=transport=dt_socket,suspend=y,address=localhost:62860, -ea, -Dio.netty.leakDetectionLevel=advanced, -Dfile.encoding=UTF-8]
+2015-11-27 15:51:47,622 INFO                      main -       Dispatcher - Dispatcher starting with 32 threads
+2015-11-27 15:51:48,141 DEBUG    nioEventLoopGroup-2-1 -          Session - WebHttpSession #1 [0x00000000] Session Start
+2015-11-27 15:52:08,195 DEBUG    nioEventLoopGroup-2-1 -          Session - WebHttpSession #1 [0x00000000] Session Stop
+2015-11-27 15:52:08,195 DEBUG    nioEventLoopGroup-2-1 -       WebService - Session Stopped: WebHttpSession #1 [0x00000000]
+2015-11-27 15:53:19,173 INFO                      main -   DefaultService - *** Start Service ***
+   *** Service name: web
+   *** Options: paused=false port=null host=null token=null 
+   *** VM Args: [-agentlib:jdwp=transport=dt_socket,suspend=y,address=localhost:62872, -ea, -Dio.netty.leakDetectionLevel=advanced, -Dfile.encoding=UTF-8]
+2015-11-27 15:53:19,212 INFO                      main -       Dispatcher - Dispatcher starting with 32 threads
+2015-11-27 15:53:19,371 INFO                      main -       WebService -  ***** WebService ***** 
+2015-11-27 15:53:19,756 DEBUG    nioEventLoopGroup-2-1 -          Session - WebHttpSession #1 [0x00000000] Session Start
+2015-11-27 15:53:35,908 DEBUG    nioEventLoopGroup-2-1 -          Session - WebHttpSession #1 [0x00000000] Session Stop
+2015-11-27 15:53:35,909 DEBUG    nioEventLoopGroup-2-1 -       WebService - Session Stopped: WebHttpSession #1 [0x00000000]
+2015-11-27 15:54:29,965 INFO                      main -   DefaultService - *** Start Service ***
+   *** Service name: web
+   *** Options: paused=false port=null host=null token=null 
+   *** VM Args: [-agentlib:jdwp=transport=dt_socket,suspend=y,address=localhost:62949, -ea, -Dio.netty.leakDetectionLevel=advanced, -Dfile.encoding=UTF-8]
+2015-11-27 15:54:30,007 INFO                      main -       Dispatcher - Dispatcher starting with 32 threads
+2015-11-27 15:54:30,162 INFO                      main -       WebService -  ***** WebService ***** 
+2015-11-27 15:54:30,562 DEBUG    nioEventLoopGroup-2-1 -          Session - WebHttpSession #1 [0x00000000] Session Start
+2015-11-27 15:54:50,645 DEBUG    nioEventLoopGroup-2-1 -          Session - WebHttpSession #1 [0x00000000] Session Stop
+2015-11-27 15:54:50,646 DEBUG    nioEventLoopGroup-2-1 -       WebService - Session Stopped: WebHttpSession #1 [0x00000000]
+2015-11-27 15:59:16,889 INFO                      main -   DefaultService - *** Start Service ***
+   *** Service name: web
+   *** Options: paused=false port=null host=null token=null 
+   *** VM Args: [-agentlib:jdwp=transport=dt_socket,suspend=y,address=localhost:63044, -ea, -Dio.netty.leakDetectionLevel=advanced, -Dfile.encoding=UTF-8]
+2015-11-27 15:59:16,933 INFO                      main -       Dispatcher - Dispatcher starting with 32 threads
+2015-11-27 15:59:17,088 INFO                      main -       WebService -  ***** WebService ***** 
+2015-11-27 15:59:17,558 DEBUG    nioEventLoopGroup-2-1 -          Session - WireSession #1 [0x00000000] Session Start
+2015-11-27 15:59:17,603 DEBUG    nioEventLoopGroup-2-1 -          Session - WireSession #1 [0x00000000] Setting my Entity 1048586
+2015-11-27 15:59:17,612 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterMemberMessage { entityId:1048576, host:Pulsatilla.local, servicePort:9901, clusterPort:9902, uuid:null } 
+2015-11-27 15:59:17,615 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterMemberMessage { entityId:1048576, host:Pulsatilla.local, servicePort:9901, clusterPort:9902, uuid:null } 
+2015-11-27 15:59:17,617 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:shortlink.useDebug, secret:false, val:~ }  } 
+2015-11-27 15:59:17,617 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:tetrapod.tls, secret:false, val:~ }  } 
+2015-11-27 15:59:17,618 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:graphite.port, secret:false, val:~ }  } 
+2015-11-27 15:59:17,618 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:aws.secretKey, secret:true, val:~ }  } 
+2015-11-27 15:59:17,623 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:hazelcast.configurationFile, secret:false, val:~ }  } 
+2015-11-27 15:59:17,625 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:tetrapod.jks.file, secret:false, val:~ }  } 
+2015-11-27 15:59:17,637 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:sql.jdbc, secret:false, val:~ }  } 
+2015-11-27 15:59:17,637 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:graphite.enabled, secret:false, val:~ }  } 
+2015-11-27 15:59:17,639 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:aws.s3bucket, secret:false, val:~ }  } 
+2015-11-27 15:59:17,640 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:raft.tetrapod.key, secret:false, val:~ }  } 
+2015-11-27 15:59:17,642 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:zendesk.client.id, secret:false, val:~ }  } 
+2015-11-27 15:59:17,643 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:graphite.host, secret:false, val:~ }  } 
+2015-11-27 15:59:17,644 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:build.dir, secret:false, val:~ }  } 
+2015-11-27 15:59:17,645 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:props.init, secret:false, val:~ }  } 
+2015-11-27 15:59:17,647 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:tetrapod.shared.secret, secret:true, val:~ }  } 
+2015-11-27 15:59:17,648 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:aws.sns.arn.apns, secret:false, val:~ }  } 
+2015-11-27 15:59:17,649 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:sql.driver, secret:false, val:~ }  } 
+2015-11-27 15:59:17,649 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:encryption.checksum, secret:false, val:~ }  } 
+2015-11-27 15:59:17,650 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:product.name, secret:false, val:~ }  } 
+2015-11-27 15:59:17,650 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:sql.enabled, secret:false, val:~ }  } 
+2015-11-27 15:59:17,651 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:sql.password, secret:true, val:~ }  } 
+2015-11-27 15:59:17,652 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:raft.tetrapod.salt, secret:false, val:~ }  } 
+2015-11-27 15:59:17,652 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:twitter.apiSecret, secret:true, val:~ }  } 
+2015-11-27 15:59:17,653 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:shortlink.useHttp, secret:false, val:~ }  } 
+2015-11-27 15:59:17,653 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:twitter.login.apiKey, secret:false, val:~ }  } 
+2015-11-27 15:59:17,654 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:twitter.accessToken, secret:false, val:~ }  } 
+2015-11-27 15:59:17,654 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:twitter.login.accessTokenSecret, secret:true, val:~ }  } 
+2015-11-27 15:59:17,655 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:twitter.apiKey, secret:false, val:~ }  } 
+2015-11-27 15:59:17,655 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:aws.sns.arn.gcm, secret:false, val:~ }  } 
+2015-11-27 15:59:17,656 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:twitter.login.accessToken, secret:false, val:~ }  } 
+2015-11-27 15:59:17,656 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:AAAAA, secret:true, val:~ }  } 
+2015-11-27 15:59:17,660 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:twitter.login.apiSecret, secret:true, val:~ }  } 
+2015-11-27 15:59:17,660 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:devMode, secret:false, val:~ }  } 
+2015-11-27 15:59:17,661 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:email.send.enabled, secret:false, val:~ }  } 
+2015-11-27 15:59:17,661 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:product.url, secret:false, val:~ }  } 
+2015-11-27 15:59:17,662 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:sql.user, secret:false, val:~ }  } 
+2015-11-27 15:59:17,662 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:zendesk.client.secret, secret:true, val:~ }  } 
+2015-11-27 15:59:17,663 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:twitter.accessTokenSecret, secret:true, val:~ }  } 
+2015-11-27 15:59:17,667 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:aws.accessKey, secret:false, val:~ }  } 
+2015-11-27 15:59:17,669 WARN     Dispatch-Sequential-1 -          Metrics - Graphite reporting is disabled
+2015-11-27 15:59:17,669 INFO     Dispatch-Sequential-1 -   DefaultService - Checking Dependencies...
+2015-11-27 15:59:17,677 INFO     Dispatch-Sequential-1 -       WebService -  ***** READY TO SERVE ***** 
+2015-11-27 15:59:17,680 INFO         Dispatch-Pooled-1 -   DefaultService - WireSession #1 [0x00100000] My entityId is 0x0010000A
+2015-11-27 15:59:17,684 INFO     Dispatch-Sequential-1 -           Server - Starting Server Listening on Port 9904
+2015-11-27 15:59:17,689 INFO         Dispatch-Pooled-1 -   DefaultService - @@@@@ ServicesSubscribeRequest
+2015-11-27 15:59:17,698 INFO         Dispatch-Pooled-1 -   DefaultService - Success {}
+2015-11-27 15:59:17,720 ERROR    Dispatch-Sequential-1 -   DefaultService - Address already in use
+java.net.BindException: Address already in use
+	at sun.nio.ch.Net.bind0(Native Method) ~[na:1.8.0_60]
+	at sun.nio.ch.Net.bind(Net.java:433) ~[na:1.8.0_60]
+	at sun.nio.ch.Net.bind(Net.java:425) ~[na:1.8.0_60]
+	at sun.nio.ch.ServerSocketChannelImpl.bind(ServerSocketChannelImpl.java:223) ~[na:1.8.0_60]
+	at sun.nio.ch.ServerSocketAdaptor.bind(ServerSocketAdaptor.java:74) ~[na:1.8.0_60]
+	at io.netty.channel.socket.nio.NioServerSocketChannel.doBind(NioServerSocketChannel.java:125) ~[netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.channel.AbstractChannel$AbstractUnsafe.bind(AbstractChannel.java:485) ~[netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.channel.DefaultChannelPipeline$HeadContext.bind(DefaultChannelPipeline.java:1089) ~[netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.channel.AbstractChannelHandlerContext.invokeBind(AbstractChannelHandlerContext.java:440) ~[netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.channel.AbstractChannelHandlerContext.bind(AbstractChannelHandlerContext.java:425) ~[netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.channel.DefaultChannelPipeline.bind(DefaultChannelPipeline.java:903) ~[netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.channel.AbstractChannel.bind(AbstractChannel.java:198) ~[netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.bootstrap.AbstractBootstrap$2.run(AbstractBootstrap.java:348) ~[netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.util.concurrent.SingleThreadEventExecutor.runAllTasks(SingleThreadEventExecutor.java:358) ~[netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:357) ~[netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.util.concurrent.SingleThreadEventExecutor$2.run(SingleThreadEventExecutor.java:112) ~[netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.util.concurrent.DefaultThreadFactory$DefaultRunnableDecorator.run(DefaultThreadFactory.java:137) ~[netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at java.lang.Thread.run(Thread.java:745) ~[na:1.8.0_60]
+2015-11-27 15:59:17,722 INFO     Dispatch-Sequential-1 -   DefaultService - resetServiceConnector(true)
+2015-11-27 15:59:17,725 INFO     Dispatch-Sequential-1 -           Server - Starting Server Listening on Port 9800
+2015-11-27 15:59:17,726 INFO     Dispatch-Sequential-1 - ServiceConnector - Address already in use
+2015-11-27 15:59:17,726 INFO     Dispatch-Sequential-1 -           Server - Starting Server Listening on Port 9801
+2015-11-27 15:59:25,065 DEBUG    nioEventLoopGroup-2-2 -           Server - Connection from [id: 0x7883f1fb, /192.168.0.17:63050 => /192.168.0.17:9801]
+2015-11-27 15:59:25,070 DEBUG    nioEventLoopGroup-2-2 -          Session - WireSession #2 [0x00000000] Setting my Entity 1048586
+2015-11-27 15:59:25,108 DEBUG    nioEventLoopGroup-2-2 -          Session - WireSession #2 [0x00000000] Session Start
+2015-11-27 15:59:44,185 INFO                      main -   DefaultService - *** Start Service ***
+   *** Service name: web
+   *** Options: paused=false port=null host=null token=null 
+   *** VM Args: [-agentlib:jdwp=transport=dt_socket,suspend=y,address=localhost:63051, -ea, -Dio.netty.leakDetectionLevel=advanced, -Dfile.encoding=UTF-8]
+2015-11-27 15:59:44,228 INFO                      main -       Dispatcher - Dispatcher starting with 32 threads
+2015-11-27 15:59:44,398 INFO                      main -       WebService -  ***** WebService ***** 
+2015-11-27 15:59:44,819 DEBUG    nioEventLoopGroup-2-1 -          Session - WireSession #1 [0x00000000] Session Start
+2015-11-27 15:59:44,882 DEBUG    nioEventLoopGroup-2-1 -          Session - WireSession #1 [0x00000000] Setting my Entity 1048587
+2015-11-27 15:59:44,886 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterMemberMessage { entityId:1048576, host:Pulsatilla.local, servicePort:9901, clusterPort:9902, uuid:null } 
+2015-11-27 15:59:44,888 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterMemberMessage { entityId:1048576, host:Pulsatilla.local, servicePort:9901, clusterPort:9902, uuid:null } 
+2015-11-27 15:59:44,889 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:shortlink.useDebug, secret:false, val:~ }  } 
+2015-11-27 15:59:44,889 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:tetrapod.tls, secret:false, val:~ }  } 
+2015-11-27 15:59:44,890 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:graphite.port, secret:false, val:~ }  } 
+2015-11-27 15:59:44,896 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:aws.secretKey, secret:true, val:~ }  } 
+2015-11-27 15:59:44,899 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:hazelcast.configurationFile, secret:false, val:~ }  } 
+2015-11-27 15:59:44,899 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:tetrapod.jks.file, secret:false, val:~ }  } 
+2015-11-27 15:59:44,900 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:sql.jdbc, secret:false, val:~ }  } 
+2015-11-27 15:59:44,900 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:graphite.enabled, secret:false, val:~ }  } 
+2015-11-27 15:59:44,900 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:aws.s3bucket, secret:false, val:~ }  } 
+2015-11-27 15:59:44,901 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:raft.tetrapod.key, secret:false, val:~ }  } 
+2015-11-27 15:59:44,901 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:zendesk.client.id, secret:false, val:~ }  } 
+2015-11-27 15:59:44,902 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:graphite.host, secret:false, val:~ }  } 
+2015-11-27 15:59:44,902 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:build.dir, secret:false, val:~ }  } 
+2015-11-27 15:59:44,902 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:props.init, secret:false, val:~ }  } 
+2015-11-27 15:59:44,903 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:tetrapod.shared.secret, secret:true, val:~ }  } 
+2015-11-27 15:59:44,903 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:aws.sns.arn.apns, secret:false, val:~ }  } 
+2015-11-27 15:59:44,903 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:sql.driver, secret:false, val:~ }  } 
+2015-11-27 15:59:44,904 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:encryption.checksum, secret:false, val:~ }  } 
+2015-11-27 15:59:44,904 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:product.name, secret:false, val:~ }  } 
+2015-11-27 15:59:44,905 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:sql.enabled, secret:false, val:~ }  } 
+2015-11-27 15:59:44,910 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:sql.password, secret:true, val:~ }  } 
+2015-11-27 15:59:44,911 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:raft.tetrapod.salt, secret:false, val:~ }  } 
+2015-11-27 15:59:44,911 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:twitter.apiSecret, secret:true, val:~ }  } 
+2015-11-27 15:59:44,912 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:shortlink.useHttp, secret:false, val:~ }  } 
+2015-11-27 15:59:44,912 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:twitter.login.apiKey, secret:false, val:~ }  } 
+2015-11-27 15:59:44,913 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:twitter.accessToken, secret:false, val:~ }  } 
+2015-11-27 15:59:44,913 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:twitter.login.accessTokenSecret, secret:true, val:~ }  } 
+2015-11-27 15:59:44,913 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:twitter.apiKey, secret:false, val:~ }  } 
+2015-11-27 15:59:44,913 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:aws.sns.arn.gcm, secret:false, val:~ }  } 
+2015-11-27 15:59:44,914 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:twitter.login.accessToken, secret:false, val:~ }  } 
+2015-11-27 15:59:44,914 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:AAAAA, secret:true, val:~ }  } 
+2015-11-27 15:59:44,914 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:twitter.login.apiSecret, secret:true, val:~ }  } 
+2015-11-27 15:59:44,915 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:devMode, secret:false, val:~ }  } 
+2015-11-27 15:59:44,915 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:email.send.enabled, secret:false, val:~ }  } 
+2015-11-27 15:59:44,915 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:product.url, secret:false, val:~ }  } 
+2015-11-27 15:59:44,916 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:sql.user, secret:false, val:~ }  } 
+2015-11-27 15:59:44,917 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:zendesk.client.secret, secret:true, val:~ }  } 
+2015-11-27 15:59:44,917 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:twitter.accessTokenSecret, secret:true, val:~ }  } 
+2015-11-27 15:59:44,917 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:aws.accessKey, secret:false, val:~ }  } 
+2015-11-27 15:59:44,918 WARN     Dispatch-Sequential-1 -          Metrics - Graphite reporting is disabled
+2015-11-27 15:59:44,918 INFO     Dispatch-Sequential-1 -   DefaultService - Checking Dependencies...
+2015-11-27 15:59:44,921 INFO         Dispatch-Pooled-1 -   DefaultService - WireSession #1 [0x00100000] My entityId is 0x0010000B
+2015-11-27 15:59:44,924 INFO     Dispatch-Sequential-1 -       WebService -  ***** READY TO SERVE ***** 
+2015-11-27 15:59:44,927 INFO         Dispatch-Pooled-1 -   DefaultService - @@@@@ ServicesSubscribeRequest
+2015-11-27 15:59:44,931 INFO     Dispatch-Sequential-1 -           Server - Starting Server Listening on Port 80
+2015-11-27 15:59:44,934 INFO         Dispatch-Pooled-1 -   DefaultService - Success {}
+2015-11-27 15:59:44,960 ERROR    Dispatch-Sequential-1 -   DefaultService - Permission denied
+java.net.SocketException: Permission denied
+	at sun.nio.ch.Net.bind0(Native Method) ~[na:1.8.0_60]
+	at sun.nio.ch.Net.bind(Net.java:433) ~[na:1.8.0_60]
+	at sun.nio.ch.Net.bind(Net.java:425) ~[na:1.8.0_60]
+	at sun.nio.ch.ServerSocketChannelImpl.bind(ServerSocketChannelImpl.java:223) ~[na:1.8.0_60]
+	at sun.nio.ch.ServerSocketAdaptor.bind(ServerSocketAdaptor.java:74) ~[na:1.8.0_60]
+	at io.netty.channel.socket.nio.NioServerSocketChannel.doBind(NioServerSocketChannel.java:125) ~[netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.channel.AbstractChannel$AbstractUnsafe.bind(AbstractChannel.java:485) ~[netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.channel.DefaultChannelPipeline$HeadContext.bind(DefaultChannelPipeline.java:1089) ~[netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.channel.AbstractChannelHandlerContext.invokeBind(AbstractChannelHandlerContext.java:440) ~[netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.channel.AbstractChannelHandlerContext.bind(AbstractChannelHandlerContext.java:425) ~[netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.channel.DefaultChannelPipeline.bind(DefaultChannelPipeline.java:903) ~[netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.channel.AbstractChannel.bind(AbstractChannel.java:198) ~[netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.bootstrap.AbstractBootstrap$2.run(AbstractBootstrap.java:348) ~[netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.util.concurrent.SingleThreadEventExecutor.runAllTasks(SingleThreadEventExecutor.java:358) ~[netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:357) ~[netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.util.concurrent.SingleThreadEventExecutor$2.run(SingleThreadEventExecutor.java:112) ~[netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.util.concurrent.DefaultThreadFactory$DefaultRunnableDecorator.run(DefaultThreadFactory.java:137) ~[netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at java.lang.Thread.run(Thread.java:745) ~[na:1.8.0_60]
+2015-11-27 15:59:44,961 INFO     Dispatch-Sequential-1 -   DefaultService - resetServiceConnector(true)
+2015-11-27 15:59:44,963 INFO     Dispatch-Sequential-1 -           Server - Starting Server Listening on Port 9800
+2015-11-27 15:59:44,964 INFO     Dispatch-Sequential-1 - ServiceConnector - Address already in use
+2015-11-27 15:59:44,965 INFO     Dispatch-Sequential-1 -           Server - Starting Server Listening on Port 9801
+2015-11-27 15:59:47,107 DEBUG    nioEventLoopGroup-2-2 -           Server - Connection from [id: 0x66373282, /192.168.0.17:63054 => /192.168.0.17:9801]
+2015-11-27 15:59:47,111 DEBUG    nioEventLoopGroup-2-2 -          Session - WireSession #2 [0x00000000] Setting my Entity 1048587
+2015-11-27 15:59:47,147 DEBUG    nioEventLoopGroup-2-2 -          Session - WireSession #2 [0x00000000] Session Start
+2015-11-27 16:00:38,348 INFO                      main -   DefaultService - *** Start Service ***
+   *** Service name: web
+   *** Options: paused=false port=null host=null token=null 
+   *** VM Args: [-agentlib:jdwp=transport=dt_socket,suspend=y,address=localhost:63073, -ea, -Dio.netty.leakDetectionLevel=advanced, -Dfile.encoding=UTF-8]
+2015-11-27 16:00:38,390 INFO                      main -       Dispatcher - Dispatcher starting with 32 threads
+2015-11-27 16:00:38,571 INFO                      main -       WebService -  ***** WebService ***** 
+2015-11-27 16:00:38,865 INFO                      main -   DefaultService - Connection refused: localhost/127.0.0.1:9901
+2015-11-27 16:00:47,443 INFO                      main -   DefaultService - *** Start Service ***
+   *** Service name: web
+   *** Options: paused=false port=null host=null token=null 
+   *** VM Args: [-agentlib:jdwp=transport=dt_socket,suspend=y,address=localhost:63088, -ea, -Dio.netty.leakDetectionLevel=advanced, -Dfile.encoding=UTF-8]
+2015-11-27 16:00:47,486 INFO                      main -       Dispatcher - Dispatcher starting with 32 threads
+2015-11-27 16:00:47,649 INFO                      main -       WebService -  ***** WebService ***** 
+2015-11-27 16:00:47,951 INFO                      main -   DefaultService - Connection refused: localhost/127.0.0.1:9901
+2015-11-27 16:00:53,072 DEBUG    nioEventLoopGroup-2-2 -          Session - WireSession #2 [0x00000000] Session Start
+2015-11-27 16:00:53,192 DEBUG    nioEventLoopGroup-2-2 -          Session - WireSession #2 [0x00000000] Setting my Entity 1048578
+2015-11-27 16:00:53,198 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterMemberMessage { entityId:1048576, host:Pulsatilla.local, servicePort:9901, clusterPort:9902, uuid:null } 
+2015-11-27 16:00:53,201 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterMemberMessage { entityId:1048576, host:Pulsatilla.local, servicePort:9901, clusterPort:9902, uuid:null } 
+2015-11-27 16:00:53,202 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:shortlink.useDebug, secret:false, val:~ }  } 
+2015-11-27 16:00:53,202 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:tetrapod.tls, secret:false, val:~ }  } 
+2015-11-27 16:00:53,203 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:graphite.port, secret:false, val:~ }  } 
+2015-11-27 16:00:53,203 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:aws.secretKey, secret:true, val:~ }  } 
+2015-11-27 16:00:53,204 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:hazelcast.configurationFile, secret:false, val:~ }  } 
+2015-11-27 16:00:53,206 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:tetrapod.jks.file, secret:false, val:~ }  } 
+2015-11-27 16:00:53,207 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:sql.jdbc, secret:false, val:~ }  } 
+2015-11-27 16:00:53,208 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:graphite.enabled, secret:false, val:~ }  } 
+2015-11-27 16:00:53,208 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:aws.s3bucket, secret:false, val:~ }  } 
+2015-11-27 16:00:53,211 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:raft.tetrapod.key, secret:false, val:~ }  } 
+2015-11-27 16:00:53,211 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:zendesk.client.id, secret:false, val:~ }  } 
+2015-11-27 16:00:53,212 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:graphite.host, secret:false, val:~ }  } 
+2015-11-27 16:00:53,212 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:build.dir, secret:false, val:~ }  } 
+2015-11-27 16:00:53,216 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:props.init, secret:false, val:~ }  } 
+2015-11-27 16:00:53,217 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:tetrapod.shared.secret, secret:true, val:~ }  } 
+2015-11-27 16:00:53,218 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:aws.sns.arn.apns, secret:false, val:~ }  } 
+2015-11-27 16:00:53,218 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:sql.driver, secret:false, val:~ }  } 
+2015-11-27 16:00:53,219 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:encryption.checksum, secret:false, val:~ }  } 
+2015-11-27 16:00:53,219 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:product.name, secret:false, val:~ }  } 
+2015-11-27 16:00:53,219 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:sql.enabled, secret:false, val:~ }  } 
+2015-11-27 16:00:53,219 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:sql.password, secret:true, val:~ }  } 
+2015-11-27 16:00:53,220 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:raft.tetrapod.salt, secret:false, val:~ }  } 
+2015-11-27 16:00:53,224 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:twitter.apiSecret, secret:true, val:~ }  } 
+2015-11-27 16:00:53,224 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:shortlink.useHttp, secret:false, val:~ }  } 
+2015-11-27 16:00:53,225 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:twitter.login.apiKey, secret:false, val:~ }  } 
+2015-11-27 16:00:53,225 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:twitter.accessToken, secret:false, val:~ }  } 
+2015-11-27 16:00:53,225 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:twitter.login.accessTokenSecret, secret:true, val:~ }  } 
+2015-11-27 16:00:53,225 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:twitter.apiKey, secret:false, val:~ }  } 
+2015-11-27 16:00:53,226 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:aws.sns.arn.gcm, secret:false, val:~ }  } 
+2015-11-27 16:00:53,226 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:twitter.login.accessToken, secret:false, val:~ }  } 
+2015-11-27 16:00:53,226 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:AAAAA, secret:true, val:~ }  } 
+2015-11-27 16:00:53,226 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:twitter.login.apiSecret, secret:true, val:~ }  } 
+2015-11-27 16:00:53,227 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:devMode, secret:false, val:~ }  } 
+2015-11-27 16:00:53,227 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:email.send.enabled, secret:false, val:~ }  } 
+2015-11-27 16:00:53,227 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:product.url, secret:false, val:~ }  } 
+2015-11-27 16:00:53,230 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:sql.user, secret:false, val:~ }  } 
+2015-11-27 16:00:53,230 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:zendesk.client.secret, secret:true, val:~ }  } 
+2015-11-27 16:00:53,231 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:twitter.accessTokenSecret, secret:true, val:~ }  } 
+2015-11-27 16:00:53,231 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:aws.accessKey, secret:false, val:~ }  } 
+2015-11-27 16:00:53,232 WARN     Dispatch-Sequential-1 -          Metrics - Graphite reporting is disabled
+2015-11-27 16:00:53,232 INFO     Dispatch-Sequential-1 -   DefaultService - Checking Dependencies...
+2015-11-27 16:00:53,235 INFO         Dispatch-Pooled-1 -   DefaultService - WireSession #2 [0x00100000] My entityId is 0x00100002
+2015-11-27 16:00:53,240 INFO     Dispatch-Sequential-1 -       WebService -  ***** READY TO SERVE ***** 
+2015-11-27 16:00:53,243 INFO         Dispatch-Pooled-1 -   DefaultService - @@@@@ ServicesSubscribeRequest
+2015-11-27 16:00:53,249 INFO     Dispatch-Sequential-1 -           Server - Starting Server Listening on Port 8080
+2015-11-27 16:00:53,258 INFO         Dispatch-Pooled-1 -   DefaultService - Success {}
+2015-11-27 16:00:53,282 INFO     Dispatch-Sequential-1 -           Server - Starting Server Listening on Port 443
+2015-11-27 16:00:53,291 ERROR    Dispatch-Sequential-1 -   DefaultService - Permission denied
+java.net.SocketException: Permission denied
+	at sun.nio.ch.Net.bind0(Native Method) ~[na:1.8.0_60]
+	at sun.nio.ch.Net.bind(Net.java:433) ~[na:1.8.0_60]
+	at sun.nio.ch.Net.bind(Net.java:425) ~[na:1.8.0_60]
+	at sun.nio.ch.ServerSocketChannelImpl.bind(ServerSocketChannelImpl.java:223) ~[na:1.8.0_60]
+	at sun.nio.ch.ServerSocketAdaptor.bind(ServerSocketAdaptor.java:74) ~[na:1.8.0_60]
+	at io.netty.channel.socket.nio.NioServerSocketChannel.doBind(NioServerSocketChannel.java:125) ~[netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.channel.AbstractChannel$AbstractUnsafe.bind(AbstractChannel.java:485) ~[netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.channel.DefaultChannelPipeline$HeadContext.bind(DefaultChannelPipeline.java:1089) ~[netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.channel.AbstractChannelHandlerContext.invokeBind(AbstractChannelHandlerContext.java:440) ~[netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.channel.AbstractChannelHandlerContext.bind(AbstractChannelHandlerContext.java:425) ~[netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.channel.DefaultChannelPipeline.bind(DefaultChannelPipeline.java:903) ~[netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.channel.AbstractChannel.bind(AbstractChannel.java:198) ~[netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.bootstrap.AbstractBootstrap$2.run(AbstractBootstrap.java:348) ~[netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.util.concurrent.SingleThreadEventExecutor.runAllTasks(SingleThreadEventExecutor.java:358) ~[netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:357) ~[netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.util.concurrent.SingleThreadEventExecutor$2.run(SingleThreadEventExecutor.java:112) ~[netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.util.concurrent.DefaultThreadFactory$DefaultRunnableDecorator.run(DefaultThreadFactory.java:137) ~[netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at java.lang.Thread.run(Thread.java:745) ~[na:1.8.0_60]
+2015-11-27 16:00:53,293 INFO     Dispatch-Sequential-1 -   DefaultService - resetServiceConnector(true)
+2015-11-27 16:00:53,300 INFO     Dispatch-Sequential-1 -           Server - Starting Server Listening on Port 9800
+2015-11-27 16:00:53,302 INFO     Dispatch-Sequential-1 - ServiceConnector - Address already in use
+2015-11-27 16:00:53,302 INFO     Dispatch-Sequential-1 -           Server - Starting Server Listening on Port 9801
+2015-11-27 16:00:55,075 DEBUG    nioEventLoopGroup-2-3 -           Server - Connection from [id: 0x8995d11b, /192.168.0.17:63097 => /192.168.0.17:9801]
+2015-11-27 16:00:55,080 DEBUG    nioEventLoopGroup-2-3 -          Session - WireSession #3 [0x00000000] Setting my Entity 1048578
+2015-11-27 16:00:55,137 DEBUG    nioEventLoopGroup-2-3 -          Session - WireSession #3 [0x00000000] Session Start
+2015-11-27 16:01:07,468 INFO                      main -   DefaultService - *** Start Service ***
+   *** Service name: web
+   *** Options: paused=false port=null host=null token=null 
+   *** VM Args: [-agentlib:jdwp=transport=dt_socket,suspend=y,address=localhost:63099, -ea, -Dio.netty.leakDetectionLevel=advanced, -Dfile.encoding=UTF-8]
+2015-11-27 16:01:07,508 INFO                      main -       Dispatcher - Dispatcher starting with 32 threads
+2015-11-27 16:01:07,670 INFO                      main -       WebService -  ***** WebService ***** 
+2015-11-27 16:01:08,081 DEBUG    nioEventLoopGroup-2-1 -          Session - WireSession #1 [0x00000000] Session Start
+2015-11-27 16:01:08,109 DEBUG    nioEventLoopGroup-2-1 -          Session - WireSession #1 [0x00000000] Setting my Entity 1048579
+2015-11-27 16:01:08,120 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterMemberMessage { entityId:1048576, host:Pulsatilla.local, servicePort:9901, clusterPort:9902, uuid:null } 
+2015-11-27 16:01:08,124 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterMemberMessage { entityId:1048576, host:Pulsatilla.local, servicePort:9901, clusterPort:9902, uuid:null } 
+2015-11-27 16:01:08,125 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:shortlink.useDebug, secret:false, val:~ }  } 
+2015-11-27 16:01:08,126 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:tetrapod.tls, secret:false, val:~ }  } 
+2015-11-27 16:01:08,126 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:graphite.port, secret:false, val:~ }  } 
+2015-11-27 16:01:08,131 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:aws.secretKey, secret:true, val:~ }  } 
+2015-11-27 16:01:08,135 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:hazelcast.configurationFile, secret:false, val:~ }  } 
+2015-11-27 16:01:08,136 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:tetrapod.jks.file, secret:false, val:~ }  } 
+2015-11-27 16:01:08,136 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:sql.jdbc, secret:false, val:~ }  } 
+2015-11-27 16:01:08,137 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:graphite.enabled, secret:false, val:~ }  } 
+2015-11-27 16:01:08,147 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:aws.s3bucket, secret:false, val:~ }  } 
+2015-11-27 16:01:08,147 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:raft.tetrapod.key, secret:false, val:~ }  } 
+2015-11-27 16:01:08,148 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:zendesk.client.id, secret:false, val:~ }  } 
+2015-11-27 16:01:08,148 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:graphite.host, secret:false, val:~ }  } 
+2015-11-27 16:01:08,154 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:build.dir, secret:false, val:~ }  } 
+2015-11-27 16:01:08,155 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:props.init, secret:false, val:~ }  } 
+2015-11-27 16:01:08,155 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:tetrapod.shared.secret, secret:true, val:~ }  } 
+2015-11-27 16:01:08,155 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:aws.sns.arn.apns, secret:false, val:~ }  } 
+2015-11-27 16:01:08,156 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:sql.driver, secret:false, val:~ }  } 
+2015-11-27 16:01:08,156 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:encryption.checksum, secret:false, val:~ }  } 
+2015-11-27 16:01:08,156 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:product.name, secret:false, val:~ }  } 
+2015-11-27 16:01:08,156 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:sql.enabled, secret:false, val:~ }  } 
+2015-11-27 16:01:08,156 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:sql.password, secret:true, val:~ }  } 
+2015-11-27 16:01:08,157 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:raft.tetrapod.salt, secret:false, val:~ }  } 
+2015-11-27 16:01:08,157 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:twitter.apiSecret, secret:true, val:~ }  } 
+2015-11-27 16:01:08,157 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:shortlink.useHttp, secret:false, val:~ }  } 
+2015-11-27 16:01:08,168 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:twitter.login.apiKey, secret:false, val:~ }  } 
+2015-11-27 16:01:08,168 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:twitter.accessToken, secret:false, val:~ }  } 
+2015-11-27 16:01:08,168 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:twitter.login.accessTokenSecret, secret:true, val:~ }  } 
+2015-11-27 16:01:08,168 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:twitter.apiKey, secret:false, val:~ }  } 
+2015-11-27 16:01:08,169 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:aws.sns.arn.gcm, secret:false, val:~ }  } 
+2015-11-27 16:01:08,169 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:twitter.login.accessToken, secret:false, val:~ }  } 
+2015-11-27 16:01:08,169 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:AAAAA, secret:true, val:~ }  } 
+2015-11-27 16:01:08,169 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:twitter.login.apiSecret, secret:true, val:~ }  } 
+2015-11-27 16:01:08,169 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:devMode, secret:false, val:~ }  } 
+2015-11-27 16:01:08,169 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:email.send.enabled, secret:false, val:~ }  } 
+2015-11-27 16:01:08,170 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:product.url, secret:false, val:~ }  } 
+2015-11-27 16:01:08,170 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:sql.user, secret:false, val:~ }  } 
+2015-11-27 16:01:08,170 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:zendesk.client.secret, secret:true, val:~ }  } 
+2015-11-27 16:01:08,170 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:twitter.accessTokenSecret, secret:true, val:~ }  } 
+2015-11-27 16:01:08,175 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:aws.accessKey, secret:false, val:~ }  } 
+2015-11-27 16:01:08,176 WARN     Dispatch-Sequential-1 -          Metrics - Graphite reporting is disabled
+2015-11-27 16:01:08,176 INFO     Dispatch-Sequential-1 -   DefaultService - Checking Dependencies...
+2015-11-27 16:01:08,181 INFO         Dispatch-Pooled-1 -   DefaultService - WireSession #1 [0x00100000] My entityId is 0x00100003
+2015-11-27 16:01:08,185 INFO     Dispatch-Sequential-1 -       WebService -  ***** READY TO SERVE ***** 
+2015-11-27 16:01:08,190 INFO         Dispatch-Pooled-1 -   DefaultService - @@@@@ ServicesSubscribeRequest
+2015-11-27 16:01:08,196 INFO     Dispatch-Sequential-1 -           Server - Starting Server Listening on Port 8080
+2015-11-27 16:01:08,205 INFO         Dispatch-Pooled-1 -   DefaultService - Success {}
+2015-11-27 16:01:08,234 INFO     Dispatch-Sequential-1 -           Server - Starting Server Listening on Port 8081
+2015-11-27 16:01:08,236 INFO     Dispatch-Sequential-1 -   DefaultService - resetServiceConnector(true)
+2015-11-27 16:01:08,239 INFO     Dispatch-Sequential-1 -           Server - Starting Server Listening on Port 9800
+2015-11-27 16:01:08,241 INFO     Dispatch-Sequential-1 - ServiceConnector - Address already in use
+2015-11-27 16:01:08,241 INFO     Dispatch-Sequential-1 -           Server - Starting Server Listening on Port 9801
+2015-11-27 16:01:10,123 DEBUG    nioEventLoopGroup-2-2 -           Server - Connection from [id: 0x88db493a, /192.168.0.17:63102 => /192.168.0.17:9801]
+2015-11-27 16:01:10,127 DEBUG    nioEventLoopGroup-2-2 -          Session - WireSession #2 [0x00000000] Setting my Entity 1048579
+2015-11-27 16:01:10,168 DEBUG    nioEventLoopGroup-2-2 -          Session - WireSession #2 [0x00000000] Session Start
+2015-11-27 16:01:19,903 DEBUG    nioEventLoopGroup-2-3 -           Server - Connection from [id: 0x3cb3335c, /0:0:0:0:0:0:0:1:63104 => /0:0:0:0:0:0:0:1:8080]
+2015-11-27 16:01:19,903 DEBUG    nioEventLoopGroup-2-4 -           Server - Connection from [id: 0x80ff4734, /0:0:0:0:0:0:0:1:63105 => /0:0:0:0:0:0:0:1:8080]
+2015-11-27 16:01:19,909 INFO     Dispatch-Sequential-2 -        Publisher - @@@@@ UNSUBSCRIBING DISCONNECTED SUBSCRIBER TopicUnsubscribedMessage { publisherId:1048579, topicId:1, entityId:1048577 } 
+2015-11-27 16:01:19,950 DEBUG    nioEventLoopGroup-2-3 -          Session - WebHttpSession #3 [0x00000000] Setting my Entity 1048579
+2015-11-27 16:01:19,950 DEBUG    nioEventLoopGroup-2-4 -          Session - WebHttpSession #4 [0x00000000] Setting my Entity 1048579
+2015-11-27 16:01:19,950 DEBUG    nioEventLoopGroup-2-4 -          Session - WebHttpSession #4 [0x00000000] Session Start
+2015-11-27 16:01:19,950 DEBUG    nioEventLoopGroup-2-3 -          Session - WebHttpSession #3 [0x00000000] Session Start
+2015-11-27 16:01:19,955 DEBUG    nioEventLoopGroup-2-3 -   WebHttpSession - •••• Referer: null 
+2015-11-27 16:01:19,955 DEBUG    nioEventLoopGroup-2-3 -   WebHttpSession - •••• Domain: localhost:8080 
+2015-11-27 16:01:19,957 ERROR    nioEventLoopGroup-2-3 -          Session - WebHttpSession #3 [0x00000000] : NullPointerException : null
+2015-11-27 16:01:19,958 DEBUG    nioEventLoopGroup-2-4 -   WebHttpSession - •••• Referer: null 
+2015-11-27 16:01:19,958 DEBUG    nioEventLoopGroup-2-4 -   WebHttpSession - •••• Domain: localhost:8080 
+2015-11-27 16:01:19,959 ERROR    nioEventLoopGroup-2-4 -          Session - WebHttpSession #4 [0x00000000] : NullPointerException : null
+2015-11-27 16:01:19,961 DEBUG    nioEventLoopGroup-2-5 -           Server - Connection from [id: 0x38cceb8b, /0:0:0:0:0:0:0:1:63106 => /0:0:0:0:0:0:0:1:8080]
+2015-11-27 16:01:19,962 DEBUG    nioEventLoopGroup-2-5 -          Session - WebHttpSession #5 [0x00000000] Setting my Entity 1048579
+2015-11-27 16:01:19,962 DEBUG    nioEventLoopGroup-2-5 -          Session - WebHttpSession #5 [0x00000000] Session Start
+2015-11-27 16:01:19,963 DEBUG    nioEventLoopGroup-2-5 -   WebHttpSession - •••• Referer: null 
+2015-11-27 16:01:19,963 DEBUG    nioEventLoopGroup-2-5 -   WebHttpSession - •••• Domain: localhost:8080 
+2015-11-27 16:01:19,964 ERROR    nioEventLoopGroup-2-5 -          Session - WebHttpSession #5 [0x00000000] : NullPointerException : null
+2015-11-27 16:01:19,964 ERROR    nioEventLoopGroup-2-4 -          Session - null
+java.lang.NullPointerException: null
+	at io.tetrapod.web.WebHttpSession.handleHttpRequest(WebHttpSession.java:183) ~[classes/:na]
+	at io.tetrapod.web.WebHttpSession.channelRead(WebHttpSession.java:85) ~[classes/:na]
+	at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:318) [netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:304) [netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.handler.codec.MessageToMessageDecoder.channelRead(MessageToMessageDecoder.java:103) [netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:318) [netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:304) [netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.handler.codec.ByteToMessageDecoder.fireChannelRead(ByteToMessageDecoder.java:276) [netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.handler.codec.ByteToMessageDecoder.channelRead(ByteToMessageDecoder.java:263) [netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.channel.CombinedChannelDuplexHandler.channelRead(CombinedChannelDuplexHandler.java:147) [netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:318) [netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:304) [netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.channel.DefaultChannelPipeline.fireChannelRead(DefaultChannelPipeline.java:846) [netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.channel.nio.AbstractNioByteChannel$NioByteUnsafe.read(AbstractNioByteChannel.java:131) [netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.channel.nio.NioEventLoop.processSelectedKey(NioEventLoop.java:511) [netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.channel.nio.NioEventLoop.processSelectedKeysOptimized(NioEventLoop.java:468) [netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.channel.nio.NioEventLoop.processSelectedKeys(NioEventLoop.java:382) [netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:354) [netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.util.concurrent.SingleThreadEventExecutor$2.run(SingleThreadEventExecutor.java:112) [netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.util.concurrent.DefaultThreadFactory$DefaultRunnableDecorator.run(DefaultThreadFactory.java:137) [netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at java.lang.Thread.run(Thread.java:745) [na:1.8.0_60]
+2015-11-27 16:01:19,964 ERROR    nioEventLoopGroup-2-5 -          Session - null
+java.lang.NullPointerException: null
+	at io.tetrapod.web.WebHttpSession.handleHttpRequest(WebHttpSession.java:183) ~[classes/:na]
+	at io.tetrapod.web.WebHttpSession.channelRead(WebHttpSession.java:85) ~[classes/:na]
+	at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:318) [netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:304) [netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.handler.codec.MessageToMessageDecoder.channelRead(MessageToMessageDecoder.java:103) [netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:318) [netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:304) [netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.handler.codec.ByteToMessageDecoder.fireChannelRead(ByteToMessageDecoder.java:276) [netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.handler.codec.ByteToMessageDecoder.channelRead(ByteToMessageDecoder.java:263) [netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.channel.CombinedChannelDuplexHandler.channelRead(CombinedChannelDuplexHandler.java:147) [netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:318) [netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:304) [netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.channel.DefaultChannelPipeline.fireChannelRead(DefaultChannelPipeline.java:846) [netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.channel.nio.AbstractNioByteChannel$NioByteUnsafe.read(AbstractNioByteChannel.java:131) [netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.channel.nio.NioEventLoop.processSelectedKey(NioEventLoop.java:511) [netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.channel.nio.NioEventLoop.processSelectedKeysOptimized(NioEventLoop.java:468) [netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.channel.nio.NioEventLoop.processSelectedKeys(NioEventLoop.java:382) [netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:354) [netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.util.concurrent.SingleThreadEventExecutor$2.run(SingleThreadEventExecutor.java:112) [netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.util.concurrent.DefaultThreadFactory$DefaultRunnableDecorator.run(DefaultThreadFactory.java:137) [netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at java.lang.Thread.run(Thread.java:745) [na:1.8.0_60]
+2015-11-27 16:01:19,964 ERROR    nioEventLoopGroup-2-3 -          Session - null
+java.lang.NullPointerException: null
+	at io.tetrapod.web.WebHttpSession.handleHttpRequest(WebHttpSession.java:183) ~[classes/:na]
+	at io.tetrapod.web.WebHttpSession.channelRead(WebHttpSession.java:85) ~[classes/:na]
+	at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:318) [netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:304) [netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.handler.codec.MessageToMessageDecoder.channelRead(MessageToMessageDecoder.java:103) [netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:318) [netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:304) [netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.handler.codec.ByteToMessageDecoder.fireChannelRead(ByteToMessageDecoder.java:276) [netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.handler.codec.ByteToMessageDecoder.channelRead(ByteToMessageDecoder.java:263) [netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.channel.CombinedChannelDuplexHandler.channelRead(CombinedChannelDuplexHandler.java:147) [netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:318) [netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:304) [netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.channel.DefaultChannelPipeline.fireChannelRead(DefaultChannelPipeline.java:846) [netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.channel.nio.AbstractNioByteChannel$NioByteUnsafe.read(AbstractNioByteChannel.java:131) [netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.channel.nio.NioEventLoop.processSelectedKey(NioEventLoop.java:511) [netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.channel.nio.NioEventLoop.processSelectedKeysOptimized(NioEventLoop.java:468) [netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.channel.nio.NioEventLoop.processSelectedKeys(NioEventLoop.java:382) [netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:354) [netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.util.concurrent.SingleThreadEventExecutor$2.run(SingleThreadEventExecutor.java:112) [netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.util.concurrent.DefaultThreadFactory$DefaultRunnableDecorator.run(DefaultThreadFactory.java:137) [netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at java.lang.Thread.run(Thread.java:745) [na:1.8.0_60]
+2015-11-27 16:01:19,965 DEBUG    nioEventLoopGroup-2-4 -          Session - WebHttpSession #4 [0x00000000] Session Stop
+2015-11-27 16:01:19,965 DEBUG    nioEventLoopGroup-2-5 -          Session - WebHttpSession #5 [0x00000000] Session Stop
+2015-11-27 16:01:19,965 DEBUG    nioEventLoopGroup-2-3 -          Session - WebHttpSession #3 [0x00000000] Session Stop
+2015-11-27 16:01:19,966 DEBUG    nioEventLoopGroup-2-4 -       WebService - Session Stopped: WebHttpSession #4 [0x00000000]
+2015-11-27 16:01:19,966 DEBUG    nioEventLoopGroup-2-5 -       WebService - Session Stopped: WebHttpSession #5 [0x00000000]
+2015-11-27 16:01:19,966 DEBUG    nioEventLoopGroup-2-3 -       WebService - Session Stopped: WebHttpSession #3 [0x00000000]
+2015-11-27 16:01:20,014 DEBUG    nioEventLoopGroup-2-6 -           Server - Connection from [id: 0x74b54434, /0:0:0:0:0:0:0:1:63107 => /0:0:0:0:0:0:0:1:8080]
+2015-11-27 16:01:20,015 DEBUG    nioEventLoopGroup-2-6 -          Session - WebHttpSession #6 [0x00000000] Setting my Entity 1048579
+2015-11-27 16:01:20,016 DEBUG    nioEventLoopGroup-2-6 -          Session - WebHttpSession #6 [0x00000000] Session Start
+2015-11-27 16:01:20,017 DEBUG    nioEventLoopGroup-2-6 -   WebHttpSession - •••• Referer: null 
+2015-11-27 16:01:20,017 DEBUG    nioEventLoopGroup-2-6 -   WebHttpSession - •••• Domain: localhost:8080 
+2015-11-27 16:01:20,018 ERROR    nioEventLoopGroup-2-6 -          Session - WebHttpSession #6 [0x00000000] : NullPointerException : null
+2015-11-27 16:01:20,018 ERROR    nioEventLoopGroup-2-6 -          Session - null
+java.lang.NullPointerException: null
+	at io.tetrapod.web.WebHttpSession.handleHttpRequest(WebHttpSession.java:183) ~[classes/:na]
+	at io.tetrapod.web.WebHttpSession.channelRead(WebHttpSession.java:85) ~[classes/:na]
+	at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:318) [netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:304) [netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.handler.codec.MessageToMessageDecoder.channelRead(MessageToMessageDecoder.java:103) [netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:318) [netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:304) [netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.handler.codec.ByteToMessageDecoder.fireChannelRead(ByteToMessageDecoder.java:276) [netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.handler.codec.ByteToMessageDecoder.channelRead(ByteToMessageDecoder.java:263) [netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.channel.CombinedChannelDuplexHandler.channelRead(CombinedChannelDuplexHandler.java:147) [netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:318) [netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:304) [netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.channel.DefaultChannelPipeline.fireChannelRead(DefaultChannelPipeline.java:846) [netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.channel.nio.AbstractNioByteChannel$NioByteUnsafe.read(AbstractNioByteChannel.java:131) [netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.channel.nio.NioEventLoop.processSelectedKey(NioEventLoop.java:511) [netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.channel.nio.NioEventLoop.processSelectedKeysOptimized(NioEventLoop.java:468) [netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.channel.nio.NioEventLoop.processSelectedKeys(NioEventLoop.java:382) [netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:354) [netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.util.concurrent.SingleThreadEventExecutor$2.run(SingleThreadEventExecutor.java:112) [netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at io.netty.util.concurrent.DefaultThreadFactory$DefaultRunnableDecorator.run(DefaultThreadFactory.java:137) [netty-all-4.0.33.Final.jar:4.0.33.Final]
+	at java.lang.Thread.run(Thread.java:745) [na:1.8.0_60]
+2015-11-27 16:01:20,019 DEBUG    nioEventLoopGroup-2-6 -          Session - WebHttpSession #6 [0x00000000] Session Stop
+2015-11-27 16:01:20,019 DEBUG    nioEventLoopGroup-2-6 -       WebService - Session Stopped: WebHttpSession #6 [0x00000000]
+2015-11-27 16:02:20,035 INFO                      main -   DefaultService - *** Start Service ***
+   *** Service name: web
+   *** Options: paused=false port=null host=null token=null 
+   *** VM Args: [-agentlib:jdwp=transport=dt_socket,suspend=y,address=localhost:63118, -ea, -Dio.netty.leakDetectionLevel=advanced, -Dfile.encoding=UTF-8]
+2015-11-27 16:02:20,087 INFO                      main -       Dispatcher - Dispatcher starting with 32 threads
+2015-11-27 16:02:20,254 INFO                      main -       WebService -  ***** WebService ***** 
+2015-11-27 16:02:20,691 DEBUG    nioEventLoopGroup-2-1 -          Session - WireSession #1 [0x00000000] Session Start
+2015-11-27 16:02:20,773 DEBUG    nioEventLoopGroup-2-1 -          Session - WireSession #1 [0x00000000] Setting my Entity 1048580
+2015-11-27 16:02:20,778 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterMemberMessage { entityId:1048576, host:Pulsatilla.local, servicePort:9901, clusterPort:9902, uuid:null } 
+2015-11-27 16:02:20,779 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterMemberMessage { entityId:1048576, host:Pulsatilla.local, servicePort:9901, clusterPort:9902, uuid:null } 
+2015-11-27 16:02:20,785 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:shortlink.useDebug, secret:false, val:~ }  } 
+2015-11-27 16:02:20,786 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:tetrapod.tls, secret:false, val:~ }  } 
+2015-11-27 16:02:20,786 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:graphite.port, secret:false, val:~ }  } 
+2015-11-27 16:02:20,786 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:aws.secretKey, secret:true, val:~ }  } 
+2015-11-27 16:02:20,789 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:hazelcast.configurationFile, secret:false, val:~ }  } 
+2015-11-27 16:02:20,789 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:tetrapod.jks.file, secret:false, val:~ }  } 
+2015-11-27 16:02:20,789 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:sql.jdbc, secret:false, val:~ }  } 
+2015-11-27 16:02:20,790 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:graphite.enabled, secret:false, val:~ }  } 
+2015-11-27 16:02:20,790 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:aws.s3bucket, secret:false, val:~ }  } 
+2015-11-27 16:02:20,790 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:raft.tetrapod.key, secret:false, val:~ }  } 
+2015-11-27 16:02:20,791 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:zendesk.client.id, secret:false, val:~ }  } 
+2015-11-27 16:02:20,791 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:graphite.host, secret:false, val:~ }  } 
+2015-11-27 16:02:20,792 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:build.dir, secret:false, val:~ }  } 
+2015-11-27 16:02:20,792 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:props.init, secret:false, val:~ }  } 
+2015-11-27 16:02:20,792 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:tetrapod.shared.secret, secret:true, val:~ }  } 
+2015-11-27 16:02:20,793 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:aws.sns.arn.apns, secret:false, val:~ }  } 
+2015-11-27 16:02:20,793 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:sql.driver, secret:false, val:~ }  } 
+2015-11-27 16:02:20,794 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:encryption.checksum, secret:false, val:~ }  } 
+2015-11-27 16:02:20,794 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:product.name, secret:false, val:~ }  } 
+2015-11-27 16:02:20,794 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:sql.enabled, secret:false, val:~ }  } 
+2015-11-27 16:02:20,799 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:sql.password, secret:true, val:~ }  } 
+2015-11-27 16:02:20,800 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:raft.tetrapod.salt, secret:false, val:~ }  } 
+2015-11-27 16:02:20,800 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:twitter.apiSecret, secret:true, val:~ }  } 
+2015-11-27 16:02:20,801 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:shortlink.useHttp, secret:false, val:~ }  } 
+2015-11-27 16:02:20,801 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:twitter.login.apiKey, secret:false, val:~ }  } 
+2015-11-27 16:02:20,801 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:twitter.accessToken, secret:false, val:~ }  } 
+2015-11-27 16:02:20,802 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:twitter.login.accessTokenSecret, secret:true, val:~ }  } 
+2015-11-27 16:02:20,803 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:twitter.apiKey, secret:false, val:~ }  } 
+2015-11-27 16:02:20,803 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:aws.sns.arn.gcm, secret:false, val:~ }  } 
+2015-11-27 16:02:20,803 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:twitter.login.accessToken, secret:false, val:~ }  } 
+2015-11-27 16:02:20,804 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:AAAAA, secret:true, val:~ }  } 
+2015-11-27 16:02:20,805 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:twitter.login.apiSecret, secret:true, val:~ }  } 
+2015-11-27 16:02:20,805 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:devMode, secret:false, val:~ }  } 
+2015-11-27 16:02:20,806 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:email.send.enabled, secret:false, val:~ }  } 
+2015-11-27 16:02:20,806 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:product.url, secret:false, val:~ }  } 
+2015-11-27 16:02:20,807 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:sql.user, secret:false, val:~ }  } 
+2015-11-27 16:02:20,807 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:zendesk.client.secret, secret:true, val:~ }  } 
+2015-11-27 16:02:20,808 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:twitter.accessTokenSecret, secret:true, val:~ }  } 
+2015-11-27 16:02:20,808 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:aws.accessKey, secret:false, val:~ }  } 
+2015-11-27 16:02:20,808 WARN     Dispatch-Sequential-1 -          Metrics - Graphite reporting is disabled
+2015-11-27 16:02:20,808 INFO     Dispatch-Sequential-1 -   DefaultService - Checking Dependencies...
+2015-11-27 16:02:20,812 INFO         Dispatch-Pooled-1 -   DefaultService - WireSession #1 [0x00100000] My entityId is 0x00100004
+2015-11-27 16:02:20,814 INFO     Dispatch-Sequential-1 -       WebService -  ***** READY TO SERVE ***** 
+2015-11-27 16:02:20,818 INFO         Dispatch-Pooled-1 -   DefaultService - @@@@@ ServicesSubscribeRequest
+2015-11-27 16:02:20,821 INFO     Dispatch-Sequential-1 -           Server - Starting Server Listening on Port 8080
+2015-11-27 16:02:20,828 INFO         Dispatch-Pooled-1 -   DefaultService - Success {}
+2015-11-27 16:02:20,840 INFO     Dispatch-Sequential-1 -           Server - Starting Server Listening on Port 8081
+2015-11-27 16:02:20,842 INFO     Dispatch-Sequential-1 -   DefaultService - resetServiceConnector(true)
+2015-11-27 16:02:20,843 INFO     Dispatch-Sequential-1 -           Server - Starting Server Listening on Port 9800
+2015-11-27 16:02:20,844 INFO     Dispatch-Sequential-1 - ServiceConnector - Address already in use
+2015-11-27 16:02:20,845 INFO     Dispatch-Sequential-1 -           Server - Starting Server Listening on Port 9801
+2015-11-27 16:02:23,326 DEBUG    nioEventLoopGroup-2-2 -           Server - Connection from [id: 0x2eef3186, /192.168.0.17:63122 => /192.168.0.17:9801]
+2015-11-27 16:02:23,331 DEBUG    nioEventLoopGroup-2-2 -          Session - WireSession #2 [0x00000000] Setting my Entity 1048580
+2015-11-27 16:02:23,371 DEBUG    nioEventLoopGroup-2-2 -          Session - WireSession #2 [0x00000000] Session Start
+2015-11-27 16:02:24,899 DEBUG    nioEventLoopGroup-2-3 -           Server - Connection from [id: 0x6123fd49, /0:0:0:0:0:0:0:1:63125 => /0:0:0:0:0:0:0:1:8080]
+2015-11-27 16:02:24,899 DEBUG    nioEventLoopGroup-2-4 -           Server - Connection from [id: 0x4e07e0aa, /0:0:0:0:0:0:0:1:63126 => /0:0:0:0:0:0:0:1:8080]
+2015-11-27 16:02:24,936 DEBUG    nioEventLoopGroup-2-3 -          Session - WebHttpSession #3 [0x00000000] Setting my Entity 1048580
+2015-11-27 16:02:24,936 DEBUG    nioEventLoopGroup-2-4 -          Session - WebHttpSession #4 [0x00000000] Setting my Entity 1048580
+2015-11-27 16:02:24,937 DEBUG    nioEventLoopGroup-2-3 -          Session - WebHttpSession #3 [0x00000000] Session Start
+2015-11-27 16:02:24,937 DEBUG    nioEventLoopGroup-2-4 -          Session - WebHttpSession #4 [0x00000000] Session Start
+2015-11-27 16:02:24,942 DEBUG    nioEventLoopGroup-2-3 -   WebHttpSession - •••• Referer: null 
+2015-11-27 16:02:24,942 DEBUG    nioEventLoopGroup-2-3 -   WebHttpSession - •••• Domain: localhost:8080 
+2015-11-27 16:02:24,958 DEBUG    nioEventLoopGroup-2-3 -          Session - WebHttpSession #3 [0x00000000] Session Stop
+2015-11-27 16:02:24,958 DEBUG    nioEventLoopGroup-2-3 -       WebService - Session Stopped: WebHttpSession #3 [0x00000000]
+2015-11-27 16:02:25,021 DEBUG    nioEventLoopGroup-2-4 -   WebHttpSession - •••• Referer: http://localhost:8080/ 
+2015-11-27 16:02:25,021 DEBUG    nioEventLoopGroup-2-4 -   WebHttpSession - •••• Domain: localhost:8080 
+2015-11-27 16:02:25,023 DEBUG    nioEventLoopGroup-2-4 -          Session - WebHttpSession #4 [0x00000000] Session Stop
+2015-11-27 16:02:25,023 DEBUG    nioEventLoopGroup-2-4 -       WebService - Session Stopped: WebHttpSession #4 [0x00000000]
+2015-11-27 16:02:27,669 DEBUG    nioEventLoopGroup-2-5 -           Server - Connection from [id: 0x7f19bd47, /0:0:0:0:0:0:0:1:63127 => /0:0:0:0:0:0:0:1:8080]
+2015-11-27 16:02:27,670 DEBUG    nioEventLoopGroup-2-6 -           Server - Connection from [id: 0x73d5f49e, /0:0:0:0:0:0:0:1:63128 => /0:0:0:0:0:0:0:1:8080]
+2015-11-27 16:02:27,670 DEBUG    nioEventLoopGroup-2-7 -           Server - Connection from [id: 0xbd188c2f, /0:0:0:0:0:0:0:1:63129 => /0:0:0:0:0:0:0:1:8080]
+2015-11-27 16:02:27,670 DEBUG    nioEventLoopGroup-2-8 -           Server - Connection from [id: 0x9ffb8642, /0:0:0:0:0:0:0:1:63130 => /0:0:0:0:0:0:0:1:8080]
+2015-11-27 16:02:27,671 DEBUG    nioEventLoopGroup-2-5 -          Session - WebHttpSession #5 [0x00000000] Setting my Entity 1048580
+2015-11-27 16:02:27,671 DEBUG    nioEventLoopGroup-2-6 -          Session - WebHttpSession #6 [0x00000000] Setting my Entity 1048580
+2015-11-27 16:02:27,672 DEBUG    nioEventLoopGroup-2-7 -          Session - WebHttpSession #7 [0x00000000] Setting my Entity 1048580
+2015-11-27 16:02:27,672 DEBUG    nioEventLoopGroup-2-8 -          Session - WebHttpSession #8 [0x00000000] Setting my Entity 1048580
+2015-11-27 16:02:27,672 DEBUG    nioEventLoopGroup-2-5 -          Session - WebHttpSession #5 [0x00000000] Session Start
+2015-11-27 16:02:27,672 DEBUG    nioEventLoopGroup-2-6 -          Session - WebHttpSession #6 [0x00000000] Session Start
+2015-11-27 16:02:27,672 DEBUG    nioEventLoopGroup-2-8 -          Session - WebHttpSession #8 [0x00000000] Session Start
+2015-11-27 16:02:27,672 DEBUG    nioEventLoopGroup-2-7 -          Session - WebHttpSession #7 [0x00000000] Session Start
+2015-11-27 16:02:27,673 DEBUG    nioEventLoopGroup-2-5 -   WebHttpSession - •••• Referer: null 
+2015-11-27 16:02:27,673 DEBUG    nioEventLoopGroup-2-5 -   WebHttpSession - •••• Domain: localhost:8080 
+2015-11-27 16:02:27,675 DEBUG    nioEventLoopGroup-2-5 -          Session - WebHttpSession #5 [0x00000000] Session Stop
+2015-11-27 16:02:27,676 DEBUG    nioEventLoopGroup-2-5 -       WebService - Session Stopped: WebHttpSession #5 [0x00000000]
+2015-11-27 16:02:30,141 DEBUG    nioEventLoopGroup-2-6 -   WebHttpSession - •••• Referer: null 
+2015-11-27 16:02:30,141 DEBUG    nioEventLoopGroup-2-6 -   WebHttpSession - •••• Domain: localhost:8080 
+2015-11-27 16:02:30,143 DEBUG    nioEventLoopGroup-2-6 -          Session - WebHttpSession #6 [0x00000000] Session Stop
+2015-11-27 16:02:30,144 DEBUG    nioEventLoopGroup-2-6 -       WebService - Session Stopped: WebHttpSession #6 [0x00000000]
+2015-11-27 16:04:09,794 INFO                      main -   DefaultService - *** Start Service ***
+   *** Service name: web
+   *** Options: paused=false port=null host=null token=null 
+   *** VM Args: [-agentlib:jdwp=transport=dt_socket,suspend=y,address=localhost:63139, -ea, -Dio.netty.leakDetectionLevel=advanced, -Dfile.encoding=UTF-8]
+2015-11-27 16:04:09,834 INFO                      main -       Dispatcher - Dispatcher starting with 32 threads
+2015-11-27 16:04:09,999 INFO                      main -       WebService -  ***** WebService ***** 
+2015-11-27 16:04:10,001 INFO                      main - WebRootLocalFilesystem - Added web root /Users/adavidson/workspace/tetrapod/core/Tetrapod-Web/www
+2015-11-27 16:04:10,385 DEBUG    nioEventLoopGroup-2-1 -          Session - WireSession #1 [0x00000000] Session Start
+2015-11-27 16:04:10,407 DEBUG    nioEventLoopGroup-2-1 -          Session - WireSession #1 [0x00000000] Setting my Entity 1048581
+2015-11-27 16:04:10,412 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterMemberMessage { entityId:1048576, host:Pulsatilla.local, servicePort:9901, clusterPort:9902, uuid:null } 
+2015-11-27 16:04:10,416 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterMemberMessage { entityId:1048576, host:Pulsatilla.local, servicePort:9901, clusterPort:9902, uuid:null } 
+2015-11-27 16:04:10,417 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:shortlink.useDebug, secret:false, val:~ }  } 
+2015-11-27 16:04:10,417 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:tetrapod.tls, secret:false, val:~ }  } 
+2015-11-27 16:04:10,418 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:graphite.port, secret:false, val:~ }  } 
+2015-11-27 16:04:10,419 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:aws.secretKey, secret:true, val:~ }  } 
+2015-11-27 16:04:10,420 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:hazelcast.configurationFile, secret:false, val:~ }  } 
+2015-11-27 16:04:10,420 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:tetrapod.jks.file, secret:false, val:~ }  } 
+2015-11-27 16:04:10,421 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:sql.jdbc, secret:false, val:~ }  } 
+2015-11-27 16:04:10,421 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:graphite.enabled, secret:false, val:~ }  } 
+2015-11-27 16:04:10,421 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:aws.s3bucket, secret:false, val:~ }  } 
+2015-11-27 16:04:10,422 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:raft.tetrapod.key, secret:false, val:~ }  } 
+2015-11-27 16:04:10,422 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:zendesk.client.id, secret:false, val:~ }  } 
+2015-11-27 16:04:10,423 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:graphite.host, secret:false, val:~ }  } 
+2015-11-27 16:04:10,423 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:build.dir, secret:false, val:~ }  } 
+2015-11-27 16:04:10,429 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:props.init, secret:false, val:~ }  } 
+2015-11-27 16:04:10,430 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:tetrapod.shared.secret, secret:true, val:~ }  } 
+2015-11-27 16:04:10,430 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:aws.sns.arn.apns, secret:false, val:~ }  } 
+2015-11-27 16:04:10,430 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:sql.driver, secret:false, val:~ }  } 
+2015-11-27 16:04:10,430 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:encryption.checksum, secret:false, val:~ }  } 
+2015-11-27 16:04:10,431 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:product.name, secret:false, val:~ }  } 
+2015-11-27 16:04:10,432 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:sql.enabled, secret:false, val:~ }  } 
+2015-11-27 16:04:10,432 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:sql.password, secret:true, val:~ }  } 
+2015-11-27 16:04:10,432 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:raft.tetrapod.salt, secret:false, val:~ }  } 
+2015-11-27 16:04:10,433 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:twitter.apiSecret, secret:true, val:~ }  } 
+2015-11-27 16:04:10,433 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:shortlink.useHttp, secret:false, val:~ }  } 
+2015-11-27 16:04:10,434 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:twitter.login.apiKey, secret:false, val:~ }  } 
+2015-11-27 16:04:10,434 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:twitter.accessToken, secret:false, val:~ }  } 
+2015-11-27 16:04:10,434 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:twitter.login.accessTokenSecret, secret:true, val:~ }  } 
+2015-11-27 16:04:10,435 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:twitter.apiKey, secret:false, val:~ }  } 
+2015-11-27 16:04:10,435 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:aws.sns.arn.gcm, secret:false, val:~ }  } 
+2015-11-27 16:04:10,435 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:twitter.login.accessToken, secret:false, val:~ }  } 
+2015-11-27 16:04:10,436 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:AAAAA, secret:true, val:~ }  } 
+2015-11-27 16:04:10,436 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:twitter.login.apiSecret, secret:true, val:~ }  } 
+2015-11-27 16:04:10,436 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:devMode, secret:false, val:~ }  } 
+2015-11-27 16:04:10,437 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:email.send.enabled, secret:false, val:~ }  } 
+2015-11-27 16:04:10,437 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:product.url, secret:false, val:~ }  } 
+2015-11-27 16:04:10,438 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:sql.user, secret:false, val:~ }  } 
+2015-11-27 16:04:10,438 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:zendesk.client.secret, secret:true, val:~ }  } 
+2015-11-27 16:04:10,439 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:twitter.accessTokenSecret, secret:true, val:~ }  } 
+2015-11-27 16:04:10,439 INFO     Dispatch-Sequential-1 -   DefaultService - ******** ClusterPropertyAddedMessage { property:{ key:aws.accessKey, secret:false, val:~ }  } 
+2015-11-27 16:04:10,439 WARN     Dispatch-Sequential-1 -          Metrics - Graphite reporting is disabled
+2015-11-27 16:04:10,440 INFO     Dispatch-Sequential-1 -   DefaultService - Checking Dependencies...
+2015-11-27 16:04:10,446 INFO     Dispatch-Sequential-1 -       WebService -  ***** READY TO SERVE ***** 
+2015-11-27 16:04:10,451 INFO         Dispatch-Pooled-1 -   DefaultService - WireSession #1 [0x00100000] My entityId is 0x00100005
+2015-11-27 16:04:10,454 INFO     Dispatch-Sequential-1 -           Server - Starting Server Listening on Port 8080
+2015-11-27 16:04:10,457 INFO         Dispatch-Pooled-1 -   DefaultService - @@@@@ ServicesSubscribeRequest
+2015-11-27 16:04:10,467 INFO         Dispatch-Pooled-1 -   DefaultService - Success {}
+2015-11-27 16:04:10,478 INFO     Dispatch-Sequential-1 -           Server - Starting Server Listening on Port 8081
+2015-11-27 16:04:10,480 INFO     Dispatch-Sequential-1 -   DefaultService - resetServiceConnector(true)
+2015-11-27 16:04:10,482 INFO     Dispatch-Sequential-1 -           Server - Starting Server Listening on Port 9800
+2015-11-27 16:04:10,483 INFO     Dispatch-Sequential-1 - ServiceConnector - Address already in use
+2015-11-27 16:04:10,483 INFO     Dispatch-Sequential-1 -           Server - Starting Server Listening on Port 9801
+2015-11-27 16:04:12,618 DEBUG    nioEventLoopGroup-2-2 -           Server - Connection from [id: 0xf600992b, /192.168.0.17:63142 => /192.168.0.17:9801]
+2015-11-27 16:04:12,624 DEBUG    nioEventLoopGroup-2-2 -          Session - WireSession #2 [0x00000000] Setting my Entity 1048581
+2015-11-27 16:04:12,673 DEBUG    nioEventLoopGroup-2-2 -          Session - WireSession #2 [0x00000000] Session Start
+2015-11-27 16:04:14,095 DEBUG    nioEventLoopGroup-2-3 -           Server - Connection from [id: 0x2d95f68c, /0:0:0:0:0:0:0:1:63143 => /0:0:0:0:0:0:0:1:8080]
+2015-11-27 16:04:14,096 DEBUG    nioEventLoopGroup-2-4 -           Server - Connection from [id: 0xef16c51a, /0:0:0:0:0:0:0:1:63144 => /0:0:0:0:0:0:0:1:8080]
+2015-11-27 16:04:14,097 DEBUG    nioEventLoopGroup-2-5 -           Server - Connection from [id: 0xd407aed2, /0:0:0:0:0:0:0:1:63145 => /0:0:0:0:0:0:0:1:8080]
+2015-11-27 16:04:14,142 DEBUG    nioEventLoopGroup-2-5 -          Session - WebHttpSession #4 [0x00000000] Setting my Entity 1048581
+2015-11-27 16:04:14,142 DEBUG    nioEventLoopGroup-2-3 -          Session - WebHttpSession #3 [0x00000000] Setting my Entity 1048581
+2015-11-27 16:04:14,142 DEBUG    nioEventLoopGroup-2-4 -          Session - WebHttpSession #5 [0x00000000] Setting my Entity 1048581
+2015-11-27 16:04:14,143 DEBUG    nioEventLoopGroup-2-5 -          Session - WebHttpSession #4 [0x00000000] Session Start
+2015-11-27 16:04:14,143 DEBUG    nioEventLoopGroup-2-4 -          Session - WebHttpSession #5 [0x00000000] Session Start
+2015-11-27 16:04:14,143 DEBUG    nioEventLoopGroup-2-3 -          Session - WebHttpSession #3 [0x00000000] Session Start
+2015-11-27 16:04:15,279 DEBUG    nioEventLoopGroup-2-3 -   WebHttpSession - •••• Referer: null 
+2015-11-27 16:04:15,279 DEBUG    nioEventLoopGroup-2-3 -   WebHttpSession - •••• Domain: localhost:8080 
+2015-11-27 16:04:15,295 DEBUG    nioEventLoopGroup-2-3 -          Session - WebHttpSession #3 [0x00000000] Session Stop
+2015-11-27 16:04:15,295 DEBUG    nioEventLoopGroup-2-3 -       WebService - Session Stopped: WebHttpSession #3 [0x00000000]
+2015-11-27 16:04:16,010 DEBUG    nioEventLoopGroup-2-4 -   WebHttpSession - •••• Referer: null 
+2015-11-27 16:04:16,010 DEBUG    nioEventLoopGroup-2-4 -   WebHttpSession - •••• Domain: localhost:8080 
+2015-11-27 16:04:16,012 DEBUG    nioEventLoopGroup-2-4 -          Session - WebHttpSession #5 [0x00000000] Session Stop
+2015-11-27 16:04:16,013 DEBUG    nioEventLoopGroup-2-4 -       WebService - Session Stopped: WebHttpSession #5 [0x00000000]
+2015-11-27 16:04:22,709 DEBUG    nioEventLoopGroup-2-5 -   WebHttpSession - •••• Referer: null 
+2015-11-27 16:04:22,709 DEBUG    nioEventLoopGroup-2-5 -   WebHttpSession - •••• Domain: localhost:8080 
+2015-11-27 16:04:22,711 DEBUG    nioEventLoopGroup-2-5 -          Session - WebHttpSession #4 [0x00000000] Session Stop
+2015-11-27 16:04:22,711 DEBUG    nioEventLoopGroup-2-5 -       WebService - Session Stopped: WebHttpSession #4 [0x00000000]
+2015-11-27 16:04:28,548 DEBUG    nioEventLoopGroup-2-6 -           Server - Connection from [id: 0x51a68ebc, /0:0:0:0:0:0:0:1:63150 => /0:0:0:0:0:0:0:1:8080]
+2015-11-27 16:04:28,549 DEBUG    nioEventLoopGroup-2-6 -          Session - WebHttpSession #6 [0x00000000] Setting my Entity 1048581
+2015-11-27 16:04:28,549 DEBUG    nioEventLoopGroup-2-6 -          Session - WebHttpSession #6 [0x00000000] Session Start
+2015-11-27 16:04:28,550 DEBUG    nioEventLoopGroup-2-6 -   WebHttpSession - •••• Referer: null 
+2015-11-27 16:04:28,550 DEBUG    nioEventLoopGroup-2-6 -   WebHttpSession - •••• Domain: localhost:8080 
+2015-11-27 16:04:28,552 DEBUG    nioEventLoopGroup-2-6 -          Session - WebHttpSession #6 [0x00000000] Session Stop
+2015-11-27 16:04:28,553 DEBUG    nioEventLoopGroup-2-6 -       WebService - Session Stopped: WebHttpSession #6 [0x00000000]
+2015-11-27 16:04:35,588 DEBUG    nioEventLoopGroup-2-7 -           Server - Connection from [id: 0x7b4a89df, /0:0:0:0:0:0:0:1:63151 => /0:0:0:0:0:0:0:1:8080]
+2015-11-27 16:04:35,589 DEBUG    nioEventLoopGroup-2-7 -          Session - WebHttpSession #7 [0x00000000] Setting my Entity 1048581
+2015-11-27 16:04:35,589 DEBUG    nioEventLoopGroup-2-7 -          Session - WebHttpSession #7 [0x00000000] Session Start
+2015-11-27 16:04:35,590 DEBUG    nioEventLoopGroup-2-7 -   WebHttpSession - •••• Referer: null 
+2015-11-27 16:04:35,591 DEBUG    nioEventLoopGroup-2-7 -   WebHttpSession - •••• Domain: localhost:8080 
+2015-11-27 16:04:35,615 DEBUG    nioEventLoopGroup-2-8 -           Server - Connection from [id: 0xd7f7785f, /0:0:0:0:0:0:0:1:63152 => /0:0:0:0:0:0:0:1:8080]
+2015-11-27 16:04:35,616 DEBUG    nioEventLoopGroup-2-7 -   WebHttpSession - •••• Referer: http://localhost:8080/admin/ 
+2015-11-27 16:04:35,616 DEBUG    nioEventLoopGroup-2-8 -          Session - WebHttpSession #8 [0x00000000] Setting my Entity 1048581
+2015-11-27 16:04:35,616 DEBUG    nioEventLoopGroup-2-8 -          Session - WebHttpSession #8 [0x00000000] Session Start
+2015-11-27 16:04:35,617 DEBUG    nioEventLoopGroup-2-8 -   WebHttpSession - •••• Referer: http://localhost:8080/admin/ 
+2015-11-27 16:04:35,617 DEBUG    nioEventLoopGroup-2-8 -   WebHttpSession - •••• Domain: localhost:8080 
+2015-11-27 16:04:35,793 DEBUG   nioEventLoopGroup-2-10 -           Server - Connection from [id: 0x184c56bc, /0:0:0:0:0:0:0:1:63158 => /0:0:0:0:0:0:0:1:8080]
+2015-11-27 16:04:35,792 DEBUG    nioEventLoopGroup-2-9 -           Server - Connection from [id: 0x37cb6960, /0:0:0:0:0:0:0:1:63157 => /0:0:0:0:0:0:0:1:8080]
+2015-11-27 16:04:35,794 DEBUG   nioEventLoopGroup-2-10 -          Session - WebHttpSession #9 [0x00000000] Setting my Entity 1048581
+2015-11-27 16:04:35,794 DEBUG    nioEventLoopGroup-2-9 -          Session - WebHttpSession #10 [0x00000000] Setting my Entity 1048581
+2015-11-27 16:04:35,794 DEBUG   nioEventLoopGroup-2-10 -          Session - WebHttpSession #9 [0x00000000] Session Start
+2015-11-27 16:04:35,794 DEBUG    nioEventLoopGroup-2-9 -          Session - WebHttpSession #10 [0x00000000] Session Start
+2015-11-27 16:04:35,795 DEBUG    nioEventLoopGroup-2-9 -   WebHttpSession - •••• Referer: http://localhost:8080/admin/ 
+2015-11-27 16:04:35,795 DEBUG   nioEventLoopGroup-2-10 -   WebHttpSession - •••• Referer: http://localhost:8080/admin/ 
+2015-11-27 16:04:35,795 DEBUG    nioEventLoopGroup-2-9 -   WebHttpSession - •••• Domain: localhost:8080 
+2015-11-27 16:04:35,795 DEBUG   nioEventLoopGroup-2-10 -   WebHttpSession - •••• Domain: localhost:8080 
+2015-11-27 16:04:35,809 DEBUG   nioEventLoopGroup-2-11 -           Server - Connection from [id: 0x8ce84612, /0:0:0:0:0:0:0:1:63159 => /0:0:0:0:0:0:0:1:8080]
+2015-11-27 16:04:35,809 DEBUG   nioEventLoopGroup-2-11 -          Session - WebHttpSession #11 [0x00000000] Setting my Entity 1048581
+2015-11-27 16:04:35,810 DEBUG   nioEventLoopGroup-2-11 -          Session - WebHttpSession #11 [0x00000000] Session Start
+2015-11-27 16:04:35,811 DEBUG   nioEventLoopGroup-2-11 -   WebHttpSession - •••• Referer: http://localhost:8080/admin/ 
+2015-11-27 16:04:35,811 DEBUG   nioEventLoopGroup-2-11 -   WebHttpSession - •••• Domain: localhost:8080 
+2015-11-27 16:04:35,814 DEBUG   nioEventLoopGroup-2-12 -           Server - Connection from [id: 0xa7c916b7, /0:0:0:0:0:0:0:1:63160 => /0:0:0:0:0:0:0:1:8080]
+2015-11-27 16:04:35,815 DEBUG   nioEventLoopGroup-2-12 -          Session - WebHttpSession #12 [0x00000000] Setting my Entity 1048581
+2015-11-27 16:04:35,815 DEBUG   nioEventLoopGroup-2-12 -          Session - WebHttpSession #12 [0x00000000] Session Start
+2015-11-27 16:04:35,816 DEBUG   nioEventLoopGroup-2-12 -   WebHttpSession - •••• Referer: http://localhost:8080/admin/ 
+2015-11-27 16:04:35,816 DEBUG   nioEventLoopGroup-2-12 -   WebHttpSession - •••• Domain: localhost:8080 
+2015-11-27 16:04:35,932 DEBUG   nioEventLoopGroup-2-13 -           Server - Connection from [id: 0x181ba888, /0:0:0:0:0:0:0:1:63161 => /0:0:0:0:0:0:0:1:8080]
+2015-11-27 16:04:35,933 DEBUG   nioEventLoopGroup-2-13 -          Session - WebHttpSession #13 [0x00000000] Setting my Entity 1048581
+2015-11-27 16:04:35,933 DEBUG   nioEventLoopGroup-2-13 -          Session - WebHttpSession #13 [0x00000000] Session Start
+2015-11-27 16:04:35,934 DEBUG   nioEventLoopGroup-2-13 -   WebHttpSession - •••• Referer: null 
+2015-11-27 16:04:35,934 DEBUG   nioEventLoopGroup-2-13 -   WebHttpSession - •••• Domain: localhost:8080 
+2015-11-27 16:04:35,959 ERROR   nioEventLoopGroup-2-13 -       WebSession - Could not find request structure contractId=1 structId-10895179
+2015-11-27 16:04:46,223 ERROR   nioEventLoopGroup-2-13 -       WebSession - Could not find request structure contractId=1 structId-5512920
+2015-11-27 16:04:57,221 ERROR   nioEventLoopGroup-2-13 -       WebSession - Could not find request structure contractId=1 structId-5512920
+2015-11-27 16:05:07,221 ERROR   nioEventLoopGroup-2-13 -       WebSession - Could not find request structure contractId=1 structId-5512920
+2015-11-27 16:05:18,222 ERROR   nioEventLoopGroup-2-13 -       WebSession - Could not find request structure contractId=1 structId-5512920
+2015-11-27 16:05:29,223 ERROR   nioEventLoopGroup-2-13 -       WebSession - Could not find request structure contractId=1 structId-5512920
+2015-11-27 16:05:41,223 ERROR   nioEventLoopGroup-2-13 -       WebSession - Could not find request structure contractId=1 structId-5512920
+2015-11-27 16:05:52,221 ERROR   nioEventLoopGroup-2-13 -       WebSession - Could not find request structure contractId=1 structId-5512920
+2015-11-27 16:06:03,221 ERROR   nioEventLoopGroup-2-13 -       WebSession - Could not find request structure contractId=1 structId-5512920
+2015-11-27 16:06:13,221 ERROR   nioEventLoopGroup-2-13 -       WebSession - Could not find request structure contractId=1 structId-5512920
+2015-11-27 16:06:24,217 ERROR   nioEventLoopGroup-2-13 -       WebSession - Could not find request structure contractId=1 structId-5512920
+2015-11-27 16:06:35,218 ERROR   nioEventLoopGroup-2-13 -       WebSession - Could not find request structure contractId=1 structId-5512920
+2015-11-27 16:06:46,218 ERROR   nioEventLoopGroup-2-13 -       WebSession - Could not find request structure contractId=1 structId-5512920
+2015-11-27 16:06:56,217 ERROR   nioEventLoopGroup-2-13 -       WebSession - Could not find request structure contractId=1 structId-5512920
+2015-11-27 16:07:06,216 ERROR   nioEventLoopGroup-2-13 -       WebSession - Could not find request structure contractId=1 structId-5512920
+2015-11-27 16:07:16,217 ERROR   nioEventLoopGroup-2-13 -       WebSession - Could not find request structure contractId=1 structId-5512920
+2015-11-27 16:07:26,218 ERROR   nioEventLoopGroup-2-13 -       WebSession - Could not find request structure contractId=1 structId-5512920
+2015-11-27 16:07:37,217 ERROR   nioEventLoopGroup-2-13 -       WebSession - Could not find request structure contractId=1 structId-5512920
+2015-11-27 16:07:47,215 ERROR   nioEventLoopGroup-2-13 -       WebSession - Could not find request structure contractId=1 structId-5512920
+2015-11-27 16:07:57,216 ERROR   nioEventLoopGroup-2-13 -       WebSession - Could not find request structure contractId=1 structId-5512920
+2015-11-27 16:08:07,216 ERROR   nioEventLoopGroup-2-13 -       WebSession - Could not find request structure contractId=1 structId-5512920
+2015-11-27 16:08:17,219 ERROR   nioEventLoopGroup-2-13 -       WebSession - Could not find request structure contractId=1 structId-5512920

@@ -40,6 +40,7 @@ public class CodeGen {
       }
       if (services.isEmpty()) {
          System.out.println("using defaults for protocols");
+         services.add("web");
          services.add("org");
          services.add("core");
          services.add("identity");
