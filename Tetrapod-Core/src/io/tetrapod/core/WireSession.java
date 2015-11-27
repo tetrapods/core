@@ -132,7 +132,9 @@ public class WireSession extends Session {
                res.read(reader);
                if (!commsLogIgnore(header.structId))
                   logged = commsLog("%s  [%d] <- %s", this, header.requestId, res.dump());
-               getDispatcher().dispatch(() -> {
+               // we dispatch responses as high priority to prevent certain 
+               // forms of live-lock when the dispatch thread pool is exhausted
+               getDispatcher().dispatchHighPriority(() -> {
                   if (res instanceof StructureAdapter) {
                      async.setResponse(new ResponseAdapter(res));
                   } else {

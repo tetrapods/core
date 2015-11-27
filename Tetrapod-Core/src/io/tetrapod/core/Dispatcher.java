@@ -20,6 +20,7 @@ public class Dispatcher {
    private final ThreadPoolExecutor       threadPool;
    private final ExecutorService          sequential;
    private final ScheduledExecutorService scheduled;
+   private final ExecutorService          urgent;
 
    private final BlockingQueue<Runnable>  overflow               = new LinkedBlockingQueue<>();
 
@@ -32,13 +33,17 @@ public class Dispatcher {
    public final Meter                     requestsHandledCounter = Metrics.meter(Dispatcher.class, "requests", "count");
    public final Meter                     messagesSentCounter    = Metrics.meter(Dispatcher.class, "messages-sent", "count");
 
+   public enum Priority {
+      LOW, NORMAL, HIGH
+   }
+
    public Dispatcher() {
       this(Util.getProperty("tetrapod.dispatcher.threads", 32));
    }
 
    public Dispatcher(int maxThreads) {
       logger.info("Dispatcher starting with {} threads", maxThreads);
-      threadPool = new ThreadPoolExecutor(0, maxThreads, 5L, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(), new ThreadFactory() {
+      threadPool = new ThreadPoolExecutor(0, maxThreads, 5L, TimeUnit.SECONDS, new SynchronousQueue<>(), new ThreadFactory() {
          private final AtomicInteger counter = new AtomicInteger();
 
          @Override
@@ -47,7 +52,7 @@ public class Dispatcher {
          }
       });
 
-      sequential = new ThreadPoolExecutor(0, 1, 5L, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(), new ThreadFactory() {
+      sequential = new ThreadPoolExecutor(0, 1, 5L, TimeUnit.SECONDS, new LinkedBlockingQueue<>(), new ThreadFactory() {
          private final AtomicInteger counter = new AtomicInteger();
 
          @Override
@@ -64,6 +69,16 @@ public class Dispatcher {
             return new Thread(r, "Dispatch-Scheduled-" + counter.incrementAndGet());
          }
       });
+
+      urgent = new ThreadPoolExecutor(0, 4, 5L, TimeUnit.SECONDS, new SynchronousQueue<>(), new ThreadFactory() {
+         private final AtomicInteger counter = new AtomicInteger();
+
+         @Override
+         public Thread newThread(Runnable r) {
+            return new Thread(r, "Dispatch-Urgent-" + counter.incrementAndGet());
+         }
+      });
+
    }
 
    public synchronized EventLoopGroup getWorkerGroup() {
@@ -84,8 +99,16 @@ public class Dispatcher {
       return bossGroup;
    }
 
+   public boolean dispatchHighPriority(final Runnable r) {
+      return dispatch(r, Integer.MAX_VALUE, Priority.HIGH);
+   }
+   
    public boolean dispatch(final Runnable r) {
-      return dispatch(r, Integer.MAX_VALUE);
+      return dispatch(r, Integer.MAX_VALUE, Priority.NORMAL);
+   }
+
+   public boolean dispatch(final Runnable r, final int overloadThreshold) {
+      return dispatch(r, overloadThreshold, Priority.NORMAL);
    }
 
    /**
@@ -95,11 +118,19 @@ public class Dispatcher {
     * 
     * If the queue is > overloadThreshold, we will not queue, and will return false.
     */
-   public boolean dispatch(final Runnable r, final int overloadThreshold) {
+   public boolean dispatch(final Runnable r, final int overloadThreshold, final Priority priority) {
       assert r != null;
       try {
          threadPool.submit(() -> processTask(r));
       } catch (RejectedExecutionException e) {
+         if (priority == Priority.HIGH) {
+            try {
+               urgent.submit(r);
+               return true;
+            } catch (RejectedExecutionException ex) {
+               // will then fall down to post on queue below
+            }
+         }
          if (overflow.size() < overloadThreshold && overflow.offer(r)) {
             workQueueSize.inc();
          } else {
@@ -178,6 +209,7 @@ public class Dispatcher {
       threadPool.shutdown();
       sequential.shutdown();
       scheduled.shutdown();
+      urgent.shutdown();
       if (bossGroup != null) {
          bossGroup.shutdownGracefully();
       }
