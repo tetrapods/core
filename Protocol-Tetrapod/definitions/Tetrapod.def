@@ -4,12 +4,13 @@ javascript out "../../Tetrapod-Tetrapod/webContent/protocol/tetrapod.js"
 #javascript out "../rsc/protocol/tetrapod.js"
 
 // The core tetrapod service
-service Tetrapod @version(1) @id(1)
+service Tetrapod @version(1) @id(1) @web(tetrapod) 
 
 error HOSTNAME_MISMATCH
 error INVALID_CREDENTIALS
 error INVALID_UUID
 error ITEM_OWNED
+error NOT_LEADER
 
 const int  MAX_PARENTS       = 0x000007FF     // Supports up to 2047 tetrapods
 const int  MAX_ID            = 0x000FFFFF     // Supports up to 1048575 entities per tetrapod
@@ -193,6 +194,18 @@ internal message Registry.TopicUnsubscribed
    1: int publisherId
    2: int topicId
    3: int entityId
+
+#### Feedback messages
+
+internal message TopicNotFound
+   1: int publisherId
+   2: int topicId
+   
+internal message SubscriberNotFound
+   1: int publisherId
+   2: int topicId
+   3: int entityId
+
    
 ##### Building #############
 
@@ -255,6 +268,10 @@ internal request VerifyEntityToken
    1: int entityId
    2: string token
      
+
+public request RaftLeader
+public response RaftLeader 
+   1: ServerAddress leader
 
 internal request RaftStats
 internal response RaftStats 

@@ -309,19 +309,21 @@ public class TetrapodCluster extends Storage
    }
 
    public void sendAdminDetails(Session ses, int toEntityId, int topicId) {
-      synchronized (raft) {
-         // send properties
-         for (ClusterProperty prop : state.props.values()) {
-            // blank out values for protected properties sent to admins
-            prop = new ClusterProperty(prop.key, prop.secret, prop.val);
-            prop.val = prop.secret ? "" : AESEncryptor.decryptSaltedAES(prop.val, state.secretKey);
-            ses.sendMessage(new ClusterPropertyAddedMessage(prop), toEntityId);
-         }
-         for (WebRootDef def : state.webRootDefs.values()) {
-            ses.sendMessage(new WebRootAddedMessage(def), toEntityId);
-         }
-         for (Admin def : state.admins.values()) {
-            ses.sendMessage(new AdminUserAddedMessage(def), toEntityId);
+      if (ses != null) {
+         synchronized (raft) {
+            // send properties
+            for (ClusterProperty prop : state.props.values()) {
+               // blank out values for protected properties sent to admins
+               prop = new ClusterProperty(prop.key, prop.secret, prop.val);
+               prop.val = prop.secret ? "" : AESEncryptor.decryptSaltedAES(prop.val, state.secretKey);
+               ses.sendMessage(new ClusterPropertyAddedMessage(prop), toEntityId);
+            }
+            for (WebRootDef def : state.webRootDefs.values()) {
+               ses.sendMessage(new WebRootAddedMessage(def), toEntityId);
+            }
+            for (Admin def : state.admins.values()) {
+               ses.sendMessage(new AdminUserAddedMessage(def), toEntityId);
+            }
          }
       }
    }
@@ -1007,7 +1009,7 @@ public class TetrapodCluster extends Storage
       service.registry.onAddEntityCommand(state.entities.get(command.getEntity().entityId));
    }
 
-   private void onModEntityCommand(ModEntityCommand command) { 
+   private void onModEntityCommand(ModEntityCommand command) {
       logger.info("onModEntityCommand {} gone={}", command.getEntityId(), command.getStatus());
       service.registry.onModEntityCommand(state.entities.get(command.getEntityId()));
    }
@@ -1030,8 +1032,8 @@ public class TetrapodCluster extends Storage
       Collections.sort(list);
       logger.info("=========================@ TETRAPOD CLUSTER REGISTRY @===========================");
       for (EntityInfo e : list) {
-         logger.info(String.format(" 0x%08X 0x%08X %-15s status=%08X topics=%d subscriptions=%d [%s]", e.parentId, e.entityId, e.name, e.status,
-                  e.getNumTopics(), e.getNumSubscriptions(), e.hasConnectedSession() ? "CONNECTED" : "*"));
+         logger.info(String.format(" 0x%08X 0x%08X %-15s status=%08X topics=%d subscriptions=%d [%s]", e.parentId, e.entityId, e.name,
+                  e.status, e.getNumTopics(), e.getNumSubscriptions(), e.hasConnectedSession() ? "CONNECTED" : "*"));
       }
       logger.info("=================================================================================\n");
    }
@@ -1044,6 +1046,18 @@ public class TetrapodCluster extends Storage
 
    public Publisher getPublisher() {
       return service.getPublisher();
+   }
+
+   public ServerAddress getLeader() {
+      synchronized (raft) {
+         final int peerId = raft.getLeader();
+         for (TetrapodPeer p : cluster.values()) {
+            if (peerId == p.peerId) {
+               return new ServerAddress(p.host, p.servicePort);
+            }
+         }
+      }
+      return null;
    }
 
 }

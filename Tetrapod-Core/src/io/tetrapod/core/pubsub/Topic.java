@@ -5,20 +5,24 @@ import static io.tetrapod.protocol.core.TetrapodContract.PARENT_ID_MASK;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import io.tetrapod.core.rpc.Message;
 import io.tetrapod.protocol.core.*;
 
 public class Topic {
+   private static final Logger                    logger      = LoggerFactory.getLogger(Topic.class);
 
-   public final Publisher                   publisher;
-   public final int                         topicId;
+   public final Publisher                         publisher;
+   public final int                               topicId;
 
-   private final Map<Integer, Subscriber>   subscribers = new ConcurrentHashMap<>();
-   private final Map<Integer, Subscriber>   tetrapods   = new ConcurrentHashMap<>();
-   private final List<SubscriptionListener> listeners   = new ArrayList<>();
+   private final Map<Integer, Subscriber>         subscribers = new ConcurrentHashMap<>();
+   private final Map<Integer, TetrapodSubscriber> tetrapods   = new ConcurrentHashMap<>();
+   private final List<SubscriptionListener>       listeners   = new ArrayList<>();
 
    public interface SubscriptionListener {
-      public void onTopicSubscribed(int entityId);
+      public void onTopicSubscribed(int entityId, boolean resub);
    }
 
    public Topic(Publisher publisher, int topicId) {
@@ -34,9 +38,24 @@ public class Topic {
       }
    }
 
+   public class TetrapodSubscriber extends Subscriber {
+      public boolean init = false;
+
+      public TetrapodSubscriber(int entityId) {
+         super(entityId);
+      }
+   }
+
    public void reset() {
       subscribers.clear();
       tetrapods.clear();
+   }
+
+   public void reset(int tetrapodId) {
+      TetrapodSubscriber tetrapod = tetrapods.get(tetrapodId);
+      if (tetrapod != null) {
+         tetrapod.init = false;
+      }
    }
 
    public void addListener(SubscriptionListener listener) {
@@ -51,15 +70,14 @@ public class Topic {
       }
    }
 
-   protected void fireTopicSubscribedEvent(int entityId) {
+   protected void fireTopicSubscribedEvent(int entityId, boolean resub) {
       synchronized (listeners) {
          for (SubscriptionListener sl : listeners) {
-            sl.onTopicSubscribed(entityId);
+            sl.onTopicSubscribed(entityId, resub);
          }
       }
    }
 
-   // FIXME: Implement once/counting?
    public synchronized void subscribe(int entityId, boolean once) {
       Subscriber sub = subscribers.get(entityId);
       if (sub == null) {
@@ -67,17 +85,19 @@ public class Topic {
          subscribers.put(entityId, sub);
 
          final int parentId = entityId & PARENT_ID_MASK;
-         Subscriber tetrapod = tetrapods.get(parentId);
+         TetrapodSubscriber tetrapod = tetrapods.get(parentId);
          if (tetrapod == null) {
-            tetrapod = new Subscriber(parentId);
+            tetrapod = new TetrapodSubscriber(parentId);
             tetrapods.put(parentId, tetrapod);
 
             // publish the topic on the new tetrapod
-            publisher.sendMessage(new TopicPublishedMessage(publisher.getEntityId(), topicId), tetrapod.entityId);
+            if (publisher.sendMessage(new TopicPublishedMessage(publisher.getEntityId(), topicId), tetrapod.entityId, topicId)) {
+               tetrapod.init = true;
+            }
          }
          // register the new subscriber for their parent tetrapod
          publisher.sendMessage(new TopicSubscribedMessage(publisher.getEntityId(), topicId, sub.entityId, once), tetrapod.entityId);
-         fireTopicSubscribedEvent(entityId);
+         fireTopicSubscribedEvent(entityId, false);
       }
    }
 
@@ -93,8 +113,26 @@ public class Topic {
 
    public synchronized void broadcast(Message msg) {
       // broadcast message to all tetrapods with subscribers to this topic
-      for (Subscriber tetrapod : tetrapods.values()) {
-         publisher.broadcastMessage(msg, tetrapod.entityId, topicId);
+      for (TetrapodSubscriber tetrapod : tetrapods.values()) {
+         if (!tetrapod.init) {
+            if (publisher.sendMessage(new TopicPublishedMessage(publisher.getEntityId(), topicId), tetrapod.entityId, topicId)) {
+               logger.info("HAVE TO REPUBLISH TOPIC {} to Tetrapod-{}", topicId, tetrapod.entityId);
+               for (Subscriber sub : subscribers.values()) {
+                  final int parentId = sub.entityId & PARENT_ID_MASK;
+                  if (parentId == tetrapod.entityId) {
+                     publisher.sendMessage(new TopicSubscribedMessage(publisher.getEntityId(), topicId, sub.entityId, true),
+                              tetrapod.entityId, topicId);
+                     fireTopicSubscribedEvent(sub.entityId, true);
+                  }
+               }
+               tetrapod.init = true;
+            } else {
+               tetrapod.init = false;
+            }
+         }
+         if (!publisher.broadcastMessage(msg, tetrapod.entityId, topicId)) {
+            tetrapod.init = false;
+         }
       }
    }
 

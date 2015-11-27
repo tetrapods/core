@@ -275,11 +275,12 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
    }
 
    public void sendAltBroadcastMessage(Message msg, int toId) {
-      if (getMyEntityId() != 0) {
+      final int myEntityId = getMyEntityId();
+      if (myEntityId != 0) {
          if (!commsLogIgnore(msg))
             commsLog("%s  [A] => %s (to altId-%d)", this, msg.dump(), toId);
          final Object buffer = makeFrame(
-                  new MessageHeader(getMyEntityId(), 0, toId, msg.getContractId(), msg.getStructId(), MessageHeader.FLAGS_ALTERNATE), msg,
+                  new MessageHeader(myEntityId, 0, toId, msg.getContractId(), msg.getStructId(), MessageHeader.FLAGS_ALTERNATE), msg,
                   ENVELOPE_BROADCAST);
          if (buffer != null) {
             writeFrame(buffer);
@@ -289,11 +290,12 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
    }
 
    public void sendTopicBroadcastMessage(Message msg, int toId, int topicId) {
-      if (getMyEntityId() != 0) {
+      final int myEntityId = getMyEntityId();
+      if (myEntityId != 0) {
          if (!commsLogIgnore(msg))
             commsLog("%s  [B] => %s (to TOPIC:%d-#%d)", this, msg.dump(), toId, topicId);
-         final Object buffer = makeFrame(new MessageHeader(getMyEntityId(), topicId, toId, msg.getContractId(), msg.getStructId(), (byte) 0),
-                  msg, ENVELOPE_BROADCAST);
+         final Object buffer = makeFrame(new MessageHeader(myEntityId, topicId, toId, msg.getContractId(), msg.getStructId(), (byte) 0), msg,
+                  ENVELOPE_BROADCAST);
          if (buffer != null) {
             writeFrame(buffer);
             getDispatcher().messagesSentCounter.mark();
@@ -302,10 +304,11 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
    }
 
    public void sendMessage(Message msg, int toId) {
-      if (getMyEntityId() != 0) {
+      final int myEntityId = getMyEntityId();
+      if (myEntityId != 0) {
          if (!commsLogIgnore(msg))
             commsLog("%s  [M] => %s (to %d)", this, msg.dump(), toId);
-         final Object buffer = makeFrame(new MessageHeader(getMyEntityId(), 0, toId, msg.getContractId(), msg.getStructId(), (byte) 0), msg,
+         final Object buffer = makeFrame(new MessageHeader(myEntityId, 0, toId, msg.getContractId(), msg.getStructId(), (byte) 0), msg,
                   ENVELOPE_MESSAGE);
          if (buffer != null) {
             writeFrame(buffer);

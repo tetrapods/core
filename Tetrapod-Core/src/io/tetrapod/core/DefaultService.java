@@ -209,7 +209,7 @@ public class DefaultService
       }
    }
 
-   private void resetServiceConnector(boolean start) {
+   protected void resetServiceConnector(boolean start) {
       logger.info("resetServiceConnector({})", start);
       if (serviceConnector != null) {
          serviceConnector.shutdown();
@@ -397,8 +397,9 @@ public class DefaultService
                   logger.info(e.getMessage());
                } catch (Throwable e) {
                   logger.error(e.getMessage(), e);
+               } finally {
+                  clusterMembers.addLast(server);
                }
-               clusterMembers.addLast(server);
             }
          }
 
@@ -683,11 +684,20 @@ public class DefaultService
       clusterClient.getSession().sendAltBroadcastMessage(msg, altId);
    }
 
-   public void sendBroadcastMessage(Message msg, int toEntityId, int topicId) {
+   public boolean sendBroadcastMessage(Message msg, int toEntityId, int topicId) {
       if (serviceConnector != null) {
-         serviceConnector.sendBroadcastMessage(msg, toEntityId, topicId);
+         return serviceConnector.sendBroadcastMessage(msg, toEntityId, topicId);
       } else {
-         clusterClient.getSession().sendTopicBroadcastMessage(msg, toEntityId, topicId);
+         //clusterClient.getSession().sendTopicBroadcastMessage(msg, toEntityId, topicId);
+         return false;
+      }
+   }
+
+   public boolean sendPrivateMessage(Message msg, int toEntityId, int topicId) {
+      if (serviceConnector != null && isServiceExistant(toEntityId)) {
+         return serviceConnector.sendMessage(msg, toEntityId);
+      } else {
+         return false;
       }
    }
 
@@ -762,6 +772,9 @@ public class DefaultService
    public void messageClusterMember(ClusterMemberMessage m, MessageContext ctx) {
       logger.info("******** {}", m.dump());
       clusterMembers.add(new ServerAddress(m.host, m.servicePort));
+      if (serviceConnector != null) {
+         serviceConnector.getDirectServiceInfo(m.entityId).considerConnecting();
+      }
    }
 
    @Override

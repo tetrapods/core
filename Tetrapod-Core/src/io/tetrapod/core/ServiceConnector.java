@@ -131,12 +131,15 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
             valid = false;
             service.clusterClient.getSession().sendRequest(new DirectConnectionRequest(token), entityId, (byte) 30).handle(res -> {
                if (res.isError()) {
-                  if (res.errorCode() != CoreContract.ERROR_NOT_CONFIGURED && res.errorCode() != CoreContract.ERROR_SERVICE_UNAVAILABLE) {
+                  if (res.errorCode() == CoreContract.ERROR_NOT_CONFIGURED || res.errorCode() == CoreContract.ERROR_SERVICE_UNAVAILABLE
+                           || res.errorCode() == CoreContract.ERROR_TIMEOUT) {
+                     logger.info("DirectConnectionRequest to {} =  {}", entityId, res);
+                  } else {
                      logger.error("DirectConnectionRequest to {} =  {}", entityId, res);
                   }
                   failure();
                } else {
-                  service.dispatcher.dispatch(() -> connect((DirectConnectionResponse) res));
+                  service.dispatcher.dispatchHighPriority(() -> connect((DirectConnectionResponse) res));
                }
             });
          }
@@ -312,19 +315,25 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
       return ses.sendRequest(req, toEntityId, (byte) 30);
    }
 
-   public void sendMessage(Message msg, int toEntityId) {
-      getSession(toEntityId).sendMessage(msg, toEntityId);
+   public boolean sendMessage(Message msg, int toEntityId) {
+      Session ses = getSession(toEntityId);
+      if (ses == null || !ses.isConnected()) {
+         return false;
+      }
+      ses.sendMessage(msg, toEntityId);
+      return true;
    }
 
    /**
     * Sends a topic message for broadcast to toEntityId
     */
-   public void sendBroadcastMessage(Message msg, int toEntityId, int topicId) {
+   public boolean sendBroadcastMessage(Message msg, int toEntityId, int topicId) {
       Session ses = getSession(toEntityId);
-      if (ses.getMyEntityId() == 0) {
-         logger.error("My Session has invalid entityId {}", ses);
+      if (ses == null || !ses.isConnected()) {
+         return false;
       }
       ses.sendTopicBroadcastMessage(msg, toEntityId, topicId);
+      return true;
    }
 
    @Override

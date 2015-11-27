@@ -219,6 +219,7 @@ public class EntityRegistry implements TetrapodContract.Registry.API {
             e.subscribe(topic);
          } else {
             logger.info("Could not find subscriber {} for topic {}", entityId, topicId);
+            broadcaster.sendMessage(new SubscriberNotFoundMessage(publisher.entityId, topicId, entityId), publisher.entityId);
          }
       } else {
          logger.info("Could not find topic {} for {}", topicId, publisher);
@@ -331,14 +332,6 @@ public class EntityRegistry implements TetrapodContract.Registry.API {
       }
 
       updateStatus(e, e.status | Core.STATUS_GONE);
-      //  e.setSession(null);
-      //         if (e.isTetrapod()) {
-      //            for (EntityInfo child : entities.values()) {
-      //               if (child.parentId == e.entityId) {
-      //                  updateStatus(child, child.status | Core.STATUS_GONE);
-      //               }
-      //            }
-      //         }
       clearAllTopicsAndSubscriptions(e);
    }
 

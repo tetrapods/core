@@ -60,6 +60,7 @@ public class TetrapodContract extends Contract {
       , KeepAliveRequest.Handler
       , LockRequest.Handler
       , LogRegistryStatsRequest.Handler
+      , RaftLeaderRequest.Handler
       , RaftStatsRequest.Handler
       , RegisterRequest.Handler
       , ReleaseOwnershipRequest.Handler
@@ -106,6 +107,7 @@ public class TetrapodContract extends Contract {
          new GetServiceBuildInfoRequest(),
          new ExecuteBuildCommandRequest(),
          new VerifyEntityTokenRequest(),
+         new RaftLeaderRequest(),
          new RaftStatsRequest(),
          new AdminSubscribeRequest(),
          new SetClusterPropertyRequest(),
@@ -132,6 +134,7 @@ public class TetrapodContract extends Contract {
          new AdminSessionTokenResponse(),
          new GetEntityInfoResponse(),
          new GetServiceBuildInfoResponse(),
+         new RaftLeaderResponse(),
          new RaftStatsResponse(),
          new LockResponse(),
          new ClaimOwnershipResponse(),
@@ -146,6 +149,8 @@ public class TetrapodContract extends Contract {
          new TopicUnpublishedMessage(),
          new TopicSubscribedMessage(),
          new TopicUnsubscribedMessage(),
+         new TopicNotFoundMessage(),
+         new SubscriberNotFoundMessage(),
          new BuildCommandProgressMessage(),
          new ServiceAddedMessage(),
          new ServiceRemovedMessage(),
@@ -190,7 +195,7 @@ public class TetrapodContract extends Contract {
    
    public WebRoute[] getWebRoutes() {
       return new WebRoute[] {
-         
+         new WebRoute("/tetrapod/raft", RaftLeaderRequest.STRUCT_ID, TetrapodContract.CONTRACT_ID),
       };
    }
 
@@ -319,5 +324,6 @@ public class TetrapodContract extends Contract {
    public static final int ERROR_INVALID_CREDENTIALS = 8845805; 
    public static final int ERROR_INVALID_UUID = 398174; 
    public static final int ERROR_ITEM_OWNED = 10331576; 
+   public static final int ERROR_NOT_LEADER = 13409358; 
    public static final int ERROR_UNKNOWN_ENTITY_ID = 15576171; 
 }

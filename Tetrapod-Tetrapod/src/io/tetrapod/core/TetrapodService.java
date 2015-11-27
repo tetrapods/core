@@ -108,7 +108,13 @@ public class TetrapodService extends DefaultService
 
          clusterTopic = publishTopic();
          servicesTopic = publishTopic();
+
          adminTopic = publishTopic();
+         adminTopic.addListener((toEntityId, resub) -> {
+            synchronized (cluster) {
+               cluster.sendAdminDetails(findSession(toEntityId), toEntityId, adminTopic.topicId);
+            }
+         });
 
          // Establish a special loopback connection to ourselves
          // connects to self on localhost on our clusterport
@@ -247,7 +253,9 @@ public class TetrapodService extends DefaultService
       if (ses.getTheirEntityId() != 0) {
          final EntityInfo e = registry.getEntity(ses.getTheirEntityId());
          if (e != null) {
-            registry.setGone(e);
+            if (!e.isService() || cluster.isLeader()) {
+               registry.setGone(e);
+            }
          }
       }
    }
@@ -364,6 +372,7 @@ public class TetrapodService extends DefaultService
    public void onShutdown(boolean restarting) {
       logger.info("Shutting Down Tetrapod");
       if (!Util.isLocal()) {
+         logger.info("Sleeping ....");
          // sleep a bit so other services getting a kill signal can shutdown cleanly
          Util.sleep(1500);
       }
@@ -385,6 +394,14 @@ public class TetrapodService extends DefaultService
    }
 
    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+   private Session findSession(final int entityId) {
+      EntityInfo e = registry.getEntity(entityId);
+      if (e != null) {
+         return findSession(e);
+      }
+      return null;
+   }
 
    private Session findSession(final EntityInfo entity) {
       if (entity.parentId == getEntityId()) {
@@ -508,7 +525,8 @@ public class TetrapodService extends DefaultService
                }
             }
          } else {
-            logger.error("Could not find topic {} for entity {} : {}", header.topicId, publisher, header.dump());
+            logger.warn("Could not find topic {} for entity {} : {}", header.topicId, publisher, header.dump());
+            sendMessage(new TopicNotFoundMessage(publisher.entityId, header.topicId), publisher.entityId);
          }
       } else {
          // relay to destination 
@@ -670,7 +688,7 @@ public class TetrapodService extends DefaultService
 
       // for all services in the registry
       for (final EntityInfo e : cluster.getEntities()) {
-         if (e.isService()) {
+         if (e.isService() && e.entityId != getEntityId()) {
             healthCheckService(e);
          }
       }
@@ -697,11 +715,11 @@ public class TetrapodService extends DefaultService
    private void healthCheckService(final EntityInfo e) {
       final long now = System.currentTimeMillis();
       final Session ses = e.getSession();
-      
-      if (cluster.isLeader()) {
-         logger.info("HEALTH CHECK {} gone={} ses={} [{}]", e, e.isGone(), ses, ses != null ? ses.isConnected() : false);
-      }
-      
+
+      //      if (cluster.isLeader()) {
+      //         logger.info("HEALTH CHECK {} gone={} ses={} [{}]", e, e.isGone(), ses, ses != null ? ses.isConnected() : false);
+      //      }
+
       if (e.isGone()) {
          // only the leader can change the registry status
          if (cluster.isLeader()) {
@@ -729,7 +747,7 @@ public class TetrapodService extends DefaultService
 
          // only the leader can change the registry status
          if (cluster.isLeader()) {
-            if ((ses == null && !e.isPendingRegistration()) || (ses != null && !ses.isConnected())) {
+            if ((ses == null /*&& !e.isPendingRegistration()*/) || (ses != null && !ses.isConnected())) {
                registry.setGone(e);
             }
          }
@@ -769,7 +787,7 @@ public class TetrapodService extends DefaultService
       assert (adminTopic != null);
       synchronized (cluster) {
          subscribe(adminTopic.topicId, toEntityId);
-         cluster.sendAdminDetails(ses, toEntityId, adminTopic.topicId);
+         //cluster.sendAdminDetails(ses, toEntityId, adminTopic.topicId);
       }
    }
 
@@ -785,6 +803,10 @@ public class TetrapodService extends DefaultService
       final SessionRequestContext ctx = (SessionRequestContext) ctxA;
       if (getEntityId() == 0) {
          return new Error(ERROR_SERVICE_UNAVAILABLE);
+      }
+
+      if (ctx.header.fromType == Core.TYPE_SERVICE && !cluster.isLeader()) {
+         //return new Error(TetrapodContract.ERROR_NOT_LEADER);
       }
 
       EntityInfo info = null;
@@ -815,9 +837,6 @@ public class TetrapodService extends DefaultService
          // clobber their reported host with their IP
          info.host = ctx.session.getPeerHostname();
       }
-
-      // register/reclaim
-      //registry.register(info);
 
       if (info.entityId == 0) {
          info.entityId = registry.issueId();
@@ -1268,6 +1287,7 @@ public class TetrapodService extends DefaultService
 
    @Override
    public Response requestCloseClientConnection(CloseClientConnectionRequest r, RequestContext ctx) {
+      resetServiceConnector(true);
       int accountId = Integer.parseInt(r.data);
       for (EntityInfo e : registry.getEntities()) {
          if (!e.isService() && e.getAlternateId() == accountId && !e.isGone()) {
@@ -1279,6 +1299,15 @@ public class TetrapodService extends DefaultService
          }
       }
       return Response.error(ERROR_INVALID_ENTITY);
+   }
+
+   @Override
+   public Response requestRaftLeader(RaftLeaderRequest r, RequestContext ctx) {
+      ServerAddress leader = cluster.getLeader();
+      if (leader != null) {
+         return new RaftLeaderResponse(leader);
+      }
+      return Response.error(TetrapodContract.ERROR_NOT_LEADER);
    }
 
 }
