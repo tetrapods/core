@@ -716,16 +716,12 @@ public class TetrapodService extends DefaultService
       final long now = System.currentTimeMillis();
       final Session ses = e.getSession();
 
-      //      if (cluster.isLeader()) {
-      //         logger.info("HEALTH CHECK {} gone={} ses={} [{}]", e, e.isGone(), ses, ses != null ? ses.isConnected() : false);
-      //      }
-
       if (e.isGone()) {
          // only the leader can change the registry status
          if (cluster.isLeader()) {
             if (ses != null && ses.isConnected()) {
                registry.clearGone(e);
-            } else if (now - e.getGoneSince() > Util.ONE_MINUTE) {
+            } else if (now - e.getGoneSince() > 5 * Util.ONE_MINUTE) {
                logger.info("Reaping: {}", e);
                if (!e.isTetrapod()) {
                   registry.unregister(e);
