@@ -322,7 +322,7 @@ public class EntityRegistry implements TetrapodContract.Registry.API {
 
    public void setGone(EntityInfo e) {
       logger.info("Setting {} as GONE", e);
-      if (e.getLastContact() != null) {
+      if (e.isClient() && e.getLastContact() != null) {
          // we set this value to non-null only for web-polling sessions, 
          // which need to be handled differently since multiple sessions can 
          // be in use for the same entity, we only set gone when health monitor 
