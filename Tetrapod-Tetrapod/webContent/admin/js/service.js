@@ -256,7 +256,6 @@ define(["knockout", "jquery", "bootbox", "alert", "app", "chart", "modules/build
                   maxCount = Math.max(maxCount, r.count);
                   maxTime = Math.max(maxTime, r.totalTime);
                   maxAvgTime = Math.max(maxAvgTime, r.avgTime);
-
                   r.numErrors = 0;
                   for (var j = 0; j < r.errors.length; j++) {
                      var error = r.errors[j];
@@ -264,7 +263,6 @@ define(["knockout", "jquery", "bootbox", "alert", "app", "chart", "modules/build
                         r.numErrors += error.count;
                      }
                   }
-
                }
 
                for (var i = 0; i < result.requests.length; i++) {

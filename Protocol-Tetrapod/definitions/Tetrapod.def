@@ -65,6 +65,7 @@ internal request ServicesUnsubscribe
 
 internal request ServiceStatusUpdate
    1: int status
+   2: int mask
 
 # perhaps this should be merged into a new RegisterService   
 internal request AddServiceInformation

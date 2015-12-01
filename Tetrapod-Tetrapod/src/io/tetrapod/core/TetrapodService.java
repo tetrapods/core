@@ -450,7 +450,7 @@ public class TetrapodService extends DefaultService
             // HACK: as a side-effect, we update last contact time
             e.setLastContact(System.currentTimeMillis());
             if (e.isGone()) {
-               registry.updateStatus(e, e.status & ~Core.STATUS_GONE);
+               registry.updateStatus(e, 0, Core.STATUS_GONE);
             }
             return true;
          }
@@ -574,7 +574,7 @@ public class TetrapodService extends DefaultService
             }
             buf.readerIndex(ri);
          } else {
-            if (!e.isGone() && (e.parentId == getEntityId() || e.isTetrapod())) {
+            if (e.parentId == getEntityId() || e.isTetrapod()) {
                final Session session = findSession(e);
                if (session != null) {
                   // rebroadcast this message if it was published by one of our children and we're sending it to another tetrapod
@@ -582,7 +582,9 @@ public class TetrapodService extends DefaultService
                   session.sendRelayedMessage(header, buf, keepBroadcasting);
                   buf.readerIndex(ri);
                } else {
-                  logger.error("Could not find session for {} {}", e, header.dump());
+                  if (!e.isGone()) {
+                     logger.error("Could not find session for {} {}", e, header.dump());
+                  }
                }
             }
          }
@@ -838,27 +840,23 @@ public class TetrapodService extends DefaultService
          info.entityId = registry.issueId();
       }
 
+      // update & store session
+      ctx.session.setTheirEntityId(info.entityId);
+      ctx.session.setTheirEntityType(info.type);
+      info.setSession(ctx.session);
+      // deliver them their entityId immediately to avoid some race conditions with the response
+      ctx.session.sendMessage(new EntityMessage(info.entityId), Core.UNADDRESSED);
+
       if (info.type == Core.TYPE_TETRAPOD) {
          info.parentId = info.entityId;
-
-         ////////// HACK //////////
          if (cluster.getEntity(info.entityId) != null) {
-            // update & store session
-            ctx.session.setTheirEntityId(info.entityId);
-            ctx.session.setTheirEntityType(info.type);
-            info.setSession(ctx.session);
-            // deliver them their entityId immediately to avoid some race conditions with the response
-            ctx.session.sendMessage(new EntityMessage(info.entityId), Core.UNADDRESSED);
+            cluster.executeCommand(new ModEntityCommand(info.entityId, info.status, 0xFFFFFFFF, info.build, info.version), null);
             return new RegisterResponse(info.entityId, getEntityId(), EntityToken.encode(info.entityId, info.reclaimToken));
          }
       }
 
       // for a client, we don't use raft to sync them, as they are a locally issued, non-replicated client
       if (info.type == Core.TYPE_CLIENT) {
-         // update & store session
-         ctx.session.setTheirEntityId(info.entityId);
-         ctx.session.setTheirEntityType(info.type);
-         info.setSession(ctx.session);
          // deliver them their entityId immediately to avoid some race conditions with the response
          ctx.session.sendMessage(new EntityMessage(info.entityId), Core.UNADDRESSED);
          registry.onAddEntityCommand(info);
@@ -867,19 +865,19 @@ public class TetrapodService extends DefaultService
 
       final int entityId = info.entityId;
 
-      final AsyncResponder responder = new AsyncResponder(ctx);
+      if (serviceConnector != null) {
+         // set this session in the serviceConnector
+         serviceConnector.seedService(info, ctx.session);
+      }
 
       logger.info("Registering: {} type={}", info, info.type);
       // execute a raft registration command
+      final AsyncResponder responder = new AsyncResponder(ctx);
       cluster.executeCommand(new AddEntityCommand(info), entry -> {
          if (entry != null) {
             logger.info("Waited for local entityId-{} : {} : {}", entityId, entry, cluster.getCommitIndex());
             // get the real entity object after we've processed the command
             final EntityInfo entity = cluster.getEntity(entityId);
-
-            // update & store session
-            ctx.session.setTheirEntityId(entity.entityId);
-            ctx.session.setTheirEntityType(entity.type);
 
             entity.setSession(ctx.session);
 
@@ -929,9 +927,9 @@ public class TetrapodService extends DefaultService
 
       synchronized (servicesTopic) {
          subscribe(servicesTopic.topicId, ctx.header.fromId);
-         // send all current entities
+         // send all current services
          for (EntityInfo e : registry.getServices()) {
-            ctx.session.sendMessage(new ServiceAddedMessage(e), ctx.header.fromId);
+            e.queue(() -> sendPrivateMessage(new ServiceAddedMessage(e), ctx.header.fromId, servicesTopic.topicId));
          }
       }
       return Response.SUCCESS;
@@ -948,11 +946,10 @@ public class TetrapodService extends DefaultService
 
    @Override
    public Response requestServiceStatusUpdate(ServiceStatusUpdateRequest r, RequestContext ctx) {
-      // TODO: don't allow certain bits to be set from a request
       if (ctx.header.fromId != 0) {
          final EntityInfo e = registry.getEntity(ctx.header.fromId);
          if (e != null) {
-            registry.updateStatus(e, r.status);
+            registry.updateStatus(e, r.status, r.mask);
          } else {
             return new Error(ERROR_INVALID_ENTITY);
          }

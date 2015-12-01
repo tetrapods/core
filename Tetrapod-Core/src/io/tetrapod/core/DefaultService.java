@@ -169,9 +169,7 @@ public class DefaultService
       stats.publishTopic();
       logger.info("@@@@@ ServicesSubscribeRequest");
       sendDirectRequest(new ServicesSubscribeRequest()).handle(res -> logger.info("{}", res.dump()));
-      if (!isStartingUp()) {
-         resetServiceConnector(true);
-      }
+      resetServiceConnector(true);
    }
 
    public boolean dependenciesReady() {
@@ -193,7 +191,6 @@ public class DefaultService
                   AdminAuthToken.setSecret(Util.getProperty(AdminAuthToken.SHARED_SECRET_KEY));
 
                   onReadyToServe();
-                  resetServiceConnector(true);
                } catch (Throwable t) {
                   fail(t);
                }
@@ -480,7 +477,7 @@ public class DefaultService
          this.status = status;
       }
       if (changed && clusterClient.isConnected()) {
-         sendDirectRequest(new ServiceStatusUpdateRequest(status)).log();
+         sendDirectRequest(new ServiceStatusUpdateRequest(bits, mask)).log();
       }
    }
 
@@ -533,8 +530,8 @@ public class DefaultService
    }
 
    public long getAverageResponseTime() {
-      // TODO: verify this is correctly converting nanos to millis
-      return (long) dispatcher.requestTimes.getSnapshot().getMean() / 1000000L;
+      //return (long) dispatcher.requestTimes.getSnapshot().getMean() / 1000000L;
+      return Math.round(dispatcher.requestTimes.getOneMinuteRate());
    }
 
    /**
@@ -675,7 +672,7 @@ public class DefaultService
    }
 
    public void sendMessage(Message msg, int toEntityId) {
-      if (serviceConnector != null && isServiceExistant(toEntityId)) {
+      if (serviceConnector != null) {
          serviceConnector.sendMessage(msg, toEntityId);
       } else {
          clusterClient.getSession().sendMessage(msg, toEntityId);
@@ -686,7 +683,7 @@ public class DefaultService
       clusterClient.getSession().sendAltBroadcastMessage(msg, altId);
    }
 
-   public boolean sendBroadcastMessage(Message msg, int toEntityId, int topicId) {
+   public boolean sendBroadcastMessage(Message msg, int toEntityId, int topicId) {      
       if (serviceConnector != null) {
          return serviceConnector.sendBroadcastMessage(msg, toEntityId, topicId);
       } else {
@@ -696,9 +693,9 @@ public class DefaultService
    }
 
    public boolean sendPrivateMessage(Message msg, int toEntityId, int topicId) {
-      if (serviceConnector != null && isServiceExistant(toEntityId)) {
+      if (serviceConnector != null) {
          return serviceConnector.sendMessage(msg, toEntityId);
-      } else {
+      } else { 
          return false;
       }
    }

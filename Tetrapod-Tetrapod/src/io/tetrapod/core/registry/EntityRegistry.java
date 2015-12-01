@@ -176,11 +176,12 @@ public class EntityRegistry implements TetrapodContract.Registry.API {
       }
    }
 
-   public void updateStatus(EntityInfo e, int status) {
+   public void updateStatus(EntityInfo e, int status, int mask) {
       if (e.isClient()) {
-         e.status = status;
+         e.status &= ~mask;
+         e.status |= status;
       } else {
-         cluster.executeCommand(new ModEntityCommand(e.entityId, status, e.build, e.version), null);
+         cluster.executeCommand(new ModEntityCommand(e.entityId, status, mask, e.build, e.version), null);
       }
    }
 
@@ -331,13 +332,13 @@ public class EntityRegistry implements TetrapodContract.Registry.API {
          return;
       }
 
-      updateStatus(e, e.status | Core.STATUS_GONE);
+      updateStatus(e, Core.STATUS_GONE, Core.STATUS_GONE);
       clearAllTopicsAndSubscriptions(e);
    }
 
    public void clearGone(EntityInfo e) {
       logger.info("Setting {} as BACK", e);
-      updateStatus(e, e.status & ~Core.STATUS_GONE);
+      updateStatus(e, 0, Core.STATUS_GONE);
    }
 
    public int getNumActiveClients() {
@@ -354,6 +355,14 @@ public class EntityRegistry implements TetrapodContract.Registry.API {
       if (getEntity(entity.entityId) != null && entity.parentId != parentId) {
          entity.queue(() -> clearAllTopicsAndSubscriptions(entity));
       }
+
+      // if we had a temporary EntityInfo stored in registry while waiting for the command to commit, we can now move 
+      // the stored session object into the new official entity object produced by this command
+      final EntityInfo old = entities.get(entity.entityId);
+      if (old != null && old.reclaimToken == entity.reclaimToken) {
+         entity.setSession(old.session);
+      }
+
       entities.put(entity.entityId, entity);
       if (entity.isService()) {
          // register their service in our services list
@@ -367,13 +376,12 @@ public class EntityRegistry implements TetrapodContract.Registry.API {
       }
       if (entity.isService()) {
          entity.queue(() -> broadcaster.broadcastServicesMessage(new ServiceAddedMessage(entity)));
-      }
+      } 
    }
 
    public void onModEntityCommand(final EntityInfo entity) {
       if (entity != null && entity.isService()) {
          entity.queue(() -> {
-            logger.info("onModEntityCommand {} gone={}", entity, entity.isGone());
             broadcaster.broadcastServicesMessage(new ServiceUpdatedMessage(entity.entityId, entity.status));
          });
       }
@@ -398,4 +406,6 @@ public class EntityRegistry implements TetrapodContract.Registry.API {
       }
    }
 
+   
+   
 }

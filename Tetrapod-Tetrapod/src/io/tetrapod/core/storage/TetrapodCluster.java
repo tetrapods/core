@@ -1010,7 +1010,7 @@ public class TetrapodCluster extends Storage
    }
 
    private void onModEntityCommand(ModEntityCommand command) {
-      logger.info("onModEntityCommand {} gone={}", command.getEntityId(), command.getStatus());
+      //logger.info("onModEntityCommand {} gone={}", command.getEntityId(), command.getStatus());
       service.registry.onModEntityCommand(state.entities.get(command.getEntityId()));
    }
 

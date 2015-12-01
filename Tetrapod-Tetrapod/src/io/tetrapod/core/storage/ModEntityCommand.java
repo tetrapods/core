@@ -8,25 +8,27 @@ public class ModEntityCommand implements Command<TetrapodStateMachine> {
 
    public static final int COMMAND_ID     = TetrapodStateMachine.MOD_ENTITY_COMMAND_ID;
 
-   private final byte      commandVersion = 1;
+   private final byte      commandVersion = 2;
 
    private int             entityId;
    private int             status;
+   private int             mask;
    private String          build;
    private int             version;
 
    public ModEntityCommand() {}
 
-   public ModEntityCommand(int entityId, int status, String build, int version) {
+   public ModEntityCommand(int entityId, int status, int mask, String build, int version) {
       this.entityId = entityId;
       this.status = status;
+      this.mask = mask;
       this.build = build;
       this.version = version;
    }
 
    @Override
    public void applyTo(TetrapodStateMachine state) {
-      state.updateEntity(entityId, status, build, version);
+      state.updateEntity(entityId, status, mask, build, version);
    }
 
    @Override
@@ -34,6 +36,7 @@ public class ModEntityCommand implements Command<TetrapodStateMachine> {
       out.writeByte(commandVersion);
       out.writeInt(entityId);
       out.writeInt(status);
+      out.writeInt(mask);
       out.writeUTF(build);
       out.writeInt(version);
    }
@@ -41,9 +44,14 @@ public class ModEntityCommand implements Command<TetrapodStateMachine> {
    @Override
    public void read(DataInputStream in, int fileVersion) throws IOException {
       byte commandVersion = in.readByte();
-      assert commandVersion == this.commandVersion;
+      assert commandVersion <= this.commandVersion;
       entityId = in.readInt();
       status = in.readInt();
+      if (commandVersion >= 2) {
+         mask = in.readInt();
+      } else {
+         mask = 0xFFFFFFFF;
+      }
       build = in.readUTF();
       version = in.readInt();
    }
@@ -55,7 +63,7 @@ public class ModEntityCommand implements Command<TetrapodStateMachine> {
 
    @Override
    public String toString() {
-      return "ModEntityCommand(" + entityId + ", " + status + ", " + build + ", " + version + ")";
+      return "ModEntityCommand(" + entityId + ", " + status + ", " + mask + ", " + build + ", " + version + ")";
    }
 
    public static void register(TetrapodStateMachine state) {
@@ -68,6 +76,10 @@ public class ModEntityCommand implements Command<TetrapodStateMachine> {
 
    public int getStatus() {
       return status;
+   }
+
+   public int getMask() {
+      return mask;
    }
 
 }

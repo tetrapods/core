@@ -318,7 +318,9 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
    public boolean sendMessage(Message msg, int toEntityId) {
       Session ses = getSession(toEntityId);
       if (ses == null || !ses.isConnected()) {
-         return false;
+         logger.warn("Could not send {} to {}. No Session", msg.dump(), toEntityId);
+         return false; // BUFFER on fail?
+
       }
       ses.sendMessage(msg, toEntityId);
       return true;
@@ -330,6 +332,7 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
    public boolean sendBroadcastMessage(Message msg, int toEntityId, int topicId) {
       Session ses = getSession(toEntityId);
       if (ses == null || !ses.isConnected()) {
+         logger.warn("Could not broadcast {} to {} for topic {}. No Session", msg.dump(), toEntityId, topicId);
          return false;
       }
       ses.sendTopicBroadcastMessage(msg, toEntityId, topicId);
@@ -364,6 +367,16 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
       synchronized (s) {
          s.theirToken = r.token;
          return new DirectConnectionResponse(new ServerAddress(Util.getHostName(), server.getPort()), s.token);
+      }
+   }
+
+   public void seedService(Entity e, Session session) {
+      final DirectServiceInfo s = getDirectServiceInfo(e.entityId);
+      synchronized (s) {
+         if (!s.pending && s.ses == null) {
+            s.ses = session;
+            s.valid = true;
+         }
       }
    }
 
