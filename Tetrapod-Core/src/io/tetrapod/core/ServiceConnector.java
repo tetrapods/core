@@ -72,9 +72,6 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
       public Session makeSession(SocketChannel ch) {
          final Session ses = super.makeSession(ch);
          ses.setName("Direct");
-         if (service instanceof RelayHandler) {
-            ses.setRelayHandler((RelayHandler) service);
-         }
          return ses;
       }
    }
@@ -155,7 +152,7 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
             c.connect(r.address.host, r.address.port, service.getDispatcher()).sync();
             synchronized (this) {
                ses = c.getSession();
-               ses.setMyEntityId(service.getEntityId());
+               ses.setMyEntityId(service.getEntityId());              
                validate(r.token);
             }
          } catch (Exception e) {
@@ -179,6 +176,10 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
          if (token.equals(this.token)) {            
             ses.setTheirEntityId(entityId);
             ses.setTheirEntityType(Core.TYPE_SERVICE);
+            ses.setName("Direct"+entityId);
+            if (service instanceof RelayHandler) {
+               ses.setRelayHandler((RelayHandler) service);
+            }
             pending = false;
             valid = true;
             failures = 0;
@@ -355,6 +356,10 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
             s.ses.setMyEntityId(service.getEntityId());
             s.ses.setTheirEntityId(r.entityId);
             s.ses.setTheirEntityType(Core.TYPE_SERVICE);
+            s.ses.setName("Direct"+s.entityId);
+            if (service instanceof RelayHandler) {
+               s.ses.setRelayHandler((RelayHandler) service);
+            }
             s.valid = true;
             return new ValidateConnectionResponse(s.theirToken);
          } else {
@@ -377,6 +382,9 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
       synchronized (s) {
          if (!s.pending && s.ses == null) {
             s.ses = session;
+            if (service instanceof RelayHandler) {
+               s.ses.setRelayHandler((RelayHandler) service);
+            }
             s.valid = true;
          }
       }
