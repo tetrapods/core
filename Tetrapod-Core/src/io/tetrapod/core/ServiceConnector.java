@@ -150,33 +150,31 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
                c.enableTLS(sslContext);
             }
             c.connect(r.address.host, r.address.port, service.getDispatcher()).sync();
-            synchronized (this) {
-               ses = c.getSession();
-               ses.setMyEntityId(service.getEntityId());              
-               validate(r.token);
-            }
+            validate(c.getSession(), r.token);
          } catch (Exception e) {
             logger.error(e.getMessage(), e);
             failure();
          }
       }
 
-      private synchronized void validate(String theirToken) {
+      private synchronized void validate(Session ses, String theirToken) {
          ses.sendRequest(new ValidateConnectionRequest(service.getEntityId(), theirToken), Core.DIRECT).handle(res -> {
             if (res.isError()) {
                failure();
             } else {
-               finish(((ValidateConnectionResponse) res).token);
+               finish(ses, ((ValidateConnectionResponse) res).token);
             }
          });
       }
 
-      private synchronized void finish(String token) {
+      private synchronized void finish(Session ses, String token) {
          assert entityId != 0;
-         if (token.equals(this.token)) {            
+         this.ses = ses;
+         if (token.equals(this.token)) {
+            ses.setMyEntityId(service.getEntityId());
             ses.setTheirEntityId(entityId);
             ses.setTheirEntityType(Core.TYPE_SERVICE);
-            ses.setName("Direct"+entityId);
+            ses.setName("Direct" + entityId);
             if (service instanceof RelayHandler) {
                ses.setRelayHandler((RelayHandler) service);
             }
@@ -356,7 +354,7 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
             s.ses.setMyEntityId(service.getEntityId());
             s.ses.setTheirEntityId(r.entityId);
             s.ses.setTheirEntityType(Core.TYPE_SERVICE);
-            s.ses.setName("Direct"+s.entityId);
+            s.ses.setName("Direct" + s.entityId);
             if (service instanceof RelayHandler) {
                s.ses.setRelayHandler((RelayHandler) service);
             }
