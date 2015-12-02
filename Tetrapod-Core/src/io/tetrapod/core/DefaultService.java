@@ -485,12 +485,16 @@ public class DefaultService
    public void fail(Throwable error) {
       logger.error(error.getMessage(), error);
       setStatus(Core.STATUS_FAILED);
+      onPaused();
    }
 
    @Override
    public void fail(String reason) {
       logger.error("FAIL: {}", reason);
       setStatus(Core.STATUS_FAILED);
+      if (!isPaused()) {
+         onPaused();
+      }
    }
 
    /**
