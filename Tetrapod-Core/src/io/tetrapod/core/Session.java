@@ -344,6 +344,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
    }
 
    public void sendRelayedMessage(MessageHeader header, ByteBuf payload, boolean broadcast) {
+      assert header.fromId != 0;
       if (!commsLogIgnore(header.structId)) {
          commsLog("%s  [M] ~> Message:%d %s (to%d)", this, header.structId, getNameFor(header), header.toId);
       }

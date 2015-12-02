@@ -224,7 +224,11 @@ public class WireSession extends Session {
       if (relayHandler == null || selfDispatch) {
          dispatchMessage(header, reader);
       } else {
-         relayHandler.relayMessage(header, in, isBroadcast);
+         if (header.fromId == 0) {
+            logger.error("{} fromId is 0 for {}", this, header.dump());
+         } else {
+            relayHandler.relayMessage(header, in, isBroadcast);
+         }
       }
    }
 
