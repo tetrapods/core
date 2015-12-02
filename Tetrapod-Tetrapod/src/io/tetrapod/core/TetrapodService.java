@@ -208,7 +208,7 @@ public class TetrapodService extends DefaultService
       @Override
       public Session makeSession(SocketChannel ch) {
          final Session ses = super.makeSession(ch);
-         ses.setName("T"+ses.theirType);
+         ses.setName("T" + ses.theirType);
          ses.setRelayHandler(TetrapodService.this);
          return ses;
       }
@@ -648,6 +648,43 @@ public class TetrapodService extends DefaultService
       }
    }
 
+   @Override
+   public boolean sendBroadcastMessage(Message msg, int toEntityId, int topicId) {
+      final EntityInfo e = registry.getEntity(toEntityId);
+      if (e.isService()) {
+         return super.sendBroadcastMessage(msg, toEntityId, topicId);
+      } else {
+         final Session ses = findSession(e);
+         if (ses != null && ses.isConnected()) {
+            ses.sendMessage(msg, toEntityId);
+            return true;
+         }
+      }
+      return false;
+   }
+   
+   @Override
+   public boolean sendPrivateMessage(Message msg, int toEntityId, int topicId) {
+      final EntityInfo e = registry.getEntity(toEntityId);
+      if (e.isService()) {
+         return super.sendPrivateMessage(msg, toEntityId, topicId);
+      } else if (e.hasConnectedSession()) {
+         e.getSession().sendMessage(msg, toEntityId);
+         return true;
+      }
+      return false;
+   }
+   
+   @Override
+   public void sendMessage(Message msg, int toEntityId) {
+      final EntityInfo e = registry.getEntity(toEntityId);
+      if (e.isService()) {
+         super.sendMessage(msg, toEntityId);
+      } else if (e.hasConnectedSession()) {
+         e.getSession().sendMessage(msg, toEntityId);
+      }
+   }
+
    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
    private void scheduleHealthCheck() {
@@ -666,7 +703,7 @@ public class TetrapodService extends DefaultService
       }
    }
 
-   private void healthCheck() {
+   private void healthCheck() {      
       cluster.service();
       final long now = System.currentTimeMillis();
       if (now - lastStatsLog > Util.ONE_MINUTE) {

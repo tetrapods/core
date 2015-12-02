@@ -69,15 +69,7 @@ public class Publisher implements TopicUnsubscribedMessage.Handler, TopicNotFoun
 
    public int getEntityId() {
       return service.getEntityId();
-   }
-
-   public void sendMessage(Message msg) {
-      sendMessage(msg, Core.UNADDRESSED);
-   }
-
-   public void sendMessage(Message msg, int toEntityId) {
-      service.sendMessage(msg, toEntityId);
-   }
+   } 
 
    public boolean sendMessage(Message msg, int toEntityId, int topicId) {
       return service.sendPrivateMessage(msg, toEntityId, topicId);
