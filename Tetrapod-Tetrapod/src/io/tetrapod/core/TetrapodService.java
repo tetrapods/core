@@ -828,6 +828,7 @@ public class TetrapodService extends DefaultService
          info.contractId = r.contractId;
       }
 
+      info.build = r.build;
       info.status = r.status &= ~Core.STATUS_GONE;
       info.parentId = getEntityId();
       info.type = ctx.session.getTheirEntityType();
