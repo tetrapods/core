@@ -138,6 +138,7 @@ public class TetrapodCluster extends Storage
    @Override
    public Session makeSession(SocketChannel ch) {
       final Session ses = new WireSession(ch, service);
+      ses.setName("Cluster");
       ses.setRelayHandler(service);
       ses.setMyEntityId(service.getEntityId());
       ses.setMyEntityType(Core.TYPE_TETRAPOD);

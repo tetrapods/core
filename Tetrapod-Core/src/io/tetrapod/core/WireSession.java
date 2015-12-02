@@ -225,7 +225,7 @@ public class WireSession extends Session {
          dispatchMessage(header, reader);
       } else {
          if (header.fromId == 0) {
-            logger.error("{} fromId is 0 for {}", this, header.dump());
+            logger.error("{} fromId is 0 for {} ({} <==> {})", this, header.dump(), myId, theirId);
          } else {
             relayHandler.relayMessage(header, in, isBroadcast);
          }

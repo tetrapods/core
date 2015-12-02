@@ -208,6 +208,7 @@ public class TetrapodService extends DefaultService
       @Override
       public Session makeSession(SocketChannel ch) {
          final Session ses = super.makeSession(ch);
+         ses.setName("T"+ses.theirType);
          ses.setRelayHandler(TetrapodService.this);
          return ses;
       }

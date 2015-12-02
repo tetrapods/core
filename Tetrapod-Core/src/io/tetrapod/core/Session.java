@@ -84,6 +84,8 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
 
    protected RelayHandler               relayHandler;
 
+   protected String                     name;
+
    protected int                        myId                       = 0;
    protected byte                       myType                     = Core.TYPE_ANONYMOUS;
 
@@ -96,6 +98,10 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
       this.channel = channel;
       this.helper = helper;
       this.myContractId = helper.getContractId();
+   }
+
+   public void setName(String name) {
+      this.name = name;
    }
 
    /**
@@ -163,7 +169,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
 
    @Override
    public String toString() {
-      return String.format("%s #%d [0x%08X]", getClass().getSimpleName(), sessionNum, theirId);
+      return String.format("%s%s #%d [0x%08X]", getClass().getSimpleName(),  name == null ? "" : name, sessionNum, theirId);
    }
 
    protected String getStructName(int contractId, int structId) {

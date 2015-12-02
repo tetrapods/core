@@ -71,6 +71,7 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
       @Override
       public Session makeSession(SocketChannel ch) {
          final Session ses = super.makeSession(ch);
+         ses.setName("Direct");
          if (service instanceof RelayHandler) {
             ses.setRelayHandler((RelayHandler) service);
          }
