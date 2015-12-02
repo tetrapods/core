@@ -175,7 +175,8 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
       }
 
       private synchronized void finish(String token) {
-         if (token.equals(this.token)) {
+         assert entityId != 0;
+         if (token.equals(this.token)) {            
             ses.setTheirEntityId(entityId);
             ses.setTheirEntityType(Core.TYPE_SERVICE);
             pending = false;
@@ -321,7 +322,6 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
       if (ses == null || !ses.isConnected()) {
          logger.warn("Could not send {} to {}. No Session", msg.dump(), toEntityId);
          return false; // BUFFER on fail?
-
       }
       ses.sendMessage(msg, toEntityId);
       return true;
@@ -347,6 +347,7 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
 
    @Override
    public Response requestValidateConnection(ValidateConnectionRequest r, RequestContext ctx) {
+      assert r.entityId != 0;
       final DirectServiceInfo s = getDirectServiceInfo(r.entityId);
       synchronized (s) {
          if (s.token.equals(r.token)) {
