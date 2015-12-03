@@ -532,8 +532,8 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
          case ServiceLogsResponse.STRUCT_ID:
          case ServiceStatsMessage.STRUCT_ID:
          case DummyRequest.STRUCT_ID:
-         case AppendEntriesRequest.STRUCT_ID:
-         case AppendEntriesResponse.STRUCT_ID:
+         //case AppendEntriesRequest.STRUCT_ID:
+         //case AppendEntriesResponse.STRUCT_ID:
             return true;
       }
       return !commsLog.isDebugEnabled();
