@@ -3,8 +3,13 @@ package io.tetrapod.core.utils;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.*;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class ClosableLock implements AutoCloseable, Lock {
-   final Lock lock;
+   public static final Logger logger = LoggerFactory.getLogger(ClosableLock.class);
+
+   final Lock                 lock;
 
    public ClosableLock(Lock lock) {
       this.lock = lock;
@@ -45,16 +50,49 @@ public class ClosableLock implements AutoCloseable, Lock {
       return this.lock.newCondition();
    }
 
+   public static ClosableLock acquire(final Lock lock, long millisWarn, String context) {
+      final long start = System.currentTimeMillis();
+      try {
+         return acquire(lock);
+      } finally {
+         if (System.currentTimeMillis() - start > millisWarn) {
+            logger.warn("{} took {} ms to acquire lock", context, System.currentTimeMillis() - start);
+         }
+      }
+   }
+
    public static ClosableLock acquire(final Lock lock) {
       ClosableLock cl = new ClosableLock(lock);
       cl.lock();
       return cl;
    }
 
+   public static ClosableLock acquireReadLock(final ReadWriteLock lock, long millisWarn, String context) {
+      final long start = System.currentTimeMillis();
+      try {
+         return acquireReadLock(lock);
+      } finally {
+         if (System.currentTimeMillis() - start > millisWarn) {
+            logger.warn("{} took {} ms to acquire lock", context, System.currentTimeMillis() - start);
+         }
+      }
+   }
+
    public static ClosableLock acquireReadLock(final ReadWriteLock lock) {
       ClosableLock cl = new ClosableLock(lock.readLock());
       cl.lock();
       return cl;
+   }
+
+   public static ClosableLock acquireWriteLock(final ReadWriteLock lock, long millisWarn, String context) {
+      final long start = System.currentTimeMillis();
+      try {
+         return acquireWriteLock(lock);
+      } finally {
+         if (System.currentTimeMillis() - start > millisWarn) {
+            logger.warn("{} took {} ms to acquire lock", context, System.currentTimeMillis() - start);
+         }
+      }
    }
 
    public static ClosableLock acquireWriteLock(final ReadWriteLock lock) {
