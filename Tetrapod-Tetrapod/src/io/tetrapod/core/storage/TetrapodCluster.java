@@ -228,9 +228,10 @@ public class TetrapodCluster extends Storage
 
    private Async sendPeerRequest(Request req, int peerId) {
       Session ses = getSessionForPeer(peerId);
-      if (ses != null) {
+      if (ses != null && ses.isConnected()) {
          return ses.sendRequest(req, Core.DIRECT);
       }
+      logger.info("Not connected to peer {} ({})", peerId);
       final Async async = new Async(req, null, null);
       async.setResponse(CoreContract.ERROR_CONNECTION_CLOSED);
       return async;
