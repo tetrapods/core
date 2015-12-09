@@ -127,19 +127,21 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
          if (System.currentTimeMillis() > restUntil) {
             pending = true;
             valid = false;
-            service.clusterClient.getSession().sendRequest(new DirectConnectionRequest(token), entityId, (byte) 30).handle(res -> {
-               if (res.isError()) {
-                  if (res.errorCode() == CoreContract.ERROR_NOT_CONFIGURED || res.errorCode() == CoreContract.ERROR_SERVICE_UNAVAILABLE
-                           || res.errorCode() == CoreContract.ERROR_TIMEOUT) {
-                     logger.info("DirectConnectionRequest to {} =  {}", entityId, res);
-                  } else {
-                     logger.error("DirectConnectionRequest to {} =  {}", entityId, res);
-                  }
-                  failure();
-               } else {
-                  service.dispatcher.dispatchHighPriority(() -> connect((DirectConnectionResponse) res));
-               }
-            });
+            service.clusterClient.getSession().sendRequest(new DirectConnectionRequest(token, service.getEntityId()), entityId, (byte) 30)
+                     .handle(res -> {
+                        if (res.isError()) {
+                           if (res.errorCode() == CoreContract.ERROR_NOT_CONFIGURED
+                                    || res.errorCode() == CoreContract.ERROR_SERVICE_UNAVAILABLE
+                                    || res.errorCode() == CoreContract.ERROR_TIMEOUT) {
+                              logger.info("DirectConnectionRequest to {} =  {}", entityId, res);
+                           } else {
+                              logger.error("DirectConnectionRequest to {} =  {}", entityId, res);
+                           }
+                           failure();
+                        } else {
+                           service.dispatcher.dispatchHighPriority(() -> connect((DirectConnectionResponse) res));
+                        }
+                     });
          }
       }
 
@@ -206,6 +208,12 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
             services.put(entityId, e);
          }
          return e;
+      }
+   }
+
+   public boolean hasService(int entityId) {
+      synchronized (services) {
+         return services.containsKey(entityId);
       }
    }
 
@@ -387,5 +395,4 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
          }
       }
    }
-
 }

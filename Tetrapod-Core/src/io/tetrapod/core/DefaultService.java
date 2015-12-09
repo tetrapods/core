@@ -676,7 +676,8 @@ public class DefaultService
    }
 
    public void sendMessage(Message msg, int toEntityId) {
-      if (serviceConnector != null) {
+      if ((serviceConnector != null && serviceConnector.hasService(toEntityId))
+               || (services != null && services.isServiceExistant(toEntityId))) {
          serviceConnector.sendMessage(msg, toEntityId);
       } else {
          clusterClient.getSession().sendMessage(msg, toEntityId);
@@ -687,7 +688,7 @@ public class DefaultService
       clusterClient.getSession().sendAltBroadcastMessage(msg, altId);
    }
 
-   public boolean sendBroadcastMessage(Message msg, int toEntityId, int topicId) {      
+   public boolean sendBroadcastMessage(Message msg, int toEntityId, int topicId) {
       if (serviceConnector != null) {
          return serviceConnector.sendBroadcastMessage(msg, toEntityId, topicId);
       } else {
@@ -697,10 +698,12 @@ public class DefaultService
    }
 
    public boolean sendPrivateMessage(Message msg, int toEntityId, int topicId) {
-      if (serviceConnector != null) {
+      if ((serviceConnector != null && serviceConnector.hasService(toEntityId))
+               || (services != null && services.isServiceExistant(toEntityId))) {
          return serviceConnector.sendMessage(msg, toEntityId);
-      } else { 
-         return false;
+      } else {
+         clusterClient.getSession().sendMessage(msg, toEntityId);
+         return true;
       }
    }
 

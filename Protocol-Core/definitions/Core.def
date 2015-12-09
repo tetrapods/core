@@ -215,6 +215,7 @@ public response WebAPI
 
 internal request DirectConnection
    1: string token
+   2: int entityId
 
 internal response DirectConnection
    1: ServerAddress address

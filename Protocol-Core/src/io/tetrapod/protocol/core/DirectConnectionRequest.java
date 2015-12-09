@@ -21,11 +21,13 @@ public class DirectConnectionRequest extends Request {
       defaults();
    }
 
-   public DirectConnectionRequest(String token) {
+   public DirectConnectionRequest(String token, int entityId) {
       this.token = token;
+      this.entityId = entityId;
    }   
 
    public String token;
+   public int entityId;
 
    public final Structure.Security getSecurity() {
       return Security.INTERNAL;
@@ -33,11 +35,13 @@ public class DirectConnectionRequest extends Request {
 
    public final void defaults() {
       token = null;
+      entityId = 0;
    }
    
    @Override
    public final void write(DataSource data) throws IOException {
       data.write(1, this.token);
+      data.write(2, this.entityId);
       data.writeEndTag();
    }
    
@@ -48,6 +52,7 @@ public class DirectConnectionRequest extends Request {
          int tag = data.readTag();
          switch (tag) {
             case 1: this.token = data.read_string(tag); break;
+            case 2: this.entityId = data.read_int(tag); break;
             case Codec.END_TAG:
                return;
             default:
@@ -80,8 +85,9 @@ public class DirectConnectionRequest extends Request {
       // Note do not use this tags in long term serializations (to disk or databases) as 
       // implementors are free to rename them however they wish.  A null means the field
       // is not to participate in web serialization (remaining at default)
-      String[] result = new String[1+1];
+      String[] result = new String[2+1];
       result[1] = "token";
+      result[2] = "entityId";
       return result;
    }
    
@@ -96,6 +102,7 @@ public class DirectConnectionRequest extends Request {
       desc.types = new TypeDescriptor[desc.tagWebNames.length];
       desc.types[0] = new TypeDescriptor(TypeDescriptor.T_STRUCT, getContractId(), getStructId());
       desc.types[1] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
+      desc.types[2] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
       return desc;
    }
 
