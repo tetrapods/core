@@ -81,7 +81,7 @@ import java.util.Map;
 public class JSONArray implements Iterable<JSONArray.JSONElement> {
 
    public static class JSONElement {
-      private int ix = 0;
+      private int ix = -1;
       private final JSONArray array;
       
       public JSONElement(JSONArray array) {
