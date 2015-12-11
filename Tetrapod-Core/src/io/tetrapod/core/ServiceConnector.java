@@ -221,7 +221,7 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
       if (entityId != Core.DIRECT) {
          if (entityId != Core.UNADDRESSED) {
             if (entityId == service.getEntityId()) {
-               logger.info("For some reason we're sending {} to ourselves", req);
+               logger.trace("We're sending {} to ourselves", req);
             } else {
                final DirectServiceInfo s = getDirectServiceInfo(entityId);
                synchronized (s) {
