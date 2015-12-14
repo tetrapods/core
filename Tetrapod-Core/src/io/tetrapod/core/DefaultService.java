@@ -676,8 +676,8 @@ public class DefaultService
    }
 
    public void sendMessage(Message msg, int toEntityId) {
-      if ((serviceConnector != null && serviceConnector.hasService(toEntityId))
-               || (services != null && services.isServiceExistant(toEntityId))) {
+      if (serviceConnector != null
+               && (serviceConnector.hasService(toEntityId) || (services != null && services.isServiceExistant(toEntityId)))) {
          serviceConnector.sendMessage(msg, toEntityId);
       } else {
          clusterClient.getSession().sendMessage(msg, toEntityId);
@@ -698,8 +698,8 @@ public class DefaultService
    }
 
    public boolean sendPrivateMessage(Message msg, int toEntityId, int topicId) {
-      if ((serviceConnector != null && serviceConnector.hasService(toEntityId))
-               || (services != null && services.isServiceExistant(toEntityId))) {
+      if (serviceConnector != null
+               && (serviceConnector.hasService(toEntityId) || (services != null && services.isServiceExistant(toEntityId)))) {
          return serviceConnector.sendMessage(msg, toEntityId);
       } else {
          clusterClient.getSession().sendMessage(msg, toEntityId);
