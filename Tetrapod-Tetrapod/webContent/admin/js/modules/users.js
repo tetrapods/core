@@ -7,8 +7,8 @@ define(function(require) {
 
    function Users(app) {
       var self = this;
-      var CONSTS = $.extend({}, app.server.consts["Core"] || {}, app.server.consts["Core.Core"] || {}, app.server.consts["Tetrapod.Admin"] || {});
 
+      var tetrapodConsts = app.server.consts['Tetrapod'];
       self.users = ko.observableArray([]);
 
       self.modalOldPassword = ko.observable('');
@@ -67,7 +67,7 @@ define(function(require) {
             if (!res.isError()) {
                Alert.info('Your password has been changed');
             } else {
-               if (res.errorCode == app.server.consts["Tetrapod"].INVALID_PASSWORD) {
+               if (res.errorCode == app.tetrapodConsts.error.INVALID_CREDENTIALS) {
                   Alert.error('Error: Incorrect Password');
                } else {
                   Alert.error('Error: Change Password Failed');
@@ -129,14 +129,14 @@ define(function(require) {
 
          function updateRights(rights) {
             self.updatingRights = true;
-            self.clusterRead(rights & CONSTS.RIGHTS_CLUSTER_READ);
-            self.clusterWrite(rights & CONSTS.RIGHTS_CLUSTER_WRITE);
-            self.userRead(rights & CONSTS.RIGHTS_USER_READ);
-            self.userWrite(rights & CONSTS.RIGHTS_USER_WRITE);
-            self.app1(rights & CONSTS.RIGHTS_APP_SET_1);
-            self.app2(rights & CONSTS.RIGHTS_APP_SET_2);
-            self.app3(rights & CONSTS.RIGHTS_APP_SET_3);
-            self.app4(rights & CONSTS.RIGHTS_APP_SET_4);
+            self.clusterRead(rights & tetrapodConsts.Admin.RIGHTS_CLUSTER_READ);
+            self.clusterWrite(rights & tetrapodConsts.Admin.RIGHTS_CLUSTER_WRITE);
+            self.userRead(rights & tetrapodConsts.Admin.RIGHTS_USER_READ);
+            self.userWrite(rights & tetrapodConsts.Admin.RIGHTS_USER_WRITE);
+            self.app1(rights & tetrapodConsts.Admin.RIGHTS_APP_SET_1);
+            self.app2(rights & tetrapodConsts.Admin.RIGHTS_APP_SET_2);
+            self.app3(rights & tetrapodConsts.Admin.RIGHTS_APP_SET_3);
+            self.app4(rights & tetrapodConsts.Admin.RIGHTS_APP_SET_4);
             self.updatingRights = false;
          }
 
@@ -173,28 +173,28 @@ define(function(require) {
          function rights() {
             var r = 0;
             if (self.clusterRead()) {
-               r |= CONSTS.RIGHTS_CLUSTER_READ
+               r |= tetrapodConsts.Admin.RIGHTS_CLUSTER_READ
             }
             if (self.clusterWrite()) {
-               r |= CONSTS.RIGHTS_CLUSTER_WRITE
+               r |= tetrapodConsts.Admin.RIGHTS_CLUSTER_WRITE
             }
             if (self.userRead()) {
-               r |= CONSTS.RIGHTS_USER_READ
+               r |= tetrapodConsts.Admin.RIGHTS_USER_READ
             }
             if (self.userWrite()) {
-               r |= CONSTS.RIGHTS_USER_WRITE
+               r |= tetrapodConsts.Admin.RIGHTS_USER_WRITE
             }
             if (self.app1()) {
-               r |= CONSTS.RIGHTS_APP_SET_1
+               r |= tetrapodConsts.Admin.RIGHTS_APP_SET_1
             }
             if (self.app2()) {
-               r |= CONSTS.RIGHTS_APP_SET_2
+               r |= tetrapodConsts.Admin.RIGHTS_APP_SET_2
             }
             if (self.app3()) {
-               r |= CONSTS.RIGHTS_APP_SET_3
+               r |= tetrapodConsts.Admin.RIGHTS_APP_SET_3
             }
             if (self.app4()) {
-               r |= CONSTS.RIGHTS_APP_SET_4
+               r |= tetrapodConsts.Admin.RIGHTS_APP_SET_4
             }
             return r;
          }

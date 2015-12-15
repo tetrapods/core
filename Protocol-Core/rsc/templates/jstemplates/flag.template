@@ -1,0 +1,4 @@
+self.{{contractClass}}.{{class}} = {
+   {{constants}}
+}
+server.registerFlag(self.{{contractClass}}.{{class}});
