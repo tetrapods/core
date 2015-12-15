@@ -1,87 +1,99 @@
 define([], function() { return TP_Core });
 
 function TP_Core(server) {
+   var self = this;
+   self.name = "Core";
 
    server.register("response", "Tetrapod", "ERROR", 1, 1);
    server.register("response", "Tetrapod", "SUCCESS", 1, 2);
 
-   server.registerConst("Core", "Core", "UNADDRESSED", 0);
-   server.registerConst("Core", "Core", "DIRECT", 1);
-   server.registerConst("Core", "Core", "TYPE_TETRAPOD", 1);
-   server.registerConst("Core", "Core", "TYPE_SERVICE", 2);
-   server.registerConst("Core", "Core", "TYPE_ADMIN", 3);
-   server.registerConst("Core", "Core", "TYPE_CLIENT", 4);
-   server.registerConst("Core", "Core", "TYPE_ANONYMOUS", 5);
-   server.registerConst("Core", "Core", "TYPE_WEBAPI", 6);
-   server.registerConst("Core", "Core", "DEFAULT_PUBLIC_PORT", 9900);
-   server.registerConst("Core", "Core", "DEFAULT_SERVICE_PORT", 9901);
-   server.registerConst("Core", "Core", "DEFAULT_CLUSTER_PORT", 9902);
-   server.registerConst("Core", "Core", "DEFAULT_HTTP_PORT", 9904);
-   server.registerConst("Core", "Core", "DEFAULT_HTTPS_PORT", 9906);
-   server.registerConst("Core", "Core", "DEFAULT_DIRECT_PORT", 9800);
-   server.registerConst("Core", "Core", "STATUS_STARTING", 1);
-   server.registerConst("Core", "Core", "STATUS_PAUSED", 2);
-   server.registerConst("Core", "Core", "STATUS_GONE", 4);
-   server.registerConst("Core", "Core", "STATUS_BUSY", 8);
-   server.registerConst("Core", "Core", "STATUS_OVERLOADED", 16);
-   server.registerConst("Core", "Core", "STATUS_FAILED", 32);
-   server.registerConst("Core", "Core", "STATUS_STOPPING", 64);
-   server.registerConst("Core", "Core", "STATUS_PASSIVE", 128);
-   server.registerConst("Core", "Core", "STATUS_ERRORS", 256);
-   server.registerConst("Core", "Core", "STATUS_WARNINGS", 512);
-   server.registerConst("Core", "Core", "ENVELOPE_HANDSHAKE", 1);
-   server.registerConst("Core", "Core", "ENVELOPE_REQUEST", 2);
-   server.registerConst("Core", "Core", "ENVELOPE_RESPONSE", 3);
-   server.registerConst("Core", "Core", "ENVELOPE_MESSAGE", 4);
-   server.registerConst("Core", "Core", "ENVELOPE_BROADCAST", 5);
-   server.registerConst("Core", "Core", "ENVELOPE_PING", 6);
-   server.registerConst("Core", "Core", "ENVELOPE_PONG", 7);
-   server.registerConst("Core", "MessageHeader", "TO_TOPIC", 1);
-   server.registerConst("Core", "MessageHeader", "TO_ENTITY", 2);
-   server.registerConst("Core", "MessageHeader", "TO_ALTERNATE", 3);
-   server.registerConst("Core", "TypeDescriptor", "T_BOOLEAN", 1);
-   server.registerConst("Core", "TypeDescriptor", "T_BYTE", 2);
-   server.registerConst("Core", "TypeDescriptor", "T_INT", 3);
-   server.registerConst("Core", "TypeDescriptor", "T_LONG", 4);
-   server.registerConst("Core", "TypeDescriptor", "T_DOUBLE", 5);
-   server.registerConst("Core", "TypeDescriptor", "T_STRING", 6);
-   server.registerConst("Core", "TypeDescriptor", "T_STRUCT", 7);
-   server.registerConst("Core", "TypeDescriptor", "T_BOOLEAN_LIST", 8);
-   server.registerConst("Core", "TypeDescriptor", "T_BYTE_LIST", 9);
-   server.registerConst("Core", "TypeDescriptor", "T_INT_LIST", 10);
-   server.registerConst("Core", "TypeDescriptor", "T_LONG_LIST", 11);
-   server.registerConst("Core", "TypeDescriptor", "T_DOUBLE_LIST", 12);
-   server.registerConst("Core", "TypeDescriptor", "T_STRING_LIST", 13);
-   server.registerConst("Core", "TypeDescriptor", "T_STRUCT_LIST", 14);
-   server.registerConst("Core", "ServiceLogEntry", "LEVEL_ALL", 0);
-   server.registerConst("Core", "ServiceLogEntry", "LEVEL_TRACE", 10);
-   server.registerConst("Core", "ServiceLogEntry", "LEVEL_DEBUG", 20);
-   server.registerConst("Core", "ServiceLogEntry", "LEVEL_INFO", 30);
-   server.registerConst("Core", "ServiceLogEntry", "LEVEL_WARN", 40);
-   server.registerConst("Core", "ServiceLogEntry", "LEVEL_ERROR", 50);
-   server.registerConst("Core", "ServiceLogEntry", "LEVEL_OFF", 100);
-   server.registerEnumConst("Core", "RequestStatsSort", "COUNT", 1);
-   server.registerEnumConst("Core", "RequestStatsSort", "TOTAL_TIME", 2);
-   server.registerEnumConst("Core", "RequestStatsSort", "AVERAGE_TIME", 3);
-   server.registerEnumConst("Core", "RequestStatsSort", "ERRORS", 4);
+   self.Core = {};
+   self.Core.UNADDRESSED = 0;
+   self.Core.DIRECT = 1;
+   self.Core.TYPE_TETRAPOD = 1;
+   self.Core.TYPE_SERVICE = 2;
+   self.Core.TYPE_ADMIN = 3;
+   self.Core.TYPE_CLIENT = 4;
+   self.Core.TYPE_ANONYMOUS = 5;
+   self.Core.TYPE_WEBAPI = 6;
+   self.Core.DEFAULT_PUBLIC_PORT = 9900;
+   self.Core.DEFAULT_SERVICE_PORT = 9901;
+   self.Core.DEFAULT_CLUSTER_PORT = 9902;
+   self.Core.DEFAULT_HTTP_PORT = 9904;
+   self.Core.DEFAULT_HTTPS_PORT = 9906;
+   self.Core.DEFAULT_DIRECT_PORT = 9800;
+   self.Core.STATUS_STARTING = 1;
+   self.Core.STATUS_PAUSED = 2;
+   self.Core.STATUS_GONE = 4;
+   self.Core.STATUS_BUSY = 8;
+   self.Core.STATUS_OVERLOADED = 16;
+   self.Core.STATUS_FAILED = 32;
+   self.Core.STATUS_STOPPING = 64;
+   self.Core.STATUS_PASSIVE = 128;
+   self.Core.STATUS_ERRORS = 256;
+   self.Core.STATUS_WARNINGS = 512;
+   self.Core.ENVELOPE_HANDSHAKE = 1;
+   self.Core.ENVELOPE_REQUEST = 2;
+   self.Core.ENVELOPE_RESPONSE = 3;
+   self.Core.ENVELOPE_MESSAGE = 4;
+   self.Core.ENVELOPE_BROADCAST = 5;
+   self.Core.ENVELOPE_PING = 6;
+   self.Core.ENVELOPE_PONG = 7;
+   self.Core.MessageHeader = {
+      TO_ALTERNATE : 3,
+      TO_ENTITY : 2,
+      TO_TOPIC : 1
+   };
+   self.Core.TypeDescriptor = {
+      T_BOOLEAN : 1,
+      T_BOOLEAN_LIST : 8,
+      T_BYTE : 2,
+      T_BYTE_LIST : 9,
+      T_DOUBLE : 5,
+      T_DOUBLE_LIST : 12,
+      T_INT : 3,
+      T_INT_LIST : 10,
+      T_LONG : 4,
+      T_LONG_LIST : 11,
+      T_STRING : 6,
+      T_STRING_LIST : 13,
+      T_STRUCT : 7,
+      T_STRUCT_LIST : 14
+   };
+   self.Core.ServiceLogEntry = {
+      LEVEL_ALL : 0,
+      LEVEL_DEBUG : 20,
+      LEVEL_ERROR : 50,
+      LEVEL_INFO : 30,
+      LEVEL_OFF : 100,
+      LEVEL_TRACE : 10,
+      LEVEL_WARN : 40
+   };
+   self.Core.RequestStatsSort = {
+      COUNT : 1,
+      TOTAL_TIME : 2,
+      AVERAGE_TIME : 3,
+      ERRORS : 4
+   };
    
-   server.registerErrorConst("Core", "null", "CONNECTION_CLOSED", 7);
-   server.registerErrorConst("Core", "null", "FLOOD", 12);
-   server.registerErrorConst("Core", "null", "INVALID_DATA", 15);
-   server.registerErrorConst("Core", "null", "INVALID_ENTITY", 9);
-   server.registerErrorConst("Core", "null", "INVALID_RIGHTS", 8);
-   server.registerErrorConst("Core", "null", "INVALID_TOKEN", 13);
-   server.registerErrorConst("Core", "null", "NOT_CONFIGURED", 2718243);
-   server.registerErrorConst("Core", "null", "PROTOCOL_MISMATCH", 5);
-   server.registerErrorConst("Core", "null", "RIGHTS_EXPIRED", 10);
-   server.registerErrorConst("Core", "null", "SECURITY", 16);
-   server.registerErrorConst("Core", "null", "SERIALIZATION", 4);
-   server.registerErrorConst("Core", "null", "SERVICE_OVERLOADED", 11);
-   server.registerErrorConst("Core", "null", "SERVICE_UNAVAILABLE", 2);
-   server.registerErrorConst("Core", "null", "TIMEOUT", 3);
-   server.registerErrorConst("Core", "null", "UNKNOWN", 1);
-   server.registerErrorConst("Core", "null", "UNKNOWN_REQUEST", 6);
-   server.registerErrorConst("Core", "null", "UNSUPPORTED", 14);
+   self.Core.error = {};
+   self.Core.error.CONNECTION_CLOSED = 7;
+   self.Core.error.FLOOD = 12;
+   self.Core.error.INVALID_DATA = 15;
+   self.Core.error.INVALID_ENTITY = 9;
+   self.Core.error.INVALID_RIGHTS = 8;
+   self.Core.error.INVALID_TOKEN = 13;
+   self.Core.error.NOT_CONFIGURED = 2718243;
+   self.Core.error.PROTOCOL_MISMATCH = 5;
+   self.Core.error.RIGHTS_EXPIRED = 10;
+   self.Core.error.SECURITY = 16;
+   self.Core.error.SERIALIZATION = 4;
+   self.Core.error.SERVICE_OVERLOADED = 11;
+   self.Core.error.SERVICE_UNAVAILABLE = 2;
+   self.Core.error.TIMEOUT = 3;
+   self.Core.error.UNKNOWN = 1;
+   self.Core.error.UNKNOWN_REQUEST = 6;
+   self.Core.error.UNSUPPORTED = 14;
    
    server.register("struct", "Core", "Core", 1, 9088168);
    server.register("struct", "Core", "RequestHeader", 1, 7165109);
@@ -130,4 +142,5 @@ function TP_Core(server) {
    server.register("struct", "Core", "StructDescription", 1, 9642196);
    server.register("struct", "Core", "ServiceLogEntry", 1, 11222968);
 
+   return self;
 }

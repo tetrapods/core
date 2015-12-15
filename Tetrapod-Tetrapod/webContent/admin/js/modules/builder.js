@@ -17,7 +17,7 @@ define(["knockout", "jquery", "app", "alert"], function(ko, $, app, Alert) {
 
       var loading = {};
       var progressDialog;
-      var BuildCommandConsts = app.server.consts["Tetrapod.BuildCommand"];
+      var BuildCommandConsts = app.server.consts['Tetrapod'].BuildCommand;
 
       function load(pods) {
          loading.num = pods.length;

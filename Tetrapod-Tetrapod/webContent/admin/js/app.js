@@ -4,12 +4,11 @@ define(["knockout", "jquery", "alert", "toolbox", "protocol/server", "protocol/t
    function App() {
       var self = this;
       var server = new Server(Tetrapod, CoreProt);
-      var Core = $.extend({}, server.consts["Core"] || {}, server.consts["Core.Core"] || {});
       var token = null;
       var model;
 
-      self.coreConsts = Core;
-      self.leaderEntityId;
+      self.coreConsts = server.consts['Core'];
+      self.tetrapodConsts = server.consts['Tetrapod'];
       self.server = server;
       self.run = run;
       self.login = login;
@@ -19,8 +18,8 @@ define(["knockout", "jquery", "alert", "toolbox", "protocol/server", "protocol/t
       self.name = window.location.hostname;
       self.email = ko.observable();
       self.accountId = ko.observable();
-      self.alertResponse = alertResponse
-      self.isProd = self.name == "chatbox.com" || self.name == "xbox.chatbox.com" || (self.name.indexOf(".prod.") > 0);
+      self.alertResponse = alertResponse;
+      self.isProd = self.name == "chatbox.com" || self.name == "pgx.chatbox.com" || (self.name.indexOf(".prod.") > 0);
 
       function run(clusterModel) {
          ko.bindingHandlers.stopBinding = {
