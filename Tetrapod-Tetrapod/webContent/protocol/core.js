@@ -8,37 +8,39 @@ function TP_Core(server) {
    server.register("response", "Tetrapod", "SUCCESS", 1, 2);
 
    self.Core = {};
-   self.Core.UNADDRESSED = 0;
-   self.Core.DIRECT = 1;
-   self.Core.TYPE_TETRAPOD = 1;
-   self.Core.TYPE_SERVICE = 2;
-   self.Core.TYPE_ADMIN = 3;
-   self.Core.TYPE_CLIENT = 4;
-   self.Core.TYPE_ANONYMOUS = 5;
-   self.Core.TYPE_WEBAPI = 6;
-   self.Core.DEFAULT_PUBLIC_PORT = 9900;
-   self.Core.DEFAULT_SERVICE_PORT = 9901;
-   self.Core.DEFAULT_CLUSTER_PORT = 9902;
-   self.Core.DEFAULT_HTTP_PORT = 9904;
-   self.Core.DEFAULT_HTTPS_PORT = 9906;
-   self.Core.DEFAULT_DIRECT_PORT = 9800;
-   self.Core.STATUS_STARTING = 1;
-   self.Core.STATUS_PAUSED = 2;
-   self.Core.STATUS_GONE = 4;
-   self.Core.STATUS_BUSY = 8;
-   self.Core.STATUS_OVERLOADED = 16;
-   self.Core.STATUS_FAILED = 32;
-   self.Core.STATUS_STOPPING = 64;
-   self.Core.STATUS_PASSIVE = 128;
-   self.Core.STATUS_ERRORS = 256;
-   self.Core.STATUS_WARNINGS = 512;
-   self.Core.ENVELOPE_HANDSHAKE = 1;
-   self.Core.ENVELOPE_REQUEST = 2;
-   self.Core.ENVELOPE_RESPONSE = 3;
-   self.Core.ENVELOPE_MESSAGE = 4;
-   self.Core.ENVELOPE_BROADCAST = 5;
-   self.Core.ENVELOPE_PING = 6;
-   self.Core.ENVELOPE_PONG = 7;
+   self.Core.Core = {
+      DEFAULT_CLUSTER_PORT : 9902,
+      DEFAULT_DIRECT_PORT : 9800,
+      DEFAULT_HTTPS_PORT : 9906,
+      DEFAULT_HTTP_PORT : 9904,
+      DEFAULT_PUBLIC_PORT : 9900,
+      DEFAULT_SERVICE_PORT : 9901,
+      DIRECT : 1,
+      ENVELOPE_BROADCAST : 5,
+      ENVELOPE_HANDSHAKE : 1,
+      ENVELOPE_MESSAGE : 4,
+      ENVELOPE_PING : 6,
+      ENVELOPE_PONG : 7,
+      ENVELOPE_REQUEST : 2,
+      ENVELOPE_RESPONSE : 3,
+      STATUS_BUSY : 8,
+      STATUS_ERRORS : 256,
+      STATUS_FAILED : 32,
+      STATUS_GONE : 4,
+      STATUS_OVERLOADED : 16,
+      STATUS_PASSIVE : 128,
+      STATUS_PAUSED : 2,
+      STATUS_STARTING : 1,
+      STATUS_STOPPING : 64,
+      STATUS_WARNINGS : 512,
+      TYPE_ADMIN : 3,
+      TYPE_ANONYMOUS : 5,
+      TYPE_CLIENT : 4,
+      TYPE_SERVICE : 2,
+      TYPE_TETRAPOD : 1,
+      TYPE_WEBAPI : 6,
+      UNADDRESSED : 0
+   };
    self.Core.MessageHeader = {
       FLAGS_ALTERNATE : 1
    };

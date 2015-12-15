@@ -46,6 +46,7 @@ class JavascriptGenerator implements LanguageGenerator {
                continue;
 
             String contractName = context.serviceName;
+            t.add("contractName", contractName);
             String contractId = context.serviceAnnotations.getFirst("id");
             for (Class c : context.classes) {
                Template sub = template("register");
@@ -58,15 +59,7 @@ class JavascriptGenerator implements LanguageGenerator {
                TreeMap<String, String> fields = new TreeMap<>();
                for (Field f : c.fields) {
                   if (f.isConstant()) {
-                     if (c.name == null || c.name.length() == 0 || c.name.equalsIgnoreCase(contractName)) {
-                        Template csub = template("namespace.const");
-                        csub.add("constType", contractName);
-                        csub.add("constName", f.name);
-                        csub.add("constValue", f.getEscapedDefaultValue());
-                        t.add("constants", csub);
-                     } else {
-                        fields.put(f.name, f.getEscapedDefaultValue());
-                     }
+                     fields.put(f.name, f.getEscapedDefaultValue());
                   }
                }
                if (fields.size() > 0) {
@@ -87,7 +80,8 @@ class JavascriptGenerator implements LanguageGenerator {
             }
             for (Field f : context.globalConstants) {
                if (f.isConstant()) {
-                  Template sub = template("const");
+                  Template sub = template("namespace.const");
+                  sub.add("constType", contractName);
                   sub.add("constName", f.name);
                   sub.add("constValue", f.getEscapedDefaultValue());
                   t.add("constants", sub);

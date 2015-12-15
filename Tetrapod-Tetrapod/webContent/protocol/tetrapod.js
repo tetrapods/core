@@ -32,10 +32,10 @@ function TP_Tetrapod(server) {
       LAUNCH_DEPLOYED : -1,
       LAUNCH_PAUSED : 5
    };
-   self.MAX_PARENTS = 0x000007FF;
-   self.MAX_ID = 0x000FFFFF;
-   self.PARENT_ID_SHIFT = 20;
-   self.PARENT_ID_MASK = 0x7FF00000;
+   self.Tetrapod.MAX_PARENTS = 0x000007FF;
+   self.Tetrapod.MAX_ID = 0x000FFFFF;
+   self.Tetrapod.PARENT_ID_SHIFT = 20;
+   self.Tetrapod.PARENT_ID_MASK = 0x7FF00000;
    
    self.Tetrapod.error = {};
    self.Tetrapod.error.HOSTNAME_MISMATCH = 12239905;
