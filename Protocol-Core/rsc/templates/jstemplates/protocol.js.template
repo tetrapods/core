@@ -2,17 +2,17 @@ define([], function() { return TP_{{name}} });
 
 function TP_{{name}}(server) {
    var self = this;
-   self.name = "{{name}}";
+   self.name = "{{contractName}}";
 
    server.register("response", "Tetrapod", "ERROR", 1, 1);
    server.register("response", "Tetrapod", "SUCCESS", 1, 2);
 
    {{declarations}}
 
-   self.{{name}} = {};
+   self.{{contractName}} = {};
    {{constants}}
    
-   self.{{name}}.error = {};
+   self.{{contractName}}.error = {};
    {{errors}}
    
    {{register}}
