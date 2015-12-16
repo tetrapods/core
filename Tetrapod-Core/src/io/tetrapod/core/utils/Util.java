@@ -546,15 +546,23 @@ public class Util {
     * Query DNS server for a TXT record
     */
    public static String getTxtRecord(String domain) throws NamingException {
+      return getTxtRecord(domain, false);
+   }
+
+   public static String getTxtRecord(String domain, boolean stripQuotes) throws NamingException {      
       DirContext ctx = new InitialDirContext();
       Attributes attrs = ctx.getAttributes("dns:/" + domain, new String[] { "TXT" });
       Attribute attr = attrs.get("TXT");
       if (attr != null) {
-         return attr.get().toString();
+         String value = attr.get().toString();
+         if (value.length() > 1 && value.charAt(0) == '"' && value.charAt(value.length()-1) == '"') {
+            return value.substring(1, value.length()-1);            
+         }
+         return value; 
       }
       return null;
    }
-
+   
    /**
     * Return a comma separated list of the collection, with no outside delimiters. Empty string if collection is null or empty.
     */
