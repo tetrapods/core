@@ -7,7 +7,7 @@ define(["knockout", "jquery", "alert", "toolbox", "protocol/server", "protocol/t
       var token = null;
       var model;
 
-      self.coreConsts = server.consts['Core'];
+      self.coreConsts = server.consts['Core'].Core;
       self.tetrapodConsts = server.consts['Tetrapod'];
       self.server = server;
       self.run = run;

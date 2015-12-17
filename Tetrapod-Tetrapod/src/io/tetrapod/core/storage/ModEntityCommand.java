@@ -7,7 +7,6 @@ import io.tetrapod.raft.Command;
 public class ModEntityCommand implements Command<TetrapodStateMachine> {
 
    public static final int COMMAND_ID     = TetrapodStateMachine.MOD_ENTITY_COMMAND_ID;
-
    private final byte      commandVersion = 2;
 
    private int             entityId;
