@@ -928,10 +928,13 @@ public class TetrapodService extends DefaultService
 
             // deliver them their entityId immediately to avoid some race conditions with the response
             ctx.session.sendMessage(new EntityMessage(entity.entityId), Core.UNADDRESSED);
-
-            if (entity.isService() && entity.entityId != getEntityId()) {
-               subscribeToCluster(ctx.session, entity.entityId);
-            }
+            
+            // avoid deadlock on raft state
+            dispatcher.dispatch(() -> {
+               if (entity.isService() && entity.entityId != getEntityId()) {
+                  subscribeToCluster(ctx.session, entity.entityId);
+               }
+            });
             responder.respondWith(
                      new RegisterResponse(entity.entityId, getEntityId(), EntityToken.encode(entity.entityId, entity.reclaimToken)));
          } else {
