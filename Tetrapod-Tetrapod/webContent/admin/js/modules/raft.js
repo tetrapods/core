@@ -7,8 +7,8 @@ define(function(require) {
 
    function Raft(app) {
       var self = this;
-
-      var Core = app.server.consts['Core'];
+ 
+      var Core = app.coreConsts;
 
       self.rafts = ko.observableArray([]);
 

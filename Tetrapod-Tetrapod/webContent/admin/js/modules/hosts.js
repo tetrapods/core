@@ -12,7 +12,7 @@ define(function(require) {
    function Hosts(app) {
 
       var self = this;
-      var Core = app.server.consts['Core'];
+      var Core = app.coreConsts;
 
       self.hosts = ko.observableArray([]);
       self.services = ko.observableArray([]);
