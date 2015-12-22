@@ -113,7 +113,7 @@ public class TetrapodPeer implements Session.Listener, SessionFactory {
    @Override
    public synchronized void onSessionStop(Session ses) {
       joined = false;
-      service.onEntityDisconnected(ses);
+      service.dispatcher.dispatch(() -> service.onEntityDisconnected(ses));
       scheduleReconnect(1);
    }
 
