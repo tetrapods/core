@@ -122,6 +122,7 @@ public class EntityRegistry implements TetrapodContract.Registry.API {
             }
          }
       }
+      logger.warn("Could not find a random available service for contractId={} in list of {} services", contractId, list.size());
       return null;
    }
 
@@ -376,7 +377,7 @@ public class EntityRegistry implements TetrapodContract.Registry.API {
       }
       if (entity.isService()) {
          entity.queue(() -> broadcaster.broadcastServicesMessage(new ServiceAddedMessage(entity)));
-      } 
+      }
    }
 
    public void onModEntityCommand(final EntityInfo entity) {
@@ -406,6 +407,4 @@ public class EntityRegistry implements TetrapodContract.Registry.API {
       }
    }
 
-   
-   
 }
