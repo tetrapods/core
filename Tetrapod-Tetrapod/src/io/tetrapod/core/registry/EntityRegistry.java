@@ -122,7 +122,7 @@ public class EntityRegistry implements TetrapodContract.Registry.API {
             }
          }
       }
-      logger.warn("Could not find a random available service for contractId={} in list of {} services", contractId, list.size());
+      logger.warn("Could not find a random available service for contractId={} in list of {} services", contractId, list == null ? "null" : list.size());
       return null;
    }
 
