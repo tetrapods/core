@@ -1,0 +1,3 @@
+self.{{contractClass}}.{{class}} = {
+   {{constants}}
+};

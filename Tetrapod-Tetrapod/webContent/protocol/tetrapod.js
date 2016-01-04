@@ -1,39 +1,47 @@
 define([], function() { return TP_Tetrapod });
 
 function TP_Tetrapod(server) {
+   var self = this;
+   self.name = "Tetrapod";
 
    server.register("response", "Tetrapod", "ERROR", 1, 1);
    server.register("response", "Tetrapod", "SUCCESS", 1, 2);
 
-   server.registerConst("Tetrapod", "Admin", "MAX_LOGIN_ATTEMPTS", 5);
-   server.registerConst("Tetrapod", "Admin", "RIGHTS_CLUSTER_READ", 1);
-   server.registerConst("Tetrapod", "Admin", "RIGHTS_CLUSTER_WRITE", 2);
-   server.registerConst("Tetrapod", "Admin", "RIGHTS_USER_READ", 4);
-   server.registerConst("Tetrapod", "Admin", "RIGHTS_USER_WRITE", 8);
-   server.registerConst("Tetrapod", "Admin", "RIGHTS_RESERVED_1", 16);
-   server.registerConst("Tetrapod", "Admin", "RIGHTS_RESERVED_2", 32);
-   server.registerConst("Tetrapod", "Admin", "RIGHTS_RESERVED_3", 64);
-   server.registerConst("Tetrapod", "Admin", "RIGHTS_RESERVED_4", 128);
-   server.registerConst("Tetrapod", "Admin", "RIGHTS_APP_SET_1", 256);
-   server.registerConst("Tetrapod", "Admin", "RIGHTS_APP_SET_2", 512);
-   server.registerConst("Tetrapod", "Admin", "RIGHTS_APP_SET_3", 1024);
-   server.registerConst("Tetrapod", "Admin", "RIGHTS_APP_SET_4", 2048);
-   server.registerConst("Tetrapod", "BuildCommand", "BUILD", 1);
-   server.registerConst("Tetrapod", "BuildCommand", "DEPLOY", 2);
-   server.registerConst("Tetrapod", "BuildCommand", "LAUNCH", 3);
-   server.registerConst("Tetrapod", "BuildCommand", "FULL_CYCLE", 4);
-   server.registerConst("Tetrapod", "BuildCommand", "LAUNCH_PAUSED", 5);
-   server.registerConst("Tetrapod", "BuildCommand", "DEPLOY_LATEST", -1);
-   server.registerConst("Tetrapod", "BuildCommand", "LAUNCH_DEPLOYED", -1);
+   self.Tetrapod = {};
+   self.Tetrapod.Admin = {
+      MAX_LOGIN_ATTEMPTS : 5,
+      RIGHTS_APP_SET_1 : 256,
+      RIGHTS_APP_SET_2 : 512,
+      RIGHTS_APP_SET_3 : 1024,
+      RIGHTS_APP_SET_4 : 2048,
+      RIGHTS_CLUSTER_READ : 1,
+      RIGHTS_CLUSTER_WRITE : 2,
+      RIGHTS_RESERVED_1 : 16,
+      RIGHTS_RESERVED_2 : 32,
+      RIGHTS_RESERVED_3 : 64,
+      RIGHTS_RESERVED_4 : 128,
+      RIGHTS_USER_READ : 4,
+      RIGHTS_USER_WRITE : 8
+   };
+   self.Tetrapod.BuildCommand = {
+      BUILD : 1,
+      DEPLOY : 2,
+      DEPLOY_LATEST : -1,
+      FULL_CYCLE : 4,
+      LAUNCH : 3,
+      LAUNCH_DEPLOYED : -1,
+      LAUNCH_PAUSED : 5
+   };
    
-   server.registerErrorConst("Tetrapod", "null", "HOSTNAME_MISMATCH", 12239905);
-   server.registerErrorConst("Tetrapod", "null", "INVALID_ACCOUNT", 14623816);
-   server.registerErrorConst("Tetrapod", "null", "INVALID_CREDENTIALS", 8845805);
-   server.registerErrorConst("Tetrapod", "null", "INVALID_UUID", 398174);
-   server.registerErrorConst("Tetrapod", "null", "ITEM_OWNED", 10331576);
-   server.registerErrorConst("Tetrapod", "null", "NOT_PARENT", 2219555);
-   server.registerErrorConst("Tetrapod", "null", "NOT_READY", 12438466);
-   server.registerErrorConst("Tetrapod", "null", "UNKNOWN_ENTITY_ID", 15576171);
+   self.Tetrapod.error = {};
+   self.Tetrapod.error.HOSTNAME_MISMATCH = 12239905;
+   self.Tetrapod.error.INVALID_ACCOUNT = 14623816;
+   self.Tetrapod.error.INVALID_CREDENTIALS = 8845805;
+   self.Tetrapod.error.INVALID_UUID = 398174;
+   self.Tetrapod.error.ITEM_OWNED = 10331576;
+   self.Tetrapod.error.NOT_PARENT = 2219555;
+   self.Tetrapod.error.NOT_READY = 12438466;
+   self.Tetrapod.error.UNKNOWN_ENTITY_ID = 15576171;
    
    server.register("struct", "Tetrapod", "Entity", 1, 10171140);
    server.register("request", "Tetrapod", "Register", 1, 10895179);
@@ -122,4 +130,5 @@ function TP_Tetrapod(server) {
    server.register("request", "Tetrapod", "TetrapodClientSessions", 1, 4764379);
    server.register("response", "Tetrapod", "TetrapodClientSessions", 1, 13660185);
 
+   return self;
 }

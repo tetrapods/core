@@ -31,10 +31,7 @@ function TP_Server() {
    self.commsLog = false;
    self.commsLogKeepAlives = false;
    self.register = register;
-   self.registerConst = registerConst;
-   self.registerErrorConst = registerErrorConst;
-   self.registerEnumConst = registerEnumConst;
-   self.registerFlagConst = registerFlagConst;
+   self.registerFlag = registerFlag;
    self.addMessageHandler = addMessageHandler;
    self.removeMessageHandler = removeMessageHandler;
    self.getErrorStrings = getErrorStrings;
@@ -54,7 +51,9 @@ function TP_Server() {
    };
 
    for (var i = 0; i < arguments.length; i++) {
-      new arguments[i](self);
+      var p = new arguments[i](self);
+      registerErrors(p[p.name].error);
+      protocol.consts[p.name] = p[p.name];
    }
 
    function register(type, contractName, structName, contractId, structId) {
@@ -72,56 +71,22 @@ function TP_Server() {
       protocol.reverseMap["" + contractId + "." + structId] = contractName + "." + structName;
    }
 
-   function registerErrorConst(contractName, structName, constName, constValue) {
-      registerConst(contractName, structName, constName, constValue);
-      if (!protocol.errors[constValue]) {
-         protocol.errors[constValue] = [];
+   function registerErrors(errors) {
+      if (errors) {
+         for (var constName in errors) {
+           if (errors.hasOwnProperty(constName)) {
+              protocol.errors[errors[constName]] = constName;
+           }
+         }
       }
-      protocol.errors[constValue].push(constName);
    }
    
-   function registerConst(contractName, structName, constName, constValue) {
-      var map = protocol["consts"];
-      var o;
-      if (structName != null && structName != "null") {
-         o = map[contractName + "." + structName] || {};
-         map[contractName + "." + structName] = o;
-      } else {
-         o = map[contractName] || {};
-         map[contractName] = o;
-      }
-      o[constName] = constValue;
-   }
-
-   function registerEnumConst(contractName, structName, constName, constValue) {
-      var map = protocol["consts"];
-      var o = map[contractName];
-      if (!o) {
-         o = {};
-         map[contractName] = o; 
-      }
-      o = o[structName];
-      if (!o) {
-         o = {};
-         map[contractName][structName] = o;
-      }
-      o[constName] = constValue;
-   }
-
-   function registerFlagConst(contractName, structName, constName, constValue) {
-      var map = protocol["consts"];
-      var o = map[contractName];
-      if (!o) {
-         o = {};
-         map[contractName] = o; 
-      }
-      o = o[structName];
-      if (!o) {
-         o = {};
-         o.on = function(val) {
+   function registerFlag(f) {
+      if (f) {
+         f.on = function(val) {
             return {
                value: val,
-               parent: o,
+               parent: f,
                isAnySet: function() { return (toFlags(arguments, this.parent) & this.value) != 0; },
                isSet: function() { var flags = toFlags(arguments, this.parent); return (flags & this.value) == flags; },
                isNoneSet: function() { return (toFlags(arguments, this.parent) & this.value) == 0; },
@@ -129,9 +94,7 @@ function TP_Server() {
                unset: function() { this.value = this.value & ~toFlags(arguments, this.parent); return this; },
             };
          };
-         map[contractName][structName] = o;
       }
-      o[constName] = constValue;
    }
    
    function toFlags(args, parent) {
@@ -143,10 +106,6 @@ function TP_Server() {
             flags = flags | parent[args[i]];
       }
       return flags;
-   }
-
-   function consts(name) {
-      return protocol["consts"][name];
    }
 
    function nameOf(arg1, arg2) {
@@ -372,7 +331,7 @@ function TP_Server() {
             var str = logstamp() + ' [' + result._requestId + '] <- ' + nameOf(result) + ' ' + JSON.stringify(result, dropUnderscored);
             if (result.isError()) {
                var err = getErrorStrings(result.errorCode);
-               err = err ? (" " + err.join(" ")) : "";
+               err = err ? (" " + err + " ") : "";
                console.warn(str + err);
             } else {
                console.debug(str);

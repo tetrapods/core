@@ -46,6 +46,7 @@ class JavascriptGenerator implements LanguageGenerator {
                continue;
 
             String contractName = context.serviceName;
+            t.add("contractName", contractName);
             String contractId = context.serviceAnnotations.getFirst("id");
             for (Class c : context.classes) {
                Template sub = template("register");
@@ -55,56 +56,54 @@ class JavascriptGenerator implements LanguageGenerator {
                sub.add("contractId", contractId);
                sub.add("structId", c.getStructId());
                t.add("register", sub);
+               TreeMap<String, String> fields = new TreeMap<>();
                for (Field f : c.fields) {
                   if (f.isConstant()) {
-                     sub = template("register.const");
-                     sub.add("register", "registerConst");
-                     sub.add("contractClass", contractName);
-                     sub.add("class", c.name);
-                     sub.add("constName", f.name);
-                     sub.add("constValue", f.getEscapedDefaultValue());
-                     t.add("constants", sub);
+                     fields.put(f.name, f.getEscapedDefaultValue());
                   }
+               }
+               if (fields.size() > 0) {
+                  Template enumTemplate = template("enum");
+                  enumTemplate.add("contractClass", contractName);
+                  enumTemplate.add("class", c.name);
+                  Iterator<Map.Entry<String, String>> fieldIterator = fields.entrySet().iterator();
+                  while (fieldIterator.hasNext()) {
+                     Map.Entry<String, String> field = fieldIterator.next();
+                     Template tf = template("field.enum");
+                     tf.add("constName", field.getKey());
+                     tf.add("constValue", field.getValue());
+                     String line = tf.expand().split("\r\n|\n|\r")[0];
+                     enumTemplate.add("constants", line + (fieldIterator.hasNext() ? "," : ""));
+                  }
+                  t.add("constants", enumTemplate);
                }
             }
             for (Field f : context.globalConstants) {
                if (f.isConstant()) {
-                  Template sub = template("register.const");
-                  sub.add("register", "registerConst");
-                  sub.add("contractClass", contractName);
-                  sub.add("class", "null");
+                  Template sub = template("namespace.const");
+                  sub.add("constType", contractName);
                   sub.add("constName", f.name);
                   sub.add("constValue", f.getEscapedDefaultValue());
                   t.add("constants", sub);
                }
             }
             for (ClassLike c : context.enums.values()) {
-               for (Field f : c.fields) {
-                  Template sub = template("register.const");
-                  sub.add("register", "registerEnumConst");
-                  sub.add("contractClass", contractName);
-                  sub.add("class", c.name);
-                  sub.add("constName", f.name);
-                  sub.add("constValue", f.getEscapedDefaultValue());
-                  t.add("constants", sub);
-               }
+               Template sub = template("enum");
+               sub.add("contractClass", contractName);
+               sub.add("class", c.name);
+               addFields(c, sub);
+               t.add("constants", sub);
             }
             for (ClassLike c : context.flags.values()) {
-               for (Field f : c.fields) {
-                  Template sub = template("register.const");
-                  sub.add("register", "registerFlagConst");
-                  sub.add("contractClass", contractName);
-                  sub.add("class", c.name);
-                  sub.add("constName", f.name);
-                  sub.add("constValue", f.getEscapedDefaultValue());
-                  t.add("constants", sub);
-               }
+               Template sub = template("flag");
+               sub.add("contractClass", contractName);
+               sub.add("class", c.name);
+               addFields(c, sub);
+               t.add("constants", sub);
             }
             for (Err err : context.allErrors) {
-               Template sub = template("register.const");
-               sub.add("register", "registerErrorConst");
-               sub.add("contractClass", contractName);
-               sub.add("class", "null");
+               Template sub = template("namespace.const");
+               sub.add("constType", contractName + ".error");
                sub.add("constName", err.name);
                sub.add("constValue", "" + err.getValue());
                t.add("errors", sub);
@@ -112,6 +111,18 @@ class JavascriptGenerator implements LanguageGenerator {
          }
          file.getParentFile().mkdirs();
          t.expandAndTrim(file);
+      }
+   }
+
+   private void addFields(ClassLike c, Template sub) throws IOException {
+      Iterator<Field> fieldIterator = c.fields.iterator();
+      while (fieldIterator.hasNext()) {
+         Field f = fieldIterator.next();
+         Template tf = template("field.enum");
+         tf.add("constName", f.name);
+         tf.add("constValue", f.getEscapedDefaultValue());
+         String line = tf.expand().split("\r\n|\n|\r")[0];
+         sub.add("constants", line + (fieldIterator.hasNext() ? "," : ""));
       }
    }
 

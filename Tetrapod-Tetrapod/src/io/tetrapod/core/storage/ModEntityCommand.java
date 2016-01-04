@@ -7,11 +7,11 @@ import io.tetrapod.raft.Command;
 public class ModEntityCommand implements Command<TetrapodStateMachine> {
 
    public static final int COMMAND_ID     = TetrapodStateMachine.MOD_ENTITY_COMMAND_ID;
-
-   private final byte      commandVersion = 1;
+   private final byte      commandVersion = 2;
 
    private int             entityId;
    private int             status;
+   private int             mask;
    private String          build;
    private int             version;
 
@@ -34,6 +34,7 @@ public class ModEntityCommand implements Command<TetrapodStateMachine> {
       out.writeByte(commandVersion);
       out.writeInt(entityId);
       out.writeInt(status);
+      out.writeInt(mask);
       out.writeUTF(build);
       out.writeInt(version);
    }
@@ -41,9 +42,14 @@ public class ModEntityCommand implements Command<TetrapodStateMachine> {
    @Override
    public void read(DataInputStream in, int fileVersion) throws IOException {
       byte commandVersion = in.readByte();
-      assert commandVersion == this.commandVersion;
+      assert commandVersion <= this.commandVersion;
       entityId = in.readInt();
       status = in.readInt();
+      if (commandVersion >= 2) {
+         mask = in.readInt();
+      } else {
+         mask = 0xFFFFFFFF;
+      }
       build = in.readUTF();
       version = in.readInt();
    }
@@ -55,7 +61,7 @@ public class ModEntityCommand implements Command<TetrapodStateMachine> {
 
    @Override
    public String toString() {
-      return "ModEntityCommand(" + entityId + ", " + status + ", " + build + ", " + version + ")";
+      return "ModEntityCommand(" + entityId + ", " + status + ", " + mask + ", " + build + ", " + version + ")";
    }
 
    public static void register(TetrapodStateMachine state) {
