@@ -19,7 +19,10 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.*;
+
 public class WebContext {
+   private static final Logger logger = LoggerFactory.getLogger(WebContext.class);
 
    public static ByteBuf makeByteBufResult(Object result) {
       if (result instanceof ByteBuf)
@@ -85,7 +88,13 @@ public class WebContext {
       }
       this.requestPath = queryStringDecoder.path();
       this.requestParameters = new JSONObject();
-      final Map<String, List<String>> reqs = queryStringDecoder.parameters();
+      Map<String, List<String>> reqs;
+      try {
+         reqs = queryStringDecoder.parameters();
+      } catch (IllegalArgumentException e) {
+         logger.warn("Can't parse request parameters for [{}]  {}", request.getUri(), routePath);
+         return;
+      }
       for (String k : reqs.keySet())
          for (String v : reqs.get(k))
             requestParameters.accumulate(k, v);
