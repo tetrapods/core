@@ -494,7 +494,6 @@ public class TetrapodCluster extends Storage
 
       // register them in our registry
       EntityInfo entity = service.registry.getEntity(req.entityId);
-
       // reconnecting with a pre-existing peerId
       final int peerId = req.entityId >> TetrapodContract.PARENT_ID_SHIFT;
       if (raft.isValidPeer(peerId)) {
@@ -504,7 +503,8 @@ public class TetrapodCluster extends Storage
          // subscribe them to our cluster and registry views
          logger.info("**************************** SYNC TO {} {}", ctx.session, req.entityId);
          service.subscribeToCluster(ctx.session, req.entityId);
-
+         
+         entity.queue(() -> service.broadcastServicesMessage(new ServiceAddedMessage(entity)));
       }
       return Response.SUCCESS;
    }
