@@ -4,7 +4,7 @@ javascript out "../../Tetrapod-Tetrapod/webContent/protocol/tetrapod.js"
 #javascript out "../rsc/protocol/tetrapod.js"
 
 // The core tetrapod service
-service Tetrapod @version(1) @id(1) @web(tetrapod) 
+service Tetrapod @version(1) @id(1) @web(api) 
 
 error HOSTNAME_MISMATCH
 error INVALID_CREDENTIALS
@@ -76,7 +76,7 @@ internal request LogRegistryStats
 internal request CloseClientConnection
    1: string data
 
-public request AdminLogin
+public request AdminLogin @web(admin_login)
    1: string email @sensitive
    2: string password @sensitive
    
@@ -94,7 +94,7 @@ public response AdminAuthorize
    2: string email
    
 // get a short-lived session token with rights encoded    
-admin request AdminSessionToken
+admin request AdminSessionToken @web(admin_session_token)
    1: int accountId
    2: string authToken @sensitive  // a valid login token
    
@@ -308,8 +308,7 @@ internal request SetClusterProperty
 
 internal request DelClusterProperty
    1: string adminToken @sensitive
-   2: string key
-   
+   2: string key 
       
 // notification of an existing tetrapod cluster member    
 internal message Cluster.ClusterMember
@@ -331,10 +330,10 @@ internal message WebRootAdded
 internal message WebRootRemoved       
    1: string name
     
-internal request SetWebRoot
+internal request SetWebRoot @web(set_web_root)
    1: string adminToken @sensitive
    2: WebRootDef def
-   
+
 internal request DelWebRoot
    1: string adminToken @sensitive
    2: string name
@@ -412,3 +411,7 @@ internal request TetrapodClientSessions
 
 internal response TetrapodClientSessions  
    1: int[] clientSessions   
+
+       
+   
+   

@@ -322,6 +322,11 @@ public class WebHttpSession extends WebSession {
                // @web() specific Request mapping
                final Structure request = readRequest(header, context.getRequestParams());
                if (request != null) {
+
+                  if (header.contractId == TetrapodContract.CONTRACT_ID && header.toId == 0) {
+                     header.toId = Core.DIRECT;
+                  }
+
                   relayRequest(header, request, handler);
                } else {
                   handler.fireResponse(new Error(ERROR_UNKNOWN_REQUEST), header);
@@ -412,7 +417,7 @@ public class WebHttpSession extends WebSession {
          if (payload == null) {
             payload = jo.toStringWithout("__http");
          }
-         ByteBuf buf = WebContext.makeByteBufResult(payload);
+         ByteBuf buf = WebContext.makeByteBufResult(payload + '\n');
          HttpResponseStatus status = HttpResponseStatus.valueOf(jo.optInt("__httpStatus", OK.code()));
          FullHttpResponse httpResponse = new DefaultFullHttpResponse(HTTP_1_1, status, buf);
          httpResponse.headers().set(CONTENT_TYPE, jo.optString("__httpMime", "application/json"));

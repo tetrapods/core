@@ -195,7 +195,9 @@ public class TetrapodContract extends Contract {
    
    public WebRoute[] getWebRoutes() {
       return new WebRoute[] {
-         
+         new WebRoute("/api/admin_login", AdminLoginRequest.STRUCT_ID, TetrapodContract.CONTRACT_ID),
+         new WebRoute("/api/admin_session_token", AdminSessionTokenRequest.STRUCT_ID, TetrapodContract.CONTRACT_ID),
+         new WebRoute("/api/set_web_root", SetWebRootRequest.STRUCT_ID, TetrapodContract.CONTRACT_ID),
       };
    }
 
