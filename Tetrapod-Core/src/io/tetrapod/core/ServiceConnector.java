@@ -223,16 +223,18 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
             if (entityId == service.getEntityId()) {
                logger.trace("We're sending {} to ourselves", req);
             } else {
-               final DirectServiceInfo s = getDirectServiceInfo(entityId);
-               synchronized (s) {
-                  s.requests++;
-                  if (s.ses != null) {
-                     if (s.valid && s.ses.isConnected()) {
-                        logger.trace("Sending {} direct to {}", req, s.ses);
-                        return s.ses;
+               if (service.isServiceExistant(entityId)) {
+                  final DirectServiceInfo s = getDirectServiceInfo(entityId);
+                  synchronized (s) {
+                     s.requests++;
+                     if (s.ses != null) {
+                        if (s.valid && s.ses.isConnected()) {
+                           logger.trace("Sending {} direct to {}", req, s.ses);
+                           return s.ses;
+                        }
+                     } else {
+                        s.considerConnecting();
                      }
-                  } else {
-                     s.considerConnecting();
                   }
                }
             }
@@ -319,7 +321,6 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
          header.timeout = 30;
          return service.dispatchRequest(header, req, null);
       }
-
       final Session ses = getSession(req, toEntityId);
       return ses.sendRequest(req, toEntityId, (byte) 30);
    }
