@@ -2,31 +2,30 @@ package io.tetrapod.core;
 
 import static io.tetrapod.protocol.core.Core.DEFAULT_DIRECT_PORT;
 import static io.tetrapod.protocol.core.CoreContract.ERROR_UNKNOWN;
-import io.tetrapod.core.rpc.*;
-import io.tetrapod.core.rpc.Error;
-import io.tetrapod.core.utils.Util;
-import io.tetrapod.protocol.core.*;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.net.ssl.SSLContext;
 
-import org.slf4j.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import io.netty.channel.socket.SocketChannel;
+import io.tetrapod.core.Session.RelayHandler;
+import io.tetrapod.core.rpc.*;
+import io.tetrapod.core.rpc.Error;
+import io.tetrapod.core.utils.Util;
+import io.tetrapod.protocol.core.*;
 
 /**
  * Allows a service to spawn direct connections with one another for faster RPC
  */
 public class ServiceConnector implements DirectConnectionRequest.Handler, ValidateConnectionRequest.Handler {
 
-   private static final Logger             logger            = LoggerFactory.getLogger(ServiceConnector.class);
+   private static final Logger             logger   = LoggerFactory.getLogger(ServiceConnector.class);
 
-   /**
-    * The number of requests sent to a specific service that triggers us to start a direct session
-    */
-   private static final int                REQUEST_THRESHOLD = 100;
-
-   private Map<Integer, DirectServiceInfo> services          = new ConcurrentHashMap<>();
+   private Map<Integer, DirectServiceInfo> services = new ConcurrentHashMap<>();
 
    private final DefaultService            service;
    private final SSLContext                sslContext;
@@ -65,12 +64,22 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
       private DirectSessionFactory(byte type, Session.Listener listener) {
          super(service, type, listener);
       }
+
+      /**
+       * Session factory for our sessions from clients and services
+       */
+      @Override
+      public Session makeSession(SocketChannel ch) {
+         final Session ses = super.makeSession(ch);
+         ses.setName("Direct");
+         return ses;
+      }
    }
 
    /**
     * This is a wrapper class for managing a single direct connection
     */
-   private class DirectServiceInfo implements Session.Listener {
+   public class DirectServiceInfo implements Session.Listener {
       public final int    entityId;
       public final String token = String.format("%016x%016x", Util.random.nextLong(), Util.random.nextLong());
       public int          requests;
@@ -118,47 +127,59 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
          if (System.currentTimeMillis() > restUntil) {
             pending = true;
             valid = false;
-            service.clusterClient.getSession().sendRequest(new DirectConnectionRequest(token), entityId, (byte) 30).handle(res -> {
-               if (res.isError()) {
-                  failure();
-               } else {
-                  connect((DirectConnectionResponse) res);
-               }
-            });
+            service.clusterClient.getSession().sendRequest(new DirectConnectionRequest(token, service.getEntityId()), entityId, (byte) 30)
+                     .handle(res -> {
+                        if (res.isError()) {
+                           if (res.errorCode() == CoreContract.ERROR_NOT_CONFIGURED
+                                    || res.errorCode() == CoreContract.ERROR_SERVICE_UNAVAILABLE
+                                    || res.errorCode() == CoreContract.ERROR_TIMEOUT) {
+                              logger.info("DirectConnectionRequest to {} =  {}", entityId, res);
+                           } else {
+                              logger.error("DirectConnectionRequest to {} =  {}", entityId, res);
+                           }
+                           failure();
+                        } else {
+                           service.dispatcher.dispatchHighPriority(() -> connect((DirectConnectionResponse) res));
+                        }
+                     });
          }
       }
 
-      private synchronized void connect(final DirectConnectionResponse res) {
-         DirectConnectionResponse r = (DirectConnectionResponse) res;
-         Client c = new Client(new DirectSessionFactory(Core.TYPE_SERVICE, this));
+      private void connect(final DirectConnectionResponse r) {
+         final Client c = new Client(new DirectSessionFactory(Core.TYPE_SERVICE, this));
          try {
             if (sslContext != null) {
                c.enableTLS(sslContext);
             }
-            c.connect(r.address.host, r.address.port, service.getDispatcher()).sync(); // FIXME: not good to be calling this while holding synchronized block
-            ses = c.getSession();
-            ses.setMyEntityId(service.getEntityId());
-            validate(r.token);
+            c.connect(r.address.host, r.address.port, service.getDispatcher()).sync();
+            validate(c.getSession(), r.token);
          } catch (Exception e) {
             logger.error(e.getMessage(), e);
             failure();
          }
       }
 
-      private synchronized void validate(String theirToken) {
+      private synchronized void validate(Session ses, String theirToken) {
          ses.sendRequest(new ValidateConnectionRequest(service.getEntityId(), theirToken), Core.DIRECT).handle(res -> {
             if (res.isError()) {
                failure();
             } else {
-               finish(((ValidateConnectionResponse) res).token);
+               finish(ses, ((ValidateConnectionResponse) res).token);
             }
          });
       }
 
-      private synchronized void finish(String token) {
+      private synchronized void finish(Session ses, String token) {
+         assert entityId != 0;
+         this.ses = ses;
          if (token.equals(this.token)) {
+            ses.setMyEntityId(service.getEntityId());
             ses.setTheirEntityId(entityId);
             ses.setTheirEntityType(Core.TYPE_SERVICE);
+            ses.setName("Direct" + entityId);
+            if (service instanceof RelayHandler) {
+               ses.setRelayHandler((RelayHandler) service);
+            }
             pending = false;
             valid = true;
             failures = 0;
@@ -168,6 +189,15 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
          }
       }
 
+      public synchronized void considerConnecting() {
+         if (entityId != service.parentId && !pending) {
+            service.dispatcher.dispatch(() -> handshake());
+         }
+      }
+
+      public synchronized Session getSession() {
+         return ses;
+      }
    }
 
    public DirectServiceInfo getDirectServiceInfo(int entityId) {
@@ -181,14 +211,17 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
       }
    }
 
-   private Session getSession(Request req, int entityId, boolean isPending) {
-      if (entityId != Core.DIRECT) {
+   public boolean hasService(int entityId) {
+      synchronized (services) {
+         return services.containsKey(entityId);
+      }
+   }
 
+   private Session getSession(Request req, int entityId) {
+      if (entityId != Core.DIRECT) {
          if (entityId != Core.UNADDRESSED) {
             if (entityId == service.getEntityId()) {
-               if (!isPending) {
-                  logger.warn("For some reason we're sending {} to ourselves", req);
-               }
+               logger.trace("We're sending {} to ourselves", req);
             } else {
                final DirectServiceInfo s = getDirectServiceInfo(entityId);
                synchronized (s) {
@@ -199,14 +232,30 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
                         return s.ses;
                      }
                   } else {
-                     if (s.requests > REQUEST_THRESHOLD && !s.pending) {
-                        service.dispatcher.dispatch(() -> s.handshake());
-                     }
+                     s.considerConnecting();
                   }
                }
             }
          }
       }
+      return service.clusterClient.getSession();
+   }
+
+   private Session getSession(int entityId) {
+      if (entityId != Core.UNADDRESSED && entityId != service.getEntityId() && entityId != service.getParentId()) {
+         final DirectServiceInfo s = getDirectServiceInfo(entityId);
+         synchronized (s) {
+            s.requests++;
+            if (s.ses != null) {
+               if (s.valid && s.ses.isConnected()) {
+                  return s.ses;
+               }
+            } else {
+               s.considerConnecting();
+            }
+         }
+      }
+      // default route through our tetrapod
       return service.clusterClient.getSession();
    }
 
@@ -218,7 +267,7 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
          }
       }
 
-      final Session ses = handler.session != null ? getSession(req, toEntityId, true) : service.clusterClient.getSession();
+      final Session ses = handler.session != null ? getSession(req, toEntityId) : service.clusterClient.getSession();
       if (ses != service.clusterClient.getSession()) {
          logger.debug("Dispatching pending {} to {} returning on {}", req, ses, handler.session);
          final Async async = ses.sendRequest(req, toEntityId, (byte) 30);
@@ -271,8 +320,31 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
          return service.dispatchRequest(header, req, null);
       }
 
-      final Session ses = getSession(req, toEntityId, false);
+      final Session ses = getSession(req, toEntityId);
       return ses.sendRequest(req, toEntityId, (byte) 30);
+   }
+
+   public boolean sendMessage(Message msg, int toEntityId) {
+      Session ses = getSession(toEntityId);
+      if (ses == null || !ses.isConnected()) {
+         logger.warn("Could not send {} to {}. No Session", msg.dump(), toEntityId);
+         return false; // BUFFER on fail?
+      }
+      ses.sendMessage(msg, toEntityId);
+      return true;
+   }
+
+   /**
+    * Sends a topic message for broadcast to toEntityId
+    */
+   public boolean sendBroadcastMessage(Message msg, int toEntityId, int topicId) {
+      Session ses = getSession(toEntityId);
+      if (ses == null || !ses.isConnected()) {
+         logger.warn("Could not broadcast {} to {} for topic {}. No Session", msg.dump(), toEntityId, topicId);
+         return false;
+      }
+      ses.sendTopicBroadcastMessage(msg, toEntityId, topicId);
+      return true;
    }
 
    @Override
@@ -282,13 +354,18 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
 
    @Override
    public Response requestValidateConnection(ValidateConnectionRequest r, RequestContext ctx) {
+      assert r.entityId != 0;
       final DirectServiceInfo s = getDirectServiceInfo(r.entityId);
       synchronized (s) {
          if (s.token.equals(r.token)) {
-            s.ses = ((SessionRequestContext) ctx).session;         
+            s.ses = ((SessionRequestContext) ctx).session;
             s.ses.setMyEntityId(service.getEntityId());
             s.ses.setTheirEntityId(r.entityId);
             s.ses.setTheirEntityType(Core.TYPE_SERVICE);
+            s.ses.setName("Direct" + s.entityId);
+            if (service instanceof RelayHandler) {
+               s.ses.setRelayHandler((RelayHandler) service);
+            }
             s.valid = true;
             return new ValidateConnectionResponse(s.theirToken);
          } else {
@@ -306,4 +383,16 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
       }
    }
 
+   public void seedService(Entity e, Session session) {
+      final DirectServiceInfo s = getDirectServiceInfo(e.entityId);
+      synchronized (s) {
+         if (!s.pending && s.ses == null) {
+            s.ses = session;
+            if (service instanceof RelayHandler) {
+               s.ses.setRelayHandler((RelayHandler) service);
+            }
+            s.valid = true;
+         }
+      }
+   }
 }

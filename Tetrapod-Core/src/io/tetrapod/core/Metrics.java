@@ -71,8 +71,7 @@ public class Metrics {
    }
    
 
-   public static void init(String prefix) {
-
+   public static void init(String prefix) { 
       if (Util.getProperty("graphite.enabled", false)) {
          startGraphite(new ServerAddress(Util.getProperty("graphite.host", "localhost"), Util.getProperty("graphite.port", 2003)), prefix);
       } else {
@@ -87,7 +86,9 @@ public class Metrics {
     * @param prefix our prefix (typically our hostname)
     */
    public synchronized static void startGraphite(ServerAddress graphite, String prefix) {
-      assert (graphiteReporter == null);
+      if (graphiteReporter != null) {
+         stopGraphite();
+      }
       logger.info("Starting Graphite reporting on {} as {}", graphite.dump(), prefix);
       graphiteReporter = GraphiteReporter.forRegistry(metrics).prefixedWith(prefix).convertRatesTo(TimeUnit.SECONDS)
                .convertDurationsTo(TimeUnit.MILLISECONDS).filter(MetricFilter.ALL)

@@ -21,11 +21,13 @@ public class ServiceStatusUpdateRequest extends Request {
       defaults();
    }
 
-   public ServiceStatusUpdateRequest(int status) {
+   public ServiceStatusUpdateRequest(int status, int mask) {
       this.status = status;
+      this.mask = mask;
    }   
 
    public int status;
+   public int mask;
 
    public final Structure.Security getSecurity() {
       return Security.INTERNAL;
@@ -33,11 +35,13 @@ public class ServiceStatusUpdateRequest extends Request {
 
    public final void defaults() {
       status = 0;
+      mask = 0;
    }
    
    @Override
    public final void write(DataSource data) throws IOException {
       data.write(1, this.status);
+      data.write(2, this.mask);
       data.writeEndTag();
    }
    
@@ -48,6 +52,7 @@ public class ServiceStatusUpdateRequest extends Request {
          int tag = data.readTag();
          switch (tag) {
             case 1: this.status = data.read_int(tag); break;
+            case 2: this.mask = data.read_int(tag); break;
             case Codec.END_TAG:
                return;
             default:
@@ -80,8 +85,9 @@ public class ServiceStatusUpdateRequest extends Request {
       // Note do not use this tags in long term serializations (to disk or databases) as 
       // implementors are free to rename them however they wish.  A null means the field
       // is not to participate in web serialization (remaining at default)
-      String[] result = new String[1+1];
+      String[] result = new String[2+1];
       result[1] = "status";
+      result[2] = "mask";
       return result;
    }
    
@@ -96,6 +102,7 @@ public class ServiceStatusUpdateRequest extends Request {
       desc.types = new TypeDescriptor[desc.tagWebNames.length];
       desc.types[0] = new TypeDescriptor(TypeDescriptor.T_STRUCT, getContractId(), getStructId());
       desc.types[1] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
+      desc.types[2] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
       return desc;
    }
 

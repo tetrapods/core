@@ -5,8 +5,7 @@ import static io.netty.buffer.Unpooled.wrappedBuffer;
 import static io.netty.handler.codec.http.HttpMethod.POST;
 import static io.tetrapod.protocol.core.Core.UNADDRESSED;
 import io.netty.buffer.ByteBuf;
-import io.netty.handler.codec.http.FullHttpRequest;
-import io.netty.handler.codec.http.QueryStringDecoder;
+import io.netty.handler.codec.http.*;
 import io.netty.handler.codec.http.multipart.*;
 import io.netty.handler.codec.http.multipart.InterfaceHttpData.HttpDataType;
 import io.netty.util.CharsetUtil;
@@ -19,7 +18,10 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.*;
+
 public class WebContext {
+   private static final Logger logger = LoggerFactory.getLogger(WebContext.class);
 
    public static ByteBuf makeByteBufResult(Object result) {
       if (result instanceof ByteBuf)
@@ -85,7 +87,13 @@ public class WebContext {
       }
       this.requestPath = queryStringDecoder.path();
       this.requestParameters = new JSONObject();
-      final Map<String, List<String>> reqs = queryStringDecoder.parameters();
+      Map<String, List<String>> reqs;
+      try {
+         reqs = queryStringDecoder.parameters();
+      } catch (IllegalArgumentException e) {
+         logger.warn("Can't parse request parameters for [{}]  {}", request.getUri(), routePath);
+         return;
+      }
       for (String k : reqs.keySet())
          for (String v : reqs.get(k))
             requestParameters.accumulate(k, v);
@@ -95,14 +103,21 @@ public class WebContext {
          return;
 
       final HttpPostRequestDecoder decoder = new HttpPostRequestDecoder(new DefaultHttpDataFactory(false), request);
-      try {
-         while (decoder.hasNext()) {
-            InterfaceHttpData httpData = decoder.next();
 
-            if (httpData.getHttpDataType() == HttpDataType.Attribute) {
-               Attribute attribute = (Attribute) httpData;
-               requestParameters.accumulate(attribute.getName(), attribute.getValue());
-               attribute.release();
+      try {
+         if (HttpHeaders.getHeader(request, "content-type").equals("application/json")) {
+            if (decoder.hasNext()) {
+               InterfaceHttpData httpData = decoder.next();
+               requestParameters = new JSONObject(httpData.toString());
+            }
+         } else {
+            while (decoder.hasNext()) {
+               InterfaceHttpData httpData = decoder.next();
+               if (httpData.getHttpDataType() == HttpDataType.Attribute) {
+                  Attribute attribute = (Attribute) httpData;
+                  requestParameters.accumulate(attribute.getName(), attribute.getValue());
+                  attribute.release();
+               }
             }
          }
       } catch (HttpPostRequestDecoder.EndOfDataDecoderException ex) {

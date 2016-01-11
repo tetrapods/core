@@ -32,6 +32,10 @@ function TP_Tetrapod(server) {
       LAUNCH_DEPLOYED : -1,
       LAUNCH_PAUSED : 5
    };
+   self.Tetrapod.MAX_PARENTS = 0x000007FF;
+   self.Tetrapod.MAX_ID = 0x000FFFFF;
+   self.Tetrapod.PARENT_ID_SHIFT = 20;
+   self.Tetrapod.PARENT_ID_MASK = 0x7FF00000;
    
    self.Tetrapod.error = {};
    self.Tetrapod.error.HOSTNAME_MISMATCH = 12239905;
@@ -39,8 +43,7 @@ function TP_Tetrapod(server) {
    self.Tetrapod.error.INVALID_CREDENTIALS = 8845805;
    self.Tetrapod.error.INVALID_UUID = 398174;
    self.Tetrapod.error.ITEM_OWNED = 10331576;
-   self.Tetrapod.error.NOT_PARENT = 2219555;
-   self.Tetrapod.error.NOT_READY = 12438466;
+   self.Tetrapod.error.NOT_LEADER = 13409358;
    self.Tetrapod.error.UNKNOWN_ENTITY_ID = 15576171;
    
    server.register("struct", "Tetrapod", "Entity", 1, 10171140);
@@ -48,10 +51,6 @@ function TP_Tetrapod(server) {
    server.register("response", "Tetrapod", "Register", 1, 13376201);
    server.register("request", "Tetrapod", "ClusterJoin", 1, 8294880);
    server.register("request", "Tetrapod", "Unregister", 1, 3896262);
-   server.register("request", "Tetrapod", "Publish", 1, 3171651);
-   server.register("response", "Tetrapod", "Publish", 1, 2698673);
-   server.register("request", "Tetrapod", "RegistrySubscribe", 1, 2572089);
-   server.register("request", "Tetrapod", "RegistryUnsubscribe", 1, 6168014);
    server.register("request", "Tetrapod", "ServicesSubscribe", 1, 7048310);
    server.register("request", "Tetrapod", "ServicesUnsubscribe", 1, 11825621);
    server.register("request", "Tetrapod", "ServiceStatusUpdate", 1, 4487218);
@@ -72,20 +71,16 @@ function TP_Tetrapod(server) {
    server.register("struct", "Tetrapod", "Admin", 1, 16753598);
    server.register("request", "Tetrapod", "KeepAlive", 1, 5512920);
    server.register("request", "Tetrapod", "SetAlternateId", 1, 10499521);
-   server.register("request", "Tetrapod", "GetSubscriberCount", 1, 9966915);
-   server.register("response", "Tetrapod", "GetSubscriberCount", 1, 6503857);
    server.register("request", "Tetrapod", "SetEntityReferrer", 1, 1987578);
    server.register("request", "Tetrapod", "GetEntityInfo", 1, 14891231);
    server.register("response", "Tetrapod", "GetEntityInfo", 1, 11007413);
    server.register("message", "Tetrapod", "Entity", 1, 10913291);
-   server.register("message", "Tetrapod", "EntityRegistered", 1, 1454035);
-   server.register("message", "Tetrapod", "EntityUnregistered", 1, 14101566);
-   server.register("message", "Tetrapod", "EntityUpdated", 1, 3775838);
    server.register("message", "Tetrapod", "TopicPublished", 1, 6873263);
    server.register("message", "Tetrapod", "TopicUnpublished", 1, 6594504);
    server.register("message", "Tetrapod", "TopicSubscribed", 1, 1498241);
    server.register("message", "Tetrapod", "TopicUnsubscribed", 1, 6934832);
-   server.register("message", "Tetrapod", "EntityListComplete", 1, 15616758);
+   server.register("message", "Tetrapod", "TopicNotFound", 1, 2478456);
+   server.register("message", "Tetrapod", "SubscriberNotFound", 1, 995961);
    server.register("request", "Tetrapod", "GetServiceBuildInfo", 1, 4482593);
    server.register("response", "Tetrapod", "GetServiceBuildInfo", 1, 4037623);
    server.register("request", "Tetrapod", "ExecuteBuildCommand", 1, 7902304);
@@ -96,6 +91,8 @@ function TP_Tetrapod(server) {
    server.register("message", "Tetrapod", "ServiceRemoved", 1, 1629937);
    server.register("message", "Tetrapod", "ServiceUpdated", 1, 1658756);
    server.register("request", "Tetrapod", "VerifyEntityToken", 1, 8934039);
+   server.register("request", "Tetrapod", "RaftLeader", 1, 13647638);
+   server.register("response", "Tetrapod", "RaftLeader", 1, 10320426);
    server.register("request", "Tetrapod", "RaftStats", 1, 15652108);
    server.register("response", "Tetrapod", "RaftStats", 1, 13186680);
    server.register("request", "Tetrapod", "AdminSubscribe", 1, 4415191);

@@ -140,4 +140,12 @@ public class AESEncryptor {
          throw new RuntimeException(e);
       }
    }
+
+   public static void main(String[] args) {
+      if (args[0].equals("enc")) {
+         System.out.println("Encrypted: " + encryptAES(args[1], args[2]));
+      } else if (args[0].equals("dec")) {
+         System.out.println("Decrypted: " + decryptAES(args[1], args[2]));
+      }
+   }
 }

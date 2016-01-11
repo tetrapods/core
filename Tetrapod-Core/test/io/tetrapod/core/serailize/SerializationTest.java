@@ -47,8 +47,7 @@ public class SerializationTest {
    @Test
    public void testLong() throws Exception {
       new TetrapodContract().registerStructs();
-      EntityRegisteredMessage m = new EntityRegisteredMessage(
-               new Entity(11, 12, 0x20E1D00AEDF8DBEDL, "xxx", 13, (byte) 14, "name", 16, 17, "build"));
+      RaftStatsResponse m = new RaftStatsResponse((byte) 12, 0x20E1D00AEDF8DBEDL, 0, 0x20E1D00AEDF8DBEDL, 0x20E1D00AEDF8DBEDL, 42, null);
       assertTrue("tempBuff", rinseTempBuff(m));
       assertTrue("adapter", rinseViaAdapter(m));
       assertTrue("json", rinseJSONBuff(m));

@@ -18,6 +18,26 @@ public class TetrapodContract extends Contract {
    public static final String NAME = "Tetrapod";
    public static final int CONTRACT_ID = 1;
    
+   /**
+    * Supports up to 2047 tetrapods
+    */
+   public static final int MAX_PARENTS = 0x000007FF; 
+   
+   /**
+    * Supports up to 1048575 entities per tetrapod
+    */
+   public static final int MAX_ID = 0x000FFFFF; 
+   
+   /**
+    * bits to shift to get parentId
+    */
+   public static final int PARENT_ID_SHIFT = 20; 
+   
+   /**
+    * mask to get parentId
+    */
+   public static final int PARENT_ID_MASK = 0x7FF00000; 
+   
    public static interface API extends APIHandler
       , AddServiceInformationRequest.Handler
       , AdminAuthorizeRequest.Handler
@@ -37,15 +57,12 @@ public class TetrapodContract extends Contract {
       , ExecuteBuildCommandRequest.Handler
       , GetEntityInfoRequest.Handler
       , GetServiceBuildInfoRequest.Handler
-      , GetSubscriberCountRequest.Handler
       , KeepAliveRequest.Handler
       , LockRequest.Handler
       , LogRegistryStatsRequest.Handler
-      , PublishRequest.Handler
+      , RaftLeaderRequest.Handler
       , RaftStatsRequest.Handler
       , RegisterRequest.Handler
-      , RegistrySubscribeRequest.Handler
-      , RegistryUnsubscribeRequest.Handler
       , ReleaseOwnershipRequest.Handler
       , RetainOwnershipRequest.Handler
       , ServiceStatusUpdateRequest.Handler
@@ -69,9 +86,6 @@ public class TetrapodContract extends Contract {
          new RegisterRequest(),
          new ClusterJoinRequest(),
          new UnregisterRequest(),
-         new PublishRequest(),
-         new RegistrySubscribeRequest(),
-         new RegistryUnsubscribeRequest(),
          new ServicesSubscribeRequest(),
          new ServicesUnsubscribeRequest(),
          new ServiceStatusUpdateRequest(),
@@ -88,12 +102,12 @@ public class TetrapodContract extends Contract {
          new AdminChangeRightsRequest(),
          new KeepAliveRequest(),
          new SetAlternateIdRequest(),
-         new GetSubscriberCountRequest(),
          new SetEntityReferrerRequest(),
          new GetEntityInfoRequest(),
          new GetServiceBuildInfoRequest(),
          new ExecuteBuildCommandRequest(),
          new VerifyEntityTokenRequest(),
+         new RaftLeaderRequest(),
          new RaftStatsRequest(),
          new AdminSubscribeRequest(),
          new SetClusterPropertyRequest(),
@@ -115,13 +129,12 @@ public class TetrapodContract extends Contract {
    public Structure[] getResponses() {
       return new Structure[] {
          new RegisterResponse(),
-         new PublishResponse(),
          new AdminLoginResponse(),
          new AdminAuthorizeResponse(),
          new AdminSessionTokenResponse(),
-         new GetSubscriberCountResponse(),
          new GetEntityInfoResponse(),
          new GetServiceBuildInfoResponse(),
+         new RaftLeaderResponse(),
          new RaftStatsResponse(),
          new LockResponse(),
          new ClaimOwnershipResponse(),
@@ -132,14 +145,12 @@ public class TetrapodContract extends Contract {
    public Structure[] getMessages() {
       return new Structure[] {
          new EntityMessage(),
-         new EntityRegisteredMessage(),
-         new EntityUnregisteredMessage(),
-         new EntityUpdatedMessage(),
          new TopicPublishedMessage(),
          new TopicUnpublishedMessage(),
          new TopicSubscribedMessage(),
          new TopicUnsubscribedMessage(),
-         new EntityListCompleteMessage(),
+         new TopicNotFoundMessage(),
+         new SubscriberNotFoundMessage(),
          new BuildCommandProgressMessage(),
          new ServiceAddedMessage(),
          new ServiceRemovedMessage(),
@@ -184,7 +195,9 @@ public class TetrapodContract extends Contract {
    
    public WebRoute[] getWebRoutes() {
       return new WebRoute[] {
-         
+         new WebRoute("/api/admin_login", AdminLoginRequest.STRUCT_ID, TetrapodContract.CONTRACT_ID),
+         new WebRoute("/api/admin_session_token", AdminSessionTokenRequest.STRUCT_ID, TetrapodContract.CONTRACT_ID),
+         new WebRoute("/api/set_web_root", SetWebRootRequest.STRUCT_ID, TetrapodContract.CONTRACT_ID),
       };
    }
 
@@ -250,10 +263,6 @@ public class TetrapodContract extends Contract {
       
    public static class Registry extends Contract {
       public static interface API extends
-         EntityListCompleteMessage.Handler,
-         EntityRegisteredMessage.Handler,
-         EntityUnregisteredMessage.Handler,
-         EntityUpdatedMessage.Handler,
          TopicPublishedMessage.Handler,
          TopicSubscribedMessage.Handler,
          TopicUnpublishedMessage.Handler,
@@ -262,10 +271,6 @@ public class TetrapodContract extends Contract {
          
       public Structure[] getMessages() {
          return new Structure[] {
-            new EntityListCompleteMessage(),
-            new EntityRegisteredMessage(),
-            new EntityUnregisteredMessage(),
-            new EntityUpdatedMessage(),
             new TopicPublishedMessage(),
             new TopicSubscribedMessage(),
             new TopicUnpublishedMessage(),
@@ -321,7 +326,6 @@ public class TetrapodContract extends Contract {
    public static final int ERROR_INVALID_CREDENTIALS = 8845805; 
    public static final int ERROR_INVALID_UUID = 398174; 
    public static final int ERROR_ITEM_OWNED = 10331576; 
-   public static final int ERROR_NOT_PARENT = 2219555; 
-   public static final int ERROR_NOT_READY = 12438466; 
+   public static final int ERROR_NOT_LEADER = 13409358; 
    public static final int ERROR_UNKNOWN_ENTITY_ID = 15576171; 
 }

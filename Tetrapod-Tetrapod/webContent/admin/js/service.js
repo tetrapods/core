@@ -28,9 +28,10 @@ define(["knockout", "jquery", "bootbox", "alert", "app", "chart", "modules/build
       self.subscribe = subscribe;
 
       self.iconURL = ko.observable("media/gear.gif");
-      subscribe(1);
 
       function subscribe(attempt) {
+         if (self.isGone())
+            return;
          app.server.sendTo("ServiceDetails", {}, self.entityId, function(result) {
             if (!result.isError()) {
                self.iconURL(result.iconURL);
@@ -41,7 +42,7 @@ define(["knockout", "jquery", "bootbox", "alert", "app", "chart", "modules/build
                   }
                }
                app.server.sendTo("ServiceStatsSubscribe", {}, self.entityId, app.server.logResponse)
-            } else if (result.errorCode == Core.SERVICE_UNAVAILABLE) {
+            } else if (result.errorCode == Core.SERVICE_UNAVAILABLE && !self.removed) {
                setTimeout(function() {
                   subscribe(attempt + 1);
                }, 1000 * attempt);
@@ -207,13 +208,13 @@ define(["knockout", "jquery", "bootbox", "alert", "app", "chart", "modules/build
          });
       }
 
-      self.requestStats(null);
+      self.requestStats([]);
       self.rpcStat = ko.observable();
       self.reqSort = ko.observable(1);
       self.requestStatsTimeRange = ko.observable(0);
       self.requestStatsDomains = ko.observableArray([]);
       self.requestStatsDomain = ko.observable(null);
-      self.reqChart = new Chart("service-stat-histogram-" + self.entityId); 
+      self.reqChart = new Chart("service-stat-histogram-" + self.entityId);
 
       self.reqSort.subscribe(function() {
          fetchRequestStats();
@@ -230,10 +231,9 @@ define(["knockout", "jquery", "bootbox", "alert", "app", "chart", "modules/build
 
       function showRequestStats() {
          self.requestStatsDomain('Requests');
-         self.requestStats(null);
+         self.requestStats([]);
          fetchRequestStats();
       }
-
 
       function fetchRequestStats() {
          var currentTimeMillis = new Date().getTime();
@@ -256,7 +256,6 @@ define(["knockout", "jquery", "bootbox", "alert", "app", "chart", "modules/build
                   maxCount = Math.max(maxCount, r.count);
                   maxTime = Math.max(maxTime, r.totalTime);
                   maxAvgTime = Math.max(maxAvgTime, r.avgTime);
-                  
                   r.numErrors = 0;
                   for (var j = 0; j < r.errors.length; j++) {
                      var error = r.errors[j];
@@ -264,7 +263,6 @@ define(["knockout", "jquery", "bootbox", "alert", "app", "chart", "modules/build
                         r.numErrors += error.count;
                      }
                   }
-                  
                }
 
                for (var i = 0; i < result.requests.length; i++) {
@@ -285,7 +283,7 @@ define(["knockout", "jquery", "bootbox", "alert", "app", "chart", "modules/build
                   self.reqChart.render();
                });
             } else {
-               self.requestStats(null);
+               self.requestStats([]);
             }
          });
       }
@@ -385,10 +383,12 @@ define(["knockout", "jquery", "bootbox", "alert", "app", "chart", "modules/build
 
       // updates all charts for this service
       self.chart = function() {
-         self.latencyChart.updatePlot(60000, self.latency());
-         self.rpsChart.updatePlot(60000, self.rps());
-         self.mpsChart.updatePlot(60000, self.mps());
-         self.counterChart.updatePlot(60000, self.counter());
+         if (!self.removed) {
+            self.latencyChart.updatePlot(60000, self.latency());
+            self.rpsChart.updatePlot(60000, self.rps());
+            self.mpsChart.updatePlot(60000, self.mps());
+            self.counterChart.updatePlot(60000, self.counter());
+         }
       }
 
       var LogConsts = app.server.consts['Core'].ServiceLogEntry;

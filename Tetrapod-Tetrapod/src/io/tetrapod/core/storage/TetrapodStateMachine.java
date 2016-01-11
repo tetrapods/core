@@ -27,6 +27,7 @@ import io.tetrapod.raft.storage.StorageStateMachine;
  * Tetrapod state machine adds cluster properties, service protocols, and tetrapod web routes
  */
 public class TetrapodStateMachine extends StorageStateMachine<TetrapodStateMachine> {
+
    public static final Logger                     logger                          = LoggerFactory.getLogger(TetrapodStateMachine.class);
 
    public final static int                        TETRAPOD_STATE_FILE_VERSION     = 1;
@@ -62,7 +63,7 @@ public class TetrapodStateMachine extends StorageStateMachine<TetrapodStateMachi
    public final Map<String, WebRoot>              webRootDirs                     = new ConcurrentHashMap<>();
    public final Map<Integer, EntityInfo>          entities                        = new ConcurrentHashMap<>();
 
-   // entityId+prefix => Owner
+   // entityId + prefix => Owner
    public final Map<String, Owner>                owners                          = new ConcurrentHashMap<>();
    public final Map<String, Owner>                ownedItems                      = new ConcurrentHashMap<>();
 
@@ -355,13 +356,17 @@ public class TetrapodStateMachine extends StorageStateMachine<TetrapodStateMachi
       logger.info(" Add Entity = {}", info);
    }
 
-   public void updateEntity(int entityId, int status, String build, int version) {
+   public void updateEntity(int entityId, int status, int mask, String build, int version) {
       final EntityInfo info = entities.get(entityId);
       if (info != null) {
          // update fields
-         info.status = status;
          info.build = build;
          info.version = version;
+
+         int s = info.status;
+         s &= ~mask;
+         s |= status;
+         info.setStatus(s);
 
          // store in state machine as a StorageItem
          putItem(TETRAPOD_ENTITY_PREFIX + entityId, (byte[]) info.toRawForm(TempBufferDataSource.forWriting()));

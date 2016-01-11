@@ -8,28 +8,26 @@ import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.Gauge;
 
+import io.tetrapod.core.pubsub.Topic;
+import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.rpc.Request;
 import io.tetrapod.protocol.core.*;
 
 /**
  * Stores basic service stats & handles stats publication
  */
-public class ServiceStats {
-   private static final Logger             logger           = LoggerFactory.getLogger(ServiceStats.class);
-
-   private final Set<Integer>              statsSubscribers = new HashSet<>();
+public class ServiceStats implements TopicUnsubscribedMessage.Handler {
+   private static final Logger             logger   = LoggerFactory.getLogger(ServiceStats.class);
 
    private final DefaultService            service;
-
-   private Integer                         statsTopicId;
-
-   private final ServiceStatsMessage       message          = new ServiceStatsMessage();
-
-   private final RequestStats              requests         = new RequestStats();
-   private final Map<String, RequestStats> domains          = new HashMap<>();
+   private final Topic                     statsTopic;
+   private final ServiceStatsMessage       message  = new ServiceStatsMessage();
+   private final RequestStats              requests = new RequestStats();
+   private final Map<String, RequestStats> domains  = new HashMap<>();
 
    public ServiceStats(DefaultService service) {
       this.service = service;
+      this.statsTopic = service.publishTopic();
       scheduleUpdate();
       register(requests, "Requests");
 
@@ -39,6 +37,8 @@ public class ServiceStats {
             return requests.getErrorRate();
          }
       }, this, "errors");
+
+      service.addMessageHandler(new TopicUnsubscribedMessage(), this);
    }
 
    /**
@@ -46,40 +46,21 @@ public class ServiceStats {
     */
    protected void publishTopic() {
       message.entityId = service.getEntityId();
-      service.sendDirectRequest(new PublishRequest(1)).handle(res -> {
-         if (!res.isError()) {
-            setTopic(((PublishResponse) res).topicIds[0]);
-         }
-      });
-   }
-
-   private synchronized void setTopic(int topicId) {
-      statsTopicId = topicId;
-      for (int entityId : statsSubscribers) {
-         service.subscribe(statsTopicId, entityId);
-      }
-      service.sendBroadcastMessage(message, statsTopicId);
    }
 
    /**
     * Subscribe an entity to our topic
     */
    protected synchronized void subscribe(int entityId) {
-      statsSubscribers.add(entityId);
-      if (statsTopicId != null) {
-         service.subscribe(statsTopicId, entityId);
-         service.sendMessage(message, entityId);
-      }
+      statsTopic.subscribe(entityId, true);
+      statsTopic.sendMessage(message, entityId);
    }
 
    /**
     * Unsubscribe an entity to our topic
     */
    protected synchronized void unsubscribe(int entityId) {
-      statsSubscribers.remove(entityId);
-      if (statsTopicId != null) {
-         service.unsubscribe(statsTopicId, entityId);
-      }
+      statsTopic.unsubscribe(entityId);
    }
 
    /**
@@ -100,7 +81,7 @@ public class ServiceStats {
     * Update our stats counters and broadcast any updates to subscribers
     */
    private synchronized void updateStats() {
-      if (statsTopicId != null && statsSubscribers.size() > 0) {
+      if (statsTopic.numSubscribers() > 0) {
          boolean dirty = false;
          int RPS = (int) service.getDispatcher().requestsHandledCounter.getOneMinuteRate();
          if (message.rps != RPS) {
@@ -138,7 +119,7 @@ public class ServiceStats {
          }
 
          if (dirty) {
-            service.sendBroadcastMessage(message, statsTopicId);
+            statsTopic.broadcast(message);
          }
       }
    }
@@ -170,6 +151,16 @@ public class ServiceStats {
    public void register(RequestStats stats, String name) {
       synchronized (domains) {
          domains.put(name, stats);
+      }
+   }
+
+   @Override
+   public void genericMessage(Message message, MessageContext ctx) {}
+
+   @Override
+   public void messageTopicUnsubscribed(TopicUnsubscribedMessage m, MessageContext ctx) {
+      if (m.publisherId == service.getEntityId()) {
+         statsTopic.unsubscribe(m.entityId);
       }
    }
 

@@ -14,17 +14,20 @@ public class WebRootInMemory implements WebRoot {
    private volatile long       modificationTime = System.currentTimeMillis();
    private AtomicInteger       size             = new AtomicInteger(0);
 
+   @Override
    public void clear() {
       this.modificationTime = System.currentTimeMillis();
       this.files.clear();
       this.size.set(0);
    }
 
+   @Override
    public void addFile(String path, byte[] content) {
       files.put(path, content);
       size.addAndGet(content.length);
    }
 
+   @Override
    public FileResult getFile(String path) {
       if (path.endsWith("/")) {
          path += "index.html";

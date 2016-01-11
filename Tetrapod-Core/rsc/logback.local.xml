@@ -12,12 +12,12 @@
       <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
          <maxFileSize>10MB</maxFileSize>
       </triggeringPolicy>
-      
+
       <encoder>
          <pattern>%d %-5level %24thread{24} - %16logger{0} - %msg%n</pattern>
       </encoder>
    </appender>
-   
+
    <appender name="COMMSFILEPID" class="ch.qos.logback.core.rolling.RollingFileAppender">
       <file>logs/comms.${APPNAME}.log</file>
 
@@ -31,7 +31,7 @@
       <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
          <maxFileSize>10MB</maxFileSize>
       </triggeringPolicy>
-      
+
       <encoder>
          <pattern>%d %-5level %24thread{24} - %16logger{0} - %msg%n</pattern>
       </encoder>
@@ -47,10 +47,18 @@
       <!-- additivity false means it does not show up in root -->
       <appender-ref ref="COMMSFILEPID" />
    </logger>
+
+
+   <logger name="io.tetrapod.core.web.WebStaticFileHandler" level="INFO" />
+
+<!--    <logger name="io.tetrapod.core.Session" level="INFO" />
+   <logger name="io.tetrapod.core.WireSession" level="INFO" />
+   <logger name="io.tetrapod.core.WebHttpSession" level="INFO" />
+   <logger name="io.tetrapod.core.ServiceConnector" level="WARN" /> 
+   <logger name="io.tetrapod.core.registry.EntityRegistry" level="INFO" />
+   <logger name="io.tetrapod.core.storage.TetrapodCluster" level="WARN" /> -->
    
    <logger name="io.netty" level="INFO" />
-   <logger name="twitter4j" level="INFO" />
-   <logger name="com.hazelcast" level="WARN" />
-   <logger name="NodeMulticastListener" level="WARN" />
-   
+   <logger name="twitter4j" level="INFO" />  
+
 </included>

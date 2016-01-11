@@ -21,12 +21,12 @@ public class TopicPublishedMessage extends Message {
       defaults();
    }
 
-   public TopicPublishedMessage(int ownerId, int topicId) {
-      this.ownerId = ownerId;
+   public TopicPublishedMessage(int publisherId, int topicId) {
+      this.publisherId = publisherId;
       this.topicId = topicId;
    }   
    
-   public int ownerId;
+   public int publisherId;
    public int topicId;
 
    public final Structure.Security getSecurity() {
@@ -34,13 +34,13 @@ public class TopicPublishedMessage extends Message {
    }
 
    public final void defaults() {
-      ownerId = 0;
+      publisherId = 0;
       topicId = 0;
    }
    
    @Override
    public final void write(DataSource data) throws IOException {
-      data.write(1, this.ownerId);
+      data.write(1, this.publisherId);
       data.write(2, this.topicId);
       data.writeEndTag();
    }
@@ -51,7 +51,7 @@ public class TopicPublishedMessage extends Message {
       while (true) {
          int tag = data.readTag();
          switch (tag) {
-            case 1: this.ownerId = data.read_int(tag); break;
+            case 1: this.publisherId = data.read_int(tag); break;
             case 2: this.topicId = data.read_int(tag); break;
             case Codec.END_TAG:
                return;
@@ -87,7 +87,7 @@ public class TopicPublishedMessage extends Message {
       // implementors are free to rename them however they wish.  A null means the field
       // is not to participate in web serialization (remaining at default)
       String[] result = new String[2+1];
-      result[1] = "ownerId";
+      result[1] = "publisherId";
       result[2] = "topicId";
       return result;
    }

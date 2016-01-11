@@ -377,7 +377,12 @@ function TP_Server() {
          return result._contractId == 1 && result._structId == 1;
       };
       var ctx = requestContexts[result._requestId];
-
+      if (!ctx) {
+         console.warn("Got unpexpected result");
+         console.warn(result);
+         return;
+      }
+      
       logResponse(result, ctx.request);
 
       if (ctx.handler) {

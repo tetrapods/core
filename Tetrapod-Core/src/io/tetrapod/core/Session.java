@@ -84,6 +84,8 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
 
    protected RelayHandler               relayHandler;
 
+   protected String                     name;
+
    protected int                        myId                       = 0;
    protected byte                       myType                     = Core.TYPE_ANONYMOUS;
 
@@ -96,6 +98,10 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
       this.channel = channel;
       this.helper = helper;
       this.myContractId = helper.getContractId();
+   }
+
+   public void setName(String name) {
+      this.name = name;
    }
 
    /**
@@ -163,7 +169,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
 
    @Override
    public String toString() {
-      return String.format("%s #%d [0x%08X]", getClass().getSimpleName(), sessionNum, theirId);
+      return String.format("%s%s #%d [0x%08X]", getClass().getSimpleName(),  name == null ? "" : name, sessionNum, theirId);
    }
 
    protected String getStructName(int contractId, int structId) {
@@ -274,11 +280,13 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
       return makeFrame(new ResponseHeader(requestId, res.getContractId(), res.getStructId()), res, ENVELOPE_RESPONSE);
    }
 
-   public void sendBroadcastMessage(Message msg, byte toType, int toId) {
-      if (getMyEntityId() != 0) {
+   public void sendAltBroadcastMessage(Message msg, int toId) {
+      final int myEntityId = getMyEntityId();
+      if (myEntityId != 0) {
          if (!commsLogIgnore(msg))
-            commsLog("%s  [B] => %s (to %s:%d)", this, msg.dump(), TO_TYPES[toType], toId);
-         final Object buffer = makeFrame(new MessageHeader(getMyEntityId(), toType, toId, msg.getContractId(), msg.getStructId()), msg,
+            commsLog("%s  [A] => %s (to altId-%d)", this, msg.dump(), toId);
+         final Object buffer = makeFrame(
+                  new MessageHeader(myEntityId, 0, toId, msg.getContractId(), msg.getStructId(), MessageHeader.FLAGS_ALTERNATE), msg,
                   ENVELOPE_BROADCAST);
          if (buffer != null) {
             writeFrame(buffer);
@@ -287,11 +295,26 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
       }
    }
 
-   public void sendMessage(Message msg, byte toType, int toId) {
-      if (getMyEntityId() != 0) {
+   public void sendTopicBroadcastMessage(Message msg, int toId, int topicId) {
+      final int myEntityId = getMyEntityId();
+      if (myEntityId != 0) {
          if (!commsLogIgnore(msg))
-            commsLog("%s  [M] => %s (to %s:%d)", this, msg.dump(), TO_TYPES[toType], toId);
-         final Object buffer = makeFrame(new MessageHeader(getMyEntityId(), toType, toId, msg.getContractId(), msg.getStructId()), msg,
+            commsLog("%s  [B] => %s (to TOPIC:%d-#%d)", this, msg.dump(), toId, topicId);
+         final Object buffer = makeFrame(new MessageHeader(myEntityId, topicId, toId, msg.getContractId(), msg.getStructId(), (byte) 0), msg,
+                  ENVELOPE_BROADCAST);
+         if (buffer != null) {
+            writeFrame(buffer);
+            getDispatcher().messagesSentCounter.mark();
+         }
+      }
+   }
+
+   public void sendMessage(Message msg, int toId) {
+      final int myEntityId = getMyEntityId();
+      if (myEntityId != 0) {
+         if (!commsLogIgnore(msg))
+            commsLog("%s  [M] => %s (to %d)", this, msg.dump(), toId);
+         final Object buffer = makeFrame(new MessageHeader(myEntityId, 0, toId, msg.getContractId(), msg.getStructId(), (byte) 0), msg,
                   ENVELOPE_MESSAGE);
          if (buffer != null) {
             writeFrame(buffer);
@@ -326,11 +349,10 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
       return null;
    }
 
-   public static final String[] TO_TYPES = { "Unknown", "Topic", "Entity", "Alt" };
-
    public void sendRelayedMessage(MessageHeader header, ByteBuf payload, boolean broadcast) {
+      assert header.fromId != 0;
       if (!commsLogIgnore(header.structId)) {
-         commsLog("%s  [M] ~> Message:%d %s (to %s:%d)", this, header.structId, getNameFor(header), TO_TYPES[header.toType], header.toId);
+         commsLog("%s  [M] ~> Message:%d %s (to%d)", this, header.structId, getNameFor(header), header.toId);
       }
       byte envelope = broadcast ? ENVELOPE_BROADCAST : ENVELOPE_MESSAGE;
       writeFrame(makeFrame(header, payload, envelope));

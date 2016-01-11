@@ -18,7 +18,6 @@ public class LogBuffer extends AppenderBase<ILoggingEvent> {
    private final LinkedList<ILoggingEvent> errors          = new LinkedList<>();
    private final LinkedList<ILoggingEvent> warnings        = new LinkedList<>();
 
-   
    private long                            count           = 0;
 
    @Override
@@ -28,18 +27,18 @@ public class LogBuffer extends AppenderBase<ILoggingEvent> {
       if (items.size() > MAX_ITEMS) {
          items.removeFirst();
       }
-      
+
       if (e.getLevel() == Level.ERROR) {
-      	errors.addLast(e);
+         errors.addLast(e);
          if (errors.size() > MAX_ERRORS) {
-         	errors.removeFirst();
+            errors.removeFirst();
          }
       }
 
       if (e.getLevel() == Level.WARN) {
-      	warnings.addLast(e);
+         warnings.addLast(e);
          if (warnings.size() > MAX_ERRORS) {
-         	warnings.removeFirst();
+            warnings.removeFirst();
          }
       }
    }
@@ -92,36 +91,36 @@ public class LogBuffer extends AppenderBase<ILoggingEvent> {
          logStack(sb, proxy.getCause());
       }
    }
-   
-	public boolean hasErrors() {
-		return !errors.isEmpty();
-	}
 
-	public boolean hasWarnings() {
-		return !warnings.isEmpty();
-	}
+   public synchronized boolean hasErrors() {
+      return !errors.isEmpty();
+   }
 
-	public void resetErrorLogs() {
-		errors.clear();
-		warnings.clear();
-	}
-	
-   public List<ServiceLogEntry> getErrors() {
+   public synchronized boolean hasWarnings() {
+      return !warnings.isEmpty();
+   }
+
+   public synchronized void resetErrorLogs() {
+      errors.clear();
+      warnings.clear();
+   }
+
+   public synchronized List<ServiceLogEntry> getErrors() {
       final List<ServiceLogEntry> list = new ArrayList<ServiceLogEntry>();
-      for(ILoggingEvent error : errors) {
+      for (ILoggingEvent error : errors) {
          list.add(logEntryFrom(error));
       }
       return list;
    }
 
-   public List<ServiceLogEntry> getWarnings() {
+   public synchronized List<ServiceLogEntry> getWarnings() {
       final List<ServiceLogEntry> list = new ArrayList<ServiceLogEntry>();
-      for(ILoggingEvent warning : warnings) {
+      for (ILoggingEvent warning : warnings) {
          list.add(logEntryFrom(warning));
       }
       return list;
    }
-	
+
    public Level convert(byte level) {
       switch (level) {
          case ServiceLogEntry.LEVEL_ALL:

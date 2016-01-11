@@ -10,18 +10,22 @@ public interface Marshaller<T> {
     * Marshals values as Strings
     */
    public static class StringMarshaller implements Marshaller<String> {
+      @Override
       public void add(String str, PreparedStatement s, int index) throws SQLException {
          s.setString(index, str);
       }
    
+      @Override
       public String get(ResultSet rs, int index) throws SQLException {
          return rs.getString(index);
       }
    
+      @Override
       public String getSQLValueType() {
          return "MEDIUMTEXT";
       }
    
+      @Override
       public String key(String memoryKey) {
          return memoryKey;
       }
@@ -31,18 +35,22 @@ public interface Marshaller<T> {
     * Marshals values as byte arrays / blobs
     */
    public static class BytesMarshaller implements Marshaller<byte[]> {
+      @Override
       public void add(byte[] data, PreparedStatement s, int index) throws SQLException {
          s.setBytes(index, data);
       }
    
+      @Override
       public byte[] get(ResultSet rs, int index) throws SQLException {
          return rs.getBytes(index);
       }
    
+      @Override
       public String getSQLValueType() {
          return "BLOB";
       }
    
+      @Override
       public String key(String memoryKey) {
          return memoryKey;
       }
