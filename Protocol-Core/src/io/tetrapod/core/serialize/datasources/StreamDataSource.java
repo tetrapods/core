@@ -632,25 +632,27 @@ abstract public class StreamDataSource implements DataSource {
    protected int readVarInt() throws IOException {
       int x = 0;
       int shift = 0;
-      while (true) {
+      while (shift < 32) {
          int v = readRawByte();
          x = x | ((v & MASK) << shift);
          if ((v & CONTINUE) == 0)
             return x;
          shift += 7;
       }
+      throw new IOException("Decoding failure");
    }
 
    protected long readVarLong() throws IOException {
       long x = 0;
       int shift = 0;
-      while (true) {
+      while (shift < 64) {
          int v = readRawByte();
          x = x | (((long)(v & MASK)) << shift);
          if ((v & CONTINUE) == 0)
             return x;
          shift += 7;
       }
+      throw new IOException("Decoding failure");
    }
 
    abstract protected int readRawByte() throws IOException;

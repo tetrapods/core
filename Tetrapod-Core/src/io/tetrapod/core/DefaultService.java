@@ -1,27 +1,29 @@
 package io.tetrapod.core;
 
-import static io.tetrapod.protocol.core.Core.UNADDRESSED;
 import static io.tetrapod.protocol.core.CoreContract.*;
-import io.netty.channel.socket.SocketChannel;
-import io.tetrapod.core.pubsub.Topic;
-import io.tetrapod.core.rpc.*;
-import io.tetrapod.core.rpc.Error;
-import io.tetrapod.core.utils.*;
-import io.tetrapod.protocol.core.*;
 
 import java.io.*;
 import java.lang.management.ManagementFactory;
 import java.net.ConnectException;
+import java.security.SecureRandom;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.SSLContext;
 
-import org.slf4j.*;
-
-import ch.qos.logback.classic.LoggerContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.Timer.Context;
+
+import ch.qos.logback.classic.LoggerContext;
+import io.netty.channel.socket.SocketChannel;
+import io.tetrapod.core.pubsub.Publisher;
+import io.tetrapod.core.pubsub.Topic;
+import io.tetrapod.core.rpc.*;
+import io.tetrapod.core.rpc.Error;
+import io.tetrapod.core.utils.*;
+import io.tetrapod.protocol.core.*;
 
 public class DefaultService
          implements Service, Fail.FailHandler, CoreContract.API, SessionFactory, EntityMessage.Handler, TetrapodContract.Cluster.API {
@@ -47,10 +49,13 @@ public class DefaultService
 
    protected final ServiceStats            stats;
    protected boolean                       startPaused;
+   public final SecureRandom               random          = new SecureRandom();
 
    private final LinkedList<ServerAddress> clusterMembers  = new LinkedList<>();
 
    private final MessageHandlers           messageHandlers = new MessageHandlers();
+
+   private final Publisher                 publisher       = new Publisher(this);
 
    public DefaultService() {
       this(null);
@@ -90,6 +95,7 @@ public class DefaultService
       }
 
       Runtime.getRuntime().addShutdownHook(new Thread("Shutdown Hook") {
+         @Override
          public void run() {
             logger.info("Shutdown Hook");
             if (!isShuttingDown()) {
@@ -108,14 +114,6 @@ public class DefaultService
       if (mainContract != null)
          addContracts(mainContract);
       this.contract = mainContract;
-   }
-
-   // HACK compatability for upcoming raft-registry
-   public Topic publishTopic() {
-      Topic.service = this;
-      Response res = sendDirectRequest(new PublishRequest(1)).waitForResponse();
-      Topic topic = new Topic(((PublishResponse) res).topicIds[0]);
-      return topic;
    }
 
    /**
@@ -169,7 +167,9 @@ public class DefaultService
    private void onServiceRegistered() {
       registerServiceInformation();
       stats.publishTopic();
-      sendDirectRequest(new ServicesSubscribeRequest());
+      logger.info("@@@@@ ServicesSubscribeRequest");
+      sendDirectRequest(new ServicesSubscribeRequest()).handle(res -> logger.info("{}", res.dump()));
+      resetServiceConnector(true);
    }
 
    public boolean dependenciesReady() {
@@ -191,12 +191,6 @@ public class DefaultService
                   AdminAuthToken.setSecret(Util.getProperty(AdminAuthToken.SHARED_SECRET_KEY));
 
                   onReadyToServe();
-                  if (getEntityType() != Core.TYPE_TETRAPOD) {
-                     if (serviceConnector != null) {
-                        serviceConnector.shutdown();
-                     }
-                     serviceConnector = new ServiceConnector(this, sslContext);
-                  }
                } catch (Throwable t) {
                   fail(t);
                }
@@ -211,6 +205,17 @@ public class DefaultService
                dispatcher.dispatch(1, TimeUnit.SECONDS, () -> checkDependencies());
             }
          }
+      }
+   }
+
+   protected void resetServiceConnector(boolean start) {
+      logger.info("resetServiceConnector({})", start);
+      if (serviceConnector != null) {
+         serviceConnector.shutdown();
+         serviceConnector = null;
+      }
+      if (start) {
+         serviceConnector = new ServiceConnector(this, sslContext);
       }
    }
 
@@ -307,6 +312,10 @@ public class DefaultService
       return services;
    }
 
+   public Publisher getPublisher() {
+      return publisher;
+   }
+
    protected String getRelaunchToken() {
       return token;
    }
@@ -322,7 +331,13 @@ public class DefaultService
       ses.addSessionListener(new Session.Listener() {
          @Override
          public void onSessionStop(Session ses) {
+            logger.info("Connection to tetrapod closed");
             onDisconnectedFromCluster();
+            resetServiceConnector(false);
+            if (!isShuttingDown()) {
+               dispatcher.dispatch(3, TimeUnit.SECONDS, () -> connectToCluster(1));
+            }
+            publisher.resetTopics();
          }
 
          @Override
@@ -334,31 +349,29 @@ public class DefaultService
    }
 
    private void onConnectedToCluster() {
-      sendDirectRequest(new RegisterRequest(token, getContractId(), getShortName(), getStatus(), Util.getHostName(), buildName))
-               .handle(res -> {
-                  if (res.isError()) {
-                     Fail.fail("Unable to register: " + res.errorCode());
-                  } else {
-                     RegisterResponse r = (RegisterResponse) res;
-                     entityId = r.entityId;
-                     parentId = r.parentId;
-                     token = r.token;
+      final Request req = new RegisterRequest(token, getContractId(), getShortName(), getStatus(), Util.getHostName(), buildName);
+      sendDirectRequest(req).handle(res -> {
+         if (res.isError()) {
+            logger.error("Unable to register: " + req.dump() + " ==> " + res);
+            clusterClient.close();
+         } else {
+            RegisterResponse r = (RegisterResponse) res;
+            entityId = r.entityId;
+            parentId = r.parentId;
+            token = r.token;
 
-                     logger.info(String.format("%s My entityId is 0x%08X", clusterClient.getSession(), r.entityId));
-                     clusterClient.getSession().setMyEntityId(r.entityId);
-                     clusterClient.getSession().setTheirEntityId(r.parentId);
-                     clusterClient.getSession().setMyEntityType(getEntityType());
-                     clusterClient.getSession().setTheirEntityType(Core.TYPE_TETRAPOD);
-                     onServiceRegistered();
-                  }
-               });
+            clusterClient.getSession().setMyEntityId(r.entityId);
+            clusterClient.getSession().setTheirEntityId(r.parentId);
+            clusterClient.getSession().setMyEntityType(getEntityType());
+            clusterClient.getSession().setTheirEntityType(Core.TYPE_TETRAPOD);
+            logger.info(String.format("%s My entityId is 0x%08X", clusterClient.getSession(), r.entityId));
+            onServiceRegistered();
+         }
+      });
    }
 
    public void onDisconnectedFromCluster() {
-      if (!isShuttingDown()) {
-         logger.info("Connection to tetrapod closed");
-         dispatcher.dispatch(3, TimeUnit.SECONDS, () -> connectToCluster(1));
-      }
+      // override
    }
 
    public boolean isConnected() {
@@ -383,8 +396,9 @@ public class DefaultService
                   logger.info(e.getMessage());
                } catch (Throwable e) {
                   logger.error(e.getMessage(), e);
+               } finally {
+                  clusterMembers.addLast(server);
                }
-               clusterMembers.addLast(server);
             }
          }
 
@@ -463,7 +477,7 @@ public class DefaultService
          this.status = status;
       }
       if (changed && clusterClient.isConnected()) {
-         sendDirectRequest(new ServiceStatusUpdateRequest(status)).log();
+         sendDirectRequest(new ServiceStatusUpdateRequest(bits, mask)).log();
       }
    }
 
@@ -471,12 +485,16 @@ public class DefaultService
    public void fail(Throwable error) {
       logger.error(error.getMessage(), error);
       setStatus(Core.STATUS_FAILED);
+      onPaused();
    }
 
    @Override
    public void fail(String reason) {
       logger.error("FAIL: {}", reason);
       setStatus(Core.STATUS_FAILED);
+      if (!isPaused()) {
+         onPaused();
+      }
    }
 
    /**
@@ -500,7 +518,7 @@ public class DefaultService
       return null;
    }
 
-   protected String getShortName() {
+   public String getShortName() {
       if (contract == null) {
          return null;
       }
@@ -516,8 +534,8 @@ public class DefaultService
    }
 
    public long getAverageResponseTime() {
-      // TODO: verify this is correctly converting nanos to millis
-      return (long) dispatcher.requestTimes.getSnapshot().getMean() / 1000000L;
+      //return (long) dispatcher.requestTimes.getSnapshot().getMean() / 1000000L;
+      return Math.round(dispatcher.requestTimes.getOneMinuteRate());
    }
 
    /**
@@ -653,23 +671,51 @@ public class DefaultService
       return clusterClient.getSession().sendRequest(req, Core.DIRECT, (byte) 30);
    }
 
-   public void sendMessage(Message msg, int toEntityId) {
-      clusterClient.getSession().sendMessage(msg, MessageHeader.TO_ENTITY, toEntityId);
+   public boolean isServiceExistant(int entityId) {
+      return services.isServiceExistant(entityId);
    }
 
-   public void sendBroadcastMessage(Message msg, int topicId) {
-      clusterClient.getSession().sendBroadcastMessage(msg, MessageHeader.TO_TOPIC, topicId);
+   public void sendMessage(Message msg, int toEntityId) {
+      if (serviceConnector != null
+               && (serviceConnector.hasService(toEntityId) || (services != null && services.isServiceExistant(toEntityId)))) {
+         serviceConnector.sendMessage(msg, toEntityId);
+      } else {
+         clusterClient.getSession().sendMessage(msg, toEntityId);
+      }
    }
 
    public void sendAltBroadcastMessage(Message msg, int altId) {
-      clusterClient.getSession().sendBroadcastMessage(msg, MessageHeader.TO_ALTERNATE, altId);
+      clusterClient.getSession().sendAltBroadcastMessage(msg, altId);
+   }
+
+   public boolean sendBroadcastMessage(Message msg, int toEntityId, int topicId) {
+      if (serviceConnector != null) {
+         return serviceConnector.sendBroadcastMessage(msg, toEntityId, topicId);
+      } else {
+         //clusterClient.getSession().sendTopicBroadcastMessage(msg, toEntityId, topicId);
+         return false;
+      }
+   }
+
+   public boolean sendPrivateMessage(Message msg, int toEntityId, int topicId) {
+      if (serviceConnector != null
+               && (serviceConnector.hasService(toEntityId) || (services != null && services.isServiceExistant(toEntityId)))) {
+         return serviceConnector.sendMessage(msg, toEntityId);
+      } else {
+         clusterClient.getSession().sendMessage(msg, toEntityId);
+         return true;
+      }
+   }
+
+   public Topic publishTopic() {
+      return publisher.publish();
    }
 
    /**
     * Subscribe an entity to the given topic. If once is true, tetrapod won't subscribe them a second time
     */
    public void subscribe(int topicId, int entityId, boolean once) {
-      sendMessage(new TopicSubscribedMessage(getEntityId(), topicId, entityId, once), UNADDRESSED);
+      publisher.subscribe(topicId, entityId, once);
    }
 
    public void subscribe(int topicId, int entityId) {
@@ -677,15 +723,16 @@ public class DefaultService
    }
 
    public void unsubscribe(int topicId, int entityId) {
-      sendMessage(new TopicUnsubscribedMessage(getEntityId(), topicId, entityId), UNADDRESSED);
+      publisher.unsubscribe(topicId, entityId);
    }
 
    public void unpublish(int topicId) {
-      sendMessage(new TopicUnpublishedMessage(getEntityId(), topicId), UNADDRESSED);
+      publisher.unpublish(topicId);
    }
 
    // Generic handlers for all request/subscriptions
 
+   @Override
    public Response genericRequest(Request r, RequestContext ctx) {
       logger.error("unhandled request " + r.dump());
       return new Error(CoreContract.ERROR_UNKNOWN_REQUEST);
@@ -731,6 +778,9 @@ public class DefaultService
    public void messageClusterMember(ClusterMemberMessage m, MessageContext ctx) {
       logger.info("******** {}", m.dump());
       clusterMembers.add(new ServerAddress(m.host, m.servicePort));
+      if (serviceConnector != null) {
+         serviceConnector.getDirectServiceInfo(m.entityId).considerConnecting();
+      }
    }
 
    @Override
@@ -868,12 +918,7 @@ public class DefaultService
       final List<ServiceLogEntry> list = new ArrayList<ServiceLogEntry>();
       list.addAll(logBuffer.getErrors());
       list.addAll(logBuffer.getWarnings());
-      Collections.sort(list, new Comparator<ServiceLogEntry>() {
-         @Override
-         public int compare(ServiceLogEntry e1, ServiceLogEntry e2) {
-            return ((Long) e1.timestamp).compareTo(e2.timestamp);
-         }
-      });
+      Collections.sort(list, (e1, e2) -> ((Long) e1.timestamp).compareTo(e2.timestamp));
 
       return new ServiceErrorLogsResponse(list);
    }

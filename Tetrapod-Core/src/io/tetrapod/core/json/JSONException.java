@@ -35,7 +35,8 @@ public class JSONException extends RuntimeException {
      * @returns the cause of this exception or null if the cause is nonexistent
      *          or unknown.
      */
-    public Throwable getCause() {
+    @Override
+   public Throwable getCause() {
         return this.cause;
     }
 }

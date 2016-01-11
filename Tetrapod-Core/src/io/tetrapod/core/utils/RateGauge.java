@@ -12,6 +12,7 @@ public class RateGauge extends Gauge {
       times = new long[numSamples];
    }
 
+   @Override
    public synchronized void sample(long value) {
       super.sample(value);
       times[cur] = System.nanoTime();

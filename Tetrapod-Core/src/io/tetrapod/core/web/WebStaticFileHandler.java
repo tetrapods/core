@@ -31,7 +31,7 @@ import org.slf4j.*;
  * Adapted from netty.io example code.
  */
 @Sharable
-class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
+public class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
 
    public static final Logger          logger       = LoggerFactory.getLogger(WebStaticFileHandler.class);
 

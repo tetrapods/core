@@ -132,7 +132,9 @@ public class WireSession extends Session {
                res.read(reader);
                if (!commsLogIgnore(header.structId))
                   logged = commsLog("%s  [%d] <- %s", this, header.requestId, res.dump());
-               getDispatcher().dispatch(() -> {
+               // we dispatch responses as high priority to prevent certain 
+               // forms of live-lock when the dispatch thread pool is exhausted
+               getDispatcher().dispatchHighPriority(() -> {
                   if (res instanceof StructureAdapter) {
                      async.setResponse(new ResponseAdapter(res));
                   } else {
@@ -214,13 +216,19 @@ public class WireSession extends Session {
       }
 
       if (!commsLogIgnore(header.structId)) {
-         commsLog("%s  [M] <- Message: %s (to %s:%d)", this, getNameFor(header), TO_TYPES[header.toType], header.toId);
+         commsLog("%s  [M] <- Message: %s (to %d f%d)", this, getNameFor(header), header.toId, header.flags);
       }
-      boolean selfDispatch = header.toType == MessageHeader.TO_ENTITY && (header.toId == myId || header.toId == UNADDRESSED);
+
+      boolean selfDispatch = header.topicId == 0 && ((header.flags & MessageHeader.FLAGS_ALTERNATE) == 0)
+               && (header.toId == myId || header.toId == UNADDRESSED);
       if (relayHandler == null || selfDispatch) {
          dispatchMessage(header, reader);
       } else {
-         relayHandler.relayMessage(header, in, isBroadcast);
+         if (header.fromId == 0) {
+            logger.error("{} fromId is 0 for {} ({} <==> {})", this, header.dump(), myId, theirId);
+         } else {
+            relayHandler.relayMessage(header, in, isBroadcast);
+         }
       }
    }
 

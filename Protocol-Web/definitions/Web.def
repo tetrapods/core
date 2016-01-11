@@ -1,0 +1,5 @@
+java package io.tetrapod.protocol.web
+java outdir "../src" 
+
+service Web @version(1) @id(15)  
+ 

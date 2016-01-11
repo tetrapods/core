@@ -64,6 +64,7 @@ public class Server extends ChannelInitializer<SocketChannel> implements Session
       return channel;
    }
 
+   @Override
    public void initChannel(SocketChannel ch) throws Exception {
       startSession(ch);
    }

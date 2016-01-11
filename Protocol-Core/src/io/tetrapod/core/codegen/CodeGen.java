@@ -40,6 +40,7 @@ public class CodeGen {
       }
       if (services.isEmpty()) {
          System.out.println("using defaults for protocols");
+         services.add("web");
          services.add("org");
          services.add("core");
          services.add("identity");
@@ -53,6 +54,7 @@ public class CodeGen {
          services.add("kpi");
          services.add("phone");
          services.add("queue");
+         services.add("notification");
       }
       if (langs.isEmpty()) {
          System.out.println("using defaults for languages");

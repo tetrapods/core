@@ -17,16 +17,17 @@ public class ModEntityCommand implements Command<TetrapodStateMachine> {
 
    public ModEntityCommand() {}
 
-   public ModEntityCommand(int entityId, int status, String build, int version) {
+   public ModEntityCommand(int entityId, int status, int mask, String build, int version) {
       this.entityId = entityId;
       this.status = status;
+      this.mask = mask;
       this.build = build;
       this.version = version;
    }
 
    @Override
    public void applyTo(TetrapodStateMachine state) {
-      state.updateEntity(entityId, status, build, version);
+      state.updateEntity(entityId, status, mask, build, version);
    }
 
    @Override
@@ -70,6 +71,14 @@ public class ModEntityCommand implements Command<TetrapodStateMachine> {
 
    public int getEntityId() {
       return entityId;
+   }
+
+   public int getStatus() {
+      return status;
+   }
+
+   public int getMask() {
+      return mask;
    }
 
 }

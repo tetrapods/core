@@ -12,32 +12,26 @@ import java.util.*;
 import java.util.concurrent.*;
 
 @SuppressWarnings("unused")
-public class PublishRequest extends Request {
+public class RaftLeaderRequest extends Request {
 
-   public static final int STRUCT_ID = 3171651;
+   public static final int STRUCT_ID = 13647638;
    public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;
    
-   public PublishRequest() {
+   public RaftLeaderRequest() {
       defaults();
    }
 
-   public PublishRequest(int numTopics) {
-      this.numTopics = numTopics;
-   }   
-
-   public int numTopics;
-
    public final Structure.Security getSecurity() {
-      return Security.INTERNAL;
+      return Security.PUBLIC;
    }
 
    public final void defaults() {
-      numTopics = 0;
+      
    }
    
    @Override
    public final void write(DataSource data) throws IOException {
-      data.write(1, this.numTopics);
+      
       data.writeEndTag();
    }
    
@@ -47,7 +41,7 @@ public class PublishRequest extends Request {
       while (true) {
          int tag = data.readTag();
          switch (tag) {
-            case 1: this.numTopics = data.read_int(tag); break;
+            
             case Codec.END_TAG:
                return;
             default:
@@ -58,44 +52,44 @@ public class PublishRequest extends Request {
    }
    
    public final int getContractId() {
-      return PublishRequest.CONTRACT_ID;
+      return RaftLeaderRequest.CONTRACT_ID;
    }
 
    public final int getStructId() {
-      return PublishRequest.STRUCT_ID;
+      return RaftLeaderRequest.STRUCT_ID;
    }
    
    @Override
    public final Response dispatch(ServiceAPI is, RequestContext ctx) {
       if (is instanceof Handler)
-         return ((Handler)is).requestPublish(this, ctx);
+         return ((Handler)is).requestRaftLeader(this, ctx);
       return is.genericRequest(this, ctx);
    }
    
    public static interface Handler extends ServiceAPI {
-      Response requestPublish(PublishRequest r, RequestContext ctx);
+      Response requestRaftLeader(RaftLeaderRequest r, RequestContext ctx);
    }
    
    public final String[] tagWebNames() {
       // Note do not use this tags in long term serializations (to disk or databases) as 
       // implementors are free to rename them however they wish.  A null means the field
       // is not to participate in web serialization (remaining at default)
-      String[] result = new String[1+1];
-      result[1] = "numTopics";
+      String[] result = new String[0+1];
+      
       return result;
    }
    
    public final Structure make() {
-      return new PublishRequest();
+      return new RaftLeaderRequest();
    }
    
    public final StructDescription makeDescription() {
       StructDescription desc = new StructDescription();      
-      desc.name = "PublishRequest";
+      desc.name = "RaftLeaderRequest";
       desc.tagWebNames = tagWebNames();
       desc.types = new TypeDescriptor[desc.tagWebNames.length];
       desc.types[0] = new TypeDescriptor(TypeDescriptor.T_STRUCT, getContractId(), getStructId());
-      desc.types[1] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
+      
       return desc;
    }
 

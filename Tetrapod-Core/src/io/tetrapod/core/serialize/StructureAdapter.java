@@ -148,6 +148,7 @@ public class StructureAdapter extends Structure {
       return description.types[0].contractId;
    }
 
+   @Override
    public String[] tagWebNames() {
       return description.tagWebNames;
    }
