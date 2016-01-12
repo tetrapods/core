@@ -215,8 +215,8 @@ public class Dispatcher {
       int minutes = calendar.get(Calendar.MINUTE);
 
       int minsAfter12AM = hour * 60 + minutes;
-      long delay = Util.MINS_IN_A_DAY - minsAfter12AM;
-
+      long delay = hour < hourOfTheDay ? ((hourOfTheDay * 60) - minsAfter12AM) : (Util.MINS_IN_A_DAY - minsAfter12AM + (hourOfTheDay * 60));
+      
       return scheduled.scheduleAtFixedRate(() -> dispatch(r), delay, Util.MINS_IN_A_DAY, TimeUnit.MINUTES); 
    }   
    
