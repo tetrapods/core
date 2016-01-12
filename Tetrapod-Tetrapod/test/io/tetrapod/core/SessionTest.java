@@ -9,6 +9,7 @@ import java.util.*;
 
 import org.junit.*;
 import org.slf4j.*;
+
 @Ignore
 public class SessionTest {
 
@@ -35,12 +36,8 @@ public class SessionTest {
       Util.sleep(1000);
       assertTrue(svc2.getEntityId() > 0);
 
-      svc1.sendRequest(new PauseRequest(), svc2.getEntityId()).handle(new ResponseHandler() {
-         @Override
-         public void onResponse(Response res) {
-            logger.info("Got my response. YEY! {} {}", res, res.errorCode());
-         }
-      });
+      svc1.sendRequest(new PauseRequest(), svc2.getEntityId())
+               .handle(res -> logger.info("Got my response. YEY! {} {}", res, res.errorCode()));
 
       svc1.addSubscriptionHandler(new TetrapodContract.Services(), new TetrapodContract.Services.API() {
 
@@ -63,8 +60,6 @@ public class SessionTest {
       Util.sleep(2000);
 
       svc2.sendMessage(new ServiceAddedMessage(), svc1.getEntityId());
-
-      pod.broadcastRegistryMessage(new EntityUpdatedMessage(svc2.getEntityId(), 0));
 
       Util.sleep(2000);
 

@@ -1,12 +1,18 @@
 package io.tetrapod.core;
 
-import io.tetrapod.core.rpc.*;
-import io.tetrapod.protocol.core.*;
-
 import java.util.*;
 import java.util.concurrent.*;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import io.tetrapod.core.rpc.Message;
+import io.tetrapod.core.rpc.MessageContext;
+import io.tetrapod.protocol.core.*;
+
 public class ServiceCache implements TetrapodContract.Services.API {
+
+   public static final Logger                         logger       = LoggerFactory.getLogger(ServiceCache.class);
 
    /**
     * Maps entityId => Entity
@@ -91,7 +97,7 @@ public class ServiceCache implements TetrapodContract.Services.API {
       }
       return false;
    }
-   
+
    public boolean isServiceExistant(int entityId, int contractId) {
       Entity e = services.get(entityId);
       if (e != null) {
@@ -129,9 +135,9 @@ public class ServiceCache implements TetrapodContract.Services.API {
    public Entity getEntity(int entityId) {
       return services.get(entityId);
    }
-   
+
    public static final boolean isAvailable(final int status) {
       return (status & (Core.STATUS_STARTING | Core.STATUS_PAUSED | Core.STATUS_GONE | Core.STATUS_BUSY | Core.STATUS_OVERLOADED
-            | Core.STATUS_FAILED | Core.STATUS_STOPPING | Core.STATUS_PASSIVE)) == 0;
+               | Core.STATUS_FAILED | Core.STATUS_STOPPING | Core.STATUS_PASSIVE)) == 0;
    }
 }

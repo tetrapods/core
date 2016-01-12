@@ -8,10 +8,8 @@ import org.slf4j.LoggerFactory;
 
 import io.netty.channel.socket.SocketChannel;
 import io.tetrapod.core.*;
-import io.tetrapod.core.registry.Registry;
 import io.tetrapod.core.utils.Util;
-import io.tetrapod.protocol.core.ClusterJoinRequest;
-import io.tetrapod.protocol.core.Core;
+import io.tetrapod.protocol.core.*;
 
 /**
  * Represents another Tetrapod in the cluster. This maintains a persistent connection with that tetrapod and transmits RPC for Raft
@@ -40,7 +38,7 @@ public class TetrapodPeer implements Session.Listener, SessionFactory {
       this.host = host;
       this.clusterPort = clusterPort;
       this.servicePort = servicePort;
-      this.peerId = entityId >> Registry.PARENT_ID_SHIFT;
+      this.peerId = entityId >> TetrapodContract.PARENT_ID_SHIFT;
       scheduleReconnect(0);
    }
 
@@ -115,7 +113,7 @@ public class TetrapodPeer implements Session.Listener, SessionFactory {
    @Override
    public synchronized void onSessionStop(Session ses) {
       joined = false;
-      service.onEntityDisconnected(ses);
+      service.dispatcher.dispatch(() -> service.onEntityDisconnected(ses));
       scheduleReconnect(1);
    }
 

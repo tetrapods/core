@@ -12,7 +12,9 @@ import com.codahale.metrics.Meter;
 
 import io.netty.channel.socket.SocketChannel;
 import io.tetrapod.core.*;
-import io.tetrapod.core.registry.*;
+import io.tetrapod.core.pubsub.Publisher;
+import io.tetrapod.core.pubsub.Topic;
+import io.tetrapod.core.registry.EntityInfo;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.utils.*;
 import io.tetrapod.core.web.WebRoot;
@@ -79,7 +81,19 @@ public class TetrapodCluster extends Storage
       }
       this.raft = raftEngine;
       this.state = this.raft.getStateMachine();
-      this.state.addListener(this);
+   }
+
+   public void init() throws IOException {
+      startListening();
+      loadProperties();
+      // add the initial set of entities from the state, then listen for subsequent changes
+      synchronized (this.raft) {
+         for (EntityInfo info : state.entities.values()) {
+            //info.status |= Core.STATUS_GONE;
+            service.registry.onAddEntityCommand(info);
+         }
+         this.state.addListener(this);
+      }
    }
 
    public void loadProperties() {
@@ -91,16 +105,17 @@ public class TetrapodCluster extends Storage
          String[] node = Util.getProperty("raft.node." + peerId, Util.getHostName() + ":" + service.getClusterPort()).split(":");
          String host = node[0];
          int port = Integer.parseInt(node[1]);
-         int entityId = peerId << Registry.PARENT_ID_SHIFT;
+         int entityId = peerId << TetrapodContract.PARENT_ID_SHIFT;
 
          if (host.equals(Util.getHostName()) && port == service.getClusterPort()) {
             myPeerId = peerId;
+            service.registry.setParentId(entityId);
          }
 
          addMember(entityId, host, service.getServicePort(), port, null);
       }
       if (myPeerId != 0) {
-         service.registerSelf(myPeerId << Registry.PARENT_ID_SHIFT, service.random.nextLong());
+         service.registerSelf(myPeerId << TetrapodContract.PARENT_ID_SHIFT, service.random.nextLong());
          raft.start(myPeerId);
          service.dispatcher.dispatch(() -> service.checkDependencies());
       } else {
@@ -123,6 +138,7 @@ public class TetrapodCluster extends Storage
    @Override
    public Session makeSession(SocketChannel ch) {
       final Session ses = new WireSession(ch, service);
+      ses.setName("Cluster");
       ses.setRelayHandler(service);
       ses.setMyEntityId(service.getEntityId());
       ses.setMyEntityType(Core.TYPE_TETRAPOD);
@@ -167,6 +183,16 @@ public class TetrapodCluster extends Storage
          case ReleaseOwnershipCommand.COMMAND_ID:
             onReleaseOwnershipCommand((ReleaseOwnershipCommand) command);
             break;
+         case AddEntityCommand.COMMAND_ID:
+            onAddEntityCommand((AddEntityCommand) command);
+            break;
+         case ModEntityCommand.COMMAND_ID:
+            onModEntityCommand((ModEntityCommand) command);
+            break;
+         case DelEntityCommand.COMMAND_ID:
+            onDelEntityCommand((DelEntityCommand) command);
+            break;
+
       }
    }
 
@@ -193,7 +219,7 @@ public class TetrapodCluster extends Storage
    }
 
    private Session getSessionForPeer(int peerId) {
-      final TetrapodPeer pod = cluster.get(peerId << Registry.PARENT_ID_SHIFT);
+      final TetrapodPeer pod = cluster.get(peerId << TetrapodContract.PARENT_ID_SHIFT);
       if (pod != null) {
          return pod.getSession();
       }
@@ -202,9 +228,10 @@ public class TetrapodCluster extends Storage
 
    private Async sendPeerRequest(Request req, int peerId) {
       Session ses = getSessionForPeer(peerId);
-      if (ses != null) {
+      if (ses != null && ses.isConnected()) {
          return ses.sendRequest(req, Core.DIRECT);
       }
+      logger.info("Not connected to peer {} ({})", peerId);
       final Async async = new Async(req, null, null);
       async.setResponse(CoreContract.ERROR_CONNECTION_CLOSED);
       return async;
@@ -219,7 +246,7 @@ public class TetrapodCluster extends Storage
          if (pod.entityId != service.getEntityId()) {
             if (pod.isConnected()) {
                Session ses = pod.getSession();
-               ses.sendMessage(msg, MessageHeader.TO_ENTITY, ses.getTheirEntityId());
+               ses.sendMessage(msg, ses.getTheirEntityId());
             }
          }
       }
@@ -231,7 +258,6 @@ public class TetrapodCluster extends Storage
     * Scan our list of known tetrapods and establish a connection to any we are missing
     */
    public void service() {
-      //lastCommand.getValue();
       if (service.getEntityId() != 0) {
          for (TetrapodPeer pod : cluster.values()) {
             if (pod.entityId != service.getEntityId()) {
@@ -258,18 +284,16 @@ public class TetrapodCluster extends Storage
       if (!raft.getLog().isRunning() && !service.isShuttingDown()) {
          service.fail("Raft Log Stopped");
       }
-
    }
 
    public void sendClusterDetails(Session ses, int toEntityId, int topicId) {
       // send ourselves
       ses.sendMessage(
                new ClusterMemberMessage(service.getEntityId(), Util.getHostName(), service.getServicePort(), service.getClusterPort(), null),
-               MessageHeader.TO_ENTITY, toEntityId);
+               toEntityId);
       // send all current members
       for (TetrapodPeer pod : cluster.values()) {
-         ses.sendMessage(new ClusterMemberMessage(pod.entityId, pod.host, pod.servicePort, pod.clusterPort, pod.uuid),
-                  MessageHeader.TO_ENTITY, toEntityId);
+         ses.sendMessage(new ClusterMemberMessage(pod.entityId, pod.host, pod.servicePort, pod.clusterPort, pod.uuid), toEntityId);
       }
       // non-tetrapods need to get some cluster details sent
       if (ses.getTheirEntityType() != Core.TYPE_TETRAPOD) {
@@ -278,33 +302,40 @@ public class TetrapodCluster extends Storage
             for (ClusterProperty prop : state.props.values()) {
                prop = new ClusterProperty(prop.key, prop.secret, prop.val);
                prop.val = AESEncryptor.decryptSaltedAES(prop.val, state.secretKey);
-               ses.sendMessage(new ClusterPropertyAddedMessage(prop), MessageHeader.TO_ENTITY, toEntityId);
+               ses.sendMessage(new ClusterPropertyAddedMessage(prop), toEntityId);
             }
          }
       }
       // tell them they are up to date
-      ses.sendMessage(new ClusterSyncedMessage(), MessageHeader.TO_ENTITY, toEntityId);
+      ses.sendMessage(new ClusterSyncedMessage(), toEntityId);
    }
 
    public void sendAdminDetails(Session ses, int toEntityId, int topicId) {
-      synchronized (raft) {
-         // send properties
-         for (ClusterProperty prop : state.props.values()) {
-            // blank out values for protected properties sent to admins
-            prop = new ClusterProperty(prop.key, prop.secret, prop.val);
-            prop.val = prop.secret ? "" : AESEncryptor.decryptSaltedAES(prop.val, state.secretKey);
-            ses.sendMessage(new ClusterPropertyAddedMessage(prop), MessageHeader.TO_ENTITY, toEntityId);
-         }
-         for (WebRootDef def : state.webRootDefs.values()) {
-            ses.sendMessage(new WebRootAddedMessage(def), MessageHeader.TO_ENTITY, toEntityId);
-         }
-         for (Admin def : state.admins.values()) {
-            ses.sendMessage(new AdminUserAddedMessage(def), MessageHeader.TO_ENTITY, toEntityId);
+      if (ses != null) {
+         synchronized (raft) {
+            // send properties
+            for (ClusterProperty prop : state.props.values()) {
+               // blank out values for protected properties sent to admins
+               prop = new ClusterProperty(prop.key, prop.secret, prop.val);
+               prop.val = prop.secret ? "" : AESEncryptor.decryptSaltedAES(prop.val, state.secretKey);
+               ses.sendMessage(new ClusterPropertyAddedMessage(prop), toEntityId);
+            }
+            for (WebRootDef def : state.webRootDefs.values()) {
+               ses.sendMessage(new WebRootAddedMessage(def), toEntityId);
+            }
+            for (Admin def : state.admins.values()) {
+               ses.sendMessage(new AdminUserAddedMessage(def), toEntityId);
+            }
          }
       }
    }
 
    public boolean addMember(int entityId, String host, int servicePort, int clusterPort, Session ses) {
+      final Entity e = new Entity(entityId, entityId, 0, host, 0, Core.TYPE_TETRAPOD, service.getShortName(), 0, service.getContractId(),
+               service.buildName);
+      state.addEntity(e, true);
+      onAddEntityCommand(new AddEntityCommand(e));
+
       // ignore ourselves
       if (entityId == service.getEntityId()) {
          return false;
@@ -459,39 +490,22 @@ public class TetrapodCluster extends Storage
       if (peer == null) {
          return Response.error(CoreContract.ERROR_INVALID_ENTITY);
       }
-
       peer.servicePort = req.servicePort;
-
-      ctx.session.setTheirEntityId(req.entityId);
 
       // register them in our registry
       EntityInfo entity = service.registry.getEntity(req.entityId);
-      if (entity == null) {
-         entity = new EntityInfo(req.entityId, req.entityId, 0L, req.host, req.status, Core.TYPE_TETRAPOD, "Tetrapod*",
-                  TetrapodContract.VERSION, TetrapodContract.CONTRACT_ID, req.build);
-         service.registry.register(entity);
-      } else {
-         // reconnecting with a pre-existing peerId
-         final int peerId = req.entityId >> Registry.PARENT_ID_SHIFT;
-         if (!raft.isValidPeer(peerId)) {
-            // we must have bootstrapped again, so re-add the peer
-            //final AddPeerCommand<TetrapodStateMachine> cmd = new AddPeerCommand<>(req.host, req.clusterPort);
-            //executeCommand(cmd, null);
-         }
+      // reconnecting with a pre-existing peerId
+      final int peerId = req.entityId >> TetrapodContract.PARENT_ID_SHIFT;
+      if (raft.isValidPeer(peerId)) {
+         ctx.session.setTheirEntityId(req.entityId);
+         entity.setSession(ctx.session);
+         entity.build = req.build;
+         // subscribe them to our cluster and registry views
+         logger.info("**************************** SYNC TO {} {}", ctx.session, req.entityId);
+         service.subscribeToCluster(ctx.session, req.entityId);
+         
+         entity.queue(() -> service.broadcastServicesMessage(new ServiceAddedMessage(entity)));
       }
-      entity.setSession(ctx.session);
-
-      // add them to the cluster list
-      //if (addMember(req.entityId, req.host, req.servicePort, req.clusterPort, ctx.session)) {
-      //   service.broadcast(new ClusterMemberMessage(req.entityId, req.host, req.servicePort, req.clusterPort, null), clusterTopic);
-      // }
-
-      // subscribe them to our cluster and registry views
-      logger.info("**************************** SYNC TO {} {}", ctx.session, req.entityId);
-
-      service.registrySubscribe(ctx.session, req.entityId, true);
-      service.subscribeToCluster(ctx.session, req.entityId);
-
       return Response.SUCCESS;
    }
 
@@ -569,12 +583,27 @@ public class TetrapodCluster extends Storage
    ///////////////////////////////////// STORAGE API ///////////////////////////////////////
 
    public void executeCommand(Command<TetrapodStateMachine> cmd, ClientResponseHandler<TetrapodStateMachine> handler) {
+      executeCommand(cmd, handler, false);
+   }
+
+   public void executeCommand(Command<TetrapodStateMachine> cmd, ClientResponseHandler<TetrapodStateMachine> handler, boolean waitForLocal) {
       boolean sent = false;
       while (!sent) {
          // if we're the leader we can execute directly
          if (!raft.executeCommand(cmd, handler)) {
             // else, send RPC to current leader
             if (raft.getLeader() != 0) {
+
+               if (waitForLocal) {
+                  final ClientResponseHandler<TetrapodStateMachine> origHandler = handler;
+                  handler = entry -> {
+                     if (entry != null) {
+                        //logger.info("Waiting for local : {} : {}", entry, getCommitIndex());
+                        raft.executeAfterCommandProcessed(entry, origHandler);
+                     }
+                  };
+
+               }
                sendIssueCommand(raft.getLeader(), cmd, handler);
                sent = true; // FIXME
             } else {
@@ -586,7 +615,7 @@ public class TetrapodCluster extends Storage
       }
    }
 
-   public abstract class PendingClientResponseHandler<T extends StateMachine<T>> implements ClientResponseHandler<T> {
+   public static abstract class PendingClientResponseHandler<T extends StateMachine<T>> implements ClientResponseHandler<T> {
 
       public final SessionRequestContext ctx;
 
@@ -703,7 +732,7 @@ public class TetrapodCluster extends Storage
          int i = 0;
          int[] peers = new int[raft.getPeers().size()];
          for (RaftEngine.Peer p : raft.getPeers()) {
-            peers[i++] = p.peerId << Registry.PARENT_ID_SHIFT;
+            peers[i++] = p.peerId << TetrapodContract.PARENT_ID_SHIFT;
          }
 
          return new RaftStatsResponse((byte) raft.getRole().ordinal(), raft.getCurrentTerm(), raft.getLog().getLastTerm(),
@@ -896,8 +925,7 @@ public class TetrapodCluster extends Storage
          for (Owner owner : state.owners.values()) {
             for (String key : owner.keys) {
                if (key.startsWith(r.prefix)) {
-                  ctx.session.sendMessage(new ClaimOwnershipMessage(owner.entityId, owner.expiry, key), MessageHeader.TO_ENTITY,
-                           ctx.header.fromId);
+                  ctx.session.sendMessage(new ClaimOwnershipMessage(owner.entityId, owner.expiry, key), ctx.header.fromId);
                }
             }
          }
@@ -967,9 +995,72 @@ public class TetrapodCluster extends Storage
 
    private void sendOwnershipMessage(Message msg, Session ses) {
       if (ses.isConnected()) {
-         ses.sendMessage(msg, MessageHeader.TO_ENTITY, ses.getTheirEntityId());
+         ses.sendMessage(msg, ses.getTheirEntityId());
       } else {
          unsubscribeOwnership(ses.getTheirEntityId());
       }
    }
+
+   public EntityInfo getEntity(int entityId) {
+      return state.entities.get(entityId);
+   }
+
+   public Collection<EntityInfo> getEntities() {
+      return state.entities.values();
+   }
+
+   private void onAddEntityCommand(AddEntityCommand command) {
+      service.registry.onAddEntityCommand(state.entities.get(command.getEntity().entityId));
+   }
+
+   private void onModEntityCommand(ModEntityCommand command) {
+      service.registry.onModEntityCommand(state.entities.get(command.getEntityId()));
+   }
+
+   private void onDelEntityCommand(DelEntityCommand command) {
+      service.registry.onDelEntityCommand(command.getEntityId());
+   }
+
+   public long getCommitIndex() {
+      return raft.getLog().getCommitIndex();
+   }
+
+   public boolean isValidPeer(int entityId) {
+      final int peerId = entityId >> TetrapodContract.PARENT_ID_SHIFT;
+      return peerId == raft.getPeerId() || raft.isValidPeer(peerId);
+   }
+
+   public void logRegistry() {
+      List<EntityInfo> list = new ArrayList<>(getEntities());
+      Collections.sort(list);
+      logger.info("=========================@ TETRAPOD CLUSTER REGISTRY @===========================");
+      for (EntityInfo e : list) {
+         logger.info(String.format(" 0x%08X 0x%08X %-15s status=%08X topics=%d subscriptions=%d [%s]", e.parentId, e.entityId, e.name,
+                  e.status, e.getNumTopics(), e.getNumSubscriptions(), e.hasConnectedSession() ? "CONNECTED" : "*"));
+      }
+      logger.info("=================================================================================\n");
+   }
+
+   public boolean isLeader() {
+      synchronized (raft) {
+         return raft.getRole() == Role.Leader;
+      }
+   }
+
+   public Publisher getPublisher() {
+      return service.getPublisher();
+   }
+
+   public ServerAddress getLeader() {
+      synchronized (raft) {
+         final int peerId = raft.getLeader();
+         for (TetrapodPeer p : cluster.values()) {
+            if (peerId == p.peerId) {
+               return new ServerAddress(p.host, p.servicePort);
+            }
+         }
+      }
+      return null;
+   }
+
 }

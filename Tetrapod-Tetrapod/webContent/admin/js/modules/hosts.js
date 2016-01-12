@@ -60,12 +60,18 @@ define(function(require) {
          self.services.push(s);
          self.services.sort(compareServices);
          self.getHost(msg.entity.host).addService(s);
+         s.subscribe(1);
       });
 
       app.server.addMessageHandler("ServiceUpdated", function(msg) {
          var s = self.findService(msg.entityId);
          if (s) {
+            var wasGone = s.isGone();
             s.status(msg.status);
+            // resub when service returns
+            if (wasGone && !s.isGone()) {
+               s.subscribe(1); 
+            }
          }
       });
 
@@ -74,6 +80,7 @@ define(function(require) {
          if (s) {
             self.services.remove(s);
             self.getHost(s.host).removeService(s);
+            s.removed = true;
          }
       });
 

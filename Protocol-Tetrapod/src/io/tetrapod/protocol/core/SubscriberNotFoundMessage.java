@@ -12,32 +12,40 @@ import java.util.*;
 import java.util.concurrent.*;
 
 @SuppressWarnings("unused")
-public class EntityRegisteredMessage extends Message {
+public class SubscriberNotFoundMessage extends Message {
    
-   public static final int STRUCT_ID = 1454035;
+   public static final int STRUCT_ID = 995961;
    public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;
     
-   public EntityRegisteredMessage() {
+   public SubscriberNotFoundMessage() {
       defaults();
    }
 
-   public EntityRegisteredMessage(Entity entity) {
-      this.entity = entity;
+   public SubscriberNotFoundMessage(int publisherId, int topicId, int entityId) {
+      this.publisherId = publisherId;
+      this.topicId = topicId;
+      this.entityId = entityId;
    }   
    
-   public Entity entity;
+   public int publisherId;
+   public int topicId;
+   public int entityId;
 
    public final Structure.Security getSecurity() {
       return Security.INTERNAL;
    }
 
    public final void defaults() {
-      entity = null;
+      publisherId = 0;
+      topicId = 0;
+      entityId = 0;
    }
    
    @Override
    public final void write(DataSource data) throws IOException {
-      if (this.entity != null) data.write(1, this.entity);
+      data.write(1, this.publisherId);
+      data.write(2, this.topicId);
+      data.write(3, this.entityId);
       data.writeEndTag();
    }
    
@@ -47,7 +55,9 @@ public class EntityRegisteredMessage extends Message {
       while (true) {
          int tag = data.readTag();
          switch (tag) {
-            case 1: this.entity = data.read_struct(tag, new Entity()); break;
+            case 1: this.publisherId = data.read_int(tag); break;
+            case 2: this.topicId = data.read_int(tag); break;
+            case 3: this.entityId = data.read_int(tag); break;
             case Codec.END_TAG:
                return;
             default:
@@ -58,45 +68,49 @@ public class EntityRegisteredMessage extends Message {
    }
    
    public final int getContractId() {
-      return EntityRegisteredMessage.CONTRACT_ID;
+      return SubscriberNotFoundMessage.CONTRACT_ID;
    }
 
    public final int getStructId() {
-      return EntityRegisteredMessage.STRUCT_ID;
+      return SubscriberNotFoundMessage.STRUCT_ID;
    }
    
    @Override
    public final void dispatch(SubscriptionAPI api, MessageContext ctx) {
       if (api instanceof Handler)
-         ((Handler)api).messageEntityRegistered(this, ctx);
+         ((Handler)api).messageSubscriberNotFound(this, ctx);
       else
          api.genericMessage(this, ctx);
    }
    
    public static interface Handler extends SubscriptionAPI {
-      void messageEntityRegistered(EntityRegisteredMessage m, MessageContext ctx);
+      void messageSubscriberNotFound(SubscriberNotFoundMessage m, MessageContext ctx);
    }
    
    public final String[] tagWebNames() {
       // Note do not use this tags in long term serializations (to disk or databases) as 
       // implementors are free to rename them however they wish.  A null means the field
       // is not to participate in web serialization (remaining at default)
-      String[] result = new String[1+1];
-      result[1] = "entity";
+      String[] result = new String[3+1];
+      result[1] = "publisherId";
+      result[2] = "topicId";
+      result[3] = "entityId";
       return result;
    }
    
    public final Structure make() {
-      return new EntityRegisteredMessage();
+      return new SubscriberNotFoundMessage();
    }
    
    public final StructDescription makeDescription() {
       StructDescription desc = new StructDescription();     
-      desc.name = "EntityRegisteredMessage";
+      desc.name = "SubscriberNotFoundMessage";
       desc.tagWebNames = tagWebNames();
       desc.types = new TypeDescriptor[desc.tagWebNames.length];
       desc.types[0] = new TypeDescriptor(TypeDescriptor.T_STRUCT, getContractId(), getStructId());
-      desc.types[1] = new TypeDescriptor(TypeDescriptor.T_STRUCT, Entity.CONTRACT_ID, Entity.STRUCT_ID);
+      desc.types[1] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
+      desc.types[2] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
+      desc.types[3] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
       return desc;
    }
 }

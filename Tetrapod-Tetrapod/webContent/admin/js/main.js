@@ -11,7 +11,7 @@ require.config({
       }
    },
    paths: {
-      "knockout": "../ext/knockout-3.3.0",
+      "knockout": "../ext/knockout-3.4.0",
       "knockout-amd-helpers": "../ext/knockout-amd-helpers",
       "jquery": "../ext/jquery.min",
       "bootstrap": "../ext/bootstrap.min",

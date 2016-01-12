@@ -21,13 +21,13 @@ public class TopicUnsubscribedMessage extends Message {
       defaults();
    }
 
-   public TopicUnsubscribedMessage(int ownerId, int topicId, int entityId) {
-      this.ownerId = ownerId;
+   public TopicUnsubscribedMessage(int publisherId, int topicId, int entityId) {
+      this.publisherId = publisherId;
       this.topicId = topicId;
       this.entityId = entityId;
    }   
    
-   public int ownerId;
+   public int publisherId;
    public int topicId;
    public int entityId;
 
@@ -36,14 +36,14 @@ public class TopicUnsubscribedMessage extends Message {
    }
 
    public final void defaults() {
-      ownerId = 0;
+      publisherId = 0;
       topicId = 0;
       entityId = 0;
    }
    
    @Override
    public final void write(DataSource data) throws IOException {
-      data.write(1, this.ownerId);
+      data.write(1, this.publisherId);
       data.write(2, this.topicId);
       data.write(3, this.entityId);
       data.writeEndTag();
@@ -55,7 +55,7 @@ public class TopicUnsubscribedMessage extends Message {
       while (true) {
          int tag = data.readTag();
          switch (tag) {
-            case 1: this.ownerId = data.read_int(tag); break;
+            case 1: this.publisherId = data.read_int(tag); break;
             case 2: this.topicId = data.read_int(tag); break;
             case 3: this.entityId = data.read_int(tag); break;
             case Codec.END_TAG:
@@ -92,7 +92,7 @@ public class TopicUnsubscribedMessage extends Message {
       // implementors are free to rename them however they wish.  A null means the field
       // is not to participate in web serialization (remaining at default)
       String[] result = new String[3+1];
-      result[1] = "ownerId";
+      result[1] = "publisherId";
       result[2] = "topicId";
       result[3] = "entityId";
       return result;

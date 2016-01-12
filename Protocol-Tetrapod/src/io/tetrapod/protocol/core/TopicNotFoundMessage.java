@@ -12,26 +12,36 @@ import java.util.*;
 import java.util.concurrent.*;
 
 @SuppressWarnings("unused")
-public class EntityListCompleteMessage extends Message {
+public class TopicNotFoundMessage extends Message {
    
-   public static final int STRUCT_ID = 15616758;
+   public static final int STRUCT_ID = 2478456;
    public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;
     
-   public EntityListCompleteMessage() {
+   public TopicNotFoundMessage() {
       defaults();
    }
+
+   public TopicNotFoundMessage(int publisherId, int topicId) {
+      this.publisherId = publisherId;
+      this.topicId = topicId;
+   }   
+   
+   public int publisherId;
+   public int topicId;
 
    public final Structure.Security getSecurity() {
       return Security.INTERNAL;
    }
 
    public final void defaults() {
-      
+      publisherId = 0;
+      topicId = 0;
    }
    
    @Override
    public final void write(DataSource data) throws IOException {
-      
+      data.write(1, this.publisherId);
+      data.write(2, this.topicId);
       data.writeEndTag();
    }
    
@@ -41,7 +51,8 @@ public class EntityListCompleteMessage extends Message {
       while (true) {
          int tag = data.readTag();
          switch (tag) {
-            
+            case 1: this.publisherId = data.read_int(tag); break;
+            case 2: this.topicId = data.read_int(tag); break;
             case Codec.END_TAG:
                return;
             default:
@@ -52,45 +63,47 @@ public class EntityListCompleteMessage extends Message {
    }
    
    public final int getContractId() {
-      return EntityListCompleteMessage.CONTRACT_ID;
+      return TopicNotFoundMessage.CONTRACT_ID;
    }
 
    public final int getStructId() {
-      return EntityListCompleteMessage.STRUCT_ID;
+      return TopicNotFoundMessage.STRUCT_ID;
    }
    
    @Override
    public final void dispatch(SubscriptionAPI api, MessageContext ctx) {
       if (api instanceof Handler)
-         ((Handler)api).messageEntityListComplete(this, ctx);
+         ((Handler)api).messageTopicNotFound(this, ctx);
       else
          api.genericMessage(this, ctx);
    }
    
    public static interface Handler extends SubscriptionAPI {
-      void messageEntityListComplete(EntityListCompleteMessage m, MessageContext ctx);
+      void messageTopicNotFound(TopicNotFoundMessage m, MessageContext ctx);
    }
    
    public final String[] tagWebNames() {
       // Note do not use this tags in long term serializations (to disk or databases) as 
       // implementors are free to rename them however they wish.  A null means the field
       // is not to participate in web serialization (remaining at default)
-      String[] result = new String[0+1];
-      
+      String[] result = new String[2+1];
+      result[1] = "publisherId";
+      result[2] = "topicId";
       return result;
    }
    
    public final Structure make() {
-      return new EntityListCompleteMessage();
+      return new TopicNotFoundMessage();
    }
    
    public final StructDescription makeDescription() {
       StructDescription desc = new StructDescription();     
-      desc.name = "EntityListCompleteMessage";
+      desc.name = "TopicNotFoundMessage";
       desc.tagWebNames = tagWebNames();
       desc.types = new TypeDescriptor[desc.tagWebNames.length];
       desc.types[0] = new TypeDescriptor(TypeDescriptor.T_STRUCT, getContractId(), getStructId());
-      
+      desc.types[1] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
+      desc.types[2] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
       return desc;
    }
 }

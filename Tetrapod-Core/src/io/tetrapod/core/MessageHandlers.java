@@ -39,7 +39,7 @@ public class MessageHandlers {
    }
 
    private long makeKey(int contractId, int structId) {
-      return ((long) contractId << 32) | (long) structId;
+      return ((long) contractId << 32) | structId;
    }
 
 }

@@ -136,9 +136,9 @@ public class WebHttpSession extends WebSession {
    }
 
    private void handleHttpRequest(final ChannelHandlerContext ctx, final FullHttpRequest req) throws Exception {
-      if (logger.isDebugEnabled()) {
+      if (logger.isTraceEnabled()) {
          synchronized (this) {
-            logger.debug(String.format("%s REQUEST[%d] = %s : %s", this, ++reqCounter, ctx.channel().remoteAddress(), req.getUri()));
+            logger.trace(String.format("%s REQUEST[%d] = %s : %s", this, ++reqCounter, ctx.channel().remoteAddress(), req.getUri()));
          }
       }
       // Set the http referrer for this request, if not already set
@@ -322,6 +322,11 @@ public class WebHttpSession extends WebSession {
                // @web() specific Request mapping
                final Structure request = readRequest(header, context.getRequestParams());
                if (request != null) {
+
+                  if (header.contractId == TetrapodContract.CONTRACT_ID && header.toId == 0) {
+                     header.toId = Core.DIRECT;
+                  }
+
                   relayRequest(header, request, handler);
                } else {
                   handler.fireResponse(new Error(ERROR_UNKNOWN_REQUEST), header);
@@ -412,7 +417,7 @@ public class WebHttpSession extends WebSession {
          if (payload == null) {
             payload = jo.toStringWithout("__http");
          }
-         ByteBuf buf = WebContext.makeByteBufResult(payload);
+         ByteBuf buf = WebContext.makeByteBufResult(payload + '\n');
          HttpResponseStatus status = HttpResponseStatus.valueOf(jo.optInt("__httpStatus", OK.code()));
          FullHttpResponse httpResponse = new DefaultFullHttpResponse(HTTP_1_1, status, buf);
          httpResponse.headers().set(CONTENT_TYPE, jo.optString("__httpMime", "application/json"));
@@ -553,7 +558,7 @@ public class WebHttpSession extends WebSession {
       } else {
          // queue the message for long poller to retrieve later
          if (!commsLogIgnore(header.structId)) {
-            commsLog("%s  [M] ~] Message:%d %s (to %s:%d)", this, header.structId, getNameFor(header), TO_TYPES[header.toType], header.toId);
+            commsLog("%s  [M] ~] Message:%d %s (to %d)", this, header.structId, getNameFor(header), header.toId);
          }
          final LongPollQueue messages = LongPollQueue.getQueue(getTheirEntityId());
          // FIXME: Need a sensible way to protect against memory gobbling if this queue isn't cleared fast enough

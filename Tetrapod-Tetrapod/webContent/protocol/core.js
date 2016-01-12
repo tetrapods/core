@@ -42,9 +42,7 @@ function TP_Core(server) {
       UNADDRESSED : 0
    };
    self.Core.MessageHeader = {
-      TO_ALTERNATE : 3,
-      TO_ENTITY : 2,
-      TO_TOPIC : 1
+      FLAGS_ALTERNATE : 1
    };
    self.Core.TypeDescriptor = {
       T_BOOLEAN : 1,
