@@ -11,10 +11,12 @@ import io.netty.handler.codec.http.multipart.InterfaceHttpData.HttpDataType;
 import io.netty.util.CharsetUtil;
 import io.tetrapod.core.Session;
 import io.tetrapod.core.json.JSONObject;
+import io.tetrapod.core.utils.Util;
 import io.tetrapod.protocol.core.RequestHeader;
 import io.tetrapod.protocol.core.WebRoute;
 
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Map;
 
@@ -102,19 +104,21 @@ public class WebContext {
       if (request.getMethod() != POST)
          return;
 
-      final HttpPostRequestDecoder decoder = new HttpPostRequestDecoder(new DefaultHttpDataFactory(false), request);
-
-      try {
-         if (HttpHeaders.getHeader(request, "content-type").equals("application/json")) {
-            if (decoder.hasNext()) {
-               InterfaceHttpData httpData = decoder.next();
-               JSONObject data = new JSONObject(httpData.toString());
-               for(String k : JSONObject.getNames(requestParameters)) {
-                 data.put(k, requestParameters.get(k));
-               }
-               requestParameters = data;
-            }
-         } else {
+      if (HttpHeaders.getHeader(request, "content-type").equals("application/json")) {
+         String charSetHeader = HttpHeaders.getHeader(request, "charset");
+         Charset charset = HttpConstants.DEFAULT_CHARSET;
+         if (!Util.isEmpty(charSetHeader) && Charset.isSupported(charSetHeader)) {
+            charset = Charset.forName(charSetHeader);
+         }
+         String json = request.content().toString(charset);
+         JSONObject data = new JSONObject(json);
+         for(String k : JSONObject.getNames(requestParameters)) {
+           data.put(k, requestParameters.get(k));
+         }
+         requestParameters = data;
+   } else {
+         final HttpPostRequestDecoder decoder = new HttpPostRequestDecoder(new DefaultHttpDataFactory(false), request);
+         try {
             while (decoder.hasNext()) {
                InterfaceHttpData httpData = decoder.next();
                if (httpData.getHttpDataType() == HttpDataType.Attribute) {
@@ -123,11 +127,11 @@ public class WebContext {
                   attribute.release();
                }
             }
+         } catch (HttpPostRequestDecoder.EndOfDataDecoderException ex) {
+            // Exception when the body is fully decoded, even if there is still data
+         } finally {
+            decoder.destroy();
          }
-      } catch (HttpPostRequestDecoder.EndOfDataDecoderException ex) {
-         // Exception when the body is fully decoded, even if there is still data
-      } finally {
-         decoder.destroy();
       }
    }
 
