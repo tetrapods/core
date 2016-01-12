@@ -475,7 +475,7 @@ public class TetrapodService extends DefaultService
             }
          }
       }
-      if (entity != null) {
+      if (entity != null && !entity.isGone()) {
          return findSession(entity);
       }
       return null;
