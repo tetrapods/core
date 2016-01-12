@@ -108,7 +108,11 @@ public class WebContext {
          if (HttpHeaders.getHeader(request, "content-type").equals("application/json")) {
             if (decoder.hasNext()) {
                InterfaceHttpData httpData = decoder.next();
-               requestParameters = new JSONObject(httpData.toString());
+               JSONObject data = new JSONObject(httpData.toString());
+               for(String k : JSONObject.getNames(requestParameters)) {
+                 data.put(k, requestParameters.get(k));
+               }
+               requestParameters = data;
             }
          } else {
             while (decoder.hasNext()) {
