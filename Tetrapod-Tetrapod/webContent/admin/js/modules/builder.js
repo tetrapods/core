@@ -3,10 +3,8 @@ define(["knockout", "jquery", "app", "alert"], function(ko, $, app, Alert) {
 
    function Builder() {
       var self = this;
-      self.doBuild = false;
       self.doDeploy = false;
       self.doLaunch = false;
-      self.doFullCycle = false;
       self.paused = false;
       self.buildNumber = "";
       self.buildName = "";
@@ -24,10 +22,10 @@ define(["knockout", "jquery", "app", "alert"], function(ko, $, app, Alert) {
          loading.num = pods.length;
          loading.oldServices = self.services;
          loading.oldHosts = self.hosts;
-         
+
          self.hosts = [];
          self.services = [];
-   
+
          for (var i = 0; i < pods.length; i++) {
             var old = findByName(pods[i].host, loading.oldHosts);
             self.hosts.push({
@@ -38,12 +36,12 @@ define(["knockout", "jquery", "app", "alert"], function(ko, $, app, Alert) {
             loadOne(pods[i].entityId);
          }
       }
-      
+
       function loadOne(id) {
-         app.server.sendTo("Tetrapod.GetServiceBuildInfo", {}, id, function (res) {
+         app.server.sendTo("Tetrapod.GetServiceBuildInfo", {}, id, function(res) {
             onLoaded(res);
             loading.num--;
-            if (loading.num == 0 && !silent) {               
+            if (loading.num == 0 && !silent) {
                app.modalData(self);
                $("#buildExecute").button('reset');
                $("#buildModal").modal();
@@ -70,7 +68,7 @@ define(["knockout", "jquery", "app", "alert"], function(ko, $, app, Alert) {
          }
       }
 
-      function run() { 
+      function run() {
          var array = [];
          var b = (self.buildName || "default") + "." + (self.buildNumber || "current");
          if (self.doDeploy) {
@@ -90,7 +88,7 @@ define(["knockout", "jquery", "app", "alert"], function(ko, $, app, Alert) {
                   build: self.buildNumber.trim(),
                   name: self.buildName,
                   command: BuildCommandConsts.DEPLOY,
-                  display: "Deploying "  + service.name
+                  display: "Deploying " + service.name
                };
                array.push(command);
             }
@@ -113,7 +111,7 @@ define(["knockout", "jquery", "app", "alert"], function(ko, $, app, Alert) {
 
          $("#buildModal").modal('hide');
          progressDialog = Alert.progress("");
-         for (var i = 0 ; i < self.hosts.length; i++) {
+         for (var i = 0; i < self.hosts.length; i++) {
             var h = self.hosts[i];
             h.progress = "";
             h.commandsLeft = 0;
@@ -128,10 +126,10 @@ define(["knockout", "jquery", "app", "alert"], function(ko, $, app, Alert) {
             }
          }
       }
-      
+
       function exec(host, commands) {
          var ix = commands.length - host.commandsLeft;
-         var commandsList = [ commands[ix] ];
+         var commandsList = [commands[ix]];
          host.progress += "&nbsp;&nbsp;&nbsp;&nbsp;" + commands[ix].display + " ..... ";
          updateProgress();
          app.server.sendTo("Tetrapod.ExecuteBuildCommand", {
@@ -150,7 +148,7 @@ define(["knockout", "jquery", "app", "alert"], function(ko, $, app, Alert) {
             }
          });
       }
-      
+
       function updateProgress() {
          var p = "";
          var left = 0;
@@ -171,19 +169,17 @@ define(["knockout", "jquery", "app", "alert"], function(ko, $, app, Alert) {
             }
          }
       }
-      
-      
 
       function upgradeHost(hostname, hostId, buildName, buildNum, services) {
-         app.server.sendTo("Tetrapod.GetServiceBuildInfo", {}, hostId, function (res) {
+         app.server.sendTo("Tetrapod.GetServiceBuildInfo", {}, hostId, function(res) {
             loading.oldServices = [];
             loading.oldHosts = [];
 
             onLoaded(res);
-             
+
             self.buildName = buildName;
             self.buildNumber = buildNum;
-            self.doBuild = true;
+            self.doDeploy = true;
 
             self.hosts = [];
             self.hosts.push({
@@ -191,16 +187,14 @@ define(["knockout", "jquery", "app", "alert"], function(ko, $, app, Alert) {
                entityId: hostId,
                isChecked: true
             });
-            
-            //self.services = [];
+
             for (var i = 0; i < self.services.length; i++) {
                self.services[i].isChecked = true;
-            }            
-            
+            }
+
             self.run();
          });
       }
-      
-      
+
    }
 });
