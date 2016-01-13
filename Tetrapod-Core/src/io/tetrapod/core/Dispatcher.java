@@ -4,6 +4,7 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.tetrapod.core.utils.Util;
 
+import java.util.Calendar;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -202,6 +203,23 @@ public class Dispatcher {
       }
    }
 
+   /**
+    * Schedule a task to be executed on the thread-pool at the same time every day. 
+    * Note: Doesn't take daylight savings into account.
+    */
+   public ScheduledFuture<?> dispatchDaily(int hourOfTheDay, final Runnable r) {
+      assert (!scheduled.isShutdown());
+
+      Calendar calendar = Calendar.getInstance();
+      int hour = calendar.get(Calendar.HOUR_OF_DAY);
+      int minutes = calendar.get(Calendar.MINUTE);
+
+      int minsAfter12AM = hour * 60 + minutes;
+      long delay = Util.MINS_IN_A_DAY - minsAfter12AM;
+
+      return scheduled.scheduleAtFixedRate(() -> dispatch(r), delay, Util.MINS_IN_A_DAY, TimeUnit.MINUTES); 
+   }   
+   
    /**
     * Cleanly terminate all thread-pools
     */
