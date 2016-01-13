@@ -251,11 +251,17 @@ define(function(require) {
          }
 
          function upgradeHost() {
+            var buildName = app.cluster.properties.findProperty('build.env');
+            if (!buildName) {
+               Alert.error("build.env property is not set");
+               return;
+            }
+            buildName = buildName.val();
             var hostId = tetrapodId();
-            Alert.prompt("Upgrade " + hostname + " to build #", function(val) {
+            Alert.prompt("Upgrade " + hostname + " to build " + buildName + "-#", function(val) {
                if (val && val.trim().length > 0) {
                   lastBuild = val;
-                  Builder.upgradeHost(hostname, hostId, 'dev', val, self.services());
+                  Builder.upgradeHost(hostname, hostId, buildName, val, self.services());
                }
             }, lastBuild);
          }

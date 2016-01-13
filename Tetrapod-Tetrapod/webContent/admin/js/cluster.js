@@ -16,6 +16,8 @@ define(function(require) {
       var self = this;
 
       self.clear = clear;
+      
+      app.cluster = self;
 
       self.hosts = new Hosts(app);
       self.raft = new Raft(app);
