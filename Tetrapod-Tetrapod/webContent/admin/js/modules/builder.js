@@ -176,6 +176,9 @@ define(["knockout", "jquery", "app", "alert"], function(ko, $, app, Alert) {
 
       function upgradeHost(hostname, hostId, buildName, buildNum, services) {
          app.server.sendTo("Tetrapod.GetServiceBuildInfo", {}, hostId, function (res) {
+            loading.oldServices = [];
+            loading.oldHosts = [];
+
             onLoaded(res);
              
             self.buildName = buildName;
