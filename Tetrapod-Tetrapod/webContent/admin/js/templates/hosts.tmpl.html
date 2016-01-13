@@ -34,6 +34,8 @@
             </div>
          </div>
          <!--  <i class="fa fa-caret-down"></i> -->
+
+
       </div>
    </div>
 
@@ -53,6 +55,7 @@
                         <ul class="dropdown-menu dropdown-service">
                            <li>
                               <a href="#" data-bind="click: onClearAllErrors">Clear All Errors</a>
+                              <a href="#" data-bind="click: upgradeHost">Upgrade Host...</a>
                            </li>
                         </ul>
                      </div>
@@ -114,7 +117,7 @@
                                        Avg (ms)
                                        <i class="fa fa-fw" data-bind="css: {'fa-caret-down' : reqSort() == 3}"></i>
                                     </th>
-                                      <th data-bind="click: function(){reqSort(4)}">
+                                    <th data-bind="click: function(){reqSort(4)}">
                                        Errors
                                        <i class="fa fa-fw" data-bind="css: {'fa-caret-down' : reqSort() == 4}"></i>
                                     </th>
@@ -144,7 +147,7 @@
                                              <meter data-bind="attr: {'value' : avgTimePercent }"></meter>
                                           </div>
                                        </td>
-                                         <td align="right">
+                                       <td align="right">
                                           <div class="cell-label">
                                              <span data-bind="text: (errorRate.toFixed(1) *100) +'%'"></span>
                                              <meter data-bind="attr: {'value' : errorRate }"></meter>

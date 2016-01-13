@@ -13,6 +13,7 @@ define(["knockout", "jquery", "app", "alert"], function(ko, $, app, Alert) {
       self.run = run;
       self.services = [];
       self.load = load;
+      self.upgradeHost = upgradeHost;
       self.hosts = [];
 
       var loading = {};
@@ -42,7 +43,7 @@ define(["knockout", "jquery", "app", "alert"], function(ko, $, app, Alert) {
          app.server.sendTo("Tetrapod.GetServiceBuildInfo", {}, id, function (res) {
             onLoaded(res);
             loading.num--;
-            if (loading.num == 0) {
+            if (loading.num == 0 && !silent) {               
                app.modalData(self);
                $("#buildExecute").button('reset');
                $("#buildModal").modal();
@@ -119,7 +120,11 @@ define(["knockout", "jquery", "app", "alert"], function(ko, $, app, Alert) {
             if (h.isChecked) {
                h.commandsLeft = array.length;
                h.progress = "<b>" + h.name + "</b><br>";
-               exec(h, array)
+               if (h.commandsLeft > 0) {
+                  exec(h, array)
+               } else {
+                  updateProgress();
+               }
             }
          }
       }
@@ -166,5 +171,33 @@ define(["knockout", "jquery", "app", "alert"], function(ko, $, app, Alert) {
             }
          }
       }
+      
+      
+
+      function upgradeHost(hostname, hostId, buildName, buildNum, services) {
+         app.server.sendTo("Tetrapod.GetServiceBuildInfo", {}, hostId, function (res) {
+            onLoaded(res);
+             
+            self.buildName = buildName;
+            self.buildNumber = buildNum;
+            self.doBuild = true;
+
+            self.hosts = [];
+            self.hosts.push({
+               name: hostname,
+               entityId: hostId,
+               isChecked: true
+            });
+            
+            //self.services = [];
+            for (var i = 0; i < self.services.length; i++) {
+               self.services[i].isChecked = true;
+            }            
+            
+            self.run();
+         });
+      }
+      
+      
    }
 });

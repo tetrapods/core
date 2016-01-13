@@ -14,6 +14,8 @@ define(function(require) {
       var self = this;
       var Core = app.coreConsts;
 
+      var lastBuild = null;
+      
       self.hosts = ko.observableArray([]);
       self.services = ko.observableArray([]);
 
@@ -141,6 +143,7 @@ define(function(require) {
          self.disk = ko.observable(0);
          self.memory = ko.observable(0);
          self.load = ko.observable(0);
+         self.upgradeHost = upgradeHost;
 
          self.loadChart = new Chart('host-chart-load-' + hostname, self.load);
          self.diskChart = new Chart('host-chart-disk-' + hostname, self.disk);
@@ -237,6 +240,27 @@ define(function(require) {
                self.services()[i].clearErrors();
             }
          };
+
+         
+         function tetrapodId() {
+            for (var i = 0; i < self.services().length; i++) {
+               if (self.services()[i].name == 'Tetrapod') {
+                  return self.services()[i].entityId;
+               }
+            }
+            return 0;
+         }
+         
+         function upgradeHost() {
+            var hostId = tetrapodId();
+            Alert.prompt("Deploy build #", function(val) {
+               if (val && val.trim().length > 0) {
+                  lastBuild = val;                  
+                  Builder.upgradeHost(hostname, hostId, 'dev', val, self.services());                 
+               }
+            }, lastBuild);
+         }
+
       }
    }
 });
