@@ -22,6 +22,7 @@ define(function(require) {
       self.clear = clear;
       self.onClearAllErrors = onClearAllErrors;
       self.deployBuilds = deployBuilds;
+      self.deployFully = deployFully;
 
       // Timer to update charts
       setInterval(function updateCharts() {
@@ -70,7 +71,7 @@ define(function(require) {
             s.status(msg.status);
             // resub when service returns
             if (wasGone && !s.isGone()) {
-               s.subscribe(1); 
+               s.subscribe(1);
             }
          }
       });
@@ -111,7 +112,7 @@ define(function(require) {
          self.hosts(array);
          return host;
       }
-      
+
       function deployBuilds() {
          var tetrapods = [];
          for (var i = 0; i < self.services().length; i++) {
@@ -121,6 +122,12 @@ define(function(require) {
             }
          }
          Builder.load(tetrapods);
+      }
+
+      // Does a full managed deployment to a new build, rolling and upgrading all services
+      function deployFully() {
+         // show a progress dialog?
+         console.log("Deploy Fully");
       }
 
       // Host Model

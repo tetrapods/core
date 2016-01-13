@@ -789,7 +789,7 @@ public class TetrapodService extends DefaultService
 
          // only the leader can change the registry status
          if (cluster.isLeader()) {
-            if ((ses == null /*&& !e.isPendingRegistration()*/) || (ses != null && !ses.isConnected())) {
+            if (ses == null || (ses != null && !ses.isConnected())) {
                registry.setGone(e);
             }
          }
