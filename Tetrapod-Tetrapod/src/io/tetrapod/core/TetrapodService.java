@@ -376,7 +376,7 @@ public class TetrapodService extends DefaultService
       if (!Util.isLocal()) {
          logger.info("Sleeping ....");
          // sleep a bit so other services getting a kill signal can shutdown cleanly
-         Util.sleep(1500);
+         Util.sleep(2500);
       }
       if (cluster != null) {
          cluster.shutdown();

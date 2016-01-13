@@ -5,6 +5,7 @@ define(["knockout", "jquery", "app", "alert"], function(ko, $, app, Alert) {
       var self = this;
       self.doDeploy = false;
       self.doLaunch = false;
+
       self.paused = false;
       self.buildNumber = "";
       self.buildName = "";
@@ -68,13 +69,13 @@ define(["knockout", "jquery", "app", "alert"], function(ko, $, app, Alert) {
          }
       }
 
-      function run() {
+      function run(onSuccess) {
          var array = [];
          var b = (self.buildName || "default") + "." + (self.buildNumber || "current");
          if (self.doDeploy) {
             array.push({
                serviceName: "",
-               build: self.buildNumber,
+               build: self.buildNumber.trim(),
                name: self.buildName,
                command: BuildCommandConsts.BUILD,
                display: "Pulling build " + b
@@ -93,6 +94,7 @@ define(["knockout", "jquery", "app", "alert"], function(ko, $, app, Alert) {
                array.push(command);
             }
          }
+
          if (self.doLaunch) {
             for (var i = 0; i < self.services.length; i++) {
                var service = self.services[i];
@@ -171,29 +173,20 @@ define(["knockout", "jquery", "app", "alert"], function(ko, $, app, Alert) {
       }
 
       function upgradeHost(hostname, hostId, buildName, buildNum, services) {
-         app.server.sendTo("Tetrapod.GetServiceBuildInfo", {}, hostId, function(res) {
-            loading.oldServices = [];
-            loading.oldHosts = [];
-
-            onLoaded(res);
-
-            self.buildName = buildName;
-            self.buildNumber = buildNum;
-            self.doDeploy = true;
-
-            self.hosts = [];
-            self.hosts.push({
-               name: hostname,
-               entityId: hostId,
-               isChecked: true
-            });
-
-            for (var i = 0; i < self.services.length; i++) {
-               self.services[i].isChecked = true;
-            }
-
-            self.run();
-         });
+         progressDialog = Alert.progress("");
+         exec({
+            name: hostname,
+            entityId: hostId,
+            isChecked: true,
+            commandsLeft: 1,
+            progress: hostname
+         }, [{
+            serviceName: 'all',
+            build: buildNum.trim(),
+            name: buildName.trim(),
+            command: BuildCommandConsts.FULL_CYCLE,
+            display: "UPGRADING " + hostname + " to " + buildName + "." + buildNum
+         }]);
       }
 
    }

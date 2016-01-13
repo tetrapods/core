@@ -15,7 +15,7 @@ define(function(require) {
       var Core = app.coreConsts;
 
       var lastBuild = null;
-      
+
       self.hosts = ko.observableArray([]);
       self.services = ko.observableArray([]);
 
@@ -241,7 +241,6 @@ define(function(require) {
             }
          };
 
-         
          function tetrapodId() {
             for (var i = 0; i < self.services().length; i++) {
                if (self.services()[i].name == 'Tetrapod') {
@@ -250,13 +249,13 @@ define(function(require) {
             }
             return 0;
          }
-         
+
          function upgradeHost() {
             var hostId = tetrapodId();
-            Alert.prompt("Deploy build #", function(val) {
+            Alert.prompt("Upgrade " + hostname + " to build #", function(val) {
                if (val && val.trim().length > 0) {
-                  lastBuild = val;                  
-                  Builder.upgradeHost(hostname, hostId, 'dev', val, self.services());                 
+                  lastBuild = val;
+                  Builder.upgradeHost(hostname, hostId, 'dev', val, self.services());
                }
             }, lastBuild);
          }
