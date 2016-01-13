@@ -500,6 +500,7 @@ public class TetrapodCluster extends Storage
          ctx.session.setTheirEntityId(req.entityId);
          entity.setSession(ctx.session);
          entity.build = req.build;
+         entity.status = req.status;
          // subscribe them to our cluster and registry views
          logger.info("**************************** SYNC TO {} {}", ctx.session, req.entityId);
          service.subscribeToCluster(ctx.session, req.entityId);

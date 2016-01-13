@@ -103,7 +103,8 @@ public class TetrapodService extends DefaultService
          } else {
             this.token = EntityToken.encode(entityId, me.reclaimToken);
             logger.info(String.format("SELF-REGISTERED: 0x%08X %s", entityId, me));
-            // update status?
+            me.status = getStatus(); // update status?
+            me.build = buildName;
          }
 
          clusterTopic = publishTopic();
