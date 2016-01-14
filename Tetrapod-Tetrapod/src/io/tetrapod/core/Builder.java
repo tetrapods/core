@@ -92,7 +92,7 @@ public class Builder {
       boolean canBuild = new File(buildDir, "pullBuild").exists();
       boolean canDeploy = new File(clusterDir, "deploy").exists();
       boolean canLaunch = new File(clusterDir, "launch").exists();
-      boolean canCycle = new File(clusterDir, "rollall").exists() || true;
+      boolean canCycle = canBuild && canDeploy && canLaunch;
 
       MyCallback m = new MyCallback();
       try {
@@ -164,7 +164,7 @@ public class Builder {
       tetrapodService.shutdownServices();
       if (doPullBuild(buildDir, buildName, build, callback)) {
          if (doDeploy(buildDir, clusterDir, "all", build, callback)) {
-            tetrapodService.shutdown(false);
+            tetrapodService.shutdown(false); 
             if (doLaunch(clusterDir, "all", build, callback, false)) {
                return true;
             }

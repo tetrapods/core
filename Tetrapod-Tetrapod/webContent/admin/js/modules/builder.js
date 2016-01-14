@@ -152,15 +152,17 @@ define(["knockout", "jquery", "app", "alert"], function(ko, $, app, Alert) {
       }
 
       function updateProgress() {
-         var p = "";
-         var left = 0;
-         for (var i = 0; i < self.hosts.length; i++) {
-            p += self.hosts[i].progress;
-            left += self.hosts[i].commandsLeft;
-         }
-         progressDialog.replace(p);
-         if (left == 0) {
-            progressDialog.addClose();
+         if (progressDialog) {
+            var p = "";
+            var left = 0;
+            for (var i = 0; i < self.hosts.length; i++) {
+               p += self.hosts[i].progress;
+               left += self.hosts[i].commandsLeft;
+            }
+            progressDialog.replace(p);
+            if (left == 0) {
+               progressDialog.addClose();
+            }
          }
       }
 
@@ -172,8 +174,7 @@ define(["knockout", "jquery", "app", "alert"], function(ko, $, app, Alert) {
          }
       }
 
-      function upgradeHost(hostname, hostId, buildName, buildNum, services) {
-         progressDialog = Alert.progress("");
+      function upgradeHost(hostname, hostId, buildName, buildNum, services) {         
          exec({
             name: hostname,
             entityId: hostId,
