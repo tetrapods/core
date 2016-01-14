@@ -87,11 +87,12 @@ public class Builder {
    }
 
    public static boolean executeCommand(BuildCommand command, TetrapodService tetrapodService) {
-      File buildDir = new File(Util.getProperty("build.dir"));
-      File clusterDir = new File(Util.getProperty("cluster.dir"));
+      File buildDir = new File(Util.getProperty("build.dir", "."));
+      File clusterDir = new File(Util.getProperty("cluster.dir", "."));
       boolean canBuild = new File(buildDir, "pullBuild").exists();
       boolean canDeploy = new File(clusterDir, "deploy").exists();
       boolean canLaunch = new File(clusterDir, "launch").exists();
+      boolean canCycle = new File(clusterDir, "rollall").exists();
 
       MyCallback m = new MyCallback();
       try {
@@ -110,9 +111,9 @@ public class Builder {
                   return false;
                return doLaunch(clusterDir, command.serviceName, command.build, m, command.command == BuildCommand.LAUNCH_PAUSED);
             case BuildCommand.FULL_CYCLE:
-               if (!canLaunch)
+               if (!canCycle)
                   return false;
-               return doFullCycle(clusterDir, command.serviceName, command.build, m);
+               return doFullCycle(clusterDir, command.name, command.build, m);
          }
       } catch (IOException e) {
          logger.error("failed build command", e);
@@ -145,7 +146,7 @@ public class Builder {
    }
 
    private static boolean doLaunch(File clusterDir, String serviceName, int build, MyCallback callback, boolean startPaused)
-         throws IOException {
+            throws IOException {
       String buildNum = build == BuildCommand.LAUNCH_DEPLOYED ? "current" : "" + build;
 
       logger.info("Launching {}/{} {}", clusterDir, serviceName, build);
@@ -158,9 +159,8 @@ public class Builder {
       return rc == 0;
    }
 
-   private static boolean doFullCycle(File clusterDir, String serviceName, int build, MyCallback callback) throws IOException {
-      String buildNum = build == BuildCommand.LAUNCH_DEPLOYED ? "current" : "" + build;
-      int rc = Util.runProcess(callback, new File(clusterDir, "fullCycle").getPath(), buildNum, serviceName);
+   private static boolean doFullCycle(File clusterDir, String buildName, int build, MyCallback callback) throws IOException {
+      int rc = Util.runProcess(callback, new File(clusterDir, "rollall").getPath(), buildName, Integer.toString(build));
       return rc == 0;
    }
 

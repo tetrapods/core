@@ -34,6 +34,8 @@ public class Util {
    public static final long         ONE_DAY    = ONE_HOUR * 24;
    public static final long         ONE_WEEK   = ONE_DAY * 7;
 
+   public static final int          MINS_IN_A_DAY = 24 * 60;
+   
    /**
     * Sleeps the current thread for a number of milliseconds, ignores interrupts.
     */
