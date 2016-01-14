@@ -42,7 +42,7 @@ define(["knockout", "jquery", "app", "alert"], function(ko, $, app, Alert) {
          app.server.sendTo("Tetrapod.GetServiceBuildInfo", {}, id, function(res) {
             onLoaded(res);
             loading.num--;
-            if (loading.num == 0 && !silent) {
+            if (loading.num == 0) {
                app.modalData(self);
                $("#buildExecute").button('reset');
                $("#buildModal").modal();
