@@ -162,9 +162,10 @@ public class Builder {
    private static boolean doFullCycle(File buildDir, File clusterDir, String buildName, int build, MyCallback callback,
             TetrapodService tetrapodService) throws IOException {
       tetrapodService.shutdownServices();
+      Util.sleep(2000);
       if (doPullBuild(buildDir, buildName, build, callback)) {
          if (doDeploy(buildDir, clusterDir, "all", build, callback)) {
-            tetrapodService.shutdown(false); 
+            tetrapodService.shutdown(false);
             if (doLaunch(clusterDir, "all", build, callback, false)) {
                return true;
             }
