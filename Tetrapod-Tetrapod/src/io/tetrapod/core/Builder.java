@@ -92,7 +92,7 @@ public class Builder {
       boolean canBuild = new File(buildDir, "pullBuild").exists();
       boolean canDeploy = new File(clusterDir, "deploy").exists();
       boolean canLaunch = new File(clusterDir, "launch").exists();
-      boolean canCycle = new File(clusterDir, "rollall").exists();
+      boolean canCycle = new File(clusterDir, "rollall").exists() || true;
 
       MyCallback m = new MyCallback();
       try {
@@ -113,7 +113,7 @@ public class Builder {
             case BuildCommand.FULL_CYCLE:
                if (!canCycle)
                   return false;
-               return doFullCycle(clusterDir, command.name, command.build, m);
+               return doFullCycle(buildDir, clusterDir, command.name, command.build, m, tetrapodService);
          }
       } catch (IOException e) {
          logger.error("failed build command", e);
@@ -159,9 +159,19 @@ public class Builder {
       return rc == 0;
    }
 
-   private static boolean doFullCycle(File clusterDir, String buildName, int build, MyCallback callback) throws IOException {
-      Runtime.getRuntime().exec(new String[]{new File(clusterDir, "rollall").getPath(), buildName, Integer.toString(build)});
-      return true;
+   private static boolean doFullCycle(File buildDir, File clusterDir, String buildName, int build, MyCallback callback,
+            TetrapodService tetrapodService) throws IOException {
+      tetrapodService.shutdownServices();
+      if (doPullBuild(buildDir, buildName, build, callback)) {
+         if (doDeploy(buildDir, clusterDir, "all", build, callback)) {
+            tetrapodService.shutdown(false);
+            if (doLaunch(clusterDir, "all", build, callback, false)) {
+               return true;
+            }
+         }
+      }
+      //Runtime.getRuntime().exec(new String[] { new File(clusterDir, "rollall").getPath(), buildName, Integer.toString(build) });
+      return false;
    }
 
 }

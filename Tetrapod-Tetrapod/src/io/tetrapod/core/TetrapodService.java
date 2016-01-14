@@ -1351,4 +1351,12 @@ public class TetrapodService extends DefaultService
       return Response.error(TetrapodContract.ERROR_NOT_LEADER);
    }
 
+   public void shutdownServices() {
+      for (EntityInfo e : registry.getServices()) {
+         if (e.entityId != getEntityId() && e.host.equals(Util.getHostName())) {
+            sendRequest(new ShutdownRequest(), e.entityId);
+         }
+      }
+   }
+
 }
