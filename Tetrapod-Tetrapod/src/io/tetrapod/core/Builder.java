@@ -160,7 +160,7 @@ public class Builder {
    }
 
    private static boolean doFullCycle(File clusterDir, String buildName, int build, MyCallback callback) throws IOException {
-      Runtime.getRuntime().exec(new String[]{new File(clusterDir, "rollall").getPath(), buildName, Integer.toString(build)});
+      Runtime.getRuntime().exec(new String[]{new File(clusterDir, "rollall").getPath(), buildName, Integer.toString(build), "&"});
       return true;
    }
 
