@@ -217,7 +217,7 @@ public class JSONObject {
             if (c != ':') {
                 throw x.syntaxError("Expected a ':' after a key");
             }
-            this.putOnce(key, x.nextValue());
+            this.put(key, x.nextValue()); // WAS: this.putOnce(key, x.nextValue()); but b0rked on some services bad JSON
 
 // Pairs are separated by ','.
 

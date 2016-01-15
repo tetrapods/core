@@ -1371,6 +1371,7 @@ public class TetrapodService extends DefaultService
    private boolean getNagiosAlertsEnabled(String host, String nagiosDomain, String nagiosUser, String nagiosPwd) throws IOException {
       final String url = String.format("http://%s/nagios/cgi-bin/statusjson.cgi?query=host&hostname=%s", nagiosDomain, host);
       String res = Util.httpGet(url, nagiosUser, nagiosPwd);
+      logger.info("{}", res);
       JSONObject jo = new JSONObject(res);
       return jo.getJSONObject("data").getJSONObject("host").getBoolean("notifications_enabled");
    }
