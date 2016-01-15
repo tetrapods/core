@@ -410,8 +410,18 @@ internal message Ownership.ReleaseOwnership
 internal request TetrapodClientSessions
 
 internal response TetrapodClientSessions  
-   1: int[] clientSessions   
+   1: int[] clientSessions    
+     
+##########################################          
+ 
+internal request NagiosStatus
+   1: string adminToken
+   2: string hostname
+   3: boolean toggle
+
+internal response NagiosStatus  
+   1: boolean enabled 
+   
 
        
-   
-   
+ 

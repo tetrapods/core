@@ -42,9 +42,8 @@ li.disabled {
 }
 
 .cell-label a {
-   cursor: pointer;	
+	cursor: pointer;
 }
-
 
 meter {
 	padding-left: 1px;
@@ -334,6 +333,18 @@ meter {
 	padding-right: 20px;
 }
 
+.host-alarms {
+	vertical-align: middle;
+	display: table-cell;
+	padding-left: 20px;
+	padding-right: 20px;
+   border-radius: 4px;
+}
+
+.host-alarms:HOVER {
+	background: #ddd;
+}
+
 .host-info {
 	font-size: 18px;
 	display: table-row;
@@ -436,14 +447,14 @@ meter {
 
 .service-histogram-wrap {
 	text-align: center;
-	border: 1px solid #eee;  
+	border: 1px solid #eee;
 	margin: 10px;
 	cursor: pointer;
 }
 
 .service-histogram {
 	height: 100px;
-   width: 700px;
+	width: 700px;
 	padding: 0px;
 }
 

@@ -130,6 +130,7 @@ define(function(require) {
       function deployFully() {
          // show a progress dialog?
          console.log("Deploy Fully");
+
       }
 
       // Host Model
@@ -143,7 +144,9 @@ define(function(require) {
          self.disk = ko.observable(0);
          self.memory = ko.observable(0);
          self.load = ko.observable(0);
+         self.nagios = ko.observable();
          self.upgradeHost = upgradeHost;
+         self.toggleAlarm = toggleAlarm;
 
          self.loadChart = new Chart('host-chart-load-' + hostname, self.load);
          self.diskChart = new Chart('host-chart-disk-' + hostname, self.disk);
@@ -164,6 +167,16 @@ define(function(require) {
                      self.cores(result.numCores);
                   }
                });
+               // FIXME -- don't poll so often, maybe roll this into HostInfo
+               app.server.sendDirect("NagiosStatus", {
+                  hostname: hostname,
+                  toggle: false
+               }, function(result) {
+                  if (!result.isError()) {
+                     self.nagios(result.enabled);
+                  }
+               });
+
             } else {
                setTimeout(updateHostDetails, 1000);
             }
@@ -248,6 +261,17 @@ define(function(require) {
                }
             }
             return 0;
+         }
+
+         function toggleAlarm() {
+            app.server.sendDirect("NagiosStatus", {
+               hostname: hostname,
+               toggle: true
+            }, function(result) {
+               if (!result.isError()) {
+                  self.nagios(result.enabled);
+               }
+            });
          }
 
          function upgradeHost() {
