@@ -11,7 +11,7 @@
 
    <div class="host-header">
       <div class="host-info">
-         <div class="host-alarms" data-bind="click: toggleAlarm, visible: nagios">
+         <div class="host-alarms" data-bind="click: toggleAlarm, visible: nagios() != null">
             <i class="fa fw fa-bell-o" data-bind="visible: nagios() == true" style="color: green;"></i>
             <i class="fa fw fa-bell-slash-o" data-bind="visible: nagios() == false" style="color: red;"></i>
          </div>

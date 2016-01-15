@@ -167,16 +167,6 @@ define(function(require) {
                      self.cores(result.numCores);
                   }
                });
-               // FIXME -- don't poll so often, maybe roll this into HostInfo
-               app.server.sendDirect("NagiosStatus", {
-                  hostname: hostname,
-                  toggle: false
-               }, function(result) {
-                  if (!result.isError()) {
-                     self.nagios(result.enabled);
-                  }
-               });
-
             } else {
                setTimeout(updateHostDetails, 1000);
             }
@@ -195,6 +185,16 @@ define(function(require) {
                   setTimeout(updateHostStats, 5000);
                   self.loadChart.updatePlot(60000, self.load());
                   self.diskChart.updatePlot(60000, self.disk());
+               });
+               
+            // FIXME -- don't poll so often, maybe roll this into HostStats
+               app.server.sendDirect("NagiosStatus", {
+                  hostname: hostname,
+                  toggle: false
+               }, function(result) {
+                  if (!result.isError()) {
+                     self.nagios(result.enabled);
+                  }
                });
             } else {
                setTimeout(updateHostStats, 1000);
