@@ -1365,14 +1365,14 @@ public class TetrapodService extends DefaultService
       final String url = String.format("http://%s/nagios/cgi-bin/cmd.cgi?cmd_typ=%d&cmd_mod=2&ahas=true&host=%s&btnSubmit=Commit",
                nagiosDomain, enable ? 28 : 29, host);
       String res = Util.httpGet(url, nagiosUser, nagiosPwd);
-      logger.info("{} =>\n{}", url, res);
+      //logger.info("{} =>\n{}", url, res);
       return res != null && res.contains("Your command request was successfully submitted to Nagios for processing");
    }
 
    private boolean getNagiosAlertsEnabled(String host, String nagiosDomain, String nagiosUser, String nagiosPwd) throws IOException {
       final String url = String.format("http://%s/nagios/cgi-bin/statusjson.cgi?query=host&hostname=%s", nagiosDomain, host);
       String res = Util.httpGet(url, nagiosUser, nagiosPwd);
-      logger.info("{} =>\n{}", url, res);
+      //logger.info("{} =>\n{}", url, res);
       JSONObject jo = new JSONObject(res);
       return jo.getJSONObject("data").getJSONObject("host").getBoolean("notifications_enabled");
    }
