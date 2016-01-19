@@ -11,6 +11,10 @@
 
    <div class="host-header">
       <div class="host-info">
+         <div class="host-alarms" data-bind="click: toggleAlarm, visible: nagios() != null">
+            <i class="fa fw fa-bell-o" data-bind="visible: nagios() == true" style="color: green;"></i>
+            <i class="fa fw fa-bell-slash-o" data-bind="visible: nagios() == false" style="color: red;"></i>
+         </div>
          <div class="host-name">
             <i class="fa fa-server"></i>
             <span data-bind="text: hostname"></span>
@@ -33,12 +37,8 @@
                </div>
             </div>
          </div>
-         <!--  <i class="fa fa-caret-down"></i> -->
-
-
       </div>
    </div>
-
 
    <!-- ko if: services().length > 0 -->
    <div id="cluster-table">

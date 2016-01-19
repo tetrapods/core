@@ -18,6 +18,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.socket.SocketChannel;
 import io.tetrapod.core.ServiceConnector.DirectServiceInfo;
 import io.tetrapod.core.Session.RelayHandler;
+import io.tetrapod.core.json.JSONObject;
 import io.tetrapod.core.pubsub.Topic;
 import io.tetrapod.core.registry.*;
 import io.tetrapod.core.rpc.*;
@@ -1349,6 +1350,54 @@ public class TetrapodService extends DefaultService
          return new RaftLeaderResponse(leader);
       }
       return Response.error(TetrapodContract.ERROR_NOT_LEADER);
+   }
+
+   public void shutdownServices() {
+      for (EntityInfo e : registry.getServices()) {
+         if (e.entityId != getEntityId() && e.host.equals(Util.getHostName())) {
+            sendRequest(new ShutdownRequest(), e.entityId);
+         }
+      }
+   }
+
+   private boolean setNagiosAlertsEnabled(String host, String nagiosDomain, String nagiosUser, String nagiosPwd, boolean enable)
+            throws IOException {
+      final String url = String.format("http://%s/nagios/cgi-bin/cmd.cgi?cmd_typ=%d&cmd_mod=2&ahas=true&host=%s&btnSubmit=Commit",
+               nagiosDomain, enable ? 28 : 29, host);
+      String res = Util.httpGet(url, nagiosUser, nagiosPwd);
+      //logger.info("{} =>\n{}", url, res);
+      return res != null && res.contains("Your command request was successfully submitted to Nagios for processing");
+   }
+
+   private boolean getNagiosAlertsEnabled(String host, String nagiosDomain, String nagiosUser, String nagiosPwd) throws IOException {
+      final String url = String.format("http://%s/nagios/cgi-bin/statusjson.cgi?query=host&hostname=%s", nagiosDomain, host);
+      String res = Util.httpGet(url, nagiosUser, nagiosPwd);
+      //logger.info("{} =>\n{}", url, res);
+      JSONObject jo = new JSONObject(res);
+      return jo.getJSONObject("data").getJSONObject("host").getBoolean("notifications_enabled");
+   }
+
+   @Override
+   public Response requestNagiosStatus(NagiosStatusRequest r, RequestContext ctx) {
+      final String user = Util.getProperty("nagios.user");
+      final String pwd = Util.getProperty("nagios.password");
+      final String domain = Util.getProperty("nagios.host");
+      if (domain == null || user == null || pwd == null) {
+         return Response.error(ERROR_NOT_CONFIGURED);
+      }
+      try {
+         boolean enabled = getNagiosAlertsEnabled(r.hostname, domain, user, pwd);
+         if (r.toggle) {
+            if (setNagiosAlertsEnabled(r.hostname, domain, user, pwd, !enabled)) {
+               enabled = !enabled;
+            }
+         }
+         return new NagiosStatusResponse(enabled);
+      } catch (Exception e) {
+         logger.error(e.getMessage(), e);
+         return Response.error(ERROR_UNKNOWN);
+      }
+
    }
 
 }

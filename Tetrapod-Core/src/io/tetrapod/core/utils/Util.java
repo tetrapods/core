@@ -26,16 +26,16 @@ import io.tetrapod.core.rpc.Flags_int;
  */
 public class Util {
 
-   public static final SecureRandom random     = new SecureRandom();
+   public static final SecureRandom random        = new SecureRandom();
 
-   public static final long         ONE_SECOND = 1000;
-   public static final long         ONE_MINUTE = ONE_SECOND * 60;
-   public static final long         ONE_HOUR   = ONE_MINUTE * 60;
-   public static final long         ONE_DAY    = ONE_HOUR * 24;
-   public static final long         ONE_WEEK   = ONE_DAY * 7;
+   public static final long         ONE_SECOND    = 1000;
+   public static final long         ONE_MINUTE    = ONE_SECOND * 60;
+   public static final long         ONE_HOUR      = ONE_MINUTE * 60;
+   public static final long         ONE_DAY       = ONE_HOUR * 24;
+   public static final long         ONE_WEEK      = ONE_DAY * 7;
 
    public static final int          MINS_IN_A_DAY = 24 * 60;
-   
+
    /**
     * Sleeps the current thread for a number of milliseconds, ignores interrupts.
     */
@@ -387,6 +387,25 @@ public class Util {
       return new JSONObject().put("status", responseCode).put("body", response.toString());
    }
 
+   public static String httpGet(String uri, String username, String password) throws IOException {
+      final URL obj = new URL(uri);
+      final String userPassword = username + ":" + password;
+      final String encoding = AESEncryptor.encodeBase64(userPassword.getBytes());
+      final URLConnection uc = obj.openConnection();
+      uc.setRequestProperty("Authorization", "Basic " + encoding);
+      uc.connect();
+      try (InputStream is = uc.getInputStream()) {
+         try (BufferedReader in = new BufferedReader(new InputStreamReader(is))) {
+            String inputLine;
+            StringBuilder response = new StringBuilder();
+            while ((inputLine = in.readLine()) != null) {
+               response.append(inputLine);
+            }
+            return response.toString();
+         }
+      }
+   }
+
    public static <T extends Object> boolean isEmpty(T[] array) {
       return array == null || array.length == 0;
    }
@@ -551,20 +570,20 @@ public class Util {
       return getTxtRecord(domain, false);
    }
 
-   public static String getTxtRecord(String domain, boolean stripQuotes) throws NamingException {      
+   public static String getTxtRecord(String domain, boolean stripQuotes) throws NamingException {
       DirContext ctx = new InitialDirContext();
       Attributes attrs = ctx.getAttributes("dns:/" + domain, new String[] { "TXT" });
       Attribute attr = attrs.get("TXT");
       if (attr != null) {
          String value = attr.get().toString();
-         if (value.length() > 1 && value.charAt(0) == '"' && value.charAt(value.length()-1) == '"') {
-            return value.substring(1, value.length()-1);            
+         if (value.length() > 1 && value.charAt(0) == '"' && value.charAt(value.length() - 1) == '"') {
+            return value.substring(1, value.length() - 1);
          }
-         return value; 
+         return value;
       }
       return null;
    }
-   
+
    /**
     * Return a comma separated list of the collection, with no outside delimiters. Empty string if collection is null or empty.
     */
@@ -599,7 +618,6 @@ public class Util {
       return val;
    }
 
-   
    /**
     * Helpful method to get an existing value from a map or lazy-init when value is missing.
     */
@@ -611,5 +629,5 @@ public class Util {
       }
       return val;
    }
-   
+
 }

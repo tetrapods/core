@@ -126,6 +126,8 @@ function TP_Tetrapod(server) {
    server.register("message", "Tetrapod", "ReleaseOwnership", 1, 9542348);
    server.register("request", "Tetrapod", "TetrapodClientSessions", 1, 4764379);
    server.register("response", "Tetrapod", "TetrapodClientSessions", 1, 13660185);
+   server.register("request", "Tetrapod", "NagiosStatus", 1, 12047571);
+   server.register("response", "Tetrapod", "NagiosStatus", 1, 15307585);
 
    return self;
 }
