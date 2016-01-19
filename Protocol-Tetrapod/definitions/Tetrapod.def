@@ -421,6 +421,10 @@ internal request NagiosStatus
 
 internal response NagiosStatus  
    1: boolean enabled 
+ 
+ internal message NagiosStatus
+   1: string hostname
+   2: boolean enabled 
    
 
        

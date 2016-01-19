@@ -169,6 +169,7 @@ public class TetrapodContract extends Contract {
          new ClaimOwnershipMessage(),
          new RetainOwnershipMessage(),
          new ReleaseOwnershipMessage(),
+         new NagiosStatusMessage(),
       };
    }
    
