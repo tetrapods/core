@@ -504,7 +504,7 @@ public class TetrapodCluster extends Storage
          // subscribe them to our cluster and registry views
          logger.info("**************************** SYNC TO {} {}", ctx.session, req.entityId);
          service.subscribeToCluster(ctx.session, req.entityId);
-         
+
          entity.queue(() -> service.broadcastServicesMessage(new ServiceAddedMessage(entity)));
       }
       return Response.SUCCESS;
@@ -726,6 +726,9 @@ public class TetrapodCluster extends Storage
       logger.info(String.format("#%d: %9s term=%d, lastIndex=%d, lastTerm=%d commitIndex=%d, %s, peers=%d, leader=%d checksum=%016X",
                raft.getPeerId(), raft.getRole(), raft.getCurrentTerm(), raft.getLog().getLastIndex(), raft.getLog().getLastTerm(),
                raft.getLog().getCommitIndex(), state, raft.getClusterSize(), raft.getLeader(), state.getChecksum()));
+      if (!raft.getLog().isRunning()) {
+         logger.warn("RAFT LOG NOT RUNNING");
+      }
    }
 
    public Response requestRaftStats(RaftStatsRequest r, RequestContext ctx) {

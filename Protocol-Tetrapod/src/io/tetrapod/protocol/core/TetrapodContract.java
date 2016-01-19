@@ -60,6 +60,7 @@ public class TetrapodContract extends Contract {
       , KeepAliveRequest.Handler
       , LockRequest.Handler
       , LogRegistryStatsRequest.Handler
+      , NagiosStatusRequest.Handler
       , RaftLeaderRequest.Handler
       , RaftStatsRequest.Handler
       , RegisterRequest.Handler
@@ -123,6 +124,7 @@ public class TetrapodContract extends Contract {
          new SubscribeOwnershipRequest(),
          new UnsubscribeOwnershipRequest(),
          new TetrapodClientSessionsRequest(),
+         new NagiosStatusRequest(),
       };
    }
    
@@ -139,6 +141,7 @@ public class TetrapodContract extends Contract {
          new LockResponse(),
          new ClaimOwnershipResponse(),
          new TetrapodClientSessionsResponse(),
+         new NagiosStatusResponse(),
       };
    }
    
