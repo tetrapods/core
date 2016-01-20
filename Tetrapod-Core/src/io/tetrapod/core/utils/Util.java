@@ -337,6 +337,11 @@ public class Util {
    }
 
    public final static String ALPHANUMERIC_CHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+   public final static String ALPHANUMERIC_CHARS_UPPERCASE = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+
+   public static String makeRandomAlphanumericStringUppercase(int len) {
+      return makeRandomString(len, ALPHANUMERIC_CHARS_UPPERCASE);
+   }
 
    public static String makeRandomAlphanumericString(int len) {
       return makeRandomString(len, ALPHANUMERIC_CHARS);
