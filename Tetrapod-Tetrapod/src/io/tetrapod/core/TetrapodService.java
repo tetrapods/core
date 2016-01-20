@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.security.SecureRandom;
 import java.util.*;
 import java.util.Properties;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
@@ -115,6 +116,9 @@ public class TetrapodService extends DefaultService
          adminTopic.addListener((toEntityId, resub) -> {
             synchronized (cluster) {
                cluster.sendAdminDetails(findSession(toEntityId), toEntityId, adminTopic.topicId);
+               for (String host : nagiosEnabled.keySet()) {
+                  broadcastAdminMessage(new NagiosStatusMessage(host, nagiosEnabled.get(host)));
+               }
             }
          });
 
@@ -740,6 +744,8 @@ public class TetrapodService extends DefaultService
             healthCheckService(e);
          }
       }
+
+      refreshNagiosEnabledCache();
    }
 
    private void healthCheckClient(final EntityInfo e) {
@@ -1372,9 +1378,38 @@ public class TetrapodService extends DefaultService
    private boolean getNagiosAlertsEnabled(String host, String nagiosDomain, String nagiosUser, String nagiosPwd) throws IOException {
       final String url = String.format("http://%s/nagios/cgi-bin/statusjson.cgi?query=host&hostname=%s", nagiosDomain, host);
       String res = Util.httpGet(url, nagiosUser, nagiosPwd);
-      //logger.info("{} =>\n{}", url, res);
+      // logger.info("{} =>\n{}", url, res);
       JSONObject jo = new JSONObject(res);
       return jo.getJSONObject("data").getJSONObject("host").getBoolean("notifications_enabled");
+   }
+
+   private final Map<String, Boolean> nagiosEnabled  = new ConcurrentHashMap<>();
+   private long                       lastNagiosPoll = 0;
+
+   private void refreshNagiosEnabledCache() {
+      synchronized (nagiosEnabled) {
+         if (System.currentTimeMillis() - lastNagiosPoll < Util.ONE_SECOND * 15) {
+            return;
+         }
+         lastNagiosPoll = System.currentTimeMillis();
+      }
+      final String user = Util.getProperty("nagios.user");
+      final String pwd = Util.getProperty("nagios.password");
+      final String domain = Util.getProperty("nagios.host");
+      if (domain != null && user != null && pwd != null) {
+         try {
+            for (String host : nagiosEnabled.keySet()) {
+               Boolean old = nagiosEnabled.get(host);
+               Boolean val = getNagiosAlertsEnabled(host, domain, user, pwd);
+               nagiosEnabled.put(host, val);
+               if (val != null && !val.equals(old)) {
+                  broadcastAdminMessage(new NagiosStatusMessage(host, val));
+               }
+            }
+         } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+         }
+      }
    }
 
    @Override
@@ -1386,12 +1421,17 @@ public class TetrapodService extends DefaultService
          return Response.error(ERROR_NOT_CONFIGURED);
       }
       try {
-         boolean enabled = getNagiosAlertsEnabled(r.hostname, domain, user, pwd);
+         Boolean enabled = nagiosEnabled.get(r.hostname);
+         if (enabled == null) {
+            enabled = getNagiosAlertsEnabled(r.hostname, domain, user, pwd);
+         }
          if (r.toggle) {
             if (setNagiosAlertsEnabled(r.hostname, domain, user, pwd, !enabled)) {
                enabled = !enabled;
             }
          }
+         nagiosEnabled.put(r.hostname, enabled);
+
          return new NagiosStatusResponse(enabled);
       } catch (Exception e) {
          logger.error(e.getMessage(), e);
