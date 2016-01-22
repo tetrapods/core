@@ -80,20 +80,20 @@ public class TetrapodCluster extends Storage
          service.fail(e);
       }
       this.raft = raftEngine;
-      this.state = this.raft.getStateMachine();
+      this.state = this.raft.getStateMachine();     
    }
 
    public void init() throws IOException {
-      startListening();
-      loadProperties();
       // add the initial set of entities from the state, then listen for subsequent changes
       synchronized (this.raft) {
          for (EntityInfo info : state.entities.values()) {
-            //info.status |= Core.STATUS_GONE;
             service.registry.onAddEntityCommand(info);
          }
          this.state.addListener(this);
       }
+      
+      startListening();
+      loadProperties();
    }
 
    public void loadProperties() {
@@ -501,6 +501,11 @@ public class TetrapodCluster extends Storage
          entity.setSession(ctx.session);
          entity.build = req.build;
          entity.status = req.status;
+
+         if (isLeader()) {
+            service.registry.updateStatus(entity, entity.status, 0xFFFFFFFF);
+         }
+
          // subscribe them to our cluster and registry views
          logger.info("**************************** SYNC TO {} {}", ctx.session, req.entityId);
          service.subscribeToCluster(ctx.session, req.entityId);

@@ -122,7 +122,8 @@ public class EntityRegistry implements TetrapodContract.Registry.API {
             }
          }
       }
-      logger.warn("Could not find a random available service for contractId={} in list of {} services", contractId, list == null ? "null" : list.size());
+      logger.warn("Could not find a random available service for contractId={} in list of {} services", contractId,
+               list == null ? "null" : list.size());
       return null;
    }
 
@@ -170,19 +171,20 @@ public class EntityRegistry implements TetrapodContract.Registry.API {
          clearAllTopicsAndSubscriptions(e);
       } else {
          if (e.isTetrapod() && cluster.isValidPeer(e.entityId)) {
+            logger.warn("Setting {} as GONE (unregister context)", e); // TEMP DEBUG LOGGING
             setGone(e);
          } else {
             cluster.executeCommand(new DelEntityCommand(e.entityId), entry -> {});
          }
       }
    }
-
+      
    public void updateStatus(EntityInfo e, int status, int mask) {
-      if (e.isClient()) {
+      if (e.isService()) {
+         cluster.executeCommand(new ModEntityCommand(e.entityId, status, mask, e.build, e.version), null);
+      } else {
          e.status &= ~mask;
          e.status |= status;
-      } else {
-         cluster.executeCommand(new ModEntityCommand(e.entityId, status, mask, e.build, e.version), null);
       }
    }
 
