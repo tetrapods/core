@@ -117,6 +117,9 @@ public class WebHttpSession extends WebSession {
          ctx.channel().write(new PongWebSocketFrame(frame.content().retain()));
          return;
       }
+      if (frame instanceof PongWebSocketFrame) {
+         return;
+      }
       if (!(frame instanceof TextWebSocketFrame)) {
          throw new UnsupportedOperationException(String.format("%s frame types not supported", frame.getClass().getName()));
       }
