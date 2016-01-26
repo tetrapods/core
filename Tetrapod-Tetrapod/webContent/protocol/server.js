@@ -208,7 +208,7 @@ function TP_Server() {
       requestContexts[requestId] = {
          request: args,
          handler: requestHandler
-      }
+      };
 
       if (simulator != null) {
          var resp = simulator.request(request, args, toId);
@@ -330,9 +330,14 @@ function TP_Server() {
          if (!isKeepAlive(req._contractId, req._structId) || self.commsLogKeepAlives) {
             var str = logstamp() + ' [' + result._requestId + '] <- ' + nameOf(result) + ' ' + JSON.stringify(result, dropUnderscored);
             if (result.isError()) {
-               var err = getErrorStrings(result.errorCode);
-               err = err ? (" " + err + " ") : "";
-               console.warn(str + err);
+               if (result.errorCode != protocol.consts.Core.error.NOT_CONFIGURED) {
+                  var err = getErrorStrings(result.errorCode);
+                  err = err ? (" " + err + " ") : "";
+                  console.warn(str + err);
+               } else {
+                  str = logstamp() + ' [' + result._requestId + '] <- TETRAPOD.CONFIGURED_MSG ' + JSON.stringify(result, dropUnderscored) + ' Not Configured Message';
+                  console.debug(str);
+               }
             } else {
                console.debug(str);
             }

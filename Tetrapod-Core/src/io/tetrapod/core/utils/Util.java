@@ -134,6 +134,14 @@ public class Util {
       return list;
    }
 
+   public static Set<String> toSet(String[] array) {
+      Set<String> set = new HashSet<String>(array.length);
+      for (int i = 0; i < array.length; i++) {
+         set.add(array[i]);
+      }
+      return set;
+   }
+   
    public static byte[] readFile(File f) throws IOException {
       return Files.readAllBytes(f.toPath());
    }
