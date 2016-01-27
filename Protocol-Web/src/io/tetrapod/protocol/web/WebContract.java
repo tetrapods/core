@@ -12,21 +12,23 @@ import io.tetrapod.protocol.core.WebRoute;
 public class WebContract extends Contract {
    public static final int VERSION = 1;
    public static final String NAME = "Web";
-   public static final int CONTRACT_ID = 15;
+   public static final int CONTRACT_ID = 20;
    
    public static interface API extends APIHandler
-      
+      , KeepAliveRequest.Handler
+      , RegisterRequest.Handler
       {}
    
    public Structure[] getRequests() {
       return new Structure[] {
-         
+         new RegisterRequest(),
+         new KeepAliveRequest(),
       };
    }
    
    public Structure[] getResponses() {
       return new Structure[] {
-         
+         new RegisterResponse(),
       };
    }
    

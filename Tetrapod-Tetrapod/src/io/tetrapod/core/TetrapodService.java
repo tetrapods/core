@@ -912,8 +912,6 @@ public class TetrapodService extends DefaultService
 
       // for a client, we don't use raft to sync them, as they are a locally issued, non-replicated client
       if (info.type == Core.TYPE_CLIENT) {
-         // deliver them their entityId immediately to avoid some race conditions with the response
-         ctx.session.sendMessage(new EntityMessage(info.entityId), Core.UNADDRESSED);
          registry.onAddEntityCommand(info);
          return new RegisterResponse(info.entityId, getEntityId(), EntityToken.encode(info.entityId, info.reclaimToken));
       }
