@@ -498,9 +498,7 @@ abstract public class StreamDataSource implements DataSource {
       try {
          Method m = c.getMethod("from", int.class);
          for (int i = 0; i < len; i++) {
-            if (readRawByte() > 0) {
-               array[i] = (T) m.invoke(null, readVarInt());         
-            }
+            array[i] = (T) m.invoke(null, readVarInt());         
          }
       } catch (Exception e) {
          throw new IOException(e);
@@ -535,9 +533,11 @@ abstract public class StreamDataSource implements DataSource {
       temp.writeVarInt(array.length);
       for (int i = 0; i < array.length; i++) {
          if (array[i] == null) {
-            temp.writeRawByte(0);
+            // enums having nulls in them is supported by using a value here not in the enum, we can't use a marker
+            // byte as the structure adapter treats these as int arrays.  that means if we go service -> tetrapod -> client
+            // the marker is exposed to clients instead of null TODO make specific type descriptor for enum_int
+            temp.writeVarInt(-999);
          } else {
-            temp.writeRawByte(1);            
             temp.writeVarInt(array[i].getValue());
          }
       }
