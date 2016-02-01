@@ -21,9 +21,10 @@ public class RequestHeader extends Structure {
       defaults();
    }
 
-   public RequestHeader(int requestId, int fromId, int toId, byte fromType, byte timeout, int version, int contractId, int structId) {
+   public RequestHeader(int requestId, int fromParentId, int fromChildId, int toId, byte fromType, byte timeout, int version, int contractId, int structId) {
       this.requestId = requestId;
-      this.fromId = fromId;
+      this.fromParentId = fromParentId;
+      this.fromChildId = fromChildId;
       this.toId = toId;
       this.fromType = fromType;
       this.timeout = timeout;
@@ -33,7 +34,8 @@ public class RequestHeader extends Structure {
    }   
    
    public int requestId;
-   public int fromId;
+   public int fromParentId;
+   public int fromChildId;
    public int toId;
    public byte fromType;
    public byte timeout;
@@ -47,7 +49,8 @@ public class RequestHeader extends Structure {
 
    public final void defaults() {
       requestId = 0;
-      fromId = 0;
+      fromParentId = 0;
+      fromChildId = 0;
       toId = 0;
       fromType = 0;
       timeout = 0;
@@ -59,13 +62,14 @@ public class RequestHeader extends Structure {
    @Override
    public final void write(DataSource data) throws IOException {
       data.write(1, this.requestId);
-      data.write(2, this.fromId);
-      data.write(3, this.toId);
-      data.write(4, this.fromType);
-      data.write(5, this.timeout);
-      data.write(6, this.version);
-      data.write(7, this.contractId);
-      data.write(8, this.structId);
+      data.write(2, this.fromParentId);
+      data.write(3, this.fromChildId);
+      data.write(4, this.toId);
+      data.write(5, this.fromType);
+      data.write(6, this.timeout);
+      data.write(7, this.version);
+      data.write(8, this.contractId);
+      data.write(9, this.structId);
       data.writeEndTag();
    }
    
@@ -76,13 +80,14 @@ public class RequestHeader extends Structure {
          int tag = data.readTag();
          switch (tag) {
             case 1: this.requestId = data.read_int(tag); break;
-            case 2: this.fromId = data.read_int(tag); break;
-            case 3: this.toId = data.read_int(tag); break;
-            case 4: this.fromType = data.read_byte(tag); break;
-            case 5: this.timeout = data.read_byte(tag); break;
-            case 6: this.version = data.read_int(tag); break;
-            case 7: this.contractId = data.read_int(tag); break;
-            case 8: this.structId = data.read_int(tag); break;
+            case 2: this.fromParentId = data.read_int(tag); break;
+            case 3: this.fromChildId = data.read_int(tag); break;
+            case 4: this.toId = data.read_int(tag); break;
+            case 5: this.fromType = data.read_byte(tag); break;
+            case 6: this.timeout = data.read_byte(tag); break;
+            case 7: this.version = data.read_int(tag); break;
+            case 8: this.contractId = data.read_int(tag); break;
+            case 9: this.structId = data.read_int(tag); break;
             case Codec.END_TAG:
                return;
             default:
@@ -104,15 +109,16 @@ public class RequestHeader extends Structure {
       // Note do not use this tags in long term serializations (to disk or databases) as 
       // implementors are free to rename them however they wish.  A null means the field
       // is not to participate in web serialization (remaining at default)
-      String[] result = new String[8+1];
+      String[] result = new String[9+1];
       result[1] = "requestId";
-      result[2] = "fromId";
-      result[3] = "toId";
-      result[4] = "fromType";
-      result[5] = "timeout";
-      result[6] = "version";
-      result[7] = "contractId";
-      result[8] = "structId";
+      result[2] = "fromParentId";
+      result[3] = "fromChildId";
+      result[4] = "toId";
+      result[5] = "fromType";
+      result[6] = "timeout";
+      result[7] = "version";
+      result[8] = "contractId";
+      result[9] = "structId";
       return result;
    }
 
@@ -129,11 +135,12 @@ public class RequestHeader extends Structure {
       desc.types[1] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
       desc.types[2] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
       desc.types[3] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
-      desc.types[4] = new TypeDescriptor(TypeDescriptor.T_BYTE, 0, 0);
+      desc.types[4] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
       desc.types[5] = new TypeDescriptor(TypeDescriptor.T_BYTE, 0, 0);
-      desc.types[6] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
+      desc.types[6] = new TypeDescriptor(TypeDescriptor.T_BYTE, 0, 0);
       desc.types[7] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
       desc.types[8] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
+      desc.types[9] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
       return desc;
    }
 }

@@ -227,7 +227,8 @@ public class WebHttpSession extends WebSession {
          final RequestHeader header = WebContext.makeRequestHeader(this, null, params);
 
          header.fromType = Core.TYPE_CLIENT;
-         header.fromId = getTheirEntityId();
+         header.fromChildId = getTheirEntityId();
+         header.fromParentId = getMyEntityId();
          synchronized (contexts) {
             contexts.put(header.requestId, ctx);
          }
@@ -286,7 +287,8 @@ public class WebHttpSession extends WebSession {
          logger.debug("{} WEB API REQUEST: {} keepAlive = {}", this, req.getUri(), HttpHeaders.isKeepAlive(req));
          header.requestId = requestCounter.incrementAndGet();
          header.fromType = Core.TYPE_WEBAPI;
-         header.fromId = getMyEntityId();
+         header.fromParentId = getMyEntityId(); 
+         header.fromChildId = getTheirEntityId();
 
          final ResponseHandler handler = new ResponseHandler() {
             @Override
@@ -561,7 +563,7 @@ public class WebHttpSession extends WebSession {
       } else {
          // queue the message for long poller to retrieve later
          if (!commsLogIgnore(header.structId)) {
-            commsLog("%s  [M] ~] Message:%d %s (to %d)", this, header.structId, getNameFor(header), header.toId);
+            commsLog("%s  [M] ~] Message:%d %s (to %d)", this, header.structId, getNameFor(header), header.toChildId);
          }
          final LongPollQueue messages = LongPollQueue.getQueue(getTheirEntityId());
          // FIXME: Need a sensible way to protect against memory gobbling if this queue isn't cleared fast enough

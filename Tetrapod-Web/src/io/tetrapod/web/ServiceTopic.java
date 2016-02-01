@@ -1,5 +1,6 @@
-package io.tetrapod.core.registry;
+package io.tetrapod.web;
 
+import io.tetrapod.core.utils.SequentialWorkQueue;
 import io.tetrapod.protocol.core.Subscriber;
 
 import java.util.*;
@@ -9,13 +10,16 @@ import java.util.*;
  * subscribes to the topic multiple times, we increment a reference counter. A subscription is fully unsubscribed if the counter drops to
  * zero.
  */
-public class RegistryTopic {
+public class ServiceTopic {
+
    public final int                       topicId;
    public final int                       ownerId;
 
    private final Map<Integer, Subscriber> subscribers = new HashMap<>();
 
-   public RegistryTopic(int ownerId, int topicId) {
+   protected SequentialWorkQueue          queue       = new SequentialWorkQueue();
+
+   public ServiceTopic(int ownerId, int topicId) {
       this.topicId = topicId;
       this.ownerId = ownerId;
    }
@@ -25,11 +29,11 @@ public class RegistryTopic {
     * 
     * @return true if the client was not already subscribed
     */
-   public synchronized boolean subscribe(final EntityInfo publisher, final EntityInfo e, final boolean once) {
-      Subscriber sub = subscribers.get(e.entityId);
+   public synchronized boolean subscribe(final int entityId, final boolean once) {
+      Subscriber sub = subscribers.get(entityId);
       if (sub == null) {
-         sub = new Subscriber(e.entityId, 1);
-         subscribers.put(e.entityId, sub);
+         sub = new Subscriber(entityId, 1);
+         subscribers.put(entityId, sub);
       } else if (!once) {
          sub.counter++;
       }
@@ -72,5 +76,27 @@ public class RegistryTopic {
 
    public long key() {
       return ((long) (ownerId) << 32) | topicId;
+   }
+
+   public synchronized void queue(final Runnable task) {
+      queue.queue(task);
+   }
+
+   public synchronized boolean isQueueEmpty() {
+      return queue == null ? true : queue.isQueueEmpty();
+   }
+
+   /**
+    * Process the pending work queued for this entity.
+    * 
+    * @return true if any queued work was processed.
+    */
+   public boolean process() {
+      synchronized (this) {
+         if (queue == null) {
+            return false;
+         }
+      }
+      return queue.process();
    }
 }

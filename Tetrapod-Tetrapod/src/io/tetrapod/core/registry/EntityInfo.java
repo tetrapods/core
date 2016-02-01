@@ -17,34 +17,20 @@ import io.tetrapod.protocol.core.Entity;
  */
 public class EntityInfo extends Entity implements Comparable<EntityInfo> {
 
-   public static final Logger            logger      = LoggerFactory.getLogger(EntityInfo.class);
+   public static final Logger    logger      = LoggerFactory.getLogger(EntityInfo.class);
 
-   /**
-    * This entity's published topics
-    * 
-    * Maps topicId => Topic
-    */
-   protected Map<Integer, RegistryTopic> topics;
-
-   /**
-    * This entity's subscriptions
-    * 
-    * Maps topic key => Topic
-    */
-   protected Map<Long, RegistryTopic>    subscriptions;
-
-   protected Session                     session;
+   protected Session             session;
 
    /**
     * An alternate not-necessarily-unique ID. This can be set by a service and used as a broadcast target. This is only set on the tetrapod
     * that owns the entity.
     */
-   protected final AtomicInteger         alternateId = new AtomicInteger(0);
+   protected final AtomicInteger alternateId = new AtomicInteger(0);
 
-   protected Long                        lastContact;
-   protected Long                        goneSince;
+   protected Long                lastContact;
+   protected Long                goneSince;
 
-   protected SequentialWorkQueue         queue;
+   protected SequentialWorkQueue queue;
 
    public EntityInfo() {}
 
@@ -89,66 +75,6 @@ public class EntityInfo extends Entity implements Comparable<EntityInfo> {
 
    public boolean isGone() {
       return (status & Core.STATUS_GONE) != 0;
-   }
-
-   public synchronized RegistryTopic getTopic(int topicId) {
-      return topics == null ? null : topics.get(topicId);
-   }
-
-   public synchronized RegistryTopic publish(int topicId) {
-      final RegistryTopic topic = new RegistryTopic(entityId, topicId);
-      if (topics == null) {
-         topics = new HashMap<>();
-      }
-      topics.put(topic.topicId, topic);
-      //logger.debug("======= PUBLISHED {} : {}", this, topic);
-      return topic;
-   }
-
-   public synchronized RegistryTopic unpublish(int topicId) {
-      if (topics != null) {
-         return topics.remove(topicId);
-      } else {
-         return null;
-      }
-   }
-
-   public synchronized void subscribe(RegistryTopic topic) {
-      if (subscriptions == null) {
-         subscriptions = new HashMap<>();
-      }
-      subscriptions.put(topic.key(), topic);
-      //logger.debug("======= SUBSCRIBED {} to {}", this, topic);
-   }
-
-   public synchronized void unsubscribe(RegistryTopic topic) {
-      if (subscriptions != null) {
-         subscriptions.remove(topic.key());
-      }
-   }
-
-   public synchronized List<RegistryTopic> getTopics() {
-      final List<RegistryTopic> list = new ArrayList<RegistryTopic>();
-      if (topics != null) {
-         list.addAll(topics.values());
-      }
-      return list;
-   }
-
-   public synchronized List<RegistryTopic> getSubscriptions() {
-      final List<RegistryTopic> list = new ArrayList<RegistryTopic>();
-      if (subscriptions != null) {
-         list.addAll(subscriptions.values());
-      }
-      return list;
-   }
-
-   public synchronized int getNumTopics() {
-      return topics == null ? 0 : topics.size();
-   }
-
-   public synchronized int getNumSubscriptions() {
-      return subscriptions == null ? 0 : subscriptions.size();
    }
 
    @Override

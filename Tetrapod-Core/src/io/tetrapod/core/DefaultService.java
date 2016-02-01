@@ -348,7 +348,7 @@ public class DefaultService
       return ses;
    }
 
-   private void onConnectedToCluster() {
+   protected void onConnectedToCluster() {
       final Request req = new RegisterRequest(token, getContractId(), getShortName(), getStatus(), Util.getHostName(), buildName);
       sendDirectRequest(req).handle(res -> {
          if (res.isError()) {
@@ -568,7 +568,7 @@ public class DefaultService
 
             Runnable onResult = () -> {
                final long elapsed = System.nanoTime() - dispatchTime;
-               stats.recordRequest(header.fromId, req, elapsed, async.getErrorCode());
+               stats.recordRequest(header.fromParentId, req, elapsed, async.getErrorCode());
                context.stop();
                dispatcher.requestsHandledCounter.mark();
                if (Util.nanosToMillis(elapsed) > 1000) {
@@ -675,12 +675,12 @@ public class DefaultService
       return services.isServiceExistant(entityId);
    }
 
-   public void sendMessage(Message msg, int toEntityId) {
+   public void sendMessage(Message msg, int toEntityId, int childId) {
       if (serviceConnector != null
                && (serviceConnector.hasService(toEntityId) || (services != null && services.isServiceExistant(toEntityId)))) {
-         serviceConnector.sendMessage(msg, toEntityId);
+         serviceConnector.sendMessage(msg, toEntityId, childId);
       } else {
-         clusterClient.getSession().sendMessage(msg, toEntityId);
+         clusterClient.getSession().sendMessage(msg, toEntityId, childId);
       }
    }
 
@@ -697,12 +697,12 @@ public class DefaultService
       }
    }
 
-   public boolean sendPrivateMessage(Message msg, int toEntityId, int topicId) {
+   public boolean sendPrivateMessage(Message msg, int toEntityId, int toChildId, int topicId) {
       if (serviceConnector != null
                && (serviceConnector.hasService(toEntityId) || (services != null && services.isServiceExistant(toEntityId)))) {
-         return serviceConnector.sendMessage(msg, toEntityId);
+         return serviceConnector.sendMessage(msg, toEntityId, toChildId);
       } else {
-         clusterClient.getSession().sendMessage(msg, toEntityId);
+         clusterClient.getSession().sendMessage(msg, toEntityId, toChildId);
          return true;
       }
    }
@@ -714,16 +714,16 @@ public class DefaultService
    /**
     * Subscribe an entity to the given topic. If once is true, tetrapod won't subscribe them a second time
     */
-   public void subscribe(int topicId, int entityId, boolean once) {
-      publisher.subscribe(topicId, entityId, once);
+   public void subscribe(int topicId, int entityId, int childId, boolean once) {
+      publisher.subscribe(topicId, entityId, childId, once);
    }
 
-   public void subscribe(int topicId, int entityId) {
-      subscribe(topicId, entityId, false);
+   public void subscribe(int topicId, int entityId, int childId) {
+      subscribe(topicId, entityId, childId, false);
    }
 
-   public void unsubscribe(int topicId, int entityId) {
-      publisher.unsubscribe(topicId, entityId);
+   public void unsubscribe(int topicId, int entityId, int childId) {
+      publisher.unsubscribe(topicId, entityId, childId);
    }
 
    public void unpublish(int topicId) {
@@ -884,13 +884,13 @@ public class DefaultService
 
    @Override
    public Response requestServiceStatsSubscribe(ServiceStatsSubscribeRequest r, RequestContext ctx) {
-      stats.subscribe(ctx.header.fromId);
+      stats.subscribe(ctx.header.fromParentId, ctx.header.fromChildId);
       return Response.SUCCESS;
    }
 
    @Override
    public Response requestServiceStatsUnsubscribe(ServiceStatsUnsubscribeRequest r, RequestContext ctx) {
-      stats.unsubscribe(ctx.header.fromId);
+      stats.unsubscribe(ctx.header.fromParentId, ctx.header.fromChildId);
       return Response.SUCCESS;
    }
 

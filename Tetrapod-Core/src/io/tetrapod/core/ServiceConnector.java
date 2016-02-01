@@ -316,7 +316,8 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
          header.contractId = req.getContractId();
          header.structId = req.getStructId();
          header.toId = toEntityId;
-         header.fromId = service.getEntityId();
+         header.fromParentId = service.getEntityId();
+         header.fromChildId = 0;
          header.fromType = service.getEntityType();
          header.timeout = 30;
          return service.dispatchRequest(header, req, null);
@@ -325,13 +326,13 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
       return ses.sendRequest(req, toEntityId, (byte) 30);
    }
 
-   public boolean sendMessage(Message msg, int toEntityId) {
+   public boolean sendMessage(Message msg, int toEntityId, int toChildId) {
       Session ses = getSession(toEntityId);
       if (ses == null || !ses.isConnected()) {
          logger.warn("Could not send {} to {}. No Session", msg.dump(), toEntityId);
          return false; // BUFFER on fail?
       }
-      ses.sendMessage(msg, toEntityId);
+      ses.sendMessage(msg, toEntityId, toChildId);
       return true;
    }
 
@@ -377,7 +378,7 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
 
    @Override
    public Response requestDirectConnection(DirectConnectionRequest r, RequestContext ctx) {
-      final DirectServiceInfo s = getDirectServiceInfo(ctx.header.fromId);
+      final DirectServiceInfo s = getDirectServiceInfo(ctx.header.fromParentId);
       synchronized (s) {
          s.theirToken = r.token;
          return new DirectConnectionResponse(new ServerAddress(Util.getHostName(), server.getPort()), s.token);

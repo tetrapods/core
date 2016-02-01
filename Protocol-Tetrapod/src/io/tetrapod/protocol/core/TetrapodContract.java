@@ -265,7 +265,7 @@ public class TetrapodContract extends Contract {
        
    }
       
-   public static class Registry extends Contract {
+   public static class Pubsub extends Contract {
       public static interface API extends
          TopicPublishedMessage.Handler,
          TopicSubscribedMessage.Handler,

@@ -21,15 +21,17 @@ public class SubscriberNotFoundMessage extends Message {
       defaults();
    }
 
-   public SubscriberNotFoundMessage(int publisherId, int topicId, int entityId) {
+   public SubscriberNotFoundMessage(int publisherId, int topicId, int entityId, int childId) {
       this.publisherId = publisherId;
       this.topicId = topicId;
       this.entityId = entityId;
+      this.childId = childId;
    }   
    
    public int publisherId;
    public int topicId;
    public int entityId;
+   public int childId;
 
    public final Structure.Security getSecurity() {
       return Security.INTERNAL;
@@ -39,6 +41,7 @@ public class SubscriberNotFoundMessage extends Message {
       publisherId = 0;
       topicId = 0;
       entityId = 0;
+      childId = 0;
    }
    
    @Override
@@ -46,6 +49,7 @@ public class SubscriberNotFoundMessage extends Message {
       data.write(1, this.publisherId);
       data.write(2, this.topicId);
       data.write(3, this.entityId);
+      data.write(4, this.childId);
       data.writeEndTag();
    }
    
@@ -58,6 +62,7 @@ public class SubscriberNotFoundMessage extends Message {
             case 1: this.publisherId = data.read_int(tag); break;
             case 2: this.topicId = data.read_int(tag); break;
             case 3: this.entityId = data.read_int(tag); break;
+            case 4: this.childId = data.read_int(tag); break;
             case Codec.END_TAG:
                return;
             default:
@@ -91,10 +96,11 @@ public class SubscriberNotFoundMessage extends Message {
       // Note do not use this tags in long term serializations (to disk or databases) as 
       // implementors are free to rename them however they wish.  A null means the field
       // is not to participate in web serialization (remaining at default)
-      String[] result = new String[3+1];
+      String[] result = new String[4+1];
       result[1] = "publisherId";
       result[2] = "topicId";
       result[3] = "entityId";
+      result[4] = "childId";
       return result;
    }
    
@@ -111,6 +117,7 @@ public class SubscriberNotFoundMessage extends Message {
       desc.types[1] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
       desc.types[2] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
       desc.types[3] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
+      desc.types[4] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
       return desc;
    }
 }

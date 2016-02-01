@@ -175,26 +175,28 @@ internal response GetEntityInfo
 public message Entity 
    1: int entityId
   
-##### Registry Topic Messages #####  
+##### Pubsub Topic Messages #####  
 
-internal message Registry.TopicPublished
+internal message Pubsub.TopicPublished
    1: int publisherId
    2: int topicId
 
-internal message Registry.TopicUnpublished
+internal message Pubsub.TopicUnpublished
    1: int publisherId
    2: int topicId
 
-internal message Registry.TopicSubscribed
-   1: int publisherId
-   2: int topicId
-   3: int entityId
-   4: boolean once
-
-internal message Registry.TopicUnsubscribed
+internal message Pubsub.TopicSubscribed
    1: int publisherId
    2: int topicId
    3: int entityId
+   4: int childId
+   5: boolean once
+
+internal message Pubsub.TopicUnsubscribed
+   1: int publisherId
+   2: int topicId
+   3: int entityId
+   4: int childId
 
 #### Feedback messages
 
@@ -206,6 +208,7 @@ internal message SubscriberNotFound
    1: int publisherId
    2: int topicId
    3: int entityId
+   4: int childId
 
    
 ##### Building #############

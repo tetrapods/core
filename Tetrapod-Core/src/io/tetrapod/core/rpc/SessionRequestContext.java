@@ -60,7 +60,7 @@ public class SessionRequestContext extends RequestContext {
       Security senderSecurity = getSenderSecurity();
       if (senderSecurity == Security.PUBLIC) {
          // upgrade them to protected if their token is good
-         DecodedSession d = LoginAuthToken.decodeSessionToken(authToken, accountId, header.fromId);
+         DecodedSession d = LoginAuthToken.decodeSessionToken(authToken, accountId, header.fromParentId);
          if (d != null && d.timeLeft >= 0) {
             senderSecurity = Security.PROTECTED;
          } else {

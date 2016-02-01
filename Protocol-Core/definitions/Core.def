@@ -66,13 +66,14 @@ struct Core
  
 public struct RequestHeader
    1: int 	requestId
-   2: int 	fromId
-   3: int 	toId
-   4: byte 	fromType
-   5: byte 	timeout
-   6: int 	version
-   7: int   contractId
-   8: int 	structId
+   2: int 	fromParentId
+   3: int   fromChildId  
+   4: int 	toId
+   5: byte 	fromType
+   6: byte 	timeout
+   7: int 	version
+   8: int   contractId
+   9: int 	structId
    
 public struct ResponseHeader
    1: int requestId 
@@ -82,10 +83,11 @@ public struct ResponseHeader
 public struct MessageHeader
    1: int fromId
    2: int topicId
-   3: int toId
-   4: int contractId
-   5: int structId
-   6: byte flags       
+   3: int toParentId
+   4: int toChildId
+   5: int contractId
+   6: int structId
+   7: byte flags       
    
    const byte FLAGS_ALTERNATE = 1
    
