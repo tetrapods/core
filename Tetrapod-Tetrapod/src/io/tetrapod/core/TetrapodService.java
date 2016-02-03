@@ -261,7 +261,6 @@ public class TetrapodService extends DefaultService
          final EntityInfo e = registry.getEntity(ses.getTheirEntityId());
          if (e != null) {
             if (!e.isService() || cluster.isLeader()) {
-               logger.warn("Setting {} as GONE (onEntityDisconnected context)", e); // TEMP DEBUG LOGGING
                registry.setGone(e);
             }
          }
@@ -761,7 +760,6 @@ public class TetrapodService extends DefaultService
          if (e.getLastContact() != null) {
             if (now - e.getLastContact() > Util.ONE_MINUTE) {
                e.setLastContact(null);
-               logger.warn("Setting {} as GONE (healthCheckClient context)", e); // TEMP DEBUG LOGGING
                registry.setGone(e);
             }
          }
@@ -800,7 +798,7 @@ public class TetrapodService extends DefaultService
          // only the leader can change the registry status
          if (cluster.isLeader()) {
             if (ses == null || (ses != null && !ses.isConnected())) {
-               logger.warn("Setting {} as GONE (healthCheckService context)", e); // TEMP DEBUG LOGGING
+               logger.info("Setting {} as GONE (healthCheckService context)", e);
                registry.setGone(e);
             }
          }
