@@ -22,7 +22,6 @@ function TP_Server() {
    var closeHandlers = [];
    var securityErrorHandlers = [];
    var socket;
-   var simulator = null;
    var lastHeardFrom = 0;
    var lastSpokeTo = 0;
 
@@ -46,9 +45,6 @@ function TP_Server() {
    self.connected = false;
    self.polling = false;
    self.getRequestContract = getRequestContract;
-   self.setSimulator = function(s) {
-      simulator = s;
-   };
 
    for (var i = 0; i < arguments.length; i++) {
       var p = new arguments[i](self);
@@ -210,16 +206,6 @@ function TP_Server() {
          handler: requestHandler
       };
 
-      if (simulator != null) {
-         var resp = simulator.request(request, args, toId);
-         var i;
-         for (i = 0; i < resp.messages.length; i++) {
-            var mess = resp.messages[i];
-            handleMessage(mess);
-         }
-         handleResponse(resp.response);
-      }
-
       if (self.polling) {
          lastSpokeTo = Date.now();
          sendRPC(args);
@@ -268,14 +254,6 @@ function TP_Server() {
       if (!window.WebSocket || self.forceLongPolling) {
          // have to long poll to same-origin
          return startPollingSession(window.location.hostname, secure);
-      }
-
-      if (simulator != null) {
-         return {
-            listen: function(onOpen, onClose) {
-               onOpen();
-            }
-         }
       }
 
       // support for websocket spec 76 and make sure we're closed before unloading the page
@@ -520,6 +498,7 @@ function TP_Server() {
          data._token = self.entityInfo.token;
       }
       //console.debug("SEND RPC: " + JSON.stringify(data));
+      /* global $ */
       $.ajax({
          type: "POST",
          url: "/poll",
