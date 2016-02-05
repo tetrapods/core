@@ -24,6 +24,7 @@ define(function(require) {
       self.webroots = new WebRoots(app);
       self.properties = new Properties(app);
       self.users = new Users(app);
+      self.isProd = app.isProd;
 
       function clear() {
          self.hosts.clear();
