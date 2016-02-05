@@ -104,7 +104,7 @@ public class Topic {
    public synchronized void unsubscribe(int entityId) {
       Subscriber sub = subscribers.remove(entityId);
       if (sub != null) {
-         final Subscriber tetrapod = subscribers.get(entityId & PARENT_ID_MASK);
+         final Subscriber tetrapod = tetrapods.get(entityId & PARENT_ID_MASK);
          if (tetrapod != null) {
             publisher.sendMessage(new TopicUnsubscribedMessage(publisher.getEntityId(), topicId, entityId), tetrapod.entityId, topicId);
          }
@@ -112,26 +112,28 @@ public class Topic {
    }
 
    public synchronized void broadcast(Message msg) {
-      // broadcast message to all tetrapods with subscribers to this topic
-      for (TetrapodSubscriber tetrapod : tetrapods.values()) {
-         if (!tetrapod.init) {
-            if (publisher.sendMessage(new TopicPublishedMessage(publisher.getEntityId(), topicId), tetrapod.entityId, topicId)) {
-               logger.info("HAVE TO REPUBLISH TOPIC {} to Tetrapod-{}", topicId, tetrapod.entityId);
-               for (Subscriber sub : subscribers.values()) {
-                  final int parentId = sub.entityId & PARENT_ID_MASK;
-                  if (parentId == tetrapod.entityId) {
-                     publisher.sendMessage(new TopicSubscribedMessage(publisher.getEntityId(), topicId, sub.entityId, true),
-                              tetrapod.entityId, topicId);
-                     fireTopicSubscribedEvent(sub.entityId, true);
+      if (numSubscribers() > 0) {
+         // broadcast message to all tetrapods with subscribers to this topic
+         for (TetrapodSubscriber tetrapod : tetrapods.values()) {
+            if (!tetrapod.init) {
+               if (publisher.sendMessage(new TopicPublishedMessage(publisher.getEntityId(), topicId), tetrapod.entityId, topicId)) {
+                  logger.info("HAVE TO REPUBLISH TOPIC {} to Tetrapod-{}", topicId, tetrapod.entityId);
+                  for (Subscriber sub : subscribers.values()) {
+                     final int parentId = sub.entityId & PARENT_ID_MASK;
+                     if (parentId == tetrapod.entityId) {
+                        publisher.sendMessage(new TopicSubscribedMessage(publisher.getEntityId(), topicId, sub.entityId, true),
+                                 tetrapod.entityId, topicId);
+                        fireTopicSubscribedEvent(sub.entityId, true);
+                     }
                   }
+                  tetrapod.init = true;
+               } else {
+                  tetrapod.init = false;
                }
-               tetrapod.init = true;
-            } else {
+            }
+            if (!publisher.broadcastMessage(msg, tetrapod.entityId, topicId)) {
                tetrapod.init = false;
             }
-         }
-         if (!publisher.broadcastMessage(msg, tetrapod.entityId, topicId)) {
-            tetrapod.init = false;
          }
       }
    }
