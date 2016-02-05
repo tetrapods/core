@@ -641,15 +641,4 @@ public class JSONDataSource implements DataSource {
          return null;
       return json.getJSONArray(key);
    }
-
-   public static String toJSONString(Structure struct) throws IOException {
-      return toJSON(struct).toString();
-   }
-
-   public static JSONObject toJSON(Structure struct) throws IOException {
-      final JSONDataSource ds = new JSONDataSource();
-      struct.write(ds);
-      return ds.getJSON();
-   }
-
 }
