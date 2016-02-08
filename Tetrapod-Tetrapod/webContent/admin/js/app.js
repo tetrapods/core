@@ -32,7 +32,7 @@ define(["knockout", "jquery", "alert", "toolbox", "protocol/server", "protocol/t
          model = clusterModel;
          server.commsLog = true;
          self.authtoken = toolbox.getCookie("auth-token");
-         ko.applyBindings(model, $("#cluster-view")[0]);
+         ko.applyBindings(model, $("#app-wrapper")[0]);
          var array = $(".app-bind");
          for (var i = 0; i < array.length; i++) {
             ko.applyBindings(self, array[i]);
