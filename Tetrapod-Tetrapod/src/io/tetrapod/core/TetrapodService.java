@@ -1221,7 +1221,7 @@ public class TetrapodService extends DefaultService
 
    @Override
    public Response requestSetClusterProperty(SetClusterPropertyRequest r, RequestContext ctx) {
-      if (!adminAccounts.isValidAdminRequest(ctx, r.adminToken, Admin.RIGHTS_CLUSTER_WRITE)) {
+      if (!ctx.isFromService() && !adminAccounts.isValidAdminRequest(ctx, r.adminToken, Admin.RIGHTS_CLUSTER_WRITE)) {
          return new Error(ERROR_INVALID_RIGHTS);
       }
       cluster.setClusterProperty(r.property);
