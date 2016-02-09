@@ -55,6 +55,7 @@ public class CodeGen {
          services.add("phone");
          services.add("queue");
          services.add("notification");
+         services.add("contacts");
       }
       if (langs.isEmpty()) {
          System.out.println("using defaults for languages");
