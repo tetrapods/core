@@ -19,7 +19,7 @@ define(["knockout", "jquery", "alert", "toolbox", "protocol/server", "protocol/t
       self.email = ko.observable();
       self.accountId = ko.observable();
       self.alertResponse = alertResponse;
-      self.isProd = self.name == "chatbox.com" || self.name == "pgx.chatbox.com" || (self.name.indexOf(".prod.") > 0);
+      self.isProd = self.name == "orgs.chatbox.com" || self.name == "pgx.chatbox.com" || (self.name.indexOf(".prod.") > 0);
 
       function run(clusterModel) {
          ko.bindingHandlers.stopBinding = {
