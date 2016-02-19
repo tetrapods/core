@@ -37,6 +37,10 @@ public class Async {
       public void onResponse(Response res);
    }
 
+   public interface IResponseHandlerErr {
+      public void onResponse(Response res) throws Exception;
+   }
+
    public synchronized void handle(IResponseHandler handler) {
       handle(new ResponseHandler() {
          @Override
@@ -44,6 +48,10 @@ public class Async {
             handler.onResponse(res);
          }
       });
+   }
+
+   public synchronized void handle(AsyncSequence seq, IResponseHandlerErr handler) {
+      handle(seq.responseHandlerFor(handler));
    }
 
    public synchronized void handle(ResponseHandler handler) {
