@@ -57,7 +57,7 @@
    <logger name="io.tetrapod.core.ServiceConnector" level="WARN" /> 
    <logger name="io.tetrapod.core.registry.EntityRegistry" level="INFO" />
    <logger name="io.tetrapod.core.storage.TetrapodCluster" level="WARN" /> -->
-   
+   <logger name="com.rethinkdb.ast" level="INFO" />
    <logger name="io.netty" level="INFO" />
    <logger name="twitter4j" level="INFO" />  
 

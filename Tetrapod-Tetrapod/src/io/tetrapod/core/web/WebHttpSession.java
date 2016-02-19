@@ -41,10 +41,10 @@ public class WebHttpSession extends WebSession {
 
    public static final Timer                   requestTimes      = Metrics.timer(WebHttpSession.class, "requests", "time");
 
-   private static final int                    FLOOD_TIME_PERIOD = 2000;
-   private static final int                    FLOOD_WARN        = 200;
-   private static final int                    FLOOD_IGNORE      = 300;
-   private static final int                    FLOOD_KILL        = 400;
+   private static final int                    FLOOD_TIME_PERIOD = 4000;
+   private static final int                    FLOOD_WARN        = 400;
+   private static final int                    FLOOD_IGNORE      = 600;
+   private static final int                    FLOOD_KILL        = 800;
 
    private volatile long                       floodPeriod;
 
