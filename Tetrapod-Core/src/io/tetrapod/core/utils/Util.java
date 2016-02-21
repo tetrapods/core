@@ -1,8 +1,7 @@
 package io.tetrapod.core.utils;
 
 import java.io.*;
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
+import java.lang.reflect.*;
 import java.net.*;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
@@ -642,5 +641,22 @@ public class Util {
       }
       return val;
    }
+
+   /**
+    * Return a new array made by appending the given value.  The source array can be null
+    * as well which results in an array containing only the supplied value.
+    */
+   @SuppressWarnings("unchecked")
+   public static <T> T[] append(T[] array, T value) {
+      T[] res;
+      if (array == null) {
+         res = (T[])Array.newInstance(value.getClass(), 1);
+      } else {
+         res = Arrays.copyOf(array, array.length + 1);
+      }
+      res[res.length - 1] = value;
+      return res;
+   }
+
 
 }

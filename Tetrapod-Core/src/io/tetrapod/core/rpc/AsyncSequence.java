@@ -49,8 +49,9 @@ public class AsyncSequence {
     * runnables turn. This runnable will only be invoked on proceeds.
     */
    public synchronized AsyncSequence then(NormalRunnable r) {
+      boolean autoRun = ix == sequence.size();
       sequence.add(r);
-      if (ix == sequence.size()) {
+      if (autoRun) {
          ix--;
          proceed();
       }
