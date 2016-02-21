@@ -28,5 +28,9 @@ abstract public class RequestContext {
       assert res != Response.PENDING;
       handlePendingResponse(res, header.requestId);
    }
+   
+   public void respondWith(int errorCode) {
+      handlePendingResponse(Response.error(errorCode), header.requestId);
+   }
 
 }
