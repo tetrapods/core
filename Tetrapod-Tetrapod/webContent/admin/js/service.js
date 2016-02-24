@@ -126,6 +126,8 @@ define(["knockout", "jquery", "bootbox", "alert", "app", "chart", "modules/build
       });
 
       self.row_style = ko.pureComputed(function() {
+         if (self.isGone())
+            return "gone-row";
          if (self.isSelected())
             return "selected";
          if (self.isStopping())

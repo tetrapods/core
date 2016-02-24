@@ -87,7 +87,11 @@ meter {
 	color: white;
 }
 
-.gone {
+.gone-row {
+   opacity: 0.3;
+}
+
+.gone { 
 	background: red;
 	color: white;
 }
