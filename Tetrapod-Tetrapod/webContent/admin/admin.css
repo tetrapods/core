@@ -87,6 +87,14 @@ meter {
 	color: white;
 }
 
+.gone-row {
+	opacity: 0.3;
+}
+
+.gone-row .dropdown {
+	opacity: 1.0;
+}
+
 .gone {
 	background: red;
 	color: white;
@@ -338,7 +346,7 @@ meter {
 	display: table-cell;
 	padding-left: 15px;
 	padding-right: 15px;
-   border-radius: 4px;
+	border-radius: 4px;
 }
 
 .host-alarms:HOVER {

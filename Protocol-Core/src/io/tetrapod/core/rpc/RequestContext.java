@@ -23,5 +23,14 @@ abstract public class RequestContext {
    public boolean isFromService() {
       return header.fromType == Core.TYPE_SERVICE;
    }
+   
+   public void respondWith(Response res) {
+      assert res != Response.PENDING;
+      handlePendingResponse(res, header.requestId);
+   }
+   
+   public void respondWith(int errorCode) {
+      handlePendingResponse(Response.error(errorCode), header.requestId);
+   }
 
 }
