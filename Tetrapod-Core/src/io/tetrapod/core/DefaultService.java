@@ -81,7 +81,7 @@ public class DefaultService
       try {
          if (Util.getProperty("tetrapod.tls", true)) {
             sslContext = Util.createSSLContext(new FileInputStream(Util.getProperty("tetrapod.jks.file", "cfg/tetrapod.jks")),
-                     System.getProperty("tetrapod.jks.pwd", "4pod.dop4").toCharArray());
+                     Util.getProperty("tetrapod.jks.pwd", "4pod.dop4").toCharArray());
          }
       } catch (Exception e) {
          fail(e);
@@ -303,7 +303,7 @@ public class DefaultService
             logger.warn("{}", t);
          }
          System.exit(1);
-      } , "Hitman");
+      }, "Hitman");
       hitman.setDaemon(true);
       hitman.start();
    }
@@ -589,18 +589,18 @@ public class DefaultService
 
                final RequestContext ctx = fromSession != null ? new SessionRequestContext(header, fromSession)
                         : new InternalRequestContext(header, new ResponseHandler() {
-                  @Override
-                  public void onResponse(Response res) {
-                     try {
-                        assert res != Response.PENDING;
-                        onResult.run();
-                        async.setResponse(res);
-                     } catch (Throwable e) {
-                        logger.error(e.getMessage(), e);
-                        async.setResponse(new Error(ERROR_UNKNOWN));
-                     }
-                  }
-               });
+                           @Override
+                           public void onResponse(Response res) {
+                              try {
+                                 assert res != Response.PENDING;
+                                 onResult.run();
+                                 async.setResponse(res);
+                              } catch (Throwable e) {
+                                 logger.error(e.getMessage(), e);
+                                 async.setResponse(new Error(ERROR_UNKNOWN));
+                              }
+                           }
+                        });
                Response res = req.securityCheck(ctx);
                if (res == null) {
                   res = req.dispatch(svc, ctx);
@@ -622,7 +622,7 @@ public class DefaultService
                   onResult.run();
                }
             }
-         } , Session.DEFAULT_OVERLOAD_THRESHOLD)) {
+         }, Session.DEFAULT_OVERLOAD_THRESHOLD)) {
             // too many items queued, full-force back-pressure
             async.setResponse(new Error(ERROR_SERVICE_OVERLOADED));
             setStatus(Core.STATUS_OVERLOADED);
@@ -786,13 +786,13 @@ public class DefaultService
    @Override
    public void messageClusterPropertyAdded(ClusterPropertyAddedMessage m, MessageContext ctx) {
       logger.info("******** {}", m.dump());
-      System.setProperty(m.property.key, m.property.val);
+      Util.setProperty(m.property.key, m.property.val);
    }
 
    @Override
    public void messageClusterPropertyRemoved(ClusterPropertyRemovedMessage m, MessageContext ctx) {
       logger.info("******** {}", m.dump());
-      System.clearProperty(m.key);
+      Util.clearProperty(m.key);
    }
 
    @Override

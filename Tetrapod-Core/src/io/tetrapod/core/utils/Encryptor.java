@@ -48,15 +48,15 @@ public class Encryptor {
       String o_salt = Util.getProperty("encryption.salt", "thisissomesaltthisissomesaltthisissomesalt");
       String o_keySalt = Util.getProperty("encryption.keysalt", o_salt);
 
-      System.setProperty("encryption.key", key);
-      System.setProperty("encryption.salt", salt);
-      System.setProperty("encryption.keysalt", keySalt);
+      Util.setProperty("encryption.key", key);
+      Util.setProperty("encryption.salt", salt);
+      Util.setProperty("encryption.keysalt", keySalt);
 
       Encryptor e = new Encryptor();
 
-      System.setProperty("encryption.key", o_key);
-      System.setProperty("encryption.salt", o_salt);
-      System.setProperty("encryption.keysalt", o_keySalt);
+      Util.setProperty("encryption.key", o_key);
+      Util.setProperty("encryption.salt", o_salt);
+      Util.setProperty("encryption.keysalt", o_keySalt);
 
       return e;
    }

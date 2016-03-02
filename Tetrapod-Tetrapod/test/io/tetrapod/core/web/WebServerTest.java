@@ -14,7 +14,7 @@ public class WebServerTest {
    @Test
    public void serveFiles() throws Exception {
       final TetrapodService pod = new TetrapodService();
-      System.setProperty("sql.enabled", "false");
+      Util.setProperty("sql.enabled", "false");
       Map<String, String> opts = new HashMap<>();
       pod.startNetwork(null, null, opts);
       while ((pod.getStatus() & Core.STATUS_STARTING) != 0) {

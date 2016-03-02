@@ -35,6 +35,8 @@ public class Util {
 
    public static final int          MINS_IN_A_DAY = 24 * 60;
 
+   public static final Properties   properties    = new Properties();
+
    /**
     * Sleeps the current thread for a number of milliseconds, ignores interrupts.
     */
@@ -140,7 +142,7 @@ public class Util {
       }
       return set;
    }
-   
+
    public static byte[] readFile(File f) throws IOException {
       return Files.readAllBytes(f.toPath());
    }
@@ -149,20 +151,46 @@ public class Util {
       return new String(readFile(f), Charset.forName("UTF-8"));
    }
 
+   public static String getProperty(String key, String defaultValue) {
+      synchronized (properties) {
+         return properties.optString(key, defaultValue);
+      }
+   }
+
+   public static String getProperty(String key) {
+      synchronized (properties) {
+         return properties.optString(key, null);
+      }
+   }
+
+   public static void setProperty(String key, String val) {
+      synchronized (properties) {
+         properties.put(key, val);
+      }
+   }
+   
+
+   public static void clearProperty(String key) {
+      synchronized (properties) {
+         properties.remove(key);         
+      }
+   }
+
+
    public static int getProperty(String key, int defaultValue) {
-      final String val = System.getProperty(key);
+      final String val = getProperty(key);
       if (val == null) {
          return defaultValue;
       }
       return Integer.parseInt(val);
    }
 
-   public static String getProperty(String key, String defaultValue) {
-      return System.getProperty(key, defaultValue);
-   }
-
-   public static String getProperty(String key) {
-      return System.getProperty(key);
+   public static boolean getProperty(String key, boolean defaultValue) {
+      final String val = getProperty(key);
+      if (val == null) {
+         return defaultValue;
+      }
+      return Boolean.parseBoolean(val);
    }
 
    public static int runProcess(Callback<String> callback, String... commands) {
@@ -184,14 +212,6 @@ public class Util {
       } catch (Exception ex) {
          return -1;
       }
-   }
-
-   public static boolean getProperty(String key, boolean defaultValue) {
-      final String val = System.getProperty(key);
-      if (val == null) {
-         return defaultValue;
-      }
-      return Boolean.parseBoolean(val);
    }
 
    public static boolean isLocal() {
@@ -343,7 +363,7 @@ public class Util {
       return val == null || val.length() == 0;
    }
 
-   public final static String ALPHANUMERIC_CHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+   public final static String ALPHANUMERIC_CHARS           = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
    public final static String ALPHANUMERIC_CHARS_UPPERCASE = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
    public static String makeRandomAlphanumericStringUppercase(int len) {
@@ -643,20 +663,19 @@ public class Util {
    }
 
    /**
-    * Return a new array made by appending the given value.  The source array can be null
-    * as well which results in an array containing only the supplied value.
+    * Return a new array made by appending the given value. The source array can be null as well which results in an array containing only
+    * the supplied value.
     */
    @SuppressWarnings("unchecked")
    public static <T> T[] append(T[] array, T value) {
       T[] res;
       if (array == null) {
-         res = (T[])Array.newInstance(value.getClass(), 1);
+         res = (T[]) Array.newInstance(value.getClass(), 1);
       } else {
          res = Arrays.copyOf(array, array.length + 1);
       }
       res[res.length - 1] = value;
       return res;
    }
-
 
 }
