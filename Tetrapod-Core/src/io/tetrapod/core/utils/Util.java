@@ -168,14 +168,12 @@ public class Util {
          properties.put(key, val);
       }
    }
-   
 
    public static void clearProperty(String key) {
       synchronized (properties) {
-         properties.remove(key);         
+         properties.remove(key);
       }
    }
-
 
    public static int getProperty(String key, int defaultValue) {
       final String val = getProperty(key);
@@ -344,19 +342,27 @@ public class Util {
    }
 
    public static String readStream(InputStream is) throws IOException {
-      String str = null;
-      ByteArrayOutputStream baos = new ByteArrayOutputStream();
-      try {
+      try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
          int r;
          while ((r = is.read()) != -1) {
             baos.write(r);
          }
-         str = new String(baos.toByteArray());
+         return new String(baos.toByteArray());
       } finally {
-         baos.close();
          is.close();
       }
-      return str;
+   }
+
+   public static String readURL(URL url) throws IOException {
+      try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+         try (InputStream is = url.openStream()) {
+            int r;
+            while ((r = is.read()) != -1) {
+               baos.write(r);
+            }
+            return new String(baos.toByteArray());
+         }
+      }
    }
 
    public static boolean isEmpty(String val) {
