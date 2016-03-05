@@ -241,6 +241,7 @@ public class WebHttpSession extends WebSession {
             assert messages != null;
             // we grab a lock so only one poll request processes at a time
             longPoll(25, messages, startTime, ctx, req);
+            messages.setLastDrain(startTime);
          });
       }
    }
@@ -564,9 +565,11 @@ public class WebHttpSession extends WebSession {
             commsLog("%s  [M] ~] Message:%d %s (to %d)", this, header.structId, getNameFor(header), header.toId);
          }
          final LongPollQueue messages = LongPollQueue.getQueue(getTheirEntityId());
-         // FIXME: Need a sensible way to protect against memory gobbling if this queue isn't cleared fast enough
          messages.add(toJSON(header, payload, ENVELOPE_MESSAGE));
-         //logger.debug("{} Queued {} messages for longPoller {}", this, messages.size(), messages.getEntityId());
+         // FIXME: Need a sensible way to protect against memory gobbling if this queue isn't cleared fast enough
+         if (System.currentTimeMillis() - messages.getLastDrainTime() > Util.ONE_MINUTE * 5) {
+            logger.warn("{} Queued {} messages for absent longPoller {}", this, messages.size(), messages.getEntityId());            
+         }
       }
    }
 

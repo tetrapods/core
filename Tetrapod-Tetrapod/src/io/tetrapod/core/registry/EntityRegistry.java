@@ -165,6 +165,7 @@ public class EntityRegistry implements TetrapodContract.Registry.API {
 
    public void unregister(final EntityInfo e) {
       if (e.isClient()) {
+         logger.info("Unregistering client entity {}", e);
          entities.remove(e.entityId);
          // HACK -- would be 'cleaner' as a listener interface
          LongPollQueue.clearEntity(e.entityId);
@@ -314,6 +315,9 @@ public class EntityRegistry implements TetrapodContract.Registry.API {
                      e.status, e.getNumTopics(), e.getNumSubscriptions(), e.hasConnectedSession() ? "CONNECTED" : "*"));
       }
       logger.info("=================================================================================\n");
+      
+LongPollQueue.logStats();
+      
    }
 
    private List<EntityInfo> ensureServicesList(int contractId) {
