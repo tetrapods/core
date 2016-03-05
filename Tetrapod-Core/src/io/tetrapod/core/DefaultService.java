@@ -176,6 +176,10 @@ public class DefaultService
       return services.checkDependencies(dependencies);
    }
 
+   public boolean dependenciesReady(Set<Integer> deps) {
+      return services.checkDependencies(deps);
+   }
+
    private final Object checkDependenciesLock = new Object();
 
    public void checkDependencies() {
