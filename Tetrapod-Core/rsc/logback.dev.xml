@@ -47,6 +47,8 @@
       <appender-ref ref="COMMSFILEPID" />
    </logger>
    
+   
+   <logger name="com.rethinkdb.ast" level="INFO" />
    <logger name="io.netty" level="INFO" />
    <logger name="twitter4j" level="INFO" />
    <logger name="com.hazelcast" level="WARN" />
