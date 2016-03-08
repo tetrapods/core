@@ -32,30 +32,44 @@ import io.tetrapod.protocol.core.CoreContract;
  */
 public class AsyncSequence {
    private static final Logger logger = LoggerFactory.getLogger(AsyncSequence.class);
+   
+   public static final AsyncSequence EMPTY = new AsyncSequence();
 
    public static interface NormalRunnable {
-      void run() throws Exception;
+      void run(AsyncSequence seq) throws Exception;
    }
 
    public static interface ErrRunnable {
       void run(int err);
    }
+   
+   public static interface ErrRunnableWithSeq {
+      void run(AsyncSequence seq, int err);
+   }
 
-   private final ArrayList<Object> sequence = new ArrayList<>();
-   private int                     ix       = 0;
+   public static interface ErrRunnableWithException {
+      void run(AsyncSequence seq, int err, Exception ex);
+   }
+
+   /**
+    * Adds the runnable to the sequence, and immediately invokes it if it's the given
+    * runnables turn. This runnable will only be invoked on proceeds.
+    */
+   public static AsyncSequence with(NormalRunnable r) {
+      return new AsyncSequence().add(r);
+   }
+
+   private final ArrayList<Object> sequence       = new ArrayList<>();
+   private int                     ix             = 0;
+   private volatile int            errorCode      = 0;
+   private volatile Exception      errorException = null;
 
    /**
     * Adds the runnable to the sequence, and immediately invokes it if it's the given
     * runnables turn. This runnable will only be invoked on proceeds.
     */
    public synchronized AsyncSequence then(NormalRunnable r) {
-      boolean autoRun = ix == sequence.size();
-      sequence.add(r);
-      if (autoRun) {
-         ix--;
-         proceed();
-      }
-      return this;
+      return add(r);
    }
 
    /**
@@ -63,8 +77,43 @@ public class AsyncSequence {
     * the given runnables turn. This runnable will only be invoked on errors.
     */
    public synchronized AsyncSequence onError(ErrRunnable r) {
+      return add(r);
+   }
+
+   /**
+    * Adds an error handling runnable to the sequence, and immediately invokes it if it's
+    * the given runnables turn. This runnable will only be invoked on errors.
+    */
+   public synchronized AsyncSequence onError(ErrRunnableWithSeq r) {
+      return add(r);
+   }
+
+   /**
+    * Adds an error handling runnable to the sequence, and immediately invokes it if it's
+    * the given runnables turn. This runnable will only be invoked on errors.
+    */
+   public synchronized AsyncSequence onError(ErrRunnableWithException r) {
+      return add(r);
+   }
+   
+   private AsyncSequence add(Object r) {
       sequence.add(r);
+      if (ix == sequence.size() - 1)
+         autorun();
       return this;
+   }
+   
+   private void autorun() {
+      ix--;
+      if (errorCode > 0) {
+         int errCode = errorCode;
+         Exception errEx = errorException;
+         this.errorCode = 0;
+         this.errorException = null;
+         reject(errCode, errEx);
+      } else {
+         proceed();
+      }
    }
 
    /**
@@ -72,20 +121,57 @@ public class AsyncSequence {
     * error runnable to be invoked.
     */
    public synchronized void reject(int errorCode) {
+      reject(errorCode, null);
+   }
+
+   /**
+    * Rejects the sequence of runnables with the given error, will cause the next
+    * error runnable to be invoked.
+    */
+   public synchronized void reject(Exception e) {
+      if (e instanceof ErrorResponseException) {
+         reject(((ErrorResponseException)e).errorCode);
+      } else {
+         logger.error(e.getMessage(), e);
+         reject(CoreContract.ERROR_UNKNOWN, e);
+      }
+   }
+
+   /**
+    * Rejects the sequence of runnables with the given error & error code, will cause the next
+    * error runnable to be invoked.
+    */
+   public synchronized void reject(int errorCode, Exception errorException) {
       for (ix++; ix < sequence.size(); ix++) {
          Object obj = sequence.get(ix);
          if (obj instanceof ErrRunnable) {
             try {
                ((ErrRunnable) obj).run(errorCode);
-            } catch (ErrorResponseException e) {
-               reject(e.errorCode);
             } catch (Exception e) {
-               logger.error(e.getMessage(), e);
-               reject(CoreContract.ERROR_UNKNOWN);
+               reject(e);
+            }
+            return;
+         }
+         if (obj instanceof ErrRunnableWithSeq) {
+            try {
+               ((ErrRunnableWithSeq) obj).run(this, errorCode);
+            } catch (Exception e) {
+               reject(e);
+            }
+            return;
+         }
+         if (obj instanceof ErrRunnableWithException) {
+            try {
+               ((ErrRunnableWithException) obj).run(this, errorCode, errorException);
+            } catch (Exception e) {
+               reject(e);
             }
             return;
          }
       }
+      // saved in case we add a handler later
+      this.errorCode = errorCode;
+      this.errorException = errorException;
    }
 
    /**
@@ -97,12 +183,9 @@ public class AsyncSequence {
          Object obj = sequence.get(ix);
          if (obj instanceof NormalRunnable) {
             try {
-               ((NormalRunnable) obj).run();
-            } catch (ErrorResponseException e) {
-               reject(e.errorCode);
+               ((NormalRunnable) obj).run(this);
             } catch (Exception e) {
-               logger.error(e.getMessage(), e);
-               reject(CoreContract.ERROR_UNKNOWN);
+               reject(e);
             }
             return;
          }
@@ -126,11 +209,8 @@ public class AsyncSequence {
          if (res.isSuccess()) {
             try {
                handler.onResponse(res);
-            } catch (ErrorResponseException e) {
-               seq.reject(e.errorCode);
             } catch (Exception e) {
-               logger.error(e.getMessage(), e);
-               seq.reject(CoreContract.ERROR_UNKNOWN);
+               seq.reject(e);
             }
          } else {
             seq.reject(res.errorCode());

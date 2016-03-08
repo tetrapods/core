@@ -201,7 +201,7 @@ public class TetrapodStateMachine extends StorageStateMachine<TetrapodStateMachi
       // keep local caches
       props.put(prop.key, prop);
       try {
-         System.setProperty(prop.key, AESEncryptor.decryptSaltedAES(prop.val, secretKey));
+         Util.setProperty(prop.key, AESEncryptor.decryptSaltedAES(prop.val, secretKey));
       } catch (Exception e) {
          logger.error(e.getMessage(), e);
       }

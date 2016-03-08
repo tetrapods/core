@@ -8,7 +8,6 @@ import java.io.File;
 import java.io.IOException;
 import java.security.SecureRandom;
 import java.util.*;
-import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
@@ -27,6 +26,7 @@ import io.tetrapod.core.rpc.Error;
 import io.tetrapod.core.serialize.datasources.ByteBufDataSource;
 import io.tetrapod.core.storage.*;
 import io.tetrapod.core.utils.*;
+import io.tetrapod.core.utils.Properties;
 import io.tetrapod.core.web.*;
 import io.tetrapod.protocol.core.*;
 import io.tetrapod.protocol.raft.*;
@@ -64,7 +64,7 @@ public class TetrapodService extends DefaultService
 
    public TetrapodService() throws IOException {
       super(new TetrapodContract());
-
+      
       worker = new TetrapodWorker(this);
       addContracts(new StorageContract());
       addContracts(new RaftContract());
@@ -278,11 +278,11 @@ public class TetrapodService extends DefaultService
             Launcher.loadProperties(importFile, props);
          }
          for (Object key : props.keySet()) {
-            cluster.setClusterProperty(new ClusterProperty(key.toString(), false, props.getProperty(key.toString())));
+            cluster.setClusterProperty(new ClusterProperty(key.toString(), false, props.optString(key.toString(), null)));
          }
 
          // secrets
-         String secrets = props.getProperty("secrets");
+         String secrets = props.optString("secrets",null);
 
          props = new Properties();
 
@@ -297,7 +297,7 @@ public class TetrapodService extends DefaultService
          }
 
          for (Object key : props.keySet()) {
-            cluster.setClusterProperty(new ClusterProperty(key.toString(), true, props.getProperty(key.toString())));
+            cluster.setClusterProperty(new ClusterProperty(key.toString(), true, props.optString(key.toString(), null)));
          }
 
          // save property indicating we've imported
