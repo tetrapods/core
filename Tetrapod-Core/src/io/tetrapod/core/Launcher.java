@@ -40,6 +40,7 @@ public class Launcher {
          deleteLogs();
          serviceClass = args[0];
          String appName = serviceClass.substring(serviceClass.lastIndexOf('.') + 1);
+         System.setProperty("APPNAME", appName);
          Util.setProperty("APPNAME", appName);
          opts = getOpts(args, 1, defaultOpts(appName));
 
