@@ -33,7 +33,6 @@ public class Launcher {
       loadSecretProperties();
       // set for logback
       System.setProperty("devMode", Util.getProperty("devMode"));
-      System.setProperty("APPNAME", Util.getProperty("APPNAME"));
       
       try {
          if (args.length < 1)
@@ -41,6 +40,7 @@ public class Launcher {
          deleteLogs();
          serviceClass = args[0];
          String appName = serviceClass.substring(serviceClass.lastIndexOf('.') + 1);
+         System.setProperty("APPNAME", Util.getProperty("APPNAME"));
          Util.setProperty("APPNAME", appName);
          opts = getOpts(args, 1, defaultOpts(appName));
 
