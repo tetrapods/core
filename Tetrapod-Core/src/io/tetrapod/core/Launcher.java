@@ -33,6 +33,7 @@ public class Launcher {
       loadSecretProperties();
       // set for logback
       System.setProperty("devMode", Util.getProperty("devMode"));
+      System.setProperty("APPNAME", Util.getProperty("APPNAME"));
       
       try {
          if (args.length < 1)
