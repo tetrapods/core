@@ -191,9 +191,9 @@ public class DefaultService
                   if (startPaused) {
                      setStatus(Core.STATUS_PAUSED);
                   }
-
-                  AdminAuthToken.setSecret(Util.getProperty(AdminAuthToken.SHARED_SECRET_KEY));
-
+                  if (getEntityType() != Core.TYPE_TETRAPOD) {
+                     AdminAuthToken.setSecret(Util.getProperty(AdminAuthToken.SHARED_SECRET_KEY));
+                  }
                   onReadyToServe();
                } catch (Throwable t) {
                   fail(t);
