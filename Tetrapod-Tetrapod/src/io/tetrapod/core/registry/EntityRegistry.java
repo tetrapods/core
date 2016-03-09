@@ -308,14 +308,14 @@ public class EntityRegistry implements TetrapodContract.Registry.API {
    public synchronized void logStats(boolean includeClients) {
       List<EntityInfo> list = new ArrayList<>(getEntities());
       Collections.sort(list);
-      logger.info("========================== TETRAPOD CLUSTER REGISTRY ============================");
+      logger.info("======================================= TETRAPOD CLUSTER REGISTRY =========================================");
       for (EntityInfo e : list) {
          if (includeClients || !e.isClient())
-            logger.info(String.format(" 0x%08X 0x%08X %-15s status=%08X altId=%-10d topics=%d subscriptions=%d [%s]", e.parentId, e.entityId,
+            logger.info(String.format(" 0x%08X 0x%08X %-15s status=%08X   alt=%-9d topics=%-4d subs=%-4d [%s]", e.parentId, e.entityId,
                      e.name, e.status, e.alternateId.get(), e.getNumTopics(), e.getNumSubscriptions(),
                      e.hasConnectedSession() ? "CONNECTED" : "*"));
       }
-      logger.info("=================================================================================\n");
+      logger.info("===========================================================================================================\n");
       if (includeClients) {
          LongPollQueue.logStats();
       }
