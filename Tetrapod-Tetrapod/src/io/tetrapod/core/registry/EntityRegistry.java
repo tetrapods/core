@@ -179,7 +179,7 @@ public class EntityRegistry implements TetrapodContract.Registry.API {
          }
       }
    }
-      
+
    public void updateStatus(EntityInfo e, int status, int mask) {
       if (e.isService()) {
          cluster.executeCommand(new ModEntityCommand(e.entityId, status, mask, e.build, e.version), null);
@@ -311,13 +311,14 @@ public class EntityRegistry implements TetrapodContract.Registry.API {
       logger.info("========================== TETRAPOD CLUSTER REGISTRY ============================");
       for (EntityInfo e : list) {
          if (includeClients || !e.isClient())
-            logger.info(String.format(" 0x%08X 0x%08X %-15s status=%08X topics=%d subscriptions=%d [%s]", e.parentId, e.entityId, e.name,
-                     e.status, e.getNumTopics(), e.getNumSubscriptions(), e.hasConnectedSession() ? "CONNECTED" : "*"));
+            logger.info(String.format(" 0x%08X 0x%08X %-15s status=%08X altId=%-10d topics=%d subscriptions=%d [%s]", e.parentId, e.entityId,
+                     e.name, e.status, e.alternateId.get(), e.getNumTopics(), e.getNumSubscriptions(),
+                     e.hasConnectedSession() ? "CONNECTED" : "*"));
       }
       logger.info("=================================================================================\n");
-      
-LongPollQueue.logStats();
-      
+      if (includeClients) {
+         LongPollQueue.logStats();
+      }
    }
 
    private List<EntityInfo> ensureServicesList(int contractId) {

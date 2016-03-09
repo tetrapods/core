@@ -64,7 +64,7 @@ public class TetrapodService extends DefaultService
 
    public TetrapodService() throws IOException {
       super(new TetrapodContract());
-      
+
       worker = new TetrapodWorker(this);
       addContracts(new StorageContract());
       addContracts(new RaftContract());
@@ -282,7 +282,7 @@ public class TetrapodService extends DefaultService
          }
 
          // secrets
-         String secrets = props.optString("secrets",null);
+         String secrets = props.optString("secrets", null);
 
          props = new Properties();
 
@@ -947,7 +947,7 @@ public class TetrapodService extends DefaultService
          } else {
             responder.respondWith(Response.error(ERROR_UNKNOWN));
          }
-      } , true);
+      }, true);
       return Response.PENDING;
    }
 
@@ -1014,13 +1014,7 @@ public class TetrapodService extends DefaultService
 
    @Override
    public Response requestAddServiceInformation(AddServiceInformationRequest req, RequestContext ctx) {
-      //      for (WebRoute r : req.routes) {
-      //         webRoutes.setRoute(r.path, r.contractId, r.structId);
-      //         logger.debug("Setting Web route [{}] for {}", r.path, r.contractId);
-      //      }
-
       cluster.registerContract(req.info);
-
       return Response.SUCCESS;
    }
 
@@ -1032,7 +1026,7 @@ public class TetrapodService extends DefaultService
    @Override
    public Response requestLogRegistryStats(LogRegistryStatsRequest r, RequestContext ctx) {
       registry.logStats(true);
-      cluster.logRegistry();
+      //   cluster.logRegistry();
       return Response.SUCCESS;
    }
 
