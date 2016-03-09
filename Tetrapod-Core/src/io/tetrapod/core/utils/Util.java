@@ -142,7 +142,15 @@ public class Util {
       }
       return set;
    }
-
+   
+   public static Set<Integer> toSet(int[] array) {
+      Set<Integer> set = new HashSet<Integer>(array.length);
+      for (int i = 0; i < array.length; i++) {
+         set.add(array[i]);
+      }
+      return set;
+   }
+   
    public static byte[] readFile(File f) throws IOException {
       return Files.readAllBytes(f.toPath());
    }
