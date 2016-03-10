@@ -156,7 +156,7 @@ public class AsyncSequence {
     * Rejects the sequence of runnables with the given error & error code, will cause the
     * next error runnable to be invoked.
     */
-   private synchronized void doReject(int errorCode, Exception errorException) {
+   protected synchronized void doReject(int errorCode, Exception errorException) {
       for (ix++; ix < sequence.size(); ix++) {
          Object obj = sequence.get(ix);
          if (obj instanceof ErrRunnable) {
@@ -232,7 +232,7 @@ public class AsyncSequence {
                seq.doReject(e);
             }
          } else {
-            seq.reject(res.errorCode());
+            seq.doReject(res.errorCode(), null);
          }
       }
    }
