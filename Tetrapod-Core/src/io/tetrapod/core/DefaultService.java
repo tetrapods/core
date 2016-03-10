@@ -26,7 +26,7 @@ import io.tetrapod.core.utils.*;
 import io.tetrapod.protocol.core.*;
 
 public class DefaultService
-         implements Service, Fail.FailHandler, CoreContract.API, SessionFactory, EntityMessage.Handler, TetrapodContract.Cluster.API {
+      implements Service, Fail.FailHandler, CoreContract.API, SessionFactory, EntityMessage.Handler, TetrapodContract.Cluster.API {
 
    private static final Logger             logger          = LoggerFactory.getLogger(DefaultService.class);
 
@@ -81,7 +81,7 @@ public class DefaultService
       try {
          if (Util.getProperty("tetrapod.tls", true)) {
             sslContext = Util.createSSLContext(new FileInputStream(Util.getProperty("tetrapod.jks.file", "cfg/tetrapod.jks")),
-                     Util.getProperty("tetrapod.jks.pwd", "4pod.dop4").toCharArray());
+                  Util.getProperty("tetrapod.jks.pwd", "4pod.dop4").toCharArray());
          }
       } catch (Exception e) {
          fail(e);
@@ -121,7 +121,7 @@ public class DefaultService
     */
    private String getMetricsPrefix() {
       return Util.getProperty("devMode", "") + "." + Util.getProperty("product.name") + "." + Util.getHostName() + "."
-               + getClass().getSimpleName();
+            + getClass().getSimpleName();
    }
 
    public byte getEntityType() {
@@ -231,7 +231,7 @@ public class DefaultService
          try {
             if (dispatcher.workQueueSize.getCount() > 0) {
                logger.warn("DISPATCHER QUEUE SIZE = {} ({} threads busy)", dispatcher.workQueueSize.getCount(),
-                        dispatcher.getActiveThreads());
+                     dispatcher.getActiveThreads());
             }
 
             int status = 0;
@@ -249,8 +249,9 @@ public class DefaultService
    }
 
    /**
-    * Called before shutting down. Default implementation is to do nothing. Subclasses are expecting to close any resources they opened (for
-    * example database connections or file handles).
+    * Called before shutting down. Default implementation is to do nothing. Subclasses are
+    * expecting to close any resources they opened (for example database connections or
+    * file handles).
     * 
     * @param restarting true if we are shutting down in order to restart
     */
@@ -502,21 +503,24 @@ public class DefaultService
    }
 
    /**
-    * Get a URL for this service's icon to display in the admin apps. Subclasses should override this to customize
+    * Get a URL for this service's icon to display in the admin apps. Subclasses should
+    * override this to customize
     */
    public String getServiceIcon() {
       return "media/gear.gif";
    }
 
    /**
-    * Get any custom metadata for the service. Subclasses should override this to customize
+    * Get any custom metadata for the service. Subclasses should override this to
+    * customize
     */
    public String getServiceMetadata() {
       return null;
    }
 
    /**
-    * Get any custom admin commands for the service to show in command menu of admin app. Subclasses should override this to customize
+    * Get any custom admin commands for the service to show in command menu of admin app.
+    * Subclasses should override this to customize
     */
    public ServiceCommand[] getServiceCommands() {
       return null;
@@ -543,7 +547,8 @@ public class DefaultService
    }
 
    /**
-    * Services can override this to provide a service specific counter for display in the admin app
+    * Services can override this to provide a service specific counter for display in the
+    * admin app
     */
    public long getCounter() {
       return 0;
@@ -592,19 +597,19 @@ public class DefaultService
                }
 
                final RequestContext ctx = fromSession != null ? new SessionRequestContext(header, fromSession)
-                        : new InternalRequestContext(header, new ResponseHandler() {
-                           @Override
-                           public void onResponse(Response res) {
-                              try {
-                                 assert res != Response.PENDING;
-                                 onResult.run();
-                                 async.setResponse(res);
-                              } catch (Throwable e) {
-                                 logger.error(e.getMessage(), e);
-                                 async.setResponse(new Error(ERROR_UNKNOWN));
-                              }
+                     : new InternalRequestContext(header, new ResponseHandler() {
+                        @Override
+                        public void onResponse(Response res) {
+                           try {
+                              assert res != Response.PENDING;
+                              onResult.run();
+                              async.setResponse(res);
+                           } catch (Throwable e) {
+                              logger.error(e.getMessage(), e);
+                              async.setResponse(new Error(ERROR_UNKNOWN));
                            }
-                        });
+                        }
+                     });
                Response res = req.securityCheck(ctx);
                if (res == null) {
                   res = req.dispatch(svc, ctx);
@@ -657,6 +662,10 @@ public class DefaultService
       return clusterClient.getSession().sendPendingRequest(req, Core.DIRECT, (byte) 30, handler);
    }
 
+   public void sendRequest(Request req, Async.IResponseHandler handler) {
+      sendRequest(req).handle(handler);
+   }
+
    public Async sendRequest(Request req) {
       if (serviceConnector != null) {
          return serviceConnector.sendRequest(req, Core.UNADDRESSED);
@@ -681,7 +690,7 @@ public class DefaultService
 
    public void sendMessage(Message msg, int toEntityId) {
       if (serviceConnector != null
-               && (serviceConnector.hasService(toEntityId) || (services != null && services.isServiceExistant(toEntityId)))) {
+            && (serviceConnector.hasService(toEntityId) || (services != null && services.isServiceExistant(toEntityId)))) {
          serviceConnector.sendMessage(msg, toEntityId);
       } else {
          clusterClient.getSession().sendMessage(msg, toEntityId);
@@ -703,7 +712,7 @@ public class DefaultService
 
    public boolean sendPrivateMessage(Message msg, int toEntityId, int topicId) {
       if (serviceConnector != null
-               && (serviceConnector.hasService(toEntityId) || (services != null && services.isServiceExistant(toEntityId)))) {
+            && (serviceConnector.hasService(toEntityId) || (services != null && services.isServiceExistant(toEntityId)))) {
          return serviceConnector.sendMessage(msg, toEntityId);
       } else {
          clusterClient.getSession().sendMessage(msg, toEntityId);
@@ -716,7 +725,8 @@ public class DefaultService
    }
 
    /**
-    * Subscribe an entity to the given topic. If once is true, tetrapod won't subscribe them a second time
+    * Subscribe an entity to the given topic. If once is true, tetrapod won't subscribe
+    * them a second time
     */
    public void subscribe(int topicId, int entityId, boolean once) {
       publisher.subscribe(topicId, entityId, once);
@@ -909,8 +919,9 @@ public class DefaultService
    }
 
    protected String getStartLoggingMessage() {
-      return "*** Start Service ***" + "\n   *** Service name: " + Util.getProperty("APPNAME") + "\n   *** Options: " + Launcher.getAllOpts()
-               + "\n   *** VM Args: " + ManagementFactory.getRuntimeMXBean().getInputArguments().toString();
+      return "*** Start Service ***" + "\n   *** Service name: " + Util.getProperty("APPNAME") + "\n   *** Options: "
+            + Launcher.getAllOpts()
+            + "\n   *** VM Args: " + ManagementFactory.getRuntimeMXBean().getInputArguments().toString();
    }
 
    @Override

@@ -31,9 +31,9 @@ import io.tetrapod.protocol.core.CoreContract;
  * consistency barrier for the next call
  */
 public class AsyncSequence {
-   private static final Logger logger = LoggerFactory.getLogger(AsyncSequence.class);
-   
-   public static final AsyncSequence EMPTY = new AsyncSequence();
+   private static final Logger       logger = LoggerFactory.getLogger(AsyncSequence.class);
+
+   public static final AsyncSequence EMPTY  = new AsyncSequence();
 
    public static interface NormalRunnable {
       void run(AsyncSequence seq) throws Exception;
@@ -42,7 +42,7 @@ public class AsyncSequence {
    public static interface ErrRunnable {
       void run(int err);
    }
-   
+
    public static interface ErrRunnableWithSeq {
       void run(AsyncSequence seq, int err);
    }
@@ -95,14 +95,14 @@ public class AsyncSequence {
    public synchronized AsyncSequence onError(ErrRunnableWithException r) {
       return add(r);
    }
-   
+
    private AsyncSequence add(Object r) {
       sequence.add(r);
       if (ix == sequence.size() - 1)
          autorun();
       return this;
    }
-   
+
    private void autorun() {
       ix--;
       if (errorCode > 0) {
@@ -125,12 +125,12 @@ public class AsyncSequence {
    }
 
    /**
-    * Rejects the sequence of runnables with the given error, will cause the next
-    * error runnable to be invoked.
+    * Rejects the sequence of runnables with the given error, will cause the next error
+    * runnable to be invoked.
     */
    public synchronized void reject(Exception e) {
       if (e instanceof ErrorResponseException) {
-         reject(((ErrorResponseException)e).errorCode);
+         reject(((ErrorResponseException) e).errorCode);
       } else {
          logger.error(e.getMessage(), e);
          reject(CoreContract.ERROR_UNKNOWN, e);
@@ -138,8 +138,8 @@ public class AsyncSequence {
    }
 
    /**
-    * Rejects the sequence of runnables with the given error & error code, will cause the next
-    * error runnable to be invoked.
+    * Rejects the sequence of runnables with the given error & error code, will cause the
+    * next error runnable to be invoked.
     */
    public synchronized void reject(int errorCode, Exception errorException) {
       for (ix++; ix < sequence.size(); ix++) {
@@ -190,6 +190,10 @@ public class AsyncSequence {
             return;
          }
       }
+   }
+
+   public Response respondAsync() {
+      return Response.ASYNC;
    }
 
    public ResponseHandler responseHandlerFor(IResponseHandlerErr handler) {
