@@ -212,7 +212,7 @@ public class TetrapodStateMachine extends StorageStateMachine<TetrapodStateMachi
       removeItem(TETRAPOD_PREF_PREFIX + key);
       // remove from local caches
       props.remove(key);
-      System.clearProperty(key);
+      Util.clearProperty(key);
    }
 
    public void setWebRoot(final WebRootDef def, boolean write) {
