@@ -13,9 +13,10 @@ import io.netty.handler.codec.base64.*;
 import io.tetrapod.core.serialize.datasources.ByteBufDataSource;
 
 /**
- * Helper class used to authenticate messages. Works by taking a message (an array of ints) and computing an HMAC using a shared secret. The
- * token is then a subset(input vals) + HMAC. Upon decoding the subset of input vals are recovered, combined with any values known through
- * other means, and the HMAC is recomputed and checked for validity.
+ * Helper class used to authenticate messages. Works by taking a message (an array of
+ * ints) and computing an HMAC using a shared secret. The token is then a subset(input
+ * vals) + HMAC. Upon decoding the subset of input vals are recovered, combined with any
+ * values known through other means, and the HMAC is recomputed and checked for validity.
  * <p>
  * Note that the actual data encoded and decoded in the token is up to the caller.
  */
@@ -43,7 +44,7 @@ public class AuthToken {
          return null;
       }
    }
-   
+
    /**
     * Creates a MAC from a secret and some additional
     */
@@ -64,10 +65,10 @@ public class AuthToken {
       }
    }
 
-
    /**
-    * Sets the shared secret. Needs to be called before this class is used. Returns false if there is an error which would typically be Java
-    * not having strong crypto available.
+    * Sets the shared secret. Needs to be called before this class is used. Returns false
+    * if there is an error which would typically be Java not having strong crypto
+    * available.
     */
    public static boolean setSecret(byte[] secret) {
       try {
@@ -90,12 +91,15 @@ public class AuthToken {
    }
 
    /**
-    * Encodes a auth token. The numInToken parameter is a bandwidth micro-optimization. Say for example we wanted to make an auth token with
-    * one value being the entityId. We *could* encode the true value for the entity id in the token, but since it is already present in the
-    * header we could leave it out of the token and supply it at decode time.
+    * Encodes a auth token. The numInToken parameter is a bandwidth micro-optimization.
+    * Say for example we wanted to make an auth token with one value being the entityId.
+    * We *could* encode the true value for the entity id in the token, but since it is
+    * already present in the header we could leave it out of the token and supply it at
+    * decode time.
     * 
     * @param values the values which form the basis of the token
-    * @param numInToken the number of values which will need to be encoded inside the token
+    * @param numInToken the number of values which will need to be encoded inside the
+    *           token
     * @return the base64 encoded token
     */
    protected static String encode(Mac theMAC, int[] values, int numInToken) {
@@ -114,13 +118,21 @@ public class AuthToken {
          for (int i = 0; i < numInToken; i++) {
             bds.writeVarInt(values[i]);
          }
-         String plainText = Base64.encode(buf, Base64Dialect.URL_SAFE).toString(Charset.forName("UTF-8"));
-         ByteBuf macBuf = Unpooled.wrappedBuffer(mac);
+         ByteBuf encodedBuf = Base64.encode(buf, Base64Dialect.URL_SAFE);
          try {
-            String macText = Base64.encode(macBuf, Base64Dialect.URL_SAFE).toString(Charset.forName("UTF-8"));
-            return plainText + macText;
+            ByteBuf macBuf = Unpooled.wrappedBuffer(mac);
+            try {
+               ByteBuf encodedMacBuf = Base64.encode(macBuf, Base64Dialect.URL_SAFE);
+               try {
+                  return encodedBuf.toString(Charset.forName("UTF-8")) + encodedMacBuf.toString(Charset.forName("UTF-8"));
+               } finally {
+                  encodedMacBuf.release();
+               }
+            } finally {
+               macBuf.release();
+            }
          } finally {
-            macBuf.release();
+            encodedBuf.release();
          }
       } catch (IOException e) {
 
@@ -131,13 +143,15 @@ public class AuthToken {
    }
 
    /**
-    * Decodes an auth token. If there is at least one value in the token it assumes the first value is a timeout value and checks it versus
-    * the current time.
+    * Decodes an auth token. If there is at least one value in the token it assumes the
+    * first value is a timeout value and checks it versus the current time.
     * 
-    * @param values the values of the token, the first numInToken elements get filled in from the token
+    * @param values the values of the token, the first numInToken elements get filled in
+    *           from the token
     * @param numInToken the number of values to pull out from the token
     * @param token the base64 encoded token
-    * @return true if it decodes successfully, and as a side effect fills in values with any values which were encoded in token
+    * @return true if it decodes successfully, and as a side effect fills in values with
+    *         any values which were encoded in token
     */
    protected static boolean decode(Mac theMac, int[] values, int numInToken, String token) {
       ByteBuf tokenBuf = null;
