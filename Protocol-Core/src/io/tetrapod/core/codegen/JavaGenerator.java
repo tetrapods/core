@@ -214,13 +214,14 @@ class JavaGenerator implements LanguageGenerator {
          global.add("constants", comment + lines[0]);
       }
    }
-   
+
    private void addAllAsConstantValues(List<Field> fields, Template global) throws ParseException, IOException {
       for (Field f : fields) {
          Template sub = template("field.constants");
          sub.add("default", f.defaultValue);
          sub.add("name", f.name);
-         sub.add("javatype", f.type);
+         JavaTypes.Info info = JavaTypes.get(f.type);
+         sub.add("javatype", info != null ? info.base : f.type);
          String[] lines = sub.expand().split("\r\n|\n|\r");
          String comment = "";
          if (f.comment != null && !f.comment.trim().isEmpty()) {
@@ -229,7 +230,6 @@ class JavaGenerator implements LanguageGenerator {
          global.add("constants", comment + (f.isEnum() ? lines[4] : lines[0]));
       }
    }
-
 
    private Template getFieldTemplate(Field f) throws IOException {
       JavaTypes.Info info = JavaTypes.get(f.type);
@@ -261,7 +261,7 @@ class JavaGenerator implements LanguageGenerator {
       }
       if (f.isConstant()) {
          primTemplate = structTemplate = "field.constants";
-      } 
+      }
       switch (f.type) {
          case "int":
             descType = "TypeDescriptor.T_INT";
@@ -289,19 +289,25 @@ class JavaGenerator implements LanguageGenerator {
       }
       if (f.interiorType != null) {
          interiorType = f.interiorType.replace('.', '_');
-         interiorTypePrim = f.interiorType.substring(f.interiorType.indexOf('.')+1);
+         interiorTypePrim = f.interiorType.substring(f.interiorType.indexOf('.') + 1);
          if (f.collectionType == null) {
             primTemplate = structTemplate = f.interiorType.startsWith("flags") ? "field.flags" : "field.enum";
          } else {
-            primTemplate = structTemplate = f.interiorType.startsWith("flag") ? "field.array.flags" : "field.array.enum";            
+            primTemplate = structTemplate = f.interiorType.startsWith("flag") ? "field.array.flags" : "field.array.enum";
          }
          switch (interiorTypePrim) {
-            case "int": descType = "TypeDescriptor.T_INT"; break;
-            case "long": descType = "TypeDescriptor.T_LONG"; break;
-            case "string":descType = "TypeDescriptor.T_STRING"; break;
+            case "int":
+               descType = "TypeDescriptor.T_INT";
+               break;
+            case "long":
+               descType = "TypeDescriptor.T_LONG";
+               break;
+            case "string":
+               descType = "TypeDescriptor.T_STRING";
+               break;
          }
          descContractId = "0";
-         descStructId = "0";            
+         descStructId = "0";
       }
       Template t = template(info.isPrimitive ? primTemplate : structTemplate);
       t.add("tag", f.tag);
@@ -379,14 +385,14 @@ class JavaGenerator implements LanguageGenerator {
    private Template template(String name) throws IOException {
       return Template.get(getClass(), "/templates/javatemplates/" + name + ".template");
    }
-   
+
    private void generateFlags(ClassLike c) throws IOException, ParseException {
       Template t = template("flags");
       t.add("class", c.name);
       t.add("package", packageName);
       t.add("type", c.fields.get(0).type);
       addAllAsConstantValues(c.fields, t);
-      t.expandAndTrim(getFilename(c.name));   
+      t.expandAndTrim(getFilename(c.name));
    }
 
    private void generateEnum(ClassLike c) throws IOException, ParseException {
@@ -398,13 +404,15 @@ class JavaGenerator implements LanguageGenerator {
          t.add("type", "String");
          t.add("equals", ".equals");
          t.add("outRangeVal", "\"__out_of_range__\"");
-         for (Field f : c.fields) { f.defaultValue = "\"" + f.defaultValue + "\""; }
+         for (Field f : c.fields) {
+            f.defaultValue = "\"" + f.defaultValue + "\"";
+         }
       } else {
          t.add("type", type);
          t.add("equals", " == ");
          t.add("outRangeVal", "-99");
       }
       addAllAsConstantValues(c.fields, t);
-      t.expandAndTrim(getFilename(c.name));        
+      t.expandAndTrim(getFilename(c.name));
    }
 }
