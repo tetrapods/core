@@ -8,7 +8,6 @@ import java.io.File;
 import java.io.IOException;
 import java.security.SecureRandom;
 import java.util.*;
-import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
@@ -267,45 +266,6 @@ public class TetrapodService extends DefaultService
       }
    }
 
-   private void importClusterPropertiesIntoRaft() {
-      if (!Util.getProperty("props.init", false)) {
-         logger.warn("###### LOADING CLUSTER PROPERTIES INTO RAFT STATE MACHINE ######");
-
-         Properties props = new Properties();
-         Launcher.loadClusterProperties(props);
-         String importFile = Util.getProperty("raft.import.properties");
-         if (importFile != null) {
-            Launcher.loadProperties(importFile, props);
-         }
-         for (Object key : props.keySet()) {
-            cluster.setClusterProperty(new ClusterProperty(key.toString(), false, props.getProperty(key.toString())));
-         }
-
-         // secrets
-         String secrets = props.getProperty("secrets");
-
-         props = new Properties();
-
-         if (secrets != null) {
-            props.put("secrets", secrets);
-            Launcher.loadSecretProperties(props);
-         }
-
-         String importSecretsFile = Util.getProperty("raft.import.secret.properties");
-         if (importSecretsFile != null) {
-            Launcher.loadProperties(importSecretsFile, props);
-         }
-
-         for (Object key : props.keySet()) {
-            cluster.setClusterProperty(new ClusterProperty(key.toString(), true, props.getProperty(key.toString())));
-         }
-
-         // save property indicating we've imported
-         cluster.setClusterProperty(new ClusterProperty("props.init", false, "true"));
-         Util.sleep(1000);
-      }
-   }
-
    /**
     * As a Tetrapod service, we can't start serving as one until we've registered & fully sync'ed with the cluster, or self-registered if we
     * are the first one. We call this once this criteria has been reached
@@ -314,7 +274,6 @@ public class TetrapodService extends DefaultService
    public void onReadyToServe() {
       logger.info(" ***** READY TO SERVE ***** ");
       if (isStartingUp()) {
-         importClusterPropertiesIntoRaft();
          try {
             AdminAuthToken.setSecret(getSharedSecret());
             adminAccounts = new AdminAccounts(cluster);
@@ -947,7 +906,7 @@ public class TetrapodService extends DefaultService
          } else {
             responder.respondWith(Response.error(ERROR_UNKNOWN));
          }
-      } , true);
+      }, true);
       return Response.PENDING;
    }
 
@@ -1014,13 +973,7 @@ public class TetrapodService extends DefaultService
 
    @Override
    public Response requestAddServiceInformation(AddServiceInformationRequest req, RequestContext ctx) {
-      //      for (WebRoute r : req.routes) {
-      //         webRoutes.setRoute(r.path, r.contractId, r.structId);
-      //         logger.debug("Setting Web route [{}] for {}", r.path, r.contractId);
-      //      }
-
       cluster.registerContract(req.info);
-
       return Response.SUCCESS;
    }
 
@@ -1032,7 +985,7 @@ public class TetrapodService extends DefaultService
    @Override
    public Response requestLogRegistryStats(LogRegistryStatsRequest r, RequestContext ctx) {
       registry.logStats(true);
-      cluster.logRegistry();
+      //   cluster.logRegistry();
       return Response.SUCCESS;
    }
 

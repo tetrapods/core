@@ -1,8 +1,9 @@
 package io.tetrapod.core.rpc;
 
-import io.tetrapod.protocol.core.RequestHeader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import org.slf4j.*;
+import io.tetrapod.protocol.core.RequestHeader;
 
 abstract public class ResponseHandler {
    private static final Logger         logger = LoggerFactory.getLogger(ResponseHandler.class);

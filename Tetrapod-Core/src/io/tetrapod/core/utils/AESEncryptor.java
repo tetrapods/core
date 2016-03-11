@@ -20,7 +20,8 @@ public class AESEncryptor {
    public static final Charset UTF8   = Charset.forName("UTF-8");
 
    /**
-    * Requires: http://www.oracle.com/technetwork/java/javase/downloads/jce8-download-2133166.html
+    * Requires:
+    * http://www.oracle.com/technetwork/java/javase/downloads/jce8-download-2133166.html
     * 
     * On Mac OS X copy jars to (replacing jdk version with appropriate one):
     * /Library/Java/JavaVirtualMachines/jdk1.8.0_60.jdk/Contents/Home/jre/lib/security/
@@ -39,7 +40,12 @@ public class AESEncryptor {
    public static String encodeBase64(byte[] data, Base64Dialect dialect) {
       ByteBuf buf = Unpooled.wrappedBuffer(data);
       try {
-         return Base64.encode(buf, dialect).toString(UTF8);
+         ByteBuf encodedBuf = Base64.encode(buf, dialect);
+         try {
+            return encodedBuf.toString(UTF8);
+         } finally {
+            encodedBuf.release();
+         }
       } finally {
          buf.release();
       }

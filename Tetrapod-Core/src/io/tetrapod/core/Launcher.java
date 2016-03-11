@@ -1,10 +1,13 @@
 package io.tetrapod.core;
 
-import io.tetrapod.protocol.core.*;
-
 import java.io.*;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Map.Entry;
+
+import io.tetrapod.core.utils.Properties;
+import io.tetrapod.core.utils.Util;
+import io.tetrapod.protocol.core.ServerAddress;
 
 /**
  * Simple service launcher. Some day it might be nice to replace with a ClusterService that was able to launch things.
@@ -28,6 +31,9 @@ public class Launcher {
       loadProperties("cfg/service.properties");
       loadClusterProperties();
       loadSecretProperties();
+      // set for logback
+      System.setProperty("devMode", Util.getProperty("devMode"));
+      
       try {
          if (args.length < 1)
             usage();
@@ -35,10 +41,11 @@ public class Launcher {
          serviceClass = args[0];
          String appName = serviceClass.substring(serviceClass.lastIndexOf('.') + 1);
          System.setProperty("APPNAME", appName);
+         Util.setProperty("APPNAME", appName);
          opts = getOpts(args, 1, defaultOpts(appName));
 
-         String host = System.getProperty("service.host", "localhost");
-         int port = Integer.parseInt(System.getProperty("service.port", "9901"));
+         String host = Util.getProperty("service.host", "localhost");
+         int port = Integer.parseInt(Util.getProperty("service.port", "9901"));
          if (opts.get("host") != null) {
             host = opts.get("host");
          }
@@ -115,7 +122,7 @@ public class Launcher {
       map.put("host", null);
       map.put("port", null);
       map.put("token", null);
-      map.put("paused", System.getProperty(appName + ".start_paused", "false"));
+      map.put("paused", Util.getProperty(appName + ".start_paused", "false"));
       return map;
    }
 
@@ -156,7 +163,7 @@ public class Launcher {
    }
 
    public static boolean loadProperties(String fileName) {
-      return loadProperties(fileName, System.getProperties());
+      return loadProperties(fileName, Util.properties);
    }
 
    public static boolean loadProperties(String fileName, Properties properties) {
@@ -176,7 +183,7 @@ public class Launcher {
    }
 
    public static void loadClusterProperties() {
-      loadClusterProperties(System.getProperties());
+      loadClusterProperties(Util.properties);
    }
 
    public static void loadClusterProperties(Properties properties) {
@@ -195,11 +202,11 @@ public class Launcher {
    }
 
    public static void loadSecretProperties() {
-      loadSecretProperties(System.getProperties());
+      loadSecretProperties(Util.properties);
    }
 
    public static void loadSecretProperties(Properties properties) {
-      String file = properties.getProperty("secrets");
+      String file = properties.optString("secrets", null);
       if (file != null && !file.isEmpty())
          loadProperties(file, properties);
    }
@@ -220,7 +227,7 @@ public class Launcher {
    }
 
    private static void deleteLogs() {
-      if (System.getProperty("delete.logs", "false").equals("true")) {
+      if (Util.getProperty("delete.logs", "false").equals("true")) {
          File logs = new File(System.getProperty("delete.logs.location", "logs"));
          if (logs.isDirectory()) {
             for (File f : logs.listFiles()) {

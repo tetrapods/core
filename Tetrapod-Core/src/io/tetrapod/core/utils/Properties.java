@@ -1,6 +1,7 @@
 package io.tetrapod.core.utils;
 
 import java.io.*;
+import java.util.Set;
 
 public class Properties {
 
@@ -44,7 +45,15 @@ public class Properties {
    }
 
    public void put(String key, String value) {
-      props.put(key, value);
+      props.setProperty(key, value);
+   }
+
+   public void remove(String key) {
+      props.remove(key);
+   }
+
+   public Set<Object> keySet() { 
+      return props.keySet();
    }
 
 }

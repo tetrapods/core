@@ -2,6 +2,6 @@ public static final {{javatype}} {{name}} = {{default}};
 public static final {{javatype}} {{name}} = {{default}}; 
 public static final {{javatype}}[] {{name}} = {{default}}; 
 public static final List<{{javatype}}> {{name}} = {{default}};
-{{name}}({{default}}), 
+{{name}}(({{javatype}}){{default}}), 
 
 Lines are: 1) primitves 2) structs 3) array 4) list 5) enum

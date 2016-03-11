@@ -8,10 +8,10 @@ import java.util.*;
 
 @SuppressWarnings("unused")
 public enum RequestStatsSort implements Enum_int<RequestStatsSort> {
-   COUNT(1), 
-   TOTAL_TIME(2), 
-   AVERAGE_TIME(3), 
-   ERRORS(4), 
+   COUNT((int)1), 
+   TOTAL_TIME((int)2), 
+   AVERAGE_TIME((int)3), 
+   ERRORS((int)4), 
    ;
    
    public static RequestStatsSort from(int val) {
