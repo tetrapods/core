@@ -110,30 +110,45 @@ public class AsyncSequence {
          Exception errEx = errorException;
          this.errorCode = 0;
          this.errorException = null;
-         reject(errCode, errEx);
+         doReject(errCode, errEx);
       } else {
          proceed();
       }
    }
 
    /**
-    * Rejects the sequence of runnables with the given error code, will cause the next
-    * error runnable to be invoked.
+    * Halts the current thread, rejects the sequence of runnables with the given error
+    * code, and will cause the next error runnable to be invoked with this error code and
+    * null as the exception.
+    * <p>
+    * This is exactly equivalent to throwing an ErrorResponseException yourself, it's just
+    * sugar.
     */
    public synchronized void reject(int errorCode) {
-      reject(errorCode, null);
+      throw new ErrorResponseException(errorCode);
+   }
+
+   /**
+    * Halts current thread, rejects the sequence of runnables with the given exception,
+    * logs the exceptions, and will cause the next error runnable to be invoked, with
+    * ERROR_UNKNOWN as the error and the given exception.
+    * <p>
+    * This is exactly equivalent to throwing the exception yourself, it's just sugar.
+    */
+   public synchronized void reject(Exception e) throws Exception {
+      throw e;
    }
 
    /**
     * Rejects the sequence of runnables with the given error, will cause the next error
     * runnable to be invoked.
     */
-   public synchronized void reject(Exception e) {
+   protected synchronized void doReject(Exception e) {
       if (e instanceof ErrorResponseException) {
-         reject(((ErrorResponseException) e).errorCode);
+         doReject(((ErrorResponseException) e).errorCode, null);
       } else {
          logger.error(e.getMessage(), e);
-         reject(CoreContract.ERROR_UNKNOWN, e);
+         doReject(CoreContract.ERROR_UNKNOWN, e);
       }
    }
 
@@ -141,14 +156,14 @@ public class AsyncSequence {
     * Rejects the sequence of runnables with the given error & error code, will cause the
     * next error runnable to be invoked.
     */
-   public synchronized void reject(int errorCode, Exception errorException) {
+   protected synchronized void doReject(int errorCode, Exception errorException) {
       for (ix++; ix < sequence.size(); ix++) {
          Object obj = sequence.get(ix);
          if (obj instanceof ErrRunnable) {
             try {
                ((ErrRunnable) obj).run(errorCode);
             } catch (Exception e) {
-               reject(e);
+               doReject(e);
             }
             return;
          }
@@ -156,7 +171,7 @@ public class AsyncSequence {
             try {
                ((ErrRunnableWithSeq) obj).run(this, errorCode);
             } catch (Exception e) {
-               reject(e);
+               doReject(e);
             }
             return;
          }
@@ -164,7 +179,7 @@ public class AsyncSequence {
             try {
                ((ErrRunnableWithException) obj).run(this, errorCode, errorException);
             } catch (Exception e) {
-               reject(e);
+               doReject(e);
             }
             return;
          }
@@ -185,7 +200,7 @@ public class AsyncSequence {
             try {
                ((NormalRunnable) obj).run(this);
             } catch (Exception e) {
-               reject(e);
+               doReject(e);
             }
             return;
          }
@@ -214,10 +229,10 @@ public class AsyncSequence {
             try {
                handler.onResponse(res);
             } catch (Exception e) {
-               seq.reject(e);
+               seq.doReject(e);
             }
          } else {
-            seq.reject(res.errorCode());
+            seq.doReject(res.errorCode(), null);
          }
       }
    }
