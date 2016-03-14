@@ -120,23 +120,20 @@ public class AsyncSequence {
     * Halts the current thread, rejects the sequence of runnables with the given error
     * code, and will cause the next error runnable to be invoked with this error code and
     * null as the exception.
-    * <p>
-    * This is exactly equivalent to throwing an ErrorResponseException yourself, it's just
-    * sugar.
     */
-   public synchronized void reject(int errorCode) {
-      throw new ErrorResponseException(errorCode);
+   public synchronized void reject(int errorCode) throws AsyncSequenceRejectException {
+      doReject(errorCode, null);
+      throw new AsyncSequenceRejectException();
    }
 
    /**
     * Halts current thread, rejects the sequence of runnables with the given exception,
     * logs the exceptions, and will cause the next error runnable to be invoked, with
     * ERROR_UNKNOWN as the error and the given exception.
-    * <p>
-    * This is exactly equivalent to throwing the exception yourself, it's just sugar.
     */
-   public synchronized void reject(Exception e) throws Exception {
-      throw e;
+   public synchronized void reject(Exception e) {
+      doReject(e);
+      throw new AsyncSequenceRejectException();
    }
 
    /**
@@ -144,7 +141,10 @@ public class AsyncSequence {
     * runnable to be invoked.
     */
    protected synchronized void doReject(Exception e) {
-      if (e instanceof ErrorResponseException) {
+      if (e instanceof AsyncSequenceRejectException) {
+         // do nothing, reject handler has already been called
+         return;
+      } else if (e instanceof ErrorResponseException) {
          doReject(((ErrorResponseException) e).errorCode, null);
       } else {
          logger.error(e.getMessage(), e);
