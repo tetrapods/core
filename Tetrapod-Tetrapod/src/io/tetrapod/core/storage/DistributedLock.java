@@ -33,7 +33,7 @@ public class DistributedLock {
    }
 
    public boolean lock(long leaseForMillis, long waitForMillis) {
-      logger.info("LOCKING {} ...", key);
+      logger.info("LOCKING {} {} ...", key, uuid);
       final Value<Boolean> acquired = new Value<>(false);
       int attempts = 0;
       final long started = System.currentTimeMillis();
@@ -64,7 +64,7 @@ public class DistributedLock {
       logger.info("UNLOCKING {} ", key);
       raft.executeCommand(new UnlockCommand<TetrapodStateMachine>(key, uuid), e -> {
          if (e != null) {
-            logger.info("UNLOCKED {} ", key);
+            logger.info("UNLOCKED {} {} ", key, uuid);
          }
       });
    }
