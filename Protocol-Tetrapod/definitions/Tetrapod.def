@@ -348,6 +348,7 @@ internal request Lock
    1: string key
    2: string uuid
    3: int leaseMillis
+   4: int waitMillis
 
 internal response Lock
    1: string uuid

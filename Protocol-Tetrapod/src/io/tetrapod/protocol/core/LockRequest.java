@@ -21,15 +21,17 @@ public class LockRequest extends Request {
       defaults();
    }
 
-   public LockRequest(String key, String uuid, int leaseMillis) {
+   public LockRequest(String key, String uuid, int leaseMillis, int waitMillis) {
       this.key = key;
       this.uuid = uuid;
       this.leaseMillis = leaseMillis;
+      this.waitMillis = waitMillis;
    }   
 
    public String key;
    public String uuid;
    public int leaseMillis;
+   public int waitMillis;
 
    public final Structure.Security getSecurity() {
       return Security.INTERNAL;
@@ -39,6 +41,7 @@ public class LockRequest extends Request {
       key = null;
       uuid = null;
       leaseMillis = 0;
+      waitMillis = 0;
    }
    
    @Override
@@ -46,6 +49,7 @@ public class LockRequest extends Request {
       data.write(1, this.key);
       data.write(2, this.uuid);
       data.write(3, this.leaseMillis);
+      data.write(4, this.waitMillis);
       data.writeEndTag();
    }
    
@@ -58,6 +62,7 @@ public class LockRequest extends Request {
             case 1: this.key = data.read_string(tag); break;
             case 2: this.uuid = data.read_string(tag); break;
             case 3: this.leaseMillis = data.read_int(tag); break;
+            case 4: this.waitMillis = data.read_int(tag); break;
             case Codec.END_TAG:
                return;
             default:
@@ -90,10 +95,11 @@ public class LockRequest extends Request {
       // Note do not use this tags in long term serializations (to disk or databases) as 
       // implementors are free to rename them however they wish.  A null means the field
       // is not to participate in web serialization (remaining at default)
-      String[] result = new String[3+1];
+      String[] result = new String[4+1];
       result[1] = "key";
       result[2] = "uuid";
       result[3] = "leaseMillis";
+      result[4] = "waitMillis";
       return result;
    }
    
@@ -110,6 +116,7 @@ public class LockRequest extends Request {
       desc.types[1] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
       desc.types[2] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
       desc.types[3] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
+      desc.types[4] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
       return desc;
    }
 
