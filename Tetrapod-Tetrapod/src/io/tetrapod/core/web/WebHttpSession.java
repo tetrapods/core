@@ -235,7 +235,7 @@ public class WebHttpSession extends WebSession {
 
       } else {
          getDispatcher().dispatch(() -> {
-            final LongPollQueue messages = LongPollQueue.getQueue(getTheirEntityId());
+            final LongPollQueue messages = LongPollQueue.getQueue(getTheirEntityId(), true);
             final long startTime = System.currentTimeMillis();
             // long poll -- wait until there are messages in queue, and return them
             assert messages != null;
@@ -247,7 +247,7 @@ public class WebHttpSession extends WebSession {
    }
 
    private void longPoll(final int millis, final LongPollQueue messages, final long startTime, final ChannelHandlerContext ctx,
-            final FullHttpRequest req) {
+         final FullHttpRequest req) {
       getDispatcher().dispatch(millis, TimeUnit.MILLISECONDS, () -> {
          if (messages.tryLock()) {
             try {
@@ -304,8 +304,9 @@ public class WebHttpSession extends WebSession {
                if (body == null || body.trim().isEmpty()) {
                   body = req.getUri();
                }
-               final WebAPIRequest request = new WebAPIRequest(route.path, getHeaders(req).toString(), context.getRequestParams().toString(),
-                        body);
+               final WebAPIRequest request = new WebAPIRequest(route.path, getHeaders(req).toString(),
+                     context.getRequestParams().toString(),
+                     body);
                final int toEntityId = relayHandler.getAvailableService(header.contractId);
                if (toEntityId != 0) {
                   final Session ses = relayHandler.getRelaySession(toEntityId, header.contractId);
@@ -564,11 +565,13 @@ public class WebHttpSession extends WebSession {
          if (!commsLogIgnore(header.structId)) {
             commsLog("%s  [M] ~] Message:%d %s (to %d)", this, header.structId, getNameFor(header), header.toId);
          }
-         final LongPollQueue messages = LongPollQueue.getQueue(getTheirEntityId());
-         messages.add(toJSON(header, payload, ENVELOPE_MESSAGE));
-         // FIXME: Need a sensible way to protect against memory gobbling if this queue isn't cleared fast enough
-         if (System.currentTimeMillis() - messages.getLastDrainTime() > Util.ONE_MINUTE * 5) {
-            logger.warn("{} Queued {} messages for absent longPoller {}", this, messages.size(), messages.getEntityId());            
+         final LongPollQueue messages = LongPollQueue.getQueue(getTheirEntityId(), false);
+         if (messages != null) {
+            messages.add(toJSON(header, payload, ENVELOPE_MESSAGE));
+            // FIXME: Need a sensible way to protect against memory gobbling if this queue isn't cleared fast enough
+            if (System.currentTimeMillis() - messages.getLastDrainTime() > Util.ONE_MINUTE * 5) {
+               logger.warn("{} Queued {} messages for absent longPoller {}", this, messages.size(), messages.getEntityId());
+            }
          }
       }
    }

@@ -18,10 +18,10 @@ public class LongPollQueue extends LinkedBlockingQueue<JSONObject> {
 
    private static final Map<Integer, LongPollQueue> queues           = new HashMap<>();
 
-   public static LongPollQueue getQueue(int entityId) {
+   public static LongPollQueue getQueue(int entityId, boolean createIfMissing) {
       synchronized (queues) {
          LongPollQueue q = queues.get(entityId);
-         if (q == null) {
+         if (q == null && createIfMissing) {
             q = new LongPollQueue(entityId);
             queues.put(entityId, q);
          }
@@ -32,7 +32,7 @@ public class LongPollQueue extends LinkedBlockingQueue<JSONObject> {
    public static void clearEntity(Integer entityId) {
       synchronized (queues) {
          if (queues.remove(entityId) != null) {
-            logger.debug("Removing long poll queue for {}", entityId);
+            logger.info("Removing long poll queue for {}", entityId);
          }
       }
    }
