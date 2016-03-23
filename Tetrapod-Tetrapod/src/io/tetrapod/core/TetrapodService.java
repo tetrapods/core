@@ -8,7 +8,6 @@ import java.io.File;
 import java.io.IOException;
 import java.security.SecureRandom;
 import java.util.*;
-import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
@@ -33,11 +32,11 @@ import io.tetrapod.protocol.raft.*;
 import io.tetrapod.protocol.storage.*;
 
 /**
- * The tetrapod service is the core cluster service which handles message routing, cluster management, service discovery, and load balancing
- * of client connections
+ * The tetrapod service is the core cluster service which handles message routing, cluster
+ * management, service discovery, and load balancing of client connections
  */
 public class TetrapodService extends DefaultService
-         implements TetrapodContract.API, StorageContract.API, RaftContract.API, RelayHandler, EntityRegistry.RegistryBroadcaster {
+      implements TetrapodContract.API, StorageContract.API, RaftContract.API, RelayHandler, EntityRegistry.RegistryBroadcaster {
 
    public static final Logger        logger                = LoggerFactory.getLogger(TetrapodService.class);
 
@@ -136,8 +135,9 @@ public class TetrapodService extends DefaultService
    }
 
    /**
-    * We need to override the connectToCluster in superclass because that one tries to reconnect to other tetrapods, but the clusterClient
-    * connection is a special loopback connection in the tetrapod, so we should only ever reconnect back to ourselves.
+    * We need to override the connectToCluster in superclass because that one tries to
+    * reconnect to other tetrapods, but the clusterClient connection is a special loopback
+    * connection in the tetrapod, so we should only ever reconnect back to ourselves.
     */
    @Override
    protected void connectToCluster(int retrySeconds) {
@@ -161,7 +161,7 @@ public class TetrapodService extends DefaultService
       return new ServiceCommand[] {
             new ServiceCommand("Log Registry Stats", null, LogRegistryStatsRequest.CONTRACT_ID, LogRegistryStatsRequest.STRUCT_ID, false),
             new ServiceCommand("Close Client Connection", null, CloseClientConnectionRequest.CONTRACT_ID,
-                     CloseClientConnectionRequest.STRUCT_ID, true), };
+                  CloseClientConnectionRequest.STRUCT_ID, true), };
    }
 
    @Override
@@ -267,54 +267,15 @@ public class TetrapodService extends DefaultService
       }
    }
 
-   private void importClusterPropertiesIntoRaft() {
-      if (!Util.getProperty("props.init", false)) {
-         logger.warn("###### LOADING CLUSTER PROPERTIES INTO RAFT STATE MACHINE ######");
-
-         Properties props = new Properties();
-         Launcher.loadClusterProperties(props);
-         String importFile = Util.getProperty("raft.import.properties");
-         if (importFile != null) {
-            Launcher.loadProperties(importFile, props);
-         }
-         for (Object key : props.keySet()) {
-            cluster.setClusterProperty(new ClusterProperty(key.toString(), false, props.getProperty(key.toString())));
-         }
-
-         // secrets
-         String secrets = props.getProperty("secrets");
-
-         props = new Properties();
-
-         if (secrets != null) {
-            props.put("secrets", secrets);
-            Launcher.loadSecretProperties(props);
-         }
-
-         String importSecretsFile = Util.getProperty("raft.import.secret.properties");
-         if (importSecretsFile != null) {
-            Launcher.loadProperties(importSecretsFile, props);
-         }
-
-         for (Object key : props.keySet()) {
-            cluster.setClusterProperty(new ClusterProperty(key.toString(), true, props.getProperty(key.toString())));
-         }
-
-         // save property indicating we've imported
-         cluster.setClusterProperty(new ClusterProperty("props.init", false, "true"));
-         Util.sleep(1000);
-      }
-   }
-
    /**
-    * As a Tetrapod service, we can't start serving as one until we've registered & fully sync'ed with the cluster, or self-registered if we
-    * are the first one. We call this once this criteria has been reached
+    * As a Tetrapod service, we can't start serving as one until we've registered & fully
+    * sync'ed with the cluster, or self-registered if we are the first one. We call this
+    * once this criteria has been reached
     */
    @Override
    public void onReadyToServe() {
       logger.info(" ***** READY TO SERVE ***** ");
       if (isStartingUp()) {
-         importClusterPropertiesIntoRaft();
          try {
             AdminAuthToken.setSecret(getSharedSecret());
             adminAccounts = new AdminAccounts(cluster);
@@ -330,7 +291,7 @@ public class TetrapodService extends DefaultService
             // create secure port servers, if configured
             if (sslContext != null) {
                httpServer = new Server(getHTTPSPort(), new WebSessionFactory(cluster.getWebRootDirs(), "/sockets"), dispatcher, sslContext,
-                        false);
+                     false);
                servers.add((httpServer));
                httpServers.add(httpServer);
             }
@@ -564,7 +525,7 @@ public class TetrapodService extends DefaultService
    }
 
    private void broadcastTopic(final EntityInfo publisher, final Subscriber sub, final RegistryTopic topic, final MessageHeader header,
-            final ByteBuf buf) throws IOException {
+         final ByteBuf buf) throws IOException {
       final int ri = buf.readerIndex();
       final EntityInfo e = registry.getEntity(sub.entityId);
       if (e != null) {
@@ -942,12 +903,12 @@ public class TetrapodService extends DefaultService
                dispatcher.dispatch(() -> subscribeToCluster(ctx.session, entity.entityId));
             }
             responder.respondWith(
-                     new RegisterResponse(entity.entityId, getEntityId(), EntityToken.encode(entity.entityId, entity.reclaimToken)));
+                  new RegisterResponse(entity.entityId, getEntityId(), EntityToken.encode(entity.entityId, entity.reclaimToken)));
 
          } else {
             responder.respondWith(Response.error(ERROR_UNKNOWN));
          }
-      } , true);
+      }, true);
       return Response.PENDING;
    }
 
@@ -1014,13 +975,7 @@ public class TetrapodService extends DefaultService
 
    @Override
    public Response requestAddServiceInformation(AddServiceInformationRequest req, RequestContext ctx) {
-      //      for (WebRoute r : req.routes) {
-      //         webRoutes.setRoute(r.path, r.contractId, r.structId);
-      //         logger.debug("Setting Web route [{}] for {}", r.path, r.contractId);
-      //      }
-
       cluster.registerContract(req.info);
-
       return Response.SUCCESS;
    }
 
@@ -1032,7 +987,7 @@ public class TetrapodService extends DefaultService
    @Override
    public Response requestLogRegistryStats(LogRegistryStatsRequest r, RequestContext ctx) {
       registry.logStats(true);
-      cluster.logRegistry();
+      //   cluster.logRegistry();
       return Response.SUCCESS;
    }
 
@@ -1264,7 +1219,7 @@ public class TetrapodService extends DefaultService
    @Override
    public Response requestLock(LockRequest r, RequestContext ctx) {
       final DistributedLock lock = cluster.getLock(r.key);
-      if (lock.lock(r.leaseMillis, r.leaseMillis + 10000)) {
+      if (lock.lock(r.leaseMillis, r.waitMillis)) {
          return new LockResponse(lock.uuid);
       }
       return Response.error(ERROR_TIMEOUT);
@@ -1367,9 +1322,9 @@ public class TetrapodService extends DefaultService
    }
 
    private boolean setNagiosAlertsEnabled(String host, String nagiosDomain, String nagiosUser, String nagiosPwd, boolean enable)
-            throws IOException {
+         throws IOException {
       final String url = String.format("http://%s/nagios/cgi-bin/cmd.cgi?cmd_typ=%d&cmd_mod=2&ahas=true&host=%s&btnSubmit=Commit",
-               nagiosDomain, enable ? 28 : 29, host);
+            nagiosDomain, enable ? 28 : 29, host);
       String res = Util.httpGet(url, nagiosUser, nagiosPwd);
       //logger.info("{} =>\n{}", url, res);
       return res != null && res.contains("Your command request was successfully submitted to Nagios for processing");

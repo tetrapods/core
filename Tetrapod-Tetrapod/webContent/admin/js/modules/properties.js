@@ -8,16 +8,19 @@ define(function(require) {
       var self = this;
 
       self.props = ko.observableArray([]);
+      self.importText = ko.observable("");
+      self.importSecret = ko.observable(false);
 
       self.findProperty = findProperty;
       self.clear = clear;
       self.addClusterProperty = addClusterProperty;
+      self.showImportClusterPropertiesDialog = showImportClusterPropertiesDialog;
+      self.importClusterProperties = importClusterProperties;
 
       function clear() {
          self.props.removeAll();
       }
 
-      
       function findProperty(key) {
          var arr = self.props();
          for (var i = 0; i < arr.length; i++) {
@@ -31,17 +34,48 @@ define(function(require) {
       function addClusterProperty(secret) {
          Alert.prompt("Enter a new key name", function(key) {
             if (key && key.trim().length > 0) {
-               app.server.sendDirect("SetClusterProperty", {
-                  adminToken: app.sessionToken,
-                  property: {
-                     key: key,
-                     val: '',
-                     secret: secret
-                  }
-               }, app.alertResponse);
+               addProperty(key, '', secret)
             }
          });
       }
+
+      function addProperty(key, val, secret) {
+         app.server.sendDirect("SetClusterProperty", {
+            adminToken: app.sessionToken,
+            property: {
+               key: key,
+               val: val,
+               secret: secret
+            }
+         }, app.alertResponse);
+      }
+
+      function showImportClusterPropertiesDialog() {
+         self.importText("");
+         self.importSecret();
+         $('#importPropertiesModal').modal('show');
+      }
+
+      function importClusterProperties() {
+         console.log("importing cluster properties....");
+         var res = self.importText().split("\n");
+         var secret = self.importSecret();
+         for (var i = 0; i < res.length; i++) {
+            if (!res[i].startsWith("#")) {
+               var item = res[i].split("=");
+               if (item.length == 2 && item[0].length > 0) {
+                  //console.log("IMPORTING: " + item[0] + " = " + item[1]);
+                  if (item[0].startsWith("*") && item[0].length > 1) {
+                     addProperty(item[0].substring(1), item[1], true);
+                  } else {
+                     addProperty(item[0], item[1], secret);
+                  }
+               }
+            }
+         }
+         $('#importPropertiesModal').modal('hide');
+      }
+
       app.server.addMessageHandler("ClusterPropertyAdded", function(msg) {
          var p = self.findProperty(msg.property.key);
          if (p) {
@@ -62,8 +96,6 @@ define(function(require) {
       function compareProperties(a, b) {
          return a.key.localeCompare(b.key);
       }
-      
-      
 
       // Property Model
       function Property(prop) {
@@ -100,8 +132,7 @@ define(function(require) {
             });
          }
       }
-      
-      
+
    }
 
 });

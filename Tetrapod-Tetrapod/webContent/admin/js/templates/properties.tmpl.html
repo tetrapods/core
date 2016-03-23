@@ -1,9 +1,15 @@
 
 <button data-bind="click: function() { addClusterProperty(false); }">
-   <i class="fa fa-fw fa-plus"></i> Add Property
+   <i class="fa fa-fw fa-plus"></i>
+   Add Property
 </button>
 <button data-bind="click: function() { addClusterProperty(true); }">
-   <i class="fa fa-fw fa-lock"></i> Add Secret Property
+   <i class="fa fa-fw fa-lock"></i>
+   Add Secret Property
+</button>
+<button data-bind="click: function() { showImportClusterPropertiesDialog(); }">
+   <i class="fa fa-fw fa-cloud-upload"></i>
+   Import
 </button>
 
 <table id="props-table" class="table table-bordered table-condensed">
@@ -33,3 +39,28 @@
       </tr>
    </tbody>
 </table>
+
+
+<div id="importPropertiesModal" class="modal fade">
+   <div class="modal-dialog">
+      <div class="modal-content">
+         <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            <h4 class="modal-title" style="text-align: center">Import Cluster Properties</h4>
+         </div>
+         <div class="modal-body">
+            <small>Tip: for a mixed import, prefix secret properties with *</small>
+            <div align="center">
+               <textarea rows="8"  data-bind="value: importText" spellcheck="false" style="font-family: monospace; font-size: 10px; width:95%;" /></textarea>
+            </div>
+            <div style="text-align: right; padding: 5px; margin-right: 10px;">
+               <label><input type="checkbox" data-bind="checked: importSecret">&nbsp; Secret &nbsp;<i class="fa fa-fw fa-lock"></i></label>
+            </div>
+            <div class="modal-footer">
+               <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+               <button type="button" class="btn btn-primary" data-bind="click: function() { importClusterProperties(); }">Import</button>
+            </div>
+         </div>
+      </div>
+   </div>
+</div>

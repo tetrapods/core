@@ -112,8 +112,10 @@ public class WebContext {
          }
          String json = request.content().toString(charset);
          JSONObject data = new JSONObject(json);
-         for(String k : JSONObject.getNames(requestParameters)) {
-           data.put(k, requestParameters.get(k));
+         if(requestParameters.length() > 0) {
+            for(String k : JSONObject.getNames(requestParameters)) {
+              data.put(k, requestParameters.get(k));
+            }
          }
          requestParameters = data;
    } else {

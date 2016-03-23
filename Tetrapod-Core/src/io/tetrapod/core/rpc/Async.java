@@ -45,7 +45,11 @@ public class Async {
       handle(new ResponseHandler() {
          @Override
          public void onResponse(Response res) {
-            handler.onResponse(res);
+            try {
+               handler.onResponse(res);
+            } catch (AsyncSequenceRejectException e) {
+               // ignore, sequence reject handler called
+            }
          }
       });
    }

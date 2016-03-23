@@ -70,6 +70,13 @@ public class TetrapodCluster extends Storage
 
       this.server = new Server(service.getClusterPort(), this, service.getDispatcher());
 
+      // load any system properties passed in
+      for (Object key : System.getProperties().keySet()) {
+         if (key.toString().startsWith("raft.")) {
+            Util.setProperty(key.toString(), System.getProperty(key.toString()));
+         }
+      }
+
       this.cfg = new Config().setLogDir(new File(Util.getProperty("raft.logs", "logs/raft")))
                .setClusterName(Util.getProperty("raft.name", "Tetrapod"));
 
@@ -80,7 +87,7 @@ public class TetrapodCluster extends Storage
          service.fail(e);
       }
       this.raft = raftEngine;
-      this.state = this.raft.getStateMachine();     
+      this.state = this.raft.getStateMachine();
    }
 
    public void init() throws IOException {
@@ -91,7 +98,7 @@ public class TetrapodCluster extends Storage
          }
          this.state.addListener(this);
       }
-      
+
       startListening();
       loadProperties();
    }

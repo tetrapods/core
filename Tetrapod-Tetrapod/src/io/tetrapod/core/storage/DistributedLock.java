@@ -15,12 +15,12 @@ import io.tetrapod.raft.storage.UnlockCommand;
  */
 public class DistributedLock {
 
-   private static final Logger logger = LoggerFactory.getLogger(DistributedLock.class);
+   private static final Logger   logger = LoggerFactory.getLogger(DistributedLock.class);
 
    final private TetrapodCluster raft;
 
-   final public String key;
-   final public String uuid;
+   final public String           key;
+   final public String           uuid;
 
    public DistributedLock(String key, TetrapodCluster raft) {
       this(key, UUID.randomUUID().toString(), raft);
@@ -33,23 +33,23 @@ public class DistributedLock {
    }
 
    public boolean lock(long leaseForMillis, long waitForMillis) {
-      final long started = System.currentTimeMillis();
-      logger.info("LOCKING {} ...", key);
+      logger.info("LOCKING {} {} ...", key, uuid);
       final Value<Boolean> acquired = new Value<>(false);
       int attempts = 0;
+      final long started = System.currentTimeMillis();
       while (!acquired.get() && started + waitForMillis > System.currentTimeMillis()) {
          if (attempts++ > 0) {
-            Util.sleep(Math.min(1024, 8 * attempts * attempts));
+            Util.sleep(Math.max(1024, 8 * attempts * attempts));
          }
          raft.executeCommand(new LockCommand<TetrapodStateMachine>(key, uuid, leaseForMillis, System.currentTimeMillis()),
-                  e -> {
-                     if (e != null) {
-                        final LockCommand<TetrapodStateMachine> command = (LockCommand<TetrapodStateMachine>) e.getCommand();
-                        acquired.set(command.wasAcquired());
-                     } else {
-                        acquired.set(false);
-                     }
-                  });
+               e -> {
+                  if (e != null) {
+                     final LockCommand<TetrapodStateMachine> command = (LockCommand<TetrapodStateMachine>) e.getCommand();
+                     acquired.set(command.wasAcquired());
+                  } else {
+                     acquired.set(false);
+                  }
+               });
 
          acquired.waitForValue();
          logger.info("\tlock {} value {}", key, acquired.get());
@@ -62,9 +62,9 @@ public class DistributedLock {
 
    public void unlock() {
       logger.info("UNLOCKING {} ", key);
-      raft.executeCommand(new UnlockCommand<TetrapodStateMachine>(key), e -> {
+      raft.executeCommand(new UnlockCommand<TetrapodStateMachine>(key, uuid), e -> {
          if (e != null) {
-            logger.info("UNLOCKED {} ", key);
+            logger.info("UNLOCKED {} {} ", key, uuid);
          }
       });
    }
