@@ -310,7 +310,7 @@ public class WebHttpSession extends WebSession {
                final int toEntityId = relayHandler.getAvailableService(header.contractId);
                if (toEntityId != 0) {
                   final Session ses = relayHandler.getRelaySession(toEntityId, header.contractId);
-                  if (ses != null) {
+                  if (ses != null && ses.isConnected()) {
                      header.contractId = Core.CONTRACT_ID;
                      header.toId = toEntityId;
                      //logger.info("{} WEB API REQEUST ROUTING TO {} {}", this, toEntityId, header.dump());
@@ -437,7 +437,7 @@ public class WebHttpSession extends WebSession {
 
    private void relayRequest(RequestHeader header, Structure request, ResponseHandler handler) throws IOException {
       final Session ses = relayHandler.getRelaySession(header.toId, header.contractId);
-      if (ses != null) {
+      if (ses != null && ses.isConnected()) {
          relayRequest(header, request, ses, handler);
       } else {
          logger.debug("{} Could not find a relay session for {} {}", this, header.toId, header.contractId);
@@ -547,7 +547,7 @@ public class WebHttpSession extends WebSession {
 
    private Async relayRequest(RequestHeader header, Structure request) throws IOException {
       final Session ses = relayHandler.getRelaySession(header.toId, header.contractId);
-      if (ses != null) {
+      if (ses != null && ses.isConnected()) {
          return relayRequest(header, request, ses, null);
       } else {
          logger.debug("Could not find a relay session for {} {}", header.toId, header.contractId);

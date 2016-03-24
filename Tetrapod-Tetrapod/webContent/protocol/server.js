@@ -69,30 +69,43 @@ function TP_Server() {
 
    function registerErrors(errors) {
       if (errors) {
-         for (var constName in errors) {
-           if (errors.hasOwnProperty(constName)) {
-              protocol.errors[errors[constName]] = constName;
-           }
+         for ( var constName in errors) {
+            if (errors.hasOwnProperty(constName)) {
+               protocol.errors[errors[constName]] = constName;
+            }
          }
       }
    }
-   
+
    function registerFlag(f) {
       if (f) {
          f.on = function(val) {
             return {
                value: val,
                parent: f,
-               isAnySet: function() { return (toFlags(arguments, this.parent) & this.value) != 0; },
-               isSet: function() { var flags = toFlags(arguments, this.parent); return (flags & this.value) == flags; },
-               isNoneSet: function() { return (toFlags(arguments, this.parent) & this.value) == 0; },
-               set: function() { this.value = this.value | toFlags(arguments, this.parent); return this; },
-               unset: function() { this.value = this.value & ~toFlags(arguments, this.parent); return this; },
+               isAnySet: function() {
+                  return (toFlags(arguments, this.parent) & this.value) != 0;
+               },
+               isSet: function() {
+                  var flags = toFlags(arguments, this.parent);
+                  return (flags & this.value) == flags;
+               },
+               isNoneSet: function() {
+                  return (toFlags(arguments, this.parent) & this.value) == 0;
+               },
+               set: function() {
+                  this.value = this.value | toFlags(arguments, this.parent);
+                  return this;
+               },
+               unset: function() {
+                  this.value = this.value & ~toFlags(arguments, this.parent);
+                  return this;
+               },
             };
          };
       }
    }
-   
+
    function toFlags(args, parent) {
       var flags = 0;
       for (var i = 0; i < args.length; i++) {
@@ -132,7 +145,7 @@ function TP_Server() {
       }
       list.push(handler);
    }
-   
+
    function removeMessageHandler(message, handler) {
       var val = protocol.message[message];
       if (!val) {
@@ -174,7 +187,7 @@ function TP_Server() {
       }
       return sendRequest(val.contractId, val.structId, args, toId, requestHandler);
    }
-   
+
    function getRequestContract(request) {
       var val = protocol.request[request];
       if (!val) {
@@ -215,6 +228,14 @@ function TP_Server() {
             if (data.length < 1024 * 128) {
                lastSpokeTo = Date.now();
                socket.send(data);
+
+               // triggers a timeout in 35 seconds, if we don't get a response 
+               setTimeout(function() {
+                  if (requestContexts[requestId]) {
+                     handleResponse(makeError(requestId, 3)); // TIMEOUT
+                  }
+               }, 35000);
+
             } else {
                console.log("RPC too big : " + data.length + "\n" + data);
                handleResponse(makeError(requestId, 1)); // UNKNOWN 
@@ -273,13 +294,13 @@ function TP_Server() {
       return {
          listen: function(onOpen, onClose, onSecurity) {
             if (onOpen) {
-               openHandlers = [ onOpen ];
+               openHandlers = [onOpen];
             }
             if (onClose) {
-               closeHandlers = [ onClose ];
+               closeHandlers = [onClose];
             }
             if (onSecurity) {
-               securityErrorHandlers = [ onSecurity ];
+               securityErrorHandlers = [onSecurity];
             }
          }
       }
@@ -322,7 +343,7 @@ function TP_Server() {
          }
       }
    }
-   
+
    function getErrorStrings(code) {
       return protocol.errors[code];
    }
@@ -361,11 +382,11 @@ function TP_Server() {
       };
       var ctx = requestContexts[result._requestId];
       if (!ctx) {
-         console.warn("Got unpexpected result");
+         console.warn("Got unexpected result");
          console.warn(result);
          return;
       }
-      
+
       logResponse(result, ctx.request);
 
       if (ctx.handler) {
