@@ -98,7 +98,6 @@ public class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRe
       }
 
       String uri = request.getUri();
-      FileResult result = getURI(uri);
 
       if (uri.endsWith("admin")) {
          HttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, MOVED_PERMANENTLY);
@@ -108,6 +107,7 @@ public class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRe
          return;
       }
 
+      FileResult result = getURI(uri);
       if (result == null) {
          sendError(ctx, NOT_FOUND);
          return;

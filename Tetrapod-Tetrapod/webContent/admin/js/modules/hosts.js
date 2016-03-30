@@ -24,7 +24,8 @@ define(function(require) {
       self.clear = clear;
       self.onClearAllErrors = onClearAllErrors;
       self.deployBuilds = deployBuilds;
-      self.deployFully = deployFully;
+      self.toggleMaintenance = toggleMaintenance;
+      self.maintenanceMode = ko.observable(false);
 
       // Timer to update charts
       setInterval(function updateCharts() {
@@ -133,11 +134,15 @@ define(function(require) {
          Builder.load(tetrapods);
       }
 
-      // Does a full managed deployment to a new build, rolling and upgrading all services
-      function deployFully() {
-         // show a progress dialog?
-         console.log("Deploy Fully");
-
+      function toggleMaintenance() {
+         if(self.maintenanceMode()) {
+            var msg = app.cluster.properties.findProperty("maintenanceMode");
+            msg.deletePropNoConfirm();
+         } else {
+            Alert.prompt("Enter maintenance end time (PT)", function(time) {
+               app.cluster.properties.addProperty("maintenanceMode", time);
+            });
+         }
       }
 
       // Host Model
