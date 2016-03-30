@@ -67,6 +67,7 @@ public class WebHttpSession extends WebSession {
       ch.pipeline().addLast("aggregator", new HttpObjectAggregator(65536));
       ch.pipeline().addLast("api", this);
       ch.pipeline().addLast("deflater", new HttpContentCompressor(6));
+      ch.pipeline().addLast("maintenance", new MaintenanceHandler(roots.get("tetrapod")));
       ch.pipeline().addLast("files", new WebStaticFileHandler(roots));
    }
 
@@ -154,8 +155,6 @@ public class WebHttpSession extends WebSession {
          setDomain(req.headers().get("Host"));
          logger.debug("•••• Domain: {} ", getDomain());
       }
-
-      // req.getUri()
 
       // see if we need to start a web socket session
       if (wsLocation.equals(req.getUri())) {

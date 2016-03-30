@@ -473,3 +473,8 @@ meter {
 .rpc-selected-stat {
 	white-space: normal;
 }
+
+.btn-maint.active {
+	background-color: green;
+	color: white;
+}
