@@ -23,7 +23,7 @@ public class WebRoutes {
       if (r == null) {
          // special handling for @root paths
          for (WebRoute route : routes.values()) {
-            if (path.startsWith(route.path)) {
+            if (path.startsWith(route.path+"/")) {
                return route;
             }
          }
