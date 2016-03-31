@@ -88,6 +88,8 @@ define(function(require) {
 
          if (msg.property.key == "maintenanceMode") {
             app.cluster.hosts.maintenanceMode(true);
+         } else if (msg.property.key == "identity.valid.builds") {
+            app.cluster.hosts.currentClientBuild(msg.property.val);
          }
       });
 
