@@ -779,6 +779,16 @@ public class TetrapodService extends DefaultService
    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
    public void subscribeToCluster(Session ses, int toEntityId) {
+      if (ses.getTheirEntityType() == Core.TYPE_SERVICE) {
+         // also auto-subscribe to services topic
+         synchronized (servicesTopic) {
+            subscribe(servicesTopic.topicId, toEntityId);
+            for (EntityInfo e : registry.getServices()) {
+               e.queue(() -> ses.sendMessage(new ServiceAddedMessage(e), toEntityId));
+            }
+         }
+      }
+
       assert (clusterTopic != null);
       synchronized (cluster) {
          subscribe(clusterTopic.topicId, toEntityId);
@@ -942,11 +952,16 @@ public class TetrapodService extends DefaultService
       }
 
       synchronized (servicesTopic) {
-         subscribe(servicesTopic.topicId, ctx.header.fromId);
          // send all current services
+         //EntityInfo sub = registry.getEntity(ctx.header.fromId);
+         subscribe(servicesTopic.topicId, ctx.header.fromId);
          for (EntityInfo e : registry.getServices()) {
-            e.queue(() -> sendPrivateMessage(new ServiceAddedMessage(e), ctx.header.fromId, servicesTopic.topicId));
+            e.queue(() -> ctx.session.sendMessage(new ServiceAddedMessage(e), ctx.header.fromId));
          }
+         // send all current services
+         //         for (EntityInfo e : registry.getServices()) {
+         //            e.queue(() -> sendPrivateMessage(new ServiceAddedMessage(e), ctx.header.fromId, servicesTopic.topicId));
+         //         }
       }
       return Response.SUCCESS;
    }
