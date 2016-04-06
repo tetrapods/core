@@ -3,7 +3,8 @@
    <div style="float: right; display: inline-block;">
       <button class="btn btn-sm" data-bind="click: onClearAllErrors">Clear Errors</button>
       <button class="btn btn-sm" data-bind="click: deployBuilds">Deploy</button>
-      <button class="btn btn-sm" data-bind="click: deployFully">Upgrade</button>
+      <button class="btn btn-sm btn-maint" data-bind="click: toggleMaintenance, css: maintenanceMode() ? 'active' : ''">Maintenance</button>
+      <button class="btn btn-sm" data-bind="click: updateClientBuild">Web Build: <span data-bind="text: currentClientBuild"></span></button>
    </div>
 </div>
 

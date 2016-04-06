@@ -14,6 +14,7 @@ define(function(require) {
       self.findProperty = findProperty;
       self.clear = clear;
       self.addClusterProperty = addClusterProperty;
+      self.addProperty = addProperty;
       self.showImportClusterPropertiesDialog = showImportClusterPropertiesDialog;
       self.importClusterProperties = importClusterProperties;
 
@@ -84,12 +85,21 @@ define(function(require) {
          p = new Property(msg.property);
          self.props.push(p);
          self.props.sort(compareProperties);
+
+         if (msg.property.key == "maintenanceMode") {
+            app.cluster.hosts.maintenanceMode(true);
+         } else if (msg.property.key == "identity.valid.builds") {
+            app.cluster.hosts.currentClientBuild(msg.property.val);
+         }
       });
 
       app.server.addMessageHandler("ClusterPropertyRemoved", function(msg) {
          var p = self.findProperty(msg.key);
          if (p) {
             self.props.remove(p);
+         }
+         if (p.key == "maintenanceMode") {
+            app.cluster.hosts.maintenanceMode(false);
          }
       });
 
@@ -107,6 +117,7 @@ define(function(require) {
 
          self.editValue = editValue;
          self.deleteProp = deleteProp;
+         self.deletePropNoConfirm = deletePropNoConfirm;
 
          function editValue() {
             Alert.prompt("Enter a new value", function(val) {
@@ -123,12 +134,16 @@ define(function(require) {
             }, self.val());
          }
 
+         function deletePropNoConfirm() {
+            app.server.sendDirect("DelClusterProperty", {
+               adminToken: app.sessionToken,
+               key: self.key
+            }, app.alertResponse);
+         }
+
          function deleteProp() {
             Alert.confirm("Are you sure you want to delete '" + self.key + "'?", function() {
-               app.server.sendDirect("DelClusterProperty", {
-                  adminToken: app.sessionToken,
-                  key: self.key
-               }, app.alertResponse);
+               deletePropNoConfirm();
             });
          }
       }

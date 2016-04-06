@@ -489,7 +489,7 @@ public class Util {
     * Checks if Object o has ALL of the bits of the flag set
     * 
     * @param o object to check, must have a "flags" field
-    * @param flag to check for
+    * @param flags to check for
     * @return true if that flag is set
     */
    public static boolean hasAllFlags(Object o, int flags) {

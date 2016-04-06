@@ -24,7 +24,10 @@ define(function(require) {
       self.clear = clear;
       self.onClearAllErrors = onClearAllErrors;
       self.deployBuilds = deployBuilds;
-      self.deployFully = deployFully;
+      self.toggleMaintenance = toggleMaintenance;
+      self.maintenanceMode = ko.observable(false);
+      self.updateClientBuild = updateClientBuild;
+      self.currentClientBuild = ko.observable("");
 
       // Timer to update charts
       setInterval(function updateCharts() {
@@ -133,11 +136,43 @@ define(function(require) {
          Builder.load(tetrapods);
       }
 
-      // Does a full managed deployment to a new build, rolling and upgrading all services
-      function deployFully() {
-         // show a progress dialog?
-         console.log("Deploy Fully");
+      function toggleMaintenance() {
+         if(self.maintenanceMode()) {
+            var msg = app.cluster.properties.findProperty("maintenanceMode");
+            msg.deletePropNoConfirm();
+         } else {
+            Alert.prompt("Enter maintenance end time (PT)", function(time) {
+               if(time && time.length > 0) {
+                  app.cluster.properties.addProperty("maintenanceMode", time);
+               }
+            });
+         }
+      }
 
+      function updateClientBuild() {
+         Alert.prompt("Enter build number (prepend with = if you don't want the +)", function (build) {
+            if (build && build.length > 0) {
+               if (build.charAt(0) == '=') {
+                  build = build.substring(1);
+               } else if (build.indexOf('+') == -1) {
+                  build += '+';
+               }
+
+               var ar = self.services();
+               for (var i = 0; i < ar.length; i++) {
+                  if (ar[i].name == "Identity") {
+                     var ar2 = ar[i].commands();
+                     for (var j = 0; j < ar2.length; j++) {
+                        if (ar2[j].structId == 7823593) {
+                           app.server.sendRequest(ar2[j].contractId, ar2[j].structId, {
+                              data: build
+                           }, ar2.entityId);
+                        }
+                     }
+                  }
+               }
+            }
+         });
       }
 
       // Host Model
