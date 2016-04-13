@@ -167,8 +167,6 @@ public class DefaultService
    private void onServiceRegistered() {
       registerServiceInformation();
       stats.publishTopic();
-      logger.info("@@@@@ ServicesSubscribeRequest");
-      sendDirectRequest(new ServicesSubscribeRequest()).handle(res -> logger.info("{}", res.dump()));
       resetServiceConnector(true);
    }
 
