@@ -1198,6 +1198,20 @@ public class JSONObject {
     }
 
     /**
+     * Copies all of the key/value pair from the specified JSONObject to this JSONObject. If this JSONObject
+     * already contains any of the keys in the specified JSONObject, they will be replaced by the values in the
+     * sepcified object.
+     * @param value
+     * @return this
+     */
+    public JSONObject putAll(JSONObject value) {
+       for(String key : JSONObject.getNames(value)) {
+         put(key, value.get(key));
+       }
+       return this;
+    }
+    
+    /**
      * Produce a string in double quotes with backslash sequences in all the
      * right places. A backslash will be inserted within </, producing <\/,
      * allowing JSON text to be delivered in HTML. In JSON text, a string cannot
