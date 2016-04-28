@@ -437,7 +437,12 @@ public class WebHttpSession extends WebSession {
    private void relayRequest(RequestHeader header, Structure request, ResponseHandler handler) throws IOException {
       final Session ses = relayHandler.getRelaySession(header.toId, header.contractId);
       if (ses != null && ses.isConnected()) {
-         relayRequest(header, request, ses, handler);
+         if (ses.getTheirEntityType() == Core.TYPE_CLIENT) {
+            logger.warn("Something's trying to send a request to a client {}", header.dump());
+            sendResponse(new Error(ERROR_SECURITY), header.requestId);
+         } else {
+            relayRequest(header, request, ses, handler);
+         }
       } else {
          logger.debug("{} Could not find a relay session for {} {}", this, header.toId, header.contractId);
          handler.fireResponse(new Error(ERROR_SERVICE_UNAVAILABLE), header);
@@ -547,12 +552,17 @@ public class WebHttpSession extends WebSession {
    private Async relayRequest(RequestHeader header, Structure request) throws IOException {
       final Session ses = relayHandler.getRelaySession(header.toId, header.contractId);
       if (ses != null && ses.isConnected()) {
-         return relayRequest(header, request, ses, null);
+         if (ses.getTheirEntityType() == Core.TYPE_CLIENT) {
+            logger.warn("Something's trying to send a request to a client {}", header.dump());
+            sendResponse(new Error(ERROR_SECURITY), header.requestId);
+         } else {
+            return relayRequest(header, request, ses, null);
+         }
       } else {
          logger.debug("Could not find a relay session for {} {}", header.toId, header.contractId);
          sendResponse(new Error(ERROR_SERVICE_UNAVAILABLE), header.requestId);
-         return null;
       }
+      return null;
    }
 
    @Override
