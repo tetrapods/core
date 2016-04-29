@@ -159,7 +159,7 @@ public class WireSession extends Session {
 
             if (!commsLogIgnore(header.structId))
                logged = commsLog("%s  [%d] <- Response.%s", this, header.requestId,
-                        res == null ? StructureFactory.getName(header.contractId, header.structId) : res.dump());
+                     res == null ? StructureFactory.getName(header.contractId, header.structId) : res.dump());
             relayResponse(header, async, in);
          }
       } else {
@@ -197,12 +197,13 @@ public class WireSession extends Session {
       } else if (relayHandler != null) {
          if (!commsLogIgnore(header.structId))
             logged = commsLog("%s  [%d] <- Request.%s (from %d)", this, header.requestId,
-                     StructureFactory.getName(header.contractId, header.structId), header.fromId);
+                  StructureFactory.getName(header.contractId, header.structId), header.fromId);
          relayRequest(header, in);
       }
 
       if (!logged && !commsLogIgnore(header.structId))
-         logged = commsLog("%s  [%d] <- Request.%s (from %d)", this, header.requestId, StructureFactory.getName(header.contractId, header.structId), header.fromId);
+         logged = commsLog("%s  [%d] <- Request.%s (from %d)", this, header.requestId,
+               StructureFactory.getName(header.contractId, header.structId), header.fromId);
    }
 
    private void readMessage(ByteBuf in, boolean isBroadcast) throws IOException {
@@ -220,7 +221,7 @@ public class WireSession extends Session {
       }
 
       boolean selfDispatch = header.topicId == 0 && ((header.flags & MessageHeader.FLAGS_ALTERNATE) == 0)
-               && (header.toId == myId || header.toId == UNADDRESSED);
+            && (header.toId == myId || header.toId == UNADDRESSED);
       if (relayHandler == null || selfDispatch) {
          dispatchMessage(header, reader);
       } else {
@@ -334,7 +335,12 @@ public class WireSession extends Session {
    private void relayRequest(final RequestHeader header, final ByteBuf in) {
       final Session ses = relayHandler.getRelaySession(header.toId, header.contractId);
       if (ses != null) {
-         ses.sendRelayedRequest(header, in, this, null);
+         if (ses.getTheirEntityType() == Core.TYPE_CLIENT) {
+            logger.warn("Something's trying to send a request to a client {}", header.dump());
+            sendResponse(new Error(ERROR_SECURITY), header.requestId);
+         } else {
+            ses.sendRelayedRequest(header, in, this, null);
+         }
       } else {
          logger.warn("Could not find a relay session for {}", header.dump());
          sendResponse(new Error(ERROR_SERVICE_UNAVAILABLE), header.requestId);

@@ -460,6 +460,10 @@ public class Util {
       return coll == null ? true : coll.isEmpty();
    }
 
+   public static boolean isEmpty(Map<?,?> map) {
+      return map == null ? true : map.isEmpty();
+   }
+
    public static boolean equals(String a, String b) {
       return (a == null) ? (b == null) : a.equals(b);
    }
