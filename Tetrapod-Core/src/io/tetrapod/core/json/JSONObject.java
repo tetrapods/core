@@ -32,14 +32,7 @@ import java.io.Writer;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.Collection;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Locale;
-import java.util.Map;
-import java.util.ResourceBundle;
-import java.util.Set;
+import java.util.*;
 
 /**
  * A JSONObject is an unordered collection of name/value pairs. Its external
@@ -1198,6 +1191,20 @@ public class JSONObject {
     }
 
     /**
+     * Copies all of the key/value pair from the specified JSONObject to this JSONObject. If this JSONObject
+     * already contains any of the keys in the specified JSONObject, they will be replaced by the values in the
+     * sepcified object.
+     * @param value
+     * @return this
+     */
+    public JSONObject putAll(JSONObject value) {
+       for(String key : JSONObject.getNames(value)) {
+         put(key, value.get(key));
+       }
+       return this;
+    }
+    
+    /**
      * Produce a string in double quotes with backslash sequences in all the
      * right places. A backslash will be inserted within </, producing <\/,
      * allowing JSON text to be delivered in HTML. In JSON text, a string cannot
@@ -1763,5 +1770,29 @@ public class JSONObject {
       return getJSONObject(key.getValue());
    }
 
+   public static JSONObject makeFromPublicFields(Object object) {
+       Map<String, Object> json = new HashMap<>();
+       Class klass = object.getClass();
+       Field[] fields = klass.getDeclaredFields();
+       for (Field field : fields) {
+           if (Modifier.isPublic(field.getModifiers()) && !Modifier.isStatic(field.getModifiers())) {
+               try {
+                   if (field.getType().isPrimitive() || field.getType().isAssignableFrom(String.class)) {
+                       String key = field.getName();
+                       Object val = field.get(object);
+                       if (val != null)
+                        json.put(key, val);
+                   }
+               } catch (IllegalAccessException e) {
+                   e.printStackTrace();
+               }
+           }
+       }
 
+       if (json.isEmpty()) {
+           return null;
+       }
+
+       return new JSONObject(json);
+   }
 }
