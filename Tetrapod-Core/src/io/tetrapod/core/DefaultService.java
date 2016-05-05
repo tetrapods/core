@@ -239,12 +239,26 @@ public class DefaultService
             if (logBuffer.hasWarnings()) {
                status |= Core.STATUS_WARNINGS;
             }
-            status |= isStartingUp() ? Core.STATUS_STARTING : 0;
-            setStatus(status, Core.STATUS_STARTING | Core.STATUS_ERRORS | Core.STATUS_WARNINGS);
+
+            synchronized (this) {
+               if (needsStatusUpdate) {
+                  // if a status update previously failed, we try a hamfisted approach here to clobber-fix everything (except GONE state).
+                  needsStatusUpdate = false;
+                  sendDirectRequest(new ServiceStatusUpdateRequest(getStatus(), ~Core.STATUS_GONE)).handle(res -> {
+                     if (res.isError()) {
+                        needsStatusUpdate = true;
+                     }
+                  });
+               } else {
+                  setStatus(status, Core.STATUS_ERRORS | Core.STATUS_WARNINGS);
+               }
+            }
+
          } finally {
             dispatcher.dispatch(1, TimeUnit.SECONDS, () -> checkHealth());
          }
       }
+
    }
 
    /**
@@ -473,6 +487,8 @@ public class DefaultService
       setStatus(0, bits);
    }
 
+   private boolean needsStatusUpdate = false;
+
    protected void setStatus(int bits, int mask) {
       boolean changed = false;
       synchronized (this) {
@@ -480,8 +496,13 @@ public class DefaultService
          changed = this.status != status;
          this.status = status;
       }
+
       if (changed && clusterClient.isConnected()) {
-         sendDirectRequest(new ServiceStatusUpdateRequest(bits, mask)).log();
+         sendDirectRequest(new ServiceStatusUpdateRequest(bits, mask)).handle(res -> {
+            if (res.isError()) {
+               needsStatusUpdate = true;
+            }
+         });
       }
    }
 
