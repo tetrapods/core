@@ -57,7 +57,8 @@ public class Util {
    }
 
    /**
-    * Takes a keystore input stream and a keystore password and return an SSLContext for TLS
+    * Takes a keystore input stream and a keystore password and return an SSLContext for
+    * TLS
     */
    public static SSLContext createSSLContext(InputStream keystoreStream, char[] pwd) throws IOException {
       try {
@@ -142,7 +143,7 @@ public class Util {
       }
       return set;
    }
-   
+
    public static Set<Integer> toSet(int[] array) {
       Set<Integer> set = new HashSet<Integer>(array.length);
       for (int i = 0; i < array.length; i++) {
@@ -150,7 +151,7 @@ public class Util {
       }
       return set;
    }
-   
+
    public static byte[] readFile(File f) throws IOException {
       return Files.readAllBytes(f.toPath());
    }
@@ -460,7 +461,7 @@ public class Util {
       return coll == null ? true : coll.isEmpty();
    }
 
-   public static boolean isEmpty(Map<?,?> map) {
+   public static boolean isEmpty(Map<?, ?> map) {
       return map == null ? true : map.isEmpty();
    }
 
@@ -635,7 +636,8 @@ public class Util {
    }
 
    /**
-    * Return a comma separated list of the collection, with no outside delimiters. Empty string if collection is null or empty.
+    * Return a comma separated list of the collection, with no outside delimiters. Empty
+    * string if collection is null or empty.
     */
    public static String commaSeparated(Collection<?> coll) {
       if (isEmpty(coll))
@@ -657,7 +659,8 @@ public class Util {
    }
 
    /**
-    * Helpful method to get an existing value from a map or lazy-init when value is missing.
+    * Helpful method to get an existing value from a map or lazy-init when value is
+    * missing.
     */
    public static <K, V> V getOrMake(Map<K, V> map, K key, ValueMaker<K, V> maker) {
       V val = map.get(key);
@@ -669,7 +672,8 @@ public class Util {
    }
 
    /**
-    * Helpful method to get an existing value from a map or lazy-init when value is missing.
+    * Helpful method to get an existing value from a map or lazy-init when value is
+    * missing.
     */
    public static <K, V> V getOrDefault(Map<K, V> map, K key, V defaultVal) {
       V val = map.get(key);
@@ -681,8 +685,8 @@ public class Util {
    }
 
    /**
-    * Return a new array made by appending the given value. The source array can be null as well which results in an array containing only
-    * the supplied value.
+    * Return a new array made by appending the given value. The source array can be null
+    * as well which results in an array containing only the supplied value.
     */
    @SuppressWarnings("unchecked")
    public static <T> T[] append(T[] array, T value) {
@@ -694,6 +698,10 @@ public class Util {
       }
       res[res.length - 1] = value;
       return res;
+   }
+
+   public static String formatDollars(int pennies) {
+      return String.format("$%1.2f", pennies / 100.0);
    }
 
 }
