@@ -239,7 +239,8 @@ public class DefaultService
             if (logBuffer.hasWarnings()) {
                status |= Core.STATUS_WARNINGS;
             }
-            setStatus(status, Core.STATUS_ERRORS | Core.STATUS_WARNINGS);
+            status |= isStartingUp() ? Core.STATUS_STARTING : 0;
+            setStatus(status, Core.STATUS_STARTING | Core.STATUS_ERRORS | Core.STATUS_WARNINGS);
          } finally {
             dispatcher.dispatch(1, TimeUnit.SECONDS, () -> checkHealth());
          }
