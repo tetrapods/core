@@ -36,7 +36,7 @@ abstract public class ResponseHandler {
       };
    }
 
-   private static void logError(RequestHeader h, int errCode) {
+   public static void logError(RequestHeader h, int errCode) {
       logger.error("[{}] {} {}\nfailed with error = {}", h.requestId,
             h.dump(),
             StructureFactory.getName(h.contractId, h.structId),
