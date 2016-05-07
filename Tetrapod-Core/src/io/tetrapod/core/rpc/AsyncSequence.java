@@ -1,7 +1,9 @@
 package io.tetrapod.core.rpc;
 
 import java.util.ArrayList;
+import java.util.concurrent.ConcurrentHashMap;
 
+import io.tetrapod.core.utils.Value;
 import org.slf4j.*;
 
 import io.tetrapod.core.rpc.Async.IResponseHandlerErr;
@@ -59,10 +61,11 @@ public class AsyncSequence {
       return new AsyncSequence().add(r);
    }
 
-   private final ArrayList<Object> sequence       = new ArrayList<>();
-   private int                     ix             = 0;
-   private volatile int            errorCode      = 0;
-   private volatile Exception      errorException = null;
+   private final ArrayList<Object>                 sequence        = new ArrayList<>();
+   private final ConcurrentHashMap<String, Object> sequenceObjects = new ConcurrentHashMap();
+   private int                                     ix              = 0;
+   private volatile int                            errorCode       = 0;
+   private volatile Exception                      errorException  = null;
 
    /**
     * Adds the runnable to the sequence, and immediately invokes it if it's the given
@@ -235,6 +238,14 @@ public class AsyncSequence {
             seq.doReject(res.errorCode(), null);
          }
       }
+   }
+
+   public void putSeqObj(String name, Object obj) {
+      sequenceObjects.put(name, obj);
+   }
+
+   public Object getSeqObj(String name) {
+      return sequenceObjects.get(name);
    }
 
 }
