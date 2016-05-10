@@ -1,0 +1,1 @@
+result = 31 * result + (int) ({{name}} ^ ({{name}} >>> 32));

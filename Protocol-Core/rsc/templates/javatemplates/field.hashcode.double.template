@@ -1,0 +1,2 @@
+long temp = Double.doubleToLongBits({{name}});
+result = 31 * result + (int) (temp ^ (temp >>> 32));

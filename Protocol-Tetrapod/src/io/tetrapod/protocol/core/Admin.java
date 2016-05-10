@@ -71,6 +71,7 @@ public class Admin extends Structure {
       data.writeEndTag();
    }
    
+   @SuppressWarnings("Duplicates")
    @Override
    public final void read(DataSource data) throws IOException {
       defaults();
@@ -90,7 +91,7 @@ public class Admin extends Structure {
          }
       }
    }
-   
+
    public final int getContractId() {
       return Admin.CONTRACT_ID;
    }
@@ -99,8 +100,9 @@ public class Admin extends Structure {
       return Admin.STRUCT_ID;
    }
 
+   @SuppressWarnings("Duplicates")
    public final String[] tagWebNames() {
-      // Note do not use this tags in long term serializations (to disk or databases) as 
+      // Note do not use this tags in long term serializations (to disk or databases) as
       // implementors are free to rename them however they wish.  A null means the field
       // is not to participate in web serialization (remaining at default)
       String[] result = new String[5+1];
@@ -135,4 +137,40 @@ public class Admin extends Structure {
       desc.types[5] = new TypeDescriptor(TypeDescriptor.T_LONG_LIST, 0, 0);
       return desc;
    }
+
+   @Override
+   @SuppressWarnings("RedundantIfStatement")
+   public boolean equals(Object o) {
+      if (this == o)
+         return true;
+      if (o == null || getClass() != o.getClass())
+         return false;
+
+      Admin that = (Admin) o;
+
+      if (accountId != that.accountId)
+         return false;
+      if (email != null ? !email.equals(that.email) : that.email != null)
+         return false;
+      if (hash != null ? !hash.equals(that.hash) : that.hash != null)
+         return false;
+      if (rights != that.rights)
+         return false;
+      if (!Arrays.equals(loginAttempts, that.loginAttempts))
+         return false;
+
+      return true;
+   }
+
+   @Override
+   public int hashCode() {
+      int result = 0;
+      result = 31 * result + accountId;
+      result = 31 * result + (email != null ? email.hashCode() : 0);
+      result = 31 * result + (hash != null ? hash.hashCode() : 0);
+      result = 31 * result + (int) (rights ^ (rights >>> 32));
+      result = 31 * result + Arrays.hashCode(loginAttempts);
+      return result;
+   }
+
 }

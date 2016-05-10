@@ -1,0 +1,2 @@
+if (!Arrays.equals({{name}}, that.{{name}}))
+   return false;
