@@ -36,8 +36,25 @@
       </encoder>
    </appender>
    
-   
-   
+   <appender name="APIFILEPID" class="ch.qos.logback.core.rolling.RollingFileAppender">
+      <file>logs/api.${APPNAME}.log</file>
+
+      <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
+         <fileNamePattern>logs/api.${APPNAME}.%i.log.gz
+         </fileNamePattern>
+         <minIndex>1</minIndex>
+         <maxIndex>5</maxIndex>
+      </rollingPolicy>
+
+      <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+         <maxFileSize>30MB</maxFileSize>
+      </triggeringPolicy>
+
+      <encoder>
+         <pattern>%d %-5level %24thread{24} - %16logger{0} - %msg%n</pattern>
+      </encoder>
+   </appender>
+
    <root level="INFO">
       <appender-ref ref="LOGFILE" />
       <appender-ref ref="BUFFER" />
@@ -47,7 +64,12 @@
       <!-- additivity false means it does not show up in root -->
       <appender-ref ref="COMMSFILE" />
    </logger>
-   
+
+   <logger name="apiLog" level="INFO" additivity="false">
+      <!-- additivity false means it does not show up in root -->
+      <appender-ref ref="APIFILEPID" />
+   </logger>
+
    <logger name="io.netty" level="INFO" />
    <logger name="com.hazelcast" level="WARN" />
    <logger name="NodeMulticastListener" level="WARN" />
