@@ -215,6 +215,8 @@ class JavaGenerator implements LanguageGenerator {
    private Template makeStructHashcode(Field field, Template sub) throws IOException{
       if(field.collectionType != null && field.collectionType.equals("<array>"))
          return template("field.hashcode.array").add(sub);
+      if(field.collectionType != null && field.collectionType.equals("<list>"))
+         return template("field.hashcode.object").add(sub);
       else if (JavaTypes.get(field.type).isPrimitive && field.type.equals("long"))
          return template("field.hashcode.long").add(sub);
       else if (JavaTypes.get(field.type).isPrimitive && field.type.equals("boolean"))
