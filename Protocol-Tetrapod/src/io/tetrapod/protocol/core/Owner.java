@@ -53,6 +53,7 @@ public class Owner extends Structure {
       data.writeEndTag();
    }
    
+   @SuppressWarnings("Duplicates")
    @Override
    public final void read(DataSource data) throws IOException {
       defaults();
@@ -71,7 +72,7 @@ public class Owner extends Structure {
          }
       }
    }
-   
+
    public final int getContractId() {
       return Owner.CONTRACT_ID;
    }
@@ -80,8 +81,9 @@ public class Owner extends Structure {
       return Owner.STRUCT_ID;
    }
 
+   @SuppressWarnings("Duplicates")
    public final String[] tagWebNames() {
-      // Note do not use this tags in long term serializations (to disk or databases) as 
+      // Note do not use this tags in long term serializations (to disk or databases) as
       // implementors are free to rename them however they wish.  A null means the field
       // is not to participate in web serialization (remaining at default)
       String[] result = new String[4+1];
@@ -108,4 +110,37 @@ public class Owner extends Structure {
       desc.types[4] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
       return desc;
    }
+
+   @Override
+   @SuppressWarnings("RedundantIfStatement")
+   public boolean equals(Object o) {
+      if (this == o)
+         return true;
+      if (o == null || getClass() != o.getClass())
+         return false;
+
+      Owner that = (Owner) o;
+
+      if (entityId != that.entityId)
+         return false;
+      if (expiry != that.expiry)
+         return false;
+      if (keys != null ? !keys.equals(that.keys) : that.keys != null)
+         return false;
+      if (prefix != null ? !prefix.equals(that.prefix) : that.prefix != null)
+         return false;
+
+      return true;
+   }
+
+   @Override
+   public int hashCode() {
+      int result = 0;
+      result = 31 * result + entityId;
+      result = 31 * result + (int) (expiry ^ (expiry >>> 32));
+      result = 31 * result + (keys != null ? keys.hashCode() : 0);
+      result = 31 * result + (prefix != null ? prefix.hashCode() : 0);
+      return result;
+   }
+
 }

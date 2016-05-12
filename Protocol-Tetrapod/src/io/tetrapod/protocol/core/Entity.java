@@ -77,6 +77,7 @@ public class Entity extends Structure {
       data.writeEndTag();
    }
    
+   @SuppressWarnings("Duplicates")
    @Override
    public final void read(DataSource data) throws IOException {
       defaults();
@@ -101,7 +102,7 @@ public class Entity extends Structure {
          }
       }
    }
-   
+
    public final int getContractId() {
       return Entity.CONTRACT_ID;
    }
@@ -110,8 +111,9 @@ public class Entity extends Structure {
       return Entity.STRUCT_ID;
    }
 
+   @SuppressWarnings("Duplicates")
    public final String[] tagWebNames() {
-      // Note do not use this tags in long term serializations (to disk or databases) as 
+      // Note do not use this tags in long term serializations (to disk or databases) as
       // implementors are free to rename them however they wish.  A null means the field
       // is not to participate in web serialization (remaining at default)
       String[] result = new String[11+1];
@@ -150,4 +152,55 @@ public class Entity extends Structure {
       desc.types[11] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
       return desc;
    }
+
+   @Override
+   @SuppressWarnings("RedundantIfStatement")
+   public boolean equals(Object o) {
+      if (this == o)
+         return true;
+      if (o == null || getClass() != o.getClass())
+         return false;
+
+      Entity that = (Entity) o;
+
+      if (entityId != that.entityId)
+         return false;
+      if (parentId != that.parentId)
+         return false;
+      if (reclaimToken != that.reclaimToken)
+         return false;
+      if (host != null ? !host.equals(that.host) : that.host != null)
+         return false;
+      if (status != that.status)
+         return false;
+      if (type != that.type)
+         return false;
+      if (name != null ? !name.equals(that.name) : that.name != null)
+         return false;
+      if (version != that.version)
+         return false;
+      if (contractId != that.contractId)
+         return false;
+      if (build != null ? !build.equals(that.build) : that.build != null)
+         return false;
+
+      return true;
+   }
+
+   @Override
+   public int hashCode() {
+      int result = 0;
+      result = 31 * result + entityId;
+      result = 31 * result + parentId;
+      result = 31 * result + (int) (reclaimToken ^ (reclaimToken >>> 32));
+      result = 31 * result + (host != null ? host.hashCode() : 0);
+      result = 31 * result + status;
+      result = 31 * result + type;
+      result = 31 * result + (name != null ? name.hashCode() : 0);
+      result = 31 * result + version;
+      result = 31 * result + contractId;
+      result = 31 * result + (build != null ? build.hashCode() : 0);
+      return result;
+   }
+
 }

@@ -37,4 +37,11 @@ public class Value<T> {
       set = false;
    }
 
+   public boolean isSet() {
+      return set;
+   }
+
+   public void setSet(boolean set) {
+      this.set = set;
+   }
 }

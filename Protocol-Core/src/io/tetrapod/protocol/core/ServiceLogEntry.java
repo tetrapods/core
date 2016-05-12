@@ -65,6 +65,7 @@ public class ServiceLogEntry extends Structure {
       data.writeEndTag();
    }
    
+   @SuppressWarnings("Duplicates")
    @Override
    public final void read(DataSource data) throws IOException {
       defaults();
@@ -84,7 +85,7 @@ public class ServiceLogEntry extends Structure {
          }
       }
    }
-   
+
    public final int getContractId() {
       return ServiceLogEntry.CONTRACT_ID;
    }
@@ -93,8 +94,9 @@ public class ServiceLogEntry extends Structure {
       return ServiceLogEntry.STRUCT_ID;
    }
 
+   @SuppressWarnings("Duplicates")
    public final String[] tagWebNames() {
-      // Note do not use this tags in long term serializations (to disk or databases) as 
+      // Note do not use this tags in long term serializations (to disk or databases) as
       // implementors are free to rename them however they wish.  A null means the field
       // is not to participate in web serialization (remaining at default)
       String[] result = new String[5+1];
@@ -123,4 +125,40 @@ public class ServiceLogEntry extends Structure {
       desc.types[5] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
       return desc;
    }
+
+   @Override
+   @SuppressWarnings("RedundantIfStatement")
+   public boolean equals(Object o) {
+      if (this == o)
+         return true;
+      if (o == null || getClass() != o.getClass())
+         return false;
+
+      ServiceLogEntry that = (ServiceLogEntry) o;
+
+      if (msg != null ? !msg.equals(that.msg) : that.msg != null)
+         return false;
+      if (level != that.level)
+         return false;
+      if (timestamp != that.timestamp)
+         return false;
+      if (thread != null ? !thread.equals(that.thread) : that.thread != null)
+         return false;
+      if (logger != null ? !logger.equals(that.logger) : that.logger != null)
+         return false;
+
+      return true;
+   }
+
+   @Override
+   public int hashCode() {
+      int result = 0;
+      result = 31 * result + (msg != null ? msg.hashCode() : 0);
+      result = 31 * result + level;
+      result = 31 * result + (int) (timestamp ^ (timestamp >>> 32));
+      result = 31 * result + (thread != null ? thread.hashCode() : 0);
+      result = 31 * result + (logger != null ? logger.hashCode() : 0);
+      return result;
+   }
+
 }

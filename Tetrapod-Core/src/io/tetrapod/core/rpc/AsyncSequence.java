@@ -1,11 +1,12 @@
 package io.tetrapod.core.rpc;
 
 import java.util.ArrayList;
+import java.util.concurrent.ConcurrentHashMap;
 
+import io.tetrapod.core.utils.Util;
 import org.slf4j.*;
 
 import io.tetrapod.core.rpc.Async.IResponseHandlerErr;
-import io.tetrapod.core.rpc.ErrorResponseException;
 import io.tetrapod.protocol.core.CoreContract;
 
 /**
@@ -14,14 +15,14 @@ import io.tetrapod.protocol.core.CoreContract;
  * (proceed) or errors (reject).
  * <p>
  * In general this class solves the problem where you want to go: reqA then (reqB or reqC)
- * then reqD ... If you nest PendingResponseHandlers then the handlers for reqB abd reqC
+ * then reqD ... If you nest PendingResponseHandlers then the handlers for reqB and reqC
  * have to duplicate all the logic for reqD onwards. Other solutions are turning requests
  * into blocking requests, or basically wrapping the call chain up in a small state
  * machine. The hope is this class leads to more maintainable and performant code than the
  * other cases.
  * <p>
  * Besides addressing the nesting issue, this class has some convenience built in:
- * <li>optionally propogates errors from a number of calls to a single handler
+ * <li>optionally propagates errors from a number of calls to a single handler
  * <li>only calls response handlers if the call was successful
  * <li>allows response handlers to throw checked exceptions (which get logged and turned
  * into ERROR_UNKNOWN)
@@ -53,20 +54,21 @@ public class AsyncSequence {
 
    /**
     * Adds the runnable to the sequence, and immediately invokes it if it's the given
-    * runnables turn. This runnable will only be invoked on proceeds.
+    * runnable's turn. This runnable will only be invoked on proceeds.
     */
    public static AsyncSequence with(NormalRunnable r) {
       return new AsyncSequence().add(r);
    }
 
-   private final ArrayList<Object> sequence       = new ArrayList<>();
-   private int                     ix             = 0;
-   private volatile int            errorCode      = 0;
-   private volatile Exception      errorException = null;
+   private final ArrayList<Object>                 sequence       = new ArrayList<>();
+   private final ConcurrentHashMap<String, Object> sequenceValues = new ConcurrentHashMap();
+   private int                                     ix             = 0;
+   private volatile int                            errorCode      = 0;
+   private volatile Exception                      errorException = null;
 
    /**
     * Adds the runnable to the sequence, and immediately invokes it if it's the given
-    * runnables turn. This runnable will only be invoked on proceeds.
+    * runnable's turn. This runnable will only be invoked on proceeds.
     */
    public synchronized AsyncSequence then(NormalRunnable r) {
       return add(r);
@@ -74,7 +76,7 @@ public class AsyncSequence {
 
    /**
     * Adds an error handling runnable to the sequence, and immediately invokes it if it's
-    * the given runnables turn. This runnable will only be invoked on errors.
+    * the given runnable's turn. This runnable will only be invoked on errors.
     */
    public synchronized AsyncSequence onError(ErrRunnable r) {
       return add(r);
@@ -82,7 +84,7 @@ public class AsyncSequence {
 
    /**
     * Adds an error handling runnable to the sequence, and immediately invokes it if it's
-    * the given runnables turn. This runnable will only be invoked on errors.
+    * the given runnable's turn. This runnable will only be invoked on errors.
     */
    public synchronized AsyncSequence onError(ErrRunnableWithSeq r) {
       return add(r);
@@ -90,7 +92,7 @@ public class AsyncSequence {
 
    /**
     * Adds an error handling runnable to the sequence, and immediately invokes it if it's
-    * the given runnables turn. This runnable will only be invoked on errors.
+    * the given runnable's turn. This runnable will only be invoked on errors.
     */
    public synchronized AsyncSequence onError(ErrRunnableWithException r) {
       return add(r);
@@ -235,6 +237,14 @@ public class AsyncSequence {
             seq.doReject(res.errorCode(), null);
          }
       }
+   }
+
+   public void putValue(String name, Object obj) {
+      sequenceValues.put(name, obj);
+   }
+
+   public <T> T getValue(String name) {
+      return Util.cast(sequenceValues.get(name));
    }
 
 }

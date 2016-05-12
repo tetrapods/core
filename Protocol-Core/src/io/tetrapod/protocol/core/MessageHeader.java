@@ -63,6 +63,7 @@ public class MessageHeader extends Structure {
       data.writeEndTag();
    }
    
+   @SuppressWarnings("Duplicates")
    @Override
    public final void read(DataSource data) throws IOException {
       defaults();
@@ -83,7 +84,7 @@ public class MessageHeader extends Structure {
          }
       }
    }
-   
+
    public final int getContractId() {
       return MessageHeader.CONTRACT_ID;
    }
@@ -92,8 +93,9 @@ public class MessageHeader extends Structure {
       return MessageHeader.STRUCT_ID;
    }
 
+   @SuppressWarnings("Duplicates")
    public final String[] tagWebNames() {
-      // Note do not use this tags in long term serializations (to disk or databases) as 
+      // Note do not use this tags in long term serializations (to disk or databases) as
       // implementors are free to rename them however they wish.  A null means the field
       // is not to participate in web serialization (remaining at default)
       String[] result = new String[6+1];
@@ -124,4 +126,43 @@ public class MessageHeader extends Structure {
       desc.types[6] = new TypeDescriptor(TypeDescriptor.T_BYTE, 0, 0);
       return desc;
    }
+
+   @Override
+   @SuppressWarnings("RedundantIfStatement")
+   public boolean equals(Object o) {
+      if (this == o)
+         return true;
+      if (o == null || getClass() != o.getClass())
+         return false;
+
+      MessageHeader that = (MessageHeader) o;
+
+      if (fromId != that.fromId)
+         return false;
+      if (topicId != that.topicId)
+         return false;
+      if (toId != that.toId)
+         return false;
+      if (contractId != that.contractId)
+         return false;
+      if (structId != that.structId)
+         return false;
+      if (flags != that.flags)
+         return false;
+
+      return true;
+   }
+
+   @Override
+   public int hashCode() {
+      int result = 0;
+      result = 31 * result + fromId;
+      result = 31 * result + topicId;
+      result = 31 * result + toId;
+      result = 31 * result + contractId;
+      result = 31 * result + structId;
+      result = 31 * result + flags;
+      return result;
+   }
+
 }

@@ -61,6 +61,7 @@ public class ServiceCommand extends Structure {
       data.writeEndTag();
    }
    
+   @SuppressWarnings("Duplicates")
    @Override
    public final void read(DataSource data) throws IOException {
       defaults();
@@ -80,7 +81,7 @@ public class ServiceCommand extends Structure {
          }
       }
    }
-   
+
    public final int getContractId() {
       return ServiceCommand.CONTRACT_ID;
    }
@@ -89,8 +90,9 @@ public class ServiceCommand extends Structure {
       return ServiceCommand.STRUCT_ID;
    }
 
+   @SuppressWarnings("Duplicates")
    public final String[] tagWebNames() {
-      // Note do not use this tags in long term serializations (to disk or databases) as 
+      // Note do not use this tags in long term serializations (to disk or databases) as
       // implementors are free to rename them however they wish.  A null means the field
       // is not to participate in web serialization (remaining at default)
       String[] result = new String[5+1];
@@ -119,4 +121,40 @@ public class ServiceCommand extends Structure {
       desc.types[5] = new TypeDescriptor(TypeDescriptor.T_BOOLEAN, 0, 0);
       return desc;
    }
+
+   @Override
+   @SuppressWarnings("RedundantIfStatement")
+   public boolean equals(Object o) {
+      if (this == o)
+         return true;
+      if (o == null || getClass() != o.getClass())
+         return false;
+
+      ServiceCommand that = (ServiceCommand) o;
+
+      if (name != null ? !name.equals(that.name) : that.name != null)
+         return false;
+      if (icon != null ? !icon.equals(that.icon) : that.icon != null)
+         return false;
+      if (contractId != that.contractId)
+         return false;
+      if (structId != that.structId)
+         return false;
+      if (hasArgument != that.hasArgument)
+         return false;
+
+      return true;
+   }
+
+   @Override
+   public int hashCode() {
+      int result = 0;
+      result = 31 * result + (name != null ? name.hashCode() : 0);
+      result = 31 * result + (icon != null ? icon.hashCode() : 0);
+      result = 31 * result + contractId;
+      result = 31 * result + structId;
+      result = 31 * result + (hasArgument ? 1 : 0);
+      return result;
+   }
+
 }

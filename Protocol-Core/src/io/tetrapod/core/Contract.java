@@ -1,6 +1,7 @@
 package io.tetrapod.core;
 
 import io.tetrapod.core.rpc.Structure;
+import io.tetrapod.protocol.core.Core;
 import io.tetrapod.protocol.core.WebRoute;
 
 import java.lang.reflect.*;
@@ -56,6 +57,9 @@ abstract public class Contract {
    }
 
    public void registerPeerStructs() {
+      for (Structure s : getRequests()) {
+         StructureFactory.add(s);
+      }
       for (Structure s : getResponses()) {
          StructureFactory.add(s);
       }
@@ -70,17 +74,19 @@ abstract public class Contract {
    public static final Map<Long, String> ERROR_NAMES = new HashMap<>();
 
    private void loadErrorCodes() {
-      for (Field f : getClass().getFields()) {
-         final int mask = Modifier.PUBLIC | Modifier.STATIC | Modifier.FINAL;
-         if ((f.getModifiers() & mask) == mask) {
-            if (f.getType() == int.class) {
-               if (f.getName().startsWith("ERROR_")) {
-                  try {
-                     int code = f.getInt(this);
-                     long key = code | (long) ((long) getContractId() << 32);
-                     ERROR_NAMES.put(key, f.getName());
-                  } catch (IllegalArgumentException | IllegalAccessException e) {
-                     throw new RuntimeException(e);
+      synchronized (ERROR_NAMES) {
+         for (Field f : getClass().getFields()) {
+            final int mask = Modifier.PUBLIC | Modifier.STATIC | Modifier.FINAL;
+            if ((f.getModifiers() & mask) == mask) {
+               if (f.getType() == int.class) {
+                  if (f.getName().startsWith("ERROR_")) {
+                     try {
+                        int code = f.getInt(this);
+                        long key = code | (long) ((long) getContractId() << 32);
+                        ERROR_NAMES.put(key, f.getName());
+                     } catch (IllegalArgumentException | IllegalAccessException e) {
+                        throw new RuntimeException(e);
+                     }
                   }
                }
             }
@@ -89,8 +95,14 @@ abstract public class Contract {
    }
 
    public static final String getErrorCode(int code, int contractId) {
-      final long key = code | (long) ((long) contractId << 32);
-      return ERROR_NAMES.get(key);
+      synchronized (ERROR_NAMES) {
+         final long key = code | (long) ((long) contractId << 32);
+         final String name = ERROR_NAMES.get(key);
+         if (name == null && contractId != Core.CONTRACT_ID) {
+            return getErrorCode(code, Core.CONTRACT_ID);
+         }
+         return name == null ? "#" + code : name;
+      }
    }
 
 }
