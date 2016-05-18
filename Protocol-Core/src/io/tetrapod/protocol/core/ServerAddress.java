@@ -45,6 +45,7 @@ public class ServerAddress extends Structure {
       data.writeEndTag();
    }
    
+   @SuppressWarnings("Duplicates")
    @Override
    public final void read(DataSource data) throws IOException {
       defaults();
@@ -61,7 +62,7 @@ public class ServerAddress extends Structure {
          }
       }
    }
-   
+
    public final int getContractId() {
       return ServerAddress.CONTRACT_ID;
    }
@@ -70,8 +71,9 @@ public class ServerAddress extends Structure {
       return ServerAddress.STRUCT_ID;
    }
 
+   @SuppressWarnings("Duplicates")
    public final String[] tagWebNames() {
-      // Note do not use this tags in long term serializations (to disk or databases) as 
+      // Note do not use this tags in long term serializations (to disk or databases) as
       // implementors are free to rename them however they wish.  A null means the field
       // is not to participate in web serialization (remaining at default)
       String[] result = new String[2+1];
@@ -94,4 +96,31 @@ public class ServerAddress extends Structure {
       desc.types[2] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
       return desc;
    }
+
+   @Override
+   @SuppressWarnings("RedundantIfStatement")
+   public boolean equals(Object o) {
+      if (this == o)
+         return true;
+      if (o == null || getClass() != o.getClass())
+         return false;
+
+      ServerAddress that = (ServerAddress) o;
+
+      if (host != null ? !host.equals(that.host) : that.host != null)
+         return false;
+      if (port != that.port)
+         return false;
+
+      return true;
+   }
+
+   @Override
+   public int hashCode() {
+      int result = 0;
+      result = 31 * result + (host != null ? host.hashCode() : 0);
+      result = 31 * result + port;
+      return result;
+   }
+
 }

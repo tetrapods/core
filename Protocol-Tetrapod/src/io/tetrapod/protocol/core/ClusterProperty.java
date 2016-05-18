@@ -49,6 +49,7 @@ public class ClusterProperty extends Structure {
       data.writeEndTag();
    }
    
+   @SuppressWarnings("Duplicates")
    @Override
    public final void read(DataSource data) throws IOException {
       defaults();
@@ -66,7 +67,7 @@ public class ClusterProperty extends Structure {
          }
       }
    }
-   
+
    public final int getContractId() {
       return ClusterProperty.CONTRACT_ID;
    }
@@ -75,8 +76,9 @@ public class ClusterProperty extends Structure {
       return ClusterProperty.STRUCT_ID;
    }
 
+   @SuppressWarnings("Duplicates")
    public final String[] tagWebNames() {
-      // Note do not use this tags in long term serializations (to disk or databases) as 
+      // Note do not use this tags in long term serializations (to disk or databases) as
       // implementors are free to rename them however they wish.  A null means the field
       // is not to participate in web serialization (remaining at default)
       String[] result = new String[3+1];
@@ -106,4 +108,34 @@ public class ClusterProperty extends Structure {
       desc.types[3] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
       return desc;
    }
+
+   @Override
+   @SuppressWarnings("RedundantIfStatement")
+   public boolean equals(Object o) {
+      if (this == o)
+         return true;
+      if (o == null || getClass() != o.getClass())
+         return false;
+
+      ClusterProperty that = (ClusterProperty) o;
+
+      if (key != null ? !key.equals(that.key) : that.key != null)
+         return false;
+      if (secret != that.secret)
+         return false;
+      if (val != null ? !val.equals(that.val) : that.val != null)
+         return false;
+
+      return true;
+   }
+
+   @Override
+   public int hashCode() {
+      int result = 0;
+      result = 31 * result + (key != null ? key.hashCode() : 0);
+      result = 31 * result + (secret ? 1 : 0);
+      result = 31 * result + (val != null ? val.hashCode() : 0);
+      return result;
+   }
+
 }

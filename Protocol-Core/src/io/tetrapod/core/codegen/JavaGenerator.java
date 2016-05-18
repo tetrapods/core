@@ -195,10 +195,38 @@ class JavaGenerator implements LanguageGenerator {
          global.add("inline-declarations", lines[4], ", ");
          global.add("inline-initializers", lines[5]);
          global.add("description-fields", template("struct.description").add(sub));
+         global.add("struct-equals", makeStructEquals(f, sub));
+         global.add("struct-hashcode", makeStructHashcode(f, sub));
       }
       if (instanceFields > 0) {
          global.add("full-constructor", template("full.constructor").add(global));
       }
+   }
+
+   private Template makeStructEquals(Field field, Template sub) throws IOException{
+      if(field.collectionType != null && field.collectionType.equals("<array>"))
+         return template("field.equals.array").add(sub);
+      else if (JavaTypes.get(field.type).isPrimitive && !field.type.equals("string"))
+         return template("field.equals.primitive").add(sub);
+      else
+         return template("field.equals.object").add(sub);
+   }
+
+   private Template makeStructHashcode(Field field, Template sub) throws IOException{
+      if(field.collectionType != null && field.collectionType.equals("<array>"))
+         return template("field.hashcode.array").add(sub);
+      if(field.collectionType != null && field.collectionType.equals("<list>"))
+         return template("field.hashcode.object").add(sub);
+      else if (JavaTypes.get(field.type).isPrimitive && field.type.equals("long"))
+         return template("field.hashcode.long").add(sub);
+      else if (JavaTypes.get(field.type).isPrimitive && field.type.equals("boolean"))
+         return template("field.hashcode.boolean").add(sub);
+      else if (JavaTypes.get(field.type).isPrimitive && field.type.equals("double"))
+         return template("field.hashcode.double").add(sub);
+      else if (JavaTypes.get(field.type).isPrimitive && !field.type.equals("string"))
+         return template("field.hashcode.primitive").add(sub);
+      else
+         return template("field.hashcode.object").add(sub);
    }
 
    private void addConstantValues(List<Field> fields, Template global) throws ParseException, IOException {

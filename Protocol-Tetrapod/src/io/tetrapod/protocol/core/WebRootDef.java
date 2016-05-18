@@ -60,6 +60,7 @@ public class WebRootDef extends Structure {
       data.writeEndTag();
    }
    
+   @SuppressWarnings("Duplicates")
    @Override
    public final void read(DataSource data) throws IOException {
       defaults();
@@ -77,7 +78,7 @@ public class WebRootDef extends Structure {
          }
       }
    }
-   
+
    public final int getContractId() {
       return WebRootDef.CONTRACT_ID;
    }
@@ -86,8 +87,9 @@ public class WebRootDef extends Structure {
       return WebRootDef.STRUCT_ID;
    }
 
+   @SuppressWarnings("Duplicates")
    public final String[] tagWebNames() {
-      // Note do not use this tags in long term serializations (to disk or databases) as 
+      // Note do not use this tags in long term serializations (to disk or databases) as
       // implementors are free to rename them however they wish.  A null means the field
       // is not to participate in web serialization (remaining at default)
       String[] result = new String[3+1];
@@ -112,4 +114,34 @@ public class WebRootDef extends Structure {
       desc.types[3] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
       return desc;
    }
+
+   @Override
+   @SuppressWarnings("RedundantIfStatement")
+   public boolean equals(Object o) {
+      if (this == o)
+         return true;
+      if (o == null || getClass() != o.getClass())
+         return false;
+
+      WebRootDef that = (WebRootDef) o;
+
+      if (name != null ? !name.equals(that.name) : that.name != null)
+         return false;
+      if (path != null ? !path.equals(that.path) : that.path != null)
+         return false;
+      if (file != null ? !file.equals(that.file) : that.file != null)
+         return false;
+
+      return true;
+   }
+
+   @Override
+   public int hashCode() {
+      int result = 0;
+      result = 31 * result + (name != null ? name.hashCode() : 0);
+      result = 31 * result + (path != null ? path.hashCode() : 0);
+      result = 31 * result + (file != null ? file.hashCode() : 0);
+      return result;
+   }
+
 }

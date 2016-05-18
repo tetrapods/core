@@ -654,6 +654,11 @@ public class Util {
       return sb.toString();
    }
 
+   @SuppressWarnings("unchecked")
+   public static <T> T cast(Object obj) {
+       return (T) obj;
+   }
+
    public interface ValueMaker<K, V> {
       public V make();
    }

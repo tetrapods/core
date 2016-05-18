@@ -3,6 +3,8 @@ package io.tetrapod.core.rpc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import io.tetrapod.core.Contract;
+import io.tetrapod.core.StructureFactory;
 import io.tetrapod.protocol.core.RequestHeader;
 
 abstract public class ResponseHandler {
@@ -12,9 +14,7 @@ abstract public class ResponseHandler {
                                                  @Override
                                                  public void onResponse(Response res) {
                                                     if (res.isError()) {
-                                                       RequestHeader h = getRequestHeader();
-                                                       logger.error("[{}] {} failed with error = {}", h.requestId, h.dump(),
-                                                                res.errorCode());
+                                                       logError(getRequestHeader(), res.errorCode());
                                                     }
                                                  }
                                               };
@@ -30,11 +30,23 @@ abstract public class ResponseHandler {
                         return;
                   }
                }
-               RequestHeader h = getRequestHeader();
-               logger.error("[{}] {} failed with error = {}", h.requestId, h.dump(), res.errorCode());
+               logError(getRequestHeader(), res.errorCode());
             }
          }
       };
+   }
+
+   public static void logError(RequestHeader h, int errCode) {
+      logger.error("[{}] {} {}\nfailed with error = {}", h.requestId,
+            h.dump(),
+            StructureFactory.getName(h.contractId, h.structId),
+            Contract.getErrorCode(errCode, h.contractId));
+   }
+
+   public static void logError(int contractId, int structId, int errCode) {
+      logger.error("{} failed with error = {}",
+            StructureFactory.getName(contractId, structId),
+            Contract.getErrorCode(errCode, contractId));
    }
 
    private RequestHeader header;
