@@ -2,3 +2,6 @@
 /barry.cluster.properties
 /barry.jks
 /local-hazelcast.xml
+/paul.cluster.properties
+/paul.jks
+

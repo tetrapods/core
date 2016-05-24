@@ -8,7 +8,7 @@
       <groupId>io.tetrapod.private</groupId>
       <artifactId>root</artifactId>
       <version>0.0.1-SNAPSHOT</version>
-      <relativePath>../../build/pom.xml</relativePath>
+      <relativePath>../../private/build/pom.xml</relativePath>
    </parent>
 
    <repositories>
