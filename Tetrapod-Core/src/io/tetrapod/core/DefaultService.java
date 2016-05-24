@@ -643,6 +643,10 @@ public class DefaultService
                }
             } catch (ErrorResponseException e) {
                async.setResponse(new Error(e.errorCode));
+            } catch (ServiceException e) {
+               //todo: should we log all wrapped exceptions down to the root cause?
+               logger.error(e.rootCause().getMessage(), e.rootCause());
+               async.setResponse(new Error(ERROR_UNKNOWN));
             } catch (Throwable e) {
                logger.error(e.getMessage(), e);
                async.setResponse(new Error(ERROR_UNKNOWN));
