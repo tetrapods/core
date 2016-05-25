@@ -4,6 +4,8 @@ import io.tetrapod.core.utils.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.function.Supplier;
+
 /**
  * This class is designed to take exceptions (checked or otherwise) and turn them into unchecked exceptions.  Throwing
  * this exception within a DefaultService invocation will result in this being caught, logged and turned into an UNKNOWN_ERROR
@@ -24,6 +26,18 @@ public class ServiceException extends RuntimeException {
       } else {
          return new ServiceException(throwable);
       }
+   }
+
+   public static <T> T run(ThrowableSupplier<T> supplier) {
+      try {
+         return supplier.get();
+      } catch (Throwable t) {
+         throw wrap(t);
+      }
+   }
+
+   public interface ThrowableSupplier<T> {
+      T get() throws Throwable;
    }
 
    public ServiceException(String message) {

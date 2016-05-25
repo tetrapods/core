@@ -7,6 +7,7 @@ import java.lang.management.ManagementFactory;
 import java.net.ConnectException;
 import java.security.SecureRandom;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.SSLContext;
@@ -630,26 +631,26 @@ public class DefaultService
                            }
                         }
                      });
-               Response res = req.securityCheck(ctx);
-               if (res == null) {
-                  res = req.dispatch(svc, ctx);
-               }
-               if (res != null) {
-                  if (res != Response.PENDING) {
-                     async.setResponse(res);
+               CompletableFuture<? extends Response> responseFuture;
+               Response securityCheck = req.securityCheck(ctx);
+               if (securityCheck != null) {
+                  responseFuture = CompletableFuture.completedFuture(securityCheck);
+               } else {
+                  if (req instanceof FutureRequest) {
+                     responseFuture = ((FutureRequest)req).dispatchFuture(svc, ctx);
+                  } else {
+                     responseFuture = CompletableFuture.completedFuture(req.dispatch(svc, ctx));
                   }
+
+               }
+               if (responseFuture != null) {
+                  responseFuture.thenAccept(async::setResponse)
+                     .exceptionally(ex->handleException(ex, async));
                } else {
                   async.setResponse(new Error(ERROR_UNKNOWN));
                }
-            } catch (ErrorResponseException e) {
-               async.setResponse(new Error(e.errorCode));
-            } catch (ServiceException e) {
-               //todo: should we log all wrapped exceptions down to the root cause?
-               logger.error(e.rootCause().getMessage(), e.rootCause());
-               async.setResponse(new Error(ERROR_UNKNOWN));
             } catch (Throwable e) {
-               logger.error(e.getMessage(), e);
-               async.setResponse(new Error(ERROR_UNKNOWN));
+               handleException(e, async);
             } finally {
                if (async.getErrorCode() != -1) {
                   onResult.run();
@@ -666,6 +667,22 @@ public class DefaultService
       }
 
       return async;
+   }
+
+   public Void handleException(Throwable throwable, Async async) {
+      if (throwable instanceof ErrorResponseException) {
+         ErrorResponseException e = ((ErrorResponseException)throwable);
+         async.setResponse(new Error(e.errorCode));
+      } else if (throwable instanceof ServiceException) {
+         //todo: should we log all wrapped exceptions down to the root cause?
+         ServiceException e = ((ServiceException)throwable);
+         logger.error(e.rootCause().getMessage(), e.rootCause());
+         async.setResponse(new Error(ERROR_UNKNOWN));
+      } else {
+         logger.error(throwable.getMessage(), throwable);
+         async.setResponse(new Error(ERROR_UNKNOWN));
+      }
+      return null;
    }
 
    public Response sendPendingRequest(Request req, int toEntityId, PendingResponseHandler handler) {
@@ -690,6 +707,13 @@ public class DefaultService
       sendRequest(req).handle(handler);
    }
 
+   public <TResp extends Response> CompletableFuture<TResp> sendRequestAsync(Request req) {
+      if (serviceConnector != null) {
+         return serviceConnector.sendRequestT(req, Core.UNADDRESSED);
+      }
+      return clusterClient.getSession().sendFutureRequest(req, Core.UNADDRESSED, (byte) 30);
+   }
+
    public Async sendRequest(Request req) {
       if (serviceConnector != null) {
          return serviceConnector.sendRequest(req, Core.UNADDRESSED);
@@ -706,6 +730,10 @@ public class DefaultService
 
    public Async sendDirectRequest(Request req) {
       return clusterClient.getSession().sendRequest(req, Core.DIRECT, (byte) 30);
+   }
+
+   public <TResp extends Response> CompletableFuture<TResp> sendDirectRequestF(Request req) {
+      return clusterClient.getSession().sendFutureRequest(req, Core.DIRECT, (byte) 30);
    }
 
    public boolean isServiceExistant(int entityId) {

@@ -4,6 +4,7 @@ import static io.tetrapod.protocol.core.Core.DEFAULT_DIRECT_PORT;
 import static io.tetrapod.protocol.core.CoreContract.ERROR_UNKNOWN;
 
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.net.ssl.SSLContext;
@@ -302,6 +303,18 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
       }
    }
 
+   public <TResp extends Response> CompletableFuture<TResp> sendRequestT(Request req, int toEntityId) {
+      CompletableFuture<TResp> future = new CompletableFuture<>();
+      Async async = sendRequest(req, toEntityId);
+      async.handle(resp -> {
+         if (resp.isError()) {
+            future.completeExceptionally(new ErrorResponseException(resp.errorCode()));
+         } else {
+            future.complete(Util.cast(resp));
+         }
+      });
+      return future;
+   }
    public Async sendRequest(Request req, int toEntityId) {
       if (toEntityId == Core.UNADDRESSED) {
          Entity e = service.services.getRandomAvailableService(req.getContractId());

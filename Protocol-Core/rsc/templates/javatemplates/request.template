@@ -13,7 +13,7 @@ import java.util.concurrent.*;
 
 {{classcomment}}
 @SuppressWarnings("unused")
-public class {{class}} extends Request {
+public class {{class}} extends {{requestClassType}} {
 
    {{constants}}
    
@@ -67,14 +67,14 @@ public class {{class}} extends Request {
    }
    
    @Override
-   public final Response dispatch(ServiceAPI is, RequestContext ctx) {
+   public final {{responseClassType}} {{dispatchFuncName}}(ServiceAPI is, RequestContext ctx) {
       if (is instanceof Handler)
          return ((Handler)is).request{{rawname}}(this, ctx);
-      return is.genericRequest(this, ctx);
+      return {{futurePrefix}}is.genericRequest(this, ctx){{futureSuffix}};
    }
    
    public static interface Handler extends ServiceAPI {
-      Response request{{rawname}}({{class}} r, RequestContext ctx);
+      {{responseClassType}} request{{rawname}}({{class}} r, RequestContext ctx);
    }
    
    public final String[] tagWebNames() {
