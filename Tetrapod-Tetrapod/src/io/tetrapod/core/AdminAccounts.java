@@ -24,6 +24,7 @@ import io.tetrapod.protocol.core.*;
 public class AdminAccounts {
 
    public static final Logger logger = LoggerFactory.getLogger(AdminAccounts.class);
+   public static final Logger auditLogger = LoggerFactory.getLogger("audit");
 
    private final TetrapodCluster cluster;
 
@@ -174,18 +175,22 @@ public class AdminAccounts {
          Admin admin = getAdminByEmail(r.email);
          if (admin != null) {
             if (recordLoginAttempt(admin)) {
-               logger.info("Invalid Credentials - brute force protection");
+               logger.info("Invalid Credentials - brute force protection ({})", admin.email);
+               auditLogger.info("Invalid Credentials - brute force protection ({})", admin.email);
                return new Error(ERROR_INVALID_CREDENTIALS); // prevent brute force attack
             }
             if (PasswordHash.validatePassword(r.password, admin.hash)) {
                // mark the session as an admin
                ctx.session.theirType = Core.TYPE_ADMIN;
+               auditLogger.info("Admin {} [{}] has logged in", r.email, admin.accountId);
                final String authtoken = AdminAuthToken.encodeLoginToken(admin.accountId, 60 * 24 * 14);
                return new AdminLoginResponse(authtoken, admin.accountId);
             } else {
+               auditLogger.info("Admin {} [{}] attempted to log in, invalid credentials", r.email, admin.accountId);
                return new Error(ERROR_INVALID_CREDENTIALS); // invalid password
             }
          } else {
+            auditLogger.info("Admin {} [{}] attempted to log in, invalid account", r.email, admin.accountId);
             return new Error(ERROR_INVALID_CREDENTIALS); // invalid account
          }
       } catch (Exception e) {
@@ -201,9 +206,11 @@ public class AdminAccounts {
             final String newHash = PasswordHash.createHash(r.newPassword);
             admin = mutate(admin, a -> a.hash = newHash);
             if (admin != null) {
+               auditLogger.info("Admin {} [{}] updated their password", admin.email, admin.accountId);
                return Response.SUCCESS;
             }
          } else {
+            auditLogger.info("Admin {} [{}] derped their attempt to update their password", admin.email, admin.accountId);
             return new Error(ERROR_INVALID_CREDENTIALS);
          }
       } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
@@ -220,6 +227,7 @@ public class AdminAccounts {
             final String newHash = PasswordHash.createHash(r.password);
             target = mutate(target, a -> a.hash = newHash);
             if (target != null) {
+               auditLogger.info("Admin [{}] reset the password for user {} [{}]", r.accountId, target.email, target.accountId);
                return Response.SUCCESS;
             }
          }
@@ -236,9 +244,13 @@ public class AdminAccounts {
          final String hash = PasswordHash.createHash(r.password);
          final Admin newUser = addAdmin(r.email.trim(), hash, r.rights);
          if (newUser != null) {
+            auditLogger.info("Admin {} [{}] created an admin account for user {} [{}]",
+                  admin.email, admin.accountId, newUser.email, newUser.accountId);
             return Response.SUCCESS;
          } else {
             // they probably already exist
+            auditLogger.info("Admin {} [{}] failed to create an admin account for user {} [{}].  Account may already exist.",
+                  admin.email, admin.accountId, newUser.email, newUser.accountId);
             return new Error(ERROR_INVALID_ACCOUNT);
          }
       } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
@@ -258,6 +270,8 @@ public class AdminAccounts {
          final Value<Boolean> val = new Value<Boolean>();
          cluster.executeCommand(new DelAdminUserCommand(r.accountId), e -> val.set(e != null));
          if (val.waitForValue()) {
+            auditLogger.info("Admin {} [{}] deleted the admin account for user {} [{}]",
+                  admin.email, admin.accountId, target.email, target.accountId);
             return Response.SUCCESS;
          } else {
             return new Error(ERROR_UNKNOWN);
@@ -280,6 +294,8 @@ public class AdminAccounts {
       if (target != null) {
          Admin mutated = mutate(target, a -> a.rights = r.rights);
          if (mutated != null) {
+            auditLogger.info("Admin {} [{}] updated permissions for user {} [{}].  New rights:{}",
+                  admin.email, admin.accountId, target.email, target.accountId, r.rights);
             return Response.SUCCESS;
          }
          return new Error(ERROR_UNKNOWN);

@@ -39,6 +39,7 @@ public class TetrapodService extends DefaultService
       implements TetrapodContract.API, StorageContract.API, RaftContract.API, RelayHandler, EntityRegistry.RegistryBroadcaster {
 
    public static final Logger        logger                = LoggerFactory.getLogger(TetrapodService.class);
+   public static final Logger        auditLogger           = LoggerFactory.getLogger("audit");
 
    public final SecureRandom         random                = new SecureRandom();
 
@@ -1072,7 +1073,9 @@ public class TetrapodService extends DefaultService
 
    @Override
    public Response requestExecuteBuildCommand(ExecuteBuildCommandRequest r, RequestContext ctx) {
+      Admin a = adminAccounts.getAdmin(ctx, r.authToken, Admin.RIGHTS_CLUSTER_WRITE);
       for (BuildCommand command : r.commands) {
+         auditLogger.info("Admin {} [{}] executed {}", a.email, a.accountId, command.name);
          boolean success = Builder.executeCommand(command, this);
          if (!success)
             return Response.error(ERROR_UNKNOWN);
@@ -1182,18 +1185,24 @@ public class TetrapodService extends DefaultService
 
    @Override
    public Response requestDelClusterProperty(DelClusterPropertyRequest r, RequestContext ctx) {
+      Admin a = adminAccounts.getAdmin(ctx, r.adminToken, Admin.RIGHTS_CLUSTER_WRITE);
       if (!adminAccounts.isValidAdminRequest(ctx, r.adminToken, Admin.RIGHTS_CLUSTER_WRITE)) {
+         auditLogger.info("Admin{} [{}] failed to delete cluster property: {}.", a.email, a.accountId, r.key);
          return new Error(ERROR_INVALID_RIGHTS);
       }
+      auditLogger.info("Admin {} [{}] deleted cluster property: {}.", a.email, a.accountId, r.key);
       cluster.delClusterProperty(r.key);
       return Response.SUCCESS;
    }
 
    @Override
    public Response requestSetClusterProperty(SetClusterPropertyRequest r, RequestContext ctx) {
+      Admin a = adminAccounts.getAdmin(ctx, r.adminToken, Admin.RIGHTS_CLUSTER_WRITE);
       if (!ctx.isFromService() && !adminAccounts.isValidAdminRequest(ctx, r.adminToken, Admin.RIGHTS_CLUSTER_WRITE)) {
+         auditLogger.info("Admin {} [{}] failed to create or modify cluster property: {}.", a.email, a.accountId, r.property.key);
          return new Error(ERROR_INVALID_RIGHTS);
       }
+      auditLogger.info("Admin {} [{}] created or modified cluster property: {}.", a.email, a.accountId, r.property.key);
       cluster.setClusterProperty(r.property);
       return Response.SUCCESS;
    }
@@ -1209,10 +1218,15 @@ public class TetrapodService extends DefaultService
 
    @Override
    public Response requestSetWebRoot(SetWebRootRequest r, RequestContext ctx) {
+      Admin a = adminAccounts.getAdmin(ctx, r.adminToken, Admin.RIGHTS_CLUSTER_WRITE);
       if (!adminAccounts.isValidAdminRequest(ctx, r.adminToken, Admin.RIGHTS_CLUSTER_WRITE)) {
+         auditLogger.info("Admin {} [{}] failed to update webroot to {}, {}, {}",
+               a.email, a.accountId, r.def.name, r.def.path, r.def.file);
          return new Error(ERROR_INVALID_RIGHTS);
       }
       if (r.def != null) {
+         auditLogger.info("Admin {} [{}] updated webroot.  New webroot: {}, {}, {}",
+               a.email, a.accountId, r.def.name, r.def.path, r.def.file);
          cluster.setWebRoot(r.def);
          return Response.SUCCESS;
       }
@@ -1221,10 +1235,13 @@ public class TetrapodService extends DefaultService
 
    @Override
    public Response requestDelWebRoot(DelWebRootRequest r, RequestContext ctx) {
+      Admin a = adminAccounts.getAdmin(ctx, r.adminToken, Admin.RIGHTS_CLUSTER_WRITE);
       if (!adminAccounts.isValidAdminRequest(ctx, r.adminToken, Admin.RIGHTS_CLUSTER_WRITE)) {
+         auditLogger.info("Admin {} [{}] failed to delete the webroot at {}.", a.email, a.accountId, r.name);
          return new Error(ERROR_INVALID_RIGHTS);
       }
       if (r.name != null) {
+         auditLogger.info("Admin {} [{}] deleted the webroot at {}.", a.email, a.accountId, r.name);
          cluster.delWebRoot(r.name);
          return Response.SUCCESS;
       }
@@ -1387,6 +1404,7 @@ public class TetrapodService extends DefaultService
       final String user = Util.getProperty("nagios.user");
       final String pwd = Util.getProperty("nagios.password");
       final String domain = Util.getProperty("nagios.host");
+      Admin a = adminAccounts.getAdmin(ctx, r.adminToken, Admin.RIGHTS_CLUSTER_WRITE);
       if (domain == null || user == null || pwd == null) {
          return Response.error(ERROR_NOT_CONFIGURED);
       }
@@ -1397,6 +1415,7 @@ public class TetrapodService extends DefaultService
          }
          if (r.toggle) {
             if (setNagiosAlertsEnabled(r.hostname, domain, user, pwd, !enabled)) {
+               auditLogger.info("Admin {} [{}] {} nagios.", a.email, a.accountId, enabled ? "enabled" : "disabled");
                enabled = !enabled;
             }
          }
