@@ -190,7 +190,7 @@ public class AdminAccounts {
                return new Error(ERROR_INVALID_CREDENTIALS); // invalid password
             }
          } else {
-            auditLogger.info("Admin {} [{}] attempted to log in, invalid account", r.email, admin.accountId);
+            auditLogger.info("Admin {} attempted to log in, invalid account", r.email);
             return new Error(ERROR_INVALID_CREDENTIALS); // invalid account
          }
       } catch (Exception e) {
