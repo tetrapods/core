@@ -134,17 +134,22 @@ public class AdminAccounts {
       return false;
    }
 
-   public Admin getAdmin(RequestContext ctx, String adminToken, long rightsRequired) {
-      if (ctx.header.fromType == TYPE_ADMIN) {
-         final AdminAuthToken.Decoded d = AdminAuthToken.decodeSessionToken(adminToken);
-         if (d != null) {
-            final Admin admin = getAdmin(d.accountId);
-            if (admin != null) {
-               if (verifyPermission(admin, rightsRequired)) {
-                  return admin;
-               }
+   public Admin getAdminInternal(String adminToken, long rightsRequired) {
+      final AdminAuthToken.Decoded d = AdminAuthToken.decodeSessionToken(adminToken);
+      if (d != null) {
+         final Admin admin = getAdmin(d.accountId);
+         if (admin != null) {
+            if (verifyPermission(admin, rightsRequired)) {
+               return admin;
             }
          }
+      }
+      throw new ErrorResponseException(ERROR_UNKNOWN);
+   }
+
+   public Admin getAdmin(RequestContext ctx, String adminToken, long rightsRequired) {
+      if (ctx.header.fromType == TYPE_ADMIN) {
+         return getAdminInternal(adminToken, rightsRequired);
       }
       throw new ErrorResponseException(ERROR_INVALID_RIGHTS);
    }
