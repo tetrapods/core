@@ -135,7 +135,8 @@ define(["knockout", "jquery", "app", "alert"], function(ko, $, app, Alert) {
          host.progress += "&nbsp;&nbsp;&nbsp;&nbsp;" + commands[ix].display + " ..... ";
          updateProgress();
          app.server.sendTo("Tetrapod.ExecuteBuildCommand", {
-            commands: commandsList
+            commands: commandsList,
+            authToken: app.sessionToken
          }, host.entityId, function(res) {
             host.commandsLeft--;
             if (res.isError()) {
