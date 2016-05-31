@@ -249,8 +249,8 @@ public class AdminAccounts {
             return Response.SUCCESS;
          } else {
             // they probably already exist
-            auditLogger.info("Admin {} [{}] failed to create an admin account for user {} [{}].  Account may already exist.",
-                  admin.email, admin.accountId, newUser.email, newUser.accountId);
+            auditLogger.info("Admin {} [{}] failed to create a new admin account.  Account may already exist.",
+                  admin.email, admin.accountId);
             return new Error(ERROR_INVALID_ACCOUNT);
          }
       } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
