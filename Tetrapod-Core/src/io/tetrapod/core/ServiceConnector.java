@@ -303,7 +303,7 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
       }
    }
 
-   public <TResp extends Response> CompletableFuture<TResp> sendRequestT(Request req, int toEntityId) {
+   public <TResp extends Response> CompletableFuture<TResp> sendFutureRequest(Request req, int toEntityId) {
       CompletableFuture<TResp> future = new CompletableFuture<>();
       Async async = sendRequest(req, toEntityId);
       async.handle(resp -> {

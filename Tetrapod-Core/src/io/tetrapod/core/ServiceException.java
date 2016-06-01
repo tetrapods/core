@@ -28,6 +28,12 @@ public class ServiceException extends RuntimeException {
       }
    }
 
+   /**
+    * Runsa  block of code, wrapping any exceptions that get thrown as Service Exceptions.
+    * @param supplier   Chunk of code which might throw an exception
+    * @param <T>        The type of value that is being returned from the code block
+    * @return           Return value of the code block
+    */
    public static <T> T run(ThrowableSupplier<T> supplier) {
       try {
          return supplier.get();
@@ -36,6 +42,10 @@ public class ServiceException extends RuntimeException {
       }
    }
 
+   /**
+    * Functional interface that allows you to wrap unchecked exceptions easily
+    * @param <T>
+    */
    public interface ThrowableSupplier<T> {
       T get() throws Throwable;
    }

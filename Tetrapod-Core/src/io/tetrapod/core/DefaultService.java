@@ -631,7 +631,7 @@ public class DefaultService
                            }
                         }
                      });
-               CompletableFuture<? extends Response> responseFuture;
+               CompletableFuture<? extends Response> responseFuture = null;
                Response securityCheck = req.securityCheck(ctx);
                if (securityCheck != null) {
                   responseFuture = CompletableFuture.completedFuture(securityCheck);
@@ -639,15 +639,21 @@ public class DefaultService
                   if (req instanceof FutureRequest) {
                      responseFuture = ((FutureRequest)req).dispatchFuture(svc, ctx);
                   } else {
-                     responseFuture = CompletableFuture.completedFuture(req.dispatch(svc, ctx));
+                     Response resp = req.dispatch(svc, ctx);
+                     if (resp != null) {
+                        if (resp != Response.PENDING) {
+                           responseFuture = CompletableFuture.completedFuture(resp);
+                        }
+                     } else {
+                        async.setResponse(new Error(ERROR_UNKNOWN));
+                     }
+
                   }
 
                }
                if (responseFuture != null) {
                   responseFuture.thenAccept(async::setResponse)
                      .exceptionally(ex->handleException(ex, async));
-               } else {
-                  async.setResponse(new Error(ERROR_UNKNOWN));
                }
             } catch (Throwable e) {
                handleException(e, async);
@@ -709,7 +715,7 @@ public class DefaultService
 
    public <TResp extends Response> CompletableFuture<TResp> sendRequestAsync(Request req) {
       if (serviceConnector != null) {
-         return serviceConnector.sendRequestT(req, Core.UNADDRESSED);
+         return serviceConnector.sendFutureRequest(req, Core.UNADDRESSED);
       }
       return clusterClient.getSession().sendFutureRequest(req, Core.UNADDRESSED, (byte) 30);
    }
