@@ -165,7 +165,8 @@ define(function(require) {
                      for (var j = 0; j < ar2.length; j++) {
                         if (ar2[j].structId == 7823593) {
                            app.server.sendRequest(ar2[j].contractId, ar2[j].structId, {
-                              data: build
+                              data: build,
+                              authToken: app.sessionToken
                            }, ar2.entityId);
                         }
                      }

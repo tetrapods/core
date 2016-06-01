@@ -134,17 +134,22 @@ public class AdminAccounts {
       return false;
    }
 
-   public Admin getAdmin(RequestContext ctx, String adminToken, long rightsRequired) {
-      if (ctx.header.fromType == TYPE_ADMIN) {
-         final AdminAuthToken.Decoded d = AdminAuthToken.decodeSessionToken(adminToken);
-         if (d != null) {
-            final Admin admin = getAdmin(d.accountId);
-            if (admin != null) {
-               if (verifyPermission(admin, rightsRequired)) {
-                  return admin;
-               }
+   public Admin getAdminInternal(String adminToken, long rightsRequired) {
+      final AdminAuthToken.Decoded d = AdminAuthToken.decodeSessionToken(adminToken);
+      if (d != null) {
+         final Admin admin = getAdmin(d.accountId);
+         if (admin != null) {
+            if (verifyPermission(admin, rightsRequired)) {
+               return admin;
             }
          }
+      }
+      throw new ErrorResponseException(ERROR_UNKNOWN);
+   }
+
+   public Admin getAdmin(RequestContext ctx, String adminToken, long rightsRequired) {
+      if (ctx.header.fromType == TYPE_ADMIN) {
+         return getAdminInternal(adminToken, rightsRequired);
       }
       throw new ErrorResponseException(ERROR_INVALID_RIGHTS);
    }
@@ -190,7 +195,7 @@ public class AdminAccounts {
                return new Error(ERROR_INVALID_CREDENTIALS); // invalid password
             }
          } else {
-            auditLogger.info("Admin {} [{}] attempted to log in, invalid account", r.email, admin.accountId);
+            auditLogger.info("Admin {} attempted to log in, invalid account", r.email);
             return new Error(ERROR_INVALID_CREDENTIALS); // invalid account
          }
       } catch (Exception e) {
@@ -249,8 +254,8 @@ public class AdminAccounts {
             return Response.SUCCESS;
          } else {
             // they probably already exist
-            auditLogger.info("Admin {} [{}] failed to create an admin account for user {} [{}].  Account may already exist.",
-                  admin.email, admin.accountId, newUser.email, newUser.accountId);
+            auditLogger.info("Admin {} [{}] failed to create a new admin account.  Account may already exist.",
+                  admin.email, admin.accountId);
             return new Error(ERROR_INVALID_ACCOUNT);
          }
       } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {

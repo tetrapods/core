@@ -1197,7 +1197,12 @@ public class TetrapodService extends DefaultService
 
    @Override
    public Response requestSetClusterProperty(SetClusterPropertyRequest r, RequestContext ctx) {
-      Admin a = adminAccounts.getAdmin(ctx, r.adminToken, Admin.RIGHTS_CLUSTER_WRITE);
+      Admin a;
+      if (ctx.isFromService()) {
+         a = adminAccounts.getAdminInternal(r.adminToken, Admin.RIGHTS_CLUSTER_WRITE);
+      } else {
+         a = adminAccounts.getAdmin(ctx, r.adminToken, Admin.RIGHTS_CLUSTER_WRITE);
+      }
       if (!ctx.isFromService() && !adminAccounts.isValidAdminRequest(ctx, r.adminToken, Admin.RIGHTS_CLUSTER_WRITE)) {
          auditLogger.info("Admin {} [{}] failed to create or modify cluster property: {}.", a.email, a.accountId, r.property.key);
          return new Error(ERROR_INVALID_RIGHTS);
