@@ -83,23 +83,24 @@ public class Topic {
       if (sub == null) {
          sub = new Subscriber(entityId, childId);
          subscribers.put(entityId, sub);
-
-         final int parentId = entityId;
-         ParentSubscriber parent = parents.get(parentId);
-         if (parent == null) {
-            parent = new ParentSubscriber(parentId);
-            parents.put(parentId, parent);
-
-            // publish the topic on the parent
-            if (publisher.sendMessage(new TopicPublishedMessage(publisher.getEntityId(), topicId), parent.entityId, 0, topicId)) {
-               parent.init = true;
-            }
-         }
-         // register the new subscriber for their parent 
-         publisher.sendMessage(new TopicSubscribedMessage(publisher.getEntityId(), topicId, sub.entityId, sub.childId, once),
-               parent.entityId, 0, topicId);
-         fireTopicSubscribedEvent(entityId, childId, false);
       }
+      final int parentId = entityId;
+      ParentSubscriber parent = parents.get(parentId);
+      if (parent == null) {
+         parent = new ParentSubscriber(parentId);
+         parents.put(parentId, parent);
+
+         // publish the topic on the parent
+         if (publisher.sendMessage(new TopicPublishedMessage(publisher.getEntityId(), topicId), parent.entityId, 0, topicId)) {
+            parent.init = true;
+         }
+      }
+
+      // register the new subscriber for their parent 
+      publisher.sendMessage(new TopicSubscribedMessage(publisher.getEntityId(), topicId, sub.entityId, sub.childId, once),
+            parent.entityId, 0, topicId);
+      fireTopicSubscribedEvent(entityId, childId, false);
+
    }
 
    public synchronized void unsubscribe(int entityId, int childId) {
@@ -113,7 +114,7 @@ public class Topic {
       }
    }
 
-   public synchronized void broadcast(Message msg) { 
+   public synchronized void broadcast(Message msg) {
       // broadcast message to all parents with subscribers to this topic
       for (ParentSubscriber parent : parents.values()) {
          if (!parent.init) {
@@ -123,7 +124,7 @@ public class Topic {
                   final int parentId = sub.entityId;
                   if (parentId == parent.entityId) {
                      publisher.sendMessage(new TopicSubscribedMessage(publisher.getEntityId(), topicId, sub.entityId, sub.childId, true),
-                              parent.entityId, 0, topicId);
+                           parent.entityId, 0, topicId);
                      fireTopicSubscribedEvent(sub.entityId, sub.childId, true);
                   }
                }

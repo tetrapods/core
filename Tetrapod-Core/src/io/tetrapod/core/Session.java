@@ -289,8 +289,8 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
          if (!commsLogIgnore(msg))
             commsLog("%s  [A] => %s (to altId-%d)", this, msg.dump(), toId);
          final Object buffer = makeFrame(
-                  new MessageHeader(myEntityId, 0, toId, 0, msg.getContractId(), msg.getStructId(), MessageHeader.FLAGS_ALTERNATE), msg,
-                  ENVELOPE_BROADCAST);
+               new MessageHeader(myEntityId, 0, toId, 0, msg.getContractId(), msg.getStructId(), MessageHeader.FLAGS_ALTERNATE), msg,
+               ENVELOPE_BROADCAST);
          if (buffer != null) {
             writeFrame(buffer);
             getDispatcher().messagesSentCounter.mark();
@@ -304,7 +304,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
          if (!commsLogIgnore(msg))
             commsLog("%s  [B] => %s (to TOPIC:%d-#%d)", this, msg.dump(), toId, topicId);
          final Object buffer = makeFrame(new MessageHeader(myEntityId, topicId, toId, 0, msg.getContractId(), msg.getStructId(), (byte) 0),
-                  msg, ENVELOPE_BROADCAST);
+               msg, ENVELOPE_BROADCAST);
          if (buffer != null) {
             writeFrame(buffer);
             getDispatcher().messagesSentCounter.mark();
@@ -318,8 +318,8 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
          if (!commsLogIgnore(msg))
             commsLog("%s  [M] => %s (to %d.%d)", this, msg.dump(), toEntityId, toChildId);
          final Object buffer = makeFrame(
-                  new MessageHeader(myEntityId, 0, toEntityId, toChildId, msg.getContractId(), msg.getStructId(), (byte) 0), msg,
-                  ENVELOPE_MESSAGE);
+               new MessageHeader(myEntityId, 0, toEntityId, toChildId, msg.getContractId(), msg.getStructId(), (byte) 0), msg,
+               ENVELOPE_MESSAGE);
          if (buffer != null) {
             writeFrame(buffer);
             getDispatcher().messagesSentCounter.mark();
@@ -368,10 +368,10 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
       int newRequestId = addPendingRequest(async);
       if (!commsLogIgnore(header.structId))
          commsLog("%s  [%d/%d] ~> Request:%s", this, newRequestId, origRequestId,
-                  StructureFactory.getName(header.contractId, header.structId));
+               StructureFactory.getName(header.contractId, header.structId));
       // making a new header lets us not worry about synchronizing the change the requestId
       RequestHeader newHeader = new RequestHeader(newRequestId, header.fromParentId, header.fromChildId, header.toId, header.fromType,
-               header.timeout, header.version, header.contractId, header.structId);
+            header.timeout, header.version, header.contractId, header.structId);
       if (newHeader.toId == UNADDRESSED && (theirType != TYPE_TETRAPOD || header.contractId == TetrapodContract.CONTRACT_ID)) {
          newHeader.toId = theirId;
       }
@@ -537,6 +537,8 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
          case ServiceStatsMessage.STRUCT_ID:
          case DummyRequest.STRUCT_ID:
          case AppendEntriesRequest.STRUCT_ID:
+         case RaftStatsRequest.STRUCT_ID:
+         case RaftStatsResponse.STRUCT_ID:
             return true;
       }
       return !commsLog.isDebugEnabled();
