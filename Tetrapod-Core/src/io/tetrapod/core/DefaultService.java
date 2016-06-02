@@ -636,8 +636,8 @@ public class DefaultService
                if (securityCheck != null) {
                   responseFuture = CompletableFuture.completedFuture(securityCheck);
                } else {
-                  if (req instanceof FutureRequest) {
-                     responseFuture = ((FutureRequest)req).dispatchFuture(svc, ctx);
+                  if (req instanceof AsyncRequest) {
+                     responseFuture = ((AsyncRequest)req).dispatchAsync(svc, ctx);
                   } else {
                      Response resp = req.dispatch(svc, ctx);
                      if (resp != null) {
@@ -715,9 +715,9 @@ public class DefaultService
 
    public <TResp extends Response> CompletableFuture<TResp> sendRequestAsync(Request req) {
       if (serviceConnector != null) {
-         return serviceConnector.sendFutureRequest(req, Core.UNADDRESSED);
+         return serviceConnector.sendRequestAsync(req, Core.UNADDRESSED);
       }
-      return clusterClient.getSession().sendFutureRequest(req, Core.UNADDRESSED, (byte) 30);
+      return clusterClient.getSession().sendRequestAsync(req, Core.UNADDRESSED, (byte) 30);
    }
 
    public Async sendRequest(Request req) {
@@ -738,8 +738,8 @@ public class DefaultService
       return clusterClient.getSession().sendRequest(req, Core.DIRECT, (byte) 30);
    }
 
-   public <TResp extends Response> CompletableFuture<TResp> sendDirectRequestF(Request req) {
-      return clusterClient.getSession().sendFutureRequest(req, Core.DIRECT, (byte) 30);
+   public <TResp extends Response> CompletableFuture<TResp> sendDirectRequestAsync(Request req) {
+      return clusterClient.getSession().sendRequestAsync(req, Core.DIRECT, (byte) 30);
    }
 
    public boolean isServiceExistant(int entityId) {

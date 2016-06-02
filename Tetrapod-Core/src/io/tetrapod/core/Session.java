@@ -234,7 +234,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
       return sendRequest(req, toId, DEFAULT_REQUEST_TIMEOUT);
    }
 
-   public <TResp extends Response> CompletableFuture<TResp> sendFutureRequest(Request req, int toId, byte timeoutSeconds) {
+   public <TResp extends Response> CompletableFuture<TResp> sendRequestAsync(Request req, int toId, byte timeoutSeconds) {
       CompletableFuture<TResp> future = new CompletableFuture<>();
       Async async = sendRequest(req, toId, timeoutSeconds);
       async.handle(resp -> {

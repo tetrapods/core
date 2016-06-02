@@ -135,9 +135,9 @@ class JavaGenerator implements LanguageGenerator {
       t.add("rawname", c.name);
       t.add("class", c.classname());
       t.add("package", packageName);
-      t.add("requestClassType", c.annotations.has("async")?"FutureRequest":"Request");
+      t.add("requestClassType", c.annotations.has("async")?"AsyncRequest":"Request");
       t.add("responseClassType", c.annotations.has("async")?"CompletableFuture<? extends Response>":"Response");
-      t.add("dispatchFuncName", c.annotations.has("async")?"dispatchFuture":"dispatch");
+      t.add("dispatchFuncName", c.annotations.has("async")?"dispatchAsync":"dispatch");
       t.add("futurePrefix", c.annotations.has("async")?"CompletableFuture.completedFuture(":"");
       t.add("futureSuffix", c.annotations.has("async")?")":"");
       t.add("security", c.security.toUpperCase());
