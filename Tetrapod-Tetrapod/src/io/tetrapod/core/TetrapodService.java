@@ -23,7 +23,6 @@ import io.tetrapod.core.pubsub.Topic;
 import io.tetrapod.core.registry.*;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.rpc.Error;
-import io.tetrapod.core.serialize.datasources.ByteBufDataSource;
 import io.tetrapod.core.storage.*;
 import io.tetrapod.core.utils.*;
 import io.tetrapod.core.web.*;
@@ -482,100 +481,7 @@ public class TetrapodService extends DefaultService
          logger.error("Could not find sender entity  {} for {}", header.fromId, header.dump());
       }
    }
-<<<<<<< HEAD
 
-   private void broadcastTopic(final EntityInfo publisher, final MessageHeader header, final ByteBuf buf) throws IOException {
-      if (header.toId == UNADDRESSED || header.toId == getEntityId()) {
-         final RegistryTopic topic = publisher.getTopic(header.topicId);
-         if (topic != null) {
-            synchronized (topic) {
-               for (final Subscriber s : topic.getSubscribers()) {
-                  broadcastTopic(publisher, s, topic, header, buf);
-               }
-            }
-         } else {
-            logger.warn("Could not find topic {} for entity {} : {}", header.topicId, publisher, header.dump());
-            sendMessage(new TopicNotFoundMessage(publisher.entityId, header.topicId), publisher.entityId);
-         }
-      } else {
-         // relay to destination 
-         final Session ses = getRelaySession(header.toId, header.contractId);
-         if (ses != null) {
-            ses.sendRelayedMessage(header, buf, true);
-         }
-      }
-   }
-
-   private void broadcastAlt(final EntityInfo publisher, final MessageHeader header, final ByteBuf buf) throws IOException {
-      final int myId = getEntityId();
-      final boolean myChildOriginated = publisher.parentId == myId;
-      final boolean toAll = header.toId == UNADDRESSED;
-      for (EntityInfo e : registry.getEntities()) {
-         if (e.isTetrapod() && e.entityId != myId) {
-            if (myChildOriginated)
-               broadcastToAlt(e, header, buf);
-            continue;
-         }
-         if (e.isService()) {
-            continue;
-         }
-         if (toAll || e.getAlternateId() == header.toId) {
-            broadcastToAlt(e, header, buf);
-         }
-      }
-   }
-
-   private void broadcastTopic(final EntityInfo publisher, final Subscriber sub, final RegistryTopic topic, final MessageHeader header,
-         final ByteBuf buf) throws IOException {
-      final int ri = buf.readerIndex();
-      final EntityInfo e = registry.getEntity(sub.entityId);
-      if (e != null) {
-         if (e.entityId == getEntityId()) {
-            // dispatch to self
-            ByteBufDataSource reader = new ByteBufDataSource(buf);
-            final Object obj = StructureFactory.make(header.contractId, header.structId);
-            final Message msg = (obj instanceof Message) ? (Message) obj : null;
-            if (msg != null) {
-               msg.read(reader);
-               clusterClient.getSession().dispatchMessage(header, msg);
-            } else {
-               logger.warn("Could not read message for self-dispatch {}", header.dump());
-            }
-            buf.readerIndex(ri);
-         } else {
-            if (e.parentId == getEntityId() || e.isTetrapod()) {
-               final Session session = findSession(e);
-               if (session != null) {
-                  // rebroadcast this message if it was published by one of our children and we're sending it to another tetrapod
-                  final boolean keepBroadcasting = e.isTetrapod() && publisher.parentId == getEntityId();
-                  session.sendRelayedMessage(header, buf, keepBroadcasting);
-                  buf.readerIndex(ri);
-               } else {
-                  if (!e.isGone()) {
-                     logger.error("Could not find session for {} {}", e, header.dump());
-                  }
-               }
-            }
-         }
-      } else {
-         logger.error("Could not find subscriber {} for topic {}", sub.entityId, topic);
-      }
-   }
-
-   private void broadcastToAlt(final EntityInfo e, final MessageHeader header, final ByteBuf buf) throws IOException {
-      final int ri = buf.readerIndex();
-      if (!e.isGone()) {
-         final Session session = findSession(e);
-         if (session != null) {
-            final boolean keepBroadcasting = e.isTetrapod();
-            session.sendRelayedMessage(header, buf, keepBroadcasting);
-            buf.readerIndex(ri);
-         } else {
-            logger.error("Could not find session for {} {}", e, header.dump());
-         }
-      }
-   }
-=======
    //
    //   private void broadcastTopic(final EntityInfo publisher, final MessageHeader header, final ByteBuf buf) throws IOException {
    //      if (header.toParentId == UNADDRESSED || header.toParentId == getEntityId()) {
@@ -667,8 +573,7 @@ public class TetrapodService extends DefaultService
    //            logger.error("Could not find session for {} {}", e, header.dump());
    //         }
    //      }
-   //   }
->>>>>>> web
+   //   } 
 
    @Override
    public WebRoutes getWebRoutes() {
@@ -873,13 +778,13 @@ public class TetrapodService extends DefaultService
 
    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-   public void subscribeToCluster(Session ses, int toEntityId) {
+   public void subscribeToCluster(Session ses, int toEntityId, int toChildId) {
       if (ses.getTheirEntityType() == Core.TYPE_SERVICE) {
          // also auto-subscribe to services topic
          synchronized (servicesTopic) {
-            subscribe(servicesTopic.topicId, toEntityId);
+            subscribe(servicesTopic.topicId, toEntityId, toChildId);
             for (EntityInfo e : registry.getServices()) {
-               e.queue(() -> ses.sendMessage(new ServiceAddedMessage(e), toEntityId));
+               e.queue(() -> ses.sendMessage(new ServiceAddedMessage(e), toEntityId, toChildId));
             }
          }
       }
@@ -1004,7 +909,7 @@ public class TetrapodService extends DefaultService
 
             // avoid deadlock on raft state
             if (entity.isService() && entity.entityId != getEntityId()) {
-               dispatcher.dispatch(() -> subscribeToCluster(ctx.session, entity.entityId));
+               dispatcher.dispatch(() -> subscribeToCluster(ctx.session, entity.entityId, 0));
             }
             responder.respondWith(
                   new RegisterResponse(entity.entityId, getEntityId(), EntityToken.encode(entity.entityId, entity.reclaimToken)));
@@ -1046,20 +951,12 @@ public class TetrapodService extends DefaultService
       }
 
       synchronized (servicesTopic) {
-<<<<<<< HEAD
-=======
          subscribe(servicesTopic.topicId, ctx.header.fromParentId, ctx.header.fromChildId);
->>>>>>> web
          // send all current services
          //EntityInfo sub = registry.getEntity(ctx.header.fromId);
-         subscribe(servicesTopic.topicId, ctx.header.fromId);
          for (EntityInfo e : registry.getServices()) {
-<<<<<<< HEAD
-            e.queue(() -> ctx.session.sendMessage(new ServiceAddedMessage(e), ctx.header.fromId));
-=======
             e.queue(() -> sendPrivateMessage(new ServiceAddedMessage(e), ctx.header.fromParentId, ctx.header.fromChildId,
-                     servicesTopic.topicId));
->>>>>>> web
+                  servicesTopic.topicId));
          }
          // send all current services
          //         for (EntityInfo e : registry.getServices()) {

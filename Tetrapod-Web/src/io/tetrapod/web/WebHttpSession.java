@@ -7,22 +7,6 @@ import static io.netty.handler.codec.http.HttpResponseStatus.*;
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 import static io.tetrapod.protocol.core.Core.*;
 import static io.tetrapod.protocol.core.CoreContract.*;
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
-import io.netty.channel.*;
-import io.netty.channel.socket.SocketChannel;
-import io.netty.handler.codec.http.*;
-import io.netty.handler.codec.http.websocketx.*;
-import io.netty.util.CharsetUtil;
-import io.netty.util.ReferenceCountUtil;
-import io.tetrapod.core.*;
-import io.tetrapod.core.json.*;
-import io.tetrapod.core.registry.EntityToken;
-import io.tetrapod.core.rpc.*;
-import io.tetrapod.core.rpc.Error;
-import io.tetrapod.core.serialize.datasources.ByteBufDataSource;
-import io.tetrapod.core.utils.Util;
-import io.tetrapod.protocol.core.*;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -35,6 +19,24 @@ import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.Timer;
 import com.codahale.metrics.Timer.Context;
+
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
+import io.netty.channel.*;
+import io.netty.channel.socket.SocketChannel;
+import io.netty.handler.codec.http.*;
+import io.netty.handler.codec.http.websocketx.*;
+import io.netty.util.CharsetUtil;
+import io.netty.util.ReferenceCountUtil;
+import io.tetrapod.core.*;
+import io.tetrapod.core.json.JSONArray;
+import io.tetrapod.core.json.JSONObject;
+import io.tetrapod.core.rpc.*;
+import io.tetrapod.core.rpc.Error;
+import io.tetrapod.core.serialize.datasources.ByteBufDataSource;
+import io.tetrapod.core.utils.Util;
+import io.tetrapod.core.web.*;
+import io.tetrapod.protocol.core.*;
 
 public class WebHttpSession extends WebSession {
    protected static final Logger               logger            = LoggerFactory.getLogger(WebHttpSession.class);
@@ -236,7 +238,7 @@ public class WebHttpSession extends WebSession {
 
       } else {
          getDispatcher().dispatch(() -> {
-            final LongPollQueue messages = LongPollQueue.getQueue(getTheirEntityId());
+            final LongPollQueue messages = LongPollQueue.getQueue(getTheirEntityId(), true);
             final long startTime = System.currentTimeMillis();
             // long poll -- wait until there are messages in queue, and return them
             assert messages != null;
@@ -247,7 +249,7 @@ public class WebHttpSession extends WebSession {
    }
 
    private void longPoll(final int millis, final LongPollQueue messages, final long startTime, final ChannelHandlerContext ctx,
-            final FullHttpRequest req) {
+         final FullHttpRequest req) {
       getDispatcher().dispatch(millis, TimeUnit.MILLISECONDS, () -> {
          if (messages.tryLock()) {
             try {
@@ -287,7 +289,7 @@ public class WebHttpSession extends WebSession {
          logger.debug("{} WEB API REQUEST: {} keepAlive = {}", this, req.getUri(), HttpHeaders.isKeepAlive(req));
          header.requestId = requestCounter.incrementAndGet();
          header.fromType = Core.TYPE_WEBAPI;
-         header.fromParentId = getMyEntityId(); 
+         header.fromParentId = getMyEntityId();
          header.fromChildId = getTheirEntityId();
 
          final ResponseHandler handler = new ResponseHandler() {
@@ -305,8 +307,9 @@ public class WebHttpSession extends WebSession {
                if (body == null || body.trim().isEmpty()) {
                   body = req.getUri();
                }
-               final WebAPIRequest request = new WebAPIRequest(route.path, getHeaders(req).toString(), context.getRequestParams().toString(),
-                        body);
+               final WebAPIRequest request = new WebAPIRequest(route.path, getHeaders(req).toString(),
+                     context.getRequestParams().toString(),
+                     body, req.getUri());
                final int toEntityId = relayHandler.getAvailableService(header.contractId);
                if (toEntityId != 0) {
                   final Session ses = relayHandler.getRelaySession(toEntityId, header.contractId);
@@ -565,7 +568,7 @@ public class WebHttpSession extends WebSession {
          if (!commsLogIgnore(header.structId)) {
             commsLog("%s  [M] ~] Message:%d %s (to %d)", this, header.structId, getNameFor(header), header.toChildId);
          }
-         final LongPollQueue messages = LongPollQueue.getQueue(getTheirEntityId());
+         final LongPollQueue messages = LongPollQueue.getQueue(getTheirEntityId(), false);
          // FIXME: Need a sensible way to protect against memory gobbling if this queue isn't cleared fast enough
          messages.add(toJSON(header, payload, ENVELOPE_MESSAGE));
          //logger.debug("{} Queued {} messages for longPoller {}", this, messages.size(), messages.getEntityId());

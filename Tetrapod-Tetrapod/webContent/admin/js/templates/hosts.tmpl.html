@@ -4,7 +4,10 @@
       <button class="btn btn-sm" data-bind="click: onClearAllErrors">Clear Errors</button>
       <button class="btn btn-sm" data-bind="click: deployBuilds">Deploy</button>
       <button class="btn btn-sm btn-maint" data-bind="click: toggleMaintenance, css: maintenanceMode() ? 'active' : ''">Maintenance</button>
-      <button class="btn btn-sm" data-bind="click: updateClientBuild">Web Build: <span data-bind="text: currentClientBuild"></span></button>
+      <button class="btn btn-sm" data-bind="click: updateClientBuild">
+         Web Build:
+         <span data-bind="text: currentClientBuild"></span>
+      </button>
    </div>
 </div>
 
@@ -354,8 +357,8 @@
                            </span>
                            <span class="stat">
 
-                              <label>Log Level:</label> <select
-                                 data-bind="options:     logLevels,
+                              <label>Log Level:</label>
+                              <select data-bind="options:     logLevels,
                                               optionsText: function(item) { return getLogLevelStyle(item);  },
                                                    value: logLevel,"></select>
                            </span>

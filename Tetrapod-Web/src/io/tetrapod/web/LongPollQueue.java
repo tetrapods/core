@@ -23,7 +23,7 @@ public class LongPollQueue extends LinkedBlockingQueue<JSONObject> {
          LongPollQueue q = queues.get(entityId);
          if (q == null && createIfMissing) {
             q = new LongPollQueue(entityId);
-            queues.put(entityId, q);
+            queues.put(entityId, q); 
          }
          return q;
       }
