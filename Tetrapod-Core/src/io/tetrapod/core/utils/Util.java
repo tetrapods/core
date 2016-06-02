@@ -710,7 +710,7 @@ public class Util {
    }
 
    public static String formatCents(double pennies) {
-      return String.format("%f¢", pennies);
+      return String.format("%1.1f¢", pennies);
    }
 
 }

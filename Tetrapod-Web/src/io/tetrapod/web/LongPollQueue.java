@@ -18,10 +18,10 @@ public class LongPollQueue extends LinkedBlockingQueue<JSONObject> {
 
    private static final Map<Integer, LongPollQueue> queues           = new HashMap<>();
 
-   public static LongPollQueue getQueue(int entityId) {
+   public static LongPollQueue getQueue(int entityId, boolean createIfMissing) {
       synchronized (queues) {
          LongPollQueue q = queues.get(entityId);
-         if (q == null) {
+         if (q == null && createIfMissing) {
             q = new LongPollQueue(entityId);
             queues.put(entityId, q);
          }
@@ -29,16 +29,25 @@ public class LongPollQueue extends LinkedBlockingQueue<JSONObject> {
       }
    }
 
-   public static void clearEntity(int entityId) {
+   public static void clearEntity(Integer entityId) {
       synchronized (queues) {
          if (queues.remove(entityId) != null) {
-            logger.debug("Removing long poll queue for {}", entityId);
+            logger.info("Removing long poll queue for {}", entityId);
          }
       }
    }
 
+   public synchronized void setLastDrain(long lastDrainTime) {
+      this.lastDrainTime = lastDrainTime;
+   }
+
+   public synchronized long getLastDrainTime() {
+      return lastDrainTime;
+   }
+
    private final int entityId;
-   private Lock      lock = new ReentrantLock(true);
+   private Lock      lock          = new ReentrantLock(true);
+   private long      lastDrainTime = System.currentTimeMillis();
 
    public LongPollQueue(int entityId) {
       this.entityId = entityId;
@@ -54,6 +63,15 @@ public class LongPollQueue extends LinkedBlockingQueue<JSONObject> {
 
    public int getEntityId() {
       return entityId;
+   }
+
+   public static void logStats() {
+      logger.info("Long Poll Queues = {}", queues.size());
+      synchronized (queues) {
+         for (LongPollQueue q : queues.values()) {
+            logger.info("Queue-{} = {} items", q.entityId, q.size());
+         }
+      }
    }
 
 }

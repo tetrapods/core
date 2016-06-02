@@ -30,6 +30,7 @@ import io.tetrapod.core.web.*;
 import io.tetrapod.protocol.core.*;
 import io.tetrapod.protocol.raft.*;
 import io.tetrapod.protocol.storage.*;
+import io.tetrapod.web.WebHttpSession;
 
 /**
  * The tetrapod service is the core cluster service which handles message routing, cluster

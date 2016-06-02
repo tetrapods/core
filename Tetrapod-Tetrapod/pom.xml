@@ -23,6 +23,11 @@
 			<groupId>${project.groupId}</groupId>
 			<version>${project.version}</version>
 		</dependency>
+      <dependency>
+         <artifactId>tetrapod-web</artifactId>
+         <groupId>${project.groupId}</groupId>
+         <version>${project.version}</version>
+      </dependency>
 		<dependency>
 			<artifactId>tetrapod-raft</artifactId>
 			<groupId>tetrapod-raft</groupId>
