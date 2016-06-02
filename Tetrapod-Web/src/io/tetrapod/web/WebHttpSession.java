@@ -35,7 +35,6 @@ import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.rpc.Error;
 import io.tetrapod.core.serialize.datasources.ByteBufDataSource;
 import io.tetrapod.core.utils.Util;
-import io.tetrapod.core.web.*;
 import io.tetrapod.protocol.core.*;
 
 public class WebHttpSession extends WebSession {

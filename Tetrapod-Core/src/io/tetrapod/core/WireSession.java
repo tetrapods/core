@@ -186,7 +186,7 @@ public class WireSession extends Session {
       // set/clobber with known details, unless it's from a trusted tetrapod
       if (theirType != TYPE_TETRAPOD && theirType != TYPE_SERVICE) {
          header.fromParentId = theirId;
-         header.fromChildId = theirId;
+         //header.fromChildId = theirId;
          header.fromType = theirType;
       }
 

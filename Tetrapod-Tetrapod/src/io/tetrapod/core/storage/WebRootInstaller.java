@@ -3,6 +3,8 @@ package io.tetrapod.core.storage;
 import io.tetrapod.core.utils.Util;
 import io.tetrapod.core.web.*;
 import io.tetrapod.protocol.core.WebRootDef;
+import io.tetrapod.web.WebRoot;
+import io.tetrapod.web.WebRootLocalFilesystem;
 
 import java.io.*;
 import java.net.URL;

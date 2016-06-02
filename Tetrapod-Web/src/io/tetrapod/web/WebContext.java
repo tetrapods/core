@@ -1,4 +1,4 @@
-package io.tetrapod.core.web;
+package io.tetrapod.web;
 
 import static io.netty.buffer.Unpooled.copiedBuffer;
 import static io.netty.buffer.Unpooled.wrappedBuffer;
@@ -53,7 +53,8 @@ public class WebContext {
       RequestHeader header = new RequestHeader();
 
       header.toId = params.optInt("_toId", UNADDRESSED);
-      header.fromId = s.getTheirEntityId();
+      header.fromChildId = s.getTheirEntityId();
+      header.fromParentId = s.getMyEntityId();
       header.fromType = s.getTheirEntityType();
       if (route == null) {
          // route is null for web socket & poller calls
@@ -112,13 +113,13 @@ public class WebContext {
          }
          String json = request.content().toString(charset);
          JSONObject data = new JSONObject(json);
-         if(requestParameters.length() > 0) {
-            for(String k : JSONObject.getNames(requestParameters)) {
-              data.put(k, requestParameters.get(k));
+         if (requestParameters.length() > 0) {
+            for (String k : JSONObject.getNames(requestParameters)) {
+               data.put(k, requestParameters.get(k));
             }
          }
          requestParameters = data;
-   } else {
+      } else {
          final HttpPostRequestDecoder decoder = new HttpPostRequestDecoder(new DefaultHttpDataFactory(false), request);
          try {
             while (decoder.hasNext()) {

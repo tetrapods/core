@@ -1,4 +1,4 @@
-package io.tetrapod.core.web;
+package io.tetrapod.core;
 
 import io.tetrapod.protocol.core.WebRoute;
 

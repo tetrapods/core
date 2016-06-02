@@ -157,12 +157,12 @@ public class AdminAccounts {
    ///////////////////////// RPC HANDLERS /////////////////////// 
 
    public Response requestAdminAuthorize(AdminAuthorizeRequest r, RequestContext ctxA) {
-      SessionRequestContext ctx = (SessionRequestContext) ctxA;
+      //SessionRequestContext ctx = (SessionRequestContext) ctxA;
       final int accountId = AdminAuthToken.decodeLoginToken(r.token);
       if (accountId != 0) {
          final Admin admin = getAdmin(accountId);
          if (admin != null) {
-            ctx.session.theirType = Core.TYPE_ADMIN;
+            //ctx.session.theirType = Core.TYPE_ADMIN;
             return new AdminAuthorizeResponse(admin.accountId, admin.email);
          }
       } else {

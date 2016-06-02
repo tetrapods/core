@@ -160,7 +160,7 @@ public class ServiceStats implements TopicUnsubscribedMessage.Handler {
    @Override
    public void messageTopicUnsubscribed(TopicUnsubscribedMessage m, MessageContext ctx) {
       if (m.publisherId == service.getEntityId()) {
-         statsTopic.unsubscribe(m.entityId);
+         statsTopic.unsubscribe(m.entityId, m.childId);
       }
    }
 

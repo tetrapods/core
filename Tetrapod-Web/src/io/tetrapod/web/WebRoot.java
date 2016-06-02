@@ -1,4 +1,4 @@
-package io.tetrapod.core.web;
+package io.tetrapod.web;
 
 import java.io.IOException;
 import java.util.*;

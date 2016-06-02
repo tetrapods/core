@@ -16,7 +16,6 @@ import io.tetrapod.core.*;
 import io.tetrapod.core.Session.RelayHandler;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.utils.Util;
-import io.tetrapod.core.web.*;
 import io.tetrapod.protocol.core.*;
 import io.tetrapod.protocol.web.KeepAliveRequest;
 import io.tetrapod.protocol.web.RegisterRequest;
@@ -24,7 +23,8 @@ import io.tetrapod.protocol.web.RegisterResponse;
 import io.tetrapod.protocol.web.WebContract;
 
 /**
- * The web service serves http web routes and terminates web socket connections that can relay into the cluster
+ * The web service serves http web routes and terminates web socket connections that can
+ * relay into the cluster
  * 
  * TODO: Implement....
  * <ul>
@@ -65,7 +65,7 @@ public class WebService extends DefaultService implements WebContract.API, Relay
       // FIXME: init contentRootMap with webRoutes
 
       contentRootMap.put("core",
-               new WebRootLocalFilesystem("/", new File("/Users/adavidson/workspace/tetrapod/core/Tetrapod-Tetrapod/webContent")));
+            new WebRootLocalFilesystem("/", new File("/Users/adavidson/workspace/tetrapod/core/Tetrapod-Tetrapod/webContent")));
       contentRootMap.put("chat", new WebRootLocalFilesystem("/", new File("/Users/adavidson/workspace/tetrapod/website/webContent")));
 
    }
@@ -89,7 +89,7 @@ public class WebService extends DefaultService implements WebContract.API, Relay
             // create secure port servers, if configured
             if (sslContext != null) {
                servers.add(new Server(Util.getProperty("tetrapod.https.port", DEFAULT_HTTPS_PORT), (ch) -> makeWebSession(ch), dispatcher,
-                        sslContext, false));
+                     sslContext, false));
             }
             // start listening
             for (Server s : servers) {
@@ -203,6 +203,9 @@ public class WebService extends DefaultService implements WebContract.API, Relay
 
    @Override
    public void relayMessage(MessageHeader header, ByteBuf buf, boolean isBroadcast) throws IOException {
+      if (header.toChildId != 0) {
+         logger.info("Relay to child {}", header.toChildId);
+      }
       if (isBroadcast) {
          final ServiceTopic topic = topics.get(topicKey(header.fromId, header.topicId));
          if (topic != null) {
@@ -292,6 +295,7 @@ public class WebService extends DefaultService implements WebContract.API, Relay
       final SessionRequestContext ctx = (SessionRequestContext) ctxA;
       final int entityId = clientCounter.incrementAndGet();
       ctx.session.setTheirEntityId(entityId);
+      clients.put(entityId, (WebHttpSession) ctx.session);
       return new RegisterResponse(entityId, getEntityId());
    }
 
@@ -336,7 +340,7 @@ public class WebService extends DefaultService implements WebContract.API, Relay
                      //FIXME: s.unsubscribe(topic);
                      // notify the subscriber that they have been unsubscribed from this topic
                      s.sendMessage(new TopicUnsubscribedMessage(m.publisherId, topic.topicId, entityId, sub.entityId), entityId,
-                              sub.entityId);
+                           sub.entityId);
                   }
                }
             }

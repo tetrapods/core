@@ -158,7 +158,9 @@ public class RequestHeader extends Structure {
 
       if (requestId != that.requestId)
          return false;
-      if (fromId != that.fromId)
+      if (fromParentId != that.fromParentId)
+         return false;
+      if (fromChildId != that.fromChildId)
          return false;
       if (toId != that.toId)
          return false;
@@ -180,7 +182,8 @@ public class RequestHeader extends Structure {
    public int hashCode() {
       int result = 0;
       result = 31 * result + requestId;
-      result = 31 * result + fromId;
+      result = 31 * result + fromParentId;
+      result = 31 * result + fromChildId;
       result = 31 * result + toId;
       result = 31 * result + fromType;
       result = 31 * result + timeout;

@@ -17,19 +17,19 @@ import io.tetrapod.core.pubsub.Topic;
 import io.tetrapod.core.registry.EntityInfo;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.utils.*;
-import io.tetrapod.core.web.WebRoot;
-import io.tetrapod.core.web.WebRoutes;
 import io.tetrapod.protocol.core.*;
 import io.tetrapod.protocol.raft.*;
 import io.tetrapod.raft.*;
 import io.tetrapod.raft.RaftEngine.Role;
 import io.tetrapod.raft.storage.*;
+import io.tetrapod.web.WebRoot;
 
 /**
- * Wraps a RaftEngine in our Tetrapod-RPC and implements the StorageContract via TetrapodStateMachine
+ * Wraps a RaftEngine in our Tetrapod-RPC and implements the StorageContract via
+ * TetrapodStateMachine
  */
 public class TetrapodCluster extends Storage
-         implements RaftRPC<TetrapodStateMachine>, RaftContract.API, StateMachine.Listener<TetrapodStateMachine>, SessionFactory {
+      implements RaftRPC<TetrapodStateMachine>, RaftContract.API, StateMachine.Listener<TetrapodStateMachine>, SessionFactory {
 
    private static final Logger                    logger         = LoggerFactory.getLogger(TetrapodCluster.class);
 
@@ -78,7 +78,7 @@ public class TetrapodCluster extends Storage
       }
 
       this.cfg = new Config().setLogDir(new File(Util.getProperty("raft.logs", "logs/raft")))
-               .setClusterName(Util.getProperty("raft.name", "Tetrapod"));
+            .setClusterName(Util.getProperty("raft.name", "Tetrapod"));
 
       RaftEngine<TetrapodStateMachine> raftEngine = null;
       try {
@@ -293,14 +293,14 @@ public class TetrapodCluster extends Storage
       }
    }
 
-   public void sendClusterDetails(Session ses, int toEntityId, int topicId) {
+   public void sendClusterDetails(Session ses, int toEntityId, int childId, int topicId) {
       // send ourselves
       ses.sendMessage(
-               new ClusterMemberMessage(service.getEntityId(), Util.getHostName(), service.getServicePort(), service.getClusterPort(), null),
-               toEntityId, 0);
+            new ClusterMemberMessage(service.getEntityId(), Util.getHostName(), service.getServicePort(), service.getClusterPort(), null),
+            toEntityId, childId);
       // send all current members
       for (TetrapodPeer pod : cluster.values()) {
-         ses.sendMessage(new ClusterMemberMessage(pod.entityId, pod.host, pod.servicePort, pod.clusterPort, pod.uuid), toEntityId, 0);
+         ses.sendMessage(new ClusterMemberMessage(pod.entityId, pod.host, pod.servicePort, pod.clusterPort, pod.uuid), toEntityId, childId);
       }
       // non-tetrapods need to get some cluster details sent
       if (ses.getTheirEntityType() != Core.TYPE_TETRAPOD) {
@@ -309,12 +309,12 @@ public class TetrapodCluster extends Storage
             for (ClusterProperty prop : state.props.values()) {
                prop = new ClusterProperty(prop.key, prop.secret, prop.val);
                prop.val = AESEncryptor.decryptSaltedAES(prop.val, state.secretKey);
-               ses.sendMessage(new ClusterPropertyAddedMessage(prop), toEntityId, 0);
+               ses.sendMessage(new ClusterPropertyAddedMessage(prop), toEntityId, childId);
             }
          }
       }
       // tell them they are up to date
-      ses.sendMessage(new ClusterSyncedMessage(), toEntityId, 0);
+      ses.sendMessage(new ClusterSyncedMessage(), toEntityId, childId);
    }
 
    public void sendAdminDetails(Session ses, int toEntityId, int toChildId, int topicId) {
@@ -339,7 +339,7 @@ public class TetrapodCluster extends Storage
 
    public boolean addMember(int entityId, String host, int servicePort, int clusterPort, Session ses) {
       final Entity e = new Entity(entityId, entityId, 0, host, 0, Core.TYPE_TETRAPOD, service.getShortName(), 0, service.getContractId(),
-               service.buildName);
+            service.buildName);
       state.addEntity(e, true);
       onAddEntityCommand(new AddEntityCommand(e));
 
@@ -370,7 +370,7 @@ public class TetrapodCluster extends Storage
 
    @Override
    public void sendRequestVote(String clusterName, int peerId, long term, int candidateId, long lastLogIndex, long lastLogTerm,
-            final VoteResponseHandler handler) {
+         final VoteResponseHandler handler) {
       sendPeerRequest(new VoteRequest(clusterName, term, candidateId, lastLogIndex, lastLogTerm), peerId).handle(res -> {
          if (res.isError()) {
             logger.error("VoteRequest {}", res);
@@ -385,7 +385,7 @@ public class TetrapodCluster extends Storage
 
    @Override
    public void sendAppendEntries(int peerId, long term, int leaderId, long prevLogIndex, long prevLogTerm,
-            Entry<TetrapodStateMachine>[] entries, long leaderCommit, final AppendEntriesResponseHandler handler) {
+         Entry<TetrapodStateMachine>[] entries, long leaderCommit, final AppendEntriesResponseHandler handler) {
 
       final LogEntry[] entryList = entries == null ? null : new LogEntry[entries.length];
       if (entryList != null) {
@@ -418,7 +418,7 @@ public class TetrapodCluster extends Storage
 
    @Override
    public void sendInstallSnapshot(int peerId, long term, long index, long length, int partSize, int part, byte[] data,
-            final InstallSnapshotResponseHandler handler) {
+         final InstallSnapshotResponseHandler handler) {
       sendPeerRequest(new InstallSnapshotRequest(term, index, length, partSize, part, data), peerId).handle(res -> {
          if (res.isError()) {
             logger.error("InstallSnapshotRequest {}", res);
@@ -435,7 +435,7 @@ public class TetrapodCluster extends Storage
    // TODO: Support for idempotent RPCs would be nice
    @Override
    public void sendIssueCommand(int peerId, final Command<TetrapodStateMachine> command,
-            final ClientResponseHandler<TetrapodStateMachine> handler) {
+         final ClientResponseHandler<TetrapodStateMachine> handler) {
       try {
          final byte[] data = commandToBytes(command);
          sendPeerRequest(new IssueCommandRequest(command.getCommandType(), data), peerId).handle(res -> {
@@ -449,7 +449,7 @@ public class TetrapodCluster extends Storage
                   IssueCommandResponse r = (IssueCommandResponse) res;
                   try {
                      handler.handleResponse(
-                              new Entry<TetrapodStateMachine>(r.term, r.index, bytesToCommand(r.command, command.getCommandType())));
+                           new Entry<TetrapodStateMachine>(r.term, r.index, bytesToCommand(r.command, command.getCommandType())));
                   } catch (IOException e) {
                      logger.error(e.getMessage(), e);
                   }
@@ -515,7 +515,7 @@ public class TetrapodCluster extends Storage
 
          // subscribe them to our cluster and registry views
          logger.info("**************************** SYNC TO {} {}", ctx.session, req.entityId);
-         service.subscribeToCluster(ctx.session, req.entityId);
+         service.subscribeToCluster(ctx.session, req.entityId, 0);
 
          entity.queue(() -> service.broadcastServicesMessage(new ServiceAddedMessage(entity)));
       }
@@ -551,11 +551,11 @@ public class TetrapodCluster extends Storage
       }
 
       raft.handleAppendEntriesRequest(r.term, r.leaderId, r.prevLogIndex, r.prevLogTerm, entries, r.leaderCommit,
-               (term, success, lastLogIndex) -> {
-                  res.term = term;
-                  res.success = success;
-                  res.lastLogIndex = lastLogIndex;
-               });
+            (term, success, lastLogIndex) -> {
+               res.term = term;
+               res.success = success;
+               res.lastLogIndex = lastLogIndex;
+            });
       return res;
    }
 
@@ -599,7 +599,8 @@ public class TetrapodCluster extends Storage
       executeCommand(cmd, handler, false);
    }
 
-   public void executeCommand(Command<TetrapodStateMachine> cmd, ClientResponseHandler<TetrapodStateMachine> handler, boolean waitForLocal) {
+   public void executeCommand(Command<TetrapodStateMachine> cmd, ClientResponseHandler<TetrapodStateMachine> handler,
+         boolean waitForLocal) {
       boolean sent = false;
       while (!sent) {
          // if we're the leader we can execute directly
@@ -652,7 +653,7 @@ public class TetrapodCluster extends Storage
    }
 
    public Response executePendingCommand(final Command<TetrapodStateMachine> cmd,
-            final PendingClientResponseHandler<TetrapodStateMachine> handler) {
+         final PendingClientResponseHandler<TetrapodStateMachine> handler) {
 
       // if we're the leader we can execute directly
       if (!raft.executeCommand(cmd, handler)) {
@@ -736,8 +737,8 @@ public class TetrapodCluster extends Storage
 
    public void logStatus() {
       logger.info(String.format("#%d: %9s term=%d, lastIndex=%d, lastTerm=%d commitIndex=%d, %s, peers=%d, leader=%d checksum=%016X",
-               raft.getPeerId(), raft.getRole(), raft.getCurrentTerm(), raft.getLog().getLastIndex(), raft.getLog().getLastTerm(),
-               raft.getLog().getCommitIndex(), state, raft.getClusterSize(), raft.getLeader(), state.getChecksum()));
+            raft.getPeerId(), raft.getRole(), raft.getCurrentTerm(), raft.getLog().getLastIndex(), raft.getLog().getLastTerm(),
+            raft.getLog().getCommitIndex(), state, raft.getClusterSize(), raft.getLeader(), state.getChecksum()));
       if (!raft.getLog().isRunning()) {
          logger.warn("RAFT LOG NOT RUNNING");
       }
@@ -752,7 +753,7 @@ public class TetrapodCluster extends Storage
          }
 
          return new RaftStatsResponse((byte) raft.getRole().ordinal(), raft.getCurrentTerm(), raft.getLog().getLastTerm(),
-                  raft.getLog().getLastIndex(), raft.getLog().getCommitIndex(), raft.getLeader(), peers);
+               raft.getLog().getLastIndex(), raft.getLog().getCommitIndex(), raft.getLeader(), peers);
       }
    }
 
@@ -883,44 +884,44 @@ public class TetrapodCluster extends Storage
 
    public Response requestClaimOwnership(final ClaimOwnershipRequest r, final SessionRequestContext ctx) {
       return executePendingCommand(
-               new ClaimOwnershipCommand(ctx.header.fromParentId, r.prefix, r.key, r.leaseMillis, System.currentTimeMillis()),
-               new PendingClientResponseHandler<TetrapodStateMachine>(ctx) {
-                  @Override
-                  public Response handlePendingResponse(Entry<TetrapodStateMachine> e) {
-                     if (e != null) {
-                        final ClaimOwnershipCommand c = (ClaimOwnershipCommand) e.getCommand();
-                        if (c.wasAcquired()) {
-                           return new ClaimOwnershipResponse(ctx.header.fromParentId, c.getExpiry());
-                        } else {
-                           Owner o = state.ownedItems.get(r.key);
-                           if (o != null) {
-                              return new ClaimOwnershipResponse(o.entityId, o.expiry);
-                           }
+            new ClaimOwnershipCommand(ctx.header.fromParentId, r.prefix, r.key, r.leaseMillis, System.currentTimeMillis()),
+            new PendingClientResponseHandler<TetrapodStateMachine>(ctx) {
+               @Override
+               public Response handlePendingResponse(Entry<TetrapodStateMachine> e) {
+                  if (e != null) {
+                     final ClaimOwnershipCommand c = (ClaimOwnershipCommand) e.getCommand();
+                     if (c.wasAcquired()) {
+                        return new ClaimOwnershipResponse(ctx.header.fromParentId, c.getExpiry());
+                     } else {
+                        Owner o = state.ownedItems.get(r.key);
+                        if (o != null) {
+                           return new ClaimOwnershipResponse(o.entityId, o.expiry);
                         }
                      }
-                     return Response.error(CoreContract.ERROR_UNKNOWN);
                   }
-               });
+                  return Response.error(CoreContract.ERROR_UNKNOWN);
+               }
+            });
    }
 
    public Response requestRetainOwnership(RetainOwnershipRequest r, final SessionRequestContext ctx) {
       return executePendingCommand(new RetainOwnershipCommand(ctx.header.fromParentId, r.prefix, r.leaseMillis, System.currentTimeMillis()),
-               new PendingClientResponseHandler<TetrapodStateMachine>(ctx) {
-                  @Override
-                  public Response handlePendingResponse(Entry<TetrapodStateMachine> e) {
-                     return e != null ? Response.SUCCESS : Response.error(CoreContract.ERROR_UNKNOWN);
-                  }
-               });
+            new PendingClientResponseHandler<TetrapodStateMachine>(ctx) {
+               @Override
+               public Response handlePendingResponse(Entry<TetrapodStateMachine> e) {
+                  return e != null ? Response.SUCCESS : Response.error(CoreContract.ERROR_UNKNOWN);
+               }
+            });
    }
 
    public Response requestReleaseOwnership(ReleaseOwnershipRequest r, final SessionRequestContext ctx) {
       return executePendingCommand(new ReleaseOwnershipCommand(ctx.header.fromParentId, r.prefix, r.keys),
-               new PendingClientResponseHandler<TetrapodStateMachine>(ctx) {
-                  @Override
-                  public Response handlePendingResponse(Entry<TetrapodStateMachine> e) {
-                     return e != null ? Response.SUCCESS : Response.error(CoreContract.ERROR_UNKNOWN);
-                  }
-               });
+            new PendingClientResponseHandler<TetrapodStateMachine>(ctx) {
+               @Override
+               public Response handlePendingResponse(Entry<TetrapodStateMachine> e) {
+                  return e != null ? Response.SUCCESS : Response.error(CoreContract.ERROR_UNKNOWN);
+               }
+            });
    }
 
    public Response requestSubscribeOwnership(SubscribeOwnershipRequest r, SessionRequestContext ctx) {
@@ -1053,7 +1054,7 @@ public class TetrapodCluster extends Storage
       logger.info("=========================@ TETRAPOD CLUSTER REGISTRY @===========================");
       for (EntityInfo e : list) {
          logger.info(String.format(" 0x%08X 0x%08X %-15s status=%08X [%s]", e.parentId, e.entityId, e.name, e.status,
-                  e.hasConnectedSession() ? "CONNECTED" : "*"));
+               e.hasConnectedSession() ? "CONNECTED" : "*"));
       }
       logger.info("=================================================================================\n");
    }

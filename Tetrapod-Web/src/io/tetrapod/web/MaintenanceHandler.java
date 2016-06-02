@@ -1,4 +1,4 @@
-package io.tetrapod.core;
+package io.tetrapod.web;
 
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFuture;
@@ -15,7 +15,7 @@ import io.netty.util.CharsetUtil;
 import io.netty.util.ReferenceCountUtil;
 import io.tetrapod.core.utils.AdminAuthToken;
 import io.tetrapod.core.utils.Util;
-import io.tetrapod.core.web.WebRoot;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -148,7 +148,9 @@ public class MessageHeader extends Structure {
          return false;
       if (topicId != that.topicId)
          return false;
-      if (toId != that.toId)
+      if (toParentId != that.toParentId)
+         return false;
+      if (toChildId != that.toChildId)
          return false;
       if (contractId != that.contractId)
          return false;
@@ -165,7 +167,8 @@ public class MessageHeader extends Structure {
       int result = 0;
       result = 31 * result + fromId;
       result = 31 * result + topicId;
-      result = 31 * result + toId;
+      result = 31 * result + toParentId;
+      result = 31 * result + toChildId;
       result = 31 * result + contractId;
       result = 31 * result + structId;
       result = 31 * result + flags;

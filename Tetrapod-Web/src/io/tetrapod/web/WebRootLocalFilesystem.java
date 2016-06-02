@@ -1,4 +1,4 @@
-package io.tetrapod.core.web;
+package io.tetrapod.web;
 
 import io.tetrapod.core.utils.Util;
 

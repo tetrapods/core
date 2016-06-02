@@ -20,16 +20,17 @@ import io.tetrapod.core.ServiceConnector.DirectServiceInfo;
 import io.tetrapod.core.Session.RelayHandler;
 import io.tetrapod.core.json.JSONObject;
 import io.tetrapod.core.pubsub.Topic;
-import io.tetrapod.core.registry.*;
+import io.tetrapod.core.registry.EntityInfo;
+import io.tetrapod.core.registry.EntityRegistry;
+import io.tetrapod.core.registry.EntityToken;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.rpc.Error;
 import io.tetrapod.core.storage.*;
 import io.tetrapod.core.utils.*;
-import io.tetrapod.core.web.*;
 import io.tetrapod.protocol.core.*;
 import io.tetrapod.protocol.raft.*;
 import io.tetrapod.protocol.storage.*;
-import io.tetrapod.web.WebHttpSession;
+import io.tetrapod.web.*;
 
 /**
  * The tetrapod service is the core cluster service which handles message routing, cluster
@@ -791,8 +792,8 @@ public class TetrapodService extends DefaultService
 
       assert (clusterTopic != null);
       synchronized (cluster) {
-         subscribe(clusterTopic.topicId, toEntityId, 0);
-         cluster.sendClusterDetails(ses, toEntityId, clusterTopic.topicId);
+         subscribe(clusterTopic.topicId, toEntityId, toChildId);
+         cluster.sendClusterDetails(ses, toEntityId, toChildId, clusterTopic.topicId);
       }
    }
 

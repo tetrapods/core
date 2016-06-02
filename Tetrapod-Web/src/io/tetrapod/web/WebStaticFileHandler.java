@@ -1,4 +1,4 @@
-package io.tetrapod.core.web;
+package io.tetrapod.web;
 
 import static io.netty.handler.codec.http.HttpHeaders.*;
 import static io.netty.handler.codec.http.HttpHeaders.Names.*;
@@ -12,7 +12,7 @@ import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.handler.codec.http.*;
 import io.netty.util.CharsetUtil;
 import io.tetrapod.core.utils.Util;
-import io.tetrapod.core.web.WebRoot.FileResult;
+import io.tetrapod.web.WebRoot.FileResult;
 
 import java.io.*;
 import java.net.URLDecoder;

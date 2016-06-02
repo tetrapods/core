@@ -11,17 +11,16 @@ import javax.crypto.SecretKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.tetrapod.core.StructureFactory;
+import io.tetrapod.core.*;
 import io.tetrapod.core.registry.EntityInfo;
 import io.tetrapod.core.serialize.StructureAdapter;
 import io.tetrapod.core.serialize.datasources.TempBufferDataSource;
 import io.tetrapod.core.utils.*;
-import io.tetrapod.core.web.WebRoot;
-import io.tetrapod.core.web.WebRoutes;
 import io.tetrapod.protocol.core.*;
 import io.tetrapod.raft.StateMachine;
 import io.tetrapod.raft.storage.StorageItem;
 import io.tetrapod.raft.storage.StorageStateMachine;
+import io.tetrapod.web.WebRoot;
 
 /**
  * Tetrapod state machine adds cluster properties, service protocols, and tetrapod web routes
