@@ -8,17 +8,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.tetrapod.core.rpc.Message;
-import io.tetrapod.core.rpc.MessageContext;
 import io.tetrapod.core.storage.*;
 import io.tetrapod.protocol.core.*;
 import io.tetrapod.web.LongPollQueue;
 
 /**
- * The global registry of all current actors in the system and their published topics and subscriptions
+ * The global registry of all current actors in the system and their published topics and
+ * subscriptions
  * 
- * Each tetrapod service owns a shard of the registry and has a full replica of all other shards.
+ * Each tetrapod service owns a shard of the registry and has a full replica of all other
+ * shards.
  */
-public class EntityRegistry implements TetrapodContract.Registry.API {
+public class EntityRegistry {
 
    protected static final Logger                logger   = LoggerFactory.getLogger(EntityRegistry.class);
 
@@ -45,7 +46,7 @@ public class EntityRegistry implements TetrapodContract.Registry.API {
    public static interface RegistryBroadcaster {
       public void broadcastServicesMessage(Message msg);
 
-      public void sendMessage(Message msg, int toEntity);
+      public void sendMessage(Message msg, int toEntityId, int toChildId);
    }
 
    private final RegistryBroadcaster broadcaster;
@@ -123,12 +124,13 @@ public class EntityRegistry implements TetrapodContract.Registry.API {
          }
       }
       logger.warn("Could not find a random available service for contractId={} in list of {} services", contractId,
-               list == null ? "null" : list.size());
+            list == null ? "null" : list.size());
       return null;
    }
 
    /**
-    * @return a new unused ID. If we hit our local maximum, we will reset and find the next currently unused id
+    * @return a new unused ID. If we hit our local maximum, we will reset and find the
+    *         next currently unused id
     */
    public synchronized int issueId() {
       while (true) {
@@ -139,44 +141,19 @@ public class EntityRegistry implements TetrapodContract.Registry.API {
       }
    }
 
-   private void clearAllTopicsAndSubscriptions(final EntityInfo e) {
-      logger.debug("clearAllTopicsAndSubscriptions: {}", e);
-      // Unpublish all their topics
-      for (RegistryTopic topic : e.getTopics()) {
-         unpublish(e, topic.topicId);
-      }
-      // Unsubscribe from all subscriptions we're managing
-      for (RegistryTopic topic : e.getSubscriptions()) {
-         EntityInfo owner = getEntity(topic.ownerId);
-         // assert (owner != null); 
-         if (owner != null) {
-            unsubscribe(owner, topic.topicId, e.entityId, true);
-
-            // notify the publisher that this client's subscription is now dead
-            broadcaster.sendMessage(new TopicUnsubscribedMessage(owner.entityId, topic.topicId, e.entityId), owner.entityId);
-
-         } else {
-            // bug here cleaning up topics on unreg, I think...
-            logger.warn("clearAllTopicsAndSubscriptions: Couldn't find {} owner {}", topic, topic.ownerId);
-         }
-      }
-      cluster.getPublisher().unsubscribeFromAllTopics(e.entityId);
-   }
-
    public void unregister(final EntityInfo e) {
-      if (e.isClient()) {
-         logger.info("Unregistering client entity {}", e);
-         entities.remove(e.entityId);
-         // HACK -- would be 'cleaner' as a listener interface
-         LongPollQueue.clearEntity(e.entityId);
-         clearAllTopicsAndSubscriptions(e);
+      //      if (e.isClient()) {
+      //         logger.info("Unregistering client entity {}", e);
+      //         entities.remove(e.entityId);
+      //         // HACK -- would be 'cleaner' as a listener interface
+      //         LongPollQueue.clearEntity(e.entityId);
+      //         clearAllTopicsAndSubscriptions(e);
+      //      }      
+      if (e.isTetrapod() && cluster.isValidPeer(e.entityId)) {
+         logger.warn("Setting {} as GONE (unregister context)", e); // TEMP DEBUG LOGGING
+         setGone(e);
       } else {
-         if (e.isTetrapod() && cluster.isValidPeer(e.entityId)) {
-            logger.warn("Setting {} as GONE (unregister context)", e); // TEMP DEBUG LOGGING
-            setGone(e);
-         } else {
-            cluster.executeCommand(new DelEntityCommand(e.entityId), entry -> {});
-         }
+         cluster.executeCommand(new DelEntityCommand(e.entityId), entry -> {});
       }
    }
 
@@ -189,120 +166,6 @@ public class EntityRegistry implements TetrapodContract.Registry.API {
       }
    }
 
-   public RegistryTopic publish(int entityId, int topicId) {
-      final EntityInfo e = getEntity(entityId);
-      if (e != null) {
-         return e.publish(topicId);
-      } else {
-         logger.error("Could not find entity {}", e);
-      }
-      return null;
-   }
-
-   public boolean unpublish(EntityInfo e, int topicId) {
-      final RegistryTopic topic = e.unpublish(topicId);
-      if (topic != null) {
-         // clean up all the subscriptions to this topic
-         synchronized (topic) {
-            for (Subscriber sub : topic.getSubscribers().toArray(new Subscriber[0])) {
-               unsubscribe(e, topic, sub.entityId, true);
-            }
-         }
-         return true;
-      } else {
-         logger.info("Could not find topic {} for entity {}", topicId, e);
-      }
-      return false;
-   }
-
-   public void subscribe(final EntityInfo publisher, final int topicId, final int entityId, final boolean once) {
-      final RegistryTopic topic = publisher.getTopic(topicId);
-      if (topic != null) {
-         final EntityInfo e = getEntity(entityId);
-         if (e != null) {
-            topic.subscribe(publisher, e, once);
-            e.subscribe(topic);
-         } else {
-            logger.info("Could not find subscriber {} for topic {}", entityId, topicId);
-            broadcaster.sendMessage(new SubscriberNotFoundMessage(publisher.entityId, topicId, entityId), publisher.entityId);
-         }
-      } else {
-         logger.info("Could not find topic {} for {}", topicId, publisher);
-      }
-   }
-
-   public void unsubscribe(final EntityInfo publisher, final int topicId, final int entityId, final boolean all) {
-      assert (publisher != null);
-      final RegistryTopic topic = publisher.getTopic(topicId);
-      if (topic != null) {
-         unsubscribe(publisher, topic, entityId, all);
-      } else {
-         logger.info("Could not find topic {} for {}", topicId, publisher);
-      }
-   }
-
-   public void unsubscribe(final EntityInfo publisher, RegistryTopic topic, final int entityId, final boolean all) {
-      assert (publisher != null);
-      assert (topic != null);
-      if (topic.unsubscribe(entityId, all)) {
-         final EntityInfo e = getEntity(entityId);
-         if (e != null) {
-            e.unsubscribe(topic);
-            // notify the subscriber that they have been unsubscribed from this topic
-            broadcaster.sendMessage(new TopicUnsubscribedMessage(publisher.entityId, topic.topicId, entityId), entityId);
-         }
-      }
-   }
-
-   //////////////////////////////////////////////////////////////////////////////////////////
-
-   @Override
-   public void genericMessage(Message message, MessageContext ctx) {}
-
-   @Override
-   public void messageTopicPublished(final TopicPublishedMessage m, MessageContext ctx) {
-      logger.debug("******* {} {}", ctx.header.dump(), m.dump());
-      final EntityInfo owner = getEntity(ctx.header.fromId);
-      if (owner != null) {
-         owner.queue(() -> owner.publish(m.topicId)); // TODO: kick()
-      } else {
-         logger.info("Could not find publisher entity {}", ctx.header.fromId);
-      }
-   }
-
-   @Override
-   public void messageTopicUnpublished(final TopicUnpublishedMessage m, MessageContext ctx) {
-      logger.debug("******* {} {}", ctx.header.dump(), m.dump());
-      final EntityInfo owner = getEntity(ctx.header.fromId);
-      if (owner != null) {
-         owner.queue(() -> unpublish(owner, m.topicId)); // TODO: kick()
-      } else {
-         logger.info("Could not find publisher entity {}", ctx.header.fromId);
-      }
-   }
-
-   @Override
-   public void messageTopicSubscribed(final TopicSubscribedMessage m, MessageContext ctx) {
-      logger.debug("******* {} {}", ctx.header.dump(), m.dump());
-      final EntityInfo owner = getEntity(ctx.header.fromId);
-      if (owner != null) {
-         owner.queue(() -> subscribe(owner, m.topicId, m.entityId, m.once)); // TODO: kick() 
-      } else {
-         logger.info("Could not find publisher entity {}", ctx.header.fromId);
-      }
-   }
-
-   @Override
-   public void messageTopicUnsubscribed(final TopicUnsubscribedMessage m, MessageContext ctx) {
-      logger.debug("******* {} {}", ctx.header.dump(), m.dump());
-      final EntityInfo owner = getEntity(ctx.header.fromId);
-      if (owner != null) {
-         owner.queue(() -> unsubscribe(owner, m.topicId, m.entityId, false)); // TODO: kick()
-      } else {
-         logger.info("Could not find publisher entity {}", ctx.header.fromId);
-      }
-   }
-
    //////////////////////////////////////////////////////////////////////////////////////////
 
    public synchronized void logStats(boolean includeClients) {
@@ -311,13 +174,8 @@ public class EntityRegistry implements TetrapodContract.Registry.API {
       logger.info("======================================= TETRAPOD CLUSTER REGISTRY =========================================");
       for (EntityInfo e : list) {
          if (includeClients || !e.isClient())
-            logger.info(String.format(" 0x%08X 0x%08X %-15s status=%08X   alt=%-9d topics=%-4d subs=%-4d [%s]", e.parentId, e.entityId,
-                     e.name, e.status, e.alternateId.get(), e.getNumTopics(), e.getNumSubscriptions(),
-                     e.hasConnectedSession() ? "CONNECTED" : "*"));
-      }
-      logger.info("===========================================================================================================\n");
-      if (includeClients) {
-         LongPollQueue.logStats();
+            logger.info(String.format(" 0x%08X 0x%08X %-15s status=%08X [%s]", e.parentId, e.entityId, e.name, e.status,
+                  e.hasConnectedSession() ? "CONNECTED" : "*"));
       }
    }
 
@@ -341,7 +199,6 @@ public class EntityRegistry implements TetrapodContract.Registry.API {
       }
 
       updateStatus(e, Core.STATUS_GONE, Core.STATUS_GONE);
-      clearAllTopicsAndSubscriptions(e);
    }
 
    public void clearGone(EntityInfo e) {
@@ -360,10 +217,6 @@ public class EntityRegistry implements TetrapodContract.Registry.API {
    }
 
    public void onAddEntityCommand(final EntityInfo entity) {
-      if (getEntity(entity.entityId) != null && entity.parentId != parentId) {
-         entity.queue(() -> clearAllTopicsAndSubscriptions(entity));
-      }
-
       // if we had a temporary EntityInfo stored in registry while waiting for the command to commit, we can now move 
       // the stored session object into the new official entity object produced by this command
       final EntityInfo old = entities.get(entity.entityId);
@@ -407,7 +260,6 @@ public class EntityRegistry implements TetrapodContract.Registry.API {
                   list.remove(e);
                }
             }
-            clearAllTopicsAndSubscriptions(e); // might need to do this elsewhere...
          });
       } else {
          logger.error("onDelEntityCommand Couldn't find {}", entityId);

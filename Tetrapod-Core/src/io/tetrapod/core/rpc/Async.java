@@ -8,12 +8,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class Async {
-   public static final Logger logger   = LoggerFactory.getLogger(Async.class);
+   public static final Logger logger    = LoggerFactory.getLogger(Async.class);
 
-   public final long          sendTime = System.currentTimeMillis();
+   public final long          sendTime  = System.currentTimeMillis();
    public final RequestHeader header;
    public final Request       request;
-   public final Session       session;
+   public final Session       session; 
 
    private Response           response;
    private ResponseHandler    handler;

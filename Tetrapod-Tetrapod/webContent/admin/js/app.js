@@ -1,9 +1,10 @@
-define(["knockout", "jquery", "alert", "toolbox", "protocol/server", "protocol/tetrapod", "protocol/core"], function(ko, $, Alert, toolbox, Server, Tetrapod, CoreProt) {
+define(["knockout", "jquery", "alert", "toolbox", "protocol/server",
+        "protocol/tetrapod", "protocol/core", "protocol/web"], function(ko, $, Alert, toolbox, Server, Tetrapod, CoreProt, Web) {
    return new App();
 
    function App() {
       var self = this;
-      var server = new Server(Tetrapod, CoreProt);
+      var server = new Server(Tetrapod, CoreProt, Web);
       var token = null;
       var model;
 
@@ -47,7 +48,7 @@ define(["knockout", "jquery", "alert", "toolbox", "protocol/server", "protocol/t
       function onConnected() {
          $('#disconnected-alertbox').hide();
          model.clear();
-         server.sendDirect("Register", {
+         server.sendDirect("Web.Register", {
             build: 0,
             contractId: 0,
             name: "Web-Admin",
@@ -66,7 +67,7 @@ define(["knockout", "jquery", "alert", "toolbox", "protocol/server", "protocol/t
          if (!result.isError()) {
             token = result.token;
             if (self.authtoken != null && self.authtoken != "") {
-               server.sendDirect("AdminAuthorize", {
+               server.send("AdminAuthorize", {
                   token: self.authtoken
                }, onLogin);
             } else {
@@ -78,7 +79,7 @@ define(["knockout", "jquery", "alert", "toolbox", "protocol/server", "protocol/t
       function login() {
          var email = $('#email').val().trim();
          var pwd = $('#password').val();
-         server.sendDirect("AdminLogin", {
+         server.send("AdminLogin", {
             email: email,
             password: pwd
          }, function(result) {
@@ -107,10 +108,10 @@ define(["knockout", "jquery", "alert", "toolbox", "protocol/server", "protocol/t
             refreshLoginToken(function() {
                $('#login-wrapper').hide();
                $('#app-wrapper').show();
-               server.sendDirect("ServicesSubscribe", {
+               server.send("ServicesSubscribe", {
                   adminToken: self.sessionToken
                }, server.logResponse);
-               server.sendDirect("AdminSubscribe", {
+               server.send("AdminSubscribe", {
                   adminToken: self.sessionToken
                }, server.logResponse);
                setInterval(refreshLoginToken, 60000 * 10); // refresh token every 10 minutes
@@ -122,7 +123,7 @@ define(["knockout", "jquery", "alert", "toolbox", "protocol/server", "protocol/t
       }
 
       function refreshLoginToken(callback) {
-         server.sendDirect("AdminSessionToken", {
+         server.send("AdminSessionToken", {
             accountId: self.accountId(),
             authToken: self.authtoken,
          }, function(result) {

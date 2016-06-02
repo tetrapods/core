@@ -51,16 +51,16 @@ public class ServiceStats implements TopicUnsubscribedMessage.Handler {
    /**
     * Subscribe an entity to our topic
     */
-   protected synchronized void subscribe(int entityId) {
-      statsTopic.subscribe(entityId, true);
-      statsTopic.sendMessage(message, entityId);
+   protected synchronized void subscribe(int entityId, int childId) {
+      statsTopic.subscribe(entityId, childId, true);
+      statsTopic.sendMessage(message, entityId, childId);
    }
 
    /**
     * Unsubscribe an entity to our topic
     */
-   protected synchronized void unsubscribe(int entityId) {
-      statsTopic.unsubscribe(entityId);
+   protected synchronized void unsubscribe(int entityId, int childId) {
+      statsTopic.unsubscribe(entityId, childId);
    }
 
    /**

@@ -7,6 +7,22 @@ import static io.netty.handler.codec.http.HttpResponseStatus.*;
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 import static io.tetrapod.protocol.core.Core.*;
 import static io.tetrapod.protocol.core.CoreContract.*;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
+import io.netty.channel.*;
+import io.netty.channel.socket.SocketChannel;
+import io.netty.handler.codec.http.*;
+import io.netty.handler.codec.http.websocketx.*;
+import io.netty.util.CharsetUtil;
+import io.netty.util.ReferenceCountUtil;
+import io.tetrapod.core.*;
+import io.tetrapod.core.json.*;
+import io.tetrapod.core.registry.EntityToken;
+import io.tetrapod.core.rpc.*;
+import io.tetrapod.core.rpc.Error;
+import io.tetrapod.core.serialize.datasources.ByteBufDataSource;
+import io.tetrapod.core.utils.Util;
+import io.tetrapod.protocol.core.*;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -20,33 +36,15 @@ import org.slf4j.LoggerFactory;
 import com.codahale.metrics.Timer;
 import com.codahale.metrics.Timer.Context;
 
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
-import io.netty.channel.*;
-import io.netty.channel.socket.SocketChannel;
-import io.netty.handler.codec.http.*;
-import io.netty.handler.codec.http.websocketx.*;
-import io.netty.util.CharsetUtil;
-import io.netty.util.ReferenceCountUtil;
-import io.tetrapod.core.*;
-import io.tetrapod.core.json.JSONArray;
-import io.tetrapod.core.json.JSONObject;
-import io.tetrapod.core.rpc.*;
-import io.tetrapod.core.rpc.Error;
-import io.tetrapod.core.serialize.datasources.ByteBufDataSource;
-import io.tetrapod.core.utils.Util;
-import io.tetrapod.core.web.*;
-import io.tetrapod.protocol.core.*;
-
 public class WebHttpSession extends WebSession {
    protected static final Logger               logger            = LoggerFactory.getLogger(WebHttpSession.class);
 
    public static final Timer                   requestTimes      = Metrics.timer(WebHttpSession.class, "requests", "time");
 
-   private static final int                    FLOOD_TIME_PERIOD = 5000;
-   private static final int                    FLOOD_WARN        = 1000;
-   private static final int                    FLOOD_IGNORE      = 1500;
-   private static final int                    FLOOD_KILL        = 2000;
+   private static final int                    FLOOD_TIME_PERIOD = 2000;
+   private static final int                    FLOOD_WARN        = 200;
+   private static final int                    FLOOD_IGNORE      = 300;
+   private static final int                    FLOOD_KILL        = 400;
 
    private volatile long                       floodPeriod;
 
@@ -69,7 +67,6 @@ public class WebHttpSession extends WebSession {
       ch.pipeline().addLast("aggregator", new HttpObjectAggregator(65536));
       ch.pipeline().addLast("api", this);
       ch.pipeline().addLast("deflater", new HttpContentCompressor(6));
-      ch.pipeline().addLast("maintenance", new MaintenanceHandler(roots.get("tetrapod")));
       ch.pipeline().addLast("files", new WebStaticFileHandler(roots));
    }
 
@@ -158,6 +155,8 @@ public class WebHttpSession extends WebSession {
          logger.debug("•••• Domain: {} ", getDomain());
       }
 
+      // req.getUri()
+
       // see if we need to start a web socket session
       if (wsLocation.equals(req.getUri())) {
          WebSocketServerHandshakerFactory wsFactory = new WebSocketServerHandshakerFactory(wsLocation, null, false);
@@ -228,7 +227,8 @@ public class WebHttpSession extends WebSession {
          final RequestHeader header = WebContext.makeRequestHeader(this, null, params);
 
          header.fromType = Core.TYPE_CLIENT;
-         header.fromId = getTheirEntityId();
+         header.fromChildId = getTheirEntityId();
+         header.fromParentId = getMyEntityId();
          synchronized (contexts) {
             contexts.put(header.requestId, ctx);
          }
@@ -236,19 +236,18 @@ public class WebHttpSession extends WebSession {
 
       } else {
          getDispatcher().dispatch(() -> {
-            final LongPollQueue messages = LongPollQueue.getQueue(getTheirEntityId(), true);
+            final LongPollQueue messages = LongPollQueue.getQueue(getTheirEntityId());
             final long startTime = System.currentTimeMillis();
             // long poll -- wait until there are messages in queue, and return them
             assert messages != null;
             // we grab a lock so only one poll request processes at a time
             longPoll(25, messages, startTime, ctx, req);
-            messages.setLastDrain(startTime);
          });
       }
    }
 
    private void longPoll(final int millis, final LongPollQueue messages, final long startTime, final ChannelHandlerContext ctx,
-         final FullHttpRequest req) {
+            final FullHttpRequest req) {
       getDispatcher().dispatch(millis, TimeUnit.MILLISECONDS, () -> {
          if (messages.tryLock()) {
             try {
@@ -288,7 +287,8 @@ public class WebHttpSession extends WebSession {
          logger.debug("{} WEB API REQUEST: {} keepAlive = {}", this, req.getUri(), HttpHeaders.isKeepAlive(req));
          header.requestId = requestCounter.incrementAndGet();
          header.fromType = Core.TYPE_WEBAPI;
-         header.fromId = getMyEntityId();
+         header.fromParentId = getMyEntityId(); 
+         header.fromChildId = getTheirEntityId();
 
          final ResponseHandler handler = new ResponseHandler() {
             @Override
@@ -305,13 +305,12 @@ public class WebHttpSession extends WebSession {
                if (body == null || body.trim().isEmpty()) {
                   body = req.getUri();
                }
-               final WebAPIRequest request = new WebAPIRequest(route.path, getHeaders(req).toString(),
-                     context.getRequestParams().toString(),
-                     body);
+               final WebAPIRequest request = new WebAPIRequest(route.path, getHeaders(req).toString(), context.getRequestParams().toString(),
+                        body);
                final int toEntityId = relayHandler.getAvailableService(header.contractId);
                if (toEntityId != 0) {
                   final Session ses = relayHandler.getRelaySession(toEntityId, header.contractId);
-                  if (ses != null && ses.isConnected()) {
+                  if (ses != null) {
                      header.contractId = Core.CONTRACT_ID;
                      header.toId = toEntityId;
                      //logger.info("{} WEB API REQEUST ROUTING TO {} {}", this, toEntityId, header.dump());
@@ -438,13 +437,8 @@ public class WebHttpSession extends WebSession {
 
    private void relayRequest(RequestHeader header, Structure request, ResponseHandler handler) throws IOException {
       final Session ses = relayHandler.getRelaySession(header.toId, header.contractId);
-      if (ses != null && ses.isConnected()) {
-         if (ses.getTheirEntityType() == Core.TYPE_CLIENT) {
-            logger.warn("Something's trying to send a request to a client {}", header.dump());
-            sendResponse(new Error(ERROR_SECURITY), header.requestId);
-         } else {
-            relayRequest(header, request, ses, handler);
-         }
+      if (ses != null) {
+         relayRequest(header, request, ses, handler);
       } else {
          logger.debug("{} Could not find a relay session for {} {}", this, header.toId, header.contractId);
          handler.fireResponse(new Error(ERROR_SERVICE_UNAVAILABLE), header);
@@ -553,18 +547,13 @@ public class WebHttpSession extends WebSession {
 
    private Async relayRequest(RequestHeader header, Structure request) throws IOException {
       final Session ses = relayHandler.getRelaySession(header.toId, header.contractId);
-      if (ses != null && ses.isConnected()) {
-         if (ses.getTheirEntityType() == Core.TYPE_CLIENT) {
-            logger.warn("Something's trying to send a request to a client {}", header.dump());
-            sendResponse(new Error(ERROR_SECURITY), header.requestId);
-         } else {
-            return relayRequest(header, request, ses, null);
-         }
+      if (ses != null) {
+         return relayRequest(header, request, ses, null);
       } else {
          logger.debug("Could not find a relay session for {} {}", header.toId, header.contractId);
          sendResponse(new Error(ERROR_SERVICE_UNAVAILABLE), header.requestId);
+         return null;
       }
-      return null;
    }
 
    @Override
@@ -574,16 +563,12 @@ public class WebHttpSession extends WebSession {
       } else {
          // queue the message for long poller to retrieve later
          if (!commsLogIgnore(header.structId)) {
-            commsLog("%s  [M] ~] Message:%d %s (to %d)", this, header.structId, getNameFor(header), header.toId);
+            commsLog("%s  [M] ~] Message:%d %s (to %d)", this, header.structId, getNameFor(header), header.toChildId);
          }
-         final LongPollQueue messages = LongPollQueue.getQueue(getTheirEntityId(), false);
-         if (messages != null) {
-            messages.add(toJSON(header, payload, ENVELOPE_MESSAGE));
-            // FIXME: Need a sensible way to protect against memory gobbling if this queue isn't cleared fast enough
-            if (System.currentTimeMillis() - messages.getLastDrainTime() > Util.ONE_MINUTE * 5) {
-               logger.warn("{} Queued {} messages for absent longPoller {}", this, messages.size(), messages.getEntityId());
-            }
-         }
+         final LongPollQueue messages = LongPollQueue.getQueue(getTheirEntityId());
+         // FIXME: Need a sensible way to protect against memory gobbling if this queue isn't cleared fast enough
+         messages.add(toJSON(header, payload, ENVELOPE_MESSAGE));
+         //logger.debug("{} Queued {} messages for longPoller {}", this, messages.size(), messages.getEntityId());
       }
    }
 

@@ -253,7 +253,7 @@ public class TetrapodCluster extends Storage
          if (pod.entityId != service.getEntityId()) {
             if (pod.isConnected()) {
                Session ses = pod.getSession();
-               ses.sendMessage(msg, ses.getTheirEntityId());
+               ses.sendMessage(msg, ses.getTheirEntityId(), 0);
             }
          }
       }
@@ -297,10 +297,10 @@ public class TetrapodCluster extends Storage
       // send ourselves
       ses.sendMessage(
                new ClusterMemberMessage(service.getEntityId(), Util.getHostName(), service.getServicePort(), service.getClusterPort(), null),
-               toEntityId);
+               toEntityId, 0);
       // send all current members
       for (TetrapodPeer pod : cluster.values()) {
-         ses.sendMessage(new ClusterMemberMessage(pod.entityId, pod.host, pod.servicePort, pod.clusterPort, pod.uuid), toEntityId);
+         ses.sendMessage(new ClusterMemberMessage(pod.entityId, pod.host, pod.servicePort, pod.clusterPort, pod.uuid), toEntityId, 0);
       }
       // non-tetrapods need to get some cluster details sent
       if (ses.getTheirEntityType() != Core.TYPE_TETRAPOD) {
@@ -309,15 +309,15 @@ public class TetrapodCluster extends Storage
             for (ClusterProperty prop : state.props.values()) {
                prop = new ClusterProperty(prop.key, prop.secret, prop.val);
                prop.val = AESEncryptor.decryptSaltedAES(prop.val, state.secretKey);
-               ses.sendMessage(new ClusterPropertyAddedMessage(prop), toEntityId);
+               ses.sendMessage(new ClusterPropertyAddedMessage(prop), toEntityId, 0);
             }
          }
       }
       // tell them they are up to date
-      ses.sendMessage(new ClusterSyncedMessage(), toEntityId);
+      ses.sendMessage(new ClusterSyncedMessage(), toEntityId, 0);
    }
 
-   public void sendAdminDetails(Session ses, int toEntityId, int topicId) {
+   public void sendAdminDetails(Session ses, int toEntityId, int toChildId, int topicId) {
       if (ses != null) {
          synchronized (raft) {
             // send properties
@@ -325,13 +325,13 @@ public class TetrapodCluster extends Storage
                // blank out values for protected properties sent to admins
                prop = new ClusterProperty(prop.key, prop.secret, prop.val);
                prop.val = prop.secret ? "" : AESEncryptor.decryptSaltedAES(prop.val, state.secretKey);
-               ses.sendMessage(new ClusterPropertyAddedMessage(prop), toEntityId);
+               ses.sendMessage(new ClusterPropertyAddedMessage(prop), toEntityId, toChildId);
             }
             for (WebRootDef def : state.webRootDefs.values()) {
-               ses.sendMessage(new WebRootAddedMessage(def), toEntityId);
+               ses.sendMessage(new WebRootAddedMessage(def), toEntityId, toChildId);
             }
             for (Admin def : state.admins.values()) {
-               ses.sendMessage(new AdminUserAddedMessage(def), toEntityId);
+               ses.sendMessage(new AdminUserAddedMessage(def), toEntityId, toChildId);
             }
          }
       }
@@ -882,14 +882,15 @@ public class TetrapodCluster extends Storage
    }
 
    public Response requestClaimOwnership(final ClaimOwnershipRequest r, final SessionRequestContext ctx) {
-      return executePendingCommand(new ClaimOwnershipCommand(ctx.header.fromId, r.prefix, r.key, r.leaseMillis, System.currentTimeMillis()),
+      return executePendingCommand(
+               new ClaimOwnershipCommand(ctx.header.fromParentId, r.prefix, r.key, r.leaseMillis, System.currentTimeMillis()),
                new PendingClientResponseHandler<TetrapodStateMachine>(ctx) {
                   @Override
                   public Response handlePendingResponse(Entry<TetrapodStateMachine> e) {
                      if (e != null) {
                         final ClaimOwnershipCommand c = (ClaimOwnershipCommand) e.getCommand();
                         if (c.wasAcquired()) {
-                           return new ClaimOwnershipResponse(ctx.header.fromId, c.getExpiry());
+                           return new ClaimOwnershipResponse(ctx.header.fromParentId, c.getExpiry());
                         } else {
                            Owner o = state.ownedItems.get(r.key);
                            if (o != null) {
@@ -903,7 +904,7 @@ public class TetrapodCluster extends Storage
    }
 
    public Response requestRetainOwnership(RetainOwnershipRequest r, final SessionRequestContext ctx) {
-      return executePendingCommand(new RetainOwnershipCommand(ctx.header.fromId, r.prefix, r.leaseMillis, System.currentTimeMillis()),
+      return executePendingCommand(new RetainOwnershipCommand(ctx.header.fromParentId, r.prefix, r.leaseMillis, System.currentTimeMillis()),
                new PendingClientResponseHandler<TetrapodStateMachine>(ctx) {
                   @Override
                   public Response handlePendingResponse(Entry<TetrapodStateMachine> e) {
@@ -913,7 +914,7 @@ public class TetrapodCluster extends Storage
    }
 
    public Response requestReleaseOwnership(ReleaseOwnershipRequest r, final SessionRequestContext ctx) {
-      return executePendingCommand(new ReleaseOwnershipCommand(ctx.header.fromId, r.prefix, r.keys),
+      return executePendingCommand(new ReleaseOwnershipCommand(ctx.header.fromParentId, r.prefix, r.keys),
                new PendingClientResponseHandler<TetrapodStateMachine>(ctx) {
                   @Override
                   public Response handlePendingResponse(Entry<TetrapodStateMachine> e) {
@@ -924,10 +925,10 @@ public class TetrapodCluster extends Storage
 
    public Response requestSubscribeOwnership(SubscribeOwnershipRequest r, SessionRequestContext ctx) {
       synchronized (topicsToOwners) {
-         Set<String> topics = ownersToTopics.get(ctx.header.fromId);
+         Set<String> topics = ownersToTopics.get(ctx.header.fromParentId);
          if (topics == null) {
             topics = new HashSet<String>();
-            ownersToTopics.put(ctx.header.fromId, topics);
+            ownersToTopics.put(ctx.header.fromParentId, topics);
          }
          topics.add(r.prefix);
 
@@ -941,7 +942,7 @@ public class TetrapodCluster extends Storage
          for (Owner owner : state.owners.values()) {
             for (String key : owner.keys) {
                if (key.startsWith(r.prefix)) {
-                  ctx.session.sendMessage(new ClaimOwnershipMessage(owner.entityId, owner.expiry, key), ctx.header.fromId);
+                  ctx.session.sendMessage(new ClaimOwnershipMessage(owner.entityId, owner.expiry, key), ctx.header.fromParentId, 0);
                }
             }
          }
@@ -951,7 +952,7 @@ public class TetrapodCluster extends Storage
    }
 
    public Response requestUnsubscribeOwnership(UnsubscribeOwnershipRequest r, RequestContext ctx) {
-      unsubscribeOwnership(ctx.header.fromId);
+      unsubscribeOwnership(ctx.header.fromParentId);
       return Response.SUCCESS;
    }
 
@@ -1011,7 +1012,7 @@ public class TetrapodCluster extends Storage
 
    private void sendOwnershipMessage(Message msg, Session ses) {
       if (ses.isConnected()) {
-         ses.sendMessage(msg, ses.getTheirEntityId());
+         ses.sendMessage(msg, ses.getTheirEntityId(), 0);
       } else {
          unsubscribeOwnership(ses.getTheirEntityId());
       }
@@ -1051,8 +1052,8 @@ public class TetrapodCluster extends Storage
       Collections.sort(list);
       logger.info("=========================@ TETRAPOD CLUSTER REGISTRY @===========================");
       for (EntityInfo e : list) {
-         logger.info(String.format(" 0x%08X 0x%08X %-15s status=%08X topics=%d subscriptions=%d [%s]", e.parentId, e.entityId, e.name,
-                  e.status, e.getNumTopics(), e.getNumSubscriptions(), e.hasConnectedSession() ? "CONNECTED" : "*"));
+         logger.info(String.format(" 0x%08X 0x%08X %-15s status=%08X [%s]", e.parentId, e.entityId, e.name, e.status,
+                  e.hasConnectedSession() ? "CONNECTED" : "*"));
       }
       logger.info("=================================================================================\n");
    }

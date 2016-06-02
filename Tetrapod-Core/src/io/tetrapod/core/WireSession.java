@@ -123,14 +123,20 @@ public class WireSession extends Session {
       header.read(reader);
       final Async async = pendingRequests.remove(header.requestId);
       if (async != null) {
+
+         if (header.structId == 8072638 && myType != TYPE_TETRAPOD) {
+            logger.info("#");
+         }
+
          // Dispatches response to ourselves if we sent the request (fromId == myId) or 
          // if fromId is UNADRESSED this handles the edge case where we are registering 
          // ourselves and so did not yet have an entityId           
-         if ((async.header.fromId == myId || async.header.fromId == Core.UNADDRESSED) && (async.request != null || async.hasHandler())) {
+         if ((async.header.fromParentId == myId || async.header.fromParentId == Core.UNADDRESSED)
+                  && (async.request != null || async.hasHandler())) {
             final Structure res = StructureFactory.make(header.contractId, header.structId);
             if (res != null) {
                res.read(reader);
-               if (!commsLogIgnore(header.structId))
+               if (!commsLogIgnore(async.header.structId))
                   logged = commsLog("%s  [%d] <- %s", this, header.requestId, res.dump());
                // we dispatch responses as high priority to prevent certain 
                // forms of live-lock when the dispatch thread pool is exhausted
@@ -157,7 +163,7 @@ public class WireSession extends Session {
             //               }
             //            }
 
-            if (!commsLogIgnore(header.structId))
+            if (!commsLogIgnore(async.header.structId))
                logged = commsLog("%s  [%d] <- Response.%s", this, header.requestId,
                      res == null ? StructureFactory.getName(header.contractId, header.structId) : res.dump());
             relayResponse(header, async, in);
@@ -167,7 +173,7 @@ public class WireSession extends Session {
          logger.info("{} Could not find pending request for {}", this, header.dump());
       }
 
-      if (!logged && !commsLogIgnore(header.structId))
+      if (!logged && !commsLogIgnore(async.header.structId))
          logged = commsLog("%s  [%d] <- Response.%s", this, header.requestId, StructureFactory.getName(header.contractId, header.structId));
    }
 
@@ -178,8 +184,9 @@ public class WireSession extends Session {
       header.read(reader);
 
       // set/clobber with known details, unless it's from a trusted tetrapod
-      if (theirType != TYPE_TETRAPOD) {
-         header.fromId = theirId;
+      if (theirType != TYPE_TETRAPOD && theirType != TYPE_SERVICE) {
+         header.fromParentId = theirId;
+         header.fromChildId = theirId;
          header.fromType = theirType;
       }
 
@@ -188,22 +195,23 @@ public class WireSession extends Session {
          if (req != null) {
             req.read(reader);
             if (!commsLogIgnore(req))
-               logged = commsLog("%s  [%d] <- %s (from %d)", this, header.requestId, req.dump(), header.fromId);
+               logged = commsLog("%s  [%d] <- %s (from %d.%d)", this, header.requestId, req.dump(), header.fromParentId, header.fromChildId);
             dispatchRequest(header, req);
          } else {
             logger.warn("Could not find request structure {}", header.structId);
             sendResponse(new Error(ERROR_SERIALIZATION), header.requestId);
          }
       } else if (relayHandler != null) {
-         if (!commsLogIgnore(header.structId))
-            logged = commsLog("%s  [%d] <- Request.%s (from %d)", this, header.requestId,
-                  StructureFactory.getName(header.contractId, header.structId), header.fromId);
+         if (commsLogIgnore(header.structId)) {
+            logged = commsLog("%s  [%d] <- Request.%s (from %d.%d)", this, header.requestId,
+                     StructureFactory.getName(header.contractId, header.structId), header.fromParentId, header.fromChildId);
+         }
          relayRequest(header, in);
       }
 
       if (!logged && !commsLogIgnore(header.structId))
-         logged = commsLog("%s  [%d] <- Request.%s (from %d)", this, header.requestId,
-               StructureFactory.getName(header.contractId, header.structId), header.fromId);
+         logged = commsLog("%s  [%d] <- Request.%s (from %d.%d)", this, header.requestId,
+                  StructureFactory.getName(header.contractId, header.structId), header.fromParentId, header.fromChildId);
    }
 
    private void readMessage(ByteBuf in, boolean isBroadcast) throws IOException {
@@ -217,11 +225,11 @@ public class WireSession extends Session {
       }
 
       if (!commsLogIgnore(header.structId)) {
-         commsLog("%s  [M] <- Message: %s (to %d f%d)", this, getNameFor(header), header.toId, header.flags);
+         commsLog("%s  [M] <- Message: %s (to %d.%d f%d)", this, getNameFor(header), header.toParentId, header.toChildId, header.flags);
       }
 
-      boolean selfDispatch = header.topicId == 0 && ((header.flags & MessageHeader.FLAGS_ALTERNATE) == 0)
-            && (header.toId == myId || header.toId == UNADDRESSED);
+      boolean selfDispatch = header.topicId == 0 && header.toChildId == 0 && ((header.flags & MessageHeader.FLAGS_ALTERNATE) == 0)
+               && (header.toParentId == myId || header.toParentId == UNADDRESSED);
       if (relayHandler == null || selfDispatch) {
          dispatchMessage(header, reader);
       } else {

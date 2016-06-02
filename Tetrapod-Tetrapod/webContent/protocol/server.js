@@ -426,7 +426,7 @@ function TP_Server() {
          var elapsedSpoke = Date.now() - lastSpokeTo;
          if (elapsedSpoke > 6000) {
             // this keep alive is a backup
-            sendDirect("KeepAlive", {});
+            sendDirect("Web.KeepAlive", {});
          }
          if (elapsedHeard > 6000) {
             commslog("We haven't heard from the server in " + elapsedHeard + " ms")
