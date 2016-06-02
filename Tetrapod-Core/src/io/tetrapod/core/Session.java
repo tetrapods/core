@@ -9,6 +9,7 @@ import io.netty.handler.codec.DecoderException;
 import io.netty.util.ReferenceCountUtil;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.rpc.Error;
+import io.tetrapod.core.tasks.Task;
 import io.tetrapod.core.web.WebRoutes;
 import io.tetrapod.protocol.core.*;
 import io.tetrapod.protocol.raft.AppendEntriesRequest;
@@ -233,7 +234,20 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
       return sendRequest(req, toId, DEFAULT_REQUEST_TIMEOUT);
    }
 
-   public Async sendRequest(Request req, int toId, byte timeoutSeconds) {
+   public Task<? extends Response> sendRequestFuture(Request req, int toId, byte timeoutSeconds) {
+      Task<Response> task = new Task<>();
+      Async async = sendRequest(req, toId, timeoutSeconds);
+      async.handle(resp -> {
+         if (resp.isError() && resp.errorCode() == ERROR_UNKNOWN) {
+            task.completeExceptionally(new ErrorResponseException(resp.errorCode()));
+         } else {
+            task.complete(resp);
+         }
+      });
+      return task;
+   }
+
+   public <TResp extends Response> Async<TResp> sendRequest(Request<TResp> req, int toId, byte timeoutSeconds) {
       final RequestHeader header = new RequestHeader();
       header.requestId = requestCounter.incrementAndGet();
       header.toId = toId;
@@ -245,8 +259,8 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
       return sendRequest(req, header);
    }
 
-   public Async sendRequest(Request req, final RequestHeader header) {
-      final Async async = new Async(req, header, this);
+   public <TResp extends Response> Async<TResp> sendRequest(Request<TResp> req, final RequestHeader header) {
+      final Async<TResp> async = new Async<>(req, header, this);
       if (channel.isActive()) {
          pendingRequests.put(header.requestId, async);
 

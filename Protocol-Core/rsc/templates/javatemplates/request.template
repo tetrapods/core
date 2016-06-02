@@ -13,7 +13,7 @@ import java.util.concurrent.*;
 
 {{classcomment}}
 @SuppressWarnings("all")
-public class {{class}} extends Request {
+public class {{class}} extends {{requestClassType}}{{requestGenerics}} {
 
    {{constants}}
    

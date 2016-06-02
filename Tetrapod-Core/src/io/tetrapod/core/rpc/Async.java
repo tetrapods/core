@@ -8,30 +8,34 @@ import io.tetrapod.protocol.core.RequestHeader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class Async {
+public class Async<TResp extends Response> {
    public static final Logger logger   = LoggerFactory.getLogger(Async.class);
 
    public final long          sendTime = System.currentTimeMillis();
    public final RequestHeader header;
-   public final Request       request;
+   public final Request<TResp> request;
    public final Session       session;
 
    private Response           response;
    private ResponseHandler    handler;
 
-   public Async(Request request, RequestHeader header, Session session) {
+   public Async(Request<TResp> request, RequestHeader header, Session session) {
       this.request = request;
       this.header = header;
       this.session = session;
    }
 
-   public Async(Request request, RequestHeader header, Session session, ResponseHandler handler) {
+   public Async(Request<TResp> request, RequestHeader header, Session session, ResponseHandler handler) {
       this(request, header, session);
       this.handler = handler;
    }
 
    public synchronized boolean hasHandler() {
       return handler != null;
+   }
+
+   public interface IResponseWrapperHandler<TResponse extends Response> {
+      void onResponse(ResponseWrapper<TResponse> response);
    }
 
    public Task<Response> asFuture() {
@@ -46,6 +50,23 @@ public class Async {
 
    public interface IResponseHandlerErr {
       public void onResponse(Response res) throws Exception;
+   }
+
+   public synchronized void handleWrapped(IResponseWrapperHandler<TResp> wrapperHandler) {
+     handle(new ResponseHandler() {
+        @Override
+        public void onResponse(Response res) {
+           try {
+              if (response.isError()) {
+                 wrapperHandler.onResponse(new ResponseWrapper<TResp>(res.errorCode()));
+              } else {
+                 wrapperHandler.onResponse(new ResponseWrapper<TResp>((TResp)res));    //todo: catch cast exception and log it better?
+              }
+           } catch (AsyncSequenceRejectException e) {
+              // ignore, sequence reject handler called
+           }
+        }
+     });
    }
 
    public synchronized void handle(IResponseHandler handler) {

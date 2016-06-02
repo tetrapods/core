@@ -95,7 +95,12 @@ class JavaGenerator implements LanguageGenerator {
 
       for (String sub : context.subscriptions)
          t.add("subscriptions", genSubscriptions(context, sub, theClass));
+
+      Collection<Class> responses = context.classesByType("response");
       for (Class c : context.classesByType("request")) {
+         if (hasResponse(c, responses)) {
+            t.add("requestGenerics", "<" + c.classname() + "Response>");
+         }
          t.add("handlers", ", " + c.classname() + ".Handler", "\n");
          String path = c.annotations.getFirst("web");
          if (path != null) {
@@ -121,6 +126,15 @@ class JavaGenerator implements LanguageGenerator {
       addErrors(context.allErrors, true, context.serviceName, t);
       addConstantValues(context.globalConstants, t);
       t.expandAndTrim(getFilename(theClass));
+   }
+
+   private boolean hasResponse(Class request, Collection<Class> responses) {
+      for (Class response : responses) {
+         if (response.name.equals(request.name)) {
+            return true;
+         }
+      }
+      return false;
    }
 
    private String genSubscriptions(CodeGenContext context, String subscription, String enclosingClass) throws IOException {

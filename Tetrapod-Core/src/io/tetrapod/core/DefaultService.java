@@ -701,21 +701,21 @@ public class DefaultService
       return clusterClient.getSession().sendRequest(req, Core.UNADDRESSED, (byte) 30).asFuture();
    }
 
-   public Async sendRequest(Request req) {
+   public <TResp extends Response> Async<TResp> sendRequest(Request<TResp> req) {
       if (serviceConnector != null) {
          return serviceConnector.sendRequest(req, Core.UNADDRESSED);
       }
       return clusterClient.getSession().sendRequest(req, Core.UNADDRESSED, (byte) 30);
    }
 
-   public Async sendRequest(Request req, int toEntityId) {
+   public <TResp extends Response> Async<TResp> sendRequest(Request<TResp> req, int toEntityId) {
       if (serviceConnector != null) {
          return serviceConnector.sendRequest(req, toEntityId);
       }
       return clusterClient.getSession().sendRequest(req, toEntityId, (byte) 30);
    }
 
-   public Async sendDirectRequest(Request req) {
+   public <TResp extends Response> Async<TResp> sendDirectRequest(Request<TResp> req) {
       return clusterClient.getSession().sendRequest(req, Core.DIRECT, (byte) 30);
    }
 

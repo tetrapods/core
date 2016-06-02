@@ -8,6 +8,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import javax.net.ssl.SSLContext;
 
+import io.tetrapod.core.tasks.Task;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -302,6 +303,18 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
       }
    }
 
+   public Task<? extends Response> sendRequestAsync(Request req, int toEntityId) {
+      Task<Response> future = new Task<>();
+      Async async = sendRequest(req, toEntityId);
+      async.handle(resp -> {
+         if (resp.isError() && resp.errorCode() == ERROR_UNKNOWN) {      //todo: I would love to have this always fail something based on errors but that's not the way our error codes work.  Some are conditional expected states
+            future.completeExceptionally(new ErrorResponseException(resp.errorCode()));
+         } else {
+            future.complete(resp);
+         }
+      });
+      return future;
+   }
    public Async sendRequest(Request req, int toEntityId) {
       if (toEntityId == Core.UNADDRESSED) {
          Entity e = service.services.getRandomAvailableService(req.getContractId());
