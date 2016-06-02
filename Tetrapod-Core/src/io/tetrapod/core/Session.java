@@ -234,14 +234,14 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
       return sendRequest(req, toId, DEFAULT_REQUEST_TIMEOUT);
    }
 
-   public <TResp extends Response> CompletableFuture<TResp> sendRequestAsync(Request req, int toId, byte timeoutSeconds) {
-      CompletableFuture<TResp> future = new CompletableFuture<>();
+   public CompletableFuture<? extends Response> sendRequestAsync(Request req, int toId, byte timeoutSeconds) {
+      CompletableFuture<Response> future = new CompletableFuture<>();
       Async async = sendRequest(req, toId, timeoutSeconds);
       async.handle(resp -> {
-         if (resp.isError()) {
+         if (resp.isError() && resp.errorCode() == ERROR_UNKNOWN) {
             future.completeExceptionally(new ErrorResponseException(resp.errorCode()));
          } else {
-            future.complete(Util.cast(resp));
+            future.complete(resp);
          }
       });
       return future;

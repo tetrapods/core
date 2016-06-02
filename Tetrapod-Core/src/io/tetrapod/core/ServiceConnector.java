@@ -303,14 +303,14 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
       }
    }
 
-   public <TResp extends Response> CompletableFuture<TResp> sendRequestAsync(Request req, int toEntityId) {
-      CompletableFuture<TResp> future = new CompletableFuture<>();
+   public CompletableFuture<? extends Response> sendRequestAsync(Request req, int toEntityId) {
+      CompletableFuture<Response> future = new CompletableFuture<>();
       Async async = sendRequest(req, toEntityId);
       async.handle(resp -> {
-         if (resp.isError()) {
+         if (resp.isError() && resp.errorCode() == ERROR_UNKNOWN) {      //todo: I would love to have this always fail something based on errors but that's not the way our error codes work.  Some are conditional expected states
             future.completeExceptionally(new ErrorResponseException(resp.errorCode()));
          } else {
-            future.complete(Util.cast(resp));
+            future.complete(resp);
          }
       });
       return future;

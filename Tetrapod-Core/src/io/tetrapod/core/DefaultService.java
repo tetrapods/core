@@ -713,7 +713,7 @@ public class DefaultService
       sendRequest(req).handle(handler);
    }
 
-   public <TResp extends Response> CompletableFuture<TResp> sendRequestAsync(Request req) {
+   public CompletableFuture<? extends Response> sendRequestAsync(Request req) {
       if (serviceConnector != null) {
          return serviceConnector.sendRequestAsync(req, Core.UNADDRESSED);
       }
@@ -738,7 +738,7 @@ public class DefaultService
       return clusterClient.getSession().sendRequest(req, Core.DIRECT, (byte) 30);
    }
 
-   public <TResp extends Response> CompletableFuture<TResp> sendDirectRequestAsync(Request req) {
+   public CompletableFuture<? extends Response> sendDirectRequestAsync(Request req) {
       return clusterClient.getSession().sendRequestAsync(req, Core.DIRECT, (byte) 30);
    }
 
