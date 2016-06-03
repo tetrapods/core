@@ -28,7 +28,7 @@ public class ServiceErrorLogsResponse extends Response {
    public List<ServiceLogEntry> errors;
 
    public final Structure.Security getSecurity() {
-      return Security.PUBLIC;
+      return Security.ADMIN;
    }
 
    public final void defaults() {

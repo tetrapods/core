@@ -1,5 +1,4 @@
-define(["knockout", "jquery", "alert", "toolbox", "protocol/server",
-        "protocol/tetrapod", "protocol/core", "protocol/web"], function(ko, $, Alert, toolbox, Server, Tetrapod, CoreProt, Web) {
+define(["knockout", "jquery", "alert", "toolbox", "protocol/server", "protocol/tetrapod", "protocol/core", "protocol/web"], function(ko, $, Alert, toolbox, Server, Tetrapod, CoreProt, Web) {
    return new App();
 
    function App() {
@@ -9,6 +8,7 @@ define(["knockout", "jquery", "alert", "toolbox", "protocol/server",
       var model;
 
       self.coreConsts = server.consts['Core'].Core;
+      self.coreConsts.Admin = server.consts['Core'].Admin;
       self.tetrapodConsts = server.consts['Tetrapod'];
       self.server = server;
       self.run = run;
@@ -21,6 +21,8 @@ define(["knockout", "jquery", "alert", "toolbox", "protocol/server",
       self.accountId = ko.observable();
       self.alertResponse = alertResponse;
       self.isProd = self.name == "orgs.chatbox.com" || self.name == "pgx.chatbox.com" || (self.name.indexOf(".prod.") > 0);
+      self.sendTo = sendTo;
+      self.sendDirect = sendDirect;
 
       function run(clusterModel) {
          ko.bindingHandlers.stopBinding = {
@@ -159,6 +161,27 @@ define(["knockout", "jquery", "alert", "toolbox", "protocol/server",
             console.warn(err);
             Alert.error(err);
          }
+      }
+
+      function addArgs(args) {
+         if (args._exactArgs) {
+            args._exactArgs = undefined;
+            return;
+         }
+         if (!args.hasOwnProperty("accountId"))
+            args.accountId = self.accountId();
+         if (!args.hasOwnProperty("authToken"))
+            args.authToken = self.sessionToken;
+      }
+
+      function sendTo(reqName, args, toEntityId, callback) {
+         addArgs(args)
+         self.server.sendTo(reqName, args, toEntityId, callback);
+      }
+
+      function sendDirect(reqName, args, callback) {
+         addArgs(args)
+         self.server.sendDirect(reqName, args, callback);
       }
 
    }

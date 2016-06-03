@@ -176,7 +176,6 @@ public class TetrapodContract extends Contract {
    public Structure[] getStructs() {
       return new Structure[] {
          new Entity(),
-         new Admin(),
          new BuildInfo(),
          new BuildCommand(),
          new ClusterProperty(),

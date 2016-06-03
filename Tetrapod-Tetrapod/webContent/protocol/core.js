@@ -44,6 +44,21 @@ function TP_Core(server) {
    self.Core.MessageHeader = {
       FLAGS_ALTERNATE : 1
    };
+   self.Core.Admin = {
+      MAX_LOGIN_ATTEMPTS : 5,
+      RIGHTS_APP_SET_1 : 256,
+      RIGHTS_APP_SET_2 : 512,
+      RIGHTS_APP_SET_3 : 1024,
+      RIGHTS_APP_SET_4 : 2048,
+      RIGHTS_CLUSTER_READ : 1,
+      RIGHTS_CLUSTER_WRITE : 2,
+      RIGHTS_RESERVED_1 : 16,
+      RIGHTS_RESERVED_2 : 32,
+      RIGHTS_RESERVED_3 : 64,
+      RIGHTS_RESERVED_4 : 128,
+      RIGHTS_USER_READ : 4,
+      RIGHTS_USER_WRITE : 8
+   };
    self.Core.TypeDescriptor = {
       T_BOOLEAN : 1,
       T_BOOLEAN_LIST : 8,
@@ -101,6 +116,7 @@ function TP_Core(server) {
    server.register("struct", "Core", "MessageHeader", 1, 11760427);
    server.register("struct", "Core", "ServiceCommand", 1, 5461687);
    server.register("struct", "Core", "ServerAddress", 1, 14893956);
+   server.register("struct", "Core", "Admin", 1, 16753598);
    server.register("request", "Core", "Pause", 1, 14690004);
    server.register("request", "Core", "Unpause", 1, 10620319);
    server.register("request", "Core", "Rebalance", 1, 1734199);

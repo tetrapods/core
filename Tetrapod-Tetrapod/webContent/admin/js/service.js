@@ -32,7 +32,7 @@ define(["knockout", "jquery", "bootbox", "alert", "app", "chart", "modules/build
       function subscribe(attempt) {
          if (self.isGone())
             return;
-         app.server.sendTo("ServiceDetails", {}, self.entityId, function(result) {
+         app.sendTo("ServiceDetails", {}, self.entityId, function(result) {
             if (!result.isError()) {
                self.iconURL(result.iconURL);
                self.metadata = result.metadata;
@@ -41,7 +41,7 @@ define(["knockout", "jquery", "bootbox", "alert", "app", "chart", "modules/build
                      self.commands.push(result.commands[i]);
                   }
                }
-               app.server.sendTo("ServiceStatsSubscribe", {}, self.entityId, app.server.logResponse)
+               app.sendTo("ServiceStatsSubscribe", {}, self.entityId, app.server.logResponse)
             } else if (result.errorCode == Core.SERVICE_UNAVAILABLE && !self.removed) {
                setTimeout(function() {
                   subscribe(attempt + 1);
@@ -144,45 +144,45 @@ define(["knockout", "jquery", "bootbox", "alert", "app", "chart", "modules/build
       });
 
       self.pause = function() {
-         app.server.sendTo("Pause", {}, self.entityId);
+         app.sendTo("Pause", {}, self.entityId);
       }
 
       self.purge = function() {
-         app.server.sendTo("Purge", {}, self.entityId);
+         app.sendTo("Purge", {}, self.entityId);
       }
 
       self.releaseExcess = function() {
          bootbox.confirm("Are you sure you want to release excess rooms on: " + self.name + "[" + self.entityId + "]?", function(result) {
             if (result) {
-               app.server.sendTo("ReleaseExcess", {}, self.entityId);
+               app.sendTo("ReleaseExcess", {}, self.entityId);
             }
          });
       }
 
       self.unpause = function() {
-         app.server.sendTo("Unpause", {}, self.entityId);
+         app.sendTo("Unpause", {}, self.entityId);
       }
       self.restart = function() {
          bootbox.confirm("Are you sure you want to restart service: " + self.name + "[" + self.entityId + "]?", function(result) {
             if (result) {
-               app.server.sendTo("Restart", {}, self.entityId);
+               app.sendTo("Restart", {}, self.entityId);
             }
          });
       }
       self.shutdown = function() {
          bootbox.confirm("Are you sure you want to shutdown service: " + self.name + "[" + self.entityId + "]?", function(result) {
             if (result) {
-               app.server.sendTo("Shutdown", {}, self.entityId);
+               app.sendTo("Shutdown", {}, self.entityId);
             }
          });
       }
 
       self.clearErrors = function() {
-         app.server.sendTo("ResetServiceErrorLogs", {}, self.entityId);
+         app.sendTo("ResetServiceErrorLogs", {}, self.entityId);
       }
 
       self.showErrors = function() {
-         app.server.sendTo("ServiceErrorLogs", {}, self.entityId, function(result) {
+         app.sendTo("ServiceErrorLogs", {}, self.entityId, function(result) {
             if (!result.isError()) {
                var messages = [];
                messages.push('<div class="service-logs" style="height: 100%; min-height: 200px">');
@@ -243,7 +243,7 @@ define(["knockout", "jquery", "bootbox", "alert", "app", "chart", "modules/build
          self.rpcStat(null);
          self.reqChart.setPlotData('Selection', []);
 
-         app.server.sendTo("ServiceRequestStats", {
+         app.sendTo("ServiceRequestStats", {
             limit: 25,
             minTime: minTime,
             sortBy: self.reqSort(),
@@ -328,7 +328,7 @@ define(["knockout", "jquery", "bootbox", "alert", "app", "chart", "modules/build
                   className: "btn-success",
                   callback: function() {
                      var level = $('#level').val();
-                     app.server.sendTo("SetCommsLogLevel", {
+                     app.sendTo("SetCommsLogLevel", {
                         level: level
                      }, self.entityId);
                   }
@@ -342,7 +342,7 @@ define(["knockout", "jquery", "bootbox", "alert", "app", "chart", "modules/build
       }
 
       self.deleteService = function() {
-         app.server.sendDirect("Unregister", {
+         app.sendDirect("Unregister", {
             entityId: self.entityId
          });
       }
@@ -432,7 +432,7 @@ define(["knockout", "jquery", "bootbox", "alert", "app", "chart", "modules/build
          if (!logRefreshPending) {
             logRefreshPending = true;
 
-            app.server.sendTo("ServiceLogs", {
+            app.sendTo("ServiceLogs", {
                logId: self.lastLogId,
                level: self.logLevel(),
                maxItems: 100

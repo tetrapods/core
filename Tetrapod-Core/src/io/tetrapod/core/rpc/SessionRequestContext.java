@@ -37,14 +37,14 @@ public class SessionRequestContext extends RequestContext {
    }
 
    @Override
-   public Response securityCheck(Request request, int accountId, String authToken) {
+   public Response securityCheck(Request request, int accountId, String authToken, int adminRightsRequired) {
       if (USE_SECURITY) {
          Value<Integer> error = new Value<>(ERROR_INVALID_RIGHTS);
          Security mine = request.getSecurity();
          Security theirs = getSenderSecurity(accountId, authToken, error);
 
          if (mine == Security.ADMIN) {
-            AdminAuthToken.validateAdminToken(accountId, authToken, request.getRequiredAdminRights());
+            AdminAuthToken.validateAdminToken(accountId, authToken, adminRightsRequired);
             theirs = Security.ADMIN;         
          }
          if (theirs.ordinal() < mine.ordinal())

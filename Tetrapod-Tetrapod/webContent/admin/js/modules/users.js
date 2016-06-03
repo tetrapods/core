@@ -8,7 +8,7 @@ define(function(require) {
    function Users(app) {
       var self = this;
 
-      var tetrapodConsts = app.server.consts['Tetrapod'];
+      self.app = app;
       self.users = ko.observableArray([]);
 
       self.modalOldPassword = ko.observable('');
@@ -29,7 +29,7 @@ define(function(require) {
       function onAddAdminUser() {
          var email = self.addUserEmail().trim();
          if (email && email.length > 0) {
-            app.server.sendDirect("AdminCreate", {
+            app.sendDirect("AdminCreate", {
                token: app.sessionToken,
                email: email,
                password: email,
@@ -59,7 +59,7 @@ define(function(require) {
 
       // called when change password dialog is submitted
       function onEditPassword() {
-         app.server.sendDirect("AdminChangePassword", {
+         app.sendDirect("AdminChangePassword", {
             token: app.sessionToken,
             oldPassword: self.modalOldPassword().trim(),
             newPassword: self.modalNewPassword().trim(),
@@ -124,25 +124,26 @@ define(function(require) {
          self.app2 = ko.observable();
          self.app3 = ko.observable();
          self.app4 = ko.observable();
-
+ 
+         
          updateRights(def.rights);
 
          function updateRights(rights) {
-            self.updatingRights = true;
-            self.clusterRead(rights & tetrapodConsts.Admin.RIGHTS_CLUSTER_READ);
-            self.clusterWrite(rights & tetrapodConsts.Admin.RIGHTS_CLUSTER_WRITE);
-            self.userRead(rights & tetrapodConsts.Admin.RIGHTS_USER_READ);
-            self.userWrite(rights & tetrapodConsts.Admin.RIGHTS_USER_WRITE);
-            self.app1(rights & tetrapodConsts.Admin.RIGHTS_APP_SET_1);
-            self.app2(rights & tetrapodConsts.Admin.RIGHTS_APP_SET_2);
-            self.app3(rights & tetrapodConsts.Admin.RIGHTS_APP_SET_3);
-            self.app4(rights & tetrapodConsts.Admin.RIGHTS_APP_SET_4);
+            self.updatingRights = true;            
+            self.clusterRead(rights & app.coreConsts.Admin.RIGHTS_CLUSTER_READ);
+            self.clusterWrite(rights & app.coreConsts.Admin.RIGHTS_CLUSTER_WRITE);
+            self.userRead(rights & app.coreConsts.Admin.RIGHTS_USER_READ);
+            self.userWrite(rights & app.coreConsts.Admin.RIGHTS_USER_WRITE);
+            self.app1(rights & app.coreConsts.Admin.RIGHTS_APP_SET_1);
+            self.app2(rights & app.coreConsts.Admin.RIGHTS_APP_SET_2);
+            self.app3(rights & app.coreConsts.Admin.RIGHTS_APP_SET_3);
+            self.app4(rights & app.coreConsts.Admin.RIGHTS_APP_SET_4);
             self.updatingRights = false;
          }
 
          function deleteUser() {
             Alert.confirm("Are you sure you want to delete '" + self.email + "'?", function() {
-               app.server.sendDirect("AdminDelete", {
+               app.sendDirect("AdminDelete", {
                   token: app.sessionToken,
                   accountId: self.accountId
                }, function(res) {
@@ -173,28 +174,28 @@ define(function(require) {
          function rights() {
             var r = 0;
             if (self.clusterRead()) {
-               r |= tetrapodConsts.Admin.RIGHTS_CLUSTER_READ
+               r |= app.coreConsts.Admin.RIGHTS_CLUSTER_READ
             }
             if (self.clusterWrite()) {
-               r |= tetrapodConsts.Admin.RIGHTS_CLUSTER_WRITE
+               r |= app.coreConsts.Admin.RIGHTS_CLUSTER_WRITE
             }
             if (self.userRead()) {
-               r |= tetrapodConsts.Admin.RIGHTS_USER_READ
+               r |= app.coreConsts.Admin.RIGHTS_USER_READ
             }
             if (self.userWrite()) {
-               r |= tetrapodConsts.Admin.RIGHTS_USER_WRITE
+               r |= app.coreConsts.Admin.RIGHTS_USER_WRITE
             }
             if (self.app1()) {
-               r |= tetrapodConsts.Admin.RIGHTS_APP_SET_1
+               r |= app.coreConsts.Admin.RIGHTS_APP_SET_1
             }
             if (self.app2()) {
-               r |= tetrapodConsts.Admin.RIGHTS_APP_SET_2
+               r |= app.coreConsts.Admin.RIGHTS_APP_SET_2
             }
             if (self.app3()) {
-               r |= tetrapodConsts.Admin.RIGHTS_APP_SET_3
+               r |= app.coreConsts.Admin.RIGHTS_APP_SET_3
             }
             if (self.app4()) {
-               r |= tetrapodConsts.Admin.RIGHTS_APP_SET_4
+               r |= app.coreConsts.Admin.RIGHTS_APP_SET_4
             }
             return r;
          }
@@ -211,7 +212,7 @@ define(function(require) {
          function changeRights() {
             if (!self.updatingRights) {
                var r = rights();
-               app.server.sendDirect("AdminChangeRights", {
+               app.sendDirect("AdminChangeRights", {
                   token: app.sessionToken,
                   accountId: self.accountId,
                   rights: r

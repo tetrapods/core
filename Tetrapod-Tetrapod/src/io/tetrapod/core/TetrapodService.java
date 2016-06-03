@@ -1395,7 +1395,7 @@ public class TetrapodService extends DefaultService
       final String user = Util.getProperty("nagios.user");
       final String pwd = Util.getProperty("nagios.password");
       final String domain = Util.getProperty("nagios.host");
-      Admin a = adminAccounts.getAdmin(ctx, r.adminToken, Admin.RIGHTS_CLUSTER_WRITE);
+      Admin a = adminAccounts.getAdmin(ctx, r.authToken, Admin.RIGHTS_CLUSTER_WRITE);
       if (domain == null || user == null || pwd == null) {
          return Response.error(ERROR_NOT_CONFIGURED);
       }

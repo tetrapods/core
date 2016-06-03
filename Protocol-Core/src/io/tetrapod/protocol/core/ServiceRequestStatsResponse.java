@@ -52,7 +52,7 @@ public class ServiceRequestStatsResponse extends Response {
    public long curTime;
 
    public final Structure.Security getSecurity() {
-      return Security.PUBLIC;
+      return Security.ADMIN;
    }
 
    public final void defaults() {

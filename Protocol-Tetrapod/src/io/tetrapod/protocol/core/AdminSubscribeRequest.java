@@ -107,13 +107,9 @@ public class AdminSubscribeRequest extends Request {
    }
 
    public final Response securityCheck(RequestContext ctx) {
-      return ctx.securityCheck(this, accountId, authToken);
+      return ctx.securityCheck(this, accountId, authToken, Admin.RIGHTS_CLUSTER_READ);
    }
-   
-   public final int getRequiredAdminRights() {
-     return Admin.RIGHTS_CLUSTER_READ;
-   }
-      
+       
    protected boolean isSensitive(String fieldName) {
       if (fieldName.equals("authToken")) return true;
       return false;

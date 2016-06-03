@@ -29,7 +29,7 @@ public class Admin extends Structure {
    public static final int RIGHTS_APP_SET_4 = 2048; 
    
    public static final int STRUCT_ID = 16753598;
-   public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;
+   public static final int CONTRACT_ID = CoreContract.CONTRACT_ID;
     
    public Admin() {
       defaults();

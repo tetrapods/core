@@ -205,12 +205,12 @@ define(function(require) {
          function updateHostDetails() {
             var s = getAvailableService();
             if (s) {
-               app.server.sendTo("HostInfo", {}, s.entityId, function(result) {
+               app.sendTo("HostInfo", {}, s.entityId, function(result) {
                   if (!result.isError()) {
                      self.cores(result.numCores);
                   }
                });
-               app.server.sendDirect("NagiosStatus", {
+               app.sendDirect("NagiosStatus", {
                   hostname: hostname,
                   toggle: false
                }, function(result) {
@@ -227,7 +227,7 @@ define(function(require) {
          function updateHostStats() {
             var s = getAvailableService();
             if (s) {
-               app.server.sendTo("HostStats", {}, s.entityId, function(result) {
+               app.sendTo("HostStats", {}, s.entityId, function(result) {
                   if (!result.isError()) {
                      // TODO: update model & charts
                      self.load(result.load.toFixed(1));
@@ -305,7 +305,7 @@ define(function(require) {
          }
 
          function toggleAlarm() {
-            app.server.sendDirect("NagiosStatus", {
+            app.sendDirect("NagiosStatus", {
                hostname: hostname,
                toggle: true
             }, function(result) {

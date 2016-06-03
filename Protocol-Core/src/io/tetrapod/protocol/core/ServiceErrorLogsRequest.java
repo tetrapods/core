@@ -21,23 +21,27 @@ public class ServiceErrorLogsRequest extends Request {
       defaults();
    }
 
-   public ServiceErrorLogsRequest(String token) {
-      this.token = token;
+   public ServiceErrorLogsRequest(int accountId, String authToken) {
+      this.accountId = accountId;
+      this.authToken = authToken;
    }   
 
-   public String token;
+   public int accountId;
+   public String authToken;
 
    public final Structure.Security getSecurity() {
-      return Security.PUBLIC;
+      return Security.ADMIN;
    }
 
    public final void defaults() {
-      token = null;
+      accountId = 0;
+      authToken = null;
    }
    
    @Override
    public final void write(DataSource data) throws IOException {
-      data.write(1, this.token);
+      data.write(1, this.accountId);
+      data.write(2, this.authToken);
       data.writeEndTag();
    }
    
@@ -47,7 +51,8 @@ public class ServiceErrorLogsRequest extends Request {
       while (true) {
          int tag = data.readTag();
          switch (tag) {
-            case 1: this.token = data.read_string(tag); break;
+            case 1: this.accountId = data.read_int(tag); break;
+            case 2: this.authToken = data.read_string(tag); break;
             case Codec.END_TAG:
                return;
             default:
@@ -80,8 +85,9 @@ public class ServiceErrorLogsRequest extends Request {
       // Note do not use this tags in long term serializations (to disk or databases) as 
       // implementors are free to rename them however they wish.  A null means the field
       // is not to participate in web serialization (remaining at default)
-      String[] result = new String[1+1];
-      result[1] = "token";
+      String[] result = new String[2+1];
+      result[1] = "accountId";
+      result[2] = "authToken";
       return result;
    }
    
@@ -95,12 +101,17 @@ public class ServiceErrorLogsRequest extends Request {
       desc.tagWebNames = tagWebNames();
       desc.types = new TypeDescriptor[desc.tagWebNames.length];
       desc.types[0] = new TypeDescriptor(TypeDescriptor.T_STRUCT, getContractId(), getStructId());
-      desc.types[1] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
+      desc.types[1] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
+      desc.types[2] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
       return desc;
    }
 
+   public final Response securityCheck(RequestContext ctx) {
+      return ctx.securityCheck(this, accountId, authToken, Admin.RIGHTS_CLUSTER_READ);
+   }
+       
    protected boolean isSensitive(String fieldName) {
-      if (fieldName.equals("token")) return true;
+      if (fieldName.equals("authToken")) return true;
       return false;
    }
 }

@@ -10,7 +10,7 @@ abstract public class RequestContext {
       this.header = header;
    }
 
-   abstract public Response securityCheck(Request request, int accountId, String authToken);
+   abstract public Response securityCheck(Request request, int accountId, String authToken, int adminRightsRequired);
 
    abstract public Response securityCheck(Request request);
 

@@ -41,7 +41,7 @@ define(function(require) {
       }
 
       function addProperty(key, val, secret) {
-         app.server.sendDirect("SetClusterProperty", {
+         app.sendDirect("SetClusterProperty", {
             adminToken: app.sessionToken,
             property: {
                key: key,
@@ -122,7 +122,7 @@ define(function(require) {
          function editValue() {
             Alert.prompt("Enter a new value", function(val) {
                if (val && val.trim().length > 0) {
-                  app.server.sendDirect("SetClusterProperty", {
+                  app.sendDirect("SetClusterProperty", {
                      adminToken: app.sessionToken,
                      property: {
                         key: self.key,
@@ -135,7 +135,7 @@ define(function(require) {
          }
 
          function deletePropNoConfirm() {
-            app.server.sendDirect("DelClusterProperty", {
+            app.sendDirect("DelClusterProperty", {
                adminToken: app.sessionToken,
                key: self.key
             }, app.alertResponse);

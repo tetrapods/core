@@ -8,21 +8,6 @@ function TP_Tetrapod(server) {
    server.register("response", "Tetrapod", "SUCCESS", 1, 2);
 
    self.Tetrapod = {};
-   self.Tetrapod.Admin = {
-      MAX_LOGIN_ATTEMPTS : 5,
-      RIGHTS_APP_SET_1 : 256,
-      RIGHTS_APP_SET_2 : 512,
-      RIGHTS_APP_SET_3 : 1024,
-      RIGHTS_APP_SET_4 : 2048,
-      RIGHTS_CLUSTER_READ : 1,
-      RIGHTS_CLUSTER_WRITE : 2,
-      RIGHTS_RESERVED_1 : 16,
-      RIGHTS_RESERVED_2 : 32,
-      RIGHTS_RESERVED_3 : 64,
-      RIGHTS_RESERVED_4 : 128,
-      RIGHTS_USER_READ : 4,
-      RIGHTS_USER_WRITE : 8
-   };
    self.Tetrapod.BuildCommand = {
       BUILD : 1,
       DEPLOY : 2,
@@ -68,7 +53,6 @@ function TP_Tetrapod(server) {
    server.register("request", "Tetrapod", "AdminChangePassword", 1, 2877212);
    server.register("request", "Tetrapod", "AdminResetPassword", 1, 868729);
    server.register("request", "Tetrapod", "AdminChangeRights", 1, 16102706);
-   server.register("struct", "Tetrapod", "Admin", 1, 16753598);
    server.register("request", "Tetrapod", "KeepAlive", 1, 5512920);
    server.register("request", "Tetrapod", "SetAlternateId", 1, 10499521);
    server.register("request", "Tetrapod", "SetEntityReferrer", 1, 1987578);

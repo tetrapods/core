@@ -164,7 +164,7 @@ define(function(require) {
          self.update();
 
          function update() {
-            app.server.sendTo("RaftStats", {}, self.entityId, function(info) {
+            app.sendTo("RaftStats", {}, self.entityId, function(info) {
                if (!info.isError()) {
                   if (info.lastIndex != self.lastIndex()) {
                      self.lastCommandTime(new Date().getTime());
@@ -230,7 +230,7 @@ define(function(require) {
          });
 
          function snapshot() {
-            app.server.sendTo("Snapshot", {
+            app.sendTo("Snapshot", {
                adminToken: app.sessionToken,
             }, self.entityId, function(info) {
                if (info.isError()) {

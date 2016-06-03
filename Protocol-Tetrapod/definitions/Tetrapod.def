@@ -102,17 +102,17 @@ public response AdminSessionToken
    1: string sessionToken @sensitive // a short lived session token
  
 internal request AdminCreate
-   1: string token @sensitive
+   1: string token @sensitive @authToken
    2: string email @sensitive
    3: string password @sensitive
    4: long rights
    
 internal request AdminDelete
-   1: string token @sensitive
+   1: string token @sensitive @authToken
    2: int accountId
    
 internal request AdminChangePassword
-   1: string token @sensitive
+   1: string token @sensitive @authToken
    2: string oldPassword @sensitive
    3: string newPassword @sensitive
    
@@ -122,31 +122,11 @@ internal request AdminResetPassword
    3: string password @sensitive 
    
 internal request AdminChangeRights
-   1: string token @sensitive
+   1: string token @sensitive @authToken
    2: int accountId
    3: long rights 
    
-public struct Admin
-   1: int accountId
-   2: string email @sensitive
-   3: string hash @sensitive
-   4: long rights      
-   5: long[] loginAttempts 
 
-   const int MAX_LOGIN_ATTEMPTS    = 5
-   
-   const int RIGHTS_CLUSTER_READ   = 1
-   const int RIGHTS_CLUSTER_WRITE  = 2
-   const int RIGHTS_USER_READ      = 4
-   const int RIGHTS_USER_WRITE     = 8
-   const int RIGHTS_RESERVED_1     = 16
-   const int RIGHTS_RESERVED_2     = 32
-   const int RIGHTS_RESERVED_3     = 64
-   const int RIGHTS_RESERVED_4     = 128   
-   const int RIGHTS_APP_SET_1      = 256  
-   const int RIGHTS_APP_SET_2      = 512
-   const int RIGHTS_APP_SET_3      = 1024
-   const int RIGHTS_APP_SET_4      = 2048
 
 public request KeepAlive
 
@@ -423,12 +403,13 @@ internal response TetrapodClientSessions
      
 ##########################################          
  
-internal request NagiosStatus
-   1: string adminToken
-   2: string hostname
-   3: boolean toggle
+admin request NagiosStatus @rights(Admin.RIGHTS_CLUSTER_WRITE)
+   1: int accountId
+   2: string authToken @sensitive
+   3: string hostname
+   4: boolean toggle
 
-internal response NagiosStatus  
+admin response NagiosStatus  
    1: boolean enabled 
  
  internal message NagiosStatus

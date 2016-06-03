@@ -106,6 +106,27 @@ public struct ServerAddress
    1: string host
    2: int port
 
+public struct Admin
+   1: int accountId
+   2: string email @sensitive
+   3: string hash @sensitive
+   4: long rights      
+   5: long[] loginAttempts 
+
+   const int MAX_LOGIN_ATTEMPTS    = 5
+   
+   const int RIGHTS_CLUSTER_READ   = 1
+   const int RIGHTS_CLUSTER_WRITE  = 2
+   const int RIGHTS_USER_READ      = 4
+   const int RIGHTS_USER_WRITE     = 8
+   const int RIGHTS_RESERVED_1     = 16
+   const int RIGHTS_RESERVED_2     = 32
+   const int RIGHTS_RESERVED_3     = 64
+   const int RIGHTS_RESERVED_4     = 128   
+   const int RIGHTS_APP_SET_1      = 256  
+   const int RIGHTS_APP_SET_2      = 512
+   const int RIGHTS_APP_SET_3      = 1024
+   const int RIGHTS_APP_SET_4      = 2048
 ################################# REQUESTS ####################
 
 admin request Pause @rights(Admin.RIGHTS_CLUSTER_WRITE)
@@ -138,7 +159,7 @@ admin request Restart @rights(Admin.RIGHTS_CLUSTER_WRITE)
    3: string restartNonce
    4: boolean restartPaused 
 
-admin request ServiceStatsSubscribe @rights(Admin.RIGHTS_CLUSTERREAD)
+admin request ServiceStatsSubscribe @rights(Admin.RIGHTS_CLUSTER_READ)
    1: int accountId
    2: string authToken @sensitive
    

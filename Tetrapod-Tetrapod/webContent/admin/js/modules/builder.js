@@ -39,7 +39,7 @@ define(["knockout", "jquery", "app", "alert"], function(ko, $, app, Alert) {
       }
 
       function loadOne(id) {
-         app.server.sendTo("Tetrapod.GetServiceBuildInfo", {}, id, function(res) {
+         app.sendTo("Tetrapod.GetServiceBuildInfo", {}, id, function(res) {
             onLoaded(res);
             loading.num--;
             if (loading.num == 0) {
@@ -134,7 +134,7 @@ define(["knockout", "jquery", "app", "alert"], function(ko, $, app, Alert) {
          var commandsList = [commands[ix]];
          host.progress += "&nbsp;&nbsp;&nbsp;&nbsp;" + commands[ix].display + " ..... ";
          updateProgress();
-         app.server.sendTo("Tetrapod.ExecuteBuildCommand", {
+         app.sendTo("Tetrapod.ExecuteBuildCommand", {
             commands: commandsList,
             authToken: app.sessionToken
          }, host.entityId, function(res) {

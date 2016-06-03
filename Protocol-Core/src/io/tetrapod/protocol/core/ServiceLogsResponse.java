@@ -30,7 +30,7 @@ public class ServiceLogsResponse extends Response {
    public List<ServiceLogEntry> items;
 
    public final Structure.Security getSecurity() {
-      return Security.PUBLIC;
+      return Security.ADMIN;
    }
 
    public final void defaults() {

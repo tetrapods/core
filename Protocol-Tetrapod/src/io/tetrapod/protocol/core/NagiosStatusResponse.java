@@ -28,7 +28,7 @@ public class NagiosStatusResponse extends Response {
    public boolean enabled;
 
    public final Structure.Security getSecurity() {
-      return Security.INTERNAL;
+      return Security.ADMIN;
    }
 
    public final void defaults() {
