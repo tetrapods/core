@@ -1,6 +1,7 @@
 package io.tetrapod.core.rpc;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Future;
 
 abstract public class Response extends Structure {
 

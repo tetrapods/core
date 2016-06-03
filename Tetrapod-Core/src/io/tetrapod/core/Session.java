@@ -9,7 +9,6 @@ import io.netty.handler.codec.DecoderException;
 import io.netty.util.ReferenceCountUtil;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.rpc.Error;
-import io.tetrapod.core.utils.Util;
 import io.tetrapod.core.web.WebRoutes;
 import io.tetrapod.protocol.core.*;
 import io.tetrapod.protocol.raft.AppendEntriesRequest;
@@ -235,16 +234,8 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
    }
 
    public CompletableFuture<? extends Response> sendRequestAsync(Request req, int toId, byte timeoutSeconds) {
-      CompletableFuture<Response> future = new CompletableFuture<>();
       Async async = sendRequest(req, toId, timeoutSeconds);
-      async.handle(resp -> {
-         if (resp.isError() && resp.errorCode() == ERROR_UNKNOWN) {
-            future.completeExceptionally(new ErrorResponseException(resp.errorCode()));
-         } else {
-            future.complete(resp);
-         }
-      });
-      return future;
+      return async.asFuture();
    }
 
    public Async sendRequest(Request req, int toId, byte timeoutSeconds) {

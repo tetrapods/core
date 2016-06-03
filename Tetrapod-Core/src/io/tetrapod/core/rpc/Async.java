@@ -7,6 +7,10 @@ import io.tetrapod.protocol.core.RequestHeader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.concurrent.CompletableFuture;
+
+import static io.tetrapod.protocol.core.CoreContract.ERROR_UNKNOWN;
+
 public class Async {
    public static final Logger logger   = LoggerFactory.getLogger(Async.class);
 
@@ -31,6 +35,15 @@ public class Async {
 
    public synchronized boolean hasHandler() {
       return handler != null;
+   }
+
+   public CompletableFuture<? extends Response> asFuture() {
+      CompletableFuture<Response> future = new CompletableFuture<>();
+      handle(resp -> {
+         AsyncUtils.handleFuture(future, resp);
+      });
+      return future;
+
    }
 
    public interface IResponseHandler {
