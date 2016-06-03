@@ -81,7 +81,7 @@ public class Topic {
    public synchronized void subscribe(int entityId, int childId, boolean once) {
       Subscriber sub = subscribers.get(entityId);
       if (sub == null) {
-         sub = new Subscriber(entityId, childId);
+         sub = new Subscriber(entityId, 0);
          subscribers.put(entityId, sub);
       }
       final int parentId = entityId;
@@ -97,7 +97,7 @@ public class Topic {
       }
 
       // register the new subscriber for their parent 
-      publisher.sendMessage(new TopicSubscribedMessage(publisher.getEntityId(), topicId, sub.entityId, sub.childId, once),
+      publisher.sendMessage(new TopicSubscribedMessage(publisher.getEntityId(), topicId, sub.entityId, childId, once),
             parent.entityId, 0, topicId);
       fireTopicSubscribedEvent(entityId, childId, false);
 

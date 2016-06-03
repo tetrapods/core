@@ -22,6 +22,7 @@ define(["knockout", "jquery", "alert", "toolbox", "protocol/server", "protocol/t
       self.alertResponse = alertResponse;
       self.isProd = self.name == "orgs.chatbox.com" || self.name == "pgx.chatbox.com" || (self.name.indexOf(".prod.") > 0);
       self.sendTo = sendTo;
+      self.sendAny = sendAny;
       self.sendDirect = sendDirect;
 
       function run(clusterModel) {
@@ -177,6 +178,11 @@ define(["knockout", "jquery", "alert", "toolbox", "protocol/server", "protocol/t
       function sendTo(reqName, args, toEntityId, callback) {
          addArgs(args)
          self.server.sendTo(reqName, args, toEntityId, callback);
+      }
+
+      function sendAny(reqName, args, callback) {
+         addArgs(args)
+         self.server.send(reqName, args, callback);
       }
 
       function sendDirect(reqName, args, callback) {

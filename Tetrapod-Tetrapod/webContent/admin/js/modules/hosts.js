@@ -305,7 +305,7 @@ define(function(require) {
          }
 
          function toggleAlarm() {
-            app.sendDirect("NagiosStatus", {
+            app.sendAny("NagiosStatus", {
                hostname: hostname,
                toggle: true
             }, function(result) {

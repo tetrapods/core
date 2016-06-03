@@ -203,7 +203,7 @@ public class WebService extends DefaultService implements WebContract.API, Relay
 
    @Override
    public void relayMessage(MessageHeader header, ByteBuf buf, boolean isBroadcast) throws IOException {
-      if (header.toChildId != 0) {
+      if (header.toChildId != 0 || header.structId == ClusterPropertyRemovedMessage.STRUCT_ID) {
          logger.info("Relay to child {}", header.toChildId);
       }
       if (isBroadcast) {

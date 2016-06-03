@@ -342,7 +342,7 @@ define(["knockout", "jquery", "bootbox", "alert", "app", "chart", "modules/build
       }
 
       self.deleteService = function() {
-         app.sendDirect("Unregister", {
+         app.sendAny("Unregister", {
             entityId: self.entityId
          });
       }

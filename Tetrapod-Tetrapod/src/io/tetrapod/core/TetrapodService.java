@@ -808,6 +808,7 @@ public class TetrapodService extends DefaultService
 
    public void subscribeToAdmin(Session ses, int toEntityId, int toChildId) {
       assert (adminTopic != null);
+      logger.info("Subscribing admin {}", toChildId);
       synchronized (cluster) {
          subscribe(adminTopic.topicId, toEntityId, toChildId);
       }

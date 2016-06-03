@@ -29,11 +29,11 @@ public class ServiceTopic {
     * 
     * @return true if the client was not already subscribed
     */
-   public synchronized boolean subscribe(final int entityId, final boolean once) {
-      Subscriber sub = subscribers.get(entityId);
+   public synchronized boolean subscribe(final int clientId, final boolean once) {
+      Subscriber sub = subscribers.get(clientId);
       if (sub == null) {
-         sub = new Subscriber(entityId, 1);
-         subscribers.put(entityId, sub);
+         sub = new Subscriber(clientId, 1);
+         subscribers.put(clientId, sub);
       } else if (!once) {
          sub.counter++;
       }

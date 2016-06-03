@@ -31,7 +31,7 @@ define(function(require) {
       function addWebRoot() {
          Alert.prompt("Enter a new web root name", function(name) {
             if (name && name.trim().length > 0) {
-               app.sendDirect("SetWebRoot", {
+               app.sendAny("SetWebRoot", {
                   adminToken: app.sessionToken,
                   def: {
                      name: name,
@@ -74,7 +74,7 @@ define(function(require) {
          function editPath() {
             Alert.prompt("Enter a new path", function(val) {
                if (val && val.trim().length > 0) {
-                  app.sendDirect("SetWebRoot", {
+                  app.sendAny("SetWebRoot", {
                      adminToken: app.sessionToken,
                      def: {
                         name: self.name,
@@ -89,7 +89,7 @@ define(function(require) {
          function editLocation() {
             Alert.prompt("Enter a new location", function(val) {
                if (val && val.trim().length > 0) {
-                  app.sendDirect("SetWebRoot", {
+                  app.sendAny("SetWebRoot", {
                      adminToken: app.sessionToken,
                      def: {
                         name: self.name,
@@ -103,7 +103,7 @@ define(function(require) {
 
          function deleteWebRoot() {
             Alert.confirm("Are you sure you want to delete '" + self.name + "'?", function() {
-               app.sendDirect("DelWebRoot", {
+               app.sendAny("DelWebRoot", {
                   adminToken: app.sessionToken,
                   name: self.name
                }, app.alertResponse);

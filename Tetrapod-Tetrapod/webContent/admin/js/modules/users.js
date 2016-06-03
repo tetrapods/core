@@ -29,7 +29,7 @@ define(function(require) {
       function onAddAdminUser() {
          var email = self.addUserEmail().trim();
          if (email && email.length > 0) {
-            app.sendDirect("AdminCreate", {
+            app.sendAny("AdminCreate", {
                token: app.sessionToken,
                email: email,
                password: email,
@@ -59,7 +59,7 @@ define(function(require) {
 
       // called when change password dialog is submitted
       function onEditPassword() {
-         app.sendDirect("AdminChangePassword", {
+         app.sendAny("AdminChangePassword", {
             token: app.sessionToken,
             oldPassword: self.modalOldPassword().trim(),
             newPassword: self.modalNewPassword().trim(),
@@ -143,7 +143,7 @@ define(function(require) {
 
          function deleteUser() {
             Alert.confirm("Are you sure you want to delete '" + self.email + "'?", function() {
-               app.sendDirect("AdminDelete", {
+               app.sendAny("AdminDelete", {
                   token: app.sessionToken,
                   accountId: self.accountId
                }, function(res) {
@@ -212,7 +212,7 @@ define(function(require) {
          function changeRights() {
             if (!self.updatingRights) {
                var r = rights();
-               app.sendDirect("AdminChangeRights", {
+               app.sendAny("AdminChangeRights", {
                   token: app.sessionToken,
                   accountId: self.accountId,
                   rights: r

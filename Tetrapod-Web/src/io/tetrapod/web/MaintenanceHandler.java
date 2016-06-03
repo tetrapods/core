@@ -1,37 +1,29 @@
 package io.tetrapod.web;
 
-import io.netty.buffer.Unpooled;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelFutureListener;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.SimpleChannelInboundHandler;
-import io.netty.handler.codec.http.DefaultFullHttpResponse;
-import io.netty.handler.codec.http.FullHttpRequest;
-import io.netty.handler.codec.http.FullHttpResponse;
-import io.netty.handler.codec.http.HttpResponse;
-import io.netty.handler.codec.http.cookie.Cookie;
-import io.netty.handler.codec.http.cookie.ServerCookieDecoder;
-import io.netty.util.CharsetUtil;
-import io.netty.util.ReferenceCountUtil;
-import io.tetrapod.core.utils.AdminAuthToken;
-import io.tetrapod.core.utils.Util;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import static io.netty.handler.codec.http.HttpHeaders.setContentLength;
+import static io.netty.handler.codec.http.HttpHeaders.Names.*;
+import static io.netty.handler.codec.http.HttpHeaders.Values.*;
+import static io.netty.handler.codec.http.HttpResponseStatus.INTERNAL_SERVER_ERROR;
+import static io.netty.handler.codec.http.HttpResponseStatus.OK;
+import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 
 import java.io.IOException;
 import java.net.URLDecoder;
 import java.util.Date;
 import java.util.Set;
 
-import static io.netty.handler.codec.http.HttpHeaders.Names.*;
-import static io.netty.handler.codec.http.HttpHeaders.Names.CACHE_CONTROL;
-import static io.netty.handler.codec.http.HttpHeaders.Names.EXPIRES;
-import static io.netty.handler.codec.http.HttpHeaders.Values.*;
-import static io.netty.handler.codec.http.HttpHeaders.setContentLength;
-import static io.netty.handler.codec.http.HttpResponseStatus.INTERNAL_SERVER_ERROR;
-import static io.netty.handler.codec.http.HttpResponseStatus.OK;
-import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import io.netty.buffer.Unpooled;
+import io.netty.channel.*;
+import io.netty.handler.codec.http.*;
+import io.netty.handler.codec.http.cookie.Cookie;
+import io.netty.handler.codec.http.cookie.ServerCookieDecoder;
+import io.netty.util.CharsetUtil;
+import io.netty.util.ReferenceCountUtil;
+import io.tetrapod.core.utils.AdminAuthToken;
+import io.tetrapod.core.utils.Util;
 
 public class MaintenanceHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
    public static final Logger logger = LoggerFactory.getLogger(MaintenanceHandler.class);
