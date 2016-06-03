@@ -303,19 +303,19 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
       }
    }
 
-   public Task<? extends Response> sendRequestAsync(Request req, int toEntityId) {
-      Task<Response> future = new Task<>();
-      Async async = sendRequest(req, toEntityId);
+   public <TResp extends Response> Task<TResp> sendRequestTask(Request<TResp> req, int toEntityId) {
+      Task<TResp> future = new Task<>();
+      Async<TResp> async = sendRequest(req, toEntityId);
       async.handle(resp -> {
-         if (resp.isError() && resp.errorCode() == ERROR_UNKNOWN) {      //todo: I would love to have this always fail something based on errors but that's not the way our error codes work.  Some are conditional expected states
+         if (resp.isError()) {
             future.completeExceptionally(new ErrorResponseException(resp.errorCode()));
          } else {
-            future.complete(resp);
+            future.complete(Util.cast(resp));
          }
       });
       return future;
    }
-   public Async sendRequest(Request req, int toEntityId) {
+   public <TResp extends Response> Async<TResp> sendRequest(Request<TResp> req, int toEntityId) {
       if (toEntityId == Core.UNADDRESSED) {
          Entity e = service.services.getRandomAvailableService(req.getContractId());
          if (e != null) {

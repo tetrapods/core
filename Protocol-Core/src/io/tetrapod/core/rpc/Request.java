@@ -11,12 +11,5 @@ abstract public class Request<TResp extends Response> extends Structure {
       return ctx.securityCheck(this);
    }
 
-   public ResponseWrapper<TResp> getResponseWrapper(TResp resp) {
-      return new ResponseWrapper<TResp>(resp);
-   }
-
-   public ResponseWrapper<TResp> getResponseWrapper(Integer errorCode) {
-      return new ResponseWrapper<TResp>(errorCode);
-   }
 
 }

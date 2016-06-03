@@ -2,6 +2,7 @@ package io.tetrapod.core.rpc;
 
 import io.tetrapod.core.Session;
 import io.tetrapod.core.tasks.Task;
+import io.tetrapod.core.utils.Util;
 import io.tetrapod.protocol.core.CoreContract;
 import io.tetrapod.protocol.core.RequestHeader;
 
@@ -34,13 +35,28 @@ public class Async<TResp extends Response> {
       return handler != null;
    }
 
-   public interface IResponseWrapperHandler<TResponse extends Response> {
-      void onResponse(ResponseWrapper<TResponse> response);
+   public <TValue> Task<ResponseAndValue<TResp, TValue>> asTask(TValue value) {
+      Task<ResponseAndValue<TResp, TValue>> future = new Task<>();
+      handle(resp -> {
+         if (resp.isError()) {
+            future.completeExceptionally(new ErrorResponseException(resp.errorCode()));
+         } else {
+            future.complete(new ResponseAndValue<>(Util.cast(resp), value));
+         }
+      });
+      return future;
    }
 
-   public Task<Response> asFuture() {
-      Task<Response> future = new Task<>();
-      handle(resp -> AsyncUtils.handleFuture(future, resp));
+   public Task<TResp> asTask() {
+      Task<TResp> future = new Task<>();
+      handle(resp -> {
+         if (resp.isError()) {
+            future.completeExceptionally(new ErrorResponseException(resp.errorCode()));
+         } else {
+            future.complete(Util.cast(resp));
+         }
+      });
+
       return future;
    }
 
@@ -52,22 +68,6 @@ public class Async<TResp extends Response> {
       public void onResponse(Response res) throws Exception;
    }
 
-   public synchronized void handleWrapped(IResponseWrapperHandler<TResp> wrapperHandler) {
-     handle(new ResponseHandler() {
-        @Override
-        public void onResponse(Response res) {
-           try {
-              if (response.isError()) {
-                 wrapperHandler.onResponse(new ResponseWrapper<TResp>(res.errorCode()));
-              } else {
-                 wrapperHandler.onResponse(new ResponseWrapper<TResp>((TResp)res));    //todo: catch cast exception and log it better?
-              }
-           } catch (AsyncSequenceRejectException e) {
-              // ignore, sequence reject handler called
-           }
-        }
-     });
-   }
 
    public synchronized void handle(IResponseHandler handler) {
       handle(new ResponseHandler() {

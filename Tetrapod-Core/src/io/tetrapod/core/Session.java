@@ -44,7 +44,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
 
       public Dispatcher getDispatcher();
 
-      public Async dispatchRequest(RequestHeader header, Request req, Session fromSession);
+      public <TResp extends Response> Async<TResp> dispatchRequest(RequestHeader header, Request<TResp> req, Session fromSession);
 
       public List<SubscriptionAPI> getMessageHandlers(int contractId, int structId);
 
@@ -234,7 +234,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
       return sendRequest(req, toId, DEFAULT_REQUEST_TIMEOUT);
    }
 
-   public Task<? extends Response> sendRequestFuture(Request req, int toId, byte timeoutSeconds) {
+   public Task<? extends Response> sendRequestTask(Request req, int toId, byte timeoutSeconds) {
       Task<Response> task = new Task<>();
       Async async = sendRequest(req, toId, timeoutSeconds);
       async.handle(resp -> {

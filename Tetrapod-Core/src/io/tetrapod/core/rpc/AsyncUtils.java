@@ -1,6 +1,7 @@
 package io.tetrapod.core.rpc;
 
 import io.tetrapod.core.tasks.Task;
+import io.tetrapod.core.utils.Util;
 
 
 /**
@@ -14,11 +15,11 @@ public class AsyncUtils {
     * @param future
     * @param resp
     */
-   public static void handleFuture(Task<Response> future, Response resp) {
+   public static void handleTask(Task<? extends Response> future, Response resp) {
       if (resp.isError()) {
          future.completeExceptionally(new ErrorResponseException(resp.errorCode()));
       } else {
-         future.complete(resp);
+         future.complete(Util.cast(resp));
       }
    }
 }

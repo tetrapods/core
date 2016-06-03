@@ -694,11 +694,17 @@ public class DefaultService
       sendRequest(req).handle(handler);
    }
 
-   public Task<Response> sendRequestFuture(Request req) {
+   public <TResp extends Response, TValue> Task<ResponseAndValue<TResp, TValue>> sendRequestTask(Request<TResp> req, TValue value) {
       if (serviceConnector != null) {
-         return serviceConnector.sendRequest(req, Core.UNADDRESSED).asFuture();
+         return serviceConnector.sendRequest(req, Core.UNADDRESSED).asTask(value);
       }
-      return clusterClient.getSession().sendRequest(req, Core.UNADDRESSED, (byte) 30).asFuture();
+      return clusterClient.getSession().sendRequest(req, Core.UNADDRESSED, (byte) 30).asTask(value);
+   }
+   public <TResp extends Response> Task<TResp> sendRequestTask(Request<TResp> req) {
+      if (serviceConnector != null) {
+         return serviceConnector.sendRequest(req, Core.UNADDRESSED).asTask();
+      }
+      return clusterClient.getSession().sendRequest(req, Core.UNADDRESSED, (byte) 30).asTask();
    }
 
    public <TResp extends Response> Async<TResp> sendRequest(Request<TResp> req) {
