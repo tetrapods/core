@@ -61,7 +61,7 @@ public class RequestStat extends Structure {
    public int[] timeline;
 
    public final Structure.Security getSecurity() {
-      return Security.INTERNAL;
+      return Security.PUBLIC;
    }
 
    public final void defaults() {

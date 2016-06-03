@@ -31,7 +31,7 @@ public class AdminSessionTokenResponse extends Response {
    public String sessionToken;
 
    public final Structure.Security getSecurity() {
-      return Security.ADMIN;
+      return Security.PUBLIC;
    }
 
    public final void defaults() {

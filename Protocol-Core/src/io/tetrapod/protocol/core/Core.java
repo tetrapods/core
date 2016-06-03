@@ -25,6 +25,10 @@ public class Core extends Structure {
    public static final int DIRECT = 1; 
    public static final byte TYPE_TETRAPOD = 1; 
    public static final byte TYPE_SERVICE = 2; 
+   
+   /**
+    * deprecated
+    */
    public static final byte TYPE_ADMIN = 3; 
    public static final byte TYPE_CLIENT = 4; 
    public static final byte TYPE_ANONYMOUS = 5; 

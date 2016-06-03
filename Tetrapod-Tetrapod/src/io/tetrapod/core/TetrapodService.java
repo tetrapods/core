@@ -810,10 +810,21 @@ public class TetrapodService extends DefaultService
       assert (adminTopic != null);
       synchronized (cluster) {
          subscribe(adminTopic.topicId, toEntityId, toChildId);
-         //cluster.sendAdminDetails(ses, toEntityId, adminTopic.topicId);
       }
+      subscribeToServices(ses, toEntityId, toChildId);
    }
 
+   public void subscribeToServices(Session ses, int toEntityId, int toChildId) {
+      assert (servicesTopic != null);
+      synchronized (servicesTopic) {
+         subscribe(servicesTopic.topicId, toEntityId, toChildId);
+         // send all current services 
+         for (EntityInfo e : registry.getServices()) {
+            e.queue(() -> sendPrivateMessage(new ServiceAddedMessage(e), toEntityId, toChildId,
+                  servicesTopic.topicId));
+         }
+      }
+   }
    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
    @Override
@@ -882,9 +893,9 @@ public class TetrapodService extends DefaultService
 
       // for a client, we don't use raft to sync them, as they are a locally issued, non-replicated client
       if (info.type == Core.TYPE_CLIENT) {
-         return new Error(ERROR_UNSUPPORTED);
-         //         registry.onAddEntityCommand(info);
-         //         return new RegisterResponse(info.entityId, getEntityId(), EntityToken.encode(info.entityId, info.reclaimToken));
+         //return new Error(ERROR_UNSUPPORTED);
+         registry.onAddEntityCommand(info);
+         return new RegisterResponse(info.entityId, getEntityId(), EntityToken.encode(info.entityId, info.reclaimToken));
       }
 
       final int entityId = info.entityId;
@@ -924,8 +935,8 @@ public class TetrapodService extends DefaultService
 
    @Override
    public Response requestUnregister(UnregisterRequest r, RequestContext ctx) {
-      if (r.entityId != ctx.header.fromParentId && ctx.header.fromType != Core.TYPE_ADMIN) {
-         return new Error(ERROR_INVALID_RIGHTS);
+      if (r.entityId != ctx.header.fromParentId) {
+         AdminAuthToken.validateAdminToken(r.authToken, Admin.RIGHTS_CLUSTER_WRITE);
       }
       final EntityInfo info = registry.getEntity(r.entityId);
       if (info == null) {
@@ -941,29 +952,7 @@ public class TetrapodService extends DefaultService
       if (servicesTopic == null) {
          return new Error(ERROR_UNKNOWN);
       }
-
-      if (!ctx.isFromService()) {
-         if (adminAccounts == null) {
-            return new Error(ERROR_SERVICE_UNAVAILABLE);
-         }
-         if (!adminAccounts.isValidAdminRequest(ctx, r.adminToken, Admin.RIGHTS_CLUSTER_READ)) {
-            return new Error(ERROR_INVALID_RIGHTS);
-         }
-      }
-
-      synchronized (servicesTopic) {
-         subscribe(servicesTopic.topicId, ctx.header.fromParentId, ctx.header.fromChildId);
-         // send all current services
-         //EntityInfo sub = registry.getEntity(ctx.header.fromId);
-         for (EntityInfo e : registry.getServices()) {
-            e.queue(() -> sendPrivateMessage(new ServiceAddedMessage(e), ctx.header.fromParentId, ctx.header.fromChildId,
-                  servicesTopic.topicId));
-         }
-         // send all current services
-         //         for (EntityInfo e : registry.getServices()) {
-         //            e.queue(() -> sendPrivateMessage(new ServiceAddedMessage(e), ctx.header.fromId, servicesTopic.topicId));
-         //         }
-      }
+      subscribeToServices(ctx.session, ctx.header.fromParentId, ctx.header.fromChildId);
       return Response.SUCCESS;
    }
 
@@ -1185,8 +1174,8 @@ public class TetrapodService extends DefaultService
 
    @Override
    public Response requestDelClusterProperty(DelClusterPropertyRequest r, RequestContext ctx) {
-      Admin a = adminAccounts.getAdmin(ctx, r.adminToken, Admin.RIGHTS_CLUSTER_WRITE);
-      if (!adminAccounts.isValidAdminRequest(ctx, r.adminToken, Admin.RIGHTS_CLUSTER_WRITE)) {
+      Admin a = adminAccounts.getAdmin(ctx, r.authToken, Admin.RIGHTS_CLUSTER_WRITE);
+      if (!adminAccounts.isValidAdminRequest(ctx, r.authToken, Admin.RIGHTS_CLUSTER_WRITE)) {
          auditLogger.info("Admin{} [{}] failed to delete cluster property: {}.", a.email, a.accountId, r.key);
          return new Error(ERROR_INVALID_RIGHTS);
       }
@@ -1199,11 +1188,11 @@ public class TetrapodService extends DefaultService
    public Response requestSetClusterProperty(SetClusterPropertyRequest r, RequestContext ctx) {
       Admin a;
       if (ctx.isFromService()) {
-         a = adminAccounts.getAdminInternal(r.adminToken, Admin.RIGHTS_CLUSTER_WRITE);
+         a = adminAccounts.getAdminInternal(r.authToken, Admin.RIGHTS_CLUSTER_WRITE);
       } else {
-         a = adminAccounts.getAdmin(ctx, r.adminToken, Admin.RIGHTS_CLUSTER_WRITE);
+         a = adminAccounts.getAdmin(ctx, r.authToken, Admin.RIGHTS_CLUSTER_WRITE);
       }
-      if (!ctx.isFromService() && !adminAccounts.isValidAdminRequest(ctx, r.adminToken, Admin.RIGHTS_CLUSTER_WRITE)) {
+      if (!ctx.isFromService() && !adminAccounts.isValidAdminRequest(ctx, r.authToken, Admin.RIGHTS_CLUSTER_WRITE)) {
          auditLogger.info("Admin {} [{}] failed to create or modify cluster property: {}.", a.email, a.accountId, r.property.key);
          return new Error(ERROR_INVALID_RIGHTS);
       }
@@ -1214,9 +1203,6 @@ public class TetrapodService extends DefaultService
 
    @Override
    public Response requestAdminSubscribe(AdminSubscribeRequest r, RequestContext ctx) {
-      if (!adminAccounts.isValidAdminRequest(ctx, r.adminToken, Admin.RIGHTS_CLUSTER_READ)) {
-         return new Error(ERROR_INVALID_RIGHTS);
-      }
       subscribeToAdmin(((SessionRequestContext) ctx).session, ctx.header.fromParentId, ctx.header.fromChildId);
       return Response.SUCCESS;
    }

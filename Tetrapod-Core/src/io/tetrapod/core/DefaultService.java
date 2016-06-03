@@ -301,7 +301,7 @@ public class DefaultService
          }
       } else {
          if (getEntityId() != 0 && clusterClient.getSession() != null) {
-            sendDirectRequest(new UnregisterRequest(getEntityId())).handle(res -> {
+            sendDirectRequest(new UnregisterRequest(0, null, getEntityId())).handle(res -> {
                clusterClient.close();
                dispatcher.shutdown();
                setTerminated(true);
@@ -865,7 +865,6 @@ public class DefaultService
 
    @Override
    public Response requestPause(PauseRequest r, RequestContext ctx) {
-      // TODO: Check admin rights or macaroon
       setStatus(Core.STATUS_PAUSED);
       onPaused();
       return Response.SUCCESS;
@@ -891,7 +890,6 @@ public class DefaultService
 
    @Override
    public Response requestUnpause(UnpauseRequest r, RequestContext ctx) {
-      // TODO: Check admin rights or macaroon
       clearStatus(Core.STATUS_PAUSED);
       onUnpaused();
       return Response.SUCCESS;
@@ -899,14 +897,12 @@ public class DefaultService
 
    @Override
    public Response requestRestart(RestartRequest r, RequestContext ctx) {
-      // TODO: Check admin rights or macaroon
       dispatcher.dispatch(() -> shutdown(true));
       return Response.SUCCESS;
    }
 
    @Override
    public Response requestShutdown(ShutdownRequest r, RequestContext ctx) {
-      // TODO: Check admin rights or macaroon
       dispatcher.dispatch(() -> shutdown(false));
       return Response.SUCCESS;
    }

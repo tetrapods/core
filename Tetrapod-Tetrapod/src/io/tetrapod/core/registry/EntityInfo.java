@@ -53,14 +53,7 @@ public class EntityInfo extends Entity implements Comparable<EntityInfo> {
     */
    public boolean isService() {
       return type == Core.TYPE_SERVICE || type == Core.TYPE_TETRAPOD;
-   }
-
-   /**
-    * Returns true if this is an admin
-    */
-   public boolean isAdmin() {
-      return type == Core.TYPE_ADMIN;
-   }
+   } 
 
    /**
     * Returns true if this is a client

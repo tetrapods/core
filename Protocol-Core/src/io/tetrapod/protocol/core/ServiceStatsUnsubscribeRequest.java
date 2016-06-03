@@ -22,7 +22,7 @@ public class ServiceStatsUnsubscribeRequest extends Request {
    }
 
    public final Structure.Security getSecurity() {
-      return Security.INTERNAL;
+      return Security.PUBLIC;
    }
 
    public final void defaults() {

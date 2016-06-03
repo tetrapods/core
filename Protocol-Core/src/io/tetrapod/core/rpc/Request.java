@@ -10,4 +10,8 @@ abstract public class Request extends Structure {
    public Response securityCheck(RequestContext ctx) {
       return ctx.securityCheck(this);
    }
+   
+   public int getRequiredAdminRights() {
+      return 0;
+   }
 }

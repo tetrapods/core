@@ -12,7 +12,7 @@ struct Core
    
    const byte  TYPE_TETRAPOD  = 1
    const byte  TYPE_SERVICE   = 2
-   const byte  TYPE_ADMIN     = 3
+   const byte  TYPE_ADMIN     = 3 // deprecated
    const byte  TYPE_CLIENT    = 4
    const byte  TYPE_ANONYMOUS = 5
    const byte  TYPE_WEBAPI    = 6
@@ -108,47 +108,71 @@ public struct ServerAddress
 
 ################################# REQUESTS ####################
 
-internal request Pause
+admin request Pause @rights(Admin.RIGHTS_CLUSTER_WRITE)
+   1: int accountId
+   2: string authToken @sensitive
 
-internal request Unpause
+admin request Unpause @rights(Admin.RIGHTS_CLUSTER_WRITE)
+   1: int accountId
+   2: string authToken @sensitive
 
-internal request Rebalance
+admin request Rebalance @rights(Admin.RIGHTS_CLUSTER_WRITE)
+   1: int accountId
+   2: string authToken @sensitive
+   
+admin request ReleaseExcess @rights(Admin.RIGHTS_CLUSTER_WRITE)
+   1: int accountId
+   2: string authToken @sensitive
 
-internal request ReleaseExcess
+admin request Purge @rights(Admin.RIGHTS_CLUSTER_WRITE)
+   1: int accountId
+   2: string authToken @sensitive
 
-internal request Purge
+admin request Shutdown @rights(Admin.RIGHTS_CLUSTER_WRITE)
+   1: int accountId
+   2: string authToken @sensitive
 
-internal request Shutdown
+admin request Restart @rights(Admin.RIGHTS_CLUSTER_WRITE)
+   1: int accountId
+   2: string authToken @sensitive
+   3: string restartNonce
+   4: boolean restartPaused 
 
-internal request Restart
-   1: string restartNonce
-   2: boolean restartPaused 
+admin request ServiceStatsSubscribe @rights(Admin.RIGHTS_CLUSTERREAD)
+   1: int accountId
+   2: string authToken @sensitive
+   
+admin request ServiceStatsUnsubscribe
+   1: int accountId
+   2: string authToken @sensitive
 
-internal request ServiceStatsSubscribe
-internal request ServiceStatsUnsubscribe
-
-internal request ServiceDetails
-internal response ServiceDetails
+admin request ServiceDetails @rights(Admin.RIGHTS_CLUSTER_READ)
+   1: int accountId
+   2: string authToken @sensitive
+   
+admin response ServiceDetails
    1: string iconURL
    3: string metadata
    2: ServiceCommand[] commands
 
-internal request ServiceLogs
-   1: long logId
-   2: byte level
-   3: int maxItems
+admin request ServiceLogs @rights(Admin.RIGHTS_CLUSTER_READ)
+   1: int accountId
+   2: string authToken @sensitive
+   3: long logId
+   4: byte level
+   5: int maxItems
 
-internal response ServiceLogs
+admin response ServiceLogs
    1: long lastLogId 
    2: ServiceLogEntry<list> items
    
    error NOT_CONFIGURED
 
-internal struct StatPair 
+public struct StatPair 
    1: int id
    2: int count
 
-internal struct RequestStat
+public struct RequestStat
    1: string name // name of the request
    2: long count  // number of invocations
    3: long time   // cumulative time spent in microseconds 
@@ -156,53 +180,63 @@ internal struct RequestStat
    5: StatPair[] errors // top errors
    6: int[] timeline // histogram of calls
  
-internal request ServiceRequestStats
-   1: string domain // null is default RPC domain
-   2: int limit
-   3: long minTime   
-   4: RequestStatsSort sortBy
+admin request ServiceRequestStats @rights(Admin.RIGHTS_CLUSTER_READ)
+   1: int accountId
+   2: string authToken @sensitive
+   3: string domain // null is default RPC domain
+   4: int limit
+   5: long minTime   
+   6: RequestStatsSort sortBy
    
    enum int RequestStatsSort.COUNT          = 1
    enum int RequestStatsSort.TOTAL_TIME     = 2
    enum int RequestStatsSort.AVERAGE_TIME   = 3
    enum int RequestStatsSort.ERRORS         = 4
-   
-   
-internal response ServiceRequestStats
+    
+admin response ServiceRequestStats 
    1: RequestStat<list> requests
    2: long minTime   // last timestamp in stats buffer
    3: string[] domains // list of other event domains service has stats for
    4: int[] timeline // histogram of calls
    5: long curTime   // current server time when stats collected
-
- 
-internal response ServiceRequestDetailedStats
       
 // returns static information for the host
-internal request HostInfo
-internal response HostInfo
+admin request HostInfo @rights(Admin.RIGHTS_CLUSTER_READ)
+   1: int accountId
+   2: string authToken @sensitive
+
+admin response HostInfo
    1: string hostname
    2: byte numCores
    3: string meta    // optional json meta data (can contain os stuff, aws info, etc...)
    
 // fetches current snapshot of host metrics
-internal request HostStats
-internal response HostStats   
+admin request HostStats @rights(Admin.RIGHTS_CLUSTER_READ)
+   1: int accountId
+   2: string authToken @sensitive
+   
+admin response HostStats   
    1: double load    // system load average
    2: long disk      // free disks space on working dir, in bytes
 
 
-internal request ServiceErrorLogs
-
-internal response ServiceErrorLogs
+admin request ServiceErrorLogs @rights(Admin.RIGHTS_CLUSTER_READ)
+   1: int accountId
+   2: string authToken @sensitive
+   
+admin response ServiceErrorLogs
    1: ServiceLogEntry<list> errors
 
    error NOT_CONFIGURED
    
-internal request ResetServiceErrorLogs
+admin request ResetServiceErrorLogs @rights(Admin.RIGHTS_CLUSTER_WRITE)
+   1: int accountId
+   2: string authToken @sensitive
 
-internal request SetCommsLogLevel
-	1: string level
+admin request SetCommsLogLevel @rights(Admin.RIGHTS_CLUSTER_WRITE)
+   1: int accountId
+   2: string authToken @sensitive 
+	3: string level
 
    
 public request WebAPI

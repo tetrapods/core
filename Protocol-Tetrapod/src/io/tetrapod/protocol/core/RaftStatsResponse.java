@@ -40,7 +40,7 @@ public class RaftStatsResponse extends Response {
    public int[] peers;
 
    public final Structure.Security getSecurity() {
-      return Security.INTERNAL;
+      return Security.ADMIN;
    }
 
    public final void defaults() {

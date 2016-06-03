@@ -12,7 +12,7 @@ public class SessionRequestContext extends RequestContext {
 
    private final static boolean USE_SECURITY = true;
 
-   public final Session session;
+   public final Session         session;
 
    public SessionRequestContext(RequestHeader header, Session session) {
       super(header);
@@ -42,6 +42,11 @@ public class SessionRequestContext extends RequestContext {
          Value<Integer> error = new Value<>(ERROR_INVALID_RIGHTS);
          Security mine = request.getSecurity();
          Security theirs = getSenderSecurity(accountId, authToken, error);
+
+         if (mine == Security.ADMIN) {
+            AdminAuthToken.validateAdminToken(accountId, authToken, request.getRequiredAdminRights());
+            theirs = Security.ADMIN;         
+         }
          if (theirs.ordinal() < mine.ordinal())
             return new Error(error.get());
       }
@@ -51,8 +56,6 @@ public class SessionRequestContext extends RequestContext {
    private Security getSenderSecurity() {
       if (header.fromType == Core.TYPE_TETRAPOD || header.fromType == Core.TYPE_SERVICE)
          return Security.INTERNAL;
-      if (header.fromType == Core.TYPE_ADMIN)
-         return Security.ADMIN;
       return Security.PUBLIC;
    }
 

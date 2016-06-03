@@ -203,8 +203,8 @@ class JavaGenerator implements LanguageGenerator {
       }
    }
 
-   private Template makeStructEquals(Field field, Template sub) throws IOException{
-      if(field.collectionType != null && field.collectionType.equals("<array>"))
+   private Template makeStructEquals(Field field, Template sub) throws IOException {
+      if (field.collectionType != null && field.collectionType.equals("<array>"))
          return template("field.equals.array").add(sub);
       else if (JavaTypes.get(field.type).isPrimitive && !field.type.equals("string"))
          return template("field.equals.primitive").add(sub);
@@ -212,10 +212,10 @@ class JavaGenerator implements LanguageGenerator {
          return template("field.equals.object").add(sub);
    }
 
-   private Template makeStructHashcode(Field field, Template sub) throws IOException{
-      if(field.collectionType != null && field.collectionType.equals("<array>"))
+   private Template makeStructHashcode(Field field, Template sub) throws IOException {
+      if (field.collectionType != null && field.collectionType.equals("<array>"))
          return template("field.hashcode.array").add(sub);
-      if(field.collectionType != null && field.collectionType.equals("<list>"))
+      if (field.collectionType != null && field.collectionType.equals("<list>"))
          return template("field.hashcode.object").add(sub);
       else if (JavaTypes.get(field.type).isPrimitive && field.type.equals("long"))
          return template("field.hashcode.long").add(sub);
@@ -380,6 +380,7 @@ class JavaGenerator implements LanguageGenerator {
          case "admin":
             String authId = "accountId";
             String authToken = "authToken";
+            String adminRights = "0";
             int m = 0;
             for (Field f : c.fields) {
                if (f.annotations.has("authId")) {
@@ -395,10 +396,13 @@ class JavaGenerator implements LanguageGenerator {
                   m++;
                }
             }
+            if (c.annotations.has("rights")) {
+               adminRights = c.annotations.getFirst("rights");
+            }
             if (m != 2)
                throw new ParseException(c.name + " is " + c.security
                      + " and must have @authId and @authToken fields (or default accountId and authToken)");
-            return template("request.security").add("authId", authId).add("authToken", authToken).expand();
+            return template("request.security").add("authId", authId).add("authToken", authToken).add("adminRights", adminRights).expand();
          default:
             return "";
       }

@@ -21,17 +21,23 @@ public class RebalanceRequest extends Request {
       defaults();
    }
 
+   public RebalanceRequest(String token) {
+      this.token = token;
+   }   
+
+   public String token;
+
    public final Structure.Security getSecurity() {
-      return Security.INTERNAL;
+      return Security.PUBLIC;
    }
 
    public final void defaults() {
-      
+      token = null;
    }
    
    @Override
    public final void write(DataSource data) throws IOException {
-      
+      data.write(1, this.token);
       data.writeEndTag();
    }
    
@@ -41,7 +47,7 @@ public class RebalanceRequest extends Request {
       while (true) {
          int tag = data.readTag();
          switch (tag) {
-            
+            case 1: this.token = data.read_string(tag); break;
             case Codec.END_TAG:
                return;
             default:
@@ -74,8 +80,8 @@ public class RebalanceRequest extends Request {
       // Note do not use this tags in long term serializations (to disk or databases) as 
       // implementors are free to rename them however they wish.  A null means the field
       // is not to participate in web serialization (remaining at default)
-      String[] result = new String[0+1];
-      
+      String[] result = new String[1+1];
+      result[1] = "token";
       return result;
    }
    
@@ -89,8 +95,12 @@ public class RebalanceRequest extends Request {
       desc.tagWebNames = tagWebNames();
       desc.types = new TypeDescriptor[desc.tagWebNames.length];
       desc.types[0] = new TypeDescriptor(TypeDescriptor.T_STRUCT, getContractId(), getStructId());
-      
+      desc.types[1] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
       return desc;
    }
 
+   protected boolean isSensitive(String fieldName) {
+      if (fieldName.equals("token")) return true;
+      return false;
+   }
 }

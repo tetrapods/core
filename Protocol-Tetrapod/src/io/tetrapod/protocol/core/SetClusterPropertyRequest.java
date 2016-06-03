@@ -21,27 +21,31 @@ public class SetClusterPropertyRequest extends Request {
       defaults();
    }
 
-   public SetClusterPropertyRequest(String adminToken, ClusterProperty property) {
-      this.adminToken = adminToken;
+   public SetClusterPropertyRequest(int accountId, String authToken, ClusterProperty property) {
+      this.accountId = accountId;
+      this.authToken = authToken;
       this.property = property;
    }   
 
-   public String adminToken;
+   public int accountId;
+   public String authToken;
    public ClusterProperty property;
 
    public final Structure.Security getSecurity() {
-      return Security.INTERNAL;
+      return Security.ADMIN;
    }
 
    public final void defaults() {
-      adminToken = null;
+      accountId = 0;
+      authToken = null;
       property = null;
    }
    
    @Override
    public final void write(DataSource data) throws IOException {
-      data.write(1, this.adminToken);
-      if (this.property != null) data.write(2, this.property);
+      data.write(1, this.accountId);
+      data.write(2, this.authToken);
+      if (this.property != null) data.write(3, this.property);
       data.writeEndTag();
    }
    
@@ -51,8 +55,9 @@ public class SetClusterPropertyRequest extends Request {
       while (true) {
          int tag = data.readTag();
          switch (tag) {
-            case 1: this.adminToken = data.read_string(tag); break;
-            case 2: this.property = data.read_struct(tag, new ClusterProperty()); break;
+            case 1: this.accountId = data.read_int(tag); break;
+            case 2: this.authToken = data.read_string(tag); break;
+            case 3: this.property = data.read_struct(tag, new ClusterProperty()); break;
             case Codec.END_TAG:
                return;
             default:
@@ -85,9 +90,10 @@ public class SetClusterPropertyRequest extends Request {
       // Note do not use this tags in long term serializations (to disk or databases) as 
       // implementors are free to rename them however they wish.  A null means the field
       // is not to participate in web serialization (remaining at default)
-      String[] result = new String[2+1];
-      result[1] = "adminToken";
-      result[2] = "property";
+      String[] result = new String[3+1];
+      result[1] = "accountId";
+      result[2] = "authToken";
+      result[3] = "property";
       return result;
    }
    
@@ -101,13 +107,22 @@ public class SetClusterPropertyRequest extends Request {
       desc.tagWebNames = tagWebNames();
       desc.types = new TypeDescriptor[desc.tagWebNames.length];
       desc.types[0] = new TypeDescriptor(TypeDescriptor.T_STRUCT, getContractId(), getStructId());
-      desc.types[1] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
-      desc.types[2] = new TypeDescriptor(TypeDescriptor.T_STRUCT, ClusterProperty.CONTRACT_ID, ClusterProperty.STRUCT_ID);
+      desc.types[1] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
+      desc.types[2] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
+      desc.types[3] = new TypeDescriptor(TypeDescriptor.T_STRUCT, ClusterProperty.CONTRACT_ID, ClusterProperty.STRUCT_ID);
       return desc;
    }
 
+   public final Response securityCheck(RequestContext ctx) {
+      return ctx.securityCheck(this, accountId, authToken);
+   }
+   
+   public final int getRequiredAdminRights() {
+     return Admin.RIGHTS_CLUSTER_WRITE;
+   }
+      
    protected boolean isSensitive(String fieldName) {
-      if (fieldName.equals("adminToken")) return true;
+      if (fieldName.equals("authToken")) return true;
       return false;
    }
 }

@@ -37,7 +37,7 @@ public class HostStatsResponse extends Response {
    public long disk;
 
    public final Structure.Security getSecurity() {
-      return Security.INTERNAL;
+      return Security.PUBLIC;
    }
 
    public final void defaults() {

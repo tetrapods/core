@@ -21,27 +21,31 @@ public class RestartRequest extends Request {
       defaults();
    }
 
-   public RestartRequest(String restartNonce, boolean restartPaused) {
+   public RestartRequest(String token, String restartNonce, boolean restartPaused) {
+      this.token = token;
       this.restartNonce = restartNonce;
       this.restartPaused = restartPaused;
    }   
 
+   public String token;
    public String restartNonce;
    public boolean restartPaused;
 
    public final Structure.Security getSecurity() {
-      return Security.INTERNAL;
+      return Security.PUBLIC;
    }
 
    public final void defaults() {
+      token = null;
       restartNonce = null;
       restartPaused = false;
    }
    
    @Override
    public final void write(DataSource data) throws IOException {
-      data.write(1, this.restartNonce);
-      data.write(2, this.restartPaused);
+      data.write(1, this.token);
+      data.write(2, this.restartNonce);
+      data.write(3, this.restartPaused);
       data.writeEndTag();
    }
    
@@ -51,8 +55,9 @@ public class RestartRequest extends Request {
       while (true) {
          int tag = data.readTag();
          switch (tag) {
-            case 1: this.restartNonce = data.read_string(tag); break;
-            case 2: this.restartPaused = data.read_boolean(tag); break;
+            case 1: this.token = data.read_string(tag); break;
+            case 2: this.restartNonce = data.read_string(tag); break;
+            case 3: this.restartPaused = data.read_boolean(tag); break;
             case Codec.END_TAG:
                return;
             default:
@@ -85,9 +90,10 @@ public class RestartRequest extends Request {
       // Note do not use this tags in long term serializations (to disk or databases) as 
       // implementors are free to rename them however they wish.  A null means the field
       // is not to participate in web serialization (remaining at default)
-      String[] result = new String[2+1];
-      result[1] = "restartNonce";
-      result[2] = "restartPaused";
+      String[] result = new String[3+1];
+      result[1] = "token";
+      result[2] = "restartNonce";
+      result[3] = "restartPaused";
       return result;
    }
    
@@ -102,8 +108,13 @@ public class RestartRequest extends Request {
       desc.types = new TypeDescriptor[desc.tagWebNames.length];
       desc.types[0] = new TypeDescriptor(TypeDescriptor.T_STRUCT, getContractId(), getStructId());
       desc.types[1] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
-      desc.types[2] = new TypeDescriptor(TypeDescriptor.T_BOOLEAN, 0, 0);
+      desc.types[2] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
+      desc.types[3] = new TypeDescriptor(TypeDescriptor.T_BOOLEAN, 0, 0);
       return desc;
    }
 
+   protected boolean isSensitive(String fieldName) {
+      if (fieldName.equals("token")) return true;
+      return false;
+   }
 }

@@ -54,12 +54,12 @@ internal request ClusterJoin
    6: int clusterPort
    7: string build
     
-
-internal request Unregister
-   1: int entityId
+internal request Unregister @rights(Admin.RIGHTS_CLUSTER_WRITE)
+   1: int accountId
+   2: string authToken @sensitive
+   3: int entityId
     
-internal request ServicesSubscribe
-   1: string adminToken
+internal request ServicesSubscribe 
    
 internal request ServicesUnsubscribe
 
@@ -94,13 +94,13 @@ public response AdminAuthorize
    2: string email
    
 // get a short-lived session token with rights encoded    
-admin request AdminSessionToken @web(admin_session_token)
+public request AdminSessionToken @web(admin_session_token)
    1: int accountId
    2: string authToken @sensitive  // a valid login token
    
-admin response AdminSessionToken    
+public response AdminSessionToken    
    1: string sessionToken @sensitive // a short lived session token
-   
+ 
 internal request AdminCreate
    1: string token @sensitive
    2: string email @sensitive
@@ -213,15 +213,15 @@ internal message SubscriberNotFound
    
 ##### Building #############
 
-admin request GetServiceBuildInfo
+admin request GetServiceBuildInfo  @rights(Admin.RIGHTS_CLUSTER_READ)
    1: int accountId
    2: string authToken @sensitive
    
-admin response  GetServiceBuildInfo
+admin response  GetServiceBuildInfo 
    1: BuildInfo<list> services
    
 // An error in any one of the build commands stops processing the remaining ones
-admin request ExecuteBuildCommand
+admin request ExecuteBuildCommand   @rights(Admin.RIGHTS_CLUSTER_WRITE)
    1: int accountId
    2: string authToken @sensitive
    3: BuildCommand<list> commands
@@ -277,8 +277,11 @@ public request RaftLeader
 public response RaftLeader 
    1: ServerAddress leader
 
-internal request RaftStats
-internal response RaftStats 
+admin request RaftStats @rights(Admin.RIGHTS_CLUSTER_READ)
+   1: int accountId
+   2: string authToken @sensitive
+   
+admin response RaftStats 
    1: byte role
    2: long curTerm
    3: long lastTerm
@@ -289,8 +292,9 @@ internal response RaftStats
       
 ## Cluster Messages
 
-internal request AdminSubscribe
-   1: string adminToken @sensitive
+admin request AdminSubscribe @rights(Admin.RIGHTS_CLUSTER_READ)
+   1: int accountId
+   2: string authToken @sensitive
    
 internal struct ClusterProperty
    1: string key
@@ -305,13 +309,15 @@ internal message Cluster.ClusterPropertyRemoved
    
 internal message Cluster.ClusterSynced         
    
-internal request SetClusterProperty
-   1: string adminToken @sensitive
-   2: ClusterProperty property
+admin request SetClusterProperty @rights(Admin.RIGHTS_CLUSTER_WRITE)
+   1: int accountId
+   2: string authToken @sensitive
+   3: ClusterProperty property
 
-internal request DelClusterProperty
-   1: string adminToken @sensitive
-   2: string key 
+admin request DelClusterProperty @rights(Admin.RIGHTS_CLUSTER_WRITE)
+   1: int accountId
+   2: string authToken @sensitive
+   3: string key 
       
 // notification of an existing tetrapod cluster member    
 internal message Cluster.ClusterMember

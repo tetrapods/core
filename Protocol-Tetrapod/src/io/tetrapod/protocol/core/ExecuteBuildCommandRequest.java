@@ -120,6 +120,10 @@ public class ExecuteBuildCommandRequest extends Request {
    public final Response securityCheck(RequestContext ctx) {
       return ctx.securityCheck(this, accountId, authToken);
    }
+   
+   public final int getRequiredAdminRights() {
+     return 0;
+   }
       
    protected boolean isSensitive(String fieldName) {
       if (fieldName.equals("authToken")) return true;

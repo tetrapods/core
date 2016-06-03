@@ -36,7 +36,7 @@ public class HostInfoResponse extends Response {
    public String meta;
 
    public final Structure.Security getSecurity() {
-      return Security.INTERNAL;
+      return Security.PUBLIC;
    }
 
    public final void defaults() {

@@ -21,23 +21,27 @@ public class SetCommsLogLevelRequest extends Request {
       defaults();
    }
 
-   public SetCommsLogLevelRequest(String level) {
+   public SetCommsLogLevelRequest(String token, String level) {
+      this.token = token;
       this.level = level;
    }   
 
+   public String token;
    public String level;
 
    public final Structure.Security getSecurity() {
-      return Security.INTERNAL;
+      return Security.PUBLIC;
    }
 
    public final void defaults() {
+      token = null;
       level = null;
    }
    
    @Override
    public final void write(DataSource data) throws IOException {
-      data.write(1, this.level);
+      data.write(1, this.token);
+      data.write(2, this.level);
       data.writeEndTag();
    }
    
@@ -47,7 +51,8 @@ public class SetCommsLogLevelRequest extends Request {
       while (true) {
          int tag = data.readTag();
          switch (tag) {
-            case 1: this.level = data.read_string(tag); break;
+            case 1: this.token = data.read_string(tag); break;
+            case 2: this.level = data.read_string(tag); break;
             case Codec.END_TAG:
                return;
             default:
@@ -80,8 +85,9 @@ public class SetCommsLogLevelRequest extends Request {
       // Note do not use this tags in long term serializations (to disk or databases) as 
       // implementors are free to rename them however they wish.  A null means the field
       // is not to participate in web serialization (remaining at default)
-      String[] result = new String[1+1];
-      result[1] = "level";
+      String[] result = new String[2+1];
+      result[1] = "token";
+      result[2] = "level";
       return result;
    }
    
@@ -96,7 +102,12 @@ public class SetCommsLogLevelRequest extends Request {
       desc.types = new TypeDescriptor[desc.tagWebNames.length];
       desc.types[0] = new TypeDescriptor(TypeDescriptor.T_STRUCT, getContractId(), getStructId());
       desc.types[1] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
+      desc.types[2] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
       return desc;
    }
 
+   protected boolean isSensitive(String fieldName) {
+      if (fieldName.equals("token")) return true;
+      return false;
+   }
 }

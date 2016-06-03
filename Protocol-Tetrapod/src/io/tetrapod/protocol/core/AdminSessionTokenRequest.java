@@ -38,7 +38,7 @@ public class AdminSessionTokenRequest extends Request {
    public String authToken;
 
    public final Structure.Security getSecurity() {
-      return Security.ADMIN;
+      return Security.PUBLIC;
    }
 
    public final void defaults() {
@@ -114,10 +114,6 @@ public class AdminSessionTokenRequest extends Request {
       return desc;
    }
 
-   public final Response securityCheck(RequestContext ctx) {
-      return ctx.securityCheck(this, accountId, authToken);
-   }
-      
    protected boolean isSensitive(String fieldName) {
       if (fieldName.equals("authToken")) return true;
       return false;

@@ -32,7 +32,7 @@ public class ServiceDetailsResponse extends Response {
    public ServiceCommand[] commands;
 
    public final Structure.Security getSecurity() {
-      return Security.INTERNAL;
+      return Security.PUBLIC;
    }
 
    public final void defaults() {

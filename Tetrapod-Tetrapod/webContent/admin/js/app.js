@@ -108,11 +108,9 @@ define(["knockout", "jquery", "alert", "toolbox", "protocol/server",
             refreshLoginToken(function() {
                $('#login-wrapper').hide();
                $('#app-wrapper').show();
-               server.send("ServicesSubscribe", {
-                  adminToken: self.sessionToken
-               }, server.logResponse);
                server.send("AdminSubscribe", {
-                  adminToken: self.sessionToken
+                  accountId: self.accountId(),
+                  authToken: self.sessionToken
                }, server.logResponse);
                setInterval(refreshLoginToken, 60000 * 10); // refresh token every 10 minutes
             });
