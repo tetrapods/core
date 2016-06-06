@@ -656,7 +656,7 @@ public class Util {
 
    @SuppressWarnings("unchecked")
    public static <T> T cast(Object obj) {
-       return (T) obj;
+      return (T) obj;
    }
 
    public interface ValueMaker<K, V> {
@@ -707,6 +707,10 @@ public class Util {
 
    public static String formatDollars(int pennies) {
       return String.format("$%1.2f", pennies / 100.0);
+   }
+
+   public static String formatCents(double pennies) {
+      return String.format("%f¢", pennies);
    }
 
 }

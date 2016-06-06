@@ -165,7 +165,7 @@ public class JSONObject {
      *                If a value is a non-finite number or if a name is
      *                duplicated.
      */
-    public JSONObject(JSONObject jo, String[] names) {
+    public JSONObject(JSONObject jo, String... names) {
         this();
         for (int i = 0; i < names.length; i += 1) {
             try {
