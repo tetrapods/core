@@ -125,30 +125,7 @@ internal request AdminChangeRights
    1: string token @sensitive @authToken
    2: int accountId
    3: long rights 
-   
-
-
-public request KeepAlive
-
-internal request SetAlternateId
-   1: int entityId
-   2: int alternateId
-   
-public request SetEntityReferrer
-   1: string referrer
-
-internal request GetEntityInfo
-   1: int entityId
-
-   error UNKNOWN_ENTITY_ID
-
-internal response GetEntityInfo
-   1: string build   
-   2: string name     // entity name
-   3: string host     // host/ip of the entity
-   4: string referrer // referrer of first request (clients only)
-   5: string domain   // domain request was sent to (clients only)
-
+     
 ################################# MESSAGES #################################
 
 // a special message to avoid race conditions on the Register response

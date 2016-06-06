@@ -17,6 +17,7 @@ abstract class WebSession extends Session {
    private static final Logger   logger       = LoggerFactory.getLogger(WebSession.class);
 
    protected final AtomicInteger requestCount = new AtomicInteger(0);
+   private int                   alternateId;
 
    public WebSession(SocketChannel channel, Session.Helper helper) {
       super(channel, helper);
@@ -100,6 +101,14 @@ abstract class WebSession extends Session {
             break;
       }
       return jo;
+   }
+
+   public synchronized void setAlternateId(int alternateId) {
+      this.alternateId = alternateId;
+   }
+
+   public synchronized int getAlternateId() {
+      return alternateId;
    }
 
 }

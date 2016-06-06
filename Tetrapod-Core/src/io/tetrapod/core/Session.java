@@ -102,8 +102,12 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
       this.myContractId = helper.getContractId();
    }
 
-   public void setName(String name) {
+   public synchronized void setName(String name) {
       this.name = name;
+   }
+
+   public synchronized String getName() {
+      return name;
    }
 
    /**

@@ -55,9 +55,7 @@ public class TetrapodContract extends Contract {
       , DelClusterPropertyRequest.Handler
       , DelWebRootRequest.Handler
       , ExecuteBuildCommandRequest.Handler
-      , GetEntityInfoRequest.Handler
       , GetServiceBuildInfoRequest.Handler
-      , KeepAliveRequest.Handler
       , LockRequest.Handler
       , LogRegistryStatsRequest.Handler
       , NagiosStatusRequest.Handler
@@ -69,9 +67,7 @@ public class TetrapodContract extends Contract {
       , ServiceStatusUpdateRequest.Handler
       , ServicesSubscribeRequest.Handler
       , ServicesUnsubscribeRequest.Handler
-      , SetAlternateIdRequest.Handler
       , SetClusterPropertyRequest.Handler
-      , SetEntityReferrerRequest.Handler
       , SetWebRootRequest.Handler
       , SnapshotRequest.Handler
       , SubscribeOwnershipRequest.Handler
@@ -101,10 +97,6 @@ public class TetrapodContract extends Contract {
          new AdminChangePasswordRequest(),
          new AdminResetPasswordRequest(),
          new AdminChangeRightsRequest(),
-         new KeepAliveRequest(),
-         new SetAlternateIdRequest(),
-         new SetEntityReferrerRequest(),
-         new GetEntityInfoRequest(),
          new GetServiceBuildInfoRequest(),
          new ExecuteBuildCommandRequest(),
          new VerifyEntityTokenRequest(),
@@ -134,7 +126,6 @@ public class TetrapodContract extends Contract {
          new AdminLoginResponse(),
          new AdminAuthorizeResponse(),
          new AdminSessionTokenResponse(),
-         new GetEntityInfoResponse(),
          new GetServiceBuildInfoResponse(),
          new RaftLeaderResponse(),
          new RaftStatsResponse(),
@@ -330,5 +321,4 @@ public class TetrapodContract extends Contract {
    public static final int ERROR_INVALID_UUID = 398174; 
    public static final int ERROR_ITEM_OWNED = 10331576; 
    public static final int ERROR_NOT_LEADER = 13409358; 
-   public static final int ERROR_UNKNOWN_ENTITY_ID = 15576171; 
 }

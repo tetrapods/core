@@ -1,4 +1,4 @@
-package io.tetrapod.protocol.core;
+package io.tetrapod.protocol.web;
 
 // This is a code generated file.  All edits will be lost the next time code gen is run.
 
@@ -12,16 +12,16 @@ import java.util.*;
 import java.util.concurrent.*;
 
 @SuppressWarnings("unused")
-public class GetEntityInfoResponse extends Response {
+public class GetClientInfoResponse extends Response {
    
-   public static final int STRUCT_ID = 11007413;
-   public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;
+   public static final int STRUCT_ID = 9293453;
+   public static final int CONTRACT_ID = WebContract.CONTRACT_ID;
     
-   public GetEntityInfoResponse() {
+   public GetClientInfoResponse() {
       defaults();
    }
 
-   public GetEntityInfoResponse(String build, String name, String host, String referrer, String domain) {
+   public GetClientInfoResponse(String build, String name, String host, String referrer, String domain) {
       this.build = build;
       this.name = name;
       this.host = host;
@@ -94,11 +94,11 @@ public class GetEntityInfoResponse extends Response {
    }
   
    public final int getContractId() {
-      return GetEntityInfoResponse.CONTRACT_ID;
+      return GetClientInfoResponse.CONTRACT_ID;
    }
 
    public final int getStructId() {
-      return GetEntityInfoResponse.STRUCT_ID;
+      return GetClientInfoResponse.STRUCT_ID;
    }
 
    public final String[] tagWebNames() {
@@ -115,12 +115,12 @@ public class GetEntityInfoResponse extends Response {
    }
 
    public final Structure make() {
-      return new GetEntityInfoResponse();
+      return new GetClientInfoResponse();
    }
 
    public final StructDescription makeDescription() {
       StructDescription desc = new StructDescription();      
-      desc.name = "GetEntityInfoResponse";
+      desc.name = "GetClientInfoResponse";
       desc.tagWebNames = tagWebNames();
       desc.types = new TypeDescriptor[desc.tagWebNames.length];
       desc.types[0] = new TypeDescriptor(TypeDescriptor.T_STRUCT, getContractId(), getStructId());

@@ -1,5 +1,7 @@
 package io.tetrapod.web;
 
+import static io.tetrapod.protocol.core.CoreContract.ERROR_INVALID_ENTITY;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
@@ -17,10 +19,9 @@ import io.tetrapod.core.Session.RelayHandler;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.utils.Util;
 import io.tetrapod.protocol.core.*;
-import io.tetrapod.protocol.web.KeepAliveRequest;
+import io.tetrapod.protocol.web.*;
 import io.tetrapod.protocol.web.RegisterRequest;
 import io.tetrapod.protocol.web.RegisterResponse;
-import io.tetrapod.protocol.web.WebContract;
 
 /**
  * The web service serves http web routes and terminates web socket connections that can
@@ -28,11 +29,9 @@ import io.tetrapod.protocol.web.WebContract;
  * 
  * TODO: Implement....
  * <ul>
- * <li>Message & Topic deliveries</li>
  * <li>Alt Broadcasts</li>
  * <li>Long Polling</li>
  * <li>Live subs of web roots</li>
- * <li>SetEntityReferrerRequest</li>
  * </ul>
  */
 public class WebService extends DefaultService implements WebContract.API, RelayHandler, TetrapodContract.Pubsub.API {
@@ -294,8 +293,12 @@ public class WebService extends DefaultService implements WebContract.API, Relay
    public Response requestRegister(RegisterRequest r, RequestContext ctxA) {
       final SessionRequestContext ctx = (SessionRequestContext) ctxA;
       final int entityId = clientCounter.incrementAndGet();
-      ctx.session.setTheirEntityId(entityId);
-      clients.put(entityId, (WebHttpSession) ctx.session);
+      WebHttpSession ses = (WebHttpSession) ctx.session;
+      ses.setTheirEntityId(entityId);
+      ses.setBuild(r.build);
+      ses.setName(r.name);
+      ses.setHttpReferrer(r.referrer);
+      clients.put(entityId, ses);
       return new RegisterResponse(entityId, getEntityId());
    }
 
@@ -381,6 +384,26 @@ public class WebService extends DefaultService implements WebContract.API, Relay
          //topic.queue(() -> unsubscribe(owner, m.topicId, m.entityId, m.childId, false)); // TODO: kick()
       } else {
          logger.info("Could not find publisher entity {}", ctx.header.fromId);
+      }
+   }
+
+   @Override
+   public Response requestSetAlternateId(SetAlternateIdRequest r, RequestContext ctx) {
+      final WebSession s = clients.get(r.clientId);
+      if (s != null) {
+         s.setAlternateId(r.alternateId);
+         return Response.SUCCESS;
+      }
+      return Response.error(ERROR_INVALID_ENTITY);
+   }
+
+   @Override
+   public Response requestGetClientInfo(GetClientInfoRequest r, RequestContext ctx) {
+      final WebHttpSession s = clients.get(r.clientId);
+      if (s != null) {
+         return new GetClientInfoResponse(s.getBuild(), s.getName(), s.getPeerHostname(), s.getHttpReferrer(), s.getDomain());
+      } else {
+         return Response.error(WebContract.ERROR_UNKNOWN_CLIENT_ID);
       }
    }
 

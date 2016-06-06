@@ -2,7 +2,6 @@ package io.tetrapod.core;
 
 import static io.tetrapod.protocol.core.Core.*;
 import static io.tetrapod.protocol.core.CoreContract.*;
-import static io.tetrapod.protocol.core.TetrapodContract.ERROR_UNKNOWN_ENTITY_ID;
 
 import java.io.File;
 import java.io.IOException;
@@ -28,8 +27,11 @@ import io.tetrapod.core.rpc.Error;
 import io.tetrapod.core.storage.*;
 import io.tetrapod.core.utils.*;
 import io.tetrapod.protocol.core.*;
+import io.tetrapod.protocol.core.RegisterRequest;
+import io.tetrapod.protocol.core.RegisterResponse;
 import io.tetrapod.protocol.raft.*;
 import io.tetrapod.protocol.storage.*;
+import io.tetrapod.protocol.web.*;
 import io.tetrapod.web.*;
 
 /**
@@ -827,11 +829,7 @@ public class TetrapodService extends DefaultService
       }
    }
    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-   @Override
-   public Response requestKeepAlive(KeepAliveRequest r, RequestContext ctx) {
-      return Response.SUCCESS;
-   }
+ 
 
    @Override
    public Response requestRegister(RegisterRequest r, final RequestContext ctxA) {
@@ -1073,15 +1071,6 @@ public class TetrapodService extends DefaultService
       return Response.SUCCESS;
    }
 
-   @Override
-   public Response requestSetAlternateId(SetAlternateIdRequest r, RequestContext ctx) {
-      EntityInfo e = registry.getEntity(r.entityId);
-      if (e != null) {
-         e.setAlternateId(r.alternateId);
-         return Response.SUCCESS;
-      }
-      return Response.error(ERROR_INVALID_ENTITY);
-   }
 
    @Override
    public Response requestVerifyEntityToken(VerifyEntityTokenRequest r, RequestContext ctx) {
@@ -1098,44 +1087,6 @@ public class TetrapodService extends DefaultService
       return Response.error(ERROR_INVALID_TOKEN);
    }
 
-   @Override
-   public Response requestGetEntityInfo(GetEntityInfoRequest r, RequestContext ctx) {
-      final EntityInfo e = registry.getEntity(r.entityId);
-      if (e != null) {
-         synchronized (e) {
-            final Session s = e.getSession();
-            if (s != null) {
-               if (e.isClient() && s instanceof WebHttpSession) {
-                  WebHttpSession ws = (WebHttpSession) s;
-                  return new GetEntityInfoResponse(e.build, e.name, s.getPeerHostname(), ws.getHttpReferrer(), ws.getDomain());
-               }
-               return new GetEntityInfoResponse(e.build, e.name, s.getPeerHostname(), null, null);
-            } else {
-               return new GetEntityInfoResponse(e.build, e.name, null, null, null);
-            }
-         }
-      }
-
-      return Response.error(ERROR_UNKNOWN_ENTITY_ID);
-   }
-
-   @Override
-   public Response requestSetEntityReferrer(SetEntityReferrerRequest r, RequestContext ctx) {
-      final EntityInfo e = registry.getEntity(ctx.header.fromParentId);
-      if (e != null) {
-         synchronized (e) {
-            final Session s = e.getSession();
-            if (s != null && s instanceof WebHttpSession) {
-               ((WebHttpSession) s).setHttpReferrer(r.referrer);
-               return Response.SUCCESS;
-            } else {
-               return Response.error(ERROR_INVALID_DATA);
-            }
-         }
-      }
-
-      return Response.error(ERROR_UNKNOWN_ENTITY_ID);
-   }
 
    /////////////// RAFT ///////////////
 

@@ -29,7 +29,6 @@ function TP_Tetrapod(server) {
    self.Tetrapod.error.INVALID_UUID = 398174;
    self.Tetrapod.error.ITEM_OWNED = 10331576;
    self.Tetrapod.error.NOT_LEADER = 13409358;
-   self.Tetrapod.error.UNKNOWN_ENTITY_ID = 15576171;
    
    server.register("struct", "Tetrapod", "Entity", 1, 10171140);
    server.register("request", "Tetrapod", "Register", 1, 10895179);
@@ -53,11 +52,6 @@ function TP_Tetrapod(server) {
    server.register("request", "Tetrapod", "AdminChangePassword", 1, 2877212);
    server.register("request", "Tetrapod", "AdminResetPassword", 1, 868729);
    server.register("request", "Tetrapod", "AdminChangeRights", 1, 16102706);
-   server.register("request", "Tetrapod", "KeepAlive", 1, 5512920);
-   server.register("request", "Tetrapod", "SetAlternateId", 1, 10499521);
-   server.register("request", "Tetrapod", "SetEntityReferrer", 1, 1987578);
-   server.register("request", "Tetrapod", "GetEntityInfo", 1, 14891231);
-   server.register("response", "Tetrapod", "GetEntityInfo", 1, 11007413);
    server.register("message", "Tetrapod", "Entity", 1, 10913291);
    server.register("message", "Tetrapod", "TopicPublished", 1, 6873263);
    server.register("message", "Tetrapod", "TopicUnpublished", 1, 6594504);

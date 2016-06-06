@@ -21,15 +21,17 @@ public class RegisterRequest extends Request {
       defaults();
    }
 
-   public RegisterRequest(String name, String build, String host) {
+   public RegisterRequest(String name, String build, String host, String referrer) {
       this.name = name;
       this.build = build;
       this.host = host;
+      this.referrer = referrer;
    }   
 
    public String name;
    public String build;
    public String host;
+   public String referrer;
 
    public final Structure.Security getSecurity() {
       return Security.PUBLIC;
@@ -39,6 +41,7 @@ public class RegisterRequest extends Request {
       name = null;
       build = null;
       host = null;
+      referrer = null;
    }
    
    @Override
@@ -46,6 +49,7 @@ public class RegisterRequest extends Request {
       data.write(1, this.name);
       data.write(2, this.build);
       data.write(3, this.host);
+      data.write(4, this.referrer);
       data.writeEndTag();
    }
    
@@ -58,6 +62,7 @@ public class RegisterRequest extends Request {
             case 1: this.name = data.read_string(tag); break;
             case 2: this.build = data.read_string(tag); break;
             case 3: this.host = data.read_string(tag); break;
+            case 4: this.referrer = data.read_string(tag); break;
             case Codec.END_TAG:
                return;
             default:
@@ -90,10 +95,11 @@ public class RegisterRequest extends Request {
       // Note do not use this tags in long term serializations (to disk or databases) as 
       // implementors are free to rename them however they wish.  A null means the field
       // is not to participate in web serialization (remaining at default)
-      String[] result = new String[3+1];
+      String[] result = new String[4+1];
       result[1] = "name";
       result[2] = "build";
       result[3] = "host";
+      result[4] = "referrer";
       return result;
    }
    
@@ -110,6 +116,7 @@ public class RegisterRequest extends Request {
       desc.types[1] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
       desc.types[2] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
       desc.types[3] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
+      desc.types[4] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
       return desc;
    }
 

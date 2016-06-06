@@ -15,20 +15,25 @@ public class WebContract extends Contract {
    public static final int CONTRACT_ID = 20;
    
    public static interface API extends APIHandler
+      , GetClientInfoRequest.Handler
       , KeepAliveRequest.Handler
       , RegisterRequest.Handler
+      , SetAlternateIdRequest.Handler
       {}
    
    public Structure[] getRequests() {
       return new Structure[] {
-         new RegisterRequest(),
          new KeepAliveRequest(),
+         new RegisterRequest(),
+         new SetAlternateIdRequest(),
+         new GetClientInfoRequest(),
       };
    }
    
    public Structure[] getResponses() {
       return new Structure[] {
          new RegisterResponse(),
+         new GetClientInfoResponse(),
       };
    }
    
@@ -62,4 +67,5 @@ public class WebContract extends Contract {
       };
    }
 
+   public static final int ERROR_UNKNOWN_CLIENT_ID = 5653403; 
 }

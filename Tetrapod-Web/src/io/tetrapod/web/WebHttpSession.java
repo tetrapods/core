@@ -58,6 +58,7 @@ public class WebHttpSession extends WebSession {
 
    private String                              httpReferrer      = null;
    private String                              domain            = null;
+   private String                              build             = null;
 
    public WebHttpSession(SocketChannel ch, Session.Helper helper, Map<String, WebRoot> roots, String wsLocation) {
       super(ch, helper);
@@ -610,19 +611,28 @@ public class WebHttpSession extends WebSession {
       return s.getContractId() == r.getContractId() && s.getStructId() == r.getStructId();
    }
 
-   public String getHttpReferrer() {
+   public synchronized String getHttpReferrer() {
       return httpReferrer;
    }
 
-   public void setHttpReferrer(String httpReferrer) {
+   public synchronized void setHttpReferrer(String httpReferrer) {
       this.httpReferrer = httpReferrer;
    }
 
-   public String getDomain() {
+   public synchronized String getDomain() {
       return domain;
    }
 
-   public void setDomain(String domain) {
+   public synchronized void setDomain(String domain) {
       this.domain = domain;
    }
+
+   public synchronized void setBuild(String build) {
+      this.build = build;
+   }
+
+   public synchronized String getBuild() {
+      return build;
+   }
+
 }
