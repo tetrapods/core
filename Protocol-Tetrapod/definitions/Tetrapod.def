@@ -222,6 +222,7 @@ internal message Services.ServiceRemoved
 internal message Services.ServiceUpdated
 	1: int entityId
 	2: int status
+ 
 	
 ## 3rd party auth add-ons
 
@@ -248,7 +249,7 @@ admin response RaftStats
    7: int[] peers
       
 ## Cluster Messages
-
+ 
 admin request AdminSubscribe @rights(Admin.RIGHTS_CLUSTER_READ)
    1: int accountId
    2: string authToken @sensitive
@@ -275,6 +276,9 @@ admin request DelClusterProperty @rights(Admin.RIGHTS_CLUSTER_WRITE)
    1: int accountId
    2: string authToken @sensitive
    3: string key 
+            
+internal message Cluster.RegisterContract
+   1: ContractDescription info
       
 // notification of an existing tetrapod cluster member    
 internal message Cluster.ClusterMember
@@ -290,10 +294,10 @@ internal struct WebRootDef
    2: string path // resource root path name 
    3: string file // location of static files to serve
 
-internal message WebRootAdded  
+internal message Cluster.WebRootAdded  
    1: WebRootDef def
    
-internal message WebRootRemoved       
+internal message  Cluster.WebRootRemoved       
    1: string name
     
 internal request SetWebRoot @web(set_web_root)

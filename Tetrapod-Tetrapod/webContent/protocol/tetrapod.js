@@ -80,6 +80,7 @@ function TP_Tetrapod(server) {
    server.register("message", "Tetrapod", "ClusterSynced", 1, 12460484);
    server.register("request", "Tetrapod", "SetClusterProperty", 1, 11003897);
    server.register("request", "Tetrapod", "DelClusterProperty", 1, 15970020);
+   server.register("message", "Tetrapod", "RegisterContract", 1, 11935907);
    server.register("message", "Tetrapod", "ClusterMember", 1, 1076508);
    server.register("struct", "Tetrapod", "WebRootDef", 1, 943242);
    server.register("message", "Tetrapod", "WebRootAdded", 1, 270402);

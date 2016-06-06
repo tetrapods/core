@@ -199,6 +199,9 @@ public class TetrapodCluster extends Storage
          case DelEntityCommand.COMMAND_ID:
             onDelEntityCommand((DelEntityCommand) command);
             break;
+         case RegisterContractCommand.COMMAND_ID:
+            onRegisterContractCommand((RegisterContractCommand) command);
+            break;
 
       }
    }
@@ -310,6 +313,9 @@ public class TetrapodCluster extends Storage
                prop = new ClusterProperty(prop.key, prop.secret, prop.val);
                prop.val = AESEncryptor.decryptSaltedAES(prop.val, state.secretKey);
                ses.sendMessage(new ClusterPropertyAddedMessage(prop), toEntityId, childId);
+            }
+            for (ContractDescription info : state.contracts.values()) {
+               ses.sendMessage(new RegisterContractMessage(info), toEntityId, childId);
             }
          }
       }
@@ -810,10 +816,12 @@ public class TetrapodCluster extends Storage
    }
 
    private void onSetWebRouteCommand(SetWebRouteCommand command) {
+      service.broadcastClusterMessage(new WebRootAddedMessage(command.getWebRouteDef()));
       service.broadcastAdminMessage(new WebRootAddedMessage(command.getWebRouteDef()));
    }
 
    private void onDelWebRouteCommand(DelWebRouteCommand command) {
+      service.broadcastClusterMessage(new WebRootRemovedMessage(command.getWebRouteName()));
       service.broadcastAdminMessage(new WebRootRemovedMessage(command.getWebRouteName()));
    }
 
@@ -1037,6 +1045,10 @@ public class TetrapodCluster extends Storage
 
    private void onDelEntityCommand(DelEntityCommand command) {
       service.registry.onDelEntityCommand(command.getEntityId());
+   }
+
+   private void onRegisterContractCommand(RegisterContractCommand command) {
+      service.broadcastClusterMessage(new RegisterContractMessage(command.getContractDescription()));
    }
 
    public long getCommitIndex() {

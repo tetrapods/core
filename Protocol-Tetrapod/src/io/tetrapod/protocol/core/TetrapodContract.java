@@ -152,6 +152,7 @@ public class TetrapodContract extends Contract {
          new ClusterPropertyAddedMessage(),
          new ClusterPropertyRemovedMessage(),
          new ClusterSyncedMessage(),
+         new RegisterContractMessage(),
          new ClusterMemberMessage(),
          new WebRootAddedMessage(),
          new WebRootRemovedMessage(),
@@ -200,7 +201,10 @@ public class TetrapodContract extends Contract {
          ClusterMemberMessage.Handler,
          ClusterPropertyAddedMessage.Handler,
          ClusterPropertyRemovedMessage.Handler,
-         ClusterSyncedMessage.Handler
+         ClusterSyncedMessage.Handler,
+         RegisterContractMessage.Handler,
+         WebRootAddedMessage.Handler,
+         WebRootRemovedMessage.Handler
          {}
          
       public Structure[] getMessages() {
@@ -209,6 +213,9 @@ public class TetrapodContract extends Contract {
             new ClusterPropertyAddedMessage(),
             new ClusterPropertyRemovedMessage(),
             new ClusterSyncedMessage(),
+            new RegisterContractMessage(),
+            new WebRootAddedMessage(),
+            new WebRootRemovedMessage(),
          };
       }
       

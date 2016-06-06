@@ -1018,4 +1018,13 @@ public class DefaultService
       return stats.getRequestStats(r.domain, r.limit, r.minTime, r.sortBy);
    }
 
+   @Override
+   public void messageWebRootAdded(WebRootAddedMessage m, MessageContext ctx) {}
+
+   @Override
+   public void messageWebRootRemoved(WebRootRemovedMessage m, MessageContext ctx) {}
+
+   @Override
+   public void messageRegisterContract(RegisterContractMessage m, MessageContext ctx) {}
+
 }

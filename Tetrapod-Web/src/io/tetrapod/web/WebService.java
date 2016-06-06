@@ -15,8 +15,10 @@ import org.slf4j.LoggerFactory;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.socket.SocketChannel;
 import io.tetrapod.core.*;
+import io.tetrapod.core.ServiceConnector.DirectServiceInfo;
 import io.tetrapod.core.Session.RelayHandler;
 import io.tetrapod.core.rpc.*;
+import io.tetrapod.core.serialize.StructureAdapter;
 import io.tetrapod.core.utils.Util;
 import io.tetrapod.protocol.core.*;
 import io.tetrapod.protocol.web.*;
@@ -194,6 +196,10 @@ public class WebService extends DefaultService implements WebContract.API, Relay
       if (entity != null) {
          if (entity.entityId == parentId) {
             return clusterClient.getSession();
+         }
+         DirectServiceInfo info = serviceConnector.getDirectServiceInfo(entityId);
+         if (info.getSession() == null || !info.ses.isConnected()) {
+            info.considerConnecting();
          }
          return serviceConnector.getDirectServiceInfo(entityId).getSession();
       }
@@ -384,6 +390,32 @@ public class WebService extends DefaultService implements WebContract.API, Relay
          //topic.queue(() -> unsubscribe(owner, m.topicId, m.entityId, m.childId, false)); // TODO: kick()
       } else {
          logger.info("Could not find publisher entity {}", ctx.header.fromId);
+      }
+   }
+
+   @Override
+   public void messageWebRootAdded(WebRootAddedMessage m, MessageContext ctx) {}
+
+   @Override
+   public void messageWebRootRemoved(WebRootRemovedMessage m, MessageContext ctx) {}
+
+   @Override
+   public void messageRegisterContract(RegisterContractMessage m, MessageContext ctx) {
+      // reg the structs
+      if (m.info.structs != null) {
+         for (StructDescription sd : m.info.structs) {
+            if (m.info.contractId != WebContract.CONTRACT_ID) {
+               //               logger.info("ADDING {} {}", sd.name, m.info.contractId);
+               StructureFactory.add(new StructureAdapter(sd));
+            }
+         }
+      }
+      // reg the web routes
+      if (m.info.routes != null) {
+         for (WebRoute r : m.info.routes) {
+            webRoutes.setRoute(r.path, r.contractId, r.structId);
+            logger.debug("Setting Web route [{}] for {}", r.path, r.contractId);
+         }
       }
    }
 

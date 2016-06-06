@@ -27,11 +27,8 @@ import io.tetrapod.core.rpc.Error;
 import io.tetrapod.core.storage.*;
 import io.tetrapod.core.utils.*;
 import io.tetrapod.protocol.core.*;
-import io.tetrapod.protocol.core.RegisterRequest;
-import io.tetrapod.protocol.core.RegisterResponse;
 import io.tetrapod.protocol.raft.*;
 import io.tetrapod.protocol.storage.*;
-import io.tetrapod.protocol.web.*;
 import io.tetrapod.web.*;
 
 /**
@@ -46,9 +43,9 @@ public class TetrapodService extends DefaultService
 
    public final SecureRandom         random                = new SecureRandom();
 
-   private Topic                     clusterTopic;
-   private Topic                     servicesTopic;
-   private Topic                     adminTopic;
+   private final Topic               clusterTopic          = publishTopic();
+   private final Topic               servicesTopic         = publishTopic();
+   private final Topic               adminTopic            = publishTopic(); 
 
    private final TetrapodWorker      worker;
 
@@ -59,7 +56,6 @@ public class TetrapodService extends DefaultService
    private AdminAccounts             adminAccounts;
 
    private final List<Server>        servers               = new ArrayList<>();
-   private final List<Server>        httpServers           = new ArrayList<>();
 
    private long                      lastStatsLog;
 
@@ -110,10 +106,6 @@ public class TetrapodService extends DefaultService
             me.build = buildName;
          }
 
-         clusterTopic = publishTopic();
-         servicesTopic = publishTopic();
-
-         adminTopic = publishTopic();
          adminTopic.addListener((toEntityId, toChildId, resub) -> {
             synchronized (cluster) {
                cluster.sendAdminDetails(findSession(toEntityId), toEntityId, toChildId, adminTopic.topicId);
@@ -179,18 +171,6 @@ public class TetrapodService extends DefaultService
       return Util.getProperty("tetrapod.cluster.port", DEFAULT_CLUSTER_PORT);
    }
 
-   public int getPublicPort() {
-      return Util.getProperty("tetrapod.public.port", DEFAULT_PUBLIC_PORT);
-   }
-
-   public int getHTTPPort() {
-      return Util.getProperty("tetrapod.http.port", DEFAULT_HTTP_PORT);
-   }
-
-   public int getHTTPSPort() {
-      return Util.getProperty("tetrapod.https.port", DEFAULT_HTTPS_PORT);
-   }
-
    @Override
    public long getCounter() {
       return cluster.getNumSessions() + servers.stream().mapToInt(Server::getNumSessions).sum();
@@ -222,43 +202,8 @@ public class TetrapodService extends DefaultService
       }
    }
 
-   private class WebSessionFactory implements SessionFactory {
-      public WebSessionFactory(Map<String, WebRoot> contentRootMap, String webSockets) {
-         this.webSockets = webSockets;
-         this.contentRootMap = contentRootMap;
-      }
-
-      final String               webSockets;
-      final Map<String, WebRoot> contentRootMap;
-
-      @Override
-      public Session makeSession(SocketChannel ch) {
-         TetrapodService pod = TetrapodService.this;
-         Session ses = null;
-         ses = new WebHttpSession(ch, pod, contentRootMap, webSockets);
-         ses.setRelayHandler(pod);
-         ses.setMyEntityId(getEntityId());
-         ses.setMyEntityType(Core.TYPE_TETRAPOD);
-         ses.setTheirEntityType(Core.TYPE_CLIENT);
-         ses.addSessionListener(new Session.Listener() {
-            @Override
-            public void onSessionStop(Session ses) {
-               onEntityDisconnected(ses);
-            }
-
-            @Override
-            public void onSessionStart(Session ses) {}
-         });
-         return ses;
-      }
-   }
-
    public void onEntityDisconnected(Session ses) {
-      if (ses instanceof WebHttpSession) {
-         logger.debug("Session Stopped: {}", ses);
-      } else {
-         logger.info("Session Stopped: {}", ses);
-      }
+      logger.info("Session Stopped: {}", ses);
       if (ses.getTheirEntityId() != 0) {
          final EntityInfo e = registry.getEntity(ses.getTheirEntityId());
          if (e != null) {
@@ -282,22 +227,6 @@ public class TetrapodService extends DefaultService
             AdminAuthToken.setSecret(getSharedSecret());
             adminAccounts = new AdminAccounts(cluster);
 
-            // FIXME:
-            // Ensure we have all of the needed WebRootDir files installed before we open http ports
-
-            // create servers
-            Server httpServer = (new Server(getHTTPPort(), new WebSessionFactory(cluster.getWebRootDirs(), "/sockets"), dispatcher));
-            servers.add((httpServer));
-            httpServers.add(httpServer);
-
-            // create secure port servers, if configured
-            if (sslContext != null) {
-               httpServer = new Server(getHTTPSPort(), new WebSessionFactory(cluster.getWebRootDirs(), "/sockets"), dispatcher, sslContext,
-                     false);
-               servers.add((httpServer));
-               httpServers.add(httpServer);
-            }
-            servers.add(new Server(getPublicPort(), new TypedSessionFactory(Core.TYPE_ANONYMOUS), dispatcher, sslContext, false));
             servers.add(new Server(getServicePort(), new TypedSessionFactory(Core.TYPE_SERVICE), dispatcher, sslContext, false));
 
             // start listening
@@ -308,34 +237,7 @@ public class TetrapodService extends DefaultService
             fail(e);
          }
       }
-   }
 
-   // Pause will close the HTTP and HTTPS ports on the tetrapod service
-   @Override
-   public void onPaused() {
-      for (Server httpServer : httpServers) {
-         httpServer.close();
-      }
-   }
-
-   // Purge will boot all non-admin sessions from the tetrapod service
-   @Override
-   public void onPurged() {
-      for (Server httpServer : httpServers) {
-         httpServer.purge();
-      }
-   }
-
-   // UnPause will restart the HTTP listeners on the tetrapod service.
-   @Override
-   public void onUnpaused() {
-      for (Server httpServer : httpServers) {
-         try {
-            httpServer.start().sync();
-         } catch (Exception e) {
-            fail(e);
-         }
-      }
    }
 
    @Override
@@ -587,17 +489,13 @@ public class TetrapodService extends DefaultService
 
    @Override
    public void broadcastServicesMessage(Message msg) {
-      if (servicesTopic != null) {
-         servicesTopic.broadcast(msg);
-      }
+      servicesTopic.broadcast(msg);
    }
 
    public void broadcastClusterMessage(Message msg) {
-      if (clusterTopic != null) {
-         clusterTopic.broadcast(msg);
-      }
+      clusterTopic.broadcast(msg);
    }
-
+ 
    //   public void broadcast(Message msg, RegistryTopic topic) {
    //      if (topic != null) {
    //         synchronized (topic) {
@@ -829,7 +727,6 @@ public class TetrapodService extends DefaultService
       }
    }
    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
- 
 
    @Override
    public Response requestRegister(RegisterRequest r, final RequestContext ctxA) {
@@ -1071,7 +968,6 @@ public class TetrapodService extends DefaultService
       return Response.SUCCESS;
    }
 
-
    @Override
    public Response requestVerifyEntityToken(VerifyEntityTokenRequest r, RequestContext ctx) {
       EntityToken t = EntityToken.decode(r.token);
@@ -1086,7 +982,6 @@ public class TetrapodService extends DefaultService
       }
       return Response.error(ERROR_INVALID_TOKEN);
    }
-
 
    /////////////// RAFT ///////////////
 
@@ -1370,6 +1265,5 @@ public class TetrapodService extends DefaultService
          return Response.error(ERROR_UNKNOWN);
       }
 
-   }
-
+   } 
 }
