@@ -345,7 +345,7 @@ public class DefaultService
    public Session makeSession(SocketChannel ch) {
       final Session ses = new WireSession(ch, DefaultService.this);
       ses.setMyEntityType(getEntityType());
-      ses.setTheirEntityType(Core.TYPE_TETRAPOD);
+      ses.setTheirEntityType(Core.TYPE_TETRAPOD);      
       ses.addSessionListener(new Session.Listener() {
          @Override
          public void onSessionStop(Session ses) {

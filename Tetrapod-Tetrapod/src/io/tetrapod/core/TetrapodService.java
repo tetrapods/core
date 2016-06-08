@@ -45,7 +45,7 @@ public class TetrapodService extends DefaultService
 
    private final Topic               clusterTopic          = publishTopic();
    private final Topic               servicesTopic         = publishTopic();
-   private final Topic               adminTopic            = publishTopic(); 
+   private final Topic               adminTopic            = publishTopic();
 
    private final TetrapodWorker      worker;
 
@@ -495,7 +495,7 @@ public class TetrapodService extends DefaultService
    public void broadcastClusterMessage(Message msg) {
       clusterTopic.broadcast(msg);
    }
- 
+
    //   public void broadcast(Message msg, RegistryTopic topic) {
    //      if (topic != null) {
    //         synchronized (topic) {
@@ -704,15 +704,6 @@ public class TetrapodService extends DefaultService
       //            broadcast(new ClusterMemberMessage(m.entityId, m.host, m.servicePort, m.clusterPort, m.uuid), clusterTopic);
       //         }
       //      }
-   }
-
-   public void subscribeToAdmin(Session ses, int toEntityId, int toChildId) {
-      assert (adminTopic != null);
-      logger.info("Subscribing admin {}", toChildId);
-      synchronized (cluster) {
-         subscribe(adminTopic.topicId, toEntityId, toChildId);
-      }
-      subscribeToServices(ses, toEntityId, toChildId);
    }
 
    public void subscribeToServices(Session ses, int toEntityId, int toChildId) {
@@ -1050,7 +1041,13 @@ public class TetrapodService extends DefaultService
 
    @Override
    public Response requestAdminSubscribe(AdminSubscribeRequest r, RequestContext ctx) {
-      subscribeToAdmin(((SessionRequestContext) ctx).session, ctx.header.fromParentId, ctx.header.fromChildId);
+      assert (adminTopic != null);
+      Session ses = ((SessionRequestContext) ctx).session;
+      logger.info("Subscribing admin {} {}", ctx.header.fromParentId, ctx.header.fromChildId);
+      synchronized (cluster) {
+         subscribe(adminTopic.topicId, ctx.header.fromParentId, ctx.header.fromChildId);
+      }
+      subscribeToServices(ses, ctx.header.fromParentId, ctx.header.fromChildId);
       return Response.SUCCESS;
    }
 
@@ -1265,5 +1262,5 @@ public class TetrapodService extends DefaultService
          return Response.error(ERROR_UNKNOWN);
       }
 
-   } 
+   }
 }

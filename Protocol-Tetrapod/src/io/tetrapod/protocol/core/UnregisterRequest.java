@@ -32,7 +32,7 @@ public class UnregisterRequest extends Request {
    public int entityId;
 
    public final Structure.Security getSecurity() {
-      return Security.INTERNAL;
+      return Security.ADMIN;
    }
 
    public final void defaults() {
@@ -113,6 +113,10 @@ public class UnregisterRequest extends Request {
       return desc;
    }
 
+   public final Response securityCheck(RequestContext ctx) {
+      return ctx.securityCheck(this, accountId, authToken, Admin.RIGHTS_CLUSTER_WRITE);
+   }
+       
    protected boolean isSensitive(String fieldName) {
       if (fieldName.equals("authToken")) return true;
       return false;

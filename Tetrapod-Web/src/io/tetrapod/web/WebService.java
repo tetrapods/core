@@ -19,6 +19,7 @@ import io.tetrapod.core.ServiceConnector.DirectServiceInfo;
 import io.tetrapod.core.Session.RelayHandler;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.serialize.StructureAdapter;
+import io.tetrapod.core.serialize.datasources.ByteBufDataSource;
 import io.tetrapod.core.utils.Util;
 import io.tetrapod.protocol.core.*;
 import io.tetrapod.protocol.web.*;
@@ -36,7 +37,8 @@ import io.tetrapod.protocol.web.RegisterResponse;
  * <li>Live subs of web roots</li>
  * </ul>
  */
-public class WebService extends DefaultService implements WebContract.API, RelayHandler, TetrapodContract.Pubsub.API {
+public class WebService extends DefaultService
+      implements WebContract.API, RelayHandler, TetrapodContract.Pubsub.API, TetrapodContract.Services.API {
 
    public static final Logger                 logger                = LoggerFactory.getLogger(WebService.class);
 
@@ -57,6 +59,7 @@ public class WebService extends DefaultService implements WebContract.API, Relay
       addContracts(new TetrapodContract());
 
       addSubscriptionHandler(new TetrapodContract.Pubsub(), this);
+      addSubscriptionHandler(new TetrapodContract.Services(), this);
 
       logger.info(" ***** WebService ***** ");
 
@@ -68,7 +71,6 @@ public class WebService extends DefaultService implements WebContract.API, Relay
       contentRootMap.put("core",
             new WebRootLocalFilesystem("/", new File("/Users/adavidson/workspace/tetrapod/core/Tetrapod-Tetrapod/webContent")));
       contentRootMap.put("chat", new WebRootLocalFilesystem("/", new File("/Users/adavidson/workspace/tetrapod/website/webContent")));
-
    }
 
    @Override
@@ -101,8 +103,6 @@ public class WebService extends DefaultService implements WebContract.API, Relay
             fail(e);
          }
       }
-
-      // ADD relay handler to tetrapod conn
    }
 
    @Override
@@ -113,7 +113,7 @@ public class WebService extends DefaultService implements WebContract.API, Relay
 
    @Override
    public void onDisconnectedFromCluster() {
-      // TODO
+      // TODO ...?
    }
 
    // Pause will close the HTTP and HTTPS ports on the web service
@@ -186,10 +186,12 @@ public class WebService extends DefaultService implements WebContract.API, Relay
       if (entityId == parentId) {
          return clusterClient.getSession();
       }
-
       Entity entity = null;
       if (entityId == Core.UNADDRESSED) {
          entity = services.getRandomAvailableService(contractId);
+         if (contractId == 4 && entity != null) {
+            logger.info("Ident lookup = {}", entity.entityId);
+         }
       } else {
          entity = services.getEntity(entityId);
       }
@@ -197,28 +199,42 @@ public class WebService extends DefaultService implements WebContract.API, Relay
          if (entity.entityId == parentId) {
             return clusterClient.getSession();
          }
-         DirectServiceInfo info = serviceConnector.getDirectServiceInfo(entityId);
+         DirectServiceInfo info = serviceConnector.getDirectServiceInfo(entity.entityId);
          if (info.getSession() == null || !info.ses.isConnected()) {
             info.considerConnecting();
          }
-         return serviceConnector.getDirectServiceInfo(entityId).getSession();
+         return info.getSession();
       }
       return null;
    }
 
    @Override
    public void relayMessage(MessageHeader header, ByteBuf buf, boolean isBroadcast) throws IOException {
-      if (header.toChildId != 0 || header.structId == ClusterPropertyRemovedMessage.STRUCT_ID) {
-         logger.info("Relay to child {}", header.toChildId);
-      }
+      logger.info("relayMessage {} isBroadcast={}", header.toChildId, isBroadcast);
+
       if (isBroadcast) {
          final ServiceTopic topic = topics.get(topicKey(header.fromId, header.topicId));
          if (topic != null) {
             synchronized (topic) {
                for (final Subscriber s : topic.getSubscribers()) {
-                  WebHttpSession ses = clients.get(s.entityId);
-                  if (ses != null) {
-                     ses.sendRelayedMessage(header, buf, isBroadcast);
+                  if (s.entityId == 0) {
+                     // that's us, dispatch to self
+                     final int ri = buf.readerIndex();
+                     ByteBufDataSource reader = new ByteBufDataSource(buf);
+                     final Object obj = StructureFactory.make(header.contractId, header.structId);
+                     final Message msg = (obj instanceof Message) ? (Message) obj : null;
+                     if (msg != null) {
+                        msg.read(reader);
+                        clusterClient.getSession().dispatchMessage(header, msg);
+                     } else {
+                        logger.warn("Could not read message for self-dispatch {}", header.dump());
+                     }
+                     buf.readerIndex(ri);
+                  } else {
+                     WebHttpSession ses = clients.get(s.entityId);
+                     if (ses != null) {
+                        ses.sendRelayedMessage(header, buf, isBroadcast);
+                     }
                   }
                }
             }
@@ -325,6 +341,29 @@ public class WebService extends DefaultService implements WebContract.API, Relay
    }
 
    @Override
+   public void messageServiceAdded(ServiceAddedMessage m, MessageContext ctx) {
+      if ((m.entity.status & (Core.STATUS_GONE | Core.STATUS_STARTING)) == 0) {
+         DirectServiceInfo info = serviceConnector.getDirectServiceInfo(m.entity.entityId);
+         if (info.getSession() == null || !info.ses.isConnected()) {
+            info.considerConnecting();
+         }
+      }
+   }
+
+   @Override
+   public void messageServiceRemoved(ServiceRemovedMessage m, MessageContext ctx) {}
+
+   @Override
+   public void messageServiceUpdated(ServiceUpdatedMessage m, MessageContext ctx) {
+      if ((m.status & (Core.STATUS_GONE | Core.STATUS_STARTING)) == 0) {
+         DirectServiceInfo info = serviceConnector.getDirectServiceInfo(m.entityId);
+         if (info.getSession() == null || !info.ses.isConnected()) {
+            info.considerConnecting();
+         }
+      }
+   }
+
+   @Override
    public void messageTopicPublished(final TopicPublishedMessage m, MessageContext ctx) {
       logger.debug("******* {} {}", ctx.header.dump(), m.dump());
       final ServiceTopic topic = topics.get(topicKey(m.publisherId, m.topicId));
@@ -418,6 +457,8 @@ public class WebService extends DefaultService implements WebContract.API, Relay
          }
       }
    }
+
+   //////////////////////////////////////////////////////////////////////////////////////////
 
    @Override
    public Response requestSetAlternateId(SetAlternateIdRequest r, RequestContext ctx) {

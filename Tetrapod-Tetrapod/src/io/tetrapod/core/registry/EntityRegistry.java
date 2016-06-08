@@ -10,7 +10,6 @@ import org.slf4j.LoggerFactory;
 import io.tetrapod.core.rpc.Message;
 import io.tetrapod.core.storage.*;
 import io.tetrapod.protocol.core.*;
-import io.tetrapod.web.LongPollQueue;
 
 /**
  * The global registry of all current actors in the system and their published topics and

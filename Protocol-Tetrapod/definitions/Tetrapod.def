@@ -54,7 +54,7 @@ internal request ClusterJoin
    6: int clusterPort
    7: string build
     
-internal request Unregister @rights(Admin.RIGHTS_CLUSTER_WRITE)
+admin request Unregister @rights(Admin.RIGHTS_CLUSTER_WRITE)
    1: int accountId
    2: string authToken @sensitive
    3: int entityId
@@ -71,7 +71,9 @@ internal request ServiceStatusUpdate
 internal request AddServiceInformation
    1: ContractDescription info
    
-internal request LogRegistryStats 
+admin request LogRegistryStats  @rights(Admin.RIGHTS_CLUSTER_READ)
+   1: int accountId
+   2: string authToken @sensitive
 
 internal request CloseClientConnection
    1: string data

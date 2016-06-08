@@ -190,7 +190,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
       helper.dispatchRequest(header, req, this).handle(res -> sendResponse(res, header.requestId));
    }
 
-   protected void dispatchMessage(final MessageHeader header, final Message msg) {
+   public void dispatchMessage(final MessageHeader header, final Message msg) {
       // we need  to hijack this now to prevent a race with dispatching subsequent messages
       if (header.structId == EntityMessage.STRUCT_ID) {
          if (getTheirEntityType() == Core.TYPE_TETRAPOD) {

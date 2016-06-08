@@ -132,7 +132,7 @@ public class WireSession extends Session {
          // if fromId is UNADRESSED this handles the edge case where we are registering 
          // ourselves and so did not yet have an entityId           
          if ((async.header.fromParentId == myId || async.header.fromParentId == Core.UNADDRESSED)
-                  && (async.request != null || async.hasHandler())) {
+               && (async.request != null || async.hasHandler())) {
             final Structure res = StructureFactory.make(header.contractId, header.structId);
             if (res != null) {
                res.read(reader);
@@ -195,7 +195,8 @@ public class WireSession extends Session {
          if (req != null) {
             req.read(reader);
             if (!commsLogIgnore(req))
-               logged = commsLog("%s  [%d] <- %s (from %d.%d)", this, header.requestId, req.dump(), header.fromParentId, header.fromChildId);
+               logged = commsLog("%s  [%d] <- %s (from %d.%d)", this, header.requestId, req.dump(), header.fromParentId,
+                     header.fromChildId);
             dispatchRequest(header, req);
          } else {
             logger.warn("Could not find request structure {}", header.structId);
@@ -204,14 +205,14 @@ public class WireSession extends Session {
       } else if (relayHandler != null) {
          if (commsLogIgnore(header.structId)) {
             logged = commsLog("%s  [%d] <- Request.%s (from %d.%d)", this, header.requestId,
-                     StructureFactory.getName(header.contractId, header.structId), header.fromParentId, header.fromChildId);
+                  StructureFactory.getName(header.contractId, header.structId), header.fromParentId, header.fromChildId);
          }
          relayRequest(header, in);
       }
 
       if (!logged && !commsLogIgnore(header.structId))
          logged = commsLog("%s  [%d] <- Request.%s (from %d.%d)", this, header.requestId,
-                  StructureFactory.getName(header.contractId, header.structId), header.fromParentId, header.fromChildId);
+               StructureFactory.getName(header.contractId, header.structId), header.fromParentId, header.fromChildId);
    }
 
    private void readMessage(ByteBuf in, boolean isBroadcast) throws IOException {
@@ -229,13 +230,13 @@ public class WireSession extends Session {
       }
 
       boolean selfDispatch = header.topicId == 0 && header.toChildId == 0 && ((header.flags & MessageHeader.FLAGS_ALTERNATE) == 0)
-               && (header.toParentId == myId || header.toParentId == UNADDRESSED);
+            && (header.toParentId == myId || header.toParentId == UNADDRESSED);
       if (relayHandler == null || selfDispatch) {
          dispatchMessage(header, reader);
       } else {
          if (header.fromId == 0) {
             logger.error("{} fromId is 0 for {} ({} <==> {})", this, header.dump(), myId, theirId);
-         } else {
+         } else { 
             relayHandler.relayMessage(header, in, isBroadcast);
          }
       }

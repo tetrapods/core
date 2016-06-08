@@ -72,6 +72,10 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
       public Session makeSession(SocketChannel ch) {
          final Session ses = super.makeSession(ch);
          ses.setName("Direct");
+         ses.setMyEntityId(service.getEntityId());
+         if (service instanceof RelayHandler) {
+            ses.setRelayHandler((RelayHandler) service);
+         }
          return ses;
       }
    }
@@ -128,20 +132,20 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
             pending = true;
             valid = false;
             service.clusterClient.getSession().sendRequest(new DirectConnectionRequest(token, service.getEntityId()), entityId, (byte) 30)
-                     .handle(res -> {
-                        if (res.isError()) {
-                           if (res.errorCode() == CoreContract.ERROR_NOT_CONFIGURED
-                                    || res.errorCode() == CoreContract.ERROR_SERVICE_UNAVAILABLE
-                                    || res.errorCode() == CoreContract.ERROR_TIMEOUT) {
-                              logger.info("DirectConnectionRequest to {} =  {}", entityId, res);
-                           } else {
-                              logger.error("DirectConnectionRequest to {} =  {}", entityId, res);
-                           }
-                           failure();
+                  .handle(res -> {
+                     if (res.isError()) {
+                        if (res.errorCode() == CoreContract.ERROR_NOT_CONFIGURED
+                              || res.errorCode() == CoreContract.ERROR_SERVICE_UNAVAILABLE
+                              || res.errorCode() == CoreContract.ERROR_TIMEOUT) {
+                           logger.info("DirectConnectionRequest to {} =  {}", entityId, res);
                         } else {
-                           service.dispatcher.dispatchHighPriority(() -> connect((DirectConnectionResponse) res));
+                           logger.error("DirectConnectionRequest to {} =  {}", entityId, res);
                         }
-                     });
+                        failure();
+                     } else {
+                        service.dispatcher.dispatchHighPriority(() -> connect((DirectConnectionResponse) res));
+                     }
+                  });
          }
       }
 
