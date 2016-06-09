@@ -74,7 +74,7 @@ public class Metrics {
    public static void init(String prefix) { 
       if (Util.getProperty("graphite.enabled", false)) {
          startGraphite(new ServerAddress(Util.getProperty("graphite.host", "localhost"), Util.getProperty("graphite.port", 2003)), prefix);
-      } else {
+      } else if (Util.getProperty("graphite.enabled", null) == null) {
          logger.warn("Graphite reporting is disabled");
       }
    }
