@@ -21,13 +21,15 @@ public class RegisterResponse extends Response {
       defaults();
    }
 
-   public RegisterResponse(int childId, int parentId) {
+   public RegisterResponse(int childId, int parentId, String token) {
       this.childId = childId;
       this.parentId = parentId;
+      this.token = token;
    }   
    
    public int childId;
    public int parentId;
+   public String token;
 
    public final Structure.Security getSecurity() {
       return Security.PUBLIC;
@@ -36,12 +38,14 @@ public class RegisterResponse extends Response {
    public final void defaults() {
       childId = 0;
       parentId = 0;
+      token = null;
    }
    
    @Override
    public final void write(DataSource data) throws IOException {
       data.write(1, this.childId);
       data.write(2, this.parentId);
+      data.write(3, this.token);
       data.writeEndTag();
    }
    
@@ -53,6 +57,7 @@ public class RegisterResponse extends Response {
          switch (tag) {
             case 1: this.childId = data.read_int(tag); break;
             case 2: this.parentId = data.read_int(tag); break;
+            case 3: this.token = data.read_string(tag); break;
             case Codec.END_TAG:
                return;
             default:
@@ -74,9 +79,10 @@ public class RegisterResponse extends Response {
       // Note do not use this tags in long term serializations (to disk or databases) as 
       // implementors are free to rename them however they wish.  A null means the field
       // is not to participate in web serialization (remaining at default)
-      String[] result = new String[2+1];
+      String[] result = new String[3+1];
       result[1] = "childId";
       result[2] = "parentId";
+      result[3] = "token";
       return result;
    }
 
@@ -92,6 +98,7 @@ public class RegisterResponse extends Response {
       desc.types[0] = new TypeDescriptor(TypeDescriptor.T_STRUCT, getContractId(), getStructId());
       desc.types[1] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
       desc.types[2] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
+      desc.types[3] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
       return desc;
    }
  }

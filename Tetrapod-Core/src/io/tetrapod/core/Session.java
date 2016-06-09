@@ -62,8 +62,6 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
 
       public WebRoutes getWebRoutes();
 
-      public boolean validate(int entityId, long token);
-
    }
 
    protected static final Logger        logger                     = LoggerFactory.getLogger(Session.class);

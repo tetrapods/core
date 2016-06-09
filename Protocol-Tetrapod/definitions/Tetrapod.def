@@ -231,11 +231,7 @@ internal message Services.ServiceUpdated
  
 	
 ## 3rd party auth add-ons
-
-internal request VerifyEntityToken
-   1: int entityId
-   2: string token
-     
+ 
 
 public request RaftLeader
 public response RaftLeader 

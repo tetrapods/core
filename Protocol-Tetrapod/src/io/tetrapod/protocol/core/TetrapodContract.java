@@ -75,7 +75,6 @@ public class TetrapodContract extends Contract {
       , UnlockRequest.Handler
       , UnregisterRequest.Handler
       , UnsubscribeOwnershipRequest.Handler
-      , VerifyEntityTokenRequest.Handler
       {}
    
    public Structure[] getRequests() {
@@ -99,7 +98,6 @@ public class TetrapodContract extends Contract {
          new AdminChangeRightsRequest(),
          new GetServiceBuildInfoRequest(),
          new ExecuteBuildCommandRequest(),
-         new VerifyEntityTokenRequest(),
          new RaftLeaderRequest(),
          new RaftStatsRequest(),
          new AdminSubscribeRequest(),

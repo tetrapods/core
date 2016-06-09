@@ -204,20 +204,18 @@ public class WebHttpSession extends WebSession {
    }
 
    private void handlePoll(final ChannelHandlerContext ctx, final FullHttpRequest req) throws Exception {
-      //logger.debug("{} POLLER: {} keepAlive = {}", this, req.getUri(), HttpHeaders.isKeepAlive(req));
+      logger.debug("{} POLLER: {} keepAlive = {}", this, req.getUri(), HttpHeaders.isKeepAlive(req));
       final JSONObject params = new JSONObject(getContent(req));
 
       // authenticate this session, if needed
       if (params.has("_token")) {
-         final EntityToken t = EntityToken.decode(params.getString("_token"));
-         if (t != null) {
-            if (relayHandler.validate(t.entityId, t.nonce)) {
-               setTheirEntityId(t.entityId);
-               setTheirEntityType(Core.TYPE_CLIENT);
-            } else {
-               sendHttpResponse(ctx, req, new DefaultFullHttpResponse(HTTP_1_1, BAD_REQUEST));
-               return;
-            }
+         Integer clientId = LongPollToken.validateToken(params.getString("_token"));
+         if (clientId != null) {
+            setTheirEntityId(clientId);
+            setTheirEntityType(Core.TYPE_CLIENT);
+         } else {
+            sendHttpResponse(ctx, req, new DefaultFullHttpResponse(HTTP_1_1, BAD_REQUEST));
+            return;
          }
       }
 
@@ -236,7 +234,7 @@ public class WebHttpSession extends WebSession {
          }
          readAndDispatchRequest(header, params);
 
-      } else {
+      } else if (getTheirEntityId() != 0) {
          getDispatcher().dispatch(() -> {
             final LongPollQueue messages = LongPollQueue.getQueue(getTheirEntityId(), true);
             final long startTime = System.currentTimeMillis();
@@ -569,9 +567,11 @@ public class WebHttpSession extends WebSession {
             commsLog("%s  [M] ~] Message:%d %s (to %d)", this, header.structId, getNameFor(header), header.toChildId);
          }
          final LongPollQueue messages = LongPollQueue.getQueue(getTheirEntityId(), false);
-         // FIXME: Need a sensible way to protect against memory gobbling if this queue isn't cleared fast enough
-         messages.add(toJSON(header, payload, ENVELOPE_MESSAGE));
-         //logger.debug("{} Queued {} messages for longPoller {}", this, messages.size(), messages.getEntityId());
+         if (messages != null) {
+            // FIXME: Need a sensible way to protect against memory gobbling if this queue isn't cleared fast enough
+            messages.add(toJSON(header, payload, ENVELOPE_MESSAGE));
+            logger.debug("{} Queued {} messages for longPoller {}", this, messages.size(), messages.getEntityId());
+         }
       }
    }
 

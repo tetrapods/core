@@ -305,25 +305,6 @@ public class TetrapodService extends DefaultService
       return false;
    }
 
-   /**
-    * Validates a long-polling session to an entityId
-    */
-   @Override
-   public boolean validate(int entityId, long token) {
-      final EntityInfo e = registry.getEntity(entityId);
-      if (e != null) {
-         if (e.reclaimToken == token) {
-            // HACK: as a side-effect, we update last contact time
-            e.setLastContact(System.currentTimeMillis());
-            if (e.isGone()) {
-               registry.updateStatus(e, 0, Core.STATUS_GONE);
-            }
-            return true;
-         }
-      }
-      return false;
-   }
-
    @Override
    public Session getRelaySession(int entityId, int contractId) {
       EntityInfo entity = null;
@@ -845,21 +826,6 @@ public class TetrapodService extends DefaultService
             return Response.error(ERROR_UNKNOWN);
       }
       return Response.SUCCESS;
-   }
-
-   @Override
-   public Response requestVerifyEntityToken(VerifyEntityTokenRequest r, RequestContext ctx) {
-      EntityToken t = EntityToken.decode(r.token);
-      if (t.entityId == r.entityId) {
-         EntityInfo e = registry.getEntity(r.entityId);
-         if (e != null) {
-            synchronized (e) {
-               if (e.reclaimToken == t.nonce)
-                  return Response.SUCCESS;
-            }
-         }
-      }
-      return Response.error(ERROR_INVALID_TOKEN);
    }
 
    /////////////// RAFT ///////////////

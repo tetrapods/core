@@ -19,6 +19,7 @@ public request Register
 public response Register 
    1: int childId
    2: int parentId
+   3: string token
     
 internal request SetAlternateId
    1: int clientId

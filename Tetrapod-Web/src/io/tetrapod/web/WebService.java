@@ -19,6 +19,7 @@ import io.tetrapod.core.Session.RelayHandler;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.serialize.StructureAdapter;
 import io.tetrapod.core.serialize.datasources.ByteBufDataSource;
+import io.tetrapod.core.utils.AuthToken;
 import io.tetrapod.core.utils.Util;
 import io.tetrapod.protocol.core.*;
 import io.tetrapod.protocol.web.*;
@@ -31,8 +32,8 @@ import io.tetrapod.protocol.web.RegisterResponse;
  * 
  * TODO: Implement....
  * <ul>
- * <li>Alt Broadcasts</li>
  * <li>Long Polling</li>
+ * <li>Hunt for topic/lifecycle edge cases</li>
  * </ul>
  */
 public class WebService extends DefaultService
@@ -61,15 +62,10 @@ public class WebService extends DefaultService
 
       logger.info(" ***** WebService ***** ");
 
-      // add the default web root
-      // contentRootMap.put("www", new WebRootLocalFilesystem("/", new File("www")));
-
       // add the tetrapod admin web root
       webInstaller.install(new WebRootDef("tetrapod", "/", "www"));
 
-      //      contentRootMap.put("core",
-      //            new WebRootLocalFilesystem("/", new File("/Users/adavidson/workspace/tetrapod/core/Tetrapod-Tetrapod/webContent")));
-      //      contentRootMap.put("chat", new WebRootLocalFilesystem("/", new File("/Users/adavidson/workspace/tetrapod/website/webContent")));
+      LongPollToken.setSecret(AuthToken.generateRandomBytes(64));
    }
 
    @Override
@@ -217,7 +213,7 @@ public class WebService extends DefaultService
       if (isBroadcast) {
          if ((header.flags & MessageHeader.FLAGS_ALTERNATE) != 0) {
             for (WebHttpSession ses : clients.values()) {
-               if (ses.getAlternateId() == header.toChildId) { 
+               if (ses.getAlternateId() == header.toChildId) {
                   ses.sendRelayedMessage(header, buf, isBroadcast);
                   buf.readerIndex(ri);
                }
@@ -265,12 +261,6 @@ public class WebService extends DefaultService
    public WebRoutes getWebRoutes() {
       return webRoutes;
    }
-
-   @Override
-   public boolean validate(int entityId, long token) {
-      return false;
-   }
-
    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
    private void scheduleHealthCheck() {
@@ -332,7 +322,7 @@ public class WebService extends DefaultService
       ses.setName(r.name);
       ses.setHttpReferrer(r.referrer);
       clients.put(entityId, ses);
-      return new RegisterResponse(entityId, getEntityId());
+      return new RegisterResponse(entityId, getEntityId(), LongPollToken.encodeToken(entityId, 10));
    }
 
    @Override

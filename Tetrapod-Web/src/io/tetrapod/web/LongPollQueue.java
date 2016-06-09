@@ -18,12 +18,16 @@ public class LongPollQueue extends LinkedBlockingQueue<JSONObject> {
 
    private static final Map<Integer, LongPollQueue> queues           = new HashMap<>();
 
+   private final int                                entityId;
+   private Lock                                     lock             = new ReentrantLock(true);
+   private long                                     lastDrainTime    = System.currentTimeMillis();
+
    public static LongPollQueue getQueue(int entityId, boolean createIfMissing) {
       synchronized (queues) {
          LongPollQueue q = queues.get(entityId);
          if (q == null && createIfMissing) {
             q = new LongPollQueue(entityId);
-            queues.put(entityId, q); 
+            queues.put(entityId, q);
          }
          return q;
       }
@@ -44,10 +48,6 @@ public class LongPollQueue extends LinkedBlockingQueue<JSONObject> {
    public synchronized long getLastDrainTime() {
       return lastDrainTime;
    }
-
-   private final int entityId;
-   private Lock      lock          = new ReentrantLock(true);
-   private long      lastDrainTime = System.currentTimeMillis();
 
    public LongPollQueue(int entityId) {
       this.entityId = entityId;
