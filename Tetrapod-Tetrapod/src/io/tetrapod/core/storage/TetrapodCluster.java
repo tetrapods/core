@@ -22,7 +22,6 @@ import io.tetrapod.protocol.raft.*;
 import io.tetrapod.raft.*;
 import io.tetrapod.raft.RaftEngine.Role;
 import io.tetrapod.raft.storage.*;
-import io.tetrapod.web.WebRoot;
 
 /**
  * Wraps a RaftEngine in our Tetrapod-RPC and implements the StorageContract via

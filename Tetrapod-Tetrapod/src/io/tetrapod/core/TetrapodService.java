@@ -3,7 +3,6 @@ package io.tetrapod.core;
 import static io.tetrapod.protocol.core.Core.*;
 import static io.tetrapod.protocol.core.CoreContract.*;
 
-import java.io.File;
 import java.io.IOException;
 import java.security.SecureRandom;
 import java.util.*;
@@ -19,9 +18,7 @@ import io.tetrapod.core.ServiceConnector.DirectServiceInfo;
 import io.tetrapod.core.Session.RelayHandler;
 import io.tetrapod.core.json.JSONObject;
 import io.tetrapod.core.pubsub.Topic;
-import io.tetrapod.core.registry.EntityInfo;
-import io.tetrapod.core.registry.EntityRegistry;
-import io.tetrapod.core.registry.EntityToken;
+import io.tetrapod.core.registry.*;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.rpc.Error;
 import io.tetrapod.core.storage.*;
@@ -29,7 +26,6 @@ import io.tetrapod.core.utils.*;
 import io.tetrapod.protocol.core.*;
 import io.tetrapod.protocol.raft.*;
 import io.tetrapod.protocol.storage.*;
-import io.tetrapod.web.*;
 
 /**
  * The tetrapod service is the core cluster service which handles message routing, cluster

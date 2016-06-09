@@ -2,7 +2,6 @@ package io.tetrapod.web;
 
 import static io.tetrapod.protocol.core.CoreContract.ERROR_INVALID_ENTITY;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
