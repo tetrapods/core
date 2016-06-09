@@ -72,8 +72,6 @@ public class TetrapodService extends DefaultService
       for (WebRoute r : contract.getWebRoutes()) {
          getWebRoutes().setRoute(r.path, r.contractId, r.structId);
       }
-      // add the tetrapod admin web root
-      cluster.getWebRootDirs().put("tetrapod", new WebRootLocalFilesystem("/", new File("webContent")));
    }
 
    @Override
@@ -1053,8 +1051,8 @@ public class TetrapodService extends DefaultService
 
    @Override
    public Response requestSetWebRoot(SetWebRootRequest r, RequestContext ctx) {
-      Admin a = adminAccounts.getAdmin(ctx, r.adminToken, Admin.RIGHTS_CLUSTER_WRITE);
-      if (!adminAccounts.isValidAdminRequest(ctx, r.adminToken, Admin.RIGHTS_CLUSTER_WRITE)) {
+      Admin a = adminAccounts.getAdmin(ctx, r.authToken, Admin.RIGHTS_CLUSTER_WRITE);
+      if (!adminAccounts.isValidAdminRequest(ctx, r.authToken, Admin.RIGHTS_CLUSTER_WRITE)) {
          auditLogger.info("Admin {} [{}] failed to update webroot to {}, {}, {}",
                a.email, a.accountId, r.def.name, r.def.path, r.def.file);
          return new Error(ERROR_INVALID_RIGHTS);
@@ -1070,8 +1068,8 @@ public class TetrapodService extends DefaultService
 
    @Override
    public Response requestDelWebRoot(DelWebRootRequest r, RequestContext ctx) {
-      Admin a = adminAccounts.getAdmin(ctx, r.adminToken, Admin.RIGHTS_CLUSTER_WRITE);
-      if (!adminAccounts.isValidAdminRequest(ctx, r.adminToken, Admin.RIGHTS_CLUSTER_WRITE)) {
+      Admin a = adminAccounts.getAdmin(ctx, r.authToken, Admin.RIGHTS_CLUSTER_WRITE);
+      if (!adminAccounts.isValidAdminRequest(ctx, r.authToken, Admin.RIGHTS_CLUSTER_WRITE)) {
          auditLogger.info("Admin {} [{}] failed to delete the webroot at {}.", a.email, a.accountId, r.name);
          return new Error(ERROR_INVALID_RIGHTS);
       }

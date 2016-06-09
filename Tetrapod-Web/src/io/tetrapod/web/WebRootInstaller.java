@@ -1,29 +1,26 @@
-package io.tetrapod.core.storage;
+package io.tetrapod.web;
 
-import io.tetrapod.core.utils.Util;
-import io.tetrapod.core.web.*;
-import io.tetrapod.protocol.core.WebRootDef;
-import io.tetrapod.web.WebRoot;
-import io.tetrapod.web.WebRootLocalFilesystem;
-
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
 import java.net.URL;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.*;
 
-import org.slf4j.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import io.tetrapod.core.utils.Util;
+import io.tetrapod.protocol.core.WebRootDef;
 
 public class WebRootInstaller {
    private static final Logger           logger                    = LoggerFactory.getLogger(WebRootInstaller.class);
 
    private final Executor                webRootSequentialExecutor = new ThreadPoolExecutor(0, 1, 5L, TimeUnit.SECONDS,
-            new LinkedBlockingQueue<>());
-   private final TetrapodStateMachine    stateMachine;
-   private final Map<String, WebRootDef> pending                   = new HashMap<>();
+         new LinkedBlockingQueue<>());
 
-   public WebRootInstaller(TetrapodStateMachine sm) {
-      stateMachine = sm;
-   }
+   private final Map<String, WebRoot>    contentRootMap            = new HashMap<>();
+   private final Map<String, WebRootDef> pending                   = new HashMap<>();
 
    public void install(final WebRootDef def) {
       synchronized (pending) {
@@ -56,7 +53,7 @@ public class WebRootInstaller {
             } else {
                wr = new WebRootLocalFilesystem(def.path, new File(def.file));
             }
-            stateMachine.webRootDirs.put(def.name, wr);
+            contentRootMap.put(def.name, wr);
          }
       } catch (IOException e) {
          logger.error(e.getMessage(), e);
@@ -65,7 +62,11 @@ public class WebRootInstaller {
 
    private void doUninstall(String name) {
       logger.debug("Uninstalling WebRoot {} ", name);
-      stateMachine.webRootDirs.remove(name);
+      contentRootMap.remove(name);
+   }
+
+   public Map<String, WebRoot> getWebRoots() {
+      return contentRootMap;
    }
 
 }

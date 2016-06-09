@@ -21,31 +21,35 @@ public class AdminResetPasswordRequest extends Request {
       defaults();
    }
 
-   public AdminResetPasswordRequest(String token, int accountId, String password) {
-      this.token = token;
+   public AdminResetPasswordRequest(int accountId, String authToken, int targetAccountId, String password) {
       this.accountId = accountId;
+      this.authToken = authToken;
+      this.targetAccountId = targetAccountId;
       this.password = password;
    }   
 
-   public String token;
    public int accountId;
+   public String authToken;
+   public int targetAccountId;
    public String password;
 
    public final Structure.Security getSecurity() {
-      return Security.INTERNAL;
+      return Security.ADMIN;
    }
 
    public final void defaults() {
-      token = null;
       accountId = 0;
+      authToken = null;
+      targetAccountId = 0;
       password = null;
    }
    
    @Override
    public final void write(DataSource data) throws IOException {
-      data.write(1, this.token);
-      data.write(2, this.accountId);
-      data.write(3, this.password);
+      data.write(1, this.accountId);
+      data.write(2, this.authToken);
+      data.write(3, this.targetAccountId);
+      data.write(4, this.password);
       data.writeEndTag();
    }
    
@@ -55,9 +59,10 @@ public class AdminResetPasswordRequest extends Request {
       while (true) {
          int tag = data.readTag();
          switch (tag) {
-            case 1: this.token = data.read_string(tag); break;
-            case 2: this.accountId = data.read_int(tag); break;
-            case 3: this.password = data.read_string(tag); break;
+            case 1: this.accountId = data.read_int(tag); break;
+            case 2: this.authToken = data.read_string(tag); break;
+            case 3: this.targetAccountId = data.read_int(tag); break;
+            case 4: this.password = data.read_string(tag); break;
             case Codec.END_TAG:
                return;
             default:
@@ -90,10 +95,11 @@ public class AdminResetPasswordRequest extends Request {
       // Note do not use this tags in long term serializations (to disk or databases) as 
       // implementors are free to rename them however they wish.  A null means the field
       // is not to participate in web serialization (remaining at default)
-      String[] result = new String[3+1];
-      result[1] = "token";
-      result[2] = "accountId";
-      result[3] = "password";
+      String[] result = new String[4+1];
+      result[1] = "accountId";
+      result[2] = "authToken";
+      result[3] = "targetAccountId";
+      result[4] = "password";
       return result;
    }
    
@@ -107,14 +113,19 @@ public class AdminResetPasswordRequest extends Request {
       desc.tagWebNames = tagWebNames();
       desc.types = new TypeDescriptor[desc.tagWebNames.length];
       desc.types[0] = new TypeDescriptor(TypeDescriptor.T_STRUCT, getContractId(), getStructId());
-      desc.types[1] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
-      desc.types[2] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
-      desc.types[3] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
+      desc.types[1] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
+      desc.types[2] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
+      desc.types[3] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
+      desc.types[4] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
       return desc;
    }
 
+   public final Response securityCheck(RequestContext ctx) {
+      return ctx.securityCheck(this, accountId, authToken, Admin.RIGHTS_USER_WRITE);
+   }
+       
    protected boolean isSensitive(String fieldName) {
-      if (fieldName.equals("token")) return true;
+      if (fieldName.equals("authToken")) return true;
       if (fieldName.equals("password")) return true;
       return false;
    }

@@ -317,6 +317,9 @@ public class TetrapodCluster extends Storage
             for (ContractDescription info : state.contracts.values()) {
                ses.sendMessage(new RegisterContractMessage(info), toEntityId, childId);
             }
+            for (WebRootDef def : state.webRootDefs.values()) {
+               ses.sendMessage(new WebRootAddedMessage(def), toEntityId, childId);
+            }
          }
       }
       // tell them they are up to date
@@ -784,10 +787,6 @@ public class TetrapodCluster extends Storage
 
    public WebRoutes getWebRoutes() {
       return state.webRoutes;
-   }
-
-   public Map<String, WebRoot> getWebRootDirs() {
-      return state.webRootDirs;
    }
 
    public void setWebRoot(WebRootDef def) {

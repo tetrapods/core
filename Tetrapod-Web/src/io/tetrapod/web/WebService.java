@@ -33,8 +33,8 @@ import io.tetrapod.protocol.web.RegisterResponse;
  * TODO: Implement....
  * <ul>
  * <li>Alt Broadcasts</li>
- * <li>Long Polling</li>
  * <li>Live subs of web roots</li>
+ * <li>Long Polling</li>
  * </ul>
  */
 public class WebService extends DefaultService
@@ -48,8 +48,8 @@ public class WebService extends DefaultService
    private final List<Server>                 servers               = new ArrayList<>();
    private final LinkedList<Integer>          clientSessionsCounter = new LinkedList<>();
    private final WebRoutes                    webRoutes             = new WebRoutes();
-   private final Map<String, WebRoot>         contentRootMap        = new HashMap<>();
    private final Map<Integer, WebHttpSession> clients               = new ConcurrentHashMap<>();
+   private final WebRootInstaller             webInstaller          = new WebRootInstaller();
 
    protected static final AtomicInteger       clientCounter         = new AtomicInteger();
    private long                               lastStatsLog;
@@ -64,13 +64,14 @@ public class WebService extends DefaultService
       logger.info(" ***** WebService ***** ");
 
       // add the default web root
-      contentRootMap.put("www", new WebRootLocalFilesystem("/", new File("www")));
+      // contentRootMap.put("www", new WebRootLocalFilesystem("/", new File("www")));
 
-      // FIXME: init contentRootMap with webRoutes
+      // add the tetrapod admin web root
+      webInstaller.install(new WebRootDef("tetrapod", "/", "www"));
 
-      contentRootMap.put("core",
-            new WebRootLocalFilesystem("/", new File("/Users/adavidson/workspace/tetrapod/core/Tetrapod-Tetrapod/webContent")));
-      contentRootMap.put("chat", new WebRootLocalFilesystem("/", new File("/Users/adavidson/workspace/tetrapod/website/webContent")));
+      //      contentRootMap.put("core",
+      //            new WebRootLocalFilesystem("/", new File("/Users/adavidson/workspace/tetrapod/core/Tetrapod-Tetrapod/webContent")));
+      //      contentRootMap.put("chat", new WebRootLocalFilesystem("/", new File("/Users/adavidson/workspace/tetrapod/website/webContent")));
    }
 
    @Override
@@ -152,7 +153,7 @@ public class WebService extends DefaultService
    }
 
    public Session makeWebSession(SocketChannel ch) {
-      final WebHttpSession ses = new WebHttpSession(ch, this, contentRootMap, "/sockets");
+      final WebHttpSession ses = new WebHttpSession(ch, this, webInstaller.getWebRoots(), "/sockets");
       ses.setRelayHandler(this);
       ses.setMyEntityId(getEntityId());
       ses.setMyEntityType(Core.TYPE_SERVICE);
@@ -342,7 +343,7 @@ public class WebService extends DefaultService
 
    @Override
    public void messageServiceAdded(ServiceAddedMessage m, MessageContext ctx) {
-      if ((m.entity.status & (Core.STATUS_GONE | Core.STATUS_STARTING)) == 0) {
+      if (serviceConnector != null && (m.entity.status & (Core.STATUS_GONE | Core.STATUS_STARTING)) == 0) {
          DirectServiceInfo info = serviceConnector.getDirectServiceInfo(m.entity.entityId);
          if (info.getSession() == null || !info.ses.isConnected()) {
             info.considerConnecting();
@@ -355,7 +356,7 @@ public class WebService extends DefaultService
 
    @Override
    public void messageServiceUpdated(ServiceUpdatedMessage m, MessageContext ctx) {
-      if ((m.status & (Core.STATUS_GONE | Core.STATUS_STARTING)) == 0) {
+      if (serviceConnector != null && (m.status & (Core.STATUS_GONE | Core.STATUS_STARTING)) == 0) {
          DirectServiceInfo info = serviceConnector.getDirectServiceInfo(m.entityId);
          if (info.getSession() == null || !info.ses.isConnected()) {
             info.considerConnecting();
@@ -433,10 +434,14 @@ public class WebService extends DefaultService
    }
 
    @Override
-   public void messageWebRootAdded(WebRootAddedMessage m, MessageContext ctx) {}
+   public void messageWebRootAdded(WebRootAddedMessage m, MessageContext ctx) {
+      webInstaller.install(m.def);
+   }
 
    @Override
-   public void messageWebRootRemoved(WebRootRemovedMessage m, MessageContext ctx) {}
+   public void messageWebRootRemoved(WebRootRemovedMessage m, MessageContext ctx) {
+      webInstaller.uninstall(m.name);
+   }
 
    @Override
    public void messageRegisterContract(RegisterContractMessage m, MessageContext ctx) {

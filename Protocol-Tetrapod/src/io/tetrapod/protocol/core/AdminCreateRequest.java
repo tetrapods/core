@@ -21,24 +21,27 @@ public class AdminCreateRequest extends Request {
       defaults();
    }
 
-   public AdminCreateRequest(String token, String email, String password, long rights) {
-      this.token = token;
+   public AdminCreateRequest(int accountId, String authToken, String email, String password, long rights) {
+      this.accountId = accountId;
+      this.authToken = authToken;
       this.email = email;
       this.password = password;
       this.rights = rights;
    }   
 
-   public String token;
+   public int accountId;
+   public String authToken;
    public String email;
    public String password;
    public long rights;
 
    public final Structure.Security getSecurity() {
-      return Security.INTERNAL;
+      return Security.ADMIN;
    }
 
    public final void defaults() {
-      token = null;
+      accountId = 0;
+      authToken = null;
       email = null;
       password = null;
       rights = 0;
@@ -46,10 +49,11 @@ public class AdminCreateRequest extends Request {
    
    @Override
    public final void write(DataSource data) throws IOException {
-      data.write(1, this.token);
-      data.write(2, this.email);
-      data.write(3, this.password);
-      data.write(4, this.rights);
+      data.write(1, this.accountId);
+      data.write(2, this.authToken);
+      data.write(3, this.email);
+      data.write(4, this.password);
+      data.write(5, this.rights);
       data.writeEndTag();
    }
    
@@ -59,10 +63,11 @@ public class AdminCreateRequest extends Request {
       while (true) {
          int tag = data.readTag();
          switch (tag) {
-            case 1: this.token = data.read_string(tag); break;
-            case 2: this.email = data.read_string(tag); break;
-            case 3: this.password = data.read_string(tag); break;
-            case 4: this.rights = data.read_long(tag); break;
+            case 1: this.accountId = data.read_int(tag); break;
+            case 2: this.authToken = data.read_string(tag); break;
+            case 3: this.email = data.read_string(tag); break;
+            case 4: this.password = data.read_string(tag); break;
+            case 5: this.rights = data.read_long(tag); break;
             case Codec.END_TAG:
                return;
             default:
@@ -95,11 +100,12 @@ public class AdminCreateRequest extends Request {
       // Note do not use this tags in long term serializations (to disk or databases) as 
       // implementors are free to rename them however they wish.  A null means the field
       // is not to participate in web serialization (remaining at default)
-      String[] result = new String[4+1];
-      result[1] = "token";
-      result[2] = "email";
-      result[3] = "password";
-      result[4] = "rights";
+      String[] result = new String[5+1];
+      result[1] = "accountId";
+      result[2] = "authToken";
+      result[3] = "email";
+      result[4] = "password";
+      result[5] = "rights";
       return result;
    }
    
@@ -113,15 +119,20 @@ public class AdminCreateRequest extends Request {
       desc.tagWebNames = tagWebNames();
       desc.types = new TypeDescriptor[desc.tagWebNames.length];
       desc.types[0] = new TypeDescriptor(TypeDescriptor.T_STRUCT, getContractId(), getStructId());
-      desc.types[1] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
+      desc.types[1] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
       desc.types[2] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
       desc.types[3] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
-      desc.types[4] = new TypeDescriptor(TypeDescriptor.T_LONG, 0, 0);
+      desc.types[4] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
+      desc.types[5] = new TypeDescriptor(TypeDescriptor.T_LONG, 0, 0);
       return desc;
    }
 
+   public final Response securityCheck(RequestContext ctx) {
+      return ctx.securityCheck(this, accountId, authToken, Admin.RIGHTS_USER_WRITE);
+   }
+       
    protected boolean isSensitive(String fieldName) {
-      if (fieldName.equals("token")) return true;
+      if (fieldName.equals("authToken")) return true;
       if (fieldName.equals("email")) return true;
       if (fieldName.equals("password")) return true;
       return false;

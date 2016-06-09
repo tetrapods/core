@@ -21,31 +21,35 @@ public class AdminChangePasswordRequest extends Request {
       defaults();
    }
 
-   public AdminChangePasswordRequest(String token, String oldPassword, String newPassword) {
-      this.token = token;
+   public AdminChangePasswordRequest(int accountId, String authToken, String oldPassword, String newPassword) {
+      this.accountId = accountId;
+      this.authToken = authToken;
       this.oldPassword = oldPassword;
       this.newPassword = newPassword;
    }   
 
-   public String token;
+   public int accountId;
+   public String authToken;
    public String oldPassword;
    public String newPassword;
 
    public final Structure.Security getSecurity() {
-      return Security.INTERNAL;
+      return Security.ADMIN;
    }
 
    public final void defaults() {
-      token = null;
+      accountId = 0;
+      authToken = null;
       oldPassword = null;
       newPassword = null;
    }
    
    @Override
    public final void write(DataSource data) throws IOException {
-      data.write(1, this.token);
-      data.write(2, this.oldPassword);
-      data.write(3, this.newPassword);
+      data.write(1, this.accountId);
+      data.write(2, this.authToken);
+      data.write(3, this.oldPassword);
+      data.write(4, this.newPassword);
       data.writeEndTag();
    }
    
@@ -55,9 +59,10 @@ public class AdminChangePasswordRequest extends Request {
       while (true) {
          int tag = data.readTag();
          switch (tag) {
-            case 1: this.token = data.read_string(tag); break;
-            case 2: this.oldPassword = data.read_string(tag); break;
-            case 3: this.newPassword = data.read_string(tag); break;
+            case 1: this.accountId = data.read_int(tag); break;
+            case 2: this.authToken = data.read_string(tag); break;
+            case 3: this.oldPassword = data.read_string(tag); break;
+            case 4: this.newPassword = data.read_string(tag); break;
             case Codec.END_TAG:
                return;
             default:
@@ -90,10 +95,11 @@ public class AdminChangePasswordRequest extends Request {
       // Note do not use this tags in long term serializations (to disk or databases) as 
       // implementors are free to rename them however they wish.  A null means the field
       // is not to participate in web serialization (remaining at default)
-      String[] result = new String[3+1];
-      result[1] = "token";
-      result[2] = "oldPassword";
-      result[3] = "newPassword";
+      String[] result = new String[4+1];
+      result[1] = "accountId";
+      result[2] = "authToken";
+      result[3] = "oldPassword";
+      result[4] = "newPassword";
       return result;
    }
    
@@ -107,14 +113,19 @@ public class AdminChangePasswordRequest extends Request {
       desc.tagWebNames = tagWebNames();
       desc.types = new TypeDescriptor[desc.tagWebNames.length];
       desc.types[0] = new TypeDescriptor(TypeDescriptor.T_STRUCT, getContractId(), getStructId());
-      desc.types[1] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
+      desc.types[1] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
       desc.types[2] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
       desc.types[3] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
+      desc.types[4] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
       return desc;
    }
 
+   public final Response securityCheck(RequestContext ctx) {
+      return ctx.securityCheck(this, accountId, authToken, Admin.RIGHTS_USER_WRITE);
+   }
+       
    protected boolean isSensitive(String fieldName) {
-      if (fieldName.equals("token")) return true;
+      if (fieldName.equals("authToken")) return true;
       if (fieldName.equals("oldPassword")) return true;
       if (fieldName.equals("newPassword")) return true;
       return false;

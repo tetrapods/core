@@ -11,7 +11,8 @@ import javax.crypto.SecretKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.tetrapod.core.*;
+import io.tetrapod.core.StructureFactory;
+import io.tetrapod.core.WebRoutes;
 import io.tetrapod.core.registry.EntityInfo;
 import io.tetrapod.core.serialize.StructureAdapter;
 import io.tetrapod.core.serialize.datasources.TempBufferDataSource;
@@ -20,10 +21,10 @@ import io.tetrapod.protocol.core.*;
 import io.tetrapod.raft.StateMachine;
 import io.tetrapod.raft.storage.StorageItem;
 import io.tetrapod.raft.storage.StorageStateMachine;
-import io.tetrapod.web.WebRoot;
 
 /**
- * Tetrapod state machine adds cluster properties, service protocols, and tetrapod web routes
+ * Tetrapod state machine adds cluster properties, service protocols, and tetrapod web
+ * routes
  */
 public class TetrapodStateMachine extends StorageStateMachine<TetrapodStateMachine> {
 
@@ -59,14 +60,13 @@ public class TetrapodStateMachine extends StorageStateMachine<TetrapodStateMachi
    public final Map<String, WebRootDef>           webRootDefs                     = new HashMap<>();
    public final Map<Integer, Admin>               admins                          = new HashMap<>();
    public final WebRoutes                         webRoutes                       = new WebRoutes();
-   public final Map<String, WebRoot>              webRootDirs                     = new ConcurrentHashMap<>();
+   //public final Map<String, WebRoot>              webRootDirs                     = new ConcurrentHashMap<>();
    public final Map<Integer, EntityInfo>          entities                        = new ConcurrentHashMap<>();
 
    // entityId + prefix => Owner
    public final Map<String, Owner>                owners                          = new ConcurrentHashMap<>();
    public final Map<String, Owner>                ownedItems                      = new ConcurrentHashMap<>();
 
-   private final WebRootInstaller                 webInstaller                    = new WebRootInstaller(this);
    protected SecretKey                            secretKey;
 
    public static class Factory implements StateMachine.Factory<TetrapodStateMachine> {
@@ -118,7 +118,6 @@ public class TetrapodStateMachine extends StorageStateMachine<TetrapodStateMachi
       contracts.clear();
       webRootDefs.clear();
       webRoutes.clear();
-      webRootDirs.clear();
       admins.clear();
       owners.clear();
 
@@ -221,7 +220,6 @@ public class TetrapodStateMachine extends StorageStateMachine<TetrapodStateMachi
          putItem(TETRAPOD_WEBROOT_PREFIX + def.name, (byte[]) def.toRawForm(TempBufferDataSource.forWriting()));
       }
       webRootDefs.put(def.name, def);
-      webInstaller.install(def);
    }
 
    public void delWebRoot(final String name) {
@@ -229,7 +227,6 @@ public class TetrapodStateMachine extends StorageStateMachine<TetrapodStateMachi
       // remove from backing store
       removeItem(TETRAPOD_WEBROOT_PREFIX + name);
       webRootDefs.remove(name);
-      webInstaller.uninstall(name);
    }
 
    public void addAdminUser(final Admin user, boolean write) {

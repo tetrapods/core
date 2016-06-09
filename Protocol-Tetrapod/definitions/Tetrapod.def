@@ -1,7 +1,6 @@
 java package io.tetrapod.protocol.core
 java outdir "../src"
-javascript out "../../Tetrapod-Tetrapod/webContent/protocol/tetrapod.js"
-#javascript out "../rsc/protocol/tetrapod.js"
+javascript out "../../Tetrapod-Web/www/protocol/tetrapod.js"
 
 // The core tetrapod service
 service Tetrapod @version(1) @id(1) @web(api) 
@@ -103,30 +102,35 @@ public request AdminSessionToken @web(admin_session_token)
 public response AdminSessionToken    
    1: string sessionToken @sensitive // a short lived session token
  
-internal request AdminCreate
-   1: string token @sensitive @authToken
-   2: string email @sensitive
-   3: string password @sensitive
-   4: long rights
+admin request AdminCreate  @rights(Admin.RIGHTS_USER_WRITE)
+   1: int accountId
+   2: string authToken @sensitive
+   3: string email @sensitive
+   4: string password @sensitive
+   5: long rights
    
-internal request AdminDelete
-   1: string token @sensitive @authToken
-   2: int accountId
+admin request AdminDelete @rights(Admin.RIGHTS_USER_WRITE)
+   1: int accountId
+   2: string authToken @sensitive
+   3: int targetAccountId
    
-internal request AdminChangePassword
-   1: string token @sensitive @authToken
-   2: string oldPassword @sensitive
-   3: string newPassword @sensitive
+admin request AdminChangePassword @rights(Admin.RIGHTS_USER_WRITE)
+   1: int accountId
+   2: string authToken @sensitive
+   3: string oldPassword @sensitive
+   4: string newPassword @sensitive
    
-internal request AdminResetPassword
-   1: string token @sensitive
-   2: int accountId
-   3: string password @sensitive 
+admin request AdminResetPassword @rights(Admin.RIGHTS_USER_WRITE)
+   1: int accountId
+   2: string authToken @sensitive
+   3: int targetAccountId
+   4: string password @sensitive 
    
-internal request AdminChangeRights
-   1: string token @sensitive @authToken
-   2: int accountId
-   3: long rights 
+admin request AdminChangeRights @rights(Admin.RIGHTS_USER_WRITE)
+   1: int accountId
+   2: string authToken @sensitive
+   3: int targetAccountId
+   4: long rights 
      
 ################################# MESSAGES #################################
 
@@ -302,13 +306,15 @@ internal message Cluster.WebRootAdded
 internal message  Cluster.WebRootRemoved       
    1: string name
     
-internal request SetWebRoot @web(set_web_root)
-   1: string adminToken @sensitive
-   2: WebRootDef def
+admin request SetWebRoot @web(set_web_root) @rights(Admin.RIGHTS_CLUSTER_WRITE)
+   1: int accountId
+   2: string authToken @sensitive
+   3: WebRootDef def
 
-internal request DelWebRoot
-   1: string adminToken @sensitive
-   2: string name
+admin request DelWebRoot @rights(Admin.RIGHTS_CLUSTER_WRITE)
+   1: int accountId
+   2: string authToken @sensitive
+   3: string name
                 
 internal message AdminUserAdded  
    1: Admin admin
