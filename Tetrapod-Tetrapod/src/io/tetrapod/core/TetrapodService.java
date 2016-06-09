@@ -26,6 +26,7 @@ import io.tetrapod.core.utils.*;
 import io.tetrapod.protocol.core.*;
 import io.tetrapod.protocol.raft.*;
 import io.tetrapod.protocol.storage.*;
+import io.tetrapod.protocol.web.WebContract;
 
 /**
  * The tetrapod service is the core cluster service which handles message routing, cluster
@@ -231,7 +232,6 @@ public class TetrapodService extends DefaultService
             fail(e);
          }
       }
-
    }
 
    @Override
@@ -353,20 +353,21 @@ public class TetrapodService extends DefaultService
          buf.retain();
          sender.queue(() -> {
             try {
-               //               if (header.topicId != 0) {
-               //                  if (isBroadcast) {
-               //                     broadcastTopic(sender, header, buf);
-               //                  }
-               //               } else if ((header.flags & MessageHeader.FLAGS_ALTERNATE) != 0) {
-               //                  if (isBroadcast) {
-               //                     broadcastAlt(sender, header, buf);
-               //                  }
-               //               } else {
-               final Session ses = getRelaySession(header.toParentId, header.contractId);
-               if (ses != null) {
-                  ses.sendRelayedMessage(header, buf, false);
+               if ((header.flags & MessageHeader.FLAGS_ALTERNATE) != 0) {
+                  // relay to all web services:
+                  final int ri = buf.readerIndex();
+                  for (EntityInfo e : registry.getServicesList(WebContract.CONTRACT_ID)) {
+                     if (e.hasConnectedSession()) {
+                        e.getSession().sendRelayedMessage(header, buf, isBroadcast);
+                        buf.readerIndex(ri);
+                     }
+                  }
+               } else {
+                  final Session ses = getRelaySession(header.toParentId, header.contractId);
+                  if (ses != null) {
+                     ses.sendRelayedMessage(header, buf, false);
+                  }
                }
-               //}
             } catch (Throwable e) {
                logger.error(e.getMessage(), e);
             } finally {
@@ -380,99 +381,6 @@ public class TetrapodService extends DefaultService
          logger.error("Could not find sender entity  {} for {}", header.fromId, header.dump());
       }
    }
-
-   //
-   //   private void broadcastTopic(final EntityInfo publisher, final MessageHeader header, final ByteBuf buf) throws IOException {
-   //      if (header.toParentId == UNADDRESSED || header.toParentId == getEntityId()) {
-   //         final RegistryTopic topic = publisher.getTopic(header.topicId);
-   //         if (topic != null) {
-   //            synchronized (topic) {
-   //               for (final Subscriber s : topic.getSubscribers()) {
-   //                  broadcastTopic(publisher, s, topic, header, buf);
-   //               }
-   //            }
-   //         } else {
-   //            logger.warn("Could not find topic {} for entity {} : {}", header.topicId, publisher, header.dump());
-   //            sendMessage(new TopicNotFoundMessage(publisher.entityId, header.topicId), publisher.entityId);
-   //         }
-   //      } else {
-   //         // relay to destination 
-   //         final Session ses = getRelaySession(header.toParentId, header.contractId);
-   //         if (ses != null) {
-   //            ses.sendRelayedMessage(header, buf, true);
-   //         }
-   //      }
-   //   }
-   //
-   //   private void broadcastAlt(final EntityInfo publisher, final MessageHeader header, final ByteBuf buf) throws IOException {
-   //      final int myId = getEntityId();
-   //      final boolean myChildOriginated = publisher.parentId == myId;
-   //      final boolean toAll = header.toParentId == UNADDRESSED;
-   //      for (EntityInfo e : registry.getEntities()) {
-   //         if (e.isTetrapod() && e.entityId != myId) {
-   //            if (myChildOriginated)
-   //               broadcastToAlt(e, header, buf);
-   //            continue;
-   //         }
-   //         if (e.isService()) {
-   //            continue;
-   //         }
-   //         if (toAll || e.getAlternateId() == header.toParentId) {
-   //            broadcastToAlt(e, header, buf);
-   //         }
-   //      }
-   //   }
-   //
-   //   private void broadcastTopic(final EntityInfo publisher, final Subscriber sub, final RegistryTopic topic, final MessageHeader header,
-   //            final ByteBuf buf) throws IOException {
-   //      final int ri = buf.readerIndex();
-   //      final EntityInfo e = registry.getEntity(sub.entityId);
-   //      if (e != null) {
-   //         if (e.entityId == getEntityId()) {
-   //            // dispatch to self
-   //            ByteBufDataSource reader = new ByteBufDataSource(buf);
-   //            final Object obj = StructureFactory.make(header.contractId, header.structId);
-   //            final Message msg = (obj instanceof Message) ? (Message) obj : null;
-   //            if (msg != null) {
-   //               msg.read(reader);
-   //               clusterClient.getSession().dispatchMessage(header, msg);
-   //            } else {
-   //               logger.warn("Could not read message for self-dispatch {}", header.dump());
-   //            }
-   //            buf.readerIndex(ri);
-   //         } else {
-   //            if (e.parentId == getEntityId() || e.isTetrapod()) {
-   //               final Session session = findSession(e);
-   //               if (session != null) {
-   //                  // rebroadcast this message if it was published by one of our children and we're sending it to another tetrapod
-   //                  final boolean keepBroadcasting = e.isTetrapod() && publisher.parentId == getEntityId();
-   //                  session.sendRelayedMessage(header, buf, keepBroadcasting);
-   //                  buf.readerIndex(ri);
-   //               } else {
-   //                  if (!e.isGone()) {
-   //                     logger.error("Could not find session for {} {}", e, header.dump());
-   //                  }
-   //               }
-   //            }
-   //         }
-   //      } else {
-   //         logger.error("Could not find subscriber {} for topic {}", sub.entityId, topic);
-   //      }
-   //   }
-   //
-   //   private void broadcastToAlt(final EntityInfo e, final MessageHeader header, final ByteBuf buf) throws IOException {
-   //      final int ri = buf.readerIndex();
-   //      if (!e.isGone()) {
-   //         final Session session = findSession(e);
-   //         if (session != null) {
-   //            final boolean keepBroadcasting = e.isTetrapod();
-   //            session.sendRelayedMessage(header, buf, keepBroadcasting);
-   //            buf.readerIndex(ri);
-   //         } else {
-   //            logger.error("Could not find session for {} {}", e, header.dump());
-   //         }
-   //      }
-   //   } 
 
    @Override
    public WebRoutes getWebRoutes() {
@@ -489,20 +397,6 @@ public class TetrapodService extends DefaultService
    public void broadcastClusterMessage(Message msg) {
       clusterTopic.broadcast(msg);
    }
-
-   //   public void broadcast(Message msg, RegistryTopic topic) {
-   //      if (topic != null) {
-   //         synchronized (topic) {
-   //            // OPTIMIZE: call broadcast() directly instead of through loop-back
-   //            Session ses = clusterClient.getSession();
-   //            if (ses != null) {
-   //               ses.sendTopicBroadcastMessage(msg, 0, topic.topicId);
-   //            } else {
-   //               logger.error("broadcast failed: no session for loopback connection");
-   //            }
-   //         }
-   //      }
-   //   }
 
    public void broadcastAdminMessage(Message msg) {
       if (adminTopic != null) {

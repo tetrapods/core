@@ -1,17 +1,19 @@
 package io.tetrapod.web;
 
+import java.io.IOException;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.socket.SocketChannel;
-import io.tetrapod.core.*;
+import io.tetrapod.core.Session;
+import io.tetrapod.core.StructureFactory;
 import io.tetrapod.core.json.JSONObject;
 import io.tetrapod.core.rpc.Structure;
 import io.tetrapod.core.serialize.datasources.*;
 import io.tetrapod.protocol.core.*;
-
-import java.io.IOException;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import org.slf4j.*;
 
 abstract class WebSession extends Session {
    private static final Logger   logger       = LoggerFactory.getLogger(WebSession.class);

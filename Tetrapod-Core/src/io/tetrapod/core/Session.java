@@ -287,13 +287,14 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
       return makeFrame(new ResponseHeader(requestId, res.getContractId(), res.getStructId()), res, ENVELOPE_RESPONSE);
    }
 
-   public void sendAltBroadcastMessage(Message msg, int toId) {
+   public void sendAltBroadcastMessage(Message msg, int toAltId) {
       final int myEntityId = getMyEntityId();
       if (myEntityId != 0) {
          if (!commsLogIgnore(msg))
-            commsLog("%s  [A] => %s (to altId-%d)", this, msg.dump(), toId);
+            commsLog("%s  [A] => %s (to altId-%d)", this, msg.dump(), toAltId);
          final Object buffer = makeFrame(
-               new MessageHeader(myEntityId, 0, toId, 0, msg.getContractId(), msg.getStructId(), MessageHeader.FLAGS_ALTERNATE), msg,
+               new MessageHeader(myEntityId, 0, theirId, toAltId, msg.getContractId(), msg.getStructId(), MessageHeader.FLAGS_ALTERNATE),
+               msg,
                ENVELOPE_BROADCAST);
          if (buffer != null) {
             writeFrame(buffer);

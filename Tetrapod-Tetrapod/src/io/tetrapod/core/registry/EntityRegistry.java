@@ -178,7 +178,7 @@ public class EntityRegistry {
       }
    }
 
-   private List<EntityInfo> ensureServicesList(int contractId) {
+   public List<EntityInfo> getServicesList(int contractId) {
       List<EntityInfo> list = services.get(contractId);
       if (list == null) {
          list = new CopyOnWriteArrayList<>();
@@ -226,7 +226,7 @@ public class EntityRegistry {
       entities.put(entity.entityId, entity);
       if (entity.isService()) {
          // register their service in our services list
-         List<EntityInfo> list = ensureServicesList(entity.contractId);
+         List<EntityInfo> list = getServicesList(entity.contractId);
          for (EntityInfo e : new ArrayList<>(list)) {
             if (e.entityId == entity.entityId) {
                list.remove(e);

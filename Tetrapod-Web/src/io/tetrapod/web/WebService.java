@@ -32,7 +32,6 @@ import io.tetrapod.protocol.web.RegisterResponse;
  * TODO: Implement....
  * <ul>
  * <li>Alt Broadcasts</li>
- * <li>Live subs of web roots</li>
  * <li>Long Polling</li>
  * </ul>
  */
@@ -199,48 +198,60 @@ public class WebService extends DefaultService
          if (entity.entityId == parentId) {
             return clusterClient.getSession();
          }
-         DirectServiceInfo info = serviceConnector.getDirectServiceInfo(entity.entityId);
-         if (info.getSession() == null || !info.ses.isConnected()) {
-            info.considerConnecting();
+         if (serviceConnector != null) {
+            DirectServiceInfo info = serviceConnector.getDirectServiceInfo(entity.entityId);
+            if (info.getSession() == null || !info.ses.isConnected()) {
+               info.considerConnecting();
+            }
+            return info.getSession();
          }
-         return info.getSession();
       }
       return null;
    }
 
    @Override
    public void relayMessage(MessageHeader header, ByteBuf buf, boolean isBroadcast) throws IOException {
-      logger.info("relayMessage {} isBroadcast={}", header.toChildId, isBroadcast);
+      //logger.info("*** relayMessage {} isBroadcast={} {}/{}/{}", header.toChildId, isBroadcast, buf.readerIndex(), buf.readableBytes(), buf.capacity());
 
+      final int ri = buf.readerIndex();
       if (isBroadcast) {
-         final ServiceTopic topic = topics.get(topicKey(header.fromId, header.topicId));
-         if (topic != null) {
-            synchronized (topic) {
-               for (final Subscriber s : topic.getSubscribers()) {
-                  if (s.entityId == 0) {
-                     // that's us, dispatch to self
-                     final int ri = buf.readerIndex();
-                     ByteBufDataSource reader = new ByteBufDataSource(buf);
-                     final Object obj = StructureFactory.make(header.contractId, header.structId);
-                     final Message msg = (obj instanceof Message) ? (Message) obj : null;
-                     if (msg != null) {
-                        msg.read(reader);
-                        clusterClient.getSession().dispatchMessage(header, msg);
-                     } else {
-                        logger.warn("Could not read message for self-dispatch {}", header.dump());
-                     }
-                     buf.readerIndex(ri);
-                  } else {
-                     WebHttpSession ses = clients.get(s.entityId);
-                     if (ses != null) {
-                        ses.sendRelayedMessage(header, buf, isBroadcast);
-                     }
-                  }
+         if ((header.flags & MessageHeader.FLAGS_ALTERNATE) != 0) {
+            for (WebHttpSession ses : clients.values()) {
+               if (ses.getAlternateId() == header.toChildId) { 
+                  ses.sendRelayedMessage(header, buf, isBroadcast);
+                  buf.readerIndex(ri);
                }
             }
          } else {
-            logger.warn("Could not find topic {} for entity {} : {}", header.topicId, header.fromId, header.dump());
-            sendMessage(new TopicNotFoundMessage(header.fromId, header.topicId), header.fromId, 0);
+            final ServiceTopic topic = topics.get(topicKey(header.fromId, header.topicId));
+            if (topic != null) {
+               synchronized (topic) {
+                  for (final Subscriber s : topic.getSubscribers()) {
+                     if (s.entityId == 0) {
+                        // that's us, dispatch to self
+                        ByteBufDataSource reader = new ByteBufDataSource(buf);
+                        final Object obj = StructureFactory.make(header.contractId, header.structId);
+                        final Message msg = (obj instanceof Message) ? (Message) obj : null;
+                        if (msg != null) {
+                           msg.read(reader);
+                           clusterClient.getSession().dispatchMessage(header, msg);
+                        } else {
+                           logger.warn("Could not read message for self-dispatch {}", header.dump());
+                        }
+                        buf.readerIndex(ri);
+                     } else {
+                        WebHttpSession ses = clients.get(s.entityId);
+                        if (ses != null) {
+                           ses.sendRelayedMessage(header, buf, isBroadcast);
+                           buf.readerIndex(ri);
+                        }
+                     }
+                  }
+               }
+            } else {
+               logger.warn("Could not find topic {} for entity {} : {}", header.topicId, header.fromId, header.dump());
+               sendMessage(new TopicNotFoundMessage(header.fromId, header.topicId), header.fromId, 0);
+            }
          }
       } else {
          WebHttpSession ses = clients.get(header.toChildId);
