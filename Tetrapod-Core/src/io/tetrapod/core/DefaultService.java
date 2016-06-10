@@ -44,6 +44,7 @@ public class DefaultService
    public final String                     buildName;
    protected final LogBuffer               logBuffer;
    protected SSLContext                    sslContext;
+   private List<SubService>                subServices     = new ArrayList<>();
 
    protected ServiceConnector              serviceConnector;
 
@@ -165,7 +166,10 @@ public class DefaultService
    public void onReadyToServe() {}
 
    private void onServiceRegistered() {
-      registerServiceInformation();
+      registerServiceInformation(this.contract);
+      for (SubService subService : subServices) {
+         registerServiceInformation(subService.getContract());
+      }
       stats.publishTopic();
       resetServiceConnector(true);
    }
@@ -588,7 +592,7 @@ public class DefaultService
    @Override
    public Async dispatchRequest(final RequestHeader header, final Request req, final Session fromSession) {
       final Async async = new Async(req, header, fromSession);
-      final ServiceAPI svc = getServiceHandler(header.contractId);
+      final ServiceAPI svc = getServiceHandler(header.contractId, req.getStructId());
       if (svc != null) {
          final long start = System.nanoTime();
          final Context context = dispatcher.requestTimes.time();
@@ -611,47 +615,48 @@ public class DefaultService
                      logger.warn("Service is overloaded. Dispatch time is {}ms", Util.nanosToMillis(dispatchTime - start));
                   }
                   // If it took a while to get dispatched, so set STATUS_OVERLOADED flag as a back-pressure signal
-                  setStatus(Core.STATUS_OVERLOADED);
-               } else {
-                  clearStatus(Core.STATUS_OVERLOADED);
-               }
-
-               final RequestContext ctx = fromSession != null ? new SessionRequestContext(header, fromSession)
-                     : new InternalRequestContext(header, new ResponseHandler() {
-                        @Override
-                        public void onResponse(Response res) {
-                           try {
-                              assert res != Response.PENDING;
-                              onResult.run();
-                              async.setResponse(res);
-                           } catch (Throwable e) {
-                              logger.error(e.getMessage(), e);
-                              async.setResponse(new Error(ERROR_UNKNOWN));
-                           }
-                        }
-                     });
-               Response res = req.securityCheck(ctx);
-               if (res == null) {
-                  res = req.dispatch(svc, ctx);
-               }
-               if (res != null) {
-                  if (res != Response.PENDING) {
-                     async.setResponse(res);
-                  }
-               } else {
-                  async.setResponse(new Error(ERROR_UNKNOWN));
-               }
-            } catch (ErrorResponseException e) {
-               async.setResponse(new Error(e.errorCode));
-            } catch (Throwable e) {
-               logger.error(e.getMessage(), e);
-               async.setResponse(new Error(ERROR_UNKNOWN));
-            } finally {
-               if (async.getErrorCode() != -1) {
-                  onResult.run();
-               }
+               setStatus(Core.STATUS_OVERLOADED);
+            } else {
+               clearStatus(Core.STATUS_OVERLOADED);
             }
-         }, Session.DEFAULT_OVERLOAD_THRESHOLD)) {
+
+            final RequestContext ctx = fromSession != null ? new SessionRequestContext(header, fromSession)
+                  : new InternalRequestContext(header, new ResponseHandler() {
+                     @Override
+                     public void onResponse(Response res) {
+                        try {
+                           assert res != Response.PENDING;
+                           onResult.run();
+                           async.setResponse(res);
+                        } catch (Throwable e) {
+                           logger.error(e.getMessage(), e);
+                           async.setResponse(new Error(ERROR_UNKNOWN));
+                        }
+                     }
+                  });
+            Response res = req.securityCheck(ctx);
+            if (res == null) {
+               Request a = req;
+               res = req.dispatch(svc, ctx);
+            }
+            if (res != null) {
+               if (res != Response.PENDING) {
+                  async.setResponse(res);
+               }
+            } else {
+               async.setResponse(new Error(ERROR_UNKNOWN));
+            }
+         } catch (ErrorResponseException e) {
+            async.setResponse(new Error(e.errorCode));
+         } catch (Throwable e) {
+            logger.error(e.getMessage(), e);
+            async.setResponse(new Error(ERROR_UNKNOWN));
+         } finally {
+            if (async.getErrorCode() != -1) {
+               onResult.run();
+            }
+         }
+      }, Session.DEFAULT_OVERLOAD_THRESHOLD)) {
             // too many items queued, full-force back-pressure
             async.setResponse(new Error(ERROR_SERVICE_OVERLOADED));
             setStatus(Core.STATUS_OVERLOADED);
@@ -785,9 +790,27 @@ public class DefaultService
       return dispatcher;
    }
 
-   public ServiceAPI getServiceHandler(int contractId) {
+   private ServiceAPI getServiceHandler(int contractId, int structId) {
       // this method allows us to have delegate objects that directly handle some contracts
+      if (!Util.isEmpty(subServices) && contractId == contract.getContractId() || !handlesStuct(contract, structId)) {
+         for (SubService subService : subServices) {
+            if (handlesStuct(subService.getContract(), structId))
+               return subService;
+         }
+      }
       return this;
+   }
+
+   private boolean handlesStuct(Contract c, int structId) {
+      for (Structure structure : c.getRequests()) {
+         if (structId == structure.getStructId())
+            return true;
+      }
+      for (Structure structure : c.getMessages()) {
+         if (structId == structure.getStructId())
+            return true;
+      }
+      return false;
    }
 
    @Override
@@ -837,8 +860,8 @@ public class DefaultService
 
    // private methods
 
-   protected void registerServiceInformation() {
-      if (contract != null) {
+   protected void registerServiceInformation(Contract contract) {
+      if (this.contract != null) {
          AddServiceInformationRequest asi = new AddServiceInformationRequest();
          asi.info = new ContractDescription();
          asi.info.contractId = contract.getContractId();
@@ -1020,6 +1043,11 @@ public class DefaultService
    @Override
    public Response requestServiceRequestStats(ServiceRequestStatsRequest r, RequestContext ctx) {
       return stats.getRequestStats(r.domain, r.limit, r.minTime, r.sortBy);
+   }
+
+   protected void addSubService(SubService subService) {
+      subServices.add(subService);
+      addPeerContracts(subService.getContract());
    }
 
 }

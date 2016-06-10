@@ -659,6 +659,16 @@ public class Util {
       return (T) obj;
    }
 
+   public static boolean isEqual(Object a, Object b) {
+      if (a == b) {
+         return true;
+      } else if ((a == null && b != null) || a != null && b == null) {
+         return false;
+      } else {
+         return a.equals(b);
+      }
+   }
+
    public interface ValueMaker<K, V> {
       public V make();
    }

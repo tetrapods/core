@@ -5,7 +5,7 @@ import java.util.Arrays;
 import javax.crypto.Mac;
 
 /**
- * Manages AuthTokens used for login and session accounts.  Note that login tokens are backwards compatable but
+ * Manages AuthTokens used for login and session accounts.  Note that login tokens are backwards compatible but
  * session tokens are not.
  * 
  * TODO : Add support for automatic key rotation, unit tests
@@ -29,6 +29,7 @@ public class LoginAuthToken {
       public int timeLeft;
       public int roomId;
       public int tokenFlags;
+      public int orgId;
    }
 
    /**
@@ -45,16 +46,17 @@ public class LoginAuthToken {
       }
    }
 
-   public static String encodeLoginToken(int accountId, int tokenFlags, int roomId, int timeoutInMinutes) {
-      return AuthToken.encode(MAC_LOGIN, AuthToken.timeNowInMinutes() + timeoutInMinutes, tokenFlags, roomId, accountId);
+   public static String encodeLoginToken(int accountId, int tokenFlags, int roomId, int timeoutInMinutes, int orgId) {
+      return AuthToken.encode(MAC_LOGIN, AuthToken.timeNowInMinutes() + timeoutInMinutes, tokenFlags, roomId, accountId, orgId);
    }
 
    public static DecodedLogin decodeLoginToken(String token) {
-      int[] vals = new int[4];
-      if (!AuthToken.decode(MAC_LOGIN, vals, 4, token)) {
+      int[] vals = new int[5];
+      if (!AuthToken.decode(MAC_LOGIN, vals, 5, token)) {
          return null;
       }
       DecodedLogin d = new DecodedLogin();
+      d.orgId = vals[4];
       d.accountId = vals[3];
       d.timeLeft = vals[0] - AuthToken.timeNowInMinutes();
       d.tokenFlags = vals[1];
