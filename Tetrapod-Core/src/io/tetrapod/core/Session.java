@@ -233,11 +233,6 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
       return sendRequest(req, toId, DEFAULT_REQUEST_TIMEOUT);
    }
 
-   public CompletableFuture<? extends Response> sendRequestAsync(Request req, int toId, byte timeoutSeconds) {
-      Async async = sendRequest(req, toId, timeoutSeconds);
-      return async.asFuture();
-   }
-
    public Async sendRequest(Request req, int toId, byte timeoutSeconds) {
       final RequestHeader header = new RequestHeader();
       header.requestId = requestCounter.incrementAndGet();

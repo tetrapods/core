@@ -12,12 +12,4 @@
       <relativePath>../build/pom.xml</relativePath>
    </parent>
 
-   <dependencies>
-      <dependency>
-          <groupId>com.ea.async</groupId>
-          <artifactId>ea-async</artifactId>
-          <version>1.0.2</version>
-      </dependency>
-   </dependencies>
-
 </project>
