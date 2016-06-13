@@ -177,7 +177,7 @@ public class DefaultService
    }
 
    public boolean dependenciesReady(boolean logIfNotReady) {
-      return services.checkDependencies(dependencies, logIfNotReady);
+      return services == null || services.checkDependencies(dependencies, logIfNotReady);
    }
 
    public boolean dependenciesReady(Set<Integer> deps) {
