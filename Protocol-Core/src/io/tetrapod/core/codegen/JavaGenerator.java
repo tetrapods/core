@@ -101,7 +101,13 @@ class JavaGenerator implements LanguageGenerator {
          if (path != null) {
             if (path.isEmpty())
                path = Character.toLowerCase(c.name.charAt(0)) + c.name.substring(1);
-            path = '/' + context.serviceAnnotations.getFirst("web") + '/' + path;
+
+            String prePath = "/";
+            for (String p : context.serviceAnnotations.get("web")) {
+               prePath += p + '/';
+            }
+            path = prePath  + path;
+
             Template sub = template("contract.webroutes.call").add("path", path).add("requestClass", c.classname())
                   .add("contractClass", theClass);
             t.add("webRoutes", sub.expand());

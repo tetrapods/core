@@ -130,7 +130,6 @@ public class TetrapodService extends DefaultService
       }
    }
 
-   @Override
    public boolean dependenciesReady() {
       return cluster.isReady();
    }
@@ -996,7 +995,7 @@ public class TetrapodService extends DefaultService
    }
 
    @Override
-   protected void registerServiceInformation() {
+   protected void registerServiceInformation(Contract contract) {
       // do nothing, our protocol is known by all tetrapods
    }
 
