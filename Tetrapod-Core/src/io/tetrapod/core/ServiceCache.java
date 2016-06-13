@@ -120,10 +120,13 @@ public class ServiceCache implements TetrapodContract.Services.API {
       return false;
    }
 
-   public boolean checkDependencies(Set<Integer> contractIds) {
+   public boolean checkDependencies(Set<Integer> contractIds, boolean logIfNotReady) {
       for (Integer contractId : contractIds) {
          Entity e = getFirstAvailableService(contractId);
          if (e == null) {
+            if (logIfNotReady) {
+               logger.info("Still waiting for service " + contractId);
+            }
             return false;
          }
       }

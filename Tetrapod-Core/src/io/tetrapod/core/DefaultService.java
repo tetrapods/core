@@ -56,6 +56,7 @@ public class DefaultService
    private final MessageHandlers           messageHandlers = new MessageHandlers();
 
    private final Publisher                 publisher       = new Publisher(this);
+   private long dependencyCheckLogThreshold;
 
    public DefaultService() {
       this(null);
@@ -64,6 +65,7 @@ public class DefaultService
    public DefaultService(Contract mainContract) {
       logBuffer = (LogBuffer) ((LoggerContext) LoggerFactory.getILoggerFactory()).getLogger("ROOT").getAppender("BUFFER");
       String m = getStartLoggingMessage();
+      dependencyCheckLogThreshold = System.currentTimeMillis() + 10000;
       logger.info(m);
       Session.commsLog.info(m);
       Fail.handler = this;
@@ -170,12 +172,12 @@ public class DefaultService
       resetServiceConnector(true);
    }
 
-   public boolean dependenciesReady() {
-      return services.checkDependencies(dependencies);
+   public boolean dependenciesReady(boolean logIfNotReady) {
+      return services.checkDependencies(dependencies, logIfNotReady);
    }
 
    public boolean dependenciesReady(Set<Integer> deps) {
-      return services.checkDependencies(deps);
+      return services.checkDependencies(deps, false);
    }
 
    private final Object checkDependenciesLock = new Object();
@@ -184,7 +186,7 @@ public class DefaultService
       synchronized (checkDependenciesLock) {
          if (!isShuttingDown() && isStartingUp()) {
             logger.info("Checking Dependencies...");
-            if (dependenciesReady()) {
+            if (dependenciesReady(dependencyCheckLogThreshold < System.currentTimeMillis())) {
                try {
                   if (startPaused) {
                      setStatus(Core.STATUS_PAUSED);
