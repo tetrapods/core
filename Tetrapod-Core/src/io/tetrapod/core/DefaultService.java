@@ -691,7 +691,7 @@ public class DefaultService
       sendRequest(req).handle(handler);
    }
 
-   public CompletableFuture<? extends Response> sendRequestFuture(Request req) {
+   public CompletableFuture<Response> sendRequestFuture(Request req) {
       if (serviceConnector != null) {
          return serviceConnector.sendRequest(req, Core.UNADDRESSED).asFuture();
       }

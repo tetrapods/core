@@ -9,8 +9,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.CompletableFuture;
 
-import static io.tetrapod.protocol.core.CoreContract.ERROR_UNKNOWN;
-
 public class Async {
    public static final Logger logger   = LoggerFactory.getLogger(Async.class);
 
@@ -37,13 +35,10 @@ public class Async {
       return handler != null;
    }
 
-   public CompletableFuture<? extends Response> asFuture() {
+   public CompletableFuture<Response> asFuture() {
       CompletableFuture<Response> future = new CompletableFuture<>();
-      handle(resp -> {
-         AsyncUtils.handleFuture(future, resp);
-      });
+      handle(resp -> AsyncUtils.handleFuture(future, resp));
       return future;
-
    }
 
    public interface IResponseHandler {
