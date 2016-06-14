@@ -29,20 +29,14 @@ import io.tetrapod.protocol.web.RegisterResponse;
 /**
  * The web service serves http web routes and terminates web socket connections that can
  * relay into the cluster
- * 
- * TODO: Implement....
- * <ul>
- * <li>Long Polling</li>
- * <li>Hunt for topic/lifecycle edge cases</li>
- * </ul>
  */
 public class WebService extends DefaultService
       implements WebContract.API, RelayHandler, TetrapodContract.Pubsub.API, TetrapodContract.Services.API {
 
    public static final Logger                 logger                = LoggerFactory.getLogger(WebService.class);
 
-   public static final int                    DEFAULT_HTTP_PORT     = 9904;//8080;
-   public static final int                    DEFAULT_HTTPS_PORT    = 9906;//8081;
+   public static final int                    DEFAULT_HTTP_PORT     = 9904;                                     //8080;
+   public static final int                    DEFAULT_HTTPS_PORT    = 9906;                                     //8081;
 
    private final List<Server>                 servers               = new ArrayList<>();
    private final LinkedList<Integer>          clientSessionsCounter = new LinkedList<>();
@@ -144,6 +138,13 @@ public class WebService extends DefaultService
       for (Server httpServer : servers) {
          httpServer.close();
       }
+   }
+
+   @Override
+   public ServiceCommand[] getServiceCommands() {
+      return new ServiceCommand[] {
+            new ServiceCommand("Close Client Connection", null, CloseClientConnectionRequest.CONTRACT_ID,
+                  CloseClientConnectionRequest.STRUCT_ID, true), };
    }
 
    public Session makeWebSession(SocketChannel ch) {
@@ -296,15 +297,12 @@ public class WebService extends DefaultService
       // TODO: Terminate long polling clients that haven't checked in
 
       //      // for all of our clients:
-      //      for (final EntityInfo e : registry.getChildren()) {
-      //         // special check for long-polling clients
-      //         if (e.getLastContact() != null) {
-      //            if (now - e.getLastContact() > Util.ONE_MINUTE) {
-      //               e.setLastContact(null);
-      //               registry.setGone(e);
-      //            }
-      //         }
-      //      }
+      for (final WebSession ses : clients.values()) {
+         // special check for long-polling clients
+         if (now - ses.getLastHeardFrom() > Util.ONE_MINUTE) {
+            ses.close();
+         }
+      }
 
    }
 
@@ -483,6 +481,24 @@ public class WebService extends DefaultService
       } else {
          return Response.error(WebContract.ERROR_UNKNOWN_CLIENT_ID);
       }
+   }
+
+   @Override
+   public Response requestClientSessions(ClientSessionsRequest r, RequestContext ctx) {
+      synchronized (clientSessionsCounter) {
+         return new ClientSessionsResponse(Util.toIntArray(clientSessionsCounter));
+      }
+   }
+
+   @Override
+   public Response requestCloseClientConnection(CloseClientConnectionRequest r, RequestContext ctx) {
+      int accountId = Integer.parseInt(r.data);
+      for (WebHttpSession ses : clients.values()) {
+         if (ses.getAlternateId() == accountId) {
+            ses.close();
+         }
+      }
+      return Response.error(WebContract.ERROR_UNKNOWN_ALT_ID);
    }
 
    // FIXME: call when client disconnects / service unregisters

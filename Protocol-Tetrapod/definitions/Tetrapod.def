@@ -74,8 +74,6 @@ admin request LogRegistryStats  @rights(Admin.RIGHTS_CLUSTER_READ)
    1: int accountId
    2: string authToken @sensitive
 
-internal request CloseClientConnection
-   1: string data
 
 public request AdminLogin @web(admin_login)
    1: string email @sensitive
@@ -381,12 +379,6 @@ internal message Ownership.ReleaseOwnership
    
 ##########################################          
  
-internal request TetrapodClientSessions
-
-internal response TetrapodClientSessions  
-   1: int[] clientSessions    
-     
-##########################################          
  
 admin request NagiosStatus @rights(Admin.RIGHTS_CLUSTER_WRITE)
    1: int accountId

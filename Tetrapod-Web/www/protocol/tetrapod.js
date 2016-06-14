@@ -40,7 +40,6 @@ function TP_Tetrapod(server) {
    server.register("request", "Tetrapod", "ServiceStatusUpdate", 1, 4487218);
    server.register("request", "Tetrapod", "AddServiceInformation", 1, 14381454);
    server.register("request", "Tetrapod", "LogRegistryStats", 1, 10504592);
-   server.register("request", "Tetrapod", "CloseClientConnection", 1, 3310279);
    server.register("request", "Tetrapod", "AdminLogin", 1, 14191480);
    server.register("response", "Tetrapod", "AdminLogin", 1, 4213436);
    server.register("request", "Tetrapod", "AdminAuthorize", 1, 12706146);
@@ -102,8 +101,6 @@ function TP_Tetrapod(server) {
    server.register("message", "Tetrapod", "ClaimOwnership", 1, 500513);
    server.register("message", "Tetrapod", "RetainOwnership", 1, 12503106);
    server.register("message", "Tetrapod", "ReleaseOwnership", 1, 9542348);
-   server.register("request", "Tetrapod", "TetrapodClientSessions", 1, 4764379);
-   server.register("response", "Tetrapod", "TetrapodClientSessions", 1, 13660185);
    server.register("request", "Tetrapod", "NagiosStatus", 1, 12047571);
    server.register("response", "Tetrapod", "NagiosStatus", 1, 15307585);
    server.register("message", "Tetrapod", "NagiosStatus", 1, 6683577);

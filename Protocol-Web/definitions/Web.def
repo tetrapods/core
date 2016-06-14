@@ -5,6 +5,7 @@ javascript out "../../Tetrapod-Web/www/protocol/web.js"
 service Web @version(1) @id(20)  
  
 error UNKNOWN_CLIENT_ID
+error UNKNOWN_ALT_ID
 
 ################################# REQUESTS #################################
 
@@ -35,4 +36,17 @@ internal response GetClientInfo
    3: string host     // host/ip of the entity
    4: string referrer // referrer of first request (clients only)
    5: string domain   // domain request was sent to (clients only)
+
+     
+##########################################          
+
+internal request CloseClientConnection
+   1: string data
    
+internal request ClientSessions
+
+internal response ClientSessions  
+   1: int[] clientSessions    
+     
+##########################################          
+ 

@@ -197,6 +197,7 @@ public class DefaultService
                   fail(t);
                }
                // ok, we're good to go
+               logger.info("Startup tasks done");
                clearStatus(Core.STATUS_STARTING);
                onStarted();
                if (startPaused) {
@@ -345,7 +346,7 @@ public class DefaultService
    public Session makeSession(SocketChannel ch) {
       final Session ses = new WireSession(ch, DefaultService.this);
       ses.setMyEntityType(getEntityType());
-      ses.setTheirEntityType(Core.TYPE_TETRAPOD);      
+      ses.setTheirEntityType(Core.TYPE_TETRAPOD);
       ses.addSessionListener(new Session.Listener() {
          @Override
          public void onSessionStop(Session ses) {

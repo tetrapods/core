@@ -35,28 +35,26 @@ import io.tetrapod.protocol.web.WebContract;
 public class TetrapodService extends DefaultService
       implements TetrapodContract.API, StorageContract.API, RaftContract.API, RelayHandler, EntityRegistry.RegistryBroadcaster {
 
-   public static final Logger        logger                = LoggerFactory.getLogger(TetrapodService.class);
-   public static final Logger        auditLogger           = LoggerFactory.getLogger("audit");
+   public static final Logger      logger        = LoggerFactory.getLogger(TetrapodService.class);
+   public static final Logger      auditLogger   = LoggerFactory.getLogger("audit");
 
-   public final SecureRandom         random                = new SecureRandom();
+   public final SecureRandom       random        = new SecureRandom();
 
-   private final Topic               clusterTopic          = publishTopic();
-   private final Topic               servicesTopic         = publishTopic();
-   private final Topic               adminTopic            = publishTopic();
+   private final Topic             clusterTopic  = publishTopic();
+   private final Topic             servicesTopic = publishTopic();
+   private final Topic             adminTopic    = publishTopic();
 
-   private final TetrapodWorker      worker;
+   private final TetrapodWorker    worker;
 
-   protected final TetrapodCluster   cluster               = new TetrapodCluster(this);
+   protected final TetrapodCluster cluster       = new TetrapodCluster(this);
 
-   public final EntityRegistry       registry              = new EntityRegistry(this, cluster);
+   public final EntityRegistry     registry      = new EntityRegistry(this, cluster);
 
-   private AdminAccounts             adminAccounts;
+   private AdminAccounts           adminAccounts;
 
-   private final List<Server>        servers               = new ArrayList<>();
+   private final List<Server>      servers       = new ArrayList<>();
 
-   private long                      lastStatsLog;
-
-   private final LinkedList<Integer> clientSessionsCounter = new LinkedList<>();
+   private long                    lastStatsLog;
 
    public TetrapodService() throws IOException {
       super(new TetrapodContract());
@@ -149,8 +147,7 @@ public class TetrapodService extends DefaultService
    public ServiceCommand[] getServiceCommands() {
       return new ServiceCommand[] {
             new ServiceCommand("Log Registry Stats", null, LogRegistryStatsRequest.CONTRACT_ID, LogRegistryStatsRequest.STRUCT_ID, false),
-            new ServiceCommand("Close Client Connection", null, CloseClientConnectionRequest.CONTRACT_ID,
-                  CloseClientConnectionRequest.STRUCT_ID, true), };
+      };
    }
 
    @Override
@@ -453,13 +450,6 @@ public class TetrapodService extends DefaultService
          registry.logStats(false);
          lastStatsLog = System.currentTimeMillis();
 
-         final int clients = registry.getNumActiveClients();
-         synchronized (clientSessionsCounter) {
-            clientSessionsCounter.addLast(clients);
-            if (clientSessionsCounter.size() > 1440) {
-               clientSessionsCounter.removeFirst();
-            }
-         }
       }
 
       // for all of our clients:
@@ -1000,29 +990,6 @@ public class TetrapodService extends DefaultService
          return new Error(ERROR_INVALID_RIGHTS);
 
       return cluster.requestUnsubscribeOwnership(r, ctx);
-   }
-
-   @Override
-   public Response requestTetrapodClientSessions(TetrapodClientSessionsRequest r, RequestContext ctx) {
-      synchronized (clientSessionsCounter) {
-         return new TetrapodClientSessionsResponse(Util.toIntArray(clientSessionsCounter));
-      }
-   }
-
-   @Override
-   public Response requestCloseClientConnection(CloseClientConnectionRequest r, RequestContext ctx) {
-      resetServiceConnector(true);
-      int accountId = Integer.parseInt(r.data);
-      for (EntityInfo e : registry.getEntities()) {
-         if (!e.isService() && e.getAlternateId() == accountId && !e.isGone()) {
-            Session session = findSession(e);
-            if (session != null) {
-               session.close();
-               return Response.SUCCESS;
-            }
-         }
-      }
-      return Response.error(ERROR_INVALID_ENTITY);
    }
 
    @Override

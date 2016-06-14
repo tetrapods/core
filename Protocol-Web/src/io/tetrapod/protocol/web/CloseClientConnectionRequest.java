@@ -1,4 +1,4 @@
-package io.tetrapod.protocol.core;
+package io.tetrapod.protocol.web;
 
 // This is a code generated file.  All edits will be lost the next time code gen is run.
 
@@ -15,7 +15,7 @@ import java.util.concurrent.*;
 public class CloseClientConnectionRequest extends Request {
 
    public static final int STRUCT_ID = 3310279;
-   public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;
+   public static final int CONTRACT_ID = WebContract.CONTRACT_ID;
    
    public CloseClientConnectionRequest() {
       defaults();

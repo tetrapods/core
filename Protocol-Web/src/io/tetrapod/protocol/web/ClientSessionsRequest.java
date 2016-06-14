@@ -1,4 +1,4 @@
-package io.tetrapod.protocol.core;
+package io.tetrapod.protocol.web;
 
 // This is a code generated file.  All edits will be lost the next time code gen is run.
 
@@ -12,12 +12,12 @@ import java.util.*;
 import java.util.concurrent.*;
 
 @SuppressWarnings("unused")
-public class TetrapodClientSessionsRequest extends Request {
+public class ClientSessionsRequest extends Request {
 
-   public static final int STRUCT_ID = 4764379;
-   public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;
+   public static final int STRUCT_ID = 1046006;
+   public static final int CONTRACT_ID = WebContract.CONTRACT_ID;
    
-   public TetrapodClientSessionsRequest() {
+   public ClientSessionsRequest() {
       defaults();
    }
 
@@ -52,22 +52,22 @@ public class TetrapodClientSessionsRequest extends Request {
    }
    
    public final int getContractId() {
-      return TetrapodClientSessionsRequest.CONTRACT_ID;
+      return ClientSessionsRequest.CONTRACT_ID;
    }
 
    public final int getStructId() {
-      return TetrapodClientSessionsRequest.STRUCT_ID;
+      return ClientSessionsRequest.STRUCT_ID;
    }
    
    @Override
    public final Response dispatch(ServiceAPI is, RequestContext ctx) {
       if (is instanceof Handler)
-         return ((Handler)is).requestTetrapodClientSessions(this, ctx);
+         return ((Handler)is).requestClientSessions(this, ctx);
       return is.genericRequest(this, ctx);
    }
    
    public static interface Handler extends ServiceAPI {
-      Response requestTetrapodClientSessions(TetrapodClientSessionsRequest r, RequestContext ctx);
+      Response requestClientSessions(ClientSessionsRequest r, RequestContext ctx);
    }
    
    public final String[] tagWebNames() {
@@ -80,12 +80,12 @@ public class TetrapodClientSessionsRequest extends Request {
    }
    
    public final Structure make() {
-      return new TetrapodClientSessionsRequest();
+      return new ClientSessionsRequest();
    }
    
    public final StructDescription makeDescription() {
       StructDescription desc = new StructDescription();      
-      desc.name = "TetrapodClientSessionsRequest";
+      desc.name = "ClientSessionsRequest";
       desc.tagWebNames = tagWebNames();
       desc.types = new TypeDescriptor[desc.tagWebNames.length];
       desc.types[0] = new TypeDescriptor(TypeDescriptor.T_STRUCT, getContractId(), getStructId());

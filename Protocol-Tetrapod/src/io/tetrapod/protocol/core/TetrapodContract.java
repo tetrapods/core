@@ -50,7 +50,6 @@ public class TetrapodContract extends Contract {
       , AdminSessionTokenRequest.Handler
       , AdminSubscribeRequest.Handler
       , ClaimOwnershipRequest.Handler
-      , CloseClientConnectionRequest.Handler
       , ClusterJoinRequest.Handler
       , DelClusterPropertyRequest.Handler
       , DelWebRootRequest.Handler
@@ -71,7 +70,6 @@ public class TetrapodContract extends Contract {
       , SetWebRootRequest.Handler
       , SnapshotRequest.Handler
       , SubscribeOwnershipRequest.Handler
-      , TetrapodClientSessionsRequest.Handler
       , UnlockRequest.Handler
       , UnregisterRequest.Handler
       , UnsubscribeOwnershipRequest.Handler
@@ -87,7 +85,6 @@ public class TetrapodContract extends Contract {
          new ServiceStatusUpdateRequest(),
          new AddServiceInformationRequest(),
          new LogRegistryStatsRequest(),
-         new CloseClientConnectionRequest(),
          new AdminLoginRequest(),
          new AdminAuthorizeRequest(),
          new AdminSessionTokenRequest(),
@@ -113,7 +110,6 @@ public class TetrapodContract extends Contract {
          new ReleaseOwnershipRequest(),
          new SubscribeOwnershipRequest(),
          new UnsubscribeOwnershipRequest(),
-         new TetrapodClientSessionsRequest(),
          new NagiosStatusRequest(),
       };
    }
@@ -129,7 +125,6 @@ public class TetrapodContract extends Contract {
          new RaftStatsResponse(),
          new LockResponse(),
          new ClaimOwnershipResponse(),
-         new TetrapodClientSessionsResponse(),
          new NagiosStatusResponse(),
       };
    }

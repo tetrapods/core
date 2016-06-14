@@ -1,4 +1,4 @@
-package io.tetrapod.protocol.core;
+package io.tetrapod.protocol.web;
 
 // This is a code generated file.  All edits will be lost the next time code gen is run.
 
@@ -12,16 +12,16 @@ import java.util.*;
 import java.util.concurrent.*;
 
 @SuppressWarnings("unused")
-public class TetrapodClientSessionsResponse extends Response {
+public class ClientSessionsResponse extends Response {
    
-   public static final int STRUCT_ID = 13660185;
-   public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;
+   public static final int STRUCT_ID = 2637706;
+   public static final int CONTRACT_ID = WebContract.CONTRACT_ID;
     
-   public TetrapodClientSessionsResponse() {
+   public ClientSessionsResponse() {
       defaults();
    }
 
-   public TetrapodClientSessionsResponse(int[] clientSessions) {
+   public ClientSessionsResponse(int[] clientSessions) {
       this.clientSessions = clientSessions;
    }   
    
@@ -58,11 +58,11 @@ public class TetrapodClientSessionsResponse extends Response {
    }
   
    public final int getContractId() {
-      return TetrapodClientSessionsResponse.CONTRACT_ID;
+      return ClientSessionsResponse.CONTRACT_ID;
    }
 
    public final int getStructId() {
-      return TetrapodClientSessionsResponse.STRUCT_ID;
+      return ClientSessionsResponse.STRUCT_ID;
    }
 
    public final String[] tagWebNames() {
@@ -75,12 +75,12 @@ public class TetrapodClientSessionsResponse extends Response {
    }
 
    public final Structure make() {
-      return new TetrapodClientSessionsResponse();
+      return new ClientSessionsResponse();
    }
 
    public final StructDescription makeDescription() {
       StructDescription desc = new StructDescription();      
-      desc.name = "TetrapodClientSessionsResponse";
+      desc.name = "ClientSessionsResponse";
       desc.tagWebNames = tagWebNames();
       desc.types = new TypeDescriptor[desc.tagWebNames.length];
       desc.types[0] = new TypeDescriptor(TypeDescriptor.T_STRUCT, getContractId(), getStructId());

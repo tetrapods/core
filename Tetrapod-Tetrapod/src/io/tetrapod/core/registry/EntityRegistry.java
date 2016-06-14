@@ -14,9 +14,6 @@ import io.tetrapod.protocol.core.*;
 /**
  * The global registry of all current actors in the system and their published topics and
  * subscriptions
- * 
- * Each tetrapod service owns a shard of the registry and has a full replica of all other
- * shards.
  */
 public class EntityRegistry {
 
@@ -141,13 +138,6 @@ public class EntityRegistry {
    }
 
    public void unregister(final EntityInfo e) {
-      //      if (e.isClient()) {
-      //         logger.info("Unregistering client entity {}", e);
-      //         entities.remove(e.entityId);
-      //         // HACK -- would be 'cleaner' as a listener interface
-      //         LongPollQueue.clearEntity(e.entityId);
-      //         clearAllTopicsAndSubscriptions(e);
-      //      }      
       if (e.isTetrapod() && cluster.isValidPeer(e.entityId)) {
          logger.warn("Setting {} as GONE (unregister context)", e); // TEMP DEBUG LOGGING
          setGone(e);
@@ -157,12 +147,7 @@ public class EntityRegistry {
    }
 
    public void updateStatus(EntityInfo e, int status, int mask) {
-      if (e.isService()) {
-         cluster.executeCommand(new ModEntityCommand(e.entityId, status, mask, e.build, e.version), null);
-      } else {
-         e.status &= ~mask;
-         e.status |= status;
-      }
+      cluster.executeCommand(new ModEntityCommand(e.entityId, status, mask, e.build, e.version), null);
    }
 
    //////////////////////////////////////////////////////////////////////////////////////////
@@ -189,13 +174,6 @@ public class EntityRegistry {
 
    public void setGone(EntityInfo e) {
       logger.info("Setting {} as GONE", e);
-      if (e.isClient() && e.getLastContact() != null) {
-         // we set this value to non-null only for web-polling sessions, 
-         // which need to be handled differently since multiple sessions can 
-         // be in use for the same entity, we only set gone when health monitor 
-         // nulls this value and calls setGone
-         return;
-      }
 
       updateStatus(e, Core.STATUS_GONE, Core.STATUS_GONE);
    }
@@ -203,16 +181,6 @@ public class EntityRegistry {
    public void clearGone(EntityInfo e) {
       logger.info("Setting {} as BACK", e);
       updateStatus(e, 0, Core.STATUS_GONE);
-   }
-
-   public int getNumActiveClients() {
-      int count = 0;
-      for (EntityInfo e : getEntities()) {
-         if (e.isClient() && !e.isGone()) {
-            count++;
-         }
-      }
-      return count;
    }
 
    public void onAddEntityCommand(final EntityInfo entity) {
@@ -233,8 +201,6 @@ public class EntityRegistry {
             }
          }
          list.add(entity);
-      }
-      if (entity.isService()) {
          entity.queue(() -> broadcaster.broadcastServicesMessage(new ServiceAddedMessage(entity)));
       }
    }
