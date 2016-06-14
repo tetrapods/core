@@ -41,8 +41,8 @@ public class WebService extends DefaultService
 
    public static final Logger                 logger                = LoggerFactory.getLogger(WebService.class);
 
-   public static final int                    DEFAULT_HTTP_PORT     = 8080;
-   public static final int                    DEFAULT_HTTPS_PORT    = 8081;
+   public static final int                    DEFAULT_HTTP_PORT     = 9904;//8080;
+   public static final int                    DEFAULT_HTTPS_PORT    = 9906;//8081;
 
    private final List<Server>                 servers               = new ArrayList<>();
    private final LinkedList<Integer>          clientSessionsCounter = new LinkedList<>();
