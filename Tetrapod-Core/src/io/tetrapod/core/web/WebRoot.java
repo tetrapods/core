@@ -6,7 +6,7 @@ import java.util.*;
 public interface WebRoot {
 
    public static final Set<String> VALID_EXTENSIONS = new HashSet<>(Arrays.asList(new String[] { "html", "htm", "js", "css", "jpg", "png",
-         "gif", "wav", "woff", "svg", "ttf", "swf", "xml" }));
+         "gif", "wav", "woff", "svg", "ttf", "swf", "xml", "txt" }));
 
    public static class FileResult {
       public String  path;

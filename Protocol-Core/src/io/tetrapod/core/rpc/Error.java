@@ -2,6 +2,7 @@ package io.tetrapod.core.rpc;
 
 import java.io.IOException;
 
+import io.tetrapod.core.Contract;
 import io.tetrapod.core.serialize.*;
 import io.tetrapod.protocol.core.*;
 
@@ -61,8 +62,8 @@ public class Error extends Response {
    }
 
    @Override
-   public String toString() {
-      return "ERROR-" + code;
+   public String toString() { 
+      return Contract.getErrorCode(code);
    }
 
 }
