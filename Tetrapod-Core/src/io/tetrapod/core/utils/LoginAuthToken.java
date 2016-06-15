@@ -22,6 +22,7 @@ public class LoginAuthToken {
       public int accountId;
       public int timeLeft;
       public int userProperties;
+      public int orgId;
    }
 
    public static class DecodedLogin {
