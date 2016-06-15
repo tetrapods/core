@@ -56,7 +56,7 @@ public class CodeGen {
          services.add("queue");
          services.add("notification");
          services.add("contacts");
-         services.add("salesforce");
+         services.add("crm");
          services.add("apiv1");
       }
       if (langs.isEmpty()) {
