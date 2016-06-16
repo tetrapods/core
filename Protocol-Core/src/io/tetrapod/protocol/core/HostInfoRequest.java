@@ -15,7 +15,7 @@ import java.util.concurrent.*;
  * returns static information for the host
  */
 
-@SuppressWarnings("unused")
+@SuppressWarnings("all")
 public class HostInfoRequest extends Request {
 
    public static final int STRUCT_ID = 16426670;

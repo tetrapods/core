@@ -11,7 +11,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
 
-@SuppressWarnings("unused")
+@SuppressWarnings("all")
 public class ClientSessionsResponse extends Response {
    
    public static final int STRUCT_ID = 2637706;

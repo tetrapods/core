@@ -6,7 +6,7 @@ import io.*;
 import io.tetrapod.core.rpc.*;
 import java.util.*;
 
-@SuppressWarnings("unused")
+@SuppressWarnings("all")
 public enum {{class}} implements Enum_{{type}}<{{class}}> {
    {{constants}}
    ;

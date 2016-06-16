@@ -15,7 +15,7 @@ import java.util.concurrent.*;
  * get a short-lived session token with rights encoded
  */
 
-@SuppressWarnings("unused")
+@SuppressWarnings("all")
 public class AdminSessionTokenRequest extends Request {
 
    public static final int STRUCT_ID = 15044284;

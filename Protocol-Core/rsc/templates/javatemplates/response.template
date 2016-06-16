@@ -12,7 +12,7 @@ import java.util.*;
 import java.util.concurrent.*;
 
 {{classcomment}}
-@SuppressWarnings("unused")
+@SuppressWarnings("all")
 public class {{class}} extends Response {
    
    {{constants}}

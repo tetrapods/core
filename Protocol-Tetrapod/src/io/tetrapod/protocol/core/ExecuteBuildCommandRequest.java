@@ -15,7 +15,7 @@ import java.util.concurrent.*;
  * An error in any one of the build commands stops processing the remaining ones
  */
 
-@SuppressWarnings("unused")
+@SuppressWarnings("all")
 public class ExecuteBuildCommandRequest extends Request {
 
    public static final int STRUCT_ID = 7902304;

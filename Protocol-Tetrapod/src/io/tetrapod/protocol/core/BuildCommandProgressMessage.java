@@ -15,7 +15,7 @@ import java.util.concurrent.*;
  * Sent every 10s or so for display in the UI while it's running
  */
 
-@SuppressWarnings("unused")
+@SuppressWarnings("all")
 public class BuildCommandProgressMessage extends Message {
    
    public static final int STRUCT_ID = 1646916;

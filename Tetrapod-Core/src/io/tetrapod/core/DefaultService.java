@@ -352,6 +352,7 @@ public class DefaultService
          public void onSessionStop(Session ses) {
             logger.info("Connection to tetrapod closed");
             onDisconnectedFromCluster();
+            services.clear();
             resetServiceConnector(false);
             if (!isShuttingDown()) {
                dispatcher.dispatch(3, TimeUnit.SECONDS, () -> connectToCluster(1));
