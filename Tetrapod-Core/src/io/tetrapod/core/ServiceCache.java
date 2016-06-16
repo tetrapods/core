@@ -147,4 +147,9 @@ public class ServiceCache implements TetrapodContract.Services.API {
       return (status & (Core.STATUS_STARTING | Core.STATUS_PAUSED | Core.STATUS_GONE | Core.STATUS_BUSY | Core.STATUS_OVERLOADED
             | Core.STATUS_FAILED | Core.STATUS_STOPPING | Core.STATUS_PASSIVE)) == 0;
    }
+
+   public void clear() {
+      services.clear();
+      serviceLists.clear();
+   }
 }
