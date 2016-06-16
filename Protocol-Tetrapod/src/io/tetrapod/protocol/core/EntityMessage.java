@@ -15,7 +15,7 @@ import java.util.concurrent.*;
  * a special message to avoid race conditions on the Register response
  */
 
-@SuppressWarnings("unused")
+@SuppressWarnings("all")
 public class EntityMessage extends Message {
    
    public static final int STRUCT_ID = 10913291;

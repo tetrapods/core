@@ -15,7 +15,7 @@ import java.util.concurrent.*;
  * fetches current snapshot of host metrics
  */
 
-@SuppressWarnings("unused")
+@SuppressWarnings("all")
 public class HostStatsRequest extends Request {
 
    public static final int STRUCT_ID = 4481593;
