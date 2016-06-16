@@ -9,7 +9,7 @@ import io.tetrapod.core.rpc.Structure;
 import io.tetrapod.protocol.core.WebRoute;
 
 {{classcomment}}
-@SuppressWarnings("unused")
+@SuppressWarnings("all")
 public class {{class}} extends Contract {
    public static final int VERSION = {{version}};
    public static final String NAME = "{{name}}";

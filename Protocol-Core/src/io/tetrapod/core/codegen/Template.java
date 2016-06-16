@@ -4,38 +4,42 @@ import java.io.*;
 import java.util.*;
 
 /**
- * Simple templating system.  Templates can have {{key}} in them.  Upon expanding the keys
- * are looked up in a passed in map and replaced.  Templates optionally memoized (on by default).
+ * Simple templating system. Templates can have {{key}} in them. Upon expanding the keys
+ * are looked up in a passed in map and replaced. Templates optionally memoized (on by
+ * default).
  * <p>
- * If a value has embedded new lines in it, each line will be indented so that it lines up with
- * the start of the {{key}} in the the template.
+ * If a value has embedded new lines in it, each line will be indented so that it lines up
+ * with the start of the {{key}} in the the template.
  * <p>
- * Opening but not closing a {{key}} throws a parse error as an IOException.  Keys which are have
- * no value to expand are left as-is in the output.
+ * Opening but not closing a {{key}} throws a parse error as an IOException. Keys which
+ * are have no value to expand are left as-is in the output.
  */
 public class Template {
-   
+
    private static class TemplateData {
       private final char[] data;
-   
+
       public TemplateData(char[] data) {
          this.data = data;
       }
    }
-   
+
    private static class Values {
-      List<String> values = new ArrayList<>();
-      String seperator = "\n";
+      List<String> values    = new ArrayList<>();
+      String       separator = "\n";
 
       public void write(Writer w, int indent) throws IOException {
          append(values.get(0), w, indent);
          for (int i = 1; i < values.size(); i++) {
-            append(seperator, w, indent);
+            append(separator, w, indent);
             append(values.get(i), w, indent);
          }
       }
-      
+
       private void append(String s, Writer w, int indent) throws IOException {
+         if (s == null) {
+            s = "";
+         }
          int N = s.length();
          for (int i = 0; i < N; i++) {
             char c = s.charAt(i);
@@ -47,18 +51,18 @@ public class Template {
          }
       }
    }
-   
+
    // simple cache
-   
-   public static boolean MEMOIZE = true;
-   private static Map<String,TemplateData> saved = new HashMap<>();
+
+   public static boolean                    MEMOIZE = true;
+   private static Map<String, TemplateData> saved   = new HashMap<>();
 
    public static Template get(File file) throws IOException {
       try (BufferedReader br = new BufferedReader(new FileReader(file))) {
          return get(br, file.getPath());
       }
    }
-   
+
    public static Template get(Class<?> context, String resourceName) throws IOException {
       try (BufferedReader br = new BufferedReader(new InputStreamReader(context.getResourceAsStream(resourceName)))) {
          return get(br, context.getName() + "::" + resourceName);
@@ -77,17 +81,16 @@ public class Template {
       }
       return res;
    }
-   
-   // instance implementations
-   
 
-   private TemplateData data;
+   // instance implementations
+
+   private TemplateData        data;
    private Map<String, Values> map = new HashMap<>();
-   
+
    public Template(TemplateData data) {
       this.data = data;
    }
-   
+
    private Template load(Reader r) throws IOException {
       CharArrayWriter w = new CharArrayWriter();
       while (true) {
@@ -167,24 +170,27 @@ public class Template {
       }
       return endIx + 1;
    }
-   
+
    public Template add(String key, String val) {
+      if (val == null) {
+         val = "";
+      }
       return add(key, val, "\n");
    }
-   
+
    public Template add(String key, Template val) {
       return add(key, val.expand(), "\n");
    }
-   
+
    public Template add(String key, String val, String sep) {
       Values v = map.get(key);
       if (v == null) {
          v = new Values();
-         v.seperator = sep;
+         v.separator = sep;
          map.put(key, v);
       }
       if (sep.length() > 0)
-         v.seperator = sep;
+         v.separator = sep;
       v.values.add(val);
       return this;
    }

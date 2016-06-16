@@ -61,7 +61,7 @@ public class AsyncSequence {
    }
 
    private final ArrayList<Object>                 sequence       = new ArrayList<>();
-   private final ConcurrentHashMap<String, Object> sequenceValues = new ConcurrentHashMap();
+   private final ConcurrentHashMap<String, Object> sequenceValues = new ConcurrentHashMap<>();
    private int                                     ix             = 0;
    private volatile int                            errorCode      = 0;
    private volatile Exception                      errorException = null;

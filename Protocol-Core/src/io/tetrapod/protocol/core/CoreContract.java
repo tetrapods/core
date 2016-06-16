@@ -12,7 +12,7 @@ import io.tetrapod.protocol.core.WebRoute;
  * The core tetrapod service
  */
 
-@SuppressWarnings("unused")
+@SuppressWarnings("all")
 public class CoreContract extends Contract {
    public static final int VERSION = 1;
    public static final String NAME = "Core";

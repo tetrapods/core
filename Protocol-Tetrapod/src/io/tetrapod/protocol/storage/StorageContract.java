@@ -8,7 +8,7 @@ import io.tetrapod.core.*;
 import io.tetrapod.core.rpc.Structure;
 import io.tetrapod.protocol.core.WebRoute;
 
-@SuppressWarnings("unused")
+@SuppressWarnings("all")
 public class StorageContract extends Contract {
    public static final int VERSION = 1;
    public static final String NAME = "Storage";

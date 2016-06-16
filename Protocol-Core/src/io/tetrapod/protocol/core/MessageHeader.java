@@ -11,7 +11,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
 
-@SuppressWarnings("unused")
+@SuppressWarnings("all")
 public class MessageHeader extends Structure {
    
    public static final byte FLAGS_ALTERNATE = 1; 
@@ -63,7 +63,6 @@ public class MessageHeader extends Structure {
       data.writeEndTag();
    }
    
-   @SuppressWarnings("Duplicates")
    @Override
    public final void read(DataSource data) throws IOException {
       defaults();
@@ -93,7 +92,6 @@ public class MessageHeader extends Structure {
       return MessageHeader.STRUCT_ID;
    }
 
-   @SuppressWarnings("Duplicates")
    public final String[] tagWebNames() {
       // Note do not use this tags in long term serializations (to disk or databases) as
       // implementors are free to rename them however they wish.  A null means the field

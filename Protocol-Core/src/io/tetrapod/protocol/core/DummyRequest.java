@@ -15,7 +15,7 @@ import java.util.concurrent.*;
  * dummy request for RPC load testing
  */
 
-@SuppressWarnings("unused")
+@SuppressWarnings("all")
 public class DummyRequest extends Request {
 
    public static final int STRUCT_ID = 6747086;
