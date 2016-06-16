@@ -31,7 +31,10 @@ public class ServiceCache implements TetrapodContract.Services.API {
 
    @Override
    public void messageServiceAdded(ServiceAddedMessage m, MessageContext ctx) {
-      assert (!services.containsKey(m.entity.entityId));
+      if (services.containsKey(m.entity.entityId)) {
+         logger.warn("Got ServiceAddedMessage for service we already have");
+         removeService(m.entity.entityId);
+      }
       services.put(m.entity.entityId, m.entity);
       getServices(m.entity.contractId).add(m.entity);
 
@@ -52,13 +55,18 @@ public class ServiceCache implements TetrapodContract.Services.API {
 
    @Override
    public void messageServiceUpdated(ServiceUpdatedMessage m, MessageContext ctx) {
-      Entity e = services.get(m.entityId);
+      removeService(m.entityId);
+      logger.info("*** {}", m.dump());
+   }
+
+   private void removeService(int entityId) {
+      Entity e = services.remove(entityId);
       if (e != null) {
          synchronized (e) {
-            e.status = m.status;
+            e.status |= Core.STATUS_GONE;
          }
+         getServices(e.contractId).remove(e);
       }
-      logger.info("*** {}", m.dump());
    }
 
    public List<Entity> getServices(int contractId) {
