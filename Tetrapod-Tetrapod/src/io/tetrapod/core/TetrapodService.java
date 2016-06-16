@@ -785,9 +785,7 @@ public class TetrapodService extends DefaultService
          synchronized (servicesTopic) {
             subscribe(servicesTopic.topicId, toEntityId);
             for (EntityInfo e : registry.getServices()) {
-               if (e.entityId != toEntityId) {
-                  e.queue(() -> ses.sendMessage(new ServiceAddedMessage(e), toEntityId));
-               }
+               e.queue(() -> ses.sendMessage(new ServiceAddedMessage(e), toEntityId));
             }
          }
       }
@@ -960,6 +958,7 @@ public class TetrapodService extends DefaultService
          subscribe(servicesTopic.topicId, ctx.header.fromId);
          for (EntityInfo e : registry.getServices()) {
             e.queue(() -> ctx.session.sendMessage(new ServiceAddedMessage(e), ctx.header.fromId));
+            //dispatcher.dispatch(() -> ctx.session.sendMessage(new ServiceAddedMessage(e), ctx.header.fromId));
          }
          // send all current services
          //         for (EntityInfo e : registry.getServices()) {
