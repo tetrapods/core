@@ -43,13 +43,7 @@ public class ServiceCache implements TetrapodContract.Services.API {
 
    @Override
    public void messageServiceRemoved(ServiceRemovedMessage m, MessageContext ctx) {
-      Entity e = services.remove(m.entityId);
-      if (e != null) {
-         synchronized (e) {
-            e.status |= Core.STATUS_GONE;
-         }
-         getServices(e.contractId).remove(e);
-      }
+      removeService(m.entityId);
       logger.info("*** {}", m.dump());
    }
 
