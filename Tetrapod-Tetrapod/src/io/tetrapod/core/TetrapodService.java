@@ -545,7 +545,7 @@ public class TetrapodService extends DefaultService
             subscribe(servicesTopic.topicId, toEntityId, toChildId);
             for (EntityInfo e : registry.getServices()) {
                if (e.entityId != toEntityId) {
-                  e.queue(() -> ses.sendMessage(new ServiceAddedMessage(e), toEntityId));
+                  e.queue(() -> ses.sendMessage(new ServiceAddedMessage(e), toEntityId, toChildId));
                }
             }
          }
