@@ -1,6 +1,5 @@
 package io.tetrapod.core.registry;
 
-import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
