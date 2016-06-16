@@ -31,6 +31,7 @@ public class ServiceCache implements TetrapodContract.Services.API {
 
    @Override
    public void messageServiceAdded(ServiceAddedMessage m, MessageContext ctx) {
+      assert (!services.containsKey(m.entity.entityId));
       services.put(m.entity.entityId, m.entity);
       getServices(m.entity.contractId).add(m.entity);
 
