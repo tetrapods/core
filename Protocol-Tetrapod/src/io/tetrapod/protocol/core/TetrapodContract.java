@@ -82,125 +82,133 @@ public class TetrapodContract extends Contract {
       , VerifyEntityTokenRequest.Handler
       {}
    
-   private Structure[] requests = null;
+   private volatile Structure[] requests = null;
 
    public Structure[] getRequests() {
       if (requests == null) {
-         requests = new Structure[] {
-            new RegisterRequest(),
-            new ClusterJoinRequest(),
-            new UnregisterRequest(),
-            new ServicesSubscribeRequest(),
-            new ServicesUnsubscribeRequest(),
-            new ServiceStatusUpdateRequest(),
-            new AddServiceInformationRequest(),
-            new LogRegistryStatsRequest(),
-            new CloseClientConnectionRequest(),
-            new AdminLoginRequest(),
-            new AdminAuthorizeRequest(),
-            new AdminSessionTokenRequest(),
-            new AdminCreateRequest(),
-            new AdminDeleteRequest(),
-            new AdminChangePasswordRequest(),
-            new AdminResetPasswordRequest(),
-            new AdminChangeRightsRequest(),
-            new KeepAliveRequest(),
-            new SetAlternateIdRequest(),
-            new SetEntityReferrerRequest(),
-            new GetEntityInfoRequest(),
-            new GetServiceBuildInfoRequest(),
-            new ExecuteBuildCommandRequest(),
-            new VerifyEntityTokenRequest(),
-            new RaftLeaderRequest(),
-            new RaftStatsRequest(),
-            new AdminSubscribeRequest(),
-            new SetClusterPropertyRequest(),
-            new DelClusterPropertyRequest(),
-            new SetWebRootRequest(),
-            new DelWebRootRequest(),
-            new LockRequest(),
-            new UnlockRequest(),
-            new SnapshotRequest(),
-            new ClaimOwnershipRequest(),
-            new RetainOwnershipRequest(),
-            new ReleaseOwnershipRequest(),
-            new SubscribeOwnershipRequest(),
-            new UnsubscribeOwnershipRequest(),
-            new TetrapodClientSessionsRequest(),
-            new NagiosStatusRequest(),
-         };
+         synchronized(this) {
+            requests = new Structure[] {
+               new RegisterRequest(),
+               new ClusterJoinRequest(),
+               new UnregisterRequest(),
+               new ServicesSubscribeRequest(),
+               new ServicesUnsubscribeRequest(),
+               new ServiceStatusUpdateRequest(),
+               new AddServiceInformationRequest(),
+               new LogRegistryStatsRequest(),
+               new CloseClientConnectionRequest(),
+               new AdminLoginRequest(),
+               new AdminAuthorizeRequest(),
+               new AdminSessionTokenRequest(),
+               new AdminCreateRequest(),
+               new AdminDeleteRequest(),
+               new AdminChangePasswordRequest(),
+               new AdminResetPasswordRequest(),
+               new AdminChangeRightsRequest(),
+               new KeepAliveRequest(),
+               new SetAlternateIdRequest(),
+               new SetEntityReferrerRequest(),
+               new GetEntityInfoRequest(),
+               new GetServiceBuildInfoRequest(),
+               new ExecuteBuildCommandRequest(),
+               new VerifyEntityTokenRequest(),
+               new RaftLeaderRequest(),
+               new RaftStatsRequest(),
+               new AdminSubscribeRequest(),
+               new SetClusterPropertyRequest(),
+               new DelClusterPropertyRequest(),
+               new SetWebRootRequest(),
+               new DelWebRootRequest(),
+               new LockRequest(),
+               new UnlockRequest(),
+               new SnapshotRequest(),
+               new ClaimOwnershipRequest(),
+               new RetainOwnershipRequest(),
+               new ReleaseOwnershipRequest(),
+               new SubscribeOwnershipRequest(),
+               new UnsubscribeOwnershipRequest(),
+               new TetrapodClientSessionsRequest(),
+               new NagiosStatusRequest(),
+            };
+         }
       }
       return requests;
    }
    
-   private Structure[] responses = null;
+   private volatile Structure[] responses = null;
 
    public Structure[] getResponses() {
       if (responses == null) {
-         responses = new Structure[] {
-            new RegisterResponse(),
-            new AdminLoginResponse(),
-            new AdminAuthorizeResponse(),
-            new AdminSessionTokenResponse(),
-            new GetEntityInfoResponse(),
-            new GetServiceBuildInfoResponse(),
-            new RaftLeaderResponse(),
-            new RaftStatsResponse(),
-            new LockResponse(),
-            new ClaimOwnershipResponse(),
-            new TetrapodClientSessionsResponse(),
-            new NagiosStatusResponse(),
-         };
+         synchronized(this) {
+            responses = new Structure[] {
+               new RegisterResponse(),
+               new AdminLoginResponse(),
+               new AdminAuthorizeResponse(),
+               new AdminSessionTokenResponse(),
+               new GetEntityInfoResponse(),
+               new GetServiceBuildInfoResponse(),
+               new RaftLeaderResponse(),
+               new RaftStatsResponse(),
+               new LockResponse(),
+               new ClaimOwnershipResponse(),
+               new TetrapodClientSessionsResponse(),
+               new NagiosStatusResponse(),
+            };
+         }
       }
       return responses;
    }
    
-   private Structure[] messages = null;
+   private volatile Structure[] messages = null;
 
    public Structure[] getMessages() {
       if (messages == null) {
-         messages = new Structure[] {
-            new EntityMessage(),
-            new TopicPublishedMessage(),
-            new TopicUnpublishedMessage(),
-            new TopicSubscribedMessage(),
-            new TopicUnsubscribedMessage(),
-            new TopicNotFoundMessage(),
-            new SubscriberNotFoundMessage(),
-            new BuildCommandProgressMessage(),
-            new ServiceAddedMessage(),
-            new ServiceRemovedMessage(),
-            new ServiceUpdatedMessage(),
-            new ClusterPropertyAddedMessage(),
-            new ClusterPropertyRemovedMessage(),
-            new ClusterSyncedMessage(),
-            new ClusterMemberMessage(),
-            new WebRootAddedMessage(),
-            new WebRootRemovedMessage(),
-            new AdminUserAddedMessage(),
-            new AdminUserRemovedMessage(),
-            new ClaimOwnershipMessage(),
-            new RetainOwnershipMessage(),
-            new ReleaseOwnershipMessage(),
-            new NagiosStatusMessage(),
-         };
+         synchronized(this) {
+            messages = new Structure[] {
+               new EntityMessage(),
+               new TopicPublishedMessage(),
+               new TopicUnpublishedMessage(),
+               new TopicSubscribedMessage(),
+               new TopicUnsubscribedMessage(),
+               new TopicNotFoundMessage(),
+               new SubscriberNotFoundMessage(),
+               new BuildCommandProgressMessage(),
+               new ServiceAddedMessage(),
+               new ServiceRemovedMessage(),
+               new ServiceUpdatedMessage(),
+               new ClusterPropertyAddedMessage(),
+               new ClusterPropertyRemovedMessage(),
+               new ClusterSyncedMessage(),
+               new ClusterMemberMessage(),
+               new WebRootAddedMessage(),
+               new WebRootRemovedMessage(),
+               new AdminUserAddedMessage(),
+               new AdminUserRemovedMessage(),
+               new ClaimOwnershipMessage(),
+               new RetainOwnershipMessage(),
+               new ReleaseOwnershipMessage(),
+               new NagiosStatusMessage(),
+            };
+         }
       }
       return messages;
    }
    
-   private Structure[] structs = null;
+   private volatile Structure[] structs = null;
 
    public Structure[] getStructs() {
       if (structs == null) {
-         structs = new Structure[] {
-            new Entity(),
-            new Admin(),
-            new BuildInfo(),
-            new BuildCommand(),
-            new ClusterProperty(),
-            new WebRootDef(),
-            new Owner(),
-         };
+         synchronized(this) {
+            structs = new Structure[] {
+               new Entity(),
+               new Admin(),
+               new BuildInfo(),
+               new BuildCommand(),
+               new ClusterProperty(),
+               new WebRootDef(),
+               new Owner(),
+            };
+         }
       }
       return structs;
    }
@@ -217,15 +225,17 @@ public class TetrapodContract extends Contract {
       return TetrapodContract.VERSION;
    }
 
-   private WebRoute[] webRoutes = null;
+   private volatile WebRoute[] webRoutes = null;
 
    public WebRoute[] getWebRoutes() {
       if (webRoutes == null) {
-         webRoutes = new WebRoute[] {
-            new WebRoute("/api/admin_login", AdminLoginRequest.STRUCT_ID, TetrapodContract.CONTRACT_ID),
-            new WebRoute("/api/admin_session_token", AdminSessionTokenRequest.STRUCT_ID, TetrapodContract.CONTRACT_ID),
-            new WebRoute("/api/set_web_root", SetWebRootRequest.STRUCT_ID, TetrapodContract.CONTRACT_ID),
-         };
+         synchronized(this) {
+            webRoutes = new WebRoute[] {
+               new WebRoute("/api/admin_login", AdminLoginRequest.STRUCT_ID, TetrapodContract.CONTRACT_ID),
+               new WebRoute("/api/admin_session_token", AdminSessionTokenRequest.STRUCT_ID, TetrapodContract.CONTRACT_ID),
+               new WebRoute("/api/set_web_root", SetWebRootRequest.STRUCT_ID, TetrapodContract.CONTRACT_ID),
+            };
+         }
       }
       return webRoutes;
    }

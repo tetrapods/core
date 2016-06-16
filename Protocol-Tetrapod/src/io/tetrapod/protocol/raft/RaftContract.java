@@ -21,52 +21,60 @@ public class RaftContract extends Contract {
       , VoteRequest.Handler
       {}
    
-   private Structure[] requests = null;
+   private volatile Structure[] requests = null;
 
    public Structure[] getRequests() {
       if (requests == null) {
-         requests = new Structure[] {
-            new VoteRequest(),
-            new AppendEntriesRequest(),
-            new InstallSnapshotRequest(),
-            new IssueCommandRequest(),
-         };
+         synchronized(this) {
+            requests = new Structure[] {
+               new VoteRequest(),
+               new AppendEntriesRequest(),
+               new InstallSnapshotRequest(),
+               new IssueCommandRequest(),
+            };
+         }
       }
       return requests;
    }
    
-   private Structure[] responses = null;
+   private volatile Structure[] responses = null;
 
    public Structure[] getResponses() {
       if (responses == null) {
-         responses = new Structure[] {
-            new VoteResponse(),
-            new AppendEntriesResponse(),
-            new InstallSnapshotResponse(),
-            new IssueCommandResponse(),
-         };
+         synchronized(this) {
+            responses = new Structure[] {
+               new VoteResponse(),
+               new AppendEntriesResponse(),
+               new InstallSnapshotResponse(),
+               new IssueCommandResponse(),
+            };
+         }
       }
       return responses;
    }
    
-   private Structure[] messages = null;
+   private volatile Structure[] messages = null;
 
    public Structure[] getMessages() {
       if (messages == null) {
-         messages = new Structure[] {
-            
-         };
+         synchronized(this) {
+            messages = new Structure[] {
+               
+            };
+         }
       }
       return messages;
    }
    
-   private Structure[] structs = null;
+   private volatile Structure[] structs = null;
 
    public Structure[] getStructs() {
       if (structs == null) {
-         structs = new Structure[] {
-            new LogEntry(),
-         };
+         synchronized(this) {
+            structs = new Structure[] {
+               new LogEntry(),
+            };
+         }
       }
       return structs;
    }
@@ -83,13 +91,15 @@ public class RaftContract extends Contract {
       return RaftContract.VERSION;
    }
 
-   private WebRoute[] webRoutes = null;
+   private volatile WebRoute[] webRoutes = null;
 
    public WebRoute[] getWebRoutes() {
       if (webRoutes == null) {
-         webRoutes = new WebRoute[] {
-            
-         };
+         synchronized(this) {
+            webRoutes = new WebRoute[] {
+               
+            };
+         }
       }
       return webRoutes;
    }

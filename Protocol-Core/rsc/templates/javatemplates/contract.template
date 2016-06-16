@@ -21,46 +21,54 @@ public class {{class}} extends Contract {
       {{handlers}}
       {}
    
-   private Structure[] requests = null;
+   private volatile Structure[] requests = null;
 
    public Structure[] getRequests() {
       if (requests == null) {
-         requests = new Structure[] {
-            {{requestAdds}}
-         };
+         synchronized(this) {
+            requests = new Structure[] {
+               {{requestAdds}}
+            };
+         }
       }
       return requests;
    }
    
-   private Structure[] responses = null;
+   private volatile Structure[] responses = null;
 
    public Structure[] getResponses() {
       if (responses == null) {
-         responses = new Structure[] {
-            {{responseAdds}}
-         };
+         synchronized(this) {
+            responses = new Structure[] {
+               {{responseAdds}}
+            };
+         }
       }
       return responses;
    }
    
-   private Structure[] messages = null;
+   private volatile Structure[] messages = null;
 
    public Structure[] getMessages() {
       if (messages == null) {
-         messages = new Structure[] {
-            {{messageAdds}}
-         };
+         synchronized(this) {
+            messages = new Structure[] {
+               {{messageAdds}}
+            };
+         }
       }
       return messages;
    }
    
-   private Structure[] structs = null;
+   private volatile Structure[] structs = null;
 
    public Structure[] getStructs() {
       if (structs == null) {
-         structs = new Structure[] {
-            {{structAdds}}
-         };
+         synchronized(this) {
+            structs = new Structure[] {
+               {{structAdds}}
+            };
+         }
       }
       return structs;
    }
@@ -77,13 +85,15 @@ public class {{class}} extends Contract {
       return {{class}}.VERSION;
    }
 
-   private WebRoute[] webRoutes = null;
+   private volatile WebRoute[] webRoutes = null;
 
    public WebRoute[] getWebRoutes() {
       if (webRoutes == null) {
-         webRoutes = new WebRoute[] {
-            {{webRoutes}}
-         };
+         synchronized(this) {
+            webRoutes = new WebRoute[] {
+               {{webRoutes}}
+            };
+         }
       }
       return webRoutes;
    }
