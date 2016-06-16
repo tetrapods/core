@@ -18,28 +18,48 @@ public class WebContract extends Contract {
       
       {}
    
+   private Structure[] requests = null;
+
    public Structure[] getRequests() {
-      return new Structure[] {
-         
-      };
+      if (requests == null) {
+         requests = new Structure[] {
+            
+         };
+      }
+      return requests;
    }
    
+   private Structure[] responses = null;
+
    public Structure[] getResponses() {
-      return new Structure[] {
-         
-      };
+      if (responses == null) {
+         responses = new Structure[] {
+            
+         };
+      }
+      return responses;
    }
    
+   private Structure[] messages = null;
+
    public Structure[] getMessages() {
-      return new Structure[] {
-         
-      };
+      if (messages == null) {
+         messages = new Structure[] {
+            
+         };
+      }
+      return messages;
    }
    
+   private Structure[] structs = null;
+
    public Structure[] getStructs() {
-      return new Structure[] {
-         
-      };
+      if (structs == null) {
+         structs = new Structure[] {
+            
+         };
+      }
+      return structs;
    }
    
    public String getName() {
@@ -53,11 +73,16 @@ public class WebContract extends Contract {
    public int getContractVersion() {
       return WebContract.VERSION;
    }
-   
+
+   private WebRoute[] webRoutes = null;
+
    public WebRoute[] getWebRoutes() {
-      return new WebRoute[] {
-         
-      };
+      if (webRoutes == null) {
+         webRoutes = new WebRoute[] {
+            
+         };
+      }
+      return webRoutes;
    }
 
 }

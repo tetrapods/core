@@ -21,28 +21,48 @@ public class {{class}} extends Contract {
       {{handlers}}
       {}
    
+   private Structure[] requests = null;
+
    public Structure[] getRequests() {
-      return new Structure[] {
-         {{requestAdds}}
-      };
+      if (requests == null) {
+         requests = new Structure[] {
+            {{requestAdds}}
+         };
+      }
+      return requests;
    }
    
+   private Structure[] responses = null;
+
    public Structure[] getResponses() {
-      return new Structure[] {
-         {{responseAdds}}
-      };
+      if (responses == null) {
+         responses = new Structure[] {
+            {{responseAdds}}
+         };
+      }
+      return responses;
    }
    
+   private Structure[] messages = null;
+
    public Structure[] getMessages() {
-      return new Structure[] {
-         {{messageAdds}}
-      };
+      if (messages == null) {
+         messages = new Structure[] {
+            {{messageAdds}}
+         };
+      }
+      return messages;
    }
    
+   private Structure[] structs = null;
+
    public Structure[] getStructs() {
-      return new Structure[] {
-         {{structAdds}}
-      };
+      if (structs == null) {
+         structs = new Structure[] {
+            {{structAdds}}
+         };
+      }
+      return structs;
    }
    
    public String getName() {
@@ -56,11 +76,16 @@ public class {{class}} extends Contract {
    public int getContractVersion() {
       return {{class}}.VERSION;
    }
-   
+
+   private WebRoute[] webRoutes = null;
+
    public WebRoute[] getWebRoutes() {
-      return new WebRoute[] {
-         {{webRoutes}}
-      };
+      if (webRoutes == null) {
+         webRoutes = new WebRoute[] {
+            {{webRoutes}}
+         };
+      }
+      return webRoutes;
    }
 
    {{subscriptions}}

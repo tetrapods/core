@@ -20,30 +20,50 @@ public class StorageContract extends Contract {
       , StorageSetRequest.Handler
       {}
    
+   private Structure[] requests = null;
+
    public Structure[] getRequests() {
-      return new Structure[] {
-         new StorageSetRequest(),
-         new StorageGetRequest(),
-         new StorageDeleteRequest(),
-      };
+      if (requests == null) {
+         requests = new Structure[] {
+            new StorageSetRequest(),
+            new StorageGetRequest(),
+            new StorageDeleteRequest(),
+         };
+      }
+      return requests;
    }
    
+   private Structure[] responses = null;
+
    public Structure[] getResponses() {
-      return new Structure[] {
-         new StorageGetResponse(),
-      };
+      if (responses == null) {
+         responses = new Structure[] {
+            new StorageGetResponse(),
+         };
+      }
+      return responses;
    }
    
+   private Structure[] messages = null;
+
    public Structure[] getMessages() {
-      return new Structure[] {
-         
-      };
+      if (messages == null) {
+         messages = new Structure[] {
+            
+         };
+      }
+      return messages;
    }
    
+   private Structure[] structs = null;
+
    public Structure[] getStructs() {
-      return new Structure[] {
-         
-      };
+      if (structs == null) {
+         structs = new Structure[] {
+            
+         };
+      }
+      return structs;
    }
    
    public String getName() {
@@ -57,11 +77,16 @@ public class StorageContract extends Contract {
    public int getContractVersion() {
       return StorageContract.VERSION;
    }
-   
+
+   private WebRoute[] webRoutes = null;
+
    public WebRoute[] getWebRoutes() {
-      return new WebRoute[] {
-         
-      };
+      if (webRoutes == null) {
+         webRoutes = new WebRoute[] {
+            
+         };
+      }
+      return webRoutes;
    }
 
 }
