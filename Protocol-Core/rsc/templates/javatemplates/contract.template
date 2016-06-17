@@ -26,9 +26,11 @@ public class {{class}} extends Contract {
    public Structure[] getRequests() {
       if (requests == null) {
          synchronized(this) {
-            requests = new Structure[] {
-               {{requestAdds}}
-            };
+            if (requests == null) {
+               requests = new Structure[] {
+                  {{requestAdds}}
+               };
+            }
          }
       }
       return requests;
@@ -39,9 +41,11 @@ public class {{class}} extends Contract {
    public Structure[] getResponses() {
       if (responses == null) {
          synchronized(this) {
-            responses = new Structure[] {
-               {{responseAdds}}
-            };
+            if (responses == null) {
+               responses = new Structure[] {
+                  {{responseAdds}}
+               };
+            }
          }
       }
       return responses;
@@ -52,9 +56,11 @@ public class {{class}} extends Contract {
    public Structure[] getMessages() {
       if (messages == null) {
          synchronized(this) {
-            messages = new Structure[] {
-               {{messageAdds}}
-            };
+            if (messages == null) {
+               messages = new Structure[] {
+                  {{messageAdds}}
+               };
+            }
          }
       }
       return messages;
@@ -65,9 +71,11 @@ public class {{class}} extends Contract {
    public Structure[] getStructs() {
       if (structs == null) {
          synchronized(this) {
-            structs = new Structure[] {
-               {{structAdds}}
-            };
+            if (structs == null) {
+               structs = new Structure[] {
+                  {{structAdds}}
+               };
+            }
          }
       }
       return structs;

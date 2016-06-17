@@ -23,9 +23,11 @@ public class WebContract extends Contract {
    public Structure[] getRequests() {
       if (requests == null) {
          synchronized(this) {
-            requests = new Structure[] {
-               
-            };
+            if (requests == null) {
+               requests = new Structure[] {
+                  
+               };
+            }
          }
       }
       return requests;
@@ -36,9 +38,11 @@ public class WebContract extends Contract {
    public Structure[] getResponses() {
       if (responses == null) {
          synchronized(this) {
-            responses = new Structure[] {
-               
-            };
+            if (responses == null) {
+               responses = new Structure[] {
+                  
+               };
+            }
          }
       }
       return responses;
@@ -49,9 +53,11 @@ public class WebContract extends Contract {
    public Structure[] getMessages() {
       if (messages == null) {
          synchronized(this) {
-            messages = new Structure[] {
-               
-            };
+            if (messages == null) {
+               messages = new Structure[] {
+                  
+               };
+            }
          }
       }
       return messages;
@@ -62,9 +68,11 @@ public class WebContract extends Contract {
    public Structure[] getStructs() {
       if (structs == null) {
          synchronized(this) {
-            structs = new Structure[] {
-               
-            };
+            if (structs == null) {
+               structs = new Structure[] {
+                  
+               };
+            }
          }
       }
       return structs;

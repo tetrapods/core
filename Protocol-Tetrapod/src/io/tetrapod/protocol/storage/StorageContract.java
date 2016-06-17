@@ -25,11 +25,13 @@ public class StorageContract extends Contract {
    public Structure[] getRequests() {
       if (requests == null) {
          synchronized(this) {
-            requests = new Structure[] {
-               new StorageSetRequest(),
-               new StorageGetRequest(),
-               new StorageDeleteRequest(),
-            };
+            if (requests == null) {
+               requests = new Structure[] {
+                  new StorageSetRequest(),
+                  new StorageGetRequest(),
+                  new StorageDeleteRequest(),
+               };
+            }
          }
       }
       return requests;
@@ -40,9 +42,11 @@ public class StorageContract extends Contract {
    public Structure[] getResponses() {
       if (responses == null) {
          synchronized(this) {
-            responses = new Structure[] {
-               new StorageGetResponse(),
-            };
+            if (responses == null) {
+               responses = new Structure[] {
+                  new StorageGetResponse(),
+               };
+            }
          }
       }
       return responses;
@@ -53,9 +57,11 @@ public class StorageContract extends Contract {
    public Structure[] getMessages() {
       if (messages == null) {
          synchronized(this) {
-            messages = new Structure[] {
-               
-            };
+            if (messages == null) {
+               messages = new Structure[] {
+                  
+               };
+            }
          }
       }
       return messages;
@@ -66,9 +72,11 @@ public class StorageContract extends Contract {
    public Structure[] getStructs() {
       if (structs == null) {
          synchronized(this) {
-            structs = new Structure[] {
-               
-            };
+            if (structs == null) {
+               structs = new Structure[] {
+                  
+               };
+            }
          }
       }
       return structs;

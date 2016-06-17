@@ -26,12 +26,14 @@ public class RaftContract extends Contract {
    public Structure[] getRequests() {
       if (requests == null) {
          synchronized(this) {
-            requests = new Structure[] {
-               new VoteRequest(),
-               new AppendEntriesRequest(),
-               new InstallSnapshotRequest(),
-               new IssueCommandRequest(),
-            };
+            if (requests == null) {
+               requests = new Structure[] {
+                  new VoteRequest(),
+                  new AppendEntriesRequest(),
+                  new InstallSnapshotRequest(),
+                  new IssueCommandRequest(),
+               };
+            }
          }
       }
       return requests;
@@ -42,12 +44,14 @@ public class RaftContract extends Contract {
    public Structure[] getResponses() {
       if (responses == null) {
          synchronized(this) {
-            responses = new Structure[] {
-               new VoteResponse(),
-               new AppendEntriesResponse(),
-               new InstallSnapshotResponse(),
-               new IssueCommandResponse(),
-            };
+            if (responses == null) {
+               responses = new Structure[] {
+                  new VoteResponse(),
+                  new AppendEntriesResponse(),
+                  new InstallSnapshotResponse(),
+                  new IssueCommandResponse(),
+               };
+            }
          }
       }
       return responses;
@@ -58,9 +62,11 @@ public class RaftContract extends Contract {
    public Structure[] getMessages() {
       if (messages == null) {
          synchronized(this) {
-            messages = new Structure[] {
-               
-            };
+            if (messages == null) {
+               messages = new Structure[] {
+                  
+               };
+            }
          }
       }
       return messages;
@@ -71,9 +77,11 @@ public class RaftContract extends Contract {
    public Structure[] getStructs() {
       if (structs == null) {
          synchronized(this) {
-            structs = new Structure[] {
-               new LogEntry(),
-            };
+            if (structs == null) {
+               structs = new Structure[] {
+                  new LogEntry(),
+               };
+            }
          }
       }
       return structs;

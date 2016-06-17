@@ -47,29 +47,31 @@ public class CoreContract extends Contract {
    public Structure[] getRequests() {
       if (requests == null) {
          synchronized(this) {
-            requests = new Structure[] {
-               new PauseRequest(),
-               new UnpauseRequest(),
-               new RebalanceRequest(),
-               new ReleaseExcessRequest(),
-               new PurgeRequest(),
-               new ShutdownRequest(),
-               new RestartRequest(),
-               new ServiceStatsSubscribeRequest(),
-               new ServiceStatsUnsubscribeRequest(),
-               new ServiceDetailsRequest(),
-               new ServiceLogsRequest(),
-               new ServiceRequestStatsRequest(),
-               new HostInfoRequest(),
-               new HostStatsRequest(),
-               new ServiceErrorLogsRequest(),
-               new ResetServiceErrorLogsRequest(),
-               new SetCommsLogLevelRequest(),
-               new WebAPIRequest(),
-               new DirectConnectionRequest(),
-               new ValidateConnectionRequest(),
-               new DummyRequest(),
-            };
+            if (requests == null) {
+               requests = new Structure[] {
+                  new PauseRequest(),
+                  new UnpauseRequest(),
+                  new RebalanceRequest(),
+                  new ReleaseExcessRequest(),
+                  new PurgeRequest(),
+                  new ShutdownRequest(),
+                  new RestartRequest(),
+                  new ServiceStatsSubscribeRequest(),
+                  new ServiceStatsUnsubscribeRequest(),
+                  new ServiceDetailsRequest(),
+                  new ServiceLogsRequest(),
+                  new ServiceRequestStatsRequest(),
+                  new HostInfoRequest(),
+                  new HostStatsRequest(),
+                  new ServiceErrorLogsRequest(),
+                  new ResetServiceErrorLogsRequest(),
+                  new SetCommsLogLevelRequest(),
+                  new WebAPIRequest(),
+                  new DirectConnectionRequest(),
+                  new ValidateConnectionRequest(),
+                  new DummyRequest(),
+               };
+            }
          }
       }
       return requests;
@@ -80,18 +82,20 @@ public class CoreContract extends Contract {
    public Structure[] getResponses() {
       if (responses == null) {
          synchronized(this) {
-            responses = new Structure[] {
-               new ServiceDetailsResponse(),
-               new ServiceLogsResponse(),
-               new ServiceRequestStatsResponse(),
-               new ServiceRequestDetailedStatsResponse(),
-               new HostInfoResponse(),
-               new HostStatsResponse(),
-               new ServiceErrorLogsResponse(),
-               new WebAPIResponse(),
-               new DirectConnectionResponse(),
-               new ValidateConnectionResponse(),
-            };
+            if (responses == null) {
+               responses = new Structure[] {
+                  new ServiceDetailsResponse(),
+                  new ServiceLogsResponse(),
+                  new ServiceRequestStatsResponse(),
+                  new ServiceRequestDetailedStatsResponse(),
+                  new HostInfoResponse(),
+                  new HostStatsResponse(),
+                  new ServiceErrorLogsResponse(),
+                  new WebAPIResponse(),
+                  new DirectConnectionResponse(),
+                  new ValidateConnectionResponse(),
+               };
+            }
          }
       }
       return responses;
@@ -102,9 +106,11 @@ public class CoreContract extends Contract {
    public Structure[] getMessages() {
       if (messages == null) {
          synchronized(this) {
-            messages = new Structure[] {
-               new ServiceStatsMessage(),
-            };
+            if (messages == null) {
+               messages = new Structure[] {
+                  new ServiceStatsMessage(),
+               };
+            }
          }
       }
       return messages;
@@ -115,22 +121,24 @@ public class CoreContract extends Contract {
    public Structure[] getStructs() {
       if (structs == null) {
          synchronized(this) {
-            structs = new Structure[] {
-               new Core(),
-               new RequestHeader(),
-               new ResponseHeader(),
-               new MessageHeader(),
-               new ServiceCommand(),
-               new ServerAddress(),
-               new StatPair(),
-               new RequestStat(),
-               new Subscriber(),
-               new WebRoute(),
-               new TypeDescriptor(),
-               new ContractDescription(),
-               new StructDescription(),
-               new ServiceLogEntry(),
-            };
+            if (structs == null) {
+               structs = new Structure[] {
+                  new Core(),
+                  new RequestHeader(),
+                  new ResponseHeader(),
+                  new MessageHeader(),
+                  new ServiceCommand(),
+                  new ServerAddress(),
+                  new StatPair(),
+                  new RequestStat(),
+                  new Subscriber(),
+                  new WebRoute(),
+                  new TypeDescriptor(),
+                  new ContractDescription(),
+                  new StructDescription(),
+                  new ServiceLogEntry(),
+               };
+            }
          }
       }
       return structs;
