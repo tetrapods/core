@@ -65,21 +65,34 @@ public class LoginAuthToken {
       return d;
    }
 
-   public static String encodeSessionToken(int accountId, int userProperties, int entityId, int timeoutInMinutes) {
+   public static String encodeSessionToken(int accountId, int userProperties, int entityId, int timeoutInMinutes, int orgId) {
       int timeout = AuthToken.timeNowInMinutes() + timeoutInMinutes;
-      int[] vals = { timeout, userProperties, accountId, entityId };
-      return AuthToken.encode(MAC_SESSION, vals, 2);
+      int[] vals = { timeout, userProperties, accountId, entityId, orgId };
+      return AuthToken.encode(MAC_SESSION, vals, vals.length);
    }
 
+   public static DecodedSession decodeSessionToken(String token) {
+      int[] vals = { 0, 0, 0, 0, 0 };
+      if (!AuthToken.decode(MAC_SESSION, vals, 5, token)) {
+         return null;
+      }
+      DecodedSession d = new DecodedSession();
+      d.accountId = vals[2];
+      d.timeLeft = vals[0] - AuthToken.timeNowInMinutes();
+      d.userProperties = vals[1];
+      d.orgId = vals[4];
+      return d;
+   }
    public static DecodedSession decodeSessionToken(String token, int accountId, int entityId) {
-      int[] vals = { 0, 0, accountId, entityId };
-      if (!AuthToken.decode(MAC_SESSION, vals, 2, token)) {
+      int[] vals = { 0, 0, accountId, entityId, 0};
+      if (!AuthToken.decode(MAC_SESSION, vals, 5, token)) {
          return null;
       }
       DecodedSession d = new DecodedSession();
       d.accountId = accountId;
       d.timeLeft = vals[0] - AuthToken.timeNowInMinutes();
       d.userProperties = vals[1];
+      d.orgId = vals[4];
       return d;
    }
 
