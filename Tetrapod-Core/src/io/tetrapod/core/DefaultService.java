@@ -639,7 +639,6 @@ public class DefaultService
                   });
             Response res = req.securityCheck(ctx);
             if (res == null) {
-               Request a = req;
                res = req.dispatch(svc, ctx);
             }
             if (res != null) {

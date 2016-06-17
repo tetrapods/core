@@ -13,7 +13,9 @@ import org.slf4j.LoggerFactory;
  */
 public class ServiceException extends RuntimeException {
 
-   /**
+	private static final long serialVersionUID = 6840536084344863338L;
+
+/**
     * Takes a throwable and wraps it in a ServiceException, insuring its not doing a double wrapping.
     * @param throwable  The exception to wrap
     * @return  The ServiceException to throw
