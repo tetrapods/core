@@ -12,7 +12,7 @@ import java.util.*;
 import java.util.concurrent.*;
 
 @SuppressWarnings("all")
-public class DirectConnectionRequest extends Request {
+public class DirectConnectionRequest extends Request<DirectConnectionResponse> {
 
    public static final int STRUCT_ID = 1361471;
    public static final int CONTRACT_ID = CoreContract.CONTRACT_ID;

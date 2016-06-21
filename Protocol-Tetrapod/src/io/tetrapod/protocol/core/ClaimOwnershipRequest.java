@@ -12,7 +12,7 @@ import java.util.*;
 import java.util.concurrent.*;
 
 @SuppressWarnings("all")
-public class ClaimOwnershipRequest extends Request {
+public class ClaimOwnershipRequest extends Request<ClaimOwnershipResponse> {
 
    public static final int STRUCT_ID = 4158859;
    public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;

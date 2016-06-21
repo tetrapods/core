@@ -12,7 +12,7 @@ import java.util.*;
 import java.util.concurrent.*;
 
 @SuppressWarnings("all")
-public class GetServiceBuildInfoRequest extends Request {
+public class GetServiceBuildInfoRequest extends Request<GetServiceBuildInfoResponse> {
 
    public static final int STRUCT_ID = 4482593;
    public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;

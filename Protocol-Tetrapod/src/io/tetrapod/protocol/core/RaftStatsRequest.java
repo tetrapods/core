@@ -12,7 +12,7 @@ import java.util.*;
 import java.util.concurrent.*;
 
 @SuppressWarnings("all")
-public class RaftStatsRequest extends Request {
+public class RaftStatsRequest extends Request<RaftStatsResponse> {
 
    public static final int STRUCT_ID = 15652108;
    public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;

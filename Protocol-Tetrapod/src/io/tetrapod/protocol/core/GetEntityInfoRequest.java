@@ -12,7 +12,7 @@ import java.util.*;
 import java.util.concurrent.*;
 
 @SuppressWarnings("all")
-public class GetEntityInfoRequest extends Request {
+public class GetEntityInfoRequest extends Request<GetEntityInfoResponse> {
 
    public static final int STRUCT_ID = 14891231;
    public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;

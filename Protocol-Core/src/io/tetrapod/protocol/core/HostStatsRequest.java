@@ -16,7 +16,7 @@ import java.util.concurrent.*;
  */
 
 @SuppressWarnings("all")
-public class HostStatsRequest extends Request {
+public class HostStatsRequest extends Request<HostStatsResponse> {
 
    public static final int STRUCT_ID = 4481593;
    public static final int CONTRACT_ID = CoreContract.CONTRACT_ID;
