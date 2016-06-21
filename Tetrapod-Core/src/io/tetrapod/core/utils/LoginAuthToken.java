@@ -71,13 +71,13 @@ public class LoginAuthToken {
       return AuthToken.encode(MAC_SESSION, vals, vals.length);
    }
 
-   public static DecodedSession decodeSessionToken(String token) {
-      int[] vals = { 0, 0, 0, 0, 0 };
+   public static DecodedSession decodeSessionToken(String token, int accountId) {
+      int[] vals = { 0, 0, accountId, 0, 0 };
       if (!AuthToken.decode(MAC_SESSION, vals, 5, token)) {
          return null;
       }
       DecodedSession d = new DecodedSession();
-      d.accountId = vals[2];
+      d.accountId = accountId;
       d.timeLeft = vals[0] - AuthToken.timeNowInMinutes();
       d.userProperties = vals[1];
       d.orgId = vals[4];
