@@ -7,11 +7,11 @@ import java.lang.management.ManagementFactory;
 import java.net.ConnectException;
 import java.security.SecureRandom;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.SSLContext;
 
+import io.tetrapod.core.tasks.Task;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -694,7 +694,7 @@ public class DefaultService
       sendRequest(req).handle(handler);
    }
 
-   public CompletableFuture<Response> sendRequestFuture(Request req) {
+   public Task<Response> sendRequestFuture(Request req) {
       if (serviceConnector != null) {
          return serviceConnector.sendRequest(req, Core.UNADDRESSED).asFuture();
       }
@@ -1053,31 +1053,6 @@ public class DefaultService
    @Override
    public Response requestServiceRequestStats(ServiceRequestStatsRequest r, RequestContext ctx) {
       return stats.getRequestStats(r.domain, r.limit, r.minTime, r.sortBy);
-   }
-
-   protected Response toResponse(CompletableFuture<Response> future, RequestContext ctx) {
-      if (!future.isDone()) {
-         future.exceptionally(this::toResponse).thenAccept(ctx::respondWith);
-         return Response.ASYNC;
-      }
-      try {
-         return future.get();
-      } catch (Throwable t) {
-         return toResponse(t);
-      }
-   }
-
-   private Response toResponse(Throwable e) {
-      if (e instanceof ErrorResponseException) {
-         return Response.error(((ErrorResponseException) e).errorCode);
-      } else if (e instanceof ServiceException) {
-         ServiceException se = ((ServiceException) e);
-         logger.error(se.rootCause().getMessage(), se.rootCause());
-         return Response.error(CoreContract.ERROR_UNKNOWN);
-      } else {
-         logger.error(e.getMessage(), e);
-         return Response.error(CoreContract.ERROR_UNKNOWN);
-      }
    }
 
    protected void addSubService(SubService subService) {

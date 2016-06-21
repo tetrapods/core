@@ -1,6 +1,6 @@
 package io.tetrapod.core.rpc;
 
-import java.util.concurrent.CompletableFuture;
+import io.tetrapod.core.tasks.Task;
 
 
 /**
@@ -14,7 +14,7 @@ public class AsyncUtils {
     * @param future
     * @param resp
     */
-   public static void handleFuture(CompletableFuture<Response> future, Response resp) {
+   public static void handleFuture(Task<Response> future, Response resp) {
       if (resp.isError()) {
          future.completeExceptionally(new ErrorResponseException(resp.errorCode()));
       } else {

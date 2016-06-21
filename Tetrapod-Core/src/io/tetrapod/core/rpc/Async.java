@@ -1,13 +1,12 @@
 package io.tetrapod.core.rpc;
 
 import io.tetrapod.core.Session;
+import io.tetrapod.core.tasks.Task;
 import io.tetrapod.protocol.core.CoreContract;
 import io.tetrapod.protocol.core.RequestHeader;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.concurrent.CompletableFuture;
 
 public class Async {
    public static final Logger logger   = LoggerFactory.getLogger(Async.class);
@@ -35,8 +34,8 @@ public class Async {
       return handler != null;
    }
 
-   public CompletableFuture<Response> asFuture() {
-      CompletableFuture<Response> future = new CompletableFuture<>();
+   public Task<Response> asFuture() {
+      Task<Response> future = new Task<>();
       handle(resp -> AsyncUtils.handleFuture(future, resp));
       return future;
    }
