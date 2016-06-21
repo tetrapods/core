@@ -11,7 +11,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
 
-@SuppressWarnings("unused")
+@SuppressWarnings("all")
 public class WebRootAddedMessage extends Message {
    
    public static final int STRUCT_ID = 270402;

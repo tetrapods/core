@@ -31,19 +31,20 @@ public class ServiceCache implements TetrapodContract.Services.API {
 
    @Override
    public void messageServiceAdded(ServiceAddedMessage m, MessageContext ctx) {
+      if (services.containsKey(m.entity.entityId)) {
+         logger.warn("Got ServiceAddedMessage for service we already have");
+         removeService(m.entity.entityId);
+      }
       services.put(m.entity.entityId, m.entity);
       getServices(m.entity.contractId).add(m.entity);
-      
-      logger.info("{}", m.dump());
+
+      logger.info("*** {}", m.dump());
    }
 
    @Override
    public void messageServiceRemoved(ServiceRemovedMessage m, MessageContext ctx) {
-      Entity e = services.remove(m.entityId);
-      if (e != null) {
-         getServices(e.contractId).remove(e);
-      }
-      logger.info("{}", m.dump());
+      removeService(m.entityId);
+      logger.info("*** {}", m.dump());
    }
 
    @Override
@@ -54,7 +55,17 @@ public class ServiceCache implements TetrapodContract.Services.API {
             e.status = m.status;
          }
       }
-      logger.info("{}", m.dump());
+      logger.info("*** {}", m.dump());
+   } 
+   
+   private void removeService(int entityId) {
+      Entity e = services.remove(entityId);
+      if (e != null) {
+         synchronized (e) {
+            e.status |= Core.STATUS_GONE;
+         }
+         getServices(e.contractId).remove(e);
+      }
    }
 
    public List<Entity> getServices(int contractId) {
@@ -120,10 +131,13 @@ public class ServiceCache implements TetrapodContract.Services.API {
       return false;
    }
 
-   public boolean checkDependencies(Set<Integer> contractIds) {
+   public boolean checkDependencies(Set<Integer> contractIds, boolean logIfNotReady) {
       for (Integer contractId : contractIds) {
          Entity e = getFirstAvailableService(contractId);
          if (e == null) {
+            if (logIfNotReady) {
+               logger.info("Still waiting for service " + contractId);
+            }
             return false;
          }
       }
@@ -142,6 +156,11 @@ public class ServiceCache implements TetrapodContract.Services.API {
 
    public static final boolean isAvailable(final int status) {
       return (status & (Core.STATUS_STARTING | Core.STATUS_PAUSED | Core.STATUS_GONE | Core.STATUS_BUSY | Core.STATUS_OVERLOADED
-               | Core.STATUS_FAILED | Core.STATUS_STOPPING | Core.STATUS_PASSIVE)) == 0;
+            | Core.STATUS_FAILED | Core.STATUS_STOPPING | Core.STATUS_PASSIVE)) == 0;
+   }
+
+   public void clear() {
+      services.clear();
+      serviceLists.clear();
    }
 }

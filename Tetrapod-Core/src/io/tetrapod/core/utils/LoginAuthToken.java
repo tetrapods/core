@@ -5,7 +5,7 @@ import java.util.Arrays;
 import javax.crypto.Mac;
 
 /**
- * Manages AuthTokens used for login and session accounts.  Note that login tokens are backwards compatable but
+ * Manages AuthTokens used for login and session accounts.  Note that login tokens are backwards compatible but
  * session tokens are not.
  * 
  * TODO : Add support for automatic key rotation, unit tests
@@ -22,6 +22,7 @@ public class LoginAuthToken {
       public int accountId;
       public int timeLeft;
       public int userProperties;
+      public int orgId;
    }
 
    public static class DecodedLogin {
@@ -29,6 +30,7 @@ public class LoginAuthToken {
       public int timeLeft;
       public int roomId;
       public int tokenFlags;
+      public int orgId;
    }
 
    /**
@@ -45,16 +47,17 @@ public class LoginAuthToken {
       }
    }
 
-   public static String encodeLoginToken(int accountId, int tokenFlags, int roomId, int timeoutInMinutes) {
-      return AuthToken.encode(MAC_LOGIN, AuthToken.timeNowInMinutes() + timeoutInMinutes, tokenFlags, roomId, accountId);
+   public static String encodeLoginToken(int accountId, int tokenFlags, int roomId, int timeoutInMinutes, int orgId) {
+      return AuthToken.encode(MAC_LOGIN, AuthToken.timeNowInMinutes() + timeoutInMinutes, tokenFlags, roomId, accountId, orgId);
    }
 
    public static DecodedLogin decodeLoginToken(String token) {
-      int[] vals = new int[4];
-      if (!AuthToken.decode(MAC_LOGIN, vals, 4, token)) {
+      int[] vals = new int[5];
+      if (!AuthToken.decode(MAC_LOGIN, vals, 5, token)) {
          return null;
       }
       DecodedLogin d = new DecodedLogin();
+      d.orgId = vals[4];
       d.accountId = vals[3];
       d.timeLeft = vals[0] - AuthToken.timeNowInMinutes();
       d.tokenFlags = vals[1];
@@ -62,21 +65,34 @@ public class LoginAuthToken {
       return d;
    }
 
-   public static String encodeSessionToken(int accountId, int userProperties, int entityId, int timeoutInMinutes) {
+   public static String encodeSessionToken(int accountId, int userProperties, int entityId, int timeoutInMinutes, int orgId) {
       int timeout = AuthToken.timeNowInMinutes() + timeoutInMinutes;
-      int[] vals = { timeout, userProperties, accountId, entityId };
-      return AuthToken.encode(MAC_SESSION, vals, 2);
+      int[] vals = { timeout, userProperties, accountId, entityId, orgId };
+      return AuthToken.encode(MAC_SESSION, vals, vals.length);
    }
 
+   public static DecodedSession decodeSessionToken(String token) {
+      int[] vals = { 0, 0, 0, 0, 0 };
+      if (!AuthToken.decode(MAC_SESSION, vals, 5, token)) {
+         return null;
+      }
+      DecodedSession d = new DecodedSession();
+      d.accountId = vals[2];
+      d.timeLeft = vals[0] - AuthToken.timeNowInMinutes();
+      d.userProperties = vals[1];
+      d.orgId = vals[4];
+      return d;
+   }
    public static DecodedSession decodeSessionToken(String token, int accountId, int entityId) {
-      int[] vals = { 0, 0, accountId, entityId };
-      if (!AuthToken.decode(MAC_SESSION, vals, 2, token)) {
+      int[] vals = { 0, 0, accountId, entityId, 0};
+      if (!AuthToken.decode(MAC_SESSION, vals, 5, token)) {
          return null;
       }
       DecodedSession d = new DecodedSession();
       d.accountId = accountId;
       d.timeLeft = vals[0] - AuthToken.timeNowInMinutes();
       d.userProperties = vals[1];
+      d.orgId = vals[4];
       return d;
    }
 

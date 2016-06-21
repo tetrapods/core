@@ -11,7 +11,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
 
-@SuppressWarnings("unused")
+@SuppressWarnings("all")
 public class Subscriber extends Structure {
    
    public static final int STRUCT_ID = 16013581;
@@ -45,7 +45,6 @@ public class Subscriber extends Structure {
       data.writeEndTag();
    }
    
-   @SuppressWarnings("Duplicates")
    @Override
    public final void read(DataSource data) throws IOException {
       defaults();
@@ -71,7 +70,6 @@ public class Subscriber extends Structure {
       return Subscriber.STRUCT_ID;
    }
 
-   @SuppressWarnings("Duplicates")
    public final String[] tagWebNames() {
       // Note do not use this tags in long term serializations (to disk or databases) as
       // implementors are free to rename them however they wish.  A null means the field

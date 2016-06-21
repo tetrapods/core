@@ -15,7 +15,7 @@ import java.util.concurrent.*;
  * notification of an existing tetrapod cluster member
  */
 
-@SuppressWarnings("unused")
+@SuppressWarnings("all")
 public class ClusterMemberMessage extends Message {
    
    public static final int STRUCT_ID = 1076508;

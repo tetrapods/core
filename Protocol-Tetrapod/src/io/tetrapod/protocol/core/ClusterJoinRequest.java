@@ -11,7 +11,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
 
-@SuppressWarnings("unused")
+@SuppressWarnings("all")
 public class ClusterJoinRequest extends Request {
 
    public static final int STRUCT_ID = 8294880;

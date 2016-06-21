@@ -11,7 +11,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
 
-@SuppressWarnings("unused")
+@SuppressWarnings("all")
 public class WebAPIRequest extends Request {
 
    public static final int STRUCT_ID = 9321342;
@@ -21,11 +21,12 @@ public class WebAPIRequest extends Request {
       defaults();
    }
 
-   public WebAPIRequest(String route, String headers, String params, String body) {
+   public WebAPIRequest(String route, String headers, String params, String body, String uri) {
       this.route = route;
       this.headers = headers;
       this.params = params;
       this.body = body;
+      this.uri = uri;
    }   
 
    /**
@@ -47,6 +48,7 @@ public class WebAPIRequest extends Request {
     * json string
     */
    public String body;
+   public String uri;
 
    public final Structure.Security getSecurity() {
       return Security.PUBLIC;
@@ -57,6 +59,7 @@ public class WebAPIRequest extends Request {
       headers = null;
       params = null;
       body = null;
+      uri = null;
    }
    
    @Override
@@ -65,6 +68,7 @@ public class WebAPIRequest extends Request {
       data.write(2, this.headers);
       data.write(3, this.params);
       data.write(4, this.body);
+      data.write(5, this.uri);
       data.writeEndTag();
    }
    
@@ -78,6 +82,7 @@ public class WebAPIRequest extends Request {
             case 2: this.headers = data.read_string(tag); break;
             case 3: this.params = data.read_string(tag); break;
             case 4: this.body = data.read_string(tag); break;
+            case 5: this.uri = data.read_string(tag); break;
             case Codec.END_TAG:
                return;
             default:
@@ -110,11 +115,12 @@ public class WebAPIRequest extends Request {
       // Note do not use this tags in long term serializations (to disk or databases) as 
       // implementors are free to rename them however they wish.  A null means the field
       // is not to participate in web serialization (remaining at default)
-      String[] result = new String[4+1];
+      String[] result = new String[5+1];
       result[1] = "route";
       result[2] = "headers";
       result[3] = "params";
       result[4] = "body";
+      result[5] = "uri";
       return result;
    }
    
@@ -132,6 +138,7 @@ public class WebAPIRequest extends Request {
       desc.types[2] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
       desc.types[3] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
       desc.types[4] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
+      desc.types[5] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
       return desc;
    }
 

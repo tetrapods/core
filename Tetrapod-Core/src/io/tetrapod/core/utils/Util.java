@@ -656,7 +656,17 @@ public class Util {
 
    @SuppressWarnings("unchecked")
    public static <T> T cast(Object obj) {
-       return (T) obj;
+      return (T) obj;
+   }
+
+   public static boolean isEqual(Object a, Object b) {
+      if (a == b) {
+         return true;
+      } else if ((a == null && b != null) || a != null && b == null) {
+         return false;
+      } else {
+         return a.equals(b);
+      }
    }
 
    public interface ValueMaker<K, V> {
@@ -707,6 +717,10 @@ public class Util {
 
    public static String formatDollars(int pennies) {
       return String.format("$%1.2f", pennies / 100.0);
+   }
+
+   public static String formatCents(double pennies) {
+      return String.format("%f¢", pennies);
    }
 
 }

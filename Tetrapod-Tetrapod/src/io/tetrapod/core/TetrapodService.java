@@ -130,7 +130,6 @@ public class TetrapodService extends DefaultService
       }
    }
 
-   @Override
    public boolean dependenciesReady() {
       return cluster.isReady();
    }
@@ -911,7 +910,7 @@ public class TetrapodService extends DefaultService
 
             // avoid deadlock on raft state
             if (entity.isService() && entity.entityId != getEntityId()) {
-               dispatcher.dispatch(() -> subscribeToCluster(ctx.session, entity.entityId));
+               entity.queue(() -> subscribeToCluster(ctx.session, entity.entityId));
             }
             responder.respondWith(
                   new RegisterResponse(entity.entityId, getEntityId(), EntityToken.encode(entity.entityId, entity.reclaimToken)));
@@ -958,6 +957,7 @@ public class TetrapodService extends DefaultService
          subscribe(servicesTopic.topicId, ctx.header.fromId);
          for (EntityInfo e : registry.getServices()) {
             e.queue(() -> ctx.session.sendMessage(new ServiceAddedMessage(e), ctx.header.fromId));
+            //dispatcher.dispatch(() -> ctx.session.sendMessage(new ServiceAddedMessage(e), ctx.header.fromId));
          }
          // send all current services
          //         for (EntityInfo e : registry.getServices()) {
@@ -996,7 +996,7 @@ public class TetrapodService extends DefaultService
    }
 
    @Override
-   protected void registerServiceInformation() {
+   protected void registerServiceInformation(Contract contract) {
       // do nothing, our protocol is known by all tetrapods
    }
 

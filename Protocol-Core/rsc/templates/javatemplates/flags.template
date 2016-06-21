@@ -5,7 +5,7 @@ package {{package}};
 import io.*;
 import io.tetrapod.core.rpc.*;
 
-@SuppressWarnings("unused")
+@SuppressWarnings("all")
 public class {{class}} extends Flags_{{type}}<{{class}}> {
 
    {{constants}}
