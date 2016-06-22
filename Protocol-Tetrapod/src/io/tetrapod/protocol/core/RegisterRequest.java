@@ -12,7 +12,7 @@ import java.util.*;
 import java.util.concurrent.*;
 
 @SuppressWarnings("all")
-public class RegisterRequest extends Request<RegisterResponse> {
+public class RegisterRequest extends RequestWithResponse<RegisterResponse> {
 
    public static final int STRUCT_ID = 10895179;
    public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;

@@ -176,9 +176,10 @@ class JavaGenerator implements LanguageGenerator {
       if (c.type.equals("request")) {
          Class resp = getResponse(c, context);
          if (resp != null) {
-            t.add("requestGenerics", "<" + resp.classname() + ">");
+            t.add("requestGenerics", "RequestWithResponse<" + resp.classname() + ">");
+         } else {
+            t.add("requestGenerics", "Request");
          }
-
       }
       t.expandAndTrim(getFilename(c.classname()));
    }

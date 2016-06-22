@@ -12,7 +12,7 @@ import java.util.*;
 import java.util.concurrent.*;
 
 @SuppressWarnings("all")
-public class ServiceDetailsRequest extends Request<ServiceDetailsResponse> {
+public class ServiceDetailsRequest extends RequestWithResponse<ServiceDetailsResponse> {
 
    public static final int STRUCT_ID = 14458441;
    public static final int CONTRACT_ID = CoreContract.CONTRACT_ID;

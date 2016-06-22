@@ -303,9 +303,9 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
       }
    }
 
-   public <TResp extends Response> Task<TResp> sendRequestTask(Request<TResp> req, int toEntityId) {
+   public <TResp extends Response> Task<TResp> sendRequestTask(Request req, int toEntityId) {
       Task<TResp> future = new Task<>();
-      Async<TResp> async = sendRequest(req, toEntityId);
+      Async async = sendRequest(req, toEntityId);
       async.handle(resp -> {
          if (resp.isError()) {
             future.completeExceptionally(new ErrorResponseException(resp.errorCode()));
@@ -315,7 +315,7 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
       });
       return future;
    }
-   public <TResp extends Response> Async<TResp> sendRequest(Request<TResp> req, int toEntityId) {
+   public Async sendRequest(Request req, int toEntityId) {
       if (toEntityId == Core.UNADDRESSED) {
          Entity e = service.services.getRandomAvailableService(req.getContractId());
          if (e != null) {

@@ -12,7 +12,7 @@ import java.util.*;
 import java.util.concurrent.*;
 
 @SuppressWarnings("all")
-public class InstallSnapshotRequest extends Request<InstallSnapshotResponse> {
+public class InstallSnapshotRequest extends RequestWithResponse<InstallSnapshotResponse> {
 
    public static final int STRUCT_ID = 5436535;
    public static final int CONTRACT_ID = RaftContract.CONTRACT_ID;

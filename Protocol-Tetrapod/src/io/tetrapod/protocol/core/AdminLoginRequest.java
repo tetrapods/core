@@ -12,7 +12,7 @@ import java.util.*;
 import java.util.concurrent.*;
 
 @SuppressWarnings("all")
-public class AdminLoginRequest extends Request<AdminLoginResponse> {
+public class AdminLoginRequest extends RequestWithResponse<AdminLoginResponse> {
 
    public static final int STRUCT_ID = 14191480;
    public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;

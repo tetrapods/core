@@ -9,24 +9,24 @@ import io.tetrapod.protocol.core.RequestHeader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class Async<TResp extends Response> {
+public class Async {
    public static final Logger logger   = LoggerFactory.getLogger(Async.class);
 
    public final long          sendTime = System.currentTimeMillis();
    public final RequestHeader header;
-   public final Request<TResp> request;
+   public final Request       request;
    public final Session       session;
 
    private Response           response;
    private ResponseHandler    handler;
 
-   public Async(Request<TResp> request, RequestHeader header, Session session) {
+   public Async(Request request, RequestHeader header, Session session) {
       this.request = request;
       this.header = header;
       this.session = session;
    }
 
-   public Async(Request<TResp> request, RequestHeader header, Session session, ResponseHandler handler) {
+   public Async(Request request, RequestHeader header, Session session, ResponseHandler handler) {
       this(request, header, session);
       this.handler = handler;
    }
@@ -35,7 +35,7 @@ public class Async<TResp extends Response> {
       return handler != null;
    }
 
-   public <TValue> Task<ResponseAndValue<TResp, TValue>> asTask(TValue value) {
+   public <TValue, TResp extends Response> Task<ResponseAndValue<TResp, TValue>> asTask(TValue value) {
       Task<ResponseAndValue<TResp, TValue>> future = new Task<>();
       handle(resp -> {
          if (resp.isError()) {
@@ -47,7 +47,7 @@ public class Async<TResp extends Response> {
       return future;
    }
 
-   public Task<TResp> asTask() {
+   public <TValue, TResp extends Response> Task<TResp> asTask() {
       Task<TResp> future = new Task<>();
       handle(resp -> {
          if (resp.isError()) {

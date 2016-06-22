@@ -44,7 +44,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
 
       public Dispatcher getDispatcher();
 
-      public <TResp extends Response> Async<TResp> dispatchRequest(RequestHeader header, Request<TResp> req, Session fromSession);
+      public <TResp extends Response> Async dispatchRequest(RequestHeader header, Request req, Session fromSession);
 
       public List<SubscriptionAPI> getMessageHandlers(int contractId, int structId);
 
@@ -247,7 +247,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
       return task;
    }
 
-   public <TResp extends Response> Async<TResp> sendRequest(Request<TResp> req, int toId, byte timeoutSeconds) {
+   public Async sendRequest(Request req, int toId, byte timeoutSeconds) {
       final RequestHeader header = new RequestHeader();
       header.requestId = requestCounter.incrementAndGet();
       header.toId = toId;
@@ -259,8 +259,8 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
       return sendRequest(req, header);
    }
 
-   public <TResp extends Response> Async<TResp> sendRequest(Request<TResp> req, final RequestHeader header) {
-      final Async<TResp> async = new Async<>(req, header, this);
+   public Async sendRequest(Request req, final RequestHeader header) {
+      final Async async = new Async(req, header, this);
       if (channel.isActive()) {
          pendingRequests.put(header.requestId, async);
 

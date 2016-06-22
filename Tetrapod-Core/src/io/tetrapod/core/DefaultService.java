@@ -694,34 +694,49 @@ public class DefaultService
       sendRequest(req).handle(handler);
    }
 
-   public <TResp extends Response, TValue> Task<ResponseAndValue<TResp, TValue>> sendRequestTask(Request<TResp> req, TValue value) {
+   public <TResp extends Response, TValue> Task<ResponseAndValue<TResp, TValue>> sendRequestTask(Request req, TValue value) {
       if (serviceConnector != null) {
          return serviceConnector.sendRequest(req, Core.UNADDRESSED).asTask(value);
       }
       return clusterClient.getSession().sendRequest(req, Core.UNADDRESSED, (byte) 30).asTask(value);
    }
-   public <TResp extends Response> Task<TResp> sendRequestTask(Request<TResp> req) {
+   
+   public <TResp extends Response> Task<TResp> sendRequestTask(Request req) {
       if (serviceConnector != null) {
          return serviceConnector.sendRequest(req, Core.UNADDRESSED).asTask();
       }
       return clusterClient.getSession().sendRequest(req, Core.UNADDRESSED, (byte) 30).asTask();
    }
 
-   public <TResp extends Response> Async<TResp> sendRequest(Request<TResp> req) {
+   public <TResp extends Response, TValue> Task<ResponseAndValue<TResp, TValue>> sendRequestTask(RequestWithResponse<TResp> req, TValue value) {
+      if (serviceConnector != null) {
+         return serviceConnector.sendRequest(req, Core.UNADDRESSED).asTask(value);
+      }
+      return clusterClient.getSession().sendRequest(req, Core.UNADDRESSED, (byte) 30).asTask(value);
+   }
+   
+   public <TResp extends Response> Task<TResp> sendRequestTask(RequestWithResponse<TResp> req) {
+      if (serviceConnector != null) {
+         return serviceConnector.sendRequest(req, Core.UNADDRESSED).asTask();
+      }
+      return clusterClient.getSession().sendRequest(req, Core.UNADDRESSED, (byte) 30).asTask();
+   }
+
+   public Async sendRequest(Request req) {
       if (serviceConnector != null) {
          return serviceConnector.sendRequest(req, Core.UNADDRESSED);
       }
       return clusterClient.getSession().sendRequest(req, Core.UNADDRESSED, (byte) 30);
    }
 
-   public <TResp extends Response> Async<TResp> sendRequest(Request<TResp> req, int toEntityId) {
+   public Async sendRequest(Request req, int toEntityId) {
       if (serviceConnector != null) {
          return serviceConnector.sendRequest(req, toEntityId);
       }
       return clusterClient.getSession().sendRequest(req, toEntityId, (byte) 30);
    }
 
-   public <TResp extends Response> Async<TResp> sendDirectRequest(Request<TResp> req) {
+   public Async sendDirectRequest(Request req) {
       return clusterClient.getSession().sendRequest(req, Core.DIRECT, (byte) 30);
    }
 

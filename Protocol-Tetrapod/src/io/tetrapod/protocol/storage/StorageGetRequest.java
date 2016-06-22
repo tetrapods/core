@@ -12,7 +12,7 @@ import java.util.*;
 import java.util.concurrent.*;
 
 @SuppressWarnings("all")
-public class StorageGetRequest extends Request<StorageGetResponse> {
+public class StorageGetRequest extends RequestWithResponse<StorageGetResponse> {
 
    public static final int STRUCT_ID = 15665625;
    public static final int CONTRACT_ID = StorageContract.CONTRACT_ID;
