@@ -9,7 +9,7 @@
       <groupId>io.tetrapod.platform</groupId>
       <artifactId>root</artifactId>
       <version>0.0.1-SNAPSHOT</version>
-      <relativePath>../../private/build/</relativePath>
+      <relativePath>../build/</relativePath>
    </parent>
 
    <dependencies>

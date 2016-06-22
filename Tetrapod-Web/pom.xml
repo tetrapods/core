@@ -8,20 +8,9 @@
       <groupId>io.tetrapod.platform</groupId>
       <artifactId>root</artifactId>
       <version>0.0.1-SNAPSHOT</version>
-      <relativePath>../../private/build/pom.xml</relativePath>
+      <relativePath>../build/pom.xml</relativePath>
    </parent>
 
-   <repositories>
-      <repository>
-         <id>central</id>
-         <url>http://repo1.maven.org/maven2/</url>
-      </repository>
-      <repository>
-         <id>apache.snapshots</id>
-         <url>http://repository.apache.org/snapshots/</url>
-      </repository>
-   </repositories>
-   
    <dependencies>
       <dependency>
          <artifactId>tetrapod-core</artifactId>
