@@ -305,9 +305,11 @@ public class WebHttpSession extends WebSession {
                if (body == null || body.trim().isEmpty()) {
                   body = req.getUri();
                }
-               final WebAPIRequest request = new WebAPIRequest(route.path, getHeaders(req).toString(),
+
+               final WebAPIRequest request = new WebAPIRequest(route.path, getHeaders(req).toString(), 
                      context.getRequestParams().toString(),
                      body, req.getUri());
+
                final int toEntityId = relayHandler.getAvailableService(header.contractId);
                if (toEntityId != 0) {
                   final Session ses = relayHandler.getRelaySession(toEntityId, header.contractId);

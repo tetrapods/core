@@ -12,7 +12,7 @@ import java.util.*;
 import java.util.concurrent.*;
 
 @SuppressWarnings("all")
-public class WebAPIRequest extends Request {
+public class WebAPIRequest extends RequestWithResponse<WebAPIResponse> {
 
    public static final int STRUCT_ID = 9321342;
    public static final int CONTRACT_ID = CoreContract.CONTRACT_ID;

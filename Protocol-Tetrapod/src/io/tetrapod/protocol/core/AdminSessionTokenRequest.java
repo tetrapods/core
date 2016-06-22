@@ -16,7 +16,7 @@ import java.util.concurrent.*;
  */
 
 @SuppressWarnings("all")
-public class AdminSessionTokenRequest extends Request {
+public class AdminSessionTokenRequest extends RequestWithResponse<AdminSessionTokenResponse> {
 
    public static final int STRUCT_ID = 15044284;
    public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;

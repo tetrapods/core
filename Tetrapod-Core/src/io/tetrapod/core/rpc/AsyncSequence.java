@@ -213,13 +213,15 @@ public class AsyncSequence {
       return Response.ASYNC;
    }
 
+
    public ResponseHandler responseHandlerFor(IResponseHandlerErr handler) {
       return new SequenceResponseHandler(this, handler);
    }
 
+
    private static class SequenceResponseHandler extends ResponseHandler {
       private final AsyncSequence       seq;
-      private final IResponseHandlerErr handler;
+      private IResponseHandlerErr handler;
 
       public SequenceResponseHandler(AsyncSequence seq, IResponseHandlerErr handler) {
          this.seq = seq;

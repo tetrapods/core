@@ -12,7 +12,7 @@ import java.util.*;
 import java.util.concurrent.*;
 
 @SuppressWarnings("all")
-public class VoteRequest extends Request {
+public class VoteRequest extends RequestWithResponse<VoteResponse> {
 
    public static final int STRUCT_ID = 9348108;
    public static final int CONTRACT_ID = RaftContract.CONTRACT_ID;

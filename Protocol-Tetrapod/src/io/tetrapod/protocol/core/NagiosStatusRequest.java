@@ -12,7 +12,7 @@ import java.util.*;
 import java.util.concurrent.*;
 
 @SuppressWarnings("all")
-public class NagiosStatusRequest extends Request {
+public class NagiosStatusRequest extends RequestWithResponse<NagiosStatusResponse> {
 
    public static final int STRUCT_ID = 12047571;
    public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;

@@ -12,7 +12,7 @@ import java.util.*;
 import java.util.concurrent.*;
 
 @SuppressWarnings("all")
-public class ValidateConnectionRequest extends Request {
+public class ValidateConnectionRequest extends RequestWithResponse<ValidateConnectionResponse> {
 
    public static final int STRUCT_ID = 6315662;
    public static final int CONTRACT_ID = CoreContract.CONTRACT_ID;

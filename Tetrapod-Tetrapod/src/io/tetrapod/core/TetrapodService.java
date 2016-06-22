@@ -116,7 +116,6 @@ public class TetrapodService extends DefaultService
       }
    }
 
-   @Override
    public boolean dependenciesReady() {
       return cluster.isReady();
    }
@@ -544,9 +543,7 @@ public class TetrapodService extends DefaultService
          synchronized (servicesTopic) {
             subscribe(servicesTopic.topicId, toEntityId, toChildId);
             for (EntityInfo e : registry.getServices()) {
-               if (e.entityId != toEntityId) {
-                  e.queue(() -> ses.sendMessage(new ServiceAddedMessage(e), toEntityId, toChildId));
-               }
+               e.queue(() -> ses.sendMessage(new ServiceAddedMessage(e), toEntityId, toChildId));
             }
          }
       }
@@ -733,7 +730,7 @@ public class TetrapodService extends DefaultService
    }
 
    @Override
-   protected void registerServiceInformation() {
+   protected void registerServiceInformation(Contract contract) {
       // do nothing, our protocol is known by all tetrapods
    }
 

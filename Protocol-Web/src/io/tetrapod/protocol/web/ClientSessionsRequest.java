@@ -12,7 +12,7 @@ import java.util.*;
 import java.util.concurrent.*;
 
 @SuppressWarnings("all")
-public class ClientSessionsRequest extends Request {
+public class ClientSessionsRequest extends RequestWithResponse<ClientSessionsResponse> {
 
    public static final int STRUCT_ID = 1046006;
    public static final int CONTRACT_ID = WebContract.CONTRACT_ID;

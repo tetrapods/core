@@ -1,6 +1,8 @@
 package io.tetrapod.core.rpc;
 
 import io.tetrapod.core.Session;
+import io.tetrapod.core.tasks.Task;
+import io.tetrapod.core.utils.Util;
 import io.tetrapod.protocol.core.CoreContract;
 import io.tetrapod.protocol.core.RequestHeader;
 
@@ -33,6 +35,31 @@ public class Async {
       return handler != null;
    }
 
+   public <TValue, TResp extends Response> Task<ResponseAndValue<TResp, TValue>> asTask(TValue value) {
+      Task<ResponseAndValue<TResp, TValue>> future = new Task<>();
+      handle(resp -> {
+         if (resp.isError()) {
+            future.completeExceptionally(new ErrorResponseException(resp.errorCode()));
+         } else {
+            future.complete(new ResponseAndValue<>(Util.cast(resp), value));
+         }
+      });
+      return future;
+   }
+
+   public <TValue, TResp extends Response> Task<TResp> asTask() {
+      Task<TResp> future = new Task<>();
+      handle(resp -> {
+         if (resp.isError()) {
+            future.completeExceptionally(new ErrorResponseException(resp.errorCode()));
+         } else {
+            future.complete(Util.cast(resp));
+         }
+      });
+
+      return future;
+   }
+
    public interface IResponseHandler {
       public void onResponse(Response res);
    }
@@ -40,6 +67,7 @@ public class Async {
    public interface IResponseHandlerErr {
       public void onResponse(Response res) throws Exception;
    }
+
 
    public synchronized void handle(IResponseHandler handler) {
       handle(new ResponseHandler() {

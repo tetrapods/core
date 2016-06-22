@@ -23,35 +23,71 @@ public class WebContract extends Contract {
       , SetAlternateIdRequest.Handler
       {}
    
+   private volatile Structure[] requests = null;
+
    public Structure[] getRequests() {
-      return new Structure[] {
-         new KeepAliveRequest(),
-         new RegisterRequest(),
-         new SetAlternateIdRequest(),
-         new GetClientInfoRequest(),
-         new CloseClientConnectionRequest(),
-         new ClientSessionsRequest(),
-      };
+      if (requests == null) {
+         synchronized(this) {
+            if (requests == null) {
+               requests = new Structure[] {
+                  new KeepAliveRequest(),
+                  new RegisterRequest(),
+                  new SetAlternateIdRequest(),
+                  new GetClientInfoRequest(),
+                  new CloseClientConnectionRequest(),
+                  new ClientSessionsRequest(),
+               };
+            }
+         }
+      }
+      return requests;
    }
    
+   private volatile Structure[] responses = null;
+
    public Structure[] getResponses() {
-      return new Structure[] {
-         new RegisterResponse(),
-         new GetClientInfoResponse(),
-         new ClientSessionsResponse(),
-      };
+      if (responses == null) {
+         synchronized(this) {
+            if (responses == null) {
+               responses = new Structure[] {
+                  new RegisterResponse(),
+                  new GetClientInfoResponse(),
+                  new ClientSessionsResponse(),
+               };
+            }
+         }
+      }
+      return responses;
    }
    
+   private volatile Structure[] messages = null;
+
    public Structure[] getMessages() {
-      return new Structure[] {
-         
-      };
+      if (messages == null) {
+         synchronized(this) {
+            if (messages == null) {
+               messages = new Structure[] {
+                  
+               };
+            }
+         }
+      }
+      return messages;
    }
    
+   private volatile Structure[] structs = null;
+
    public Structure[] getStructs() {
-      return new Structure[] {
-         
-      };
+      if (structs == null) {
+         synchronized(this) {
+            if (structs == null) {
+               structs = new Structure[] {
+                  
+               };
+            }
+         }
+      }
+      return structs;
    }
    
    public String getName() {
@@ -65,11 +101,18 @@ public class WebContract extends Contract {
    public int getContractVersion() {
       return WebContract.VERSION;
    }
-   
+
+   private volatile WebRoute[] webRoutes = null;
+
    public WebRoute[] getWebRoutes() {
-      return new WebRoute[] {
-         
-      };
+      if (webRoutes == null) {
+         synchronized(this) {
+            webRoutes = new WebRoute[] {
+               
+            };
+         }
+      }
+      return webRoutes;
    }
 
    public static final int ERROR_UNKNOWN_ALT_ID = 5866283; 

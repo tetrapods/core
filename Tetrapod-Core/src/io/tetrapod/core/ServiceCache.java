@@ -43,13 +43,7 @@ public class ServiceCache implements TetrapodContract.Services.API {
 
    @Override
    public void messageServiceRemoved(ServiceRemovedMessage m, MessageContext ctx) {
-      Entity e = services.remove(m.entityId);
-      if (e != null) {
-         synchronized (e) {
-            e.status |= Core.STATUS_GONE;
-         }
-         getServices(e.contractId).remove(e);
-      }
+      removeService(m.entityId);
       logger.info("*** {}", m.dump());
    }
 
@@ -137,10 +131,13 @@ public class ServiceCache implements TetrapodContract.Services.API {
       return false;
    }
 
-   public boolean checkDependencies(Set<Integer> contractIds) {
+   public boolean checkDependencies(Set<Integer> contractIds, boolean logIfNotReady) {
       for (Integer contractId : contractIds) {
          Entity e = getFirstAvailableService(contractId);
          if (e == null) {
+            if (logIfNotReady) {
+               logger.info("Still waiting for service " + contractId);
+            }
             return false;
          }
       }

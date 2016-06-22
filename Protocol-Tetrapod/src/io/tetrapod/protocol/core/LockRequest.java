@@ -12,7 +12,7 @@ import java.util.*;
 import java.util.concurrent.*;
 
 @SuppressWarnings("all")
-public class LockRequest extends Request {
+public class LockRequest extends RequestWithResponse<LockResponse> {
 
    public static final int STRUCT_ID = 3921081;
    public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;

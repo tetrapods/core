@@ -23,6 +23,7 @@ import io.netty.handler.codec.DecoderException;
 import io.netty.util.ReferenceCountUtil;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.rpc.Error;
+import io.tetrapod.core.tasks.Task;
 import io.tetrapod.protocol.core.*;
 import io.tetrapod.protocol.raft.AppendEntriesRequest;
 
@@ -45,7 +46,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
 
       public Dispatcher getDispatcher();
 
-      public Async dispatchRequest(RequestHeader header, Request req, Session fromSession);
+      public <TResp extends Response> Async dispatchRequest(RequestHeader header, Request req, Session fromSession);
 
       public List<SubscriptionAPI> getMessageHandlers(int contractId, int structId);
 
@@ -235,6 +236,19 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
 
    public Async sendRequest(Request req, int toId) {
       return sendRequest(req, toId, DEFAULT_REQUEST_TIMEOUT);
+   }
+
+   public Task<? extends Response> sendRequestTask(Request req, int toId, byte timeoutSeconds) {
+      Task<Response> task = new Task<>();
+      Async async = sendRequest(req, toId, timeoutSeconds);
+      async.handle(resp -> {
+         if (resp.isError() && resp.errorCode() == ERROR_UNKNOWN) {
+            task.completeExceptionally(new ErrorResponseException(resp.errorCode()));
+         } else {
+            task.complete(resp);
+         }
+      });
+      return task;
    }
 
    public Async sendRequest(Request req, int toId, byte timeoutSeconds) {

@@ -45,7 +45,7 @@ class JavaGenerator implements LanguageGenerator {
          f.delete();
       }
       for (Class c : context.classes) {
-         generateClass(c, context.serviceName + "Contract");
+         generateClass(c, context.serviceName + "Contract", context);
       }
       for (String name : context.enums.keySet()) {
          generateEnum(context.enums.get(name));
@@ -95,13 +95,20 @@ class JavaGenerator implements LanguageGenerator {
 
       for (String sub : context.subscriptions)
          t.add("subscriptions", genSubscriptions(context, sub, theClass));
+
       for (Class c : context.classesByType("request")) {
          t.add("handlers", ", " + c.classname() + ".Handler", "\n");
          String path = c.annotations.getFirst("web");
          if (path != null) {
             if (path.isEmpty())
                path = Character.toLowerCase(c.name.charAt(0)) + c.name.substring(1);
-            path = '/' + context.serviceAnnotations.getFirst("web") + '/' + path;
+
+            String prePath = "/";
+            for (String p : context.serviceAnnotations.get("web")) {
+               prePath += p + '/';
+            }
+            path = prePath  + path;
+
             Template sub = template("contract.webroutes.call").add("path", path).add("requestClass", c.classname())
                   .add("contractClass", theClass);
             t.add("webRoutes", sub.expand());
@@ -117,6 +124,16 @@ class JavaGenerator implements LanguageGenerator {
       t.expandAndTrim(getFilename(theClass));
    }
 
+   private Class getResponse(Class request, CodeGenContext context) {
+      Collection<Class> responses = context.classesByType("response");
+      for (Class response : responses) {
+         if (response.name.equals(request.name)) {
+            return response;
+         }
+      }
+      return null;
+   }
+
    private String genSubscriptions(CodeGenContext context, String subscription, String enclosingClass) throws IOException {
       Template t = template("contract.subscription");
       t.add("name", subscription);
@@ -130,7 +147,7 @@ class JavaGenerator implements LanguageGenerator {
       return t.expand();
    }
 
-   private void generateClass(Class c, String serviceName) throws IOException, ParseException {
+   private void generateClass(Class c, String serviceName, CodeGenContext context) throws IOException, ParseException {
       Template t = template(c.type.toLowerCase());
       t.add("rawname", c.name);
       t.add("class", c.classname());
@@ -156,6 +173,14 @@ class JavaGenerator implements LanguageGenerator {
       addFieldValues(c.fields, t);
       addConstantValues(c.fields, t);
       addErrors(c.errors, false, serviceName, t);
+      if (c.type.equals("request")) {
+         Class resp = getResponse(c, context);
+         if (resp != null) {
+            t.add("requestGenerics", "RequestWithResponse<" + resp.classname() + ">");
+         } else {
+            t.add("requestGenerics", "Request");
+         }
+      }
       t.expandAndTrim(getFilename(c.classname()));
    }
 

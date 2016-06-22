@@ -42,70 +42,106 @@ public class CoreContract extends Contract {
       , WebAPIRequest.Handler
       {}
    
+   private volatile Structure[] requests = null;
+
    public Structure[] getRequests() {
-      return new Structure[] {
-         new PauseRequest(),
-         new UnpauseRequest(),
-         new RebalanceRequest(),
-         new ReleaseExcessRequest(),
-         new PurgeRequest(),
-         new ShutdownRequest(),
-         new RestartRequest(),
-         new ServiceStatsSubscribeRequest(),
-         new ServiceStatsUnsubscribeRequest(),
-         new ServiceDetailsRequest(),
-         new ServiceLogsRequest(),
-         new ServiceRequestStatsRequest(),
-         new HostInfoRequest(),
-         new HostStatsRequest(),
-         new ServiceErrorLogsRequest(),
-         new ResetServiceErrorLogsRequest(),
-         new SetCommsLogLevelRequest(),
-         new WebAPIRequest(),
-         new DirectConnectionRequest(),
-         new ValidateConnectionRequest(),
-         new DummyRequest(),
-      };
+      if (requests == null) {
+         synchronized(this) {
+            if (requests == null) {
+               requests = new Structure[] {
+                  new PauseRequest(),
+                  new UnpauseRequest(),
+                  new RebalanceRequest(),
+                  new ReleaseExcessRequest(),
+                  new PurgeRequest(),
+                  new ShutdownRequest(),
+                  new RestartRequest(),
+                  new ServiceStatsSubscribeRequest(),
+                  new ServiceStatsUnsubscribeRequest(),
+                  new ServiceDetailsRequest(),
+                  new ServiceLogsRequest(),
+                  new ServiceRequestStatsRequest(),
+                  new HostInfoRequest(),
+                  new HostStatsRequest(),
+                  new ServiceErrorLogsRequest(),
+                  new ResetServiceErrorLogsRequest(),
+                  new SetCommsLogLevelRequest(),
+                  new WebAPIRequest(),
+                  new DirectConnectionRequest(),
+                  new ValidateConnectionRequest(),
+                  new DummyRequest(),
+               };
+            }
+         }
+      }
+      return requests;
    }
    
+   private volatile Structure[] responses = null;
+
    public Structure[] getResponses() {
-      return new Structure[] {
-         new ServiceDetailsResponse(),
-         new ServiceLogsResponse(),
-         new ServiceRequestStatsResponse(),
-         new HostInfoResponse(),
-         new HostStatsResponse(),
-         new ServiceErrorLogsResponse(),
-         new WebAPIResponse(),
-         new DirectConnectionResponse(),
-         new ValidateConnectionResponse(),
-      };
+      if (responses == null) {
+         synchronized(this) {
+            if (responses == null) {
+               responses = new Structure[] {
+                  new ServiceDetailsResponse(),
+                  new ServiceLogsResponse(),
+                  new ServiceRequestStatsResponse(),
+                  new HostInfoResponse(),
+                  new HostStatsResponse(),
+                  new ServiceErrorLogsResponse(),
+                  new WebAPIResponse(),
+                  new DirectConnectionResponse(),
+                  new ValidateConnectionResponse(),
+               };
+            }
+         }
+      }
+      return responses;
    }
    
+   private volatile Structure[] messages = null;
+
    public Structure[] getMessages() {
-      return new Structure[] {
-         new ServiceStatsMessage(),
-      };
+      if (messages == null) {
+         synchronized(this) {
+            if (messages == null) {
+               messages = new Structure[] {
+                  new ServiceStatsMessage(),
+               };
+            }
+         }
+      }
+      return messages;
    }
    
+   private volatile Structure[] structs = null;
+
    public Structure[] getStructs() {
-      return new Structure[] {
-         new Core(),
-         new RequestHeader(),
-         new ResponseHeader(),
-         new MessageHeader(),
-         new ServiceCommand(),
-         new ServerAddress(),
-         new Admin(),
-         new StatPair(),
-         new RequestStat(),
-         new Subscriber(),
-         new WebRoute(),
-         new TypeDescriptor(),
-         new ContractDescription(),
-         new StructDescription(),
-         new ServiceLogEntry(),
-      };
+      if (structs == null) {
+         synchronized(this) {
+            if (structs == null) {
+               structs = new Structure[] {
+                  new Core(),
+                  new RequestHeader(),
+                  new ResponseHeader(),
+                  new MessageHeader(),
+                  new ServiceCommand(),
+                  new ServerAddress(),
+                  new Admin(),
+                  new StatPair(),
+                  new RequestStat(),
+                  new Subscriber(),
+                  new WebRoute(),
+                  new TypeDescriptor(),
+                  new ContractDescription(),
+                  new StructDescription(),
+                  new ServiceLogEntry(),
+               };
+            }
+         }
+      }
+      return structs;
    }
    
    public String getName() {
@@ -119,11 +155,18 @@ public class CoreContract extends Contract {
    public int getContractVersion() {
       return CoreContract.VERSION;
    }
-   
+
+   private volatile WebRoute[] webRoutes = null;
+
    public WebRoute[] getWebRoutes() {
-      return new WebRoute[] {
-         
-      };
+      if (webRoutes == null) {
+         synchronized(this) {
+            webRoutes = new WebRoute[] {
+               
+            };
+         }
+      }
+      return webRoutes;
    }
 
    public static class ServiceStats extends Contract {

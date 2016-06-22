@@ -8,6 +8,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import javax.net.ssl.SSLContext;
 
+import io.tetrapod.core.tasks.Task;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -306,6 +307,18 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
       }
    }
 
+   public <TResp extends Response> Task<TResp> sendRequestTask(Request req, int toEntityId) {
+      Task<TResp> future = new Task<>();
+      Async async = sendRequest(req, toEntityId);
+      async.handle(resp -> {
+         if (resp.isError()) {
+            future.completeExceptionally(new ErrorResponseException(resp.errorCode()));
+         } else {
+            future.complete(Util.cast(resp));
+         }
+      });
+      return future;
+   }
    public Async sendRequest(Request req, int toEntityId) {
       if (toEntityId == Core.UNADDRESSED) {
          Entity e = service.services.getRandomAvailableService(req.getContractId());
