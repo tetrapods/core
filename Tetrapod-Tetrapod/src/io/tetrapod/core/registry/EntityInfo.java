@@ -1,7 +1,5 @@
 package io.tetrapod.core.registry;
 
-import java.util.concurrent.atomic.AtomicInteger;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,16 +14,9 @@ import io.tetrapod.protocol.core.Entity;
  */
 public class EntityInfo extends Entity implements Comparable<EntityInfo> {
 
-   public static final Logger    logger      = LoggerFactory.getLogger(EntityInfo.class);
+   public static final Logger    logger = LoggerFactory.getLogger(EntityInfo.class);
 
-   protected Session             session;
-
-   /**
-    * An alternate not-necessarily-unique ID. This can be set by a service and used as a broadcast target. This is only set on the tetrapod
-    * that owns the entity.
-    */
-   protected final AtomicInteger alternateId = new AtomicInteger(0);
-
+   protected Session             session; 
    protected Long                lastContact;
    protected Long                goneSince;
 
@@ -39,7 +30,7 @@ public class EntityInfo extends Entity implements Comparable<EntityInfo> {
    }
 
    public EntityInfo(int entityId, int parentId, long reclaimToken, String host, int status, byte type, String name, int version,
-            int contractId, String build) {
+         int contractId, String build) {
       super(entityId, parentId, reclaimToken, host, status, type, name, version, contractId, build);
    }
 
@@ -52,7 +43,7 @@ public class EntityInfo extends Entity implements Comparable<EntityInfo> {
     */
    public boolean isService() {
       return type == Core.TYPE_SERVICE || type == Core.TYPE_TETRAPOD;
-   } 
+   }
 
    /**
     * Returns true if this is a client
@@ -107,7 +98,8 @@ public class EntityInfo extends Entity implements Comparable<EntityInfo> {
    }
 
    /**
-    * Returns true if this service is considered available. Checks all status bits that might cause unavailability
+    * Returns true if this service is considered available. Checks all status bits that
+    * might cause unavailability
     * 
     * @return
     */
@@ -138,14 +130,6 @@ public class EntityInfo extends Entity implements Comparable<EntityInfo> {
          }
       }
       return queue.process();
-   }
-
-   public synchronized int getAlternateId() {
-      return alternateId.get();
-   }
-
-   public synchronized void setAlternateId(int id) {
-      alternateId.set(id);
    }
 
    public synchronized void setLastContact(Long val) {
