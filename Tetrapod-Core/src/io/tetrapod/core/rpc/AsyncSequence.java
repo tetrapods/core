@@ -70,7 +70,7 @@ public class AsyncSequence {
     * Adds the runnable to the sequence, and immediately invokes it if it's the given
     * runnable's turn. This runnable will only be invoked on proceeds.
     */
-   public synchronized AsyncSequence then(NormalRunnable r) {
+   public AsyncSequence then(NormalRunnable r) {
       return add(r);
    }
 
@@ -78,7 +78,7 @@ public class AsyncSequence {
     * Adds an error handling runnable to the sequence, and immediately invokes it if it's
     * the given runnable's turn. This runnable will only be invoked on errors.
     */
-   public synchronized AsyncSequence onError(ErrRunnable r) {
+   public AsyncSequence onError(ErrRunnable r) {
       return add(r);
    }
 
@@ -86,7 +86,7 @@ public class AsyncSequence {
     * Adds an error handling runnable to the sequence, and immediately invokes it if it's
     * the given runnable's turn. This runnable will only be invoked on errors.
     */
-   public synchronized AsyncSequence onError(ErrRunnableWithSeq r) {
+   public AsyncSequence onError(ErrRunnableWithSeq r) {
       return add(r);
    }
 
@@ -94,15 +94,17 @@ public class AsyncSequence {
     * Adds an error handling runnable to the sequence, and immediately invokes it if it's
     * the given runnable's turn. This runnable will only be invoked on errors.
     */
-   public synchronized AsyncSequence onError(ErrRunnableWithException r) {
+   public AsyncSequence onError(ErrRunnableWithException r) {
       return add(r);
    }
 
    private AsyncSequence add(Object r) {
-      sequence.add(r);
-      if (ix == sequence.size() - 1)
-         autorun();
-      return this;
+      synchronized (sequence) {
+         sequence.add(r);
+         if (ix == sequence.size() - 1)
+            autorun();
+         return this;
+      }
    }
 
    private void autorun() {

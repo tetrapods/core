@@ -82,6 +82,13 @@ public class Async {
       });
    }
 
+   public synchronized void handle(AsyncSequence seq) {
+      handle(seq.responseHandlerFor(resp -> {
+         seq.putValue("response", resp);
+         seq.proceed();
+      }));
+   }
+
    public synchronized void handle(AsyncSequence seq, IResponseHandlerErr handler) {
       handle(seq.responseHandlerFor(handler));
    }
