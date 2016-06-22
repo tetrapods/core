@@ -475,14 +475,6 @@ public class TetrapodService extends DefaultService
             logger.info("Reaping: {}", e);
             registry.unregister(e);
          }
-      } else {
-         // special check for long-polling clients
-         if (e.getLastContact() != null) {
-            if (now - e.getLastContact() > Util.ONE_MINUTE) {
-               e.setLastContact(null);
-               registry.setGone(e);
-            }
-         }
       }
    }
 

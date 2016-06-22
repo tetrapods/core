@@ -43,6 +43,7 @@ public class WebService extends DefaultService
    private final WebRoutes                    webRoutes             = new WebRoutes();
    private final Map<Integer, WebHttpSession> clients               = new ConcurrentHashMap<>();
    private final WebRootInstaller             webInstaller          = new WebRootInstaller();
+   private final Map<Long, ServiceTopic>      topics                = new ConcurrentHashMap<>();
 
    protected static final AtomicInteger       clientCounter         = new AtomicInteger();
    private long                               lastStatsLog;
@@ -157,7 +158,12 @@ public class WebService extends DefaultService
          @Override
          public void onSessionStop(Session ses) {
             logger.debug("Web Session Stopped: {}", ses);
-            clients.remove(ses.getTheirEntityId());
+            if (ses.getTheirEntityId() != 0) {
+               clients.remove(ses.getTheirEntityId());
+               if (LongPollQueue.getQueue(ses.getTheirEntityId(), false) == null) {
+                  clearAllSubscriptions(ses.getTheirEntityId());
+               }
+            }
          }
 
          @Override
@@ -296,12 +302,17 @@ public class WebService extends DefaultService
 
       // TODO: Terminate long polling clients that haven't checked in
 
-      //      // for all of our clients:
+      // for all of our clients:
       for (final WebSession ses : clients.values()) {
          // special check for long-polling clients
          if (now - ses.getLastHeardFrom() > Util.ONE_MINUTE) {
             ses.close();
          }
+      }
+
+      for (int childId : LongPollQueue.removeExpired(System.currentTimeMillis() - Util.ONE_MINUTE)) {
+         // TODO: cleanup
+         clearAllSubscriptions(childId);
       }
 
    }
@@ -329,8 +340,6 @@ public class WebService extends DefaultService
    }
 
    //////////////////////////////////////////////////////////////////////////////////////////
-
-   private final Map<Long, ServiceTopic> topics = new ConcurrentHashMap<>();
 
    @Override
    public void genericMessage(Message message, MessageContext ctx) {}
@@ -503,28 +512,15 @@ public class WebService extends DefaultService
 
    // FIXME: call when client disconnects / service unregisters
 
-   //   private void clearAllTopicsAndSubscriptions(final EntityInfo e) {
-   //      logger.debug("clearAllTopicsAndSubscriptions: {}", e);
-   //      // Unpublish all their topics
-   //      for (RegistryTopic topic : e.getTopics()) {
-   //         unpublish(e, topic.topicId);
-   //      }
-   //      // Unsubscribe from all subscriptions we're managing
-   //      for (RegistryTopic topic : e.getSubscriptions()) {
-   //         EntityInfo owner = getEntity(topic.ownerId);
-   //         // assert (owner != null); 
-   //         if (owner != null) {
-   //            unsubscribe(owner, topic.topicId, e.entityId, true);
-   //
-   //            // notify the publisher that this client's subscription is now dead
-   //            broadcaster.sendMessage(new TopicUnsubscribedMessage(owner.entityId, topic.topicId, e.entityId), owner.entityId);
-   //
-   //         } else {
-   //            // bug here cleaning up topics on unreg, I think...
-   //            logger.warn("clearAllTopicsAndSubscriptions: Couldn't find {} owner {}", topic, topic.ownerId);
-   //         }
-   //      }
-   //      cluster.getPublisher().unsubscribeFromAllTopics(e.entityId);
-   //   }
+   private void clearAllSubscriptions(final int childId) {
+      logger.debug("clearAllSubscriptions: {}", childId);
+      // Unsubscribe from all subscriptions we're managing
+      for (ServiceTopic topic : topics.values()) {
+         if (topic.unsubscribe(childId, true)) {
+            // notify the publisher that this client's subscription is now dead
+            sendMessage(new TopicUnsubscribedMessage(topic.ownerId, topic.topicId, entityId, childId), topic.ownerId, 0);
+         }
+      }
+   }
 
 }

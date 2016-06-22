@@ -213,6 +213,7 @@ public class WebHttpSession extends WebSession {
          if (clientId != null) {
             setTheirEntityId(clientId);
             setTheirEntityType(Core.TYPE_CLIENT);
+            LongPollQueue.getQueue(clientId, true); // init long poll queue
          } else {
             sendHttpResponse(ctx, req, new DefaultFullHttpResponse(HTTP_1_1, BAD_REQUEST));
             return;
@@ -236,7 +237,7 @@ public class WebHttpSession extends WebSession {
 
       } else if (getTheirEntityId() != 0) {
          getDispatcher().dispatch(() -> {
-            final LongPollQueue messages = LongPollQueue.getQueue(getTheirEntityId(), true);
+            final LongPollQueue messages = LongPollQueue.getQueue(getTheirEntityId(), false);
             final long startTime = System.currentTimeMillis();
             // long poll -- wait until there are messages in queue, and return them
             assert messages != null;
@@ -269,6 +270,7 @@ public class WebHttpSession extends WebSession {
                      longPoll(50, messages, startTime, ctx, req);
                   }
                }
+               messages.setLastDrain(System.currentTimeMillis());
             } finally {
                messages.unlock();
             }
@@ -306,7 +308,7 @@ public class WebHttpSession extends WebSession {
                   body = req.getUri();
                }
 
-               final WebAPIRequest request = new WebAPIRequest(route.path, getHeaders(req).toString(), 
+               final WebAPIRequest request = new WebAPIRequest(route.path, getHeaders(req).toString(),
                      context.getRequestParams().toString(),
                      body, req.getUri());
 
