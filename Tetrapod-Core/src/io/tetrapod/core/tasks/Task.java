@@ -28,11 +28,9 @@ package io.tetrapod.core.tasks;
  */
 
 import io.tetrapod.core.ServiceException;
-import io.tetrapod.core.rpc.Async;
 import io.tetrapod.core.rpc.ErrorResponseException;
 import io.tetrapod.core.rpc.RequestContext;
 import io.tetrapod.core.rpc.Response;
-import io.tetrapod.core.utils.Util;
 import io.tetrapod.protocol.core.CoreContract;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -259,6 +257,7 @@ public class Task<T> extends CompletableFuture<T> {
 
       // TODO: find a way to inject time for testing
       // also consider letting the application override this with the TaskContext
+      @SuppressWarnings("unused")
       final ScheduledFuture<?> rr = schedulerExecutor.schedule(
               () -> {
                  if (!t.isDone()) {

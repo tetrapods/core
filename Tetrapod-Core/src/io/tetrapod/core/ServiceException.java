@@ -1,10 +1,6 @@
 package io.tetrapod.core;
 
 import io.tetrapod.core.utils.Util;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.function.Supplier;
 
 /**
  * This class is designed to take exceptions (checked or otherwise) and turn them into unchecked exceptions.  Throwing
