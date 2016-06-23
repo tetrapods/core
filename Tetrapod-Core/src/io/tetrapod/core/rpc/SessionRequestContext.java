@@ -41,9 +41,9 @@ public class SessionRequestContext extends RequestContext {
       if (USE_SECURITY) {
          Value<Integer> error = new Value<>(ERROR_INVALID_RIGHTS);
          Security mine = request.getSecurity();
-         Security theirs = getSenderSecurity(accountId, authToken, error);
-         if (isFromService()) {
-            theirs = Security.INTERNAL;
+         Security theirs = getSenderSecurity(accountId, authToken, error);         
+         if (header.fromType == Core.TYPE_SERVICE || header.fromType == Core.TYPE_TETRAPOD) {
+            theirs = Security.ADMIN; // FIXME -- this should be INTERNAL
          } else if (mine == Security.ADMIN) {
             AdminAuthToken.validateAdminToken(accountId, authToken, adminRightsRequired);
             theirs = Security.ADMIN;
