@@ -210,7 +210,7 @@ define(function(require) {
                      self.cores(result.numCores);
                   }
                });
-               app.sendDirect("NagiosStatus", {
+               app.sendAny("NagiosStatus", {
                   hostname: hostname,
                   toggle: false
                }, function(result) {

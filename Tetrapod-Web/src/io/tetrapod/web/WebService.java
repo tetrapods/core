@@ -27,8 +27,7 @@ import io.tetrapod.protocol.web.RegisterRequest;
 import io.tetrapod.protocol.web.RegisterResponse;
 
 /**
- * The web service serves http web routes and terminates web socket connections that can
- * relay into the cluster
+ * The web service serves http web routes and terminates web socket connections that can relay into the cluster
  */
 public class WebService extends DefaultService
       implements WebContract.API, RelayHandler, TetrapodContract.Pubsub.API, TetrapodContract.Services.API {
@@ -143,9 +142,8 @@ public class WebService extends DefaultService
 
    @Override
    public ServiceCommand[] getServiceCommands() {
-      return new ServiceCommand[] {
-            new ServiceCommand("Close Client Connection", null, CloseClientConnectionRequest.CONTRACT_ID,
-                  CloseClientConnectionRequest.STRUCT_ID, true), };
+      return new ServiceCommand[] { new ServiceCommand("Close Client Connection", null, CloseClientConnectionRequest.CONTRACT_ID,
+            CloseClientConnectionRequest.STRUCT_ID, true), };
    }
 
    public Session makeWebSession(SocketChannel ch) {
@@ -185,31 +183,28 @@ public class WebService extends DefaultService
 
    @Override
    public Session getRelaySession(int entityId, int contractId) {
-      if (entityId == parentId) {
-         return clusterClient.getSession();
-      }
-      Entity entity = null;
-      if (entityId == Core.UNADDRESSED) {
-         entity = services.getRandomAvailableService(contractId);
-         if (contractId == 4 && entity != null) {
-            logger.info("Ident lookup = {}", entity.entityId);
+      if (entityId != parentId) {
+         Entity entity = null;
+         if (entityId == Core.UNADDRESSED) {
+            entity = services.getRandomAvailableService(contractId);
+         } else {
+            entity = services.getEntity(entityId);
          }
-      } else {
-         entity = services.getEntity(entityId);
-      }
-      if (entity != null) {
-         if (entity.entityId == parentId) {
-            return clusterClient.getSession();
-         }
-         if (serviceConnector != null) {
-            DirectServiceInfo info = serviceConnector.getDirectServiceInfo(entity.entityId);
-            if (info.getSession() == null || !info.ses.isConnected()) {
-               info.considerConnecting();
+         if (entity != null) {
+            if (serviceConnector != null) {
+               DirectServiceInfo info = serviceConnector.getDirectServiceInfo(entity.entityId);
+               if (info.getSession() == null || !info.ses.isConnected()) {
+                  info.considerConnecting();
+               }
+               Session ses = info.getSession();
+               if (ses != null && ses.isConnected()) {
+                  return ses;
+               }
             }
-            return info.getSession();
          }
       }
-      return null;
+      // route to parent tetrapod
+      return clusterClient.getSession();
    }
 
    @Override
