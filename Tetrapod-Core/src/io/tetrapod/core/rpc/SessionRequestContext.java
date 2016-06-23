@@ -72,6 +72,9 @@ public class SessionRequestContext extends RequestContext {
             try {
                // see if the token is an admin token
                AdminAuthToken.validateAdminToken(accountId, authToken, 0);
+               if (header.fromType == Core.TYPE_CLIENT) {
+                  header.fromType = Core.TYPE_ADMIN;
+               }
                return Security.ADMIN;
             } catch (Exception e) {}
 
