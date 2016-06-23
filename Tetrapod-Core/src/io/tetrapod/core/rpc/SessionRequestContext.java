@@ -42,10 +42,11 @@ public class SessionRequestContext extends RequestContext {
          Value<Integer> error = new Value<>(ERROR_INVALID_RIGHTS);
          Security mine = request.getSecurity();
          Security theirs = getSenderSecurity(accountId, authToken, error);
-
-         if (mine == Security.ADMIN) {
+         if (isFromService()) {
+            theirs = Security.INTERNAL;
+         } else if (mine == Security.ADMIN) {
             AdminAuthToken.validateAdminToken(accountId, authToken, adminRightsRequired);
-            theirs = Security.ADMIN;         
+            theirs = Security.ADMIN;
          }
          if (theirs.ordinal() < mine.ordinal())
             return new Error(error.get());
