@@ -41,15 +41,16 @@ public class SessionRequestContext extends RequestContext {
       if (USE_SECURITY) {
          Value<Integer> error = new Value<>(ERROR_INVALID_RIGHTS);
          Security mine = request.getSecurity();
-         Security theirs = getSenderSecurity(accountId, authToken, error);         
+         Security theirs = getSenderSecurity(accountId, authToken, error);
          if (header.fromType == Core.TYPE_SERVICE || header.fromType == Core.TYPE_TETRAPOD) {
             theirs = Security.ADMIN; // FIXME -- this should be INTERNAL
          } else if (mine == Security.ADMIN) {
             AdminAuthToken.validateAdminToken(accountId, authToken, adminRightsRequired);
             theirs = Security.ADMIN;
          }
-         if (theirs.ordinal() < mine.ordinal())
+         if (theirs.ordinal() < mine.ordinal()) {
             return new Error(error.get());
+         }
       }
       return null;
    }
@@ -68,6 +69,12 @@ public class SessionRequestContext extends RequestContext {
          if (d != null && d.timeLeft >= 0) {
             senderSecurity = Security.PROTECTED;
          } else {
+            try {
+               // see if the token is an admin token
+               AdminAuthToken.validateAdminToken(accountId, authToken, 0);
+               return Security.ADMIN;
+            } catch (Exception e) {}
+
             errorCode.set((d != null && d.timeLeft < 0) ? ERROR_RIGHTS_EXPIRED : ERROR_SECURITY);
          }
       }
