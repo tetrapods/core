@@ -4,6 +4,7 @@ package {{package}};
 
 import io.*;
 import io.tetrapod.core.rpc.*;
+import io.tetrapod.protocol.core.Admin;
 import io.tetrapod.core.serialize.*;
 import io.tetrapod.protocol.core.TypeDescriptor;
 import io.tetrapod.protocol.core.StructDescription;

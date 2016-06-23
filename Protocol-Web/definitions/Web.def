@@ -2,7 +2,7 @@ java package io.tetrapod.protocol.web
 java outdir "../src" 
 javascript out "../../Tetrapod-Web/www/protocol/web.js"
 
-service Web @version(1) @id(20)  
+service Web @version(1) @id(22)
  
 error UNKNOWN_CLIENT_ID
 error UNKNOWN_ALT_ID
@@ -49,4 +49,3 @@ internal response ClientSessions
    1: int[] clientSessions    
      
 ##########################################          
- 
