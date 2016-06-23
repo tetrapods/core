@@ -995,7 +995,7 @@ public class TetrapodService extends DefaultService
    public void shutdownServices() {
       for (EntityInfo e : registry.getServices()) {
          if (e.entityId != getEntityId() && e.host.equals(Util.getHostName())) {
-            sendRequest(new ShutdownRequest(), e.entityId);
+            sendRequest(new ShutdownRequest(), e.entityId).log();
          }
       }
    }

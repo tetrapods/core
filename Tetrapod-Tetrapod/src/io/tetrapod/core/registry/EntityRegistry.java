@@ -1,19 +1,16 @@
 package io.tetrapod.core.registry;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.*;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.slf4j.*;
 
 import io.tetrapod.core.rpc.Message;
 import io.tetrapod.core.storage.*;
 import io.tetrapod.protocol.core.*;
 
 /**
- * The global registry of all current actors in the system and their published topics and
- * subscriptions
+ * The global registry of all current actors in the system and their published topics and subscriptions
  */
 public class EntityRegistry {
 
@@ -33,6 +30,11 @@ public class EntityRegistry {
     * Maps entityId => EntityInfo
     */
    private final Map<Integer, EntityInfo>       entities = new ConcurrentHashMap<>();
+
+   /**
+    * A list of recently deleted entities we need to clean up
+    */
+   private final Queue<EntityInfo>              deleted  = new ConcurrentLinkedQueue<>();
 
    /**
     * Maps contractId => List of EntityInfos that provide that service
@@ -125,8 +127,7 @@ public class EntityRegistry {
    }
 
    /**
-    * @return a new unused ID. If we hit our local maximum, we will reset and find the
-    *         next currently unused id
+    * @return a new unused ID. If we hit our local maximum, we will reset and find the next currently unused id
     */
    public synchronized int issueId() {
       while (true) {
@@ -226,9 +227,15 @@ public class EntityRegistry {
                }
             }
          });
+         // add to list so we can drain queue later
+         deleted.add(e);
       } else {
          logger.error("onDelEntityCommand Couldn't find {}", entityId);
       }
+   }
+
+   public Queue<EntityInfo> getDeletedEntities() {
+      return deleted;
    }
 
 }
