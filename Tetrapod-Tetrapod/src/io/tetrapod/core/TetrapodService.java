@@ -29,8 +29,8 @@ import io.tetrapod.protocol.storage.*;
 import io.tetrapod.protocol.web.WebContract;
 
 /**
- * The tetrapod service is the core cluster service which handles message routing, cluster
- * management, service discovery, and load balancing of client connections
+ * The tetrapod service is the core cluster service which handles message routing, cluster management, service discovery, and load balancing
+ * of client connections
  */
 public class TetrapodService extends DefaultService
       implements TetrapodContract.API, StorageContract.API, RaftContract.API, RelayHandler, EntityRegistry.RegistryBroadcaster {
@@ -101,9 +101,12 @@ public class TetrapodService extends DefaultService
 
          adminTopic.addListener((toEntityId, toChildId, resub) -> {
             synchronized (cluster) {
-               cluster.sendAdminDetails(findSession(toEntityId), toEntityId, toChildId, adminTopic.topicId);
-               for (String host : nagiosEnabled.keySet()) {
-                  broadcastAdminMessage(new NagiosStatusMessage(host, nagiosEnabled.get(host)));
+               Session ses = findSession(toEntityId);
+               if (ses != null) {
+                  cluster.sendAdminDetails(ses, toEntityId, toChildId, adminTopic.topicId);
+                  for (String host : nagiosEnabled.keySet()) {
+                     ses.sendMessage(new NagiosStatusMessage(host, nagiosEnabled.get(host)), toEntityId, toChildId);
+                  }
                }
             }
          });
@@ -121,9 +124,8 @@ public class TetrapodService extends DefaultService
    }
 
    /**
-    * We need to override the connectToCluster in superclass because that one tries to
-    * reconnect to other tetrapods, but the clusterClient connection is a special loopback
-    * connection in the tetrapod, so we should only ever reconnect back to ourselves.
+    * We need to override the connectToCluster in superclass because that one tries to reconnect to other tetrapods, but the clusterClient
+    * connection is a special loopback connection in the tetrapod, so we should only ever reconnect back to ourselves.
     */
    @Override
    protected void connectToCluster(int retrySeconds) {
@@ -144,9 +146,8 @@ public class TetrapodService extends DefaultService
 
    @Override
    public ServiceCommand[] getServiceCommands() {
-      return new ServiceCommand[] {
-            new ServiceCommand("Log Registry Stats", null, LogRegistryStatsRequest.CONTRACT_ID, LogRegistryStatsRequest.STRUCT_ID, false),
-      };
+      return new ServiceCommand[] { new ServiceCommand("Log Registry Stats", null, LogRegistryStatsRequest.CONTRACT_ID,
+            LogRegistryStatsRequest.STRUCT_ID, false), };
    }
 
    @Override
@@ -206,9 +207,8 @@ public class TetrapodService extends DefaultService
    }
 
    /**
-    * As a Tetrapod service, we can't start serving as one until we've registered & fully
-    * sync'ed with the cluster, or self-registered if we are the first one. We call this
-    * once this criteria has been reached
+    * As a Tetrapod service, we can't start serving as one until we've registered & fully sync'ed with the cluster, or self-registered if we
+    * are the first one. We call this once this criteria has been reached
     */
    @Override
    public void onReadyToServe() {
@@ -562,8 +562,7 @@ public class TetrapodService extends DefaultService
          subscribe(servicesTopic.topicId, toEntityId, toChildId);
          // send all current services 
          for (EntityInfo e : registry.getServices()) {
-            e.queue(() -> sendPrivateMessage(new ServiceAddedMessage(e), toEntityId, toChildId,
-                  servicesTopic.topicId));
+            e.queue(() -> sendPrivateMessage(new ServiceAddedMessage(e), toEntityId, toChildId, servicesTopic.topicId));
          }
       }
    }
@@ -890,13 +889,12 @@ public class TetrapodService extends DefaultService
    public Response requestSetWebRoot(SetWebRootRequest r, RequestContext ctx) {
       Admin a = adminAccounts.getAdmin(ctx, r.authToken, Admin.RIGHTS_CLUSTER_WRITE);
       if (!adminAccounts.isValidAdminRequest(ctx, r.authToken, Admin.RIGHTS_CLUSTER_WRITE)) {
-         auditLogger.info("Admin {} [{}] failed to update webroot to {}, {}, {}",
-               a.email, a.accountId, r.def.name, r.def.path, r.def.file);
+         auditLogger.info("Admin {} [{}] failed to update webroot to {}, {}, {}", a.email, a.accountId, r.def.name, r.def.path, r.def.file);
          return new Error(ERROR_INVALID_RIGHTS);
       }
       if (r.def != null) {
-         auditLogger.info("Admin {} [{}] updated webroot.  New webroot: {}, {}, {}",
-               a.email, a.accountId, r.def.name, r.def.path, r.def.file);
+         auditLogger.info("Admin {} [{}] updated webroot.  New webroot: {}, {}, {}", a.email, a.accountId, r.def.name, r.def.path,
+               r.def.file);
          cluster.setWebRoot(r.def);
          return Response.SUCCESS;
       }
