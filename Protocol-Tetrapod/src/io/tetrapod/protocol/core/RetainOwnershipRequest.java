@@ -17,7 +17,8 @@ public class RetainOwnershipRequest extends Request {
 
    public static final int STRUCT_ID = 3539584;
    public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;
-   
+   public static final int SUB_CONTRACT_ID = TetrapodContract.SUB_CONTRACT_ID;
+
    public RetainOwnershipRequest() {
       defaults();
    }
@@ -65,6 +66,10 @@ public class RetainOwnershipRequest extends Request {
    
    public final int getContractId() {
       return RetainOwnershipRequest.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return RetainOwnershipRequest.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

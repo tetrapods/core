@@ -16,7 +16,8 @@ public class NagiosStatusMessage extends Message {
    
    public static final int STRUCT_ID = 6683577;
    public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;
-    
+   public static final int SUB_CONTRACT_ID = TetrapodContract.SUB_CONTRACT_ID;
+
    public NagiosStatusMessage() {
       defaults();
    }
@@ -64,6 +65,10 @@ public class NagiosStatusMessage extends Message {
    
    public final int getContractId() {
       return NagiosStatusMessage.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return NagiosStatusMessage.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

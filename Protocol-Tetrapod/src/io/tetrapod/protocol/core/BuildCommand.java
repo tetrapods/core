@@ -24,7 +24,8 @@ public class BuildCommand extends Structure {
    
    public static final int STRUCT_ID = 4239258;
    public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;
-    
+   public static final int SUB_CONTRACT_ID = TetrapodContract.SUB_CONTRACT_ID;
+
    public BuildCommand() {
       defaults();
    }
@@ -82,6 +83,10 @@ public class BuildCommand extends Structure {
 
    public final int getContractId() {
       return BuildCommand.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return BuildCommand.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

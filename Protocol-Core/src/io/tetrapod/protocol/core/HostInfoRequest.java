@@ -21,7 +21,8 @@ public class HostInfoRequest extends RequestWithResponse<HostInfoResponse> {
 
    public static final int STRUCT_ID = 16426670;
    public static final int CONTRACT_ID = CoreContract.CONTRACT_ID;
-   
+   public static final int SUB_CONTRACT_ID = CoreContract.SUB_CONTRACT_ID;
+
    public HostInfoRequest() {
       defaults();
    }
@@ -69,6 +70,10 @@ public class HostInfoRequest extends RequestWithResponse<HostInfoResponse> {
    
    public final int getContractId() {
       return HostInfoRequest.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return HostInfoRequest.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

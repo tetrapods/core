@@ -17,7 +17,8 @@ public class ReleaseExcessRequest extends Request {
 
    public static final int STRUCT_ID = 12519092;
    public static final int CONTRACT_ID = CoreContract.CONTRACT_ID;
-   
+   public static final int SUB_CONTRACT_ID = CoreContract.SUB_CONTRACT_ID;
+
    public ReleaseExcessRequest() {
       defaults();
    }
@@ -65,6 +66,10 @@ public class ReleaseExcessRequest extends Request {
    
    public final int getContractId() {
       return ReleaseExcessRequest.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return ReleaseExcessRequest.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

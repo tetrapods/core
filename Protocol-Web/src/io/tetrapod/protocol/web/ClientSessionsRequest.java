@@ -17,7 +17,8 @@ public class ClientSessionsRequest extends RequestWithResponse<ClientSessionsRes
 
    public static final int STRUCT_ID = 1046006;
    public static final int CONTRACT_ID = WebContract.CONTRACT_ID;
-   
+   public static final int SUB_CONTRACT_ID = WebContract.SUB_CONTRACT_ID;
+
    public ClientSessionsRequest() {
       defaults();
    }
@@ -54,6 +55,10 @@ public class ClientSessionsRequest extends RequestWithResponse<ClientSessionsRes
    
    public final int getContractId() {
       return ClientSessionsRequest.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return ClientSessionsRequest.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

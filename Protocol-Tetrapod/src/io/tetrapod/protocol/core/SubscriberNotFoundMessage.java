@@ -16,7 +16,8 @@ public class SubscriberNotFoundMessage extends Message {
    
    public static final int STRUCT_ID = 995961;
    public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;
-    
+   public static final int SUB_CONTRACT_ID = TetrapodContract.SUB_CONTRACT_ID;
+
    public SubscriberNotFoundMessage() {
       defaults();
    }
@@ -74,6 +75,10 @@ public class SubscriberNotFoundMessage extends Message {
    
    public final int getContractId() {
       return SubscriberNotFoundMessage.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return SubscriberNotFoundMessage.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

@@ -13,7 +13,8 @@ public class WebContract extends Contract {
    public static final int VERSION = 1;
    public static final String NAME = "Web";
    public static final int CONTRACT_ID = 22;
-   
+   public static final int SUB_CONTRACT_ID = 1;
+
    public static interface API extends APIHandler
       , ClientSessionsRequest.Handler
       , CloseClientConnectionRequest.Handler
@@ -98,6 +99,10 @@ public class WebContract extends Contract {
       return WebContract.CONTRACT_ID;
    }
    
+   public int getSubContractId() {
+      return WebContract.SUB_CONTRACT_ID;
+   }
+
    public int getContractVersion() {
       return WebContract.VERSION;
    }

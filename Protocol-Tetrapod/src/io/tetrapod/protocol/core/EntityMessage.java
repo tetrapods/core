@@ -20,7 +20,8 @@ public class EntityMessage extends Message {
    
    public static final int STRUCT_ID = 10913291;
    public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;
-    
+   public static final int SUB_CONTRACT_ID = TetrapodContract.SUB_CONTRACT_ID;
+
    public EntityMessage() {
       defaults();
    }
@@ -63,6 +64,10 @@ public class EntityMessage extends Message {
    
    public final int getContractId() {
       return EntityMessage.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return EntityMessage.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

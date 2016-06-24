@@ -16,22 +16,25 @@ public class ContractDescription extends Structure {
    
    public static final int STRUCT_ID = 7323457;
    public static final int CONTRACT_ID = CoreContract.CONTRACT_ID;
-    
+   public static final int SUB_CONTRACT_ID = CoreContract.SUB_CONTRACT_ID;
+
    public ContractDescription() {
       defaults();
    }
 
-   public ContractDescription(int contractId, int version, List<StructDescription> structs, WebRoute[] routes) {
+   public ContractDescription(int contractId, int version, List<StructDescription> structs, WebRoute[] routes, int subContractId) {
       this.contractId = contractId;
       this.version = version;
       this.structs = structs;
       this.routes = routes;
+      this.subContractId = subContractId;
    }   
    
    public int contractId;
    public int version;
    public List<StructDescription> structs;
    public WebRoute[] routes;
+   public int subContractId;
 
    public final Structure.Security getSecurity() {
       return Security.INTERNAL;
@@ -42,6 +45,7 @@ public class ContractDescription extends Structure {
       version = 0;
       structs = null;
       routes = null;
+      subContractId = 0;
    }
    
    @Override
@@ -50,6 +54,7 @@ public class ContractDescription extends Structure {
       data.write(2, this.version);
       if (this.structs != null) data.write_struct(3, this.structs);
       if (this.routes != null) data.write(4, this.routes);
+      data.write(5, this.subContractId);
       data.writeEndTag();
    }
    
@@ -63,6 +68,7 @@ public class ContractDescription extends Structure {
             case 2: this.version = data.read_int(tag); break;
             case 3: this.structs = data.read_struct_list(tag, new StructDescription()); break;
             case 4: this.routes = data.read_struct_array(tag, new WebRoute()); break;
+            case 5: this.subContractId = data.read_int(tag); break;
             case Codec.END_TAG:
                return;
             default:
@@ -76,6 +82,10 @@ public class ContractDescription extends Structure {
       return ContractDescription.CONTRACT_ID;
    }
 
+   public final int getSubContractId() {
+      return ContractDescription.SUB_CONTRACT_ID;
+   }
+
    public final int getStructId() {
       return ContractDescription.STRUCT_ID;
    }
@@ -84,11 +94,12 @@ public class ContractDescription extends Structure {
       // Note do not use this tags in long term serializations (to disk or databases) as
       // implementors are free to rename them however they wish.  A null means the field
       // is not to participate in web serialization (remaining at default)
-      String[] result = new String[4+1];
+      String[] result = new String[5+1];
       result[1] = "contractId";
       result[2] = "version";
       result[3] = "structs";
       result[4] = "routes";
+      result[5] = "subContractId";
       return result;
    }
 
@@ -106,6 +117,7 @@ public class ContractDescription extends Structure {
       desc.types[2] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
       desc.types[3] = new TypeDescriptor(TypeDescriptor.T_STRUCT_LIST, StructDescription.CONTRACT_ID, StructDescription.STRUCT_ID);
       desc.types[4] = new TypeDescriptor(TypeDescriptor.T_STRUCT_LIST, WebRoute.CONTRACT_ID, WebRoute.STRUCT_ID);
+      desc.types[5] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
       return desc;
    }
 
@@ -127,6 +139,8 @@ public class ContractDescription extends Structure {
          return false;
       if (!Arrays.equals(routes, that.routes))
          return false;
+      if (subContractId != that.subContractId)
+         return false;
 
       return true;
    }
@@ -138,6 +152,7 @@ public class ContractDescription extends Structure {
       result = 31 * result + version;
       result = 31 * result + (structs != null ? structs.hashCode() : 0);
       result = 31 * result + Arrays.hashCode(routes);
+      result = 31 * result + subContractId;
       return result;
    }
 

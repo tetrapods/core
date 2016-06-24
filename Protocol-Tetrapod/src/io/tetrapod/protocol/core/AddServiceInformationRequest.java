@@ -17,7 +17,8 @@ public class AddServiceInformationRequest extends Request {
 
    public static final int STRUCT_ID = 14381454;
    public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;
-   
+   public static final int SUB_CONTRACT_ID = TetrapodContract.SUB_CONTRACT_ID;
+
    public AddServiceInformationRequest() {
       defaults();
    }
@@ -60,6 +61,10 @@ public class AddServiceInformationRequest extends Request {
    
    public final int getContractId() {
       return AddServiceInformationRequest.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return AddServiceInformationRequest.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

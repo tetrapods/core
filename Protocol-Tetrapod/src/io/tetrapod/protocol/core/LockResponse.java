@@ -16,7 +16,8 @@ public class LockResponse extends Response {
    
    public static final int STRUCT_ID = 7264127;
    public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;
-    
+   public static final int SUB_CONTRACT_ID = TetrapodContract.SUB_CONTRACT_ID;
+
    public LockResponse() {
       defaults();
    }
@@ -59,6 +60,10 @@ public class LockResponse extends Response {
   
    public final int getContractId() {
       return LockResponse.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return LockResponse.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

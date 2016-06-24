@@ -16,7 +16,8 @@ public class ClaimOwnershipMessage extends Message {
    
    public static final int STRUCT_ID = 500513;
    public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;
-    
+   public static final int SUB_CONTRACT_ID = TetrapodContract.SUB_CONTRACT_ID;
+
    public ClaimOwnershipMessage() {
       defaults();
    }
@@ -69,6 +70,10 @@ public class ClaimOwnershipMessage extends Message {
    
    public final int getContractId() {
       return ClaimOwnershipMessage.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return ClaimOwnershipMessage.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

@@ -16,7 +16,8 @@ public class WebRoute extends Structure {
    
    public static final int STRUCT_ID = 4890284;
    public static final int CONTRACT_ID = CoreContract.CONTRACT_ID;
-    
+   public static final int SUB_CONTRACT_ID = CoreContract.SUB_CONTRACT_ID;
+
    public WebRoute() {
       defaults();
    }
@@ -69,6 +70,10 @@ public class WebRoute extends Structure {
 
    public final int getContractId() {
       return WebRoute.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return WebRoute.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

@@ -14,7 +14,8 @@ public class {{class}} extends Contract {
    public static final int VERSION = {{version}};
    public static final String NAME = "{{name}}";
    public static {{contractIdVolatile}} int CONTRACT_ID = {{contractId}};
-   
+   public static {{contractIdVolatile}} int SUB_CONTRACT_ID = {{subContractId}};
+
    {{constants}}
    
    public static interface API extends APIHandler
@@ -89,6 +90,10 @@ public class {{class}} extends Contract {
       return {{class}}.CONTRACT_ID;
    }
    
+   public int getSubContractId() {
+      return {{class}}.SUB_CONTRACT_ID;
+   }
+
    public int getContractVersion() {
       return {{class}}.VERSION;
    }

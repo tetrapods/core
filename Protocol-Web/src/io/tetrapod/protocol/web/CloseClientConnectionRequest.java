@@ -17,7 +17,8 @@ public class CloseClientConnectionRequest extends Request {
 
    public static final int STRUCT_ID = 3310279;
    public static final int CONTRACT_ID = WebContract.CONTRACT_ID;
-   
+   public static final int SUB_CONTRACT_ID = WebContract.SUB_CONTRACT_ID;
+
    public CloseClientConnectionRequest() {
       defaults();
    }
@@ -60,6 +61,10 @@ public class CloseClientConnectionRequest extends Request {
    
    public final int getContractId() {
       return CloseClientConnectionRequest.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return CloseClientConnectionRequest.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

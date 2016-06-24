@@ -17,7 +17,8 @@ public class AdminResetPasswordRequest extends Request {
 
    public static final int STRUCT_ID = 868729;
    public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;
-   
+   public static final int SUB_CONTRACT_ID = TetrapodContract.SUB_CONTRACT_ID;
+
    public AdminResetPasswordRequest() {
       defaults();
    }
@@ -75,6 +76,10 @@ public class AdminResetPasswordRequest extends Request {
    
    public final int getContractId() {
       return AdminResetPasswordRequest.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return AdminResetPasswordRequest.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

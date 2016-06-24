@@ -16,7 +16,8 @@ public class StructDescription extends Structure {
    
    public static final int STRUCT_ID = 9642196;
    public static final int CONTRACT_ID = CoreContract.CONTRACT_ID;
-    
+   public static final int SUB_CONTRACT_ID = CoreContract.SUB_CONTRACT_ID;
+
    public StructDescription() {
       defaults();
    }
@@ -69,6 +70,10 @@ public class StructDescription extends Structure {
 
    public final int getContractId() {
       return StructDescription.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return StructDescription.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

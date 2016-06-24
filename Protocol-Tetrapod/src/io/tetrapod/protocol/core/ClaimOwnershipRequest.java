@@ -17,7 +17,8 @@ public class ClaimOwnershipRequest extends RequestWithResponse<ClaimOwnershipRes
 
    public static final int STRUCT_ID = 4158859;
    public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;
-   
+   public static final int SUB_CONTRACT_ID = TetrapodContract.SUB_CONTRACT_ID;
+
    public ClaimOwnershipRequest() {
       defaults();
    }
@@ -70,6 +71,10 @@ public class ClaimOwnershipRequest extends RequestWithResponse<ClaimOwnershipRes
    
    public final int getContractId() {
       return ClaimOwnershipRequest.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return ClaimOwnershipRequest.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

@@ -17,7 +17,8 @@ public class UnlockRequest extends Request {
 
    public static final int STRUCT_ID = 426316;
    public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;
-   
+   public static final int SUB_CONTRACT_ID = TetrapodContract.SUB_CONTRACT_ID;
+
    public UnlockRequest() {
       defaults();
    }
@@ -65,6 +66,10 @@ public class UnlockRequest extends Request {
    
    public final int getContractId() {
       return UnlockRequest.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return UnlockRequest.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

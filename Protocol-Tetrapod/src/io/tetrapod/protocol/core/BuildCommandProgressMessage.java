@@ -20,7 +20,8 @@ public class BuildCommandProgressMessage extends Message {
    
    public static final int STRUCT_ID = 1646916;
    public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;
-    
+   public static final int SUB_CONTRACT_ID = TetrapodContract.SUB_CONTRACT_ID;
+
    public BuildCommandProgressMessage() {
       defaults();
    }
@@ -68,6 +69,10 @@ public class BuildCommandProgressMessage extends Message {
    
    public final int getContractId() {
       return BuildCommandProgressMessage.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return BuildCommandProgressMessage.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

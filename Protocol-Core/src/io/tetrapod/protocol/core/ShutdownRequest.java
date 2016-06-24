@@ -17,7 +17,8 @@ public class ShutdownRequest extends Request {
 
    public static final int STRUCT_ID = 8989182;
    public static final int CONTRACT_ID = CoreContract.CONTRACT_ID;
-   
+   public static final int SUB_CONTRACT_ID = CoreContract.SUB_CONTRACT_ID;
+
    public ShutdownRequest() {
       defaults();
    }
@@ -65,6 +66,10 @@ public class ShutdownRequest extends Request {
    
    public final int getContractId() {
       return ShutdownRequest.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return ShutdownRequest.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

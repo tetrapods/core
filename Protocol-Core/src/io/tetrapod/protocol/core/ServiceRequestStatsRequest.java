@@ -17,7 +17,8 @@ public class ServiceRequestStatsRequest extends RequestWithResponse<ServiceReque
 
    public static final int STRUCT_ID = 16134423;
    public static final int CONTRACT_ID = CoreContract.CONTRACT_ID;
-   
+   public static final int SUB_CONTRACT_ID = CoreContract.SUB_CONTRACT_ID;
+
    public ServiceRequestStatsRequest() {
       defaults();
    }
@@ -89,6 +90,10 @@ public class ServiceRequestStatsRequest extends RequestWithResponse<ServiceReque
    
    public final int getContractId() {
       return ServiceRequestStatsRequest.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return ServiceRequestStatsRequest.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

@@ -17,7 +17,8 @@ public class SetWebRootRequest extends Request {
 
    public static final int STRUCT_ID = 4029010;
    public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;
-   
+   public static final int SUB_CONTRACT_ID = TetrapodContract.SUB_CONTRACT_ID;
+
    public SetWebRootRequest() {
       defaults();
    }
@@ -70,6 +71,10 @@ public class SetWebRootRequest extends Request {
    
    public final int getContractId() {
       return SetWebRootRequest.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return SetWebRootRequest.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

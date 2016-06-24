@@ -17,7 +17,8 @@ public class ValidateConnectionRequest extends RequestWithResponse<ValidateConne
 
    public static final int STRUCT_ID = 6315662;
    public static final int CONTRACT_ID = CoreContract.CONTRACT_ID;
-   
+   public static final int SUB_CONTRACT_ID = CoreContract.SUB_CONTRACT_ID;
+
    public ValidateConnectionRequest() {
       defaults();
    }
@@ -65,6 +66,10 @@ public class ValidateConnectionRequest extends RequestWithResponse<ValidateConne
    
    public final int getContractId() {
       return ValidateConnectionRequest.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return ValidateConnectionRequest.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

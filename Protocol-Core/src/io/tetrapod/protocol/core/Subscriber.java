@@ -16,7 +16,8 @@ public class Subscriber extends Structure {
    
    public static final int STRUCT_ID = 16013581;
    public static final int CONTRACT_ID = CoreContract.CONTRACT_ID;
-    
+   public static final int SUB_CONTRACT_ID = CoreContract.SUB_CONTRACT_ID;
+
    public Subscriber() {
       defaults();
    }
@@ -64,6 +65,10 @@ public class Subscriber extends Structure {
 
    public final int getContractId() {
       return Subscriber.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return Subscriber.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

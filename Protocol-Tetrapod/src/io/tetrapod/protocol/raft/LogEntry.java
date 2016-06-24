@@ -16,7 +16,8 @@ public class LogEntry extends Structure {
    
    public static final int STRUCT_ID = 3294185;
    public static final int CONTRACT_ID = RaftContract.CONTRACT_ID;
-    
+   public static final int SUB_CONTRACT_ID = RaftContract.SUB_CONTRACT_ID;
+
    public LogEntry() {
       defaults();
    }
@@ -74,6 +75,10 @@ public class LogEntry extends Structure {
 
    public final int getContractId() {
       return LogEntry.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return LogEntry.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

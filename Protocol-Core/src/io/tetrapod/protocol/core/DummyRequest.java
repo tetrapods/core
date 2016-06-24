@@ -21,7 +21,8 @@ public class DummyRequest extends Request {
 
    public static final int STRUCT_ID = 6747086;
    public static final int CONTRACT_ID = CoreContract.CONTRACT_ID;
-   
+   public static final int SUB_CONTRACT_ID = CoreContract.SUB_CONTRACT_ID;
+
    public DummyRequest() {
       defaults();
    }
@@ -58,6 +59,10 @@ public class DummyRequest extends Request {
    
    public final int getContractId() {
       return DummyRequest.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return DummyRequest.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

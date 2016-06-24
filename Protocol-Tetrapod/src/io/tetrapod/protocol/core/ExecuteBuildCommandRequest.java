@@ -21,7 +21,8 @@ public class ExecuteBuildCommandRequest extends Request {
 
    public static final int STRUCT_ID = 7902304;
    public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;
-   
+   public static final int SUB_CONTRACT_ID = TetrapodContract.SUB_CONTRACT_ID;
+
    public ExecuteBuildCommandRequest() {
       defaults();
    }
@@ -74,6 +75,10 @@ public class ExecuteBuildCommandRequest extends Request {
    
    public final int getContractId() {
       return ExecuteBuildCommandRequest.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return ExecuteBuildCommandRequest.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

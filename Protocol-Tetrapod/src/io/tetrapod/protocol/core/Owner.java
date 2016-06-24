@@ -16,7 +16,8 @@ public class Owner extends Structure {
    
    public static final int STRUCT_ID = 2276990;
    public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;
-    
+   public static final int SUB_CONTRACT_ID = TetrapodContract.SUB_CONTRACT_ID;
+
    public Owner() {
       defaults();
    }
@@ -74,6 +75,10 @@ public class Owner extends Structure {
 
    public final int getContractId() {
       return Owner.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return Owner.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

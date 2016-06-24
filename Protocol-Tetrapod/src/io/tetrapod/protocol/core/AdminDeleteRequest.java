@@ -17,7 +17,8 @@ public class AdminDeleteRequest extends Request {
 
    public static final int STRUCT_ID = 7421322;
    public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;
-   
+   public static final int SUB_CONTRACT_ID = TetrapodContract.SUB_CONTRACT_ID;
+
    public AdminDeleteRequest() {
       defaults();
    }
@@ -70,6 +71,10 @@ public class AdminDeleteRequest extends Request {
    
    public final int getContractId() {
       return AdminDeleteRequest.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return AdminDeleteRequest.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

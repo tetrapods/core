@@ -16,7 +16,8 @@ public class RequestStat extends Structure {
    
    public static final int STRUCT_ID = 12902770;
    public static final int CONTRACT_ID = CoreContract.CONTRACT_ID;
-    
+   public static final int SUB_CONTRACT_ID = CoreContract.SUB_CONTRACT_ID;
+
    public RequestStat() {
       defaults();
    }
@@ -107,6 +108,10 @@ public class RequestStat extends Structure {
 
    public final int getContractId() {
       return RequestStat.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return RequestStat.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

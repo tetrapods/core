@@ -16,7 +16,8 @@ public class AdminUserAddedMessage extends Message {
    
    public static final int STRUCT_ID = 2316676;
    public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;
-    
+   public static final int SUB_CONTRACT_ID = TetrapodContract.SUB_CONTRACT_ID;
+
    public AdminUserAddedMessage() {
       defaults();
    }
@@ -59,6 +60,10 @@ public class AdminUserAddedMessage extends Message {
    
    public final int getContractId() {
       return AdminUserAddedMessage.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return AdminUserAddedMessage.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

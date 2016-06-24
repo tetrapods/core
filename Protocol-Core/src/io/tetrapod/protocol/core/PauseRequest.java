@@ -17,7 +17,8 @@ public class PauseRequest extends Request {
 
    public static final int STRUCT_ID = 14690004;
    public static final int CONTRACT_ID = CoreContract.CONTRACT_ID;
-   
+   public static final int SUB_CONTRACT_ID = CoreContract.SUB_CONTRACT_ID;
+
    public PauseRequest() {
       defaults();
    }
@@ -65,6 +66,10 @@ public class PauseRequest extends Request {
    
    public final int getContractId() {
       return PauseRequest.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return PauseRequest.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

@@ -16,7 +16,8 @@ public class AdminSessionTokenResponse extends Response {
    
    public static final int STRUCT_ID = 1057000;
    public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;
-    
+   public static final int SUB_CONTRACT_ID = TetrapodContract.SUB_CONTRACT_ID;
+
    public AdminSessionTokenResponse() {
       defaults();
    }
@@ -62,6 +63,10 @@ public class AdminSessionTokenResponse extends Response {
   
    public final int getContractId() {
       return AdminSessionTokenResponse.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return AdminSessionTokenResponse.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

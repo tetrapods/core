@@ -17,7 +17,8 @@ public class AppendEntriesRequest extends RequestWithResponse<AppendEntriesRespo
 
    public static final int STRUCT_ID = 5018018;
    public static final int CONTRACT_ID = RaftContract.CONTRACT_ID;
-   
+   public static final int SUB_CONTRACT_ID = RaftContract.SUB_CONTRACT_ID;
+
    public AppendEntriesRequest() {
       defaults();
    }
@@ -85,6 +86,10 @@ public class AppendEntriesRequest extends RequestWithResponse<AppendEntriesRespo
    
    public final int getContractId() {
       return AppendEntriesRequest.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return AppendEntriesRequest.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

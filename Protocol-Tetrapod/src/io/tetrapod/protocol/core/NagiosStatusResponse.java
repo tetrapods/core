@@ -16,7 +16,8 @@ public class NagiosStatusResponse extends Response {
    
    public static final int STRUCT_ID = 15307585;
    public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;
-    
+   public static final int SUB_CONTRACT_ID = TetrapodContract.SUB_CONTRACT_ID;
+
    public NagiosStatusResponse() {
       defaults();
    }
@@ -59,6 +60,10 @@ public class NagiosStatusResponse extends Response {
   
    public final int getContractId() {
       return NagiosStatusResponse.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return NagiosStatusResponse.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

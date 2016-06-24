@@ -16,7 +16,8 @@ public class TopicUnsubscribedMessage extends Message {
    
    public static final int STRUCT_ID = 6934832;
    public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;
-    
+   public static final int SUB_CONTRACT_ID = TetrapodContract.SUB_CONTRACT_ID;
+
    public TopicUnsubscribedMessage() {
       defaults();
    }
@@ -74,6 +75,10 @@ public class TopicUnsubscribedMessage extends Message {
    
    public final int getContractId() {
       return TopicUnsubscribedMessage.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return TopicUnsubscribedMessage.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

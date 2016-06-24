@@ -16,7 +16,8 @@ public class GetClientInfoResponse extends Response {
    
    public static final int STRUCT_ID = 9293453;
    public static final int CONTRACT_ID = WebContract.CONTRACT_ID;
-    
+   public static final int SUB_CONTRACT_ID = WebContract.SUB_CONTRACT_ID;
+
    public GetClientInfoResponse() {
       defaults();
    }
@@ -95,6 +96,10 @@ public class GetClientInfoResponse extends Response {
   
    public final int getContractId() {
       return GetClientInfoResponse.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return GetClientInfoResponse.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

@@ -313,7 +313,7 @@ public class TetrapodCluster extends Storage
                prop.val = AESEncryptor.decryptSaltedAES(prop.val, state.secretKey);
                ses.sendMessage(new ClusterPropertyAddedMessage(prop), toEntityId, childId);
             }
-            for (ContractDescription info : state.contracts.values()) {
+            for ( ContractDescription info : state.contracts.values()) {
                ses.sendMessage(new RegisterContractMessage(info), toEntityId, childId);
             }
             for (WebRootDef def : state.webRootDefs.values()) {
@@ -779,7 +779,7 @@ public class TetrapodCluster extends Storage
    public void registerContract(ContractDescription info) {
       logger.info("Register contract: {} v{}", info.contractId, info.version);
       // FIXME: version isn't updated for minor changes, so we should also include a hash or timestamp for minor updates 
-      if (!state.hasContract(info.contractId, info.version)) {
+      if (!state.hasContract(info.contractId, info.subContractId, info.version)) {
          executeCommand(new RegisterContractCommand(info), null);
       }
    }

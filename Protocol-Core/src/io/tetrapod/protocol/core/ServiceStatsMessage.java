@@ -16,7 +16,8 @@ public class ServiceStatsMessage extends Message {
    
    public static final int STRUCT_ID = 469976;
    public static final int CONTRACT_ID = CoreContract.CONTRACT_ID;
-    
+   public static final int SUB_CONTRACT_ID = CoreContract.SUB_CONTRACT_ID;
+
    public ServiceStatsMessage() {
       defaults();
    }
@@ -113,6 +114,10 @@ public class ServiceStatsMessage extends Message {
    
    public final int getContractId() {
       return ServiceStatsMessage.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return ServiceStatsMessage.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

@@ -16,7 +16,8 @@ public class StatPair extends Structure {
    
    public static final int STRUCT_ID = 10082177;
    public static final int CONTRACT_ID = CoreContract.CONTRACT_ID;
-    
+   public static final int SUB_CONTRACT_ID = CoreContract.SUB_CONTRACT_ID;
+
    public StatPair() {
       defaults();
    }
@@ -64,6 +65,10 @@ public class StatPair extends Structure {
 
    public final int getContractId() {
       return StatPair.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return StatPair.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

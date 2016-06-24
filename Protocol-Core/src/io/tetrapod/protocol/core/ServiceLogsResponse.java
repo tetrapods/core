@@ -16,7 +16,8 @@ public class ServiceLogsResponse extends Response {
    
    public static final int STRUCT_ID = 6345878;
    public static final int CONTRACT_ID = CoreContract.CONTRACT_ID;
-    
+   public static final int SUB_CONTRACT_ID = CoreContract.SUB_CONTRACT_ID;
+
    public ServiceLogsResponse() {
       defaults();
    }
@@ -64,6 +65,10 @@ public class ServiceLogsResponse extends Response {
   
    public final int getContractId() {
       return ServiceLogsResponse.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return ServiceLogsResponse.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

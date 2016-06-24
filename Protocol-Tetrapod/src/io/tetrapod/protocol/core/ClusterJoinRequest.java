@@ -17,7 +17,8 @@ public class ClusterJoinRequest extends Request {
 
    public static final int STRUCT_ID = 8294880;
    public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;
-   
+   public static final int SUB_CONTRACT_ID = TetrapodContract.SUB_CONTRACT_ID;
+
    public ClusterJoinRequest() {
       defaults();
    }
@@ -85,6 +86,10 @@ public class ClusterJoinRequest extends Request {
    
    public final int getContractId() {
       return ClusterJoinRequest.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return ClusterJoinRequest.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

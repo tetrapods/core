@@ -17,7 +17,8 @@ public class UnsubscribeOwnershipRequest extends Request {
 
    public static final int STRUCT_ID = 5167974;
    public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;
-   
+   public static final int SUB_CONTRACT_ID = TetrapodContract.SUB_CONTRACT_ID;
+
    public UnsubscribeOwnershipRequest() {
       defaults();
    }
@@ -63,6 +64,10 @@ public class UnsubscribeOwnershipRequest extends Request {
    
    public final int getContractId() {
       return UnsubscribeOwnershipRequest.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return UnsubscribeOwnershipRequest.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

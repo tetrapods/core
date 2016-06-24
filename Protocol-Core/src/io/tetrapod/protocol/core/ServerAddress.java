@@ -16,7 +16,8 @@ public class ServerAddress extends Structure {
    
    public static final int STRUCT_ID = 14893956;
    public static final int CONTRACT_ID = CoreContract.CONTRACT_ID;
-    
+   public static final int SUB_CONTRACT_ID = CoreContract.SUB_CONTRACT_ID;
+
    public ServerAddress() {
       defaults();
    }
@@ -64,6 +65,10 @@ public class ServerAddress extends Structure {
 
    public final int getContractId() {
       return ServerAddress.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return ServerAddress.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

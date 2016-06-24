@@ -13,7 +13,8 @@ public class StorageContract extends Contract {
    public static final int VERSION = 1;
    public static final String NAME = "Storage";
    public static final int CONTRACT_ID = 3;
-   
+   public static final int SUB_CONTRACT_ID = 1;
+
    public static interface API extends APIHandler
       , StorageDeleteRequest.Handler
       , StorageGetRequest.Handler
@@ -90,6 +91,10 @@ public class StorageContract extends Contract {
       return StorageContract.CONTRACT_ID;
    }
    
+   public int getSubContractId() {
+      return StorageContract.SUB_CONTRACT_ID;
+   }
+
    public int getContractVersion() {
       return StorageContract.VERSION;
    }

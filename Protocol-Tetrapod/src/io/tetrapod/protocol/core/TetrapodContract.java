@@ -17,7 +17,8 @@ public class TetrapodContract extends Contract {
    public static final int VERSION = 1;
    public static final String NAME = "Tetrapod";
    public static final int CONTRACT_ID = 1;
-   
+   public static final int SUB_CONTRACT_ID = 1;
+
    /**
     * Supports up to 2047 tetrapods
     */
@@ -213,6 +214,10 @@ public class TetrapodContract extends Contract {
       return TetrapodContract.CONTRACT_ID;
    }
    
+   public int getSubContractId() {
+      return TetrapodContract.SUB_CONTRACT_ID;
+   }
+
    public int getContractVersion() {
       return TetrapodContract.VERSION;
    }
@@ -263,12 +268,16 @@ public class TetrapodContract extends Contract {
          return TetrapodContract.CONTRACT_ID;
       } 
        
+      public int getSubContractId() {
+         return TetrapodContract.SUB_CONTRACT_ID;
+      }
+   
       public int getContractVersion() {
          return TetrapodContract.VERSION;
       } 
        
    }
-      
+   
    public static class Ownership extends Contract {
       public static interface API extends
          ClaimOwnershipMessage.Handler,
@@ -292,12 +301,16 @@ public class TetrapodContract extends Contract {
          return TetrapodContract.CONTRACT_ID;
       } 
        
+      public int getSubContractId() {
+         return TetrapodContract.SUB_CONTRACT_ID;
+      }
+   
       public int getContractVersion() {
          return TetrapodContract.VERSION;
       } 
        
    }
-      
+   
    public static class Pubsub extends Contract {
       public static interface API extends
          TopicPublishedMessage.Handler,
@@ -323,12 +336,16 @@ public class TetrapodContract extends Contract {
          return TetrapodContract.CONTRACT_ID;
       } 
        
+      public int getSubContractId() {
+         return TetrapodContract.SUB_CONTRACT_ID;
+      }
+   
       public int getContractVersion() {
          return TetrapodContract.VERSION;
       } 
        
    }
-      
+   
    public static class Services extends Contract {
       public static interface API extends
          ServiceAddedMessage.Handler,
@@ -352,12 +369,16 @@ public class TetrapodContract extends Contract {
          return TetrapodContract.CONTRACT_ID;
       } 
        
+      public int getSubContractId() {
+         return TetrapodContract.SUB_CONTRACT_ID;
+      }
+   
       public int getContractVersion() {
          return TetrapodContract.VERSION;
       } 
        
    }
-      
+   
    public static final int ERROR_HOSTNAME_MISMATCH = 12239905; 
    public static final int ERROR_INVALID_ACCOUNT = 14623816; 
    public static final int ERROR_INVALID_CREDENTIALS = 8845805; 

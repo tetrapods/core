@@ -17,7 +17,8 @@ public class RebalanceRequest extends Request {
 
    public static final int STRUCT_ID = 1734199;
    public static final int CONTRACT_ID = CoreContract.CONTRACT_ID;
-   
+   public static final int SUB_CONTRACT_ID = CoreContract.SUB_CONTRACT_ID;
+
    public RebalanceRequest() {
       defaults();
    }
@@ -65,6 +66,10 @@ public class RebalanceRequest extends Request {
    
    public final int getContractId() {
       return RebalanceRequest.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return RebalanceRequest.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

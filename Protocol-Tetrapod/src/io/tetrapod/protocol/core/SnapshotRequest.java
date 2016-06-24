@@ -17,7 +17,8 @@ public class SnapshotRequest extends Request {
 
    public static final int STRUCT_ID = 7083092;
    public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;
-   
+   public static final int SUB_CONTRACT_ID = TetrapodContract.SUB_CONTRACT_ID;
+
    public SnapshotRequest() {
       defaults();
    }
@@ -60,6 +61,10 @@ public class SnapshotRequest extends Request {
    
    public final int getContractId() {
       return SnapshotRequest.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return SnapshotRequest.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

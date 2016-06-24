@@ -20,7 +20,8 @@ public class ServiceCommand extends Structure {
    
    public static final int STRUCT_ID = 5461687;
    public static final int CONTRACT_ID = CoreContract.CONTRACT_ID;
-    
+   public static final int SUB_CONTRACT_ID = CoreContract.SUB_CONTRACT_ID;
+
    public ServiceCommand() {
       defaults();
    }
@@ -83,6 +84,10 @@ public class ServiceCommand extends Structure {
 
    public final int getContractId() {
       return ServiceCommand.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return ServiceCommand.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {
