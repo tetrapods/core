@@ -56,7 +56,7 @@ public class TetrapodStateMachine extends StorageStateMachine<TetrapodStateMachi
    public static final int                            DEL_ENTITY_COMMAND_ID           = 413;
 
    public final Map<String, ClusterProperty>          props                           = new HashMap<>();
-   public final Map<ContractKey, ContractDescription> contracts                       = new HashMap<>();
+   public final Map<ContractKey, ContractDescription> contracts                       = new ConcurrentHashMap<>();
    public final Map<String, WebRootDef>               webRootDefs                     = new HashMap<>();
    public final Map<Integer, Admin>                   admins                          = new HashMap<>();
    public final WebRoutes                             webRoutes                       = new WebRoutes();
