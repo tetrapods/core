@@ -912,6 +912,7 @@ public class DefaultService
          for (Structure s : contract.getStructs()) {
             asi.info.structs.add(s.makeDescription());
          }
+         asi.info.subContractId = contract.getSubContractId();
          sendDirectRequest(asi).handle(ResponseHandler.LOGGER);
       }
    }
