@@ -16,4 +16,26 @@ public class ContractKey {
    public int getSubContractId() {
       return subContractId;
    }
+
+   @Override
+   public boolean equals(Object o) {
+      if (this == o)
+         return true;
+      if (o == null || getClass() != o.getClass())
+         return false;
+
+      ContractKey that = (ContractKey) o;
+
+      if (contractId != that.contractId)
+         return false;
+      return subContractId == that.subContractId;
+
+   }
+
+   @Override
+   public int hashCode() {
+      int result = contractId;
+      result = 31 * result + subContractId;
+      return result;
+   }
 }
