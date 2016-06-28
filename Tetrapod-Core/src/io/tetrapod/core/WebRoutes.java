@@ -23,7 +23,7 @@ public class WebRoutes {
       if (r == null) {
          // special handling for @root paths
          for (WebRoute route : routes.values()) {
-            if (path.startsWith(route.path+"/")) {
+            if (path.startsWith(route.path + "/")) {
                return route;
             }
          }
@@ -40,6 +40,21 @@ public class WebRoutes {
 
    public void clear() {
       routes.clear();
+   }
+
+   /**
+    * Removes all routes for a contract that aren't in the existing set
+    */
+   public void clear(int contractId, WebRoute[] existing) {
+      for (WebRoute r : routes.values()) {
+         if (r.contractId == contractId) {
+            for (WebRoute e : existing) {
+               if (e.path.equals(r.path))
+                  continue;
+            }
+            routes.remove(r.path);
+         }
+      }
    }
 
 }
