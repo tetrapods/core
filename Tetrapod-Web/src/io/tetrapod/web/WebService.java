@@ -64,7 +64,7 @@ public class WebService extends DefaultService
 
    @Override
    public String getServiceIcon() {
-      return "fa-group";
+      return "fa-cloud";
    }
 
    @Override
