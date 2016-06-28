@@ -16,7 +16,8 @@ public class RegisterContractMessage extends Message {
    
    public static final int STRUCT_ID = 11935907;
    public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;
-    
+   public static final int SUB_CONTRACT_ID = TetrapodContract.SUB_CONTRACT_ID;
+
    public RegisterContractMessage() {
       defaults();
    }
@@ -59,6 +60,10 @@ public class RegisterContractMessage extends Message {
    
    public final int getContractId() {
       return RegisterContractMessage.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return RegisterContractMessage.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

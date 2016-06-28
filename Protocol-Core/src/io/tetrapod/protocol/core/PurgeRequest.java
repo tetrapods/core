@@ -17,7 +17,8 @@ public class PurgeRequest extends Request {
 
    public static final int STRUCT_ID = 2667367;
    public static final int CONTRACT_ID = CoreContract.CONTRACT_ID;
-   
+   public static final int SUB_CONTRACT_ID = CoreContract.SUB_CONTRACT_ID;
+
    public PurgeRequest() {
       defaults();
    }
@@ -65,6 +66,10 @@ public class PurgeRequest extends Request {
    
    public final int getContractId() {
       return PurgeRequest.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return PurgeRequest.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

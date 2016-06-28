@@ -17,7 +17,8 @@ public class SetCommsLogLevelRequest extends Request {
 
    public static final int STRUCT_ID = 10256079;
    public static final int CONTRACT_ID = CoreContract.CONTRACT_ID;
-   
+   public static final int SUB_CONTRACT_ID = CoreContract.SUB_CONTRACT_ID;
+
    public SetCommsLogLevelRequest() {
       defaults();
    }
@@ -70,6 +71,10 @@ public class SetCommsLogLevelRequest extends Request {
    
    public final int getContractId() {
       return SetCommsLogLevelRequest.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return SetCommsLogLevelRequest.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

@@ -17,7 +17,8 @@ public class ServiceStatsUnsubscribeRequest extends Request {
 
    public static final int STRUCT_ID = 576067;
    public static final int CONTRACT_ID = CoreContract.CONTRACT_ID;
-   
+   public static final int SUB_CONTRACT_ID = CoreContract.SUB_CONTRACT_ID;
+
    public ServiceStatsUnsubscribeRequest() {
       defaults();
    }
@@ -65,6 +66,10 @@ public class ServiceStatsUnsubscribeRequest extends Request {
    
    public final int getContractId() {
       return ServiceStatsUnsubscribeRequest.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return ServiceStatsUnsubscribeRequest.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

@@ -17,7 +17,8 @@ public class AdminChangeRightsRequest extends Request {
 
    public static final int STRUCT_ID = 16102706;
    public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;
-   
+   public static final int SUB_CONTRACT_ID = TetrapodContract.SUB_CONTRACT_ID;
+
    public AdminChangeRightsRequest() {
       defaults();
    }
@@ -75,6 +76,10 @@ public class AdminChangeRightsRequest extends Request {
    
    public final int getContractId() {
       return AdminChangeRightsRequest.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return AdminChangeRightsRequest.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

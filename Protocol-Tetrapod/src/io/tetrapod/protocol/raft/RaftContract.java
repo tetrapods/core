@@ -13,7 +13,8 @@ public class RaftContract extends Contract {
    public static final int VERSION = 1;
    public static final String NAME = "Raft";
    public static final int CONTRACT_ID = 16;
-   
+   public static final int SUB_CONTRACT_ID = 1;
+
    public static interface API extends APIHandler
       , AppendEntriesRequest.Handler
       , InstallSnapshotRequest.Handler
@@ -95,6 +96,10 @@ public class RaftContract extends Contract {
       return RaftContract.CONTRACT_ID;
    }
    
+   public int getSubContractId() {
+      return RaftContract.SUB_CONTRACT_ID;
+   }
+
    public int getContractVersion() {
       return RaftContract.VERSION;
    }

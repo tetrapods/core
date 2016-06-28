@@ -17,7 +17,8 @@ public class CoreContract extends Contract {
    public static final int VERSION = 1;
    public static final String NAME = "Core";
    public static final int CONTRACT_ID = 1;
-   
+   public static final int SUB_CONTRACT_ID = 1;
+
    public static interface API extends APIHandler
       , DirectConnectionRequest.Handler
       , DummyRequest.Handler
@@ -152,6 +153,10 @@ public class CoreContract extends Contract {
       return CoreContract.CONTRACT_ID;
    }
    
+   public int getSubContractId() {
+      return CoreContract.SUB_CONTRACT_ID;
+   }
+
    public int getContractVersion() {
       return CoreContract.VERSION;
    }
@@ -188,12 +193,16 @@ public class CoreContract extends Contract {
          return CoreContract.CONTRACT_ID;
       } 
        
+      public int getSubContractId() {
+         return CoreContract.SUB_CONTRACT_ID;
+      }
+   
       public int getContractVersion() {
          return CoreContract.VERSION;
       } 
        
    }
-      
+   
    /**
     * Request's session was disconnected
     */

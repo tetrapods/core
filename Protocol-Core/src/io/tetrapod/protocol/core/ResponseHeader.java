@@ -16,7 +16,8 @@ public class ResponseHeader extends Structure {
    
    public static final int STRUCT_ID = 675609;
    public static final int CONTRACT_ID = CoreContract.CONTRACT_ID;
-    
+   public static final int SUB_CONTRACT_ID = CoreContract.SUB_CONTRACT_ID;
+
    public ResponseHeader() {
       defaults();
    }
@@ -69,6 +70,10 @@ public class ResponseHeader extends Structure {
 
    public final int getContractId() {
       return ResponseHeader.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return ResponseHeader.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

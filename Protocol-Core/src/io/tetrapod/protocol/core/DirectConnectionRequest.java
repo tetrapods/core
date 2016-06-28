@@ -17,7 +17,8 @@ public class DirectConnectionRequest extends RequestWithResponse<DirectConnectio
 
    public static final int STRUCT_ID = 1361471;
    public static final int CONTRACT_ID = CoreContract.CONTRACT_ID;
-   
+   public static final int SUB_CONTRACT_ID = CoreContract.SUB_CONTRACT_ID;
+
    public DirectConnectionRequest() {
       defaults();
    }
@@ -65,6 +66,10 @@ public class DirectConnectionRequest extends RequestWithResponse<DirectConnectio
    
    public final int getContractId() {
       return DirectConnectionRequest.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return DirectConnectionRequest.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

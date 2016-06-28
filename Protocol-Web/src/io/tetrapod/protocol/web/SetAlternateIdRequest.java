@@ -17,7 +17,8 @@ public class SetAlternateIdRequest extends Request {
 
    public static final int STRUCT_ID = 10499521;
    public static final int CONTRACT_ID = WebContract.CONTRACT_ID;
-   
+   public static final int SUB_CONTRACT_ID = WebContract.SUB_CONTRACT_ID;
+
    public SetAlternateIdRequest() {
       defaults();
    }
@@ -65,6 +66,10 @@ public class SetAlternateIdRequest extends Request {
    
    public final int getContractId() {
       return SetAlternateIdRequest.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return SetAlternateIdRequest.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

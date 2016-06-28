@@ -17,7 +17,8 @@ public class SetClusterPropertyRequest extends Request {
 
    public static final int STRUCT_ID = 11003897;
    public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;
-   
+   public static final int SUB_CONTRACT_ID = TetrapodContract.SUB_CONTRACT_ID;
+
    public SetClusterPropertyRequest() {
       defaults();
    }
@@ -70,6 +71,10 @@ public class SetClusterPropertyRequest extends Request {
    
    public final int getContractId() {
       return SetClusterPropertyRequest.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return SetClusterPropertyRequest.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

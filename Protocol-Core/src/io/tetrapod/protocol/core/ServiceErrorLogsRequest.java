@@ -17,7 +17,8 @@ public class ServiceErrorLogsRequest extends RequestWithResponse<ServiceErrorLog
 
    public static final int STRUCT_ID = 16327568;
    public static final int CONTRACT_ID = CoreContract.CONTRACT_ID;
-   
+   public static final int SUB_CONTRACT_ID = CoreContract.SUB_CONTRACT_ID;
+
    public ServiceErrorLogsRequest() {
       defaults();
    }
@@ -65,6 +66,10 @@ public class ServiceErrorLogsRequest extends RequestWithResponse<ServiceErrorLog
    
    public final int getContractId() {
       return ServiceErrorLogsRequest.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return ServiceErrorLogsRequest.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

@@ -17,7 +17,8 @@ public class WebAPIRequest extends RequestWithResponse<WebAPIResponse> {
 
    public static final int STRUCT_ID = 9321342;
    public static final int CONTRACT_ID = CoreContract.CONTRACT_ID;
-   
+   public static final int SUB_CONTRACT_ID = CoreContract.SUB_CONTRACT_ID;
+
    public WebAPIRequest() {
       defaults();
    }
@@ -95,6 +96,10 @@ public class WebAPIRequest extends RequestWithResponse<WebAPIResponse> {
    
    public final int getContractId() {
       return WebAPIRequest.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return WebAPIRequest.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

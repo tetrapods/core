@@ -17,7 +17,8 @@ public class GetServiceBuildInfoRequest extends RequestWithResponse<GetServiceBu
 
    public static final int STRUCT_ID = 4482593;
    public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;
-   
+   public static final int SUB_CONTRACT_ID = TetrapodContract.SUB_CONTRACT_ID;
+
    public GetServiceBuildInfoRequest() {
       defaults();
    }
@@ -65,6 +66,10 @@ public class GetServiceBuildInfoRequest extends RequestWithResponse<GetServiceBu
    
    public final int getContractId() {
       return GetServiceBuildInfoRequest.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return GetServiceBuildInfoRequest.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

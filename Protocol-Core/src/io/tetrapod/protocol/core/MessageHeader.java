@@ -18,7 +18,8 @@ public class MessageHeader extends Structure {
    
    public static final int STRUCT_ID = 11760427;
    public static final int CONTRACT_ID = CoreContract.CONTRACT_ID;
-    
+   public static final int SUB_CONTRACT_ID = CoreContract.SUB_CONTRACT_ID;
+
    public MessageHeader() {
       defaults();
    }
@@ -91,6 +92,10 @@ public class MessageHeader extends Structure {
 
    public final int getContractId() {
       return MessageHeader.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return MessageHeader.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

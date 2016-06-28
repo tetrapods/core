@@ -17,7 +17,8 @@ public class InstallSnapshotRequest extends RequestWithResponse<InstallSnapshotR
 
    public static final int STRUCT_ID = 5436535;
    public static final int CONTRACT_ID = RaftContract.CONTRACT_ID;
-   
+   public static final int SUB_CONTRACT_ID = RaftContract.SUB_CONTRACT_ID;
+
    public InstallSnapshotRequest() {
       defaults();
    }
@@ -85,6 +86,10 @@ public class InstallSnapshotRequest extends RequestWithResponse<InstallSnapshotR
    
    public final int getContractId() {
       return InstallSnapshotRequest.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return InstallSnapshotRequest.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

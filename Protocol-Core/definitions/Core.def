@@ -334,6 +334,7 @@ internal struct ContractDescription
    2: int version
    3: StructDescription<list> structs
    4: WebRoute[] routes
+   5: int subContractId
    
 internal struct StructDescription
    1: TypeDescriptor[] types

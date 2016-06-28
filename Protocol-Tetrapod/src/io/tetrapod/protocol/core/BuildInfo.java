@@ -16,7 +16,8 @@ public class BuildInfo extends Structure {
    
    public static final int STRUCT_ID = 14488001;
    public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;
-    
+   public static final int SUB_CONTRACT_ID = TetrapodContract.SUB_CONTRACT_ID;
+
    public BuildInfo() {
       defaults();
    }
@@ -84,6 +85,10 @@ public class BuildInfo extends Structure {
 
    public final int getContractId() {
       return BuildInfo.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return BuildInfo.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

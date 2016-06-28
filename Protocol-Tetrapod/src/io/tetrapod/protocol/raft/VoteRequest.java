@@ -17,7 +17,8 @@ public class VoteRequest extends RequestWithResponse<VoteResponse> {
 
    public static final int STRUCT_ID = 9348108;
    public static final int CONTRACT_ID = RaftContract.CONTRACT_ID;
-   
+   public static final int SUB_CONTRACT_ID = RaftContract.SUB_CONTRACT_ID;
+
    public VoteRequest() {
       defaults();
    }
@@ -80,6 +81,10 @@ public class VoteRequest extends RequestWithResponse<VoteResponse> {
    
    public final int getContractId() {
       return VoteRequest.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return VoteRequest.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

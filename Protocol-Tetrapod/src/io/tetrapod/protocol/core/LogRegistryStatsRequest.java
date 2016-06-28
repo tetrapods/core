@@ -17,7 +17,8 @@ public class LogRegistryStatsRequest extends Request {
 
    public static final int STRUCT_ID = 10504592;
    public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;
-   
+   public static final int SUB_CONTRACT_ID = TetrapodContract.SUB_CONTRACT_ID;
+
    public LogRegistryStatsRequest() {
       defaults();
    }
@@ -65,6 +66,10 @@ public class LogRegistryStatsRequest extends Request {
    
    public final int getContractId() {
       return LogRegistryStatsRequest.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return LogRegistryStatsRequest.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

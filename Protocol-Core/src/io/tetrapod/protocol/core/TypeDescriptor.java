@@ -31,7 +31,8 @@ public class TypeDescriptor extends Structure {
    
    public static final int STRUCT_ID = 6493266;
    public static final int CONTRACT_ID = CoreContract.CONTRACT_ID;
-    
+   public static final int SUB_CONTRACT_ID = CoreContract.SUB_CONTRACT_ID;
+
    public TypeDescriptor() {
       defaults();
    }
@@ -84,6 +85,10 @@ public class TypeDescriptor extends Structure {
 
    public final int getContractId() {
       return TypeDescriptor.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return TypeDescriptor.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

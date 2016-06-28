@@ -16,7 +16,8 @@ public class AdminLoginResponse extends Response {
    
    public static final int STRUCT_ID = 4213436;
    public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;
-    
+   public static final int SUB_CONTRACT_ID = TetrapodContract.SUB_CONTRACT_ID;
+
    public AdminLoginResponse() {
       defaults();
    }
@@ -64,6 +65,10 @@ public class AdminLoginResponse extends Response {
   
    public final int getContractId() {
       return AdminLoginResponse.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return AdminLoginResponse.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

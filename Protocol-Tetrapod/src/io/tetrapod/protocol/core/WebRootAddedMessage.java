@@ -16,7 +16,8 @@ public class WebRootAddedMessage extends Message {
    
    public static final int STRUCT_ID = 270402;
    public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;
-    
+   public static final int SUB_CONTRACT_ID = TetrapodContract.SUB_CONTRACT_ID;
+
    public WebRootAddedMessage() {
       defaults();
    }
@@ -59,6 +60,10 @@ public class WebRootAddedMessage extends Message {
    
    public final int getContractId() {
       return WebRootAddedMessage.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return WebRootAddedMessage.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

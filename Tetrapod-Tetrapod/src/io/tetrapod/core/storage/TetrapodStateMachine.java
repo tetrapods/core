@@ -27,45 +27,45 @@ import io.tetrapod.raft.storage.StorageStateMachine;
  */
 public class TetrapodStateMachine extends StorageStateMachine<TetrapodStateMachine> {
 
-   public static final Logger                     logger                          = LoggerFactory.getLogger(TetrapodStateMachine.class);
+   public static final Logger                         logger                          = LoggerFactory.getLogger(TetrapodStateMachine.class);
 
-   public final static int                        TETRAPOD_STATE_FILE_VERSION     = 1;
+   public final static int                            TETRAPOD_STATE_FILE_VERSION     = 1;
 
-   private static final String                    TETRAPOD_ENTITY_PREFIX          = "tetrapod.entity::";
-   private static final String                    TETRAPOD_PREF_PREFIX            = "tetrapod.prefs::";
-   private static final String                    TETRAPOD_CONTRACT_PREFIX        = "tetrapod.contract::";
-   private static final String                    TETRAPOD_WEBROOT_PREFIX         = "tetrapod.webroot::";
-   private static final String                    TETRAPOD_ADMIN_PREFIX           = "tetrapod.admin::";
-   private static final String                    TETRAPOD_ADMIN_ACCOUNT_SEQ_KEY  = "tetrapod.admin.account.seq";
-   private static final String                    TETRAPOD_OWNER_PREFIX           = "tetrapod.owner::";
+   private static final String                        TETRAPOD_ENTITY_PREFIX          = "tetrapod.entity::";
+   private static final String                        TETRAPOD_PREF_PREFIX            = "tetrapod.prefs::";
+   private static final String                        TETRAPOD_CONTRACT_PREFIX        = "tetrapod.contract::";
+   private static final String                        TETRAPOD_WEBROOT_PREFIX         = "tetrapod.webroot::";
+   private static final String                        TETRAPOD_ADMIN_PREFIX           = "tetrapod.admin::";
+   private static final String                        TETRAPOD_ADMIN_ACCOUNT_SEQ_KEY  = "tetrapod.admin.account.seq";
+   private static final String                        TETRAPOD_OWNER_PREFIX           = "tetrapod.owner::";
 
-   public static final int                        SET_CLUSTER_PROPERTY_COMMAND_ID = 400;
-   public static final int                        DEL_CLUSTER_PROPERTY_COMMAND_ID = 401;
-   public static final int                        REGISTER_CONTRACT_COMMAND_ID    = 402;
-   public static final int                        SET_WEB_ROUTE_COMMAND_ID        = 403;
-   public static final int                        DEL_WEB_ROUTE_COMMAND_ID        = 404;
-   public static final int                        ADD_ADMIN_COMMAND_ID            = 405;
-   public static final int                        DEL_ADMIN_COMMAND_ID            = 406;
-   public static final int                        MOD_ADMIN_COMMAND_ID            = 407;
-   public static final int                        CLAIM_OWNERSHIP_COMMAND_ID      = 408;
-   public static final int                        RETAIN_OWNERSHIP_COMMAND_ID     = 409;
-   public static final int                        RELEASE_OWNERSHIP_COMMAND_ID    = 410;
-   public static final int                        ADD_ENTITY_COMMAND_ID           = 411;
-   public static final int                        MOD_ENTITY_COMMAND_ID           = 412;
-   public static final int                        DEL_ENTITY_COMMAND_ID           = 413;
+   public static final int                            SET_CLUSTER_PROPERTY_COMMAND_ID = 400;
+   public static final int                            DEL_CLUSTER_PROPERTY_COMMAND_ID = 401;
+   public static final int                            REGISTER_CONTRACT_COMMAND_ID    = 402;
+   public static final int                            SET_WEB_ROUTE_COMMAND_ID        = 403;
+   public static final int                            DEL_WEB_ROUTE_COMMAND_ID        = 404;
+   public static final int                            ADD_ADMIN_COMMAND_ID            = 405;
+   public static final int                            DEL_ADMIN_COMMAND_ID            = 406;
+   public static final int                            MOD_ADMIN_COMMAND_ID            = 407;
+   public static final int                            CLAIM_OWNERSHIP_COMMAND_ID      = 408;
+   public static final int                            RETAIN_OWNERSHIP_COMMAND_ID     = 409;
+   public static final int                            RELEASE_OWNERSHIP_COMMAND_ID    = 410;
+   public static final int                            ADD_ENTITY_COMMAND_ID           = 411;
+   public static final int                            MOD_ENTITY_COMMAND_ID           = 412;
+   public static final int                            DEL_ENTITY_COMMAND_ID           = 413;
 
-   public final Map<String, ClusterProperty>      props                           = new HashMap<>();
-   public final Map<Integer, ContractDescription> contracts                       = new HashMap<>();
-   public final Map<String, WebRootDef>           webRootDefs                     = new HashMap<>();
-   public final Map<Integer, Admin>               admins                          = new HashMap<>();
-   public final WebRoutes                         webRoutes                       = new WebRoutes();
-   public final Map<Integer, EntityInfo>          entities                        = new ConcurrentHashMap<>();
+   public final Map<String, ClusterProperty>          props                           = new HashMap<>();
+   public final Map<ContractKey, ContractDescription> contracts                       = new ConcurrentHashMap<>();
+   public final Map<String, WebRootDef>               webRootDefs                     = new HashMap<>();
+   public final Map<Integer, Admin>                   admins                          = new HashMap<>();
+   public final WebRoutes                             webRoutes                       = new WebRoutes();
+   public final Map<Integer, EntityInfo>              entities                        = new ConcurrentHashMap<>();
 
    // entityId + prefix => Owner
-   public final Map<String, Owner>                owners                          = new ConcurrentHashMap<>();
-   public final Map<String, Owner>                ownedItems                      = new ConcurrentHashMap<>();
+   public final Map<String, Owner>                    owners                          = new ConcurrentHashMap<>();
+   public final Map<String, Owner>                    ownedItems                      = new ConcurrentHashMap<>();
 
-   protected SecretKey                            secretKey;
+   protected SecretKey                                secretKey;
 
    public static class Factory implements StateMachine.Factory<TetrapodStateMachine> {
       @Override
@@ -178,11 +178,11 @@ public class TetrapodStateMachine extends StorageStateMachine<TetrapodStateMachi
          }
       }
       // keep local cache of contracts
-      contracts.put(info.contractId, info);
+      contracts.put(new ContractKey(info.contractId, info.subContractId), info);
    }
 
-   public boolean hasContract(int contractId, int version) {
-      ContractDescription info = contracts.get(contractId);
+   public boolean hasContract(int contractId, int subContractId, int version) {
+      ContractDescription info = contracts.get(new ContractKey(contractId, subContractId));
       if (info != null) {
          return info.version > version;
       }

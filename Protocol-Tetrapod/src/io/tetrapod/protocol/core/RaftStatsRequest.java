@@ -17,7 +17,8 @@ public class RaftStatsRequest extends RequestWithResponse<RaftStatsResponse> {
 
    public static final int STRUCT_ID = 15652108;
    public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;
-   
+   public static final int SUB_CONTRACT_ID = TetrapodContract.SUB_CONTRACT_ID;
+
    public RaftStatsRequest() {
       defaults();
    }
@@ -65,6 +66,10 @@ public class RaftStatsRequest extends RequestWithResponse<RaftStatsResponse> {
    
    public final int getContractId() {
       return RaftStatsRequest.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return RaftStatsRequest.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

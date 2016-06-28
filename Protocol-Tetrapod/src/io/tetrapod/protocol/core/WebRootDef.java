@@ -16,7 +16,8 @@ public class WebRootDef extends Structure {
    
    public static final int STRUCT_ID = 943242;
    public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;
-    
+   public static final int SUB_CONTRACT_ID = TetrapodContract.SUB_CONTRACT_ID;
+
    public WebRootDef() {
       defaults();
    }
@@ -80,6 +81,10 @@ public class WebRootDef extends Structure {
 
    public final int getContractId() {
       return WebRootDef.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return WebRootDef.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

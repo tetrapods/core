@@ -17,7 +17,8 @@ public class UnpauseRequest extends Request {
 
    public static final int STRUCT_ID = 10620319;
    public static final int CONTRACT_ID = CoreContract.CONTRACT_ID;
-   
+   public static final int SUB_CONTRACT_ID = CoreContract.SUB_CONTRACT_ID;
+
    public UnpauseRequest() {
       defaults();
    }
@@ -65,6 +66,10 @@ public class UnpauseRequest extends Request {
    
    public final int getContractId() {
       return UnpauseRequest.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return UnpauseRequest.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

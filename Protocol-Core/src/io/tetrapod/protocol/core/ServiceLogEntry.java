@@ -24,7 +24,8 @@ public class ServiceLogEntry extends Structure {
    
    public static final int STRUCT_ID = 11222968;
    public static final int CONTRACT_ID = CoreContract.CONTRACT_ID;
-    
+   public static final int SUB_CONTRACT_ID = CoreContract.SUB_CONTRACT_ID;
+
    public ServiceLogEntry() {
       defaults();
    }
@@ -87,6 +88,10 @@ public class ServiceLogEntry extends Structure {
 
    public final int getContractId() {
       return ServiceLogEntry.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return ServiceLogEntry.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

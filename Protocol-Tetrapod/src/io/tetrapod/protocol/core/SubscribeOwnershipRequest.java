@@ -17,7 +17,8 @@ public class SubscribeOwnershipRequest extends Request {
 
    public static final int STRUCT_ID = 15739199;
    public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;
-   
+   public static final int SUB_CONTRACT_ID = TetrapodContract.SUB_CONTRACT_ID;
+
    public SubscribeOwnershipRequest() {
       defaults();
    }
@@ -63,6 +64,10 @@ public class SubscribeOwnershipRequest extends Request {
    
    public final int getContractId() {
       return SubscribeOwnershipRequest.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return SubscribeOwnershipRequest.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

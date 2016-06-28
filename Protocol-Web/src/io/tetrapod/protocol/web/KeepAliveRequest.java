@@ -17,7 +17,8 @@ public class KeepAliveRequest extends Request {
 
    public static final int STRUCT_ID = 5512920;
    public static final int CONTRACT_ID = WebContract.CONTRACT_ID;
-   
+   public static final int SUB_CONTRACT_ID = WebContract.SUB_CONTRACT_ID;
+
    public KeepAliveRequest() {
       defaults();
    }
@@ -54,6 +55,10 @@ public class KeepAliveRequest extends Request {
    
    public final int getContractId() {
       return KeepAliveRequest.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return KeepAliveRequest.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

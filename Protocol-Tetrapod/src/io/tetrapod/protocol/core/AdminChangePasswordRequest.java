@@ -17,7 +17,8 @@ public class AdminChangePasswordRequest extends Request {
 
    public static final int STRUCT_ID = 2877212;
    public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;
-   
+   public static final int SUB_CONTRACT_ID = TetrapodContract.SUB_CONTRACT_ID;
+
    public AdminChangePasswordRequest() {
       defaults();
    }
@@ -75,6 +76,10 @@ public class AdminChangePasswordRequest extends Request {
    
    public final int getContractId() {
       return AdminChangePasswordRequest.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return AdminChangePasswordRequest.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

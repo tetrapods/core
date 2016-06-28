@@ -16,7 +16,8 @@ public class RegisterResponse extends Response {
    
    public static final int STRUCT_ID = 13376201;
    public static final int CONTRACT_ID = WebContract.CONTRACT_ID;
-    
+   public static final int SUB_CONTRACT_ID = WebContract.SUB_CONTRACT_ID;
+
    public RegisterResponse() {
       defaults();
    }
@@ -69,6 +70,10 @@ public class RegisterResponse extends Response {
   
    public final int getContractId() {
       return RegisterResponse.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return RegisterResponse.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

@@ -17,7 +17,8 @@ public class StorageGetRequest extends RequestWithResponse<StorageGetResponse> {
 
    public static final int STRUCT_ID = 15665625;
    public static final int CONTRACT_ID = StorageContract.CONTRACT_ID;
-   
+   public static final int SUB_CONTRACT_ID = StorageContract.SUB_CONTRACT_ID;
+
    public StorageGetRequest() {
       defaults();
    }
@@ -60,6 +61,10 @@ public class StorageGetRequest extends RequestWithResponse<StorageGetResponse> {
    
    public final int getContractId() {
       return StorageGetRequest.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return StorageGetRequest.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

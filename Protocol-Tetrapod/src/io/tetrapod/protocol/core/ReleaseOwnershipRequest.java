@@ -17,7 +17,8 @@ public class ReleaseOwnershipRequest extends Request {
 
    public static final int STRUCT_ID = 3927214;
    public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;
-   
+   public static final int SUB_CONTRACT_ID = TetrapodContract.SUB_CONTRACT_ID;
+
    public ReleaseOwnershipRequest() {
       defaults();
    }
@@ -69,6 +70,10 @@ public class ReleaseOwnershipRequest extends Request {
    
    public final int getContractId() {
       return ReleaseOwnershipRequest.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return ReleaseOwnershipRequest.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

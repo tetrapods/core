@@ -16,7 +16,8 @@ public class ClusterProperty extends Structure {
    
    public static final int STRUCT_ID = 16245306;
    public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;
-    
+   public static final int SUB_CONTRACT_ID = TetrapodContract.SUB_CONTRACT_ID;
+
    public ClusterProperty() {
       defaults();
    }
@@ -69,6 +70,10 @@ public class ClusterProperty extends Structure {
 
    public final int getContractId() {
       return ClusterProperty.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return ClusterProperty.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

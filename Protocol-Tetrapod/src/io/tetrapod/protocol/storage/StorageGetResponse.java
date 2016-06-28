@@ -16,7 +16,8 @@ public class StorageGetResponse extends Response {
    
    public static final int STRUCT_ID = 4411679;
    public static final int CONTRACT_ID = StorageContract.CONTRACT_ID;
-    
+   public static final int SUB_CONTRACT_ID = StorageContract.SUB_CONTRACT_ID;
+
    public StorageGetResponse() {
       defaults();
    }
@@ -59,6 +60,10 @@ public class StorageGetResponse extends Response {
   
    public final int getContractId() {
       return StorageGetResponse.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return StorageGetResponse.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

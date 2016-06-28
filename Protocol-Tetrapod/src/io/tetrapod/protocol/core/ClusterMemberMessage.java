@@ -20,7 +20,8 @@ public class ClusterMemberMessage extends Message {
    
    public static final int STRUCT_ID = 1076508;
    public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;
-    
+   public static final int SUB_CONTRACT_ID = TetrapodContract.SUB_CONTRACT_ID;
+
    public ClusterMemberMessage() {
       defaults();
    }
@@ -83,6 +84,10 @@ public class ClusterMemberMessage extends Message {
    
    public final int getContractId() {
       return ClusterMemberMessage.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return ClusterMemberMessage.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

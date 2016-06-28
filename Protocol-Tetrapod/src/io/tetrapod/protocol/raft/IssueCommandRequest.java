@@ -17,7 +17,8 @@ public class IssueCommandRequest extends RequestWithResponse<IssueCommandRespons
 
    public static final int STRUCT_ID = 9938264;
    public static final int CONTRACT_ID = RaftContract.CONTRACT_ID;
-   
+   public static final int SUB_CONTRACT_ID = RaftContract.SUB_CONTRACT_ID;
+
    public IssueCommandRequest() {
       defaults();
    }
@@ -65,6 +66,10 @@ public class IssueCommandRequest extends RequestWithResponse<IssueCommandRespons
    
    public final int getContractId() {
       return IssueCommandRequest.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return IssueCommandRequest.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

@@ -17,7 +17,8 @@ public class ResetServiceErrorLogsRequest extends Request {
 
    public static final int STRUCT_ID = 9359779;
    public static final int CONTRACT_ID = CoreContract.CONTRACT_ID;
-   
+   public static final int SUB_CONTRACT_ID = CoreContract.SUB_CONTRACT_ID;
+
    public ResetServiceErrorLogsRequest() {
       defaults();
    }
@@ -65,6 +66,10 @@ public class ResetServiceErrorLogsRequest extends Request {
    
    public final int getContractId() {
       return ResetServiceErrorLogsRequest.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return ResetServiceErrorLogsRequest.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

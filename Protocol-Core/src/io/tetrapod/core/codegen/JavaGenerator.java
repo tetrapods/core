@@ -61,6 +61,10 @@ class JavaGenerator implements LanguageGenerator {
       Template t = template("contract");
       String theClass = context.serviceName + "Contract";
       String serviceId = context.serviceAnnotations.getFirst("id");
+      String subContractId = context.serviceAnnotations.getFirst("subid");
+      if (subContractId == null) {
+         subContractId = "1";
+      }
       t.add("class", theClass);
       t.add("package", context.serviceAnnotations.getFirst("java.package"));
       t.add("version", context.serviceAnnotations.getFirst("version"));
@@ -72,6 +76,7 @@ class JavaGenerator implements LanguageGenerator {
          throw new ParseException("dynamic contract id's not supported yet");
       } else {
          t.add("contractId", serviceId);
+         t.add("subContractId", subContractId);
          t.add("contractIdVolatile", "final");
          t.add("contractIdSet", "");
       }

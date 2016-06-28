@@ -17,7 +17,8 @@ public class RestartRequest extends Request {
 
    public static final int STRUCT_ID = 4802943;
    public static final int CONTRACT_ID = CoreContract.CONTRACT_ID;
-   
+   public static final int SUB_CONTRACT_ID = CoreContract.SUB_CONTRACT_ID;
+
    public RestartRequest() {
       defaults();
    }
@@ -75,6 +76,10 @@ public class RestartRequest extends Request {
    
    public final int getContractId() {
       return RestartRequest.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return RestartRequest.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

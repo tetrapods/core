@@ -20,7 +20,8 @@ public class {{class}} extends {{requestGenerics}} {
    
    public static final int STRUCT_ID = {{structid}};
    public static final int CONTRACT_ID = {{service}}.CONTRACT_ID;
-   
+   public static final int SUB_CONTRACT_ID = {{service}}.SUB_CONTRACT_ID;
+
    public {{class}}() {
       defaults();
    }
@@ -61,6 +62,10 @@ public class {{class}} extends {{requestGenerics}} {
    
    public final int getContractId() {
       return {{class}}.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return {{class}}.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {
