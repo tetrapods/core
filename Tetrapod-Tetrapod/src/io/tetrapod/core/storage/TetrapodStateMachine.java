@@ -23,8 +23,7 @@ import io.tetrapod.raft.storage.StorageItem;
 import io.tetrapod.raft.storage.StorageStateMachine;
 
 /**
- * Tetrapod state machine adds cluster properties, service protocols, and tetrapod web
- * routes
+ * Tetrapod state machine adds cluster properties, service protocols, and tetrapod web routes
  */
 public class TetrapodStateMachine extends StorageStateMachine<TetrapodStateMachine> {
 
@@ -60,7 +59,6 @@ public class TetrapodStateMachine extends StorageStateMachine<TetrapodStateMachi
    public final Map<String, WebRootDef>           webRootDefs                     = new HashMap<>();
    public final Map<Integer, Admin>               admins                          = new HashMap<>();
    public final WebRoutes                         webRoutes                       = new WebRoutes();
-   //public final Map<String, WebRoot>              webRootDirs                     = new ConcurrentHashMap<>();
    public final Map<Integer, EntityInfo>          entities                        = new ConcurrentHashMap<>();
 
    // entityId + prefix => Owner
