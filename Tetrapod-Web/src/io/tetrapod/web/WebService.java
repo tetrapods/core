@@ -372,9 +372,8 @@ public class WebService extends DefaultService
       final ServiceTopic topic = topics.get(topicKey(m.publisherId, m.topicId));
       if (topic == null) {
          topics.put(topicKey(m.publisherId, m.topicId), new ServiceTopic(m.publisherId, m.topicId));
-         //topic.queue(() -> owner.publish(m.topicId)); // FIXME
       } else {
-         logger.error("Publisher {} already exists?", ctx.header.fromId);
+         logger.error("Topic {} already exists?", topic);
       }
    }
 
@@ -388,7 +387,6 @@ public class WebService extends DefaultService
                if (topic.unsubscribe(sub.entityId, true)) {
                   final Session s = clients.get(sub.entityId);
                   if (s != null) {
-                     //FIXME: s.unsubscribe(topic);
                      // notify the subscriber that they have been unsubscribed from this topic
                      s.sendMessage(new TopicUnsubscribedMessage(m.publisherId, topic.topicId, entityId, sub.entityId), entityId,
                            sub.entityId);
@@ -396,7 +394,6 @@ public class WebService extends DefaultService
                }
             }
          }
-         //topic.queue(() -> unpublish(owner, m.topicId)); // TODO: kick()
       } else {
          logger.info("Could not find publisher entity {}", ctx.header.fromId);
       }
@@ -408,8 +405,6 @@ public class WebService extends DefaultService
       final ServiceTopic topic = topics.get(topicKey(m.publisherId, m.topicId));
       if (topic != null) {
          topic.subscribe(m.childId, m.once);
-         //FIXME: s.subscribe
-         // topic.queue(() -> subscribe(owner, m.topicId, m.entityId, m.childId, m.once)); // TODO: kick() 
       } else {
          logger.info("Could not find publisher entity {}", ctx.header.fromId);
       }
@@ -423,13 +418,9 @@ public class WebService extends DefaultService
          if (topic.unsubscribe(entityId, true)) {
             final Session s = clients.get(m.childId);
             if (s != null) {
-               //FIXME: e.unsubscribe(topic);
-               // notify the subscriber that they have been unsubscribed from this topic
                s.sendMessage(new TopicUnsubscribedMessage(m.publisherId, topic.topicId, entityId, m.childId), entityId, m.childId);
             }
          }
-
-         //topic.queue(() -> unsubscribe(owner, m.topicId, m.entityId, m.childId, false)); // TODO: kick()
       } else {
          logger.info("Could not find publisher entity {}", ctx.header.fromId);
       }
@@ -451,7 +442,6 @@ public class WebService extends DefaultService
       if (m.info.structs != null) {
          for (StructDescription sd : m.info.structs) {
             if (m.info.contractId != WebContract.CONTRACT_ID) {
-               //               logger.info("ADDING {} {}", sd.name, m.info.contractId);
                StructureFactory.add(new StructureAdapter(sd));
             }
          }
@@ -463,6 +453,7 @@ public class WebService extends DefaultService
             logger.debug("Setting Web route [{}] for {}", r.path, r.contractId);
          }
       }
+      webRoutes.clear(m.info.contractId, m.info.routes);
    }
 
    //////////////////////////////////////////////////////////////////////////////////////////
@@ -504,8 +495,6 @@ public class WebService extends DefaultService
       }
       return Response.error(WebContract.ERROR_UNKNOWN_ALT_ID);
    }
-
-   // FIXME: call when client disconnects / service unregisters
 
    private void clearAllSubscriptions(final int childId) {
       logger.debug("clearAllSubscriptions: {}", childId);
