@@ -55,7 +55,7 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
    }
 
    public void shutdown() {
-      server.stop();
+      server.close();
       for (DirectServiceInfo service : services.values()) {
          service.close();
       }
