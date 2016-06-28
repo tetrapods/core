@@ -48,11 +48,16 @@ public class WebRoutes {
    public void clear(int contractId, WebRoute[] existing) {
       for (WebRoute r : routes.values()) {
          if (r.contractId == contractId) {
+            boolean found = false;
             for (WebRoute e : existing) {
-               if (e.path.equals(r.path))
+               if (e.path.equals(r.path)) {
+                  found = true;
                   continue;
+               }
             }
-            routes.remove(r.path);
+            if (!found) {
+               routes.remove(r.path);
+            }
          }
       }
    }
