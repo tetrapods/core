@@ -24,8 +24,7 @@ import io.tetrapod.raft.RaftEngine.Role;
 import io.tetrapod.raft.storage.*;
 
 /**
- * Wraps a RaftEngine in our Tetrapod-RPC and implements the StorageContract via
- * TetrapodStateMachine
+ * Wraps a RaftEngine in our Tetrapod-RPC and implements the StorageContract via TetrapodStateMachine
  */
 public class TetrapodCluster extends Storage
       implements RaftRPC<TetrapodStateMachine>, RaftContract.API, StateMachine.Listener<TetrapodStateMachine>, SessionFactory {
@@ -313,7 +312,7 @@ public class TetrapodCluster extends Storage
                prop.val = AESEncryptor.decryptSaltedAES(prop.val, state.secretKey);
                ses.sendMessage(new ClusterPropertyAddedMessage(prop), toEntityId, childId);
             }
-            for ( ContractDescription info : state.contracts.values()) {
+            for (ContractDescription info : state.contracts.values()) { 
                ses.sendMessage(new RegisterContractMessage(info), toEntityId, childId);
             }
             for (WebRootDef def : state.webRootDefs.values()) {

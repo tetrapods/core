@@ -8,6 +8,7 @@ import java.security.SecureRandom;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,9 +25,11 @@ import io.tetrapod.core.rpc.Error;
 import io.tetrapod.core.storage.*;
 import io.tetrapod.core.utils.*;
 import io.tetrapod.protocol.core.*;
+import io.tetrapod.protocol.core.RegisterRequest;
+import io.tetrapod.protocol.core.RegisterResponse;
 import io.tetrapod.protocol.raft.*;
 import io.tetrapod.protocol.storage.*;
-import io.tetrapod.protocol.web.WebContract;
+import io.tetrapod.protocol.web.*;
 
 /**
  * The tetrapod service is the core cluster service which handles message routing, cluster management, service discovery, and load balancing
@@ -934,9 +937,6 @@ public class TetrapodService extends DefaultService
 
    @Override
    public Response requestSnapshot(SnapshotRequest r, RequestContext ctx) {
-      if (!adminAccounts.isValidAdminRequest(ctx, r.adminToken, Admin.RIGHTS_CLUSTER_WRITE)) {
-         return new Error(ERROR_INVALID_RIGHTS);
-      }
       cluster.snapshot();
       return Response.SUCCESS;
    }
@@ -1073,4 +1073,5 @@ public class TetrapodService extends DefaultService
       }
 
    }
+
 }

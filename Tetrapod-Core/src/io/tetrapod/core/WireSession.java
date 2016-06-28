@@ -191,16 +191,21 @@ public class WireSession extends Session {
       }
 
       if ((header.toId == DIRECT) || header.toId == myId) {
-         final Request req = (Request) StructureFactory.make(header.contractId, header.structId);
-         if (req != null) {
-            req.read(reader);
-            if (!commsLogIgnore(req))
-               logged = commsLog("%s  [%d] <- %s (from %d.%d)", this, header.requestId, req.dump(), header.fromParentId,
-                     header.fromChildId);
-            dispatchRequest(header, req);
-         } else {
-            logger.warn("Could not find request structure {}", header.structId);
-            sendResponse(new Error(ERROR_SERIALIZATION), header.requestId);
+         try {
+            final Request req = (Request) StructureFactory.make(header.contractId, header.structId);
+            if (req != null) {
+               req.read(reader);
+               if (!commsLogIgnore(req))
+                  logged = commsLog("%s  [%d] <- %s (from %d.%d)", this, header.requestId, req.dump(), header.fromParentId,
+                        header.fromChildId);
+               dispatchRequest(header, req);
+            } else {
+               logger.warn("Could not find request structure {}", header.structId);
+               sendResponse(new Error(ERROR_SERIALIZATION), header.requestId);
+            }
+         } catch (ClassCastException e) {
+            logger.error("Serialization Error on {}", header.dump());
+            logger.error(e.getMessage(), e);
          }
       } else if (relayHandler != null) {
          if (commsLogIgnore(header.structId)) {
@@ -236,7 +241,7 @@ public class WireSession extends Session {
       } else {
          if (header.fromId == 0) {
             logger.error("{} fromId is 0 for {} ({} <==> {})", this, header.dump(), myId, theirId);
-         } else { 
+         } else {
             relayHandler.relayMessage(header, in, isBroadcast);
          }
       }

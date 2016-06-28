@@ -1,6 +1,6 @@
 java package io.tetrapod.protocol.core
 java outdir "../src"
-javascript out "../../Tetrapod-Web/www/protocol/tetrapod.js"
+javascript out "../../Tetrapod-Web/webContent/protocol/tetrapod.js"
 
 // The core tetrapod service
 service Tetrapod @version(1) @id(1) @web(api) 
@@ -328,8 +328,10 @@ internal request Unlock
    1: string key
    2: string uuid
    
-internal request Snapshot
-   1: string adminToken @sensitive 
+admin request Snapshot  @rights(Admin.RIGHTS_CLUSTER_WRITE)
+   1: int accountId
+   2: string authToken @sensitive
+    
    
 ########### OWNERSHIP SERVICES ###########    
 

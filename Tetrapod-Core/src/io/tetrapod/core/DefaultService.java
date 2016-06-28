@@ -58,7 +58,7 @@ public class DefaultService
    private final MessageHandlers           messageHandlers = new MessageHandlers();
 
    private final Publisher                 publisher       = new Publisher(this);
-   private long dependencyCheckLogThreshold;
+   private long                            dependencyCheckLogThreshold;
 
    public DefaultService() {
       this(null);
@@ -270,9 +270,8 @@ public class DefaultService
    }
 
    /**
-    * Called before shutting down. Default implementation is to do nothing. Subclasses are
-    * expecting to close any resources they opened (for example database connections or
-    * file handles).
+    * Called before shutting down. Default implementation is to do nothing. Subclasses are expecting to close any resources they opened (for
+    * example database connections or file handles).
     * 
     * @param restarting true if we are shutting down in order to restart
     */
@@ -532,24 +531,21 @@ public class DefaultService
    }
 
    /**
-    * Get a URL for this service's icon to display in the admin apps. Subclasses should
-    * override this to customize
+    * Get a URL for this service's icon to display in the admin apps. Subclasses should override this to customize
     */
    public String getServiceIcon() {
       return "media/gear.gif";
    }
 
    /**
-    * Get any custom metadata for the service. Subclasses should override this to
-    * customize
+    * Get any custom metadata for the service. Subclasses should override this to customize
     */
    public String getServiceMetadata() {
       return null;
    }
 
    /**
-    * Get any custom admin commands for the service to show in command menu of admin app.
-    * Subclasses should override this to customize
+    * Get any custom admin commands for the service to show in command menu of admin app. Subclasses should override this to customize
     */
    public ServiceCommand[] getServiceCommands() {
       return null;
@@ -576,8 +572,7 @@ public class DefaultService
    }
 
    /**
-    * Services can override this to provide a service specific counter for display in the
-    * admin app
+    * Services can override this to provide a service specific counter for display in the admin app
     */
    public long getCounter() {
       return 0;
@@ -620,47 +615,47 @@ public class DefaultService
                      logger.warn("Service is overloaded. Dispatch time is {}ms", Util.nanosToMillis(dispatchTime - start));
                   }
                   // If it took a while to get dispatched, so set STATUS_OVERLOADED flag as a back-pressure signal
-               setStatus(Core.STATUS_OVERLOADED);
-            } else {
-               clearStatus(Core.STATUS_OVERLOADED);
-            }
-
-            final RequestContext ctx = fromSession != null ? new SessionRequestContext(header, fromSession)
-                  : new InternalRequestContext(header, new ResponseHandler() {
-                     @Override
-                     public void onResponse(Response res) {
-                        try {
-                           assert res != Response.PENDING;
-                           onResult.run();
-                           async.setResponse(res);
-                        } catch (Throwable e) {
-                           logger.error(e.getMessage(), e);
-                           async.setResponse(new Error(ERROR_UNKNOWN));
-                        }
-                     }
-                  });
-            Response res = req.securityCheck(ctx);
-            if (res == null) {
-               res = req.dispatch(svc, ctx);
-            }
-            if (res != null) {
-               if (res != Response.PENDING) {
-                  async.setResponse(res);
+                  setStatus(Core.STATUS_OVERLOADED);
+               } else {
+                  clearStatus(Core.STATUS_OVERLOADED);
                }
-            } else {
+
+               final RequestContext ctx = fromSession != null ? new SessionRequestContext(header, fromSession)
+                     : new InternalRequestContext(header, new ResponseHandler() {
+                        @Override
+                        public void onResponse(Response res) {
+                           try {
+                              assert res != Response.PENDING;
+                              onResult.run();
+                              async.setResponse(res);
+                           } catch (Throwable e) {
+                              logger.error(e.getMessage(), e);
+                              async.setResponse(new Error(ERROR_UNKNOWN));
+                           }
+                        }
+                     });
+               Response res = req.securityCheck(ctx);
+               if (res == null) {
+                  res = req.dispatch(svc, ctx);
+               }
+               if (res != null) {
+                  if (res != Response.PENDING) {
+                     async.setResponse(res);
+                  }
+               } else {
+                  async.setResponse(new Error(ERROR_UNKNOWN));
+               }
+            } catch (ErrorResponseException e) {
+               async.setResponse(new Error(e.errorCode));
+            } catch (Throwable e) {
+               logger.error(e.getMessage(), e);
                async.setResponse(new Error(ERROR_UNKNOWN));
+            } finally {
+               if (async.getErrorCode() != -1) {
+                  onResult.run();
+               }
             }
-         } catch (ErrorResponseException e) {
-            async.setResponse(new Error(e.errorCode));
-         } catch (Throwable e) {
-            logger.error(e.getMessage(), e);
-            async.setResponse(new Error(ERROR_UNKNOWN));
-         } finally {
-            if (async.getErrorCode() != -1) {
-               onResult.run();
-            }
-         }
-      }, Session.DEFAULT_OVERLOAD_THRESHOLD)) {
+         }, Session.DEFAULT_OVERLOAD_THRESHOLD)) {
             // too many items queued, full-force back-pressure
             async.setResponse(new Error(ERROR_SERVICE_OVERLOADED));
             setStatus(Core.STATUS_OVERLOADED);
@@ -701,7 +696,7 @@ public class DefaultService
       }
       return clusterClient.getSession().sendRequest(req, Core.UNADDRESSED, (byte) 30).asTask(value);
    }
-   
+
    public <TResp extends Response> Task<TResp> sendRequestTask(Request req) {
       if (serviceConnector != null) {
          return serviceConnector.sendRequest(req, Core.UNADDRESSED).asTask();
@@ -709,13 +704,14 @@ public class DefaultService
       return clusterClient.getSession().sendRequest(req, Core.UNADDRESSED, (byte) 30).asTask();
    }
 
-   public <TResp extends Response, TValue> Task<ResponseAndValue<TResp, TValue>> sendRequestTask(RequestWithResponse<TResp> req, TValue value) {
+   public <TResp extends Response, TValue> Task<ResponseAndValue<TResp, TValue>> sendRequestTask(RequestWithResponse<TResp> req,
+         TValue value) {
       if (serviceConnector != null) {
          return serviceConnector.sendRequest(req, Core.UNADDRESSED).asTask(value);
       }
       return clusterClient.getSession().sendRequest(req, Core.UNADDRESSED, (byte) 30).asTask(value);
    }
-   
+
    public <TResp extends Response> Task<TResp> sendRequestTask(RequestWithResponse<TResp> req) {
       if (serviceConnector != null) {
          return serviceConnector.sendRequest(req, Core.UNADDRESSED).asTask();
@@ -782,8 +778,7 @@ public class DefaultService
    }
 
    /**
-    * Subscribe an entity to the given topic. If once is true, tetrapod won't subscribe
-    * them a second time
+    * Subscribe an entity to the given topic. If once is true, tetrapod won't subscribe them a second time
     */
    public void subscribe(int topicId, int entityId, int childId, boolean once) {
       publisher.subscribe(topicId, entityId, childId, once);
@@ -992,8 +987,7 @@ public class DefaultService
 
    protected String getStartLoggingMessage() {
       return "*** Start Service ***" + "\n   *** Service name: " + Util.getProperty("APPNAME") + "\n   *** Options: "
-            + Launcher.getAllOpts()
-            + "\n   *** VM Args: " + ManagementFactory.getRuntimeMXBean().getInputArguments().toString();
+            + Launcher.getAllOpts() + "\n   *** VM Args: " + ManagementFactory.getRuntimeMXBean().getInputArguments().toString();
    }
 
    @Override

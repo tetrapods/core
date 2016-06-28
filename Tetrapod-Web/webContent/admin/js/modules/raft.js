@@ -7,7 +7,7 @@ define(function(require) {
 
    function Raft(app) {
       var self = this;
-      
+
       var Core = app.coreConsts;
 
       self.rafts = ko.observableArray([]);
@@ -156,9 +156,9 @@ define(function(require) {
          });
 
          self.update = update;
-         //   self.leaveCluster = leaveCluster;
+         // self.leaveCluster = leaveCluster;
          self.hasPeer = hasPeer;
-         //self.forceBootstrap = forceBootstrap;
+         // self.forceBootstrap = forceBootstrap;
          self.snapshot = snapshot;
 
          self.update();
@@ -230,16 +230,14 @@ define(function(require) {
          });
 
          function snapshot() {
-            app.sendTo("Snapshot", {
-               adminToken: app.sessionToken,
-            }, self.entityId, function(info) {
+            app.sendTo("Snapshot", {}, self.entityId, function(info) {
                if (info.isError()) {
                   console.error("Snapshot Failed");
                }
             });
          }
 
-         // return true if this node is part of the cluster and is reasonably synced.  
+         // return true if this node is part of the cluster and is reasonably synced.
          self.isHealthy = ko.pureComputed(function() {
             if (self.curTerm() < cluster.maxTerm())
                return false;
