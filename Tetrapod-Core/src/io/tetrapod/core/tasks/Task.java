@@ -124,6 +124,17 @@ public class Task<T> extends CompletableFuture<T> {
       return t;
    }
 
+   /**
+    * Creates a completed null task.
+    * @param <T>
+    * @return
+    */
+   public static <T> Task<T> fromNull() {
+      final Task<T> t = new Task<>();
+      t.internalComplete(null);
+      return t;
+   }
+
    public static <T> Task<T> from(Throwable ex) {
       final Task<T> t = new Task<>();
       t.internalCompleteExceptionally(ex);
@@ -451,6 +462,27 @@ public class Task<T> extends CompletableFuture<T> {
          return from(super.handleAsync(wrap, defaultExecutor));
       }
       return from(super.handle(wrap));
+   }
+
+   /**
+    * In the event of an error code exception, execute the following function, otherwise rethrows the exception
+    * @param code    The error code for the exception
+    * @param fn      The function to execute
+    * @return The task that was returned from the function
+    */
+   public Task<T> exceptionallyOnErrorCode(int code, final Func0<? extends T> fn) {
+      return exceptionally(t -> {
+         if (t instanceof ServiceException) {
+            t = ((ServiceException)t).rootCause();
+         }
+         if (t instanceof ErrorResponseException && ((ErrorResponseException) t).errorCode == code) {
+            return fn.apply();
+         } else if (t instanceof RuntimeException) {
+            throw (RuntimeException) t;
+         } else {
+            throw ServiceException.wrap(t);
+         }
+      });
    }
 
    @Override
