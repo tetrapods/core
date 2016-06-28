@@ -57,7 +57,7 @@ public class WebService extends DefaultService
       logger.info(" ***** WebService ***** ");
 
       // add the tetrapod admin web root
-      webInstaller.install(new WebRootDef("tetrapod", "/", "www"));
+      webInstaller.install(new WebRootDef("tetrapod", "/", "webContent"));
 
       LongPollToken.setSecret(AuthToken.generateRandomBytes(64));
    }
