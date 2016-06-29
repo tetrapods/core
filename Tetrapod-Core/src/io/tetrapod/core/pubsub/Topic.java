@@ -51,10 +51,10 @@ public class Topic {
       parents.clear();
    }
 
-   public void reset(int tetrapodId) {
-      ParentSubscriber tetrapod = parents.get(tetrapodId);
-      if (tetrapod != null) {
-         tetrapod.init = false;
+   public void reset(int parentId) {
+      ParentSubscriber parent = parents.get(parentId);
+      if (parent != null) {
+         parent.init = false;
       }
    }
 
@@ -97,8 +97,8 @@ public class Topic {
       }
 
       // register the new subscriber for their parent 
-      publisher.sendMessage(new TopicSubscribedMessage(publisher.getEntityId(), topicId, sub.entityId, childId, once),
-            parent.entityId, 0, topicId);
+      publisher.sendMessage(new TopicSubscribedMessage(publisher.getEntityId(), topicId, sub.entityId, childId, once), parent.entityId, 0,
+            topicId);
       fireTopicSubscribedEvent(entityId, childId, false);
 
    }
@@ -119,7 +119,7 @@ public class Topic {
       for (ParentSubscriber parent : parents.values()) {
          if (!parent.init) {
             if (publisher.sendMessage(new TopicPublishedMessage(publisher.getEntityId(), topicId), parent.entityId, 0, topicId)) {
-               logger.info("HAVE TO REPUBLISH TOPIC {} to Tetrapod-{}", topicId, parent.entityId);
+               logger.info("HAVE TO REPUBLISH TOPIC {} to Parent-{}", topicId, parent.entityId);
                for (Subscriber sub : subscribers.values()) {
                   final int parentId = sub.entityId;
                   if (parentId == parent.entityId) {
@@ -149,8 +149,8 @@ public class Topic {
 
    // Called by Publisher.unpublish()
    protected synchronized void unpublishAll() {
-      for (Subscriber tetrapod : parents.values()) {
-         publisher.sendMessage(new TopicUnpublishedMessage(publisher.getEntityId(), topicId), tetrapod.entityId, 0, topicId);
+      for (Subscriber parent : parents.values()) {
+         publisher.sendMessage(new TopicUnpublishedMessage(publisher.getEntityId(), topicId), parent.entityId, 0, topicId);
       }
    }
 
