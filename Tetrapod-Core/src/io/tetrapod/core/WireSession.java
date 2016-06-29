@@ -168,13 +168,14 @@ public class WireSession extends Session {
                      res == null ? StructureFactory.getName(header.contractId, header.structId) : res.dump());
             relayResponse(header, async, in);
          }
+         if (!logged && !commsLogIgnore(async.header.structId)) {
+            logged = commsLog("%s  [%d] <- Response.%s", this, header.requestId, StructureFactory.getName(header.contractId, header.structId));
+         }
       } else {
          // Typical if the request timed out earlier, and now we've finally received the actual response, it's too late 
          logger.info("{} Could not find pending request for {}", this, header.dump());
       }
 
-      if (!logged && !commsLogIgnore(async.header.structId))
-         logged = commsLog("%s  [%d] <- Response.%s", this, header.requestId, StructureFactory.getName(header.contractId, header.structId));
    }
 
    private void readRequest(final ByteBuf in) throws IOException {
