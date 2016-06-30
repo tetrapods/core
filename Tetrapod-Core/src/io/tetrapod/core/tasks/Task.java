@@ -31,6 +31,7 @@ import io.tetrapod.core.ServiceException;
 import io.tetrapod.core.rpc.ErrorResponseException;
 import io.tetrapod.core.rpc.RequestContext;
 import io.tetrapod.core.rpc.Response;
+import io.tetrapod.core.utils.Util;
 import io.tetrapod.protocol.core.CoreContract;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -287,15 +288,12 @@ public class Task<T> extends CompletableFuture<T> {
             throw new ServiceException("Tried to convert a Task to a response that isn't a Response. " + res.getClass());
          }
          return null;
-      }).exceptionally(e -> {
-         if (e instanceof ErrorResponseException) {
-            ctx.respondWith(((ErrorResponseException) e).errorCode);
-         } else if (e instanceof ServiceException) {
-            ServiceException se = ((ServiceException) e);
-            logger.error(se.rootCause().getMessage(), se.rootCause());
-            ctx.respondWith(CoreContract.ERROR_UNKNOWN);
+      }).exceptionally(parentEx -> {
+         ErrorResponseException e = Util.getThrowableInChain(parentEx, ErrorResponseException.class);
+         if (e != null && e.errorCode != CoreContract.ERROR_UNKNOWN) {
+            ctx.respondWith(e.errorCode);
          } else {
-            logger.error(e.getMessage(), e);
+            logger.error("Task chain failed with: " + parentEx.getMessage() + " ctx: " + ctx.header.dump()); //onError.apply(parentEx));
             ctx.respondWith(CoreContract.ERROR_UNKNOWN);
          }
          return null;

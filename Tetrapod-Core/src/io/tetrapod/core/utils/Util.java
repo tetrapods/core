@@ -19,6 +19,7 @@ import javax.xml.bind.DatatypeConverter;
 import io.tetrapod.core.json.JSONArray;
 import io.tetrapod.core.json.JSONObject;
 import io.tetrapod.core.rpc.Flags_int;
+import io.tetrapod.core.tasks.Task;
 
 /**
  * A random collection of useful static utility methods
@@ -667,6 +668,32 @@ public class Util {
       } else {
          return a.equals(b);
       }
+   }
+
+   public static Throwable getRootCause(Throwable ex) {
+      while (ex.getCause() != null && ex != ex.getCause()) {
+         ex = ex.getCause();
+      }
+      return ex;
+   }
+
+   /**
+    * Given a throwable, this will find if there is a throwable that is descendant from the specified class or null if not found.
+    * @param t The throwable to check
+    * @param throwableClass The throwable class to check for
+    * @param <T> The throwable type to search for
+    * @return The throwable that descneds T, or null if it's not in the chain
+    */
+   public static <T extends Throwable> T getThrowableInChain(Throwable t, Class<T> throwableClass) {
+      do {
+         if (throwableClass.isAssignableFrom(t.getClass())) {
+            return cast(t);
+         }
+         if (t.getCause() == null || t.getCause() == t) {
+            return null;
+         }
+         t = t.getCause();
+      } while (true);
    }
 
    public interface ValueMaker<K, V> {

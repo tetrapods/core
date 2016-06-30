@@ -648,8 +648,13 @@ public class DefaultService
             } catch (ErrorResponseException e) {
                async.setResponse(new Error(e.errorCode));
             } catch (Throwable e) {
-               logger.error(e.getMessage(), e);
-               async.setResponse(new Error(ERROR_UNKNOWN));
+               ErrorResponseException ere = Util.getThrowableInChain(e, ErrorResponseException.class);
+               if (ere != null && ere.errorCode != ERROR_UNKNOWN) {
+                  async.setResponse(new Error(ere.errorCode));
+               } else {
+                  logger.error(e.getMessage(), e);
+                  async.setResponse(new Error(ERROR_UNKNOWN));
+               }
             } finally {
                if (async.getErrorCode() != -1) {
                   onResult.run();
