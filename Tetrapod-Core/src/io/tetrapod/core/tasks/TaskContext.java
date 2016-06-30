@@ -328,4 +328,11 @@ public class TaskContext {
       return properties;
    }
 
+
+   @Override
+   public TaskContext clone() {
+      TaskContext clone = new TaskContext();
+      clone.properties().putAll(properties());
+      return clone;
+   }
 }
