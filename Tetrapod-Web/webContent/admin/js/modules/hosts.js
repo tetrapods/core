@@ -166,7 +166,7 @@ define(function(require) {
                         if (ar2[j].structId == 7823593) {
                            app.server.sendRequest(ar2[j].contractId, ar2[j].structId, {
                               data: build,
-                              accountId: app.aaccountId,
+                              accountId: app.accountId,
                               authToken: app.sessionToken
                            }, ar2.entityId);
                         }
