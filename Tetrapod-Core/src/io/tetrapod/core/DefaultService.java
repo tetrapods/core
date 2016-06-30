@@ -957,6 +957,12 @@ public class DefaultService
    }
 
    @Override
+   public Response requestInternalShutdown(InternalShutdownRequest r, RequestContext ctx) {
+      dispatcher.dispatch(() -> shutdown(false));
+      return Response.SUCCESS;
+   }
+
+   @Override
    public Response requestServiceDetails(ServiceDetailsRequest r, RequestContext ctx) {
       return new ServiceDetailsResponse(getServiceIcon(), getServiceMetadata(), getServiceCommands());
    }
