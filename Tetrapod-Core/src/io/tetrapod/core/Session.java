@@ -306,8 +306,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
             commsLog("%s  [A] => %s (to altId-%d)", this, msg.dump(), toAltId);
          final Object buffer = makeFrame(
                new MessageHeader(myEntityId, 0, theirId, toAltId, msg.getContractId(), msg.getStructId(), MessageHeader.FLAGS_ALTERNATE),
-               msg,
-               ENVELOPE_BROADCAST);
+               msg, ENVELOPE_BROADCAST);
          if (buffer != null) {
             writeFrame(buffer);
             getDispatcher().messagesSentCounter.mark();
@@ -373,7 +372,8 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
    public void sendRelayedMessage(MessageHeader header, ByteBuf payload, boolean broadcast) {
       assert header.fromId != 0;
       if (!commsLogIgnore(header.structId)) {
-         commsLog("%s  [M] ~> Message:%d %s (to %d.%d)", this, header.structId, getNameFor(header), header.toParentId, header.toChildId);
+         commsLog("%s  [%s] ~> Message:%d %s (to %d.%d)", this, broadcast ? "B" : "M", header.structId, getNameFor(header),
+               header.toParentId, header.toChildId);
       }
       byte envelope = broadcast ? ENVELOPE_BROADCAST : ENVELOPE_MESSAGE;
       writeFrame(makeFrame(header, payload, envelope));

@@ -24,6 +24,7 @@ public class CoreContract extends Contract {
       , DummyRequest.Handler
       , HostInfoRequest.Handler
       , HostStatsRequest.Handler
+      , InternalShutdownRequest.Handler
       , PauseRequest.Handler
       , PurgeRequest.Handler
       , RebalanceRequest.Handler
@@ -55,6 +56,7 @@ public class CoreContract extends Contract {
                   new RebalanceRequest(),
                   new ReleaseExcessRequest(),
                   new PurgeRequest(),
+                  new InternalShutdownRequest(),
                   new ShutdownRequest(),
                   new RestartRequest(),
                   new ServiceStatsSubscribeRequest(),

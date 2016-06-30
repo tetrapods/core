@@ -4,12 +4,10 @@ import static io.tetrapod.protocol.core.CoreContract.ERROR_INVALID_ENTITY;
 
 import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.slf4j.*;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.socket.SocketChannel;
@@ -19,8 +17,7 @@ import io.tetrapod.core.Session.RelayHandler;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.serialize.StructureAdapter;
 import io.tetrapod.core.serialize.datasources.ByteBufDataSource;
-import io.tetrapod.core.utils.AuthToken;
-import io.tetrapod.core.utils.Util;
+import io.tetrapod.core.utils.*;
 import io.tetrapod.protocol.core.*;
 import io.tetrapod.protocol.web.*;
 import io.tetrapod.protocol.web.RegisterRequest;
@@ -75,22 +72,23 @@ public class WebService extends DefaultService
    @Override
    public void onReadyToServe() {
       logger.info(" ***** READY TO SERVE ***** ");
-      if (isStartingUp()) {
-         try {
+      try {
+         if (isStartingUp()) {
             servers.add(new Server(Util.getProperty("tetrapod.http.port", DEFAULT_HTTP_PORT), (ch) -> makeWebSession(ch), dispatcher));
             // create secure port servers, if configured
             if (sslContext != null) {
                servers.add(new Server(Util.getProperty("tetrapod.https.port", DEFAULT_HTTPS_PORT), (ch) -> makeWebSession(ch), dispatcher,
                      sslContext, false));
             }
+            scheduleHealthCheck();
+
             // start listening
             for (Server s : servers) {
                s.start().sync();
             }
-            scheduleHealthCheck();
-         } catch (Exception e) {
-            fail(e);
          }
+      } catch (Exception e) {
+         fail(e);
       }
    }
 
@@ -98,11 +96,24 @@ public class WebService extends DefaultService
    protected void onConnectedToCluster() {
       super.onConnectedToCluster();
       clusterClient.getSession().setRelayHandler(this);
+      if (!isStartingUp()) {
+         try {
+            for (Server httpServer : servers) {
+               httpServer.start().sync();
+            }
+         } catch (Exception e) {
+            fail(e);
+         }
+      }
    }
 
    @Override
    public void onDisconnectedFromCluster() {
-      // TODO ...?
+      // drop our client connections if we lose connection to cluster
+      for (Server httpServer : servers) {
+         httpServer.close();
+         httpServer.purge();
+      }
    }
 
    // Pause will close the HTTP and HTTPS ports on the web service

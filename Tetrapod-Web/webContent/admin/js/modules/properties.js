@@ -42,7 +42,6 @@ define(function(require) {
 
       function addProperty(key, val, secret) {
          app.sendAny("SetClusterProperty", {
-            adminToken: app.sessionToken,
             property: {
                key: key,
                val: val,
@@ -123,7 +122,6 @@ define(function(require) {
             Alert.prompt("Enter a new value", function(val) {
                if (val && val.trim().length > 0) {
                   app.sendAny("SetClusterProperty", {
-                     adminToken: app.sessionToken,
                      property: {
                         key: self.key,
                         val: val,
@@ -136,7 +134,6 @@ define(function(require) {
 
          function deletePropNoConfirm() {
             app.sendAny("DelClusterProperty", {
-               adminToken: app.sessionToken,
                key: self.key
             }, app.alertResponse);
          }

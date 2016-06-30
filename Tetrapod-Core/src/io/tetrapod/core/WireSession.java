@@ -232,7 +232,8 @@ public class WireSession extends Session {
       }
 
       if (!commsLogIgnore(header.structId)) {
-         commsLog("%s  [M] <- Message: %s (to %d.%d f%d)", this, getNameFor(header), header.toParentId, header.toChildId, header.flags);
+         commsLog("%s  [%s] <- Message: %s (to %d.%d t%d f%d)", this, isBroadcast ? "B" : "M", getNameFor(header), header.toParentId,
+               header.toChildId, header.topicId, header.flags);
       }
 
       boolean selfDispatch = header.topicId == 0 && header.toChildId == 0 && ((header.flags & MessageHeader.FLAGS_ALTERNATE) == 0)

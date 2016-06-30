@@ -11,18 +11,16 @@ import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.SSLContext;
 
-import io.tetrapod.core.tasks.Task;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.slf4j.*;
 
 import com.codahale.metrics.Timer.Context;
 
 import ch.qos.logback.classic.LoggerContext;
 import io.netty.channel.socket.SocketChannel;
-import io.tetrapod.core.pubsub.Publisher;
-import io.tetrapod.core.pubsub.Topic;
+import io.tetrapod.core.pubsub.*;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.rpc.Error;
+import io.tetrapod.core.tasks.Task;
 import io.tetrapod.core.utils.*;
 import io.tetrapod.protocol.core.*;
 
@@ -959,6 +957,12 @@ public class DefaultService
 
    @Override
    public Response requestShutdown(ShutdownRequest r, RequestContext ctx) {
+      dispatcher.dispatch(() -> shutdown(false));
+      return Response.SUCCESS;
+   }
+
+   @Override
+   public Response requestInternalShutdown(InternalShutdownRequest r, RequestContext ctx) {
       dispatcher.dispatch(() -> shutdown(false));
       return Response.SUCCESS;
    }

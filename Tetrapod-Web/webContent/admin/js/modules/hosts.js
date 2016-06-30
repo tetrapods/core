@@ -95,7 +95,7 @@ define(function(require) {
          if (s) {
             s.statsUpdate(msg);
          }
-      }); 
+      });
 
       app.server.addMessageHandler("NagiosStatus", function(msg) {
          var host = getHost(msg.hostname);
@@ -137,12 +137,12 @@ define(function(require) {
       }
 
       function toggleMaintenance() {
-         if(self.maintenanceMode()) {
+         if (self.maintenanceMode()) {
             var msg = app.cluster.properties.findProperty("maintenanceMode");
             msg.deletePropNoConfirm();
          } else {
             Alert.prompt("Enter maintenance end time (PT)", function(time) {
-               if(time && time.length > 0) {
+               if (time && time.length > 0) {
                   app.cluster.properties.addProperty("maintenanceMode", time);
                }
             });
@@ -150,28 +150,19 @@ define(function(require) {
       }
 
       function updateClientBuild() {
-         Alert.prompt("Enter build number (prepend with = if you don't want the +)", function (build) {
+         Alert.prompt("Enter build number (prepend with = if you don't want the +)", function(build) {
             if (build && build.length > 0) {
                if (build.charAt(0) == '=') {
                   build = build.substring(1);
                } else if (build.indexOf('+') == -1) {
                   build += '+';
                }
-
-               var ar = self.services();
-               for (var i = 0; i < ar.length; i++) {
-                  if (ar[i].name == "Identity") {
-                     var ar2 = ar[i].commands();
-                     for (var j = 0; j < ar2.length; j++) {
-                        if (ar2[j].structId == 7823593) {
-                           app.server.sendRequest(ar2[j].contractId, ar2[j].structId, {
-                              data: build,
-                              authToken: app.sessionToken
-                           }, ar2.entityId);
-                        }
-                     }
-                  }
-               }
+ 
+                app.server.sendRequest(4, 7823593, {
+                   accountId: app.accountId(),
+                   authToken: app.sessionToken,
+                   data : build
+                });
             }
          });
       }
@@ -180,7 +171,7 @@ define(function(require) {
       function Host(hostname) {
          var self = this;
 
-         self.services = ko.observableArray([]); // services running on this host      
+         self.services = ko.observableArray([]); // services running on this host
 
          self.hostname = hostname;
          self.cores = ko.observable(0);
@@ -211,8 +202,8 @@ define(function(require) {
                   }
                });
                app.sendAny("NagiosStatus", {
-                  hostname: hostname,
-                  toggle: false
+                  hostname : hostname,
+                  toggle : false
                }, function(result) {
                   if (!result.isError()) {
                      self.nagios(result.enabled);
@@ -243,7 +234,7 @@ define(function(require) {
          }
 
          var iter = 0;
-         // returns any available service running on this host 
+         // returns any available service running on this host
          function getAvailableService() {
             var arr = self.services();
             for (var i = 0; i < arr.length; i++) {
@@ -282,7 +273,7 @@ define(function(require) {
          }
 
          self.diskLabel = ko.pureComputed(function() {
-            var d = self.disk() / (1024 * 1024); // mb
+            var d = self.disk() / (1024 * 1024); /* mb */
             if (d > 10000) {
                return (d / 1024).toFixed(1) + " gb";
             }
@@ -306,8 +297,8 @@ define(function(require) {
 
          function toggleAlarm() {
             app.sendAny("NagiosStatus", {
-               hostname: hostname,
-               toggle: true
+               hostname : hostname,
+               toggle : true
             }, function(result) {
                if (!result.isError()) {
                   self.nagios(result.enabled);
