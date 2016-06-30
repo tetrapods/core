@@ -785,27 +785,20 @@ public class TetrapodService extends DefaultService
    @Override
    public Response requestDelClusterProperty(DelClusterPropertyRequest r, RequestContext ctx) {
       Admin a = adminAccounts.getAdmin(ctx, r.authToken, Admin.RIGHTS_CLUSTER_WRITE);
-      if (!adminAccounts.isValidAdminRequest(ctx, r.authToken, Admin.RIGHTS_CLUSTER_WRITE)) {
-         auditLogger.info("Admin{} [{}] failed to delete cluster property: {}.", a.email, a.accountId, r.key);
-         return new Error(ERROR_INVALID_RIGHTS);
-      }
       auditLogger.info("Admin {} [{}] deleted cluster property: {}.", a.email, a.accountId, r.key);
       cluster.delClusterProperty(r.key);
       return Response.SUCCESS;
    }
 
    @Override
+   public Response requestInternalSetClusterProperty(InternalSetClusterPropertyRequest r, RequestContext ctx) {
+      cluster.setClusterProperty(r.property);
+      return Response.SUCCESS;
+   }
+
+   @Override
    public Response requestSetClusterProperty(SetClusterPropertyRequest r, RequestContext ctx) {
-      Admin a;
-      if (ctx.isFromService()) {
-         a = adminAccounts.getAdminInternal(r.authToken, Admin.RIGHTS_CLUSTER_WRITE);
-      } else {
-         a = adminAccounts.getAdmin(ctx, r.authToken, Admin.RIGHTS_CLUSTER_WRITE);
-      }
-      if (!ctx.isFromService() && !adminAccounts.isValidAdminRequest(ctx, r.authToken, Admin.RIGHTS_CLUSTER_WRITE)) {
-         auditLogger.info("Admin {} [{}] failed to create or modify cluster property: {}.", a.email, a.accountId, r.property.key);
-         return new Error(ERROR_INVALID_RIGHTS);
-      }
+      Admin a = adminAccounts.getAdmin(ctx, r.authToken, Admin.RIGHTS_CLUSTER_WRITE);
       auditLogger.info("Admin {} [{}] created or modified cluster property: {}.", a.email, a.accountId, r.property.key);
       cluster.setClusterProperty(r.property);
       return Response.SUCCESS;
@@ -827,10 +820,6 @@ public class TetrapodService extends DefaultService
    @Override
    public Response requestSetWebRoot(SetWebRootRequest r, RequestContext ctx) {
       Admin a = adminAccounts.getAdmin(ctx, r.authToken, Admin.RIGHTS_CLUSTER_WRITE);
-      if (!adminAccounts.isValidAdminRequest(ctx, r.authToken, Admin.RIGHTS_CLUSTER_WRITE)) {
-         auditLogger.info("Admin {} [{}] failed to update webroot to {}, {}, {}", a.email, a.accountId, r.def.name, r.def.path, r.def.file);
-         return new Error(ERROR_INVALID_RIGHTS);
-      }
       if (r.def != null) {
          auditLogger.info("Admin {} [{}] updated webroot.  New webroot: {}, {}, {}", a.email, a.accountId, r.def.name, r.def.path,
                r.def.file);
@@ -843,10 +832,6 @@ public class TetrapodService extends DefaultService
    @Override
    public Response requestDelWebRoot(DelWebRootRequest r, RequestContext ctx) {
       Admin a = adminAccounts.getAdmin(ctx, r.authToken, Admin.RIGHTS_CLUSTER_WRITE);
-      if (!adminAccounts.isValidAdminRequest(ctx, r.authToken, Admin.RIGHTS_CLUSTER_WRITE)) {
-         auditLogger.info("Admin {} [{}] failed to delete the webroot at {}.", a.email, a.accountId, r.name);
-         return new Error(ERROR_INVALID_RIGHTS);
-      }
       if (r.name != null) {
          auditLogger.info("Admin {} [{}] deleted the webroot at {}.", a.email, a.accountId, r.name);
          cluster.delWebRoot(r.name);

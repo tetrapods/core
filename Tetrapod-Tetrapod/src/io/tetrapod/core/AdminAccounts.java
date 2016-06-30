@@ -145,10 +145,7 @@ public class AdminAccounts {
    }
 
    public Admin getAdmin(RequestContext ctx, String adminToken, long rightsRequired) {
-      //if (ctx.header.fromType == TYPE_ADMIN) {
       return getAdminInternal(adminToken, rightsRequired);
-      //}
-      //throw new ErrorResponseException(ERROR_INVALID_RIGHTS);
    }
 
    ///////////////////////// RPC HANDLERS /////////////////////// 

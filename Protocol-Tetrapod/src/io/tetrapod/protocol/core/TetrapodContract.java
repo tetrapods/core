@@ -56,6 +56,7 @@ public class TetrapodContract extends Contract {
       , DelWebRootRequest.Handler
       , ExecuteBuildCommandRequest.Handler
       , GetServiceBuildInfoRequest.Handler
+      , InternalSetClusterPropertyRequest.Handler
       , LockRequest.Handler
       , LogRegistryStatsRequest.Handler
       , NagiosStatusRequest.Handler
@@ -104,6 +105,7 @@ public class TetrapodContract extends Contract {
                   new RaftLeaderRequest(),
                   new RaftStatsRequest(),
                   new AdminSubscribeRequest(),
+                  new InternalSetClusterPropertyRequest(),
                   new SetClusterPropertyRequest(),
                   new DelClusterPropertyRequest(),
                   new SetWebRootRequest(),
