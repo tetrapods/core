@@ -464,6 +464,10 @@ public class Util {
    public static boolean isEmpty(Map<?, ?> map) {
       return map == null ? true : map.isEmpty();
    }
+   
+   public static boolean isEmpty(JSONArray array) {
+      return array == null ? true : array.length() == 0;
+   }
 
    public static boolean equals(String a, String b) {
       return (a == null) ? (b == null) : a.equals(b);
