@@ -149,6 +149,8 @@ admin request Purge @rights(Admin.RIGHTS_CLUSTER_WRITE)
    1: int accountId
    2: string authToken @sensitive
 
+internal request InternalShutdown 
+
 admin request Shutdown @rights(Admin.RIGHTS_CLUSTER_WRITE)
    1: int accountId
    2: string authToken @sensitive

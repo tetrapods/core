@@ -27,7 +27,21 @@ public class ServiceException extends RuntimeException {
    }
 
    /**
-    * Runsa  block of code, wrapping any exceptions that get thrown as Service Exceptions.
+    * Takes a throwable and makes sure its an unchecked exception, wrapping it in a ServiceException if needed
+    * @param throwable  The exception to wrap
+    * @return  The ServiceException to throw
+    */
+   public static RuntimeException wrapIfChecked(Throwable throwable) {
+      if (throwable instanceof RuntimeException) {
+         return Util.cast(throwable);
+      } else {
+         return new ServiceException(throwable);
+      }
+   }
+
+
+   /**
+    * Runs a block of code, wrapping any exceptions that get thrown as Service Exceptions.
     * @param supplier   Chunk of code which might throw an exception
     * @param <T>        The type of value that is being returned from the code block
     * @return           Return value of the code block
@@ -39,6 +53,7 @@ public class ServiceException extends RuntimeException {
          throw wrap(t);
       }
    }
+
 
    /**
     * Functional interface that allows you to wrap unchecked exceptions easily

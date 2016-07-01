@@ -11,18 +11,16 @@ import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.SSLContext;
 
-import io.tetrapod.core.tasks.Task;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.slf4j.*;
 
 import com.codahale.metrics.Timer.Context;
 
 import ch.qos.logback.classic.LoggerContext;
 import io.netty.channel.socket.SocketChannel;
-import io.tetrapod.core.pubsub.Publisher;
-import io.tetrapod.core.pubsub.Topic;
+import io.tetrapod.core.pubsub.*;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.rpc.Error;
+import io.tetrapod.core.tasks.Task;
 import io.tetrapod.core.utils.*;
 import io.tetrapod.protocol.core.*;
 
@@ -648,8 +646,13 @@ public class DefaultService
             } catch (ErrorResponseException e) {
                async.setResponse(new Error(e.errorCode));
             } catch (Throwable e) {
-               logger.error(e.getMessage(), e);
-               async.setResponse(new Error(ERROR_UNKNOWN));
+               ErrorResponseException ere = Util.getThrowableInChain(e, ErrorResponseException.class);
+               if (ere != null && ere.errorCode != ERROR_UNKNOWN) {
+                  async.setResponse(new Error(ere.errorCode));
+               } else {
+                  logger.error(e.getMessage(), e);
+                  async.setResponse(new Error(ERROR_UNKNOWN));
+               }
             } finally {
                if (async.getErrorCode() != -1) {
                   onResult.run();
@@ -954,6 +957,12 @@ public class DefaultService
 
    @Override
    public Response requestShutdown(ShutdownRequest r, RequestContext ctx) {
+      dispatcher.dispatch(() -> shutdown(false));
+      return Response.SUCCESS;
+   }
+
+   @Override
+   public Response requestInternalShutdown(InternalShutdownRequest r, RequestContext ctx) {
       dispatcher.dispatch(() -> shutdown(false));
       return Response.SUCCESS;
    }

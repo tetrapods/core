@@ -30,7 +30,6 @@ define(function(require) {
          var email = self.addUserEmail().trim();
          if (email && email.length > 0) {
             app.sendAny("AdminCreate", {
-               token: app.sessionToken,
                email: email,
                password: email,
                rights: 0
@@ -60,7 +59,6 @@ define(function(require) {
       // called when change password dialog is submitted
       function onEditPassword() {
          app.sendAny("AdminChangePassword", {
-            token: app.sessionToken,
             oldPassword: self.modalOldPassword().trim(),
             newPassword: self.modalNewPassword().trim(),
          }, function(res) {
@@ -144,8 +142,7 @@ define(function(require) {
          function deleteUser() {
             Alert.confirm("Are you sure you want to delete '" + self.email + "'?", function() {
                app.sendAny("AdminDelete", {
-                  token: app.sessionToken,
-                  accountId: self.accountId
+                  targetAccountId: self.accountId
                }, function(res) {
                   if (res.isError()) {
                      Alert.error('Error: Delete Admin Failed');
@@ -157,8 +154,7 @@ define(function(require) {
          function resetPassword() {
             Alert.prompt("Change password for '" + self.email + "':", function(val) {
                app.server.sendDirect("AdminResetPassword", {
-                  token: app.sessionToken,
-                  accountId: self.accountId,
+                  targetAccountId: self.accountId,
                   password: val
                }, function(res) {
                   if (res.isError()) {
@@ -212,9 +208,8 @@ define(function(require) {
          function changeRights() {
             if (!self.updatingRights) {
                var r = rights();
-               app.sendAny("AdminChangeRights", {
-                  token: app.sessionToken,
-                  accountId: self.accountId,
+               app.sendAny("AdminChangeRights", { 
+                  targetAccountId: self.accountId,
                   rights: r
                }, function(res) {
                   if (res.isError()) {

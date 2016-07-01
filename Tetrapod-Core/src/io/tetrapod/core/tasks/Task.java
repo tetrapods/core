@@ -28,9 +28,11 @@ package io.tetrapod.core.tasks;
  */
 
 import io.tetrapod.core.ServiceException;
+import io.tetrapod.core.StructureFactory;
 import io.tetrapod.core.rpc.ErrorResponseException;
 import io.tetrapod.core.rpc.RequestContext;
 import io.tetrapod.core.rpc.Response;
+import io.tetrapod.core.utils.Util;
 import io.tetrapod.protocol.core.CoreContract;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -287,20 +289,27 @@ public class Task<T> extends CompletableFuture<T> {
             throw new ServiceException("Tried to convert a Task to a response that isn't a Response. " + res.getClass());
          }
          return null;
-      }).exceptionally(e -> {
-         if (e instanceof ErrorResponseException) {
-            ctx.respondWith(((ErrorResponseException) e).errorCode);
-         } else if (e instanceof ServiceException) {
-            ServiceException se = ((ServiceException) e);
-            logger.error(se.rootCause().getMessage(), se.rootCause());
-            ctx.respondWith(CoreContract.ERROR_UNKNOWN);
+      }).exceptionally(parentEx -> {
+         ErrorResponseException e = Util.getThrowableInChain(parentEx, ErrorResponseException.class);
+         if (e != null && e.errorCode != CoreContract.ERROR_UNKNOWN) {
+            ctx.respondWith(e.errorCode);
          } else {
-            logger.error(e.getMessage(), e);
+            logger.error("**TASK ERROR** Chain failed while dispatching {} Error: {} {} ",
+                    makeRequestName(StructureFactory.getName(ctx.header.contractId, ctx.header.structId)),
+                    parentEx.getMessage(),
+                    ctx.header.dump());
             ctx.respondWith(CoreContract.ERROR_UNKNOWN);
          }
          return null;
       });
       return Response.ASYNC;
+   }
+
+   private String makeRequestName(String name) {
+      if (name == null || name.length() < 7) {
+         return "";
+      }
+      return "request" + name.substring(0, name.length() - 7) + "()";
    }
 
    static class TaskFutureAdapter<T> implements Runnable {
@@ -472,15 +481,11 @@ public class Task<T> extends CompletableFuture<T> {
     */
    public Task<T> exceptionallyOnErrorCode(int code, final Func0<? extends T> fn) {
       return exceptionally(t -> {
-         if (t instanceof ServiceException) {
-            t = ((ServiceException)t).rootCause();
-         }
-         if (t instanceof ErrorResponseException && ((ErrorResponseException) t).errorCode == code) {
+         ErrorResponseException ere = Util.getThrowableInChain(t, ErrorResponseException.class);
+         if (ere != null && ere.errorCode == code) {
             return fn.apply();
-         } else if (t instanceof RuntimeException) {
-            throw (RuntimeException) t;
          } else {
-            throw ServiceException.wrap(t);
+            throw ServiceException.wrapIfChecked(t);
          }
       });
    }
@@ -758,4 +763,9 @@ public class Task<T> extends CompletableFuture<T> {
       return from(CompletableFuture.anyOf((CompletableFuture[]) cfs.toArray(size -> new CompletableFuture[size])));
    }
 
+   private static class TaskChainException extends RuntimeException {
+      public TaskChainException(Throwable cause) {
+         super(cause);
+      }
+   }
 }

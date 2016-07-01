@@ -43,7 +43,7 @@ public class SessionRequestContext extends RequestContext {
          Security mine = request.getSecurity();
          Security theirs = getSenderSecurity(accountId, authToken, error);
          if (header.fromType == Core.TYPE_SERVICE || header.fromType == Core.TYPE_TETRAPOD) {
-            theirs = Security.ADMIN; // FIXME -- this should be INTERNAL
+            theirs = Security.INTERNAL;
          } else if (mine == Security.ADMIN) {
             AdminAuthToken.validateAdminToken(accountId, authToken, adminRightsRequired);
             theirs = Security.ADMIN;
