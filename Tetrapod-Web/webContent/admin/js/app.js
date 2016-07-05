@@ -139,7 +139,7 @@ define(["knockout", "jquery", "alert", "toolbox", "protocol/server", "protocol/t
       }
 
       function onLogout(keepToken) {
-         if (!keepToken) {
+         if (keepToken != true) {
             self.authtoken = null;
             toolbox.deleteCookie("auth-token");
          }
