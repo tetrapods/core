@@ -11,7 +11,7 @@ define(function() {
       if (exdays != null) {
          var d = new Date();
          d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000));
-         c_value += "; expires=" + exdate.toUTCString();
+         c_value += ";expires=" + exdate.toUTCString()+";secure";
       }
       document.cookie = c_name + "=" + c_value;
    }
@@ -28,7 +28,7 @@ define(function() {
    }
 
    function deleteCookie(name) {
-      document.cookie = name + '=;path=/;expires=-1;';
+      document.cookie = name + '=;path=/;expires=-1;secure';
    }
 
 });
