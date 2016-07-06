@@ -153,7 +153,7 @@ define(function(require) {
 
          function resetPassword() {
             Alert.prompt("Change password for '" + self.email + "':", function(val) {
-               app.server.sendDirect("AdminResetPassword", {
+               app.sendAny("AdminResetPassword", {
                   targetAccountId: self.accountId,
                   password: val
                }, function(res) {
