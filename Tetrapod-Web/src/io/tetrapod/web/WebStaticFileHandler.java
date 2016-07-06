@@ -6,13 +6,6 @@ import static io.netty.handler.codec.http.HttpHeaders.Values.*;
 import static io.netty.handler.codec.http.HttpMethod.GET;
 import static io.netty.handler.codec.http.HttpResponseStatus.*;
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
-import io.netty.buffer.Unpooled;
-import io.netty.channel.*;
-import io.netty.channel.ChannelHandler.Sharable;
-import io.netty.handler.codec.http.*;
-import io.netty.util.CharsetUtil;
-import io.tetrapod.core.utils.Util;
-import io.tetrapod.web.WebRoot.FileResult;
 
 import java.io.*;
 import java.net.URLDecoder;
@@ -23,10 +16,19 @@ import javax.activation.MimetypesFileTypeMap;
 
 import org.slf4j.*;
 
+import io.netty.buffer.Unpooled;
+import io.netty.channel.*;
+import io.netty.channel.ChannelHandler.Sharable;
+import io.netty.handler.codec.http.*;
+import io.netty.util.CharsetUtil;
+import io.tetrapod.core.json.*;
+import io.tetrapod.core.utils.*;
+import io.tetrapod.web.WebRoot.FileResult;
+
 /**
  * A simple handler that serves incoming HTTP requests to send their respective HTTP responses. It also implements
- * {@code 'If-Modified-Since'} header to take advantage of browser cache, as described in <a
- * href="http://tools.ietf.org/html/rfc2616#section-14.25">RFC 2616</a>.
+ * {@code 'If-Modified-Since'} header to take advantage of browser cache, as described in
+ * <a href="http://tools.ietf.org/html/rfc2616#section-14.25">RFC 2616</a>.
  * 
  * Adapted from netty.io example code.
  */
@@ -56,8 +58,8 @@ public class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRe
       mimeTypesMap.addMimeTypes("application/x-shockwave-flash swf SWF");
    }
 
-   private final Map<String, WebRoot>  roots;
-   private final boolean               noCaching;
+   private final Map<String, WebRoot> roots;
+   private final boolean              noCaching;
 
    public WebStaticFileHandler(Map<String, WebRoot> roots) {
       this.roots = roots;
@@ -136,8 +138,11 @@ public class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRe
       if (isKeepAlive(request)) {
          response.headers().set(CONNECTION, HttpHeaders.Values.KEEP_ALIVE);
       }
+
+      addHackyHeadersForOWASP(result, request, response);
+
       if (result.doNotCache || noCaching) {
-          // see http://stackoverflow.com/questions/49547/making-sure-a-web-page-is-not-cached-across-all-browsers
+         // see http://stackoverflow.com/questions/49547/making-sure-a-web-page-is-not-cached-across-all-browsers
          response.headers().set(CACHE_CONTROL, NO_CACHE + ", " + NO_STORE + ", " + MUST_REVALIDATE);
          response.headers().add(PRAGMA, NO_CACHE);
          response.headers().add(EXPIRES, 0);
@@ -151,6 +156,51 @@ public class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRe
       if (!isKeepAlive(request)) {
          f.addListener(ChannelFutureListener.CLOSE);
       }
+   }
+
+   final static LRUCache<String, String[]> SUBDOMAIN_CACHE = new LRUCache<>(1000);
+ 
+
+   final static Pattern SUBDOMAIN_PATTERN = Pattern.compile("([^.]+)\\..*");
+
+   private void addHackyHeadersForOWASP(FileResult result, FullHttpRequest request, HttpResponse response) {
+      if (result.path.endsWith(".html")) {
+         String host = request.headers().get(HOST);
+         Matcher m = SUBDOMAIN_PATTERN.matcher(host);
+         if (m.matches()) {
+            String subdomain = m.group(1);
+            String[] xframes = getXFramesFromSubdomain(host, subdomain);
+            if (xframes != null) {
+               for (String xframe : xframes) {
+                  response.headers().set("X-Frame-Options", xframe); //  "ALLOW-FROM https://example.com/ " 
+               }
+            }
+         }
+      }
+   }
+
+   private String[] getXFramesFromSubdomain(String host, String subdomain) {
+      String[] xframes = SUBDOMAIN_CACHE.get(subdomain);
+      if (xframes == null) {
+
+         JSONObject jo = new JSONObject();
+         jo.put("subdomain", subdomain);
+
+         try {
+            String url = String.format("https://%s/api/v1/framesForSubdomain", Util.getProperty("product.url"));
+            JSONObject res = Util.httpPost(url, jo.toString(), new JSONObject());
+            logger.info("{} => {}", url, res);
+            JSONArray arr = res.getJSONArray("xframes");
+            xframes = new String[arr.length()];
+            for (int i = 0; i < arr.length(); i++) {
+               xframes[i] = arr.getString(i);
+            }
+            SUBDOMAIN_CACHE.put(subdomain, xframes);
+         } catch (Exception e) {
+            logger.error(e.getMessage());
+         }
+      }
+      return xframes;
    }
 
    @Override
@@ -181,9 +231,9 @@ public class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRe
             if (uri.startsWith("/home") && roots.containsKey("override"))
                return roots.get("override").getFile(uri);
             for (WebRoot root : roots.values()) {
-                  FileResult r = root.getFile(uri);
-                  if (r != null)
-                     return r;
+               FileResult r = root.getFile(uri);
+               if (r != null)
+                  return r;
             }
          } catch (IOException e) {
             logger.warn("io error accessing web file", e);
@@ -193,8 +243,8 @@ public class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRe
    }
 
    private void sendError(ChannelHandlerContext ctx, HttpResponseStatus status) {
-      FullHttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, status, Unpooled.copiedBuffer("Failure: " + status.toString()
-            + "\r\n", CharsetUtil.UTF_8));
+      FullHttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, status,
+            Unpooled.copiedBuffer("Failure: " + status.toString() + "\r\n", CharsetUtil.UTF_8));
       response.headers().set(CONTENT_TYPE, "text/plain; charset=UTF-8");
       ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
    }
