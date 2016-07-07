@@ -158,49 +158,49 @@ public class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRe
       }
    }
 
-   final static LRUCache<String, String[]> SUBDOMAIN_CACHE = new LRUCache<>(1000);
- 
+   final static LRUCache<String, Boolean> SUBDOMAIN_CACHE   = new LRUCache<>(1000);
 
-   final static Pattern SUBDOMAIN_PATTERN = Pattern.compile("([^.]+)\\..*");
+   final static Pattern                   SUBDOMAIN_PATTERN = Pattern.compile("([^.]+)\\..*");
 
    private void addHackyHeadersForOWASP(FileResult result, FullHttpRequest request, HttpResponse response) {
       if (result.path.endsWith(".html")) {
          String host = request.headers().get(HOST);
+         String referer = request.headers().get(REFERER);
          Matcher m = SUBDOMAIN_PATTERN.matcher(host);
          if (m.matches()) {
             String subdomain = m.group(1);
-            String[] xframes = getXFramesFromSubdomain(host, subdomain);
-            if (xframes != null) {
-               for (String xframe : xframes) {
-                  response.headers().set("X-Frame-Options", xframe); //  "ALLOW-FROM https://example.com/ " 
-               }
+            if (allowXFramesFromSubdomain(referer, subdomain)) {
+               response.headers().set("X-Frame-Options", "ALLOW-FROM " + referer);
             }
          }
       }
    }
 
-   private String[] getXFramesFromSubdomain(String host, String subdomain) {
-      String[] xframes = SUBDOMAIN_CACHE.get(subdomain);
-      if (xframes == null) {
+   private boolean allowXFramesFromSubdomain(String referer, String subdomain) {
+      String key = referer + ";" + subdomain;
+      Boolean val = SUBDOMAIN_CACHE.get(key);
+      if (val == null) {
 
          JSONObject jo = new JSONObject();
          jo.put("subdomain", subdomain);
+         jo.put("referer", referer);
 
          try {
-            String url = String.format("https://%s/api/v1/framesForSubdomain", Util.getProperty("product.url"));
-            JSONObject res = Util.httpPost(url, jo.toString(), new JSONObject());
-            logger.info("{} => {}", url, res);
-            JSONArray arr = res.getJSONArray("xframes");
-            xframes = new String[arr.length()];
-            for (int i = 0; i < arr.length(); i++) {
-               xframes[i] = arr.getString(i);
+            String url = String.format("https://%s/api/v1/allowFrame", Util.getProperty("product.url"));
+            if (Util.isLocal()) {
+               url = String.format("http://localhost:9904/api/v1/allowFrame");
             }
-            SUBDOMAIN_CACHE.put(subdomain, xframes);
+            JSONObject body = Util.httpPost(url, jo.toString(), new JSONObject());
+            JSONObject res = new JSONObject(body.getString("body"));
+            logger.info("{}\n\t{} => \n\t{}", url, jo.toString(3), res.toString(3));
+            val = res.getString("result").equals("SUCCESS");
+            SUBDOMAIN_CACHE.put(key, val);
          } catch (Exception e) {
+            val = true; // fail open
             logger.error(e.getMessage());
          }
       }
-      return xframes;
+      return val;
    }
 
    @Override
