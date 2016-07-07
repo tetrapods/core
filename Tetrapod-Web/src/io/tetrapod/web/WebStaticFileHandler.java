@@ -171,6 +171,8 @@ public class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRe
             String subdomain = m.group(1);
             if (allowXFramesFromSubdomain(referer, subdomain)) {
                response.headers().set("X-Frame-Options", "ALLOW-FROM " + referer);
+            } else {
+               response.headers().set("X-Frame-Options", "DENY");
             }
          }
       }
@@ -192,7 +194,7 @@ public class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRe
             }
             JSONObject body = Util.httpPost(url, jo.toString(), new JSONObject());
             JSONObject res = new JSONObject(body.getString("body"));
-            logger.info("{}\n\t{} => \n\t{}", url, jo.toString(3), res.toString(3));
+            logger.debug("{}\n\t{} => \n\t{}", url, jo.toString(3), res.toString(3));
             val = res.getString("result").equals("SUCCESS");
             SUBDOMAIN_CACHE.put(key, val);
          } catch (Exception e) {
