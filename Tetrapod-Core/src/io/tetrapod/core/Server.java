@@ -1,18 +1,19 @@
 package io.tetrapod.core;
 
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLEngine;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.ssl.SslHandler;
-
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-
-import javax.net.ssl.*;
-
-import io.tetrapod.protocol.core.Core;
-import org.slf4j.*;
 
 /**
  * A server that speaks the tetrapod wire protocol
@@ -100,9 +101,7 @@ public class Server extends ChannelInitializer<SocketChannel> implements Session
 
    public void purge() {
       for (Session session : sessions.values()) {
-         if (session.getTheirEntityType() != Core.TYPE_ADMIN) {
-            session.close();
-         }
+         session.close();
       }
    }
 

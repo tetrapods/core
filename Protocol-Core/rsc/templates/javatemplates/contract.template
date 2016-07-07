@@ -9,40 +9,77 @@ import io.tetrapod.core.rpc.Structure;
 import io.tetrapod.protocol.core.WebRoute;
 
 {{classcomment}}
-@SuppressWarnings("unused")
+@SuppressWarnings("all")
 public class {{class}} extends Contract {
    public static final int VERSION = {{version}};
    public static final String NAME = "{{name}}";
    public static {{contractIdVolatile}} int CONTRACT_ID = {{contractId}};
-   
+   public static {{contractIdVolatile}} int SUB_CONTRACT_ID = {{subContractId}};
+
    {{constants}}
    
    public static interface API extends APIHandler
       {{handlers}}
       {}
    
+   private volatile Structure[] requests = null;
+
    public Structure[] getRequests() {
-      return new Structure[] {
-         {{requestAdds}}
-      };
+      if (requests == null) {
+         synchronized(this) {
+            if (requests == null) {
+               requests = new Structure[] {
+                  {{requestAdds}}
+               };
+            }
+         }
+      }
+      return requests;
    }
    
+   private volatile Structure[] responses = null;
+
    public Structure[] getResponses() {
-      return new Structure[] {
-         {{responseAdds}}
-      };
+      if (responses == null) {
+         synchronized(this) {
+            if (responses == null) {
+               responses = new Structure[] {
+                  {{responseAdds}}
+               };
+            }
+         }
+      }
+      return responses;
    }
    
+   private volatile Structure[] messages = null;
+
    public Structure[] getMessages() {
-      return new Structure[] {
-         {{messageAdds}}
-      };
+      if (messages == null) {
+         synchronized(this) {
+            if (messages == null) {
+               messages = new Structure[] {
+                  {{messageAdds}}
+               };
+            }
+         }
+      }
+      return messages;
    }
    
+   private volatile Structure[] structs = null;
+
    public Structure[] getStructs() {
-      return new Structure[] {
-         {{structAdds}}
-      };
+      if (structs == null) {
+         synchronized(this) {
+            if (structs == null) {
+               structs = new Structure[] {
+                  {{structAdds}}
+               };
+            }
+         }
+      }
+      return structs;
    }
    
    public String getName() {
@@ -53,14 +90,25 @@ public class {{class}} extends Contract {
       return {{class}}.CONTRACT_ID;
    }
    
+   public int getSubContractId() {
+      return {{class}}.SUB_CONTRACT_ID;
+   }
+
    public int getContractVersion() {
       return {{class}}.VERSION;
    }
-   
+
+   private volatile WebRoute[] webRoutes = null;
+
    public WebRoute[] getWebRoutes() {
-      return new WebRoute[] {
-         {{webRoutes}}
-      };
+      if (webRoutes == null) {
+         synchronized(this) {
+            webRoutes = new WebRoute[] {
+               {{webRoutes}}
+            };
+         }
+      }
+      return webRoutes;
    }
 
    {{subscriptions}}

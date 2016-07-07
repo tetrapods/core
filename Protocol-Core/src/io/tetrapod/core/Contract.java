@@ -20,6 +20,8 @@ abstract public class Contract {
 
    abstract public int getContractId();
 
+   abstract public int getSubContractId();
+
    abstract public int getContractVersion();
 
    public Structure[] getRequests() {

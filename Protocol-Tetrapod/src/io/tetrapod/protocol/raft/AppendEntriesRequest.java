@@ -4,6 +4,7 @@ package io.tetrapod.protocol.raft;
 
 import io.*;
 import io.tetrapod.core.rpc.*;
+import io.tetrapod.protocol.core.Admin;
 import io.tetrapod.core.serialize.*;
 import io.tetrapod.protocol.core.TypeDescriptor;
 import io.tetrapod.protocol.core.StructDescription;
@@ -11,12 +12,13 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
 
-@SuppressWarnings("unused")
-public class AppendEntriesRequest extends Request {
+@SuppressWarnings("all")
+public class AppendEntriesRequest extends RequestWithResponse<AppendEntriesResponse> {
 
    public static final int STRUCT_ID = 5018018;
    public static final int CONTRACT_ID = RaftContract.CONTRACT_ID;
-   
+   public static final int SUB_CONTRACT_ID = RaftContract.SUB_CONTRACT_ID;
+
    public AppendEntriesRequest() {
       defaults();
    }
@@ -84,6 +86,10 @@ public class AppendEntriesRequest extends Request {
    
    public final int getContractId() {
       return AppendEntriesRequest.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return AppendEntriesRequest.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

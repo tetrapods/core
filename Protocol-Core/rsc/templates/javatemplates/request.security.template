@@ -1,3 +1,4 @@
 public final Response securityCheck(RequestContext ctx) {
-   return ctx.securityCheck(this, {{authId}}, {{authToken}});
+   return ctx.securityCheck(this, {{authId}}, {{authToken}}, {{adminRights}});
 }
+ 

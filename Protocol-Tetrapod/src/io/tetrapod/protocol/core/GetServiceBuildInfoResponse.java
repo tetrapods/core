@@ -11,12 +11,13 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
 
-@SuppressWarnings("unused")
+@SuppressWarnings("all")
 public class GetServiceBuildInfoResponse extends Response {
    
    public static final int STRUCT_ID = 4037623;
    public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;
-    
+   public static final int SUB_CONTRACT_ID = TetrapodContract.SUB_CONTRACT_ID;
+
    public GetServiceBuildInfoResponse() {
       defaults();
    }
@@ -59,6 +60,10 @@ public class GetServiceBuildInfoResponse extends Response {
   
    public final int getContractId() {
       return GetServiceBuildInfoResponse.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return GetServiceBuildInfoResponse.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

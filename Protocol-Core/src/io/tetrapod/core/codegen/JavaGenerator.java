@@ -45,7 +45,7 @@ class JavaGenerator implements LanguageGenerator {
          f.delete();
       }
       for (Class c : context.classes) {
-         generateClass(c, context.serviceName + "Contract");
+         generateClass(c, context.serviceName + "Contract", context);
       }
       for (String name : context.enums.keySet()) {
          generateEnum(context.enums.get(name));
@@ -61,6 +61,10 @@ class JavaGenerator implements LanguageGenerator {
       Template t = template("contract");
       String theClass = context.serviceName + "Contract";
       String serviceId = context.serviceAnnotations.getFirst("id");
+      String subContractId = context.serviceAnnotations.getFirst("subid");
+      if (subContractId == null) {
+         subContractId = "1";
+      }
       t.add("class", theClass);
       t.add("package", context.serviceAnnotations.getFirst("java.package"));
       t.add("version", context.serviceAnnotations.getFirst("version"));
@@ -72,6 +76,7 @@ class JavaGenerator implements LanguageGenerator {
          throw new ParseException("dynamic contract id's not supported yet");
       } else {
          t.add("contractId", serviceId);
+         t.add("subContractId", subContractId);
          t.add("contractIdVolatile", "final");
          t.add("contractIdSet", "");
       }
@@ -95,13 +100,20 @@ class JavaGenerator implements LanguageGenerator {
 
       for (String sub : context.subscriptions)
          t.add("subscriptions", genSubscriptions(context, sub, theClass));
+
       for (Class c : context.classesByType("request")) {
          t.add("handlers", ", " + c.classname() + ".Handler", "\n");
          String path = c.annotations.getFirst("web");
          if (path != null) {
             if (path.isEmpty())
                path = Character.toLowerCase(c.name.charAt(0)) + c.name.substring(1);
-            path = '/' + context.serviceAnnotations.getFirst("web") + '/' + path;
+
+            String prePath = "/";
+            for (String p : context.serviceAnnotations.get("web")) {
+               prePath += p + '/';
+            }
+            path = prePath  + path;
+
             Template sub = template("contract.webroutes.call").add("path", path).add("requestClass", c.classname())
                   .add("contractClass", theClass);
             t.add("webRoutes", sub.expand());
@@ -117,6 +129,16 @@ class JavaGenerator implements LanguageGenerator {
       t.expandAndTrim(getFilename(theClass));
    }
 
+   private Class getResponse(Class request, CodeGenContext context) {
+      Collection<Class> responses = context.classesByType("response");
+      for (Class response : responses) {
+         if (response.name.equals(request.name)) {
+            return response;
+         }
+      }
+      return null;
+   }
+
    private String genSubscriptions(CodeGenContext context, String subscription, String enclosingClass) throws IOException {
       Template t = template("contract.subscription");
       t.add("name", subscription);
@@ -130,7 +152,7 @@ class JavaGenerator implements LanguageGenerator {
       return t.expand();
    }
 
-   private void generateClass(Class c, String serviceName) throws IOException, ParseException {
+   private void generateClass(Class c, String serviceName, CodeGenContext context) throws IOException, ParseException {
       Template t = template(c.type.toLowerCase());
       t.add("rawname", c.name);
       t.add("class", c.classname());
@@ -156,6 +178,14 @@ class JavaGenerator implements LanguageGenerator {
       addFieldValues(c.fields, t);
       addConstantValues(c.fields, t);
       addErrors(c.errors, false, serviceName, t);
+      if (c.type.equals("request")) {
+         Class resp = getResponse(c, context);
+         if (resp != null) {
+            t.add("requestGenerics", "RequestWithResponse<" + resp.classname() + ">");
+         } else {
+            t.add("requestGenerics", "Request");
+         }
+      }
       t.expandAndTrim(getFilename(c.classname()));
    }
 
@@ -203,8 +233,8 @@ class JavaGenerator implements LanguageGenerator {
       }
    }
 
-   private Template makeStructEquals(Field field, Template sub) throws IOException{
-      if(field.collectionType != null && field.collectionType.equals("<array>"))
+   private Template makeStructEquals(Field field, Template sub) throws IOException {
+      if (field.collectionType != null && field.collectionType.equals("<array>"))
          return template("field.equals.array").add(sub);
       else if (JavaTypes.get(field.type).isPrimitive && !field.type.equals("string"))
          return template("field.equals.primitive").add(sub);
@@ -212,10 +242,10 @@ class JavaGenerator implements LanguageGenerator {
          return template("field.equals.object").add(sub);
    }
 
-   private Template makeStructHashcode(Field field, Template sub) throws IOException{
-      if(field.collectionType != null && field.collectionType.equals("<array>"))
+   private Template makeStructHashcode(Field field, Template sub) throws IOException {
+      if (field.collectionType != null && field.collectionType.equals("<array>"))
          return template("field.hashcode.array").add(sub);
-      if(field.collectionType != null && field.collectionType.equals("<list>"))
+      if (field.collectionType != null && field.collectionType.equals("<list>"))
          return template("field.hashcode.object").add(sub);
       else if (JavaTypes.get(field.type).isPrimitive && field.type.equals("long"))
          return template("field.hashcode.long").add(sub);
@@ -380,6 +410,7 @@ class JavaGenerator implements LanguageGenerator {
          case "admin":
             String authId = "accountId";
             String authToken = "authToken";
+            String adminRights = "0";
             int m = 0;
             for (Field f : c.fields) {
                if (f.annotations.has("authId")) {
@@ -395,10 +426,13 @@ class JavaGenerator implements LanguageGenerator {
                   m++;
                }
             }
+            if (c.annotations.has("rights")) {
+               adminRights = c.annotations.getFirst("rights");
+            }
             if (m != 2)
                throw new ParseException(c.name + " is " + c.security
                      + " and must have @authId and @authToken fields (or default accountId and authToken)");
-            return template("request.security").add("authId", authId).add("authToken", authToken).expand();
+            return template("request.security").add("authId", authId).add("authToken", authToken).add("adminRights", adminRights).expand();
          default:
             return "";
       }

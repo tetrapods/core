@@ -11,12 +11,13 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
 
-@SuppressWarnings("unused")
+@SuppressWarnings("all")
 public class ServiceDetailsResponse extends Response {
    
    public static final int STRUCT_ID = 12435407;
    public static final int CONTRACT_ID = CoreContract.CONTRACT_ID;
-    
+   public static final int SUB_CONTRACT_ID = CoreContract.SUB_CONTRACT_ID;
+
    public ServiceDetailsResponse() {
       defaults();
    }
@@ -32,7 +33,7 @@ public class ServiceDetailsResponse extends Response {
    public ServiceCommand[] commands;
 
    public final Structure.Security getSecurity() {
-      return Security.INTERNAL;
+      return Security.ADMIN;
    }
 
    public final void defaults() {
@@ -69,6 +70,10 @@ public class ServiceDetailsResponse extends Response {
   
    public final int getContractId() {
       return ServiceDetailsResponse.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return ServiceDetailsResponse.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

@@ -11,12 +11,13 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
 
-@SuppressWarnings("unused")
+@SuppressWarnings("all")
 public class InstallSnapshotResponse extends Response {
    
    public static final int STRUCT_ID = 6834013;
    public static final int CONTRACT_ID = RaftContract.CONTRACT_ID;
-    
+   public static final int SUB_CONTRACT_ID = RaftContract.SUB_CONTRACT_ID;
+
    public InstallSnapshotResponse() {
       defaults();
    }
@@ -59,6 +60,10 @@ public class InstallSnapshotResponse extends Response {
   
    public final int getContractId() {
       return InstallSnapshotResponse.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return InstallSnapshotResponse.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

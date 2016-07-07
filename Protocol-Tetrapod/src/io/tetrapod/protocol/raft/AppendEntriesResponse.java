@@ -11,12 +11,13 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
 
-@SuppressWarnings("unused")
+@SuppressWarnings("all")
 public class AppendEntriesResponse extends Response {
    
    public static final int STRUCT_ID = 32510;
    public static final int CONTRACT_ID = RaftContract.CONTRACT_ID;
-    
+   public static final int SUB_CONTRACT_ID = RaftContract.SUB_CONTRACT_ID;
+
    public AppendEntriesResponse() {
       defaults();
    }
@@ -69,6 +70,10 @@ public class AppendEntriesResponse extends Response {
   
    public final int getContractId() {
       return AppendEntriesResponse.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return AppendEntriesResponse.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

@@ -11,7 +11,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
 
-@SuppressWarnings("unused")
+@SuppressWarnings("all")
 public class Core extends Structure {
    
    /**
@@ -25,6 +25,10 @@ public class Core extends Structure {
    public static final int DIRECT = 1; 
    public static final byte TYPE_TETRAPOD = 1; 
    public static final byte TYPE_SERVICE = 2; 
+   
+   /**
+    * deprecated
+    */
    public static final byte TYPE_ADMIN = 3; 
    public static final byte TYPE_CLIENT = 4; 
    public static final byte TYPE_ANONYMOUS = 5; 
@@ -55,7 +59,8 @@ public class Core extends Structure {
    
    public static final int STRUCT_ID = 9088168;
    public static final int CONTRACT_ID = CoreContract.CONTRACT_ID;
-    
+   public static final int SUB_CONTRACT_ID = CoreContract.SUB_CONTRACT_ID;
+
    public Core() {
       defaults();
    }
@@ -74,7 +79,6 @@ public class Core extends Structure {
       data.writeEndTag();
    }
    
-   @SuppressWarnings("Duplicates")
    @Override
    public final void read(DataSource data) throws IOException {
       defaults();
@@ -95,11 +99,14 @@ public class Core extends Structure {
       return Core.CONTRACT_ID;
    }
 
+   public final int getSubContractId() {
+      return Core.SUB_CONTRACT_ID;
+   }
+
    public final int getStructId() {
       return Core.STRUCT_ID;
    }
 
-   @SuppressWarnings("Duplicates")
    public final String[] tagWebNames() {
       // Note do not use this tags in long term serializations (to disk or databases) as
       // implementors are free to rename them however they wish.  A null means the field

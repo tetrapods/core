@@ -4,6 +4,7 @@ package io.tetrapod.protocol.core;
 
 import io.*;
 import io.tetrapod.core.rpc.*;
+import io.tetrapod.protocol.core.Admin;
 import io.tetrapod.core.serialize.*;
 import io.tetrapod.protocol.core.TypeDescriptor;
 import io.tetrapod.protocol.core.StructDescription;
@@ -11,33 +12,28 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
 
-@SuppressWarnings("unused")
+@SuppressWarnings("all")
 public class ServicesSubscribeRequest extends Request {
 
    public static final int STRUCT_ID = 7048310;
    public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;
-   
+   public static final int SUB_CONTRACT_ID = TetrapodContract.SUB_CONTRACT_ID;
+
    public ServicesSubscribeRequest() {
       defaults();
    }
-
-   public ServicesSubscribeRequest(String adminToken) {
-      this.adminToken = adminToken;
-   }   
-
-   public String adminToken;
 
    public final Structure.Security getSecurity() {
       return Security.INTERNAL;
    }
 
    public final void defaults() {
-      adminToken = null;
+      
    }
    
    @Override
    public final void write(DataSource data) throws IOException {
-      data.write(1, this.adminToken);
+      
       data.writeEndTag();
    }
    
@@ -47,7 +43,7 @@ public class ServicesSubscribeRequest extends Request {
       while (true) {
          int tag = data.readTag();
          switch (tag) {
-            case 1: this.adminToken = data.read_string(tag); break;
+            
             case Codec.END_TAG:
                return;
             default:
@@ -59,6 +55,10 @@ public class ServicesSubscribeRequest extends Request {
    
    public final int getContractId() {
       return ServicesSubscribeRequest.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return ServicesSubscribeRequest.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {
@@ -80,8 +80,8 @@ public class ServicesSubscribeRequest extends Request {
       // Note do not use this tags in long term serializations (to disk or databases) as 
       // implementors are free to rename them however they wish.  A null means the field
       // is not to participate in web serialization (remaining at default)
-      String[] result = new String[1+1];
-      result[1] = "adminToken";
+      String[] result = new String[0+1];
+      
       return result;
    }
    
@@ -95,7 +95,7 @@ public class ServicesSubscribeRequest extends Request {
       desc.tagWebNames = tagWebNames();
       desc.types = new TypeDescriptor[desc.tagWebNames.length];
       desc.types[0] = new TypeDescriptor(TypeDescriptor.T_STRUCT, getContractId(), getStructId());
-      desc.types[1] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
+      
       return desc;
    }
 

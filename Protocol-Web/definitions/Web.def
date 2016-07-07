@@ -1,5 +1,51 @@
 java package io.tetrapod.protocol.web
 java outdir "../src" 
+javascript out "../../Tetrapod-Web/webContent/protocol/web.js"
 
-service Web @version(1) @id(15)  
+service Web @version(1) @id(22)
  
+error UNKNOWN_CLIENT_ID
+error UNKNOWN_ALT_ID
+
+################################# REQUESTS #################################
+
+public request KeepAlive
+
+public request Register
+   1: string name
+   2: string build
+   3: string host
+   4: string referrer
+
+public response Register 
+   1: int childId
+   2: int parentId
+   3: string token
+    
+internal request SetAlternateId
+   1: int clientId
+   2: int alternateId
+   
+internal request GetClientInfo
+   1: int clientId
+ 
+
+internal response GetClientInfo
+   1: string build   
+   2: string name     // entity name
+   3: string host     // host/ip of the entity
+   4: string referrer // referrer of first request (clients only)
+   5: string domain   // domain request was sent to (clients only)
+
+     
+##########################################          
+
+internal request CloseClientConnection
+   1: string data
+   
+internal request ClientSessions
+
+internal response ClientSessions  
+   1: int[] clientSessions    
+     
+##########################################          

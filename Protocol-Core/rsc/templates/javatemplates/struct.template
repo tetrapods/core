@@ -12,14 +12,15 @@ import java.util.*;
 import java.util.concurrent.*;
 
 {{classcomment}}
-@SuppressWarnings("unused")
+@SuppressWarnings("all")
 public class {{class}} extends Structure {
    
    {{constants}}
    
    public static final int STRUCT_ID = {{structid}};
    public static final int CONTRACT_ID = {{service}}.CONTRACT_ID;
-    
+   public static final int SUB_CONTRACT_ID = {{service}}.SUB_CONTRACT_ID;
+
    public {{class}}() {
       defaults();
    }
@@ -42,7 +43,6 @@ public class {{class}} extends Structure {
       data.writeEndTag();
    }
    
-   @SuppressWarnings("Duplicates")
    @Override
    public final void read(DataSource data) throws IOException {
       defaults();
@@ -63,11 +63,14 @@ public class {{class}} extends Structure {
       return {{class}}.CONTRACT_ID;
    }
 
+   public final int getSubContractId() {
+      return {{class}}.SUB_CONTRACT_ID;
+   }
+
    public final int getStructId() {
       return {{class}}.STRUCT_ID;
    }
 
-   @SuppressWarnings("Duplicates")
    public final String[] tagWebNames() {
       // Note do not use this tags in long term serializations (to disk or databases) as
       // implementors are free to rename them however they wish.  A null means the field

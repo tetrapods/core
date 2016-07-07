@@ -1,15 +1,14 @@
 package io.tetrapod.web;
 
-import io.tetrapod.core.json.JSONObject;
-
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import io.tetrapod.core.json.JSONObject;
 
 public class LongPollQueue extends LinkedBlockingQueue<JSONObject> {
    private static final long                        serialVersionUID = 1L;
@@ -18,10 +17,14 @@ public class LongPollQueue extends LinkedBlockingQueue<JSONObject> {
 
    private static final Map<Integer, LongPollQueue> queues           = new HashMap<>();
 
-   public static LongPollQueue getQueue(int entityId) {
+   private final int                                entityId;
+   private Lock                                     lock             = new ReentrantLock(true);
+   private long                                     lastDrainTime    = System.currentTimeMillis();
+
+   public static LongPollQueue getQueue(int entityId, boolean createIfMissing) {
       synchronized (queues) {
          LongPollQueue q = queues.get(entityId);
-         if (q == null) {
+         if (q == null && createIfMissing) {
             q = new LongPollQueue(entityId);
             queues.put(entityId, q);
          }
@@ -29,16 +32,43 @@ public class LongPollQueue extends LinkedBlockingQueue<JSONObject> {
       }
    }
 
-   public static void clearEntity(int entityId) {
+   /**
+    * Removes expired long poll queues and returns the list so we can also clean up any
+    * topic subscribers
+    * 
+    * @param lastDrainedBefore if the long poll queue hasn't been drained since this
+    *           timestamp, we assume they are gone
+    */
+   public static List<Integer> removeExpired(long lastDrainedBefore) {
+      List<Integer> removed = new ArrayList<>();
+      synchronized (queues) {
+         for (LongPollQueue q : queues.values()) {
+            if (q.lastDrainTime < lastDrainedBefore) {
+               removed.add(q.entityId);
+            }
+         }
+         for (Integer entityId : removed) {
+            queues.remove(entityId);
+         }
+      }
+      return removed;
+   }
+
+   public static void clearEntity(Integer entityId) {
       synchronized (queues) {
          if (queues.remove(entityId) != null) {
-            logger.debug("Removing long poll queue for {}", entityId);
+            logger.info("Removing long poll queue for {}", entityId);
          }
       }
    }
 
-   private final int entityId;
-   private Lock      lock = new ReentrantLock(true);
+   public synchronized void setLastDrain(long lastDrainTime) {
+      this.lastDrainTime = lastDrainTime;
+   }
+
+   public synchronized long getLastDrainTime() {
+      return lastDrainTime;
+   }
 
    public LongPollQueue(int entityId) {
       this.entityId = entityId;
@@ -54,6 +84,15 @@ public class LongPollQueue extends LinkedBlockingQueue<JSONObject> {
 
    public int getEntityId() {
       return entityId;
+   }
+
+   public static void logStats() {
+      logger.info("Long Poll Queues = {}", queues.size());
+      synchronized (queues) {
+         for (LongPollQueue q : queues.values()) {
+            logger.info("Queue-{} = {} items", q.entityId, q.size());
+         }
+      }
    }
 
 }

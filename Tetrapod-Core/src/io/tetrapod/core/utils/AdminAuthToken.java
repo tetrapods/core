@@ -15,8 +15,8 @@ public class AdminAuthToken {
 
    public static final String SHARED_SECRET_KEY = "tetrapod.shared.secret";
 
-   private static Mac MAC_LOGIN   = null;
-   private static Mac MAC_SESSION = null;
+   private static Mac         MAC_LOGIN         = null;
+   private static Mac         MAC_SESSION       = null;
 
    public static class Decoded {
       public int  accountId;
@@ -29,8 +29,9 @@ public class AdminAuthToken {
    }
 
    /**
-    * Sets the shared secret. Needs to be called before this class is used. Returns false if there is an error which would typically be Java
-    * not having strong crypto available.
+    * Sets the shared secret. Needs to be called before this class is used. Returns false
+    * if there is an error which would typically be Java not having strong crypto
+    * available.
     */
    public synchronized static boolean setSecret(byte[] secret) {
       try {
@@ -80,6 +81,16 @@ public class AdminAuthToken {
    public static void validateAdminToken(String authToken, long requiredRights) {
       final Decoded d = decodeSessionToken(authToken);
       if (d == null) {
+         throw new ErrorResponseException(CoreContract.ERROR_INVALID_RIGHTS);
+      }
+      if ((d.rights & requiredRights) != requiredRights) {
+         throw new ErrorResponseException(CoreContract.ERROR_INVALID_RIGHTS);
+      }
+   }
+
+   public static void validateAdminToken(int accountId, String adminToken, long requiredRights) {
+      final Decoded d = decodeSessionToken(adminToken);
+      if (d == null || d.accountId != accountId) {
          throw new ErrorResponseException(CoreContract.ERROR_INVALID_RIGHTS);
       }
       if ((d.rights & requiredRights) != requiredRights) {

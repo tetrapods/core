@@ -8,16 +8,14 @@ import java.nio.file.Files;
 import java.security.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.regex.*;
 
 import javax.naming.NamingException;
 import javax.naming.directory.*;
 import javax.net.ssl.*;
 import javax.xml.bind.DatatypeConverter;
 
-import io.tetrapod.core.json.JSONArray;
-import io.tetrapod.core.json.JSONObject;
+import io.tetrapod.core.json.*;
 import io.tetrapod.core.rpc.Flags_int;
 
 /**
@@ -464,6 +462,10 @@ public class Util {
    public static boolean isEmpty(Map<?, ?> map) {
       return map == null ? true : map.isEmpty();
    }
+   
+   public static boolean isEmpty(JSONArray array) {
+      return array == null ? true : array.length() == 0;
+   }
 
    public static boolean equals(String a, String b) {
       return (a == null) ? (b == null) : a.equals(b);
@@ -659,6 +661,42 @@ public class Util {
       return (T) obj;
    }
 
+   public static boolean isEqual(Object a, Object b) {
+      if (a == b) {
+         return true;
+      } else if ((a == null && b != null) || a != null && b == null) {
+         return false;
+      } else {
+         return a.equals(b);
+      }
+   }
+
+   public static Throwable getRootCause(Throwable ex) {
+      while (ex.getCause() != null && ex != ex.getCause()) {
+         ex = ex.getCause();
+      }
+      return ex;
+   }
+
+   /**
+    * Given a throwable, this will find if there is a throwable that is descendant from the specified class or null if not found.
+    * @param t The throwable to check
+    * @param throwableClass The throwable class to check for
+    * @param <T> The throwable type to search for
+    * @return The throwable that descneds T, or null if it's not in the chain
+    */
+   public static <T extends Throwable> T getThrowableInChain(Throwable t, Class<T> throwableClass) {
+      do {
+         if (throwableClass.isAssignableFrom(t.getClass())) {
+            return cast(t);
+         }
+         if (t.getCause() == null || t.getCause() == t) {
+            return null;
+         }
+         t = t.getCause();
+      } while (true);
+   }
+
    public interface ValueMaker<K, V> {
       public V make();
    }
@@ -710,7 +748,7 @@ public class Util {
    }
 
    public static String formatCents(double pennies) {
-      return String.format("%f¢", pennies);
+      return String.format("%1.1f¢", pennies);
    }
 
 }

@@ -4,6 +4,7 @@ package io.tetrapod.protocol.storage;
 
 import io.*;
 import io.tetrapod.core.rpc.*;
+import io.tetrapod.protocol.core.Admin;
 import io.tetrapod.core.serialize.*;
 import io.tetrapod.protocol.core.TypeDescriptor;
 import io.tetrapod.protocol.core.StructDescription;
@@ -11,12 +12,13 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
 
-@SuppressWarnings("unused")
-public class StorageGetRequest extends Request {
+@SuppressWarnings("all")
+public class StorageGetRequest extends RequestWithResponse<StorageGetResponse> {
 
    public static final int STRUCT_ID = 15665625;
    public static final int CONTRACT_ID = StorageContract.CONTRACT_ID;
-   
+   public static final int SUB_CONTRACT_ID = StorageContract.SUB_CONTRACT_ID;
+
    public StorageGetRequest() {
       defaults();
    }
@@ -59,6 +61,10 @@ public class StorageGetRequest extends Request {
    
    public final int getContractId() {
       return StorageGetRequest.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return StorageGetRequest.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

@@ -11,17 +11,16 @@ import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.SSLContext;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.slf4j.*;
 
 import com.codahale.metrics.Timer.Context;
 
 import ch.qos.logback.classic.LoggerContext;
 import io.netty.channel.socket.SocketChannel;
-import io.tetrapod.core.pubsub.Publisher;
-import io.tetrapod.core.pubsub.Topic;
+import io.tetrapod.core.pubsub.*;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.rpc.Error;
+import io.tetrapod.core.tasks.Task;
 import io.tetrapod.core.utils.*;
 import io.tetrapod.protocol.core.*;
 
@@ -44,6 +43,7 @@ public class DefaultService
    public final String                     buildName;
    protected final LogBuffer               logBuffer;
    protected SSLContext                    sslContext;
+   private List<SubService>                subServices     = new ArrayList<>();
 
    protected ServiceConnector              serviceConnector;
 
@@ -56,6 +56,7 @@ public class DefaultService
    private final MessageHandlers           messageHandlers = new MessageHandlers();
 
    private final Publisher                 publisher       = new Publisher(this);
+   private long                            dependencyCheckLogThreshold;
 
    public DefaultService() {
       this(null);
@@ -64,6 +65,7 @@ public class DefaultService
    public DefaultService(Contract mainContract) {
       logBuffer = (LogBuffer) ((LoggerContext) LoggerFactory.getILoggerFactory()).getLogger("ROOT").getAppender("BUFFER");
       String m = getStartLoggingMessage();
+      dependencyCheckLogThreshold = System.currentTimeMillis() + 10000;
       logger.info(m);
       Session.commsLog.info(m);
       Fail.handler = this;
@@ -165,17 +167,20 @@ public class DefaultService
    public void onReadyToServe() {}
 
    private void onServiceRegistered() {
-      registerServiceInformation();
+      registerServiceInformation(this.contract);
+      for (SubService subService : subServices) {
+         registerServiceInformation(subService.getContract());
+      }
       stats.publishTopic();
       resetServiceConnector(true);
    }
 
-   public boolean dependenciesReady() {
-      return services.checkDependencies(dependencies);
+   public boolean dependenciesReady(boolean logIfNotReady) {
+      return services == null || services.checkDependencies(dependencies, logIfNotReady);
    }
 
    public boolean dependenciesReady(Set<Integer> deps) {
-      return services.checkDependencies(deps);
+      return services.checkDependencies(deps, false);
    }
 
    private final Object checkDependenciesLock = new Object();
@@ -184,7 +189,7 @@ public class DefaultService
       synchronized (checkDependenciesLock) {
          if (!isShuttingDown() && isStartingUp()) {
             logger.info("Checking Dependencies...");
-            if (dependenciesReady()) {
+            if (dependenciesReady(dependencyCheckLogThreshold < System.currentTimeMillis())) {
                try {
                   if (startPaused) {
                      setStatus(Core.STATUS_PAUSED);
@@ -197,6 +202,7 @@ public class DefaultService
                   fail(t);
                }
                // ok, we're good to go
+               logger.info("Startup tasks done");
                clearStatus(Core.STATUS_STARTING);
                onStarted();
                if (startPaused) {
@@ -262,9 +268,8 @@ public class DefaultService
    }
 
    /**
-    * Called before shutting down. Default implementation is to do nothing. Subclasses are
-    * expecting to close any resources they opened (for example database connections or
-    * file handles).
+    * Called before shutting down. Default implementation is to do nothing. Subclasses are expecting to close any resources they opened (for
+    * example database connections or file handles).
     * 
     * @param restarting true if we are shutting down in order to restart
     */
@@ -301,7 +306,7 @@ public class DefaultService
          }
       } else {
          if (getEntityId() != 0 && clusterClient.getSession() != null) {
-            sendDirectRequest(new UnregisterRequest(getEntityId())).handle(res -> {
+            sendDirectRequest(new UnregisterRequest(0, null, getEntityId())).handle(res -> {
                clusterClient.close();
                dispatcher.shutdown();
                setTerminated(true);
@@ -351,6 +356,7 @@ public class DefaultService
          public void onSessionStop(Session ses) {
             logger.info("Connection to tetrapod closed");
             onDisconnectedFromCluster();
+            services.clear();
             resetServiceConnector(false);
             if (!isShuttingDown()) {
                dispatcher.dispatch(3, TimeUnit.SECONDS, () -> connectToCluster(1));
@@ -366,7 +372,7 @@ public class DefaultService
       return ses;
    }
 
-   private void onConnectedToCluster() {
+   protected void onConnectedToCluster() {
       final Request req = new RegisterRequest(token, getContractId(), getShortName(), getStatus(), Util.getHostName(), buildName);
       sendDirectRequest(req).handle(res -> {
          if (res.isError()) {
@@ -523,24 +529,21 @@ public class DefaultService
    }
 
    /**
-    * Get a URL for this service's icon to display in the admin apps. Subclasses should
-    * override this to customize
+    * Get a URL for this service's icon to display in the admin apps. Subclasses should override this to customize
     */
    public String getServiceIcon() {
       return "media/gear.gif";
    }
 
    /**
-    * Get any custom metadata for the service. Subclasses should override this to
-    * customize
+    * Get any custom metadata for the service. Subclasses should override this to customize
     */
    public String getServiceMetadata() {
       return null;
    }
 
    /**
-    * Get any custom admin commands for the service to show in command menu of admin app.
-    * Subclasses should override this to customize
+    * Get any custom admin commands for the service to show in command menu of admin app. Subclasses should override this to customize
     */
    public ServiceCommand[] getServiceCommands() {
       return null;
@@ -567,8 +570,7 @@ public class DefaultService
    }
 
    /**
-    * Services can override this to provide a service specific counter for display in the
-    * admin app
+    * Services can override this to provide a service specific counter for display in the admin app
     */
    public long getCounter() {
       return 0;
@@ -588,7 +590,7 @@ public class DefaultService
    @Override
    public Async dispatchRequest(final RequestHeader header, final Request req, final Session fromSession) {
       final Async async = new Async(req, header, fromSession);
-      final ServiceAPI svc = getServiceHandler(header.contractId);
+      final ServiceAPI svc = getServiceHandler(header.contractId, req.getStructId());
       if (svc != null) {
          final long start = System.nanoTime();
          final Context context = dispatcher.requestTimes.time();
@@ -597,7 +599,7 @@ public class DefaultService
 
             Runnable onResult = () -> {
                final long elapsed = System.nanoTime() - dispatchTime;
-               stats.recordRequest(header.fromId, req, elapsed, async.getErrorCode());
+               stats.recordRequest(header.fromParentId, req, elapsed, async.getErrorCode());
                context.stop();
                dispatcher.requestsHandledCounter.mark();
                if (Util.nanosToMillis(elapsed) > 1000) {
@@ -644,8 +646,13 @@ public class DefaultService
             } catch (ErrorResponseException e) {
                async.setResponse(new Error(e.errorCode));
             } catch (Throwable e) {
-               logger.error(e.getMessage(), e);
-               async.setResponse(new Error(ERROR_UNKNOWN));
+               ErrorResponseException ere = Util.getThrowableInChain(e, ErrorResponseException.class);
+               if (ere != null && ere.errorCode != ERROR_UNKNOWN) {
+                  async.setResponse(new Error(ere.errorCode));
+               } else {
+                  logger.error(e.getMessage(), e);
+                  async.setResponse(new Error(ERROR_UNKNOWN));
+               }
             } finally {
                if (async.getErrorCode() != -1) {
                   onResult.run();
@@ -686,6 +693,35 @@ public class DefaultService
       sendRequest(req).handle(handler);
    }
 
+   public <TResp extends Response, TValue> Task<ResponseAndValue<TResp, TValue>> sendRequestTask(Request req, TValue value) {
+      if (serviceConnector != null) {
+         return serviceConnector.sendRequest(req, Core.UNADDRESSED).asTask(value);
+      }
+      return clusterClient.getSession().sendRequest(req, Core.UNADDRESSED, (byte) 30).asTask(value);
+   }
+
+   public <TResp extends Response> Task<TResp> sendRequestTask(Request req) {
+      if (serviceConnector != null) {
+         return serviceConnector.sendRequest(req, Core.UNADDRESSED).asTask();
+      }
+      return clusterClient.getSession().sendRequest(req, Core.UNADDRESSED, (byte) 30).asTask();
+   }
+
+   public <TResp extends Response, TValue> Task<ResponseAndValue<TResp, TValue>> sendRequestTask(RequestWithResponse<TResp> req,
+         TValue value) {
+      if (serviceConnector != null) {
+         return serviceConnector.sendRequest(req, Core.UNADDRESSED).asTask(value);
+      }
+      return clusterClient.getSession().sendRequest(req, Core.UNADDRESSED, (byte) 30).asTask(value);
+   }
+
+   public <TResp extends Response> Task<TResp> sendRequestTask(RequestWithResponse<TResp> req) {
+      if (serviceConnector != null) {
+         return serviceConnector.sendRequest(req, Core.UNADDRESSED).asTask();
+      }
+      return clusterClient.getSession().sendRequest(req, Core.UNADDRESSED, (byte) 30).asTask();
+   }
+
    public Async sendRequest(Request req) {
       if (serviceConnector != null) {
          return serviceConnector.sendRequest(req, Core.UNADDRESSED);
@@ -708,12 +744,12 @@ public class DefaultService
       return services.isServiceExistant(entityId);
    }
 
-   public void sendMessage(Message msg, int toEntityId) {
+   public void sendMessage(Message msg, int toEntityId, int childId) {
       if (serviceConnector != null
             && (serviceConnector.hasService(toEntityId) || (services != null && services.isServiceExistant(toEntityId)))) {
-         serviceConnector.sendMessage(msg, toEntityId);
+         serviceConnector.sendMessage(msg, toEntityId, childId);
       } else {
-         clusterClient.getSession().sendMessage(msg, toEntityId);
+         clusterClient.getSession().sendMessage(msg, toEntityId, childId);
       }
    }
 
@@ -730,12 +766,12 @@ public class DefaultService
       }
    }
 
-   public boolean sendPrivateMessage(Message msg, int toEntityId, int topicId) {
+   public boolean sendPrivateMessage(Message msg, int toEntityId, int toChildId, int topicId) {
       if (serviceConnector != null
             && (serviceConnector.hasService(toEntityId) || (services != null && services.isServiceExistant(toEntityId)))) {
-         return serviceConnector.sendMessage(msg, toEntityId);
+         return serviceConnector.sendMessage(msg, toEntityId, toChildId);
       } else {
-         clusterClient.getSession().sendMessage(msg, toEntityId);
+         clusterClient.getSession().sendMessage(msg, toEntityId, toChildId);
          return true;
       }
    }
@@ -745,19 +781,18 @@ public class DefaultService
    }
 
    /**
-    * Subscribe an entity to the given topic. If once is true, tetrapod won't subscribe
-    * them a second time
+    * Subscribe an entity to the given topic. If once is true, tetrapod won't subscribe them a second time
     */
-   public void subscribe(int topicId, int entityId, boolean once) {
-      publisher.subscribe(topicId, entityId, once);
+   public void subscribe(int topicId, int entityId, int childId, boolean once) {
+      publisher.subscribe(topicId, entityId, childId, once);
    }
 
-   public void subscribe(int topicId, int entityId) {
-      subscribe(topicId, entityId, false);
+   public void subscribe(int topicId, int entityId, int childId) {
+      subscribe(topicId, entityId, childId, false);
    }
 
-   public void unsubscribe(int topicId, int entityId) {
-      publisher.unsubscribe(topicId, entityId);
+   public void unsubscribe(int topicId, int entityId, int childId) {
+      publisher.unsubscribe(topicId, entityId, childId);
    }
 
    public void unpublish(int topicId) {
@@ -785,9 +820,27 @@ public class DefaultService
       return dispatcher;
    }
 
-   public ServiceAPI getServiceHandler(int contractId) {
+   private ServiceAPI getServiceHandler(int contractId, int structId) {
       // this method allows us to have delegate objects that directly handle some contracts
+      if (!Util.isEmpty(subServices) && contractId == contract.getContractId() || !handlesStuct(contract, structId)) {
+         for (SubService subService : subServices) {
+            if (handlesStuct(subService.getContract(), structId))
+               return subService;
+         }
+      }
       return this;
+   }
+
+   private boolean handlesStuct(Contract c, int structId) {
+      for (Structure structure : c.getRequests()) {
+         if (structId == structure.getStructId())
+            return true;
+      }
+      for (Structure structure : c.getMessages()) {
+         if (structId == structure.getStructId())
+            return true;
+      }
+      return false;
    }
 
    @Override
@@ -837,8 +890,8 @@ public class DefaultService
 
    // private methods
 
-   protected void registerServiceInformation() {
-      if (contract != null) {
+   protected void registerServiceInformation(Contract contract) {
+      if (this.contract != null) {
          AddServiceInformationRequest asi = new AddServiceInformationRequest();
          asi.info = new ContractDescription();
          asi.info.contractId = contract.getContractId();
@@ -857,6 +910,7 @@ public class DefaultService
          for (Structure s : contract.getStructs()) {
             asi.info.structs.add(s.makeDescription());
          }
+         asi.info.subContractId = contract.getSubContractId();
          sendDirectRequest(asi).handle(ResponseHandler.LOGGER);
       }
    }
@@ -865,7 +919,6 @@ public class DefaultService
 
    @Override
    public Response requestPause(PauseRequest r, RequestContext ctx) {
-      // TODO: Check admin rights or macaroon
       setStatus(Core.STATUS_PAUSED);
       onPaused();
       return Response.SUCCESS;
@@ -891,7 +944,6 @@ public class DefaultService
 
    @Override
    public Response requestUnpause(UnpauseRequest r, RequestContext ctx) {
-      // TODO: Check admin rights or macaroon
       clearStatus(Core.STATUS_PAUSED);
       onUnpaused();
       return Response.SUCCESS;
@@ -899,14 +951,18 @@ public class DefaultService
 
    @Override
    public Response requestRestart(RestartRequest r, RequestContext ctx) {
-      // TODO: Check admin rights or macaroon
       dispatcher.dispatch(() -> shutdown(true));
       return Response.SUCCESS;
    }
 
    @Override
    public Response requestShutdown(ShutdownRequest r, RequestContext ctx) {
-      // TODO: Check admin rights or macaroon
+      dispatcher.dispatch(() -> shutdown(false));
+      return Response.SUCCESS;
+   }
+
+   @Override
+   public Response requestInternalShutdown(InternalShutdownRequest r, RequestContext ctx) {
       dispatcher.dispatch(() -> shutdown(false));
       return Response.SUCCESS;
    }
@@ -918,13 +974,13 @@ public class DefaultService
 
    @Override
    public Response requestServiceStatsSubscribe(ServiceStatsSubscribeRequest r, RequestContext ctx) {
-      stats.subscribe(ctx.header.fromId);
+      stats.subscribe(ctx.header.fromParentId, ctx.header.fromChildId);
       return Response.SUCCESS;
    }
 
    @Override
    public Response requestServiceStatsUnsubscribe(ServiceStatsUnsubscribeRequest r, RequestContext ctx) {
-      stats.unsubscribe(ctx.header.fromId);
+      stats.unsubscribe(ctx.header.fromParentId, ctx.header.fromChildId);
       return Response.SUCCESS;
    }
 
@@ -940,8 +996,7 @@ public class DefaultService
 
    protected String getStartLoggingMessage() {
       return "*** Start Service ***" + "\n   *** Service name: " + Util.getProperty("APPNAME") + "\n   *** Options: "
-            + Launcher.getAllOpts()
-            + "\n   *** VM Args: " + ManagementFactory.getRuntimeMXBean().getInputArguments().toString();
+            + Launcher.getAllOpts() + "\n   *** VM Args: " + ManagementFactory.getRuntimeMXBean().getInputArguments().toString();
    }
 
    @Override
@@ -1020,6 +1075,20 @@ public class DefaultService
    @Override
    public Response requestServiceRequestStats(ServiceRequestStatsRequest r, RequestContext ctx) {
       return stats.getRequestStats(r.domain, r.limit, r.minTime, r.sortBy);
+   }
+
+   @Override
+   public void messageWebRootAdded(WebRootAddedMessage m, MessageContext ctx) {}
+
+   @Override
+   public void messageWebRootRemoved(WebRootRemovedMessage m, MessageContext ctx) {}
+
+   @Override
+   public void messageRegisterContract(RegisterContractMessage m, MessageContext ctx) {}
+
+   protected void addSubService(SubService subService) {
+      subServices.add(subService);
+      addPeerContracts(subService.getContract());
    }
 
 }
