@@ -163,7 +163,7 @@ public class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRe
    final static Pattern                   SUBDOMAIN_PATTERN = Pattern.compile("([^.]+)\\..*");
 
    private void addHackyHeadersForOWASP(FileResult result, FullHttpRequest request, HttpResponse response) {
-      if (result.path.endsWith(".html")) {
+      if (result.path.endsWith(".html") || Util.isDev()) {
          String host = request.headers().get(HOST);
          String referer = request.headers().get(REFERER);
          Matcher m = SUBDOMAIN_PATTERN.matcher(host);
