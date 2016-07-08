@@ -176,6 +176,7 @@ public class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRe
             }
          }
       }
+      response.headers().set("X-Content-Type-Options", "nosniff");
    }
 
    private boolean allowXFramesFromSubdomain(String referer, String subdomain) {
