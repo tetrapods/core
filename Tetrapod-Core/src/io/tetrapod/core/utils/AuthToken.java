@@ -190,6 +190,10 @@ public class AuthToken {
       return Base64.encode(Unpooled.wrappedBuffer(generateRandomBytes(64)), Base64Dialect.STANDARD).toString(Charset.forName("UTF-8"));
    }
 
+   public static String generateUrlSafeSharedSecret() {
+      return Base64.encode(Unpooled.wrappedBuffer(generateRandomBytes(64)), Base64Dialect.URL_SAFE).toString(Charset.forName("UTF-8"));
+   }
+
    public static byte[] generateRandomBytes(int len) {
       byte[] b = new byte[len];
       Random r = new SecureRandom();
