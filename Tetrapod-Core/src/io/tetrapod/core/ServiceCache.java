@@ -32,7 +32,7 @@ public class ServiceCache implements TetrapodContract.Services.API {
    @Override
    public void messageServiceAdded(ServiceAddedMessage m, MessageContext ctx) {
       if (services.containsKey(m.entity.entityId)) {
-         logger.warn("Got ServiceAddedMessage for service we already have");
+         //logger.warn("Got ServiceAddedMessage for service we already have");
          removeService(m.entity.entityId);
       }
       services.put(m.entity.entityId, m.entity);
