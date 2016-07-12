@@ -51,12 +51,9 @@ internal request ClusterJoin
    4: int entityId
    5: int servicePort
    6: int clusterPort
-   7: string build
-    
-admin request Unregister @rights(Admin.RIGHTS_CLUSTER_WRITE)
-   1: int accountId
-   2: string authToken @sensitive
-   3: int entityId
+   7: string build     
+
+internal request Unregister  
     
 internal request ServicesSubscribe 
    
