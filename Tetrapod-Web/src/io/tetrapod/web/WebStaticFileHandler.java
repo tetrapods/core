@@ -166,14 +166,15 @@ public class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRe
       if (result != null && request != null && (result.path.endsWith(".html") || Util.isDev())) {
          String host = request.headers().get(HOST);
          String referer = request.headers().get(REFERER);
-         logger.debug("XFRAME {} + {}", host, referer);
-         Matcher m = SUBDOMAIN_PATTERN.matcher(host);
-         if (m.matches()) {
-            String subdomain = m.group(1);
-            if (allowXFramesFromSubdomain(referer, subdomain)) {
-               response.headers().set("X-Frame-Options", "ALLOW-FROM " + referer);
-            } else {
-               response.headers().set("X-Frame-Options", "DENY");
+         if (referer != null && host != null) {
+            Matcher m = SUBDOMAIN_PATTERN.matcher(host);
+            if (m.matches()) {
+               String subdomain = m.group(1);
+               if (allowXFramesFromSubdomain(referer, subdomain)) {
+                  response.headers().set("X-Frame-Options", "ALLOW-FROM " + referer);
+               } else {
+                  response.headers().set("X-Frame-Options", "DENY");
+               }
             }
          }
       }
