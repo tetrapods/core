@@ -166,6 +166,7 @@ public class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRe
       if (result.path.endsWith(".html") || Util.isDev()) {
          String host = request.headers().get(HOST);
          String referer = request.headers().get(REFERER);
+         logger.debug("XFRAME {} + {}", host, referer);
          Matcher m = SUBDOMAIN_PATTERN.matcher(host);
          if (m.matches()) {
             String subdomain = m.group(1);
