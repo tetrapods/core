@@ -163,7 +163,7 @@ public class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRe
    final static Pattern                   SUBDOMAIN_PATTERN = Pattern.compile("([^.]+)\\..*");
 
    private void addHackyHeadersForOWASP(FileResult result, FullHttpRequest request, HttpResponse response) {
-      if (result.path.endsWith(".html") || Util.isDev()) {
+      if (result != null && request != null && (result.path.endsWith(".html") || Util.isDev())) {
          String host = request.headers().get(HOST);
          String referer = request.headers().get(REFERER);
          logger.debug("XFRAME {} + {}", host, referer);
@@ -179,11 +179,11 @@ public class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRe
       }
       response.headers().set("X-Content-Type-Options", "nosniff");
       response.headers().set("X-XSS-Protection", "1");
-      response.headers().set("X-TetrapodDevMode", Util.getProperty("devMode"));
+      //response.headers().set("X-TetrapodDevMode", Util.getProperty("devMode"));
 
    }
 
-   private boolean allowXFramesFromSubdomain(String referer, String subdomain) {      
+   private boolean allowXFramesFromSubdomain(String referer, String subdomain) {
       String key = referer + ";" + subdomain;
       Boolean val = SUBDOMAIN_CACHE.get(key);
       if (val == null) {
@@ -264,6 +264,7 @@ public class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRe
       FullHttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, status,
             Unpooled.copiedBuffer("Failure: " + status.toString() + "\r\n", CharsetUtil.UTF_8));
       response.headers().set(CONTENT_TYPE, "text/plain; charset=UTF-8");
+      addHackyHeadersForOWASP(null, null, response);
       ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
    }
 
