@@ -297,7 +297,7 @@ public class Task<T> extends CompletableFuture<T> {
             logger.error("**TASK ERROR** Chain failed while dispatching {} Error: {} {} ",
                     makeRequestName(StructureFactory.getName(ctx.header.contractId, ctx.header.structId)),
                     parentEx.getMessage(),
-                    ctx.header.dump());
+                    ctx.header.dump(), parentEx);
             ctx.respondWith(CoreContract.ERROR_UNKNOWN);
          }
          return null;
