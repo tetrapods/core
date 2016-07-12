@@ -306,7 +306,7 @@ public class DefaultService
          }
       } else {
          if (getEntityId() != 0 && clusterClient.getSession() != null) {
-            sendDirectRequest(new UnregisterRequest(0, null, getEntityId())).handle(res -> {
+            sendDirectRequest(new UnregisterRequest()).handle(res -> {
                clusterClient.close();
                dispatcher.shutdown();
                setTerminated(true);

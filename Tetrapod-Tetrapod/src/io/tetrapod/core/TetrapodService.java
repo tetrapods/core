@@ -609,10 +609,7 @@ public class TetrapodService extends DefaultService
 
    @Override
    public Response requestUnregister(UnregisterRequest r, RequestContext ctx) {
-      if (r.entityId != ctx.header.fromParentId) {
-         AdminAuthToken.validateAdminToken(r.authToken, Admin.RIGHTS_CLUSTER_WRITE);
-      }
-      final EntityInfo info = registry.getEntity(r.entityId);
+      final EntityInfo info = registry.getEntity(ctx.header.fromParentId);
       if (info == null) {
          return new Error(ERROR_INVALID_ENTITY);
       }
@@ -992,7 +989,6 @@ public class TetrapodService extends DefaultService
          logger.error(e.getMessage(), e);
          return Response.error(ERROR_UNKNOWN);
       }
-
    }
 
 }

@@ -37,7 +37,8 @@ public class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRe
 
    public static final Logger          logger       = LoggerFactory.getLogger(WebStaticFileHandler.class);
 
-   public static final int             ONE_YEAR     = 365 * 24 * 60 * 60 * 1000;
+   public static final int             ONE_DAY      = 24 * 60 * 60 * 1000;
+   public static final int             ONE_YEAR     = 365 * ONE_DAY;
 
    // These rules are not correct in general, but for sites with control of their file names 
    // they are safe.  We only allow alphanumeric ascii character, ., -, _, and /.  We also do 
@@ -163,20 +164,25 @@ public class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRe
    final static Pattern                   SUBDOMAIN_PATTERN = Pattern.compile("([^.]+)\\..*");
 
    private void addHackyHeadersForOWASP(FileResult result, FullHttpRequest request, HttpResponse response) {
-      if (result.path.endsWith(".html") || Util.isDev()) {
+      if (request != null && ((result != null && result.path.endsWith(".html")) || Util.isDev())) {
          String host = request.headers().get(HOST);
          String referer = request.headers().get(REFERER);
-         Matcher m = SUBDOMAIN_PATTERN.matcher(host);
-         if (m.matches()) {
-            String subdomain = m.group(1);
-            if (allowXFramesFromSubdomain(referer, subdomain)) {
-               response.headers().set("X-Frame-Options", "ALLOW-FROM " + referer);
-            } else {
-               response.headers().set("X-Frame-Options", "DENY");
+         if (referer != null && host != null) {
+            Matcher m = SUBDOMAIN_PATTERN.matcher(host);
+            if (m.matches()) {
+               String subdomain = m.group(1);
+               if (allowXFramesFromSubdomain(referer, subdomain)) {
+                  response.headers().set("X-Frame-Options", "ALLOW-FROM " + referer);
+               } else {
+                  response.headers().set("X-Frame-Options", "DENY");
+               }
             }
          }
       }
       response.headers().set("X-Content-Type-Options", "nosniff");
+      response.headers().set("X-XSS-Protection", "1");
+      //response.headers().set("X-TetrapodDevMode", Util.getProperty("devMode"));
+
    }
 
    private boolean allowXFramesFromSubdomain(String referer, String subdomain) {
@@ -203,6 +209,7 @@ public class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRe
             logger.error(e.getMessage());
          }
       }
+      logger.debug("XFRAME {} = {}", key, val);
       return val;
    }
 
@@ -215,6 +222,7 @@ public class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRe
    }
 
    private FileResult getURI(String uri) {
+      FileResult res = null;
       int qIx = uri.indexOf('?');
       if (qIx > 0) {
          uri = uri.substring(0, qIx);
@@ -229,26 +237,42 @@ public class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRe
          }
       }
       if (VALID_URI.matcher(uri).matches() && !INVALID_URI.matcher(uri).matches()) {
-         uri = mangle(uri);
+         final String mangledURI = uri;
+         uri = unmangle(mangledURI);
          try {
-            if (uri.startsWith("/home") && roots.containsKey("override"))
-               return roots.get("override").getFile(uri);
-            for (WebRoot root : roots.values()) {
-               FileResult r = root.getFile(uri);
-               if (r != null)
-                  return r;
+
+            if (uri.startsWith("/home") && roots.containsKey("override")) {
+               res = roots.get("override").getFile(uri);
+            } else {
+               for (WebRoot root : roots.values()) {
+                  res = root.getFile(uri);
+                  if (res != null)
+                     break;
+               }
             }
+
+            if (res != null) {
+               res.doNotCache = !mangledURI.startsWith("/vbf");
+            }
+
          } catch (IOException e) {
             logger.warn("io error accessing web file", e);
          }
       }
-      return null;
+      return res;
    }
 
    private void sendError(ChannelHandlerContext ctx, HttpResponseStatus status) {
       FullHttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, status,
             Unpooled.copiedBuffer("Failure: " + status.toString() + "\r\n", CharsetUtil.UTF_8));
       response.headers().set(CONTENT_TYPE, "text/plain; charset=UTF-8");
+
+      if (status == NOT_FOUND) {
+         response.headers().set(CACHE_CONTROL, PUBLIC);
+         response.headers().add(EXPIRES, new Date(System.currentTimeMillis() + ONE_DAY));
+      }
+
+      addHackyHeadersForOWASP(null, null, response);
       ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
    }
 
@@ -258,7 +282,7 @@ public class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRe
       ctx.writeAndFlush(response);
    }
 
-   private String mangle(String uri) {
+   private String unmangle(String uri) {
       if (uri.startsWith("/vbf")) {
          uri = uri.substring(uri.indexOf("/", 2));
       }
