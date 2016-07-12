@@ -177,6 +177,9 @@ public class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRe
          }
       }
       response.headers().set("X-Content-Type-Options", "nosniff");
+      response.headers().set("X-XSS-Protection", "1");
+      response.headers().set("X-TetrapodDevMode", Util.getProperty("devMode"));
+
    }
 
    private boolean allowXFramesFromSubdomain(String referer, String subdomain) {
@@ -215,6 +218,7 @@ public class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRe
    }
 
    private FileResult getURI(String uri) {
+      FileResult res = null;
       int qIx = uri.indexOf('?');
       if (qIx > 0) {
          uri = uri.substring(0, qIx);
@@ -229,20 +233,29 @@ public class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRe
          }
       }
       if (VALID_URI.matcher(uri).matches() && !INVALID_URI.matcher(uri).matches()) {
-         uri = mangle(uri);
+         final String mangledURI = uri;
+         uri = unmangle(mangledURI);
          try {
-            if (uri.startsWith("/home") && roots.containsKey("override"))
-               return roots.get("override").getFile(uri);
-            for (WebRoot root : roots.values()) {
-               FileResult r = root.getFile(uri);
-               if (r != null)
-                  return r;
+
+            if (uri.startsWith("/home") && roots.containsKey("override")) {
+               res = roots.get("override").getFile(uri);
+            } else {
+               for (WebRoot root : roots.values()) {
+                  res = root.getFile(uri);
+                  if (res != null)
+                     break;
+               }
             }
+
+            if (res != null) {
+               res.doNotCache = !mangledURI.startsWith("/vbf");
+            }
+
          } catch (IOException e) {
             logger.warn("io error accessing web file", e);
          }
       }
-      return null;
+      return res;
    }
 
    private void sendError(ChannelHandlerContext ctx, HttpResponseStatus status) {
@@ -258,7 +271,7 @@ public class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRe
       ctx.writeAndFlush(response);
    }
 
-   private String mangle(String uri) {
+   private String unmangle(String uri) {
       if (uri.startsWith("/vbf")) {
          uri = uri.substring(uri.indexOf("/", 2));
       }

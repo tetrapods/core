@@ -220,7 +220,7 @@ public class Util {
    }
 
    public static boolean isLocal() {
-      return Util.getProperty("devMode", "local").equals("local");
+      return Util.getProperty("devMode", "dev").equals("local");
    }
 
    public static boolean isDev() {
@@ -228,7 +228,7 @@ public class Util {
    }
 
    public static boolean isProduction() {
-      return Util.getProperty("devMode", "local").equals("prod");
+      return Util.getProperty("devMode", "dev").equals("prod");
    }
 
    public static String formatFileSize(long bytes) {

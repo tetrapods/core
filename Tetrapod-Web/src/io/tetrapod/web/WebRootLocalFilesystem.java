@@ -113,7 +113,6 @@ public class WebRootLocalFilesystem implements WebRoot {
                   FileResult r = new FileResult();
                   r.modificationTime = Files.getLastModifiedTime(p).toMillis();
                   r.path = "/" + path;
-                  r.doNotCache = !r.path.startsWith("/vbf");
                   if (Files.isDirectory(p)) {
                      r.isDirectory = true;
                   } else {
