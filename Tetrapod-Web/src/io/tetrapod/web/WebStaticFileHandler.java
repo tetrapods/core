@@ -182,7 +182,7 @@ public class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRe
 
    }
 
-   private boolean allowXFramesFromSubdomain(String referer, String subdomain) {
+   private boolean allowXFramesFromSubdomain(String referer, String subdomain) {      
       String key = referer + ";" + subdomain;
       Boolean val = SUBDOMAIN_CACHE.get(key);
       if (val == null) {
@@ -206,6 +206,7 @@ public class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRe
             logger.error(e.getMessage());
          }
       }
+      logger.debug("XFRAME {} = {}", key, val);
       return val;
    }
 
