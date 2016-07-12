@@ -37,7 +37,8 @@ public class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRe
 
    public static final Logger          logger       = LoggerFactory.getLogger(WebStaticFileHandler.class);
 
-   public static final int             ONE_YEAR     = 365 * 24 * 60 * 60 * 1000;
+   public static final int             ONE_DAY      = 24 * 60 * 60 * 1000;
+   public static final int             ONE_YEAR     = 365 * ONE_DAY;
 
    // These rules are not correct in general, but for sites with control of their file names 
    // they are safe.  We only allow alphanumeric ascii character, ., -, _, and /.  We also do 
@@ -163,7 +164,7 @@ public class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRe
    final static Pattern                   SUBDOMAIN_PATTERN = Pattern.compile("([^.]+)\\..*");
 
    private void addHackyHeadersForOWASP(FileResult result, FullHttpRequest request, HttpResponse response) {
-      if (result != null && request != null && (result.path.endsWith(".html") || Util.isDev())) {
+      if (request != null && ((result != null && result.path.endsWith(".html")) || Util.isDev())) {
          String host = request.headers().get(HOST);
          String referer = request.headers().get(REFERER);
          if (referer != null && host != null) {
@@ -265,6 +266,12 @@ public class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRe
       FullHttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, status,
             Unpooled.copiedBuffer("Failure: " + status.toString() + "\r\n", CharsetUtil.UTF_8));
       response.headers().set(CONTENT_TYPE, "text/plain; charset=UTF-8");
+
+      if (status == NOT_FOUND) {
+         response.headers().set(CACHE_CONTROL, PUBLIC);
+         response.headers().add(EXPIRES, new Date(System.currentTimeMillis() + ONE_DAY));
+      }
+
       addHackyHeadersForOWASP(null, null, response);
       ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
    }

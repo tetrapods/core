@@ -989,7 +989,6 @@ public class TetrapodService extends DefaultService
          logger.error(e.getMessage(), e);
          return Response.error(ERROR_UNKNOWN);
       }
-
    }
 
 }
