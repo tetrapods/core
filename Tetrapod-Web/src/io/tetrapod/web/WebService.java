@@ -121,6 +121,7 @@ public class WebService extends DefaultService
    public void onPaused() {
       for (Server httpServer : servers) {
          httpServer.close();
+         httpServer.purge();
       }
    }
 
