@@ -164,21 +164,21 @@ public class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRe
    final static Pattern                   SUBDOMAIN_PATTERN = Pattern.compile("([^.]+)\\..*");
 
    private void addHackyHeadersForOWASP(FileResult result, FullHttpRequest request, HttpResponse response) {
-      if (request != null && ((result != null && result.path.endsWith(".html")) || Util.isDev())) {
-         String host = request.headers().get(HOST);
-         String referer = request.headers().get(REFERER);
-         if (referer != null && host != null) {
-            Matcher m = SUBDOMAIN_PATTERN.matcher(host);
-            if (m.matches()) {
-               String subdomain = m.group(1);
-               if (allowXFramesFromSubdomain(referer, subdomain)) {
-                  response.headers().set("X-Frame-Options", "ALLOW-FROM " + referer);
-               } else {
-                  response.headers().set("X-Frame-Options", "DENY");
-               }
-            }
-         }
-      }
+//      if (request != null && ((result != null && result.path.endsWith(".html")) || Util.isDev())) {
+//         String host = request.headers().get(HOST);
+//         String referer = request.headers().get(REFERER);
+//         if (referer != null && host != null) {
+//            Matcher m = SUBDOMAIN_PATTERN.matcher(host);
+//            if (m.matches()) {
+//               String subdomain = m.group(1);
+//               if (allowXFramesFromSubdomain(referer, subdomain)) {
+//                  response.headers().set("X-Frame-Options", "ALLOW-FROM " + referer);
+//               } else {
+//                  response.headers().set("X-Frame-Options", "DENY");
+//               }
+//            }
+//         }
+//      }
       response.headers().set("X-Content-Type-Options", "nosniff");
       response.headers().set("X-XSS-Protection", "1");
       //response.headers().set("X-TetrapodDevMode", Util.getProperty("devMode"));
