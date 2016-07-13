@@ -7,13 +7,13 @@ function TP_Server() {
 
    // private vars
    var protocol = {
-      request: {},
-      response: {},
-      struct: {},
-      message: {},
-      consts: {},
-      reverseMap: {},
-      errors: {}
+      request : {},
+      response : {},
+      struct : {},
+      message : {},
+      consts : {},
+      reverseMap : {},
+      errors : {}
    };
    var requestCounter = 0;
    var requestContexts = {};
@@ -24,6 +24,10 @@ function TP_Server() {
    var socket;
    var lastHeardFrom = 0;
    var lastSpokeTo = 0;
+
+   // for rate limiting requests:
+   var requestQueue = [];
+   var pendingQueueTask = false;
 
    // public interface
    self.forceLongPolling = false;
@@ -55,8 +59,8 @@ function TP_Server() {
    function register(type, contractName, structName, contractId, structId) {
       var map = protocol[type];
       var val = {
-         contractId: contractId,
-         structId: structId
+         contractId : contractId,
+         structId : structId
       };
       map[contractName + "." + structName] = val;
       if (map[structName]) {
@@ -81,23 +85,23 @@ function TP_Server() {
       if (f) {
          f.on = function(val) {
             return {
-               value: val,
-               parent: f,
-               isAnySet: function() {
+               value : val,
+               parent : f,
+               isAnySet : function() {
                   return (toFlags(arguments, this.parent) & this.value) != 0;
                },
-               isSet: function() {
+               isSet : function() {
                   var flags = toFlags(arguments, this.parent);
                   return (flags & this.value) == flags;
                },
-               isNoneSet: function() {
+               isNoneSet : function() {
                   return (toFlags(arguments, this.parent) & this.value) == 0;
                },
-               set: function() {
+               set : function() {
                   this.value = this.value | toFlags(arguments, this.parent);
                   return this;
                },
-               unset: function() {
+               unset : function() {
                   this.value = this.value & ~toFlags(arguments, this.parent);
                   return this;
                },
@@ -215,21 +219,67 @@ function TP_Server() {
       logRequest(args, toId);
 
       requestContexts[requestId] = {
-         request: args,
-         handler: requestHandler
+         request : args,
+         handler : requestHandler,
+         time : Date.now()
       };
 
+      // start rate-limiting if we have a lot of pending requests
+      if (numItems(requestContexts) > 25) {
+         requestQueue.push(requestId);
+         scheduleProcessRequestQueue();
+      } else {
+         dispatchRequest(requestId);
+      }
+   }
+
+   function scheduleProcessRequestQueue() {
+      if (!pendingQueueTask) {
+         pendingQueueTask = true;
+         setTimeout(function() {
+            pendingQueueTask = false;
+            processRequestQueue();
+         }, 5);
+      }
+   }
+
+   function numItems(obj) {
+      if (Object.keys22) {
+         return Object.keys(obj).length;
+      } else {
+         var count = 0;
+         for ( var i in obj) {
+            if (obj.hasOwnProperty(i)) {
+               count++;
+            }
+         }
+         return count;
+      }
+   }
+
+   function processRequestQueue() {
+      if (requestQueue.length > 0) {
+         var requestId = requestQueue.shift();
+         dispatchRequest(requestId);
+         if (requestQueue.length > 0) {
+            scheduleProcessRequestQueue();
+         }
+      }
+   }
+
+   function dispatchRequest(requestId) {
+      var r = requestContexts[requestId];
       if (self.polling) {
          lastSpokeTo = Date.now();
-         sendRPC(args);
+         sendRPC(r.request);
       } else {
          if (isConnected()) {
-            var data = JSON.stringify(args, null, 3);
+            var data = JSON.stringify(r.request, null, 3);
             if (data.length < 1024 * 128) {
                lastSpokeTo = Date.now();
                socket.send(data);
 
-               // triggers a timeout in 35 seconds, if we don't get a response 
+               // triggers a timeout in 35 seconds, if we don't get a response
                setTimeout(function() {
                   if (requestContexts[requestId]) {
                      handleResponse(makeError(requestId, 3)); // TIMEOUT
@@ -238,20 +288,20 @@ function TP_Server() {
 
             } else {
                console.log("RPC too big : " + data.length + "\n" + data);
-               handleResponse(makeError(requestId, 1)); // UNKNOWN 
+               handleResponse(makeError(requestId, 1)); // UNKNOWN
             }
          } else {
-            handleResponse(makeError(requestId, 7)); // CONNECTION_CLOSED 
+            handleResponse(makeError(requestId, 7)); // CONNECTION_CLOSED
          }
       }
    }
 
    function makeError(requestId, code) {
       return {
-         _requestId: requestId,
-         _contractId: 1,
-         _structId: 1,
-         errorCode: code
+         _requestId : requestId,
+         _contractId : 1,
+         _structId : 1,
+         errorCode : code
       }
    }
 
@@ -265,8 +315,10 @@ function TP_Server() {
          window.WebSocket = window.MozWebSocket;
       }
 
-      // I suspect Safari 5.1 fails because it claims to have websockets but the implementation is only partial, so we detect the user agent and force it here
-      // Mozilla/5.0 (iPad; CPU OS 5_1 like Mac OS X) AppleWebKit/534.46 (KHTML, like Gecko) Version/5.1 Mobile/9B176 Safari/7534.48.3
+      // I suspect Safari 5.1 fails because it claims to have websockets but the implementation is only partial, so we
+      // detect the user agent and force it here
+      // Mozilla/5.0 (iPad; CPU OS 5_1 like Mac OS X) AppleWebKit/534.46 (KHTML, like Gecko) Version/5.1 Mobile/9B176
+      // Safari/7534.48.3
       if (navigator.userAgent.indexOf("AppleWebKit") > 0 && navigator.userAgent.indexOf("Version/5.1") > 0) {
          self.forceLongPolling = true;
       }
@@ -292,15 +344,15 @@ function TP_Server() {
       socket.onclose = onSocketClose;
       socket.onerror = onSocketError;
       return {
-         listen: function(onOpen, onClose, onSecurity) {
+         listen : function(onOpen, onClose, onSecurity) {
             if (onOpen) {
-               openHandlers = [onOpen];
+               openHandlers = [ onOpen ];
             }
             if (onClose) {
-               closeHandlers = [onClose];
+               closeHandlers = [ onClose ];
             }
             if (onSecurity) {
-               securityErrorHandlers = [onSecurity];
+               securityErrorHandlers = [ onSecurity ];
             }
          }
       }
@@ -327,14 +379,16 @@ function TP_Server() {
    function logResponse(result, req) {
       if (self.commsLog) {
          if (!isKeepAlive(req._contractId, req._structId) || self.commsLogKeepAlives) {
-            var str = logstamp() + ' [' + result._requestId + '] <- ' + nameOf(result) + ' ' + JSON.stringify(result, dropUnderscored);
+            var str = logstamp() + ' [' + result._requestId + '] <- ' + nameOf(result) + ' '
+                  + JSON.stringify(result, dropUnderscored);
             if (result.isError()) {
                if (result.errorCode != protocol.consts.Core.error.NOT_CONFIGURED) {
                   var err = getErrorStrings(result.errorCode);
                   err = err ? (" " + err + " ") : "";
                   console.warn(str + err);
                } else {
-                  str = logstamp() + ' [' + result._requestId + '] <- TETRAPOD.CONFIGURED_MSG ' + JSON.stringify(result, dropUnderscored) + ' Not Configured Message';
+                  str = logstamp() + ' [' + result._requestId + '] <- TETRAPOD.CONFIGURED_MSG '
+                        + JSON.stringify(result, dropUnderscored) + ' Not Configured Message';
                   console.debug(str);
                }
             } else {
@@ -353,7 +407,8 @@ function TP_Server() {
          if (!isKeepAlive(req._contractId, req._structId) || self.commsLogKeepAlives) {
             var toStr = toId == 0 ? " to any" : (toId == 1 ? " to direct" : " to " + toId);
             try {
-               console.debug(logstamp() + ' [' + req._requestId + '] => ' + nameOf(req) + ' ' + JSON.stringify(req, dropUnderscored) + toStr);
+               console.debug(logstamp() + ' [' + req._requestId + '] => ' + nameOf(req) + ' '
+                     + JSON.stringify(req, dropUnderscored) + toStr);
             } catch (e) {
                console.error('Error logging a request: ' + e);
                console.error(req);
@@ -364,7 +419,8 @@ function TP_Server() {
 
    function logMessage(result) {
       if (self.commsLog) {
-         console.debug(logstamp() + ' [M:' + result._topicId + '] <- ' + nameOf(result) + ' ' + JSON.stringify(result, dropUnderscored));
+         console.debug(logstamp() + ' [M:' + result._topicId + '] <- ' + nameOf(result) + ' '
+               + JSON.stringify(result, dropUnderscored));
       }
    }
 
@@ -449,10 +505,10 @@ function TP_Server() {
       for (i = 0; i < array.length; i++)
          array[i]();
 
-      // terminate all pending requests (only if using websockets I think...)      
-      //      for ( var requestId in requestContexts) {
-      //         handleResponse(7);
-      //      }
+      // terminate all pending requests (only if using websockets I think...)
+      // for ( var requestId in requestContexts) {
+      // handleResponse(7);
+      // }
    }
 
    function onSocketMessage(event) {
@@ -482,7 +538,8 @@ function TP_Server() {
    function logstamp() {
       var now = new Date();
       var p2 = '00';
-      return pad(2, now.getHours()) + ':' + pad(2, now.getMinutes()) + ':' + pad(2, now.getSeconds()) + '.' + pad(3, now.getMilliseconds());
+      return pad(2, now.getHours()) + ':' + pad(2, now.getMinutes()) + ':' + pad(2, now.getSeconds()) + '.'
+            + pad(3, now.getMilliseconds());
    }
 
    function commslog(msg) {
@@ -495,7 +552,8 @@ function TP_Server() {
    }
 
    function isKeepAlive(contractId, structId) {
-      return (contractId == 1 && structId == 5512920) || (contractId == 10 && structId == 15966706) || (contractId == 10 && structId == 10578136);
+      return (contractId == 1 && structId == 5512920) || (contractId == 10 && structId == 15966706)
+            || (contractId == 10 && structId == 10578136);
    }
 
    // ------------------------ long polling fall-back ----------------------------- //
@@ -508,7 +566,7 @@ function TP_Server() {
       lastHeardFrom = Date.now();
       commslog("[poller] open: " + host);
       return {
-         listen: function(onOpen, onClose) {
+         listen : function(onOpen, onClose) {
             onOpen();
          }
       }
@@ -518,20 +576,20 @@ function TP_Server() {
       if (self.entityInfo != null) {
          data._token = self.entityInfo.token;
       }
-      //console.debug("SEND RPC: " + JSON.stringify(data));
+      // console.debug("SEND RPC: " + JSON.stringify(data));
       /* global $ */
       $.ajax({
-         type: "POST",
-         url: "/poll",
-         timeout: 24000,
-         data: JSON.stringify(data),
-         dataType: 'json',
-         success: function(data) {
+         type : "POST",
+         url : "/poll",
+         timeout : 24000,
+         data : JSON.stringify(data),
+         dataType : 'json',
+         success : function(data) {
             self.connected = true;
             handleResponse(data);
             schedulePoll(100);
          },
-         error: function(XMLHttpRequest, textStatus, errorThrown) {
+         error : function(XMLHttpRequest, textStatus, errorThrown) {
             console.error(textStatus + " (" + errorThrown + ")");
             if (textStatus == 'timeout') {
                handleResponse(makeError(data._requestId, 3));
@@ -555,17 +613,17 @@ function TP_Server() {
       if (self.entityInfo != null && self.entityInfo.entityId != 0) {
          if (self.pollPending == false) {
             var data = {
-               _token: self.entityInfo.token
+               _token : self.entityInfo.token
             };
             console.debug("POLL -> " + JSON.stringify(data));
             self.pollPending = true;
             $.ajax({
-               type: "POST",
-               url: "/poll",
-               timeout: 12000,
-               data: JSON.stringify(data),
-               dataType: 'json',
-               success: function(data) {
+               type : "POST",
+               url : "/poll",
+               timeout : 12000,
+               data : JSON.stringify(data),
+               dataType : 'json',
+               success : function(data) {
                   self.connected = true;
                   self.pollPending = false;
                   if (data.error) {
@@ -579,10 +637,10 @@ function TP_Server() {
                      schedulePoll(100);
                   }
                },
-               error: function(XMLHttpRequest, textStatus, errorThrown) {
+               error : function(XMLHttpRequest, textStatus, errorThrown) {
                   console.error(textStatus + " (" + errorThrown + ")");
                   self.pollPending = false;
-                  onSocketClose(); // fake socket close event 
+                  onSocketClose(); // fake socket close event
                }
             });
          }
