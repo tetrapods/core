@@ -195,7 +195,7 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
       }
 
       public synchronized void considerConnecting() {
-         if (entityId != service.parentId && !pending) {
+         if (entityId != service.entityId && entityId != service.parentId && !pending) {
             service.dispatcher.dispatch(() -> handshake());
          }
       }
@@ -319,6 +319,7 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
       });
       return future;
    }
+
    public Async sendRequest(Request req, int toEntityId) {
       if (toEntityId == Core.UNADDRESSED) {
          Entity e = service.services.getRandomAvailableService(req.getContractId());
