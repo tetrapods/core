@@ -751,4 +751,25 @@ public class Util {
       return String.format("%1.1f¢", pennies);
    }
 
+   public static List<String> getResourceFiles(String path) throws IOException {
+      List<String> filenames = new ArrayList<>();
+      try (InputStream in = getResourceAsStream(path); BufferedReader br = new BufferedReader(new InputStreamReader(in))) {
+         String resource;
+         while ((resource = br.readLine()) != null) {
+            filenames.add(resource);
+         }
+      }
+
+      return filenames;
+   }
+
+   public static InputStream getResourceAsStream(String resource) {
+      final InputStream in = getContextClassLoader().getResourceAsStream(resource);
+      return in == null ? Util.class.getClass().getResourceAsStream(resource) : in;
+   }
+
+   private static ClassLoader getContextClassLoader() {
+      return Thread.currentThread().getContextClassLoader();
+   }
+
 }
