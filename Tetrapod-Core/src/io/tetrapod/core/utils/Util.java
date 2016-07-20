@@ -753,7 +753,7 @@ public class Util {
 
    public static List<String> getResourceFiles(Class<?> context, String path) throws IOException {
       List<String> filenames = new ArrayList<>();
-      try (InputStream in = getResourceAsStream(context, path); BufferedReader br = new BufferedReader(new InputStreamReader(in))) {
+      try (InputStream in = context.getResourceAsStream(path); BufferedReader br = new BufferedReader(new InputStreamReader(in))) {
          String resource;
          while ((resource = br.readLine()) != null) {
             filenames.add(resource);
@@ -761,11 +761,6 @@ public class Util {
       }
 
       return filenames;
-   }
-
-   public static InputStream getResourceAsStream(Class<?> context, String resource) {
-      final InputStream in = context.getResourceAsStream(resource);
-      return in == null ? Util.class.getClass().getResourceAsStream(resource) : in;
    }
 
 }
