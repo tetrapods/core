@@ -385,7 +385,7 @@ public class WebService extends DefaultService
       if (topic == null) {
          topics.put(topicKey(m.publisherId, m.topicId), new ServiceTopic(m.publisherId, m.topicId));
       } else {
-         logger.error("Topic {} already exists?", topic);
+         logger.warn("Topic {} already exists?", topic);
       }
    }
 

@@ -25,7 +25,7 @@ public class WebRootLocalFilesystem implements WebRoot {
 
    public WebRootLocalFilesystem(String path, URL url) throws IOException {
       this.rootPath = path;
-      final File cacheDir = new File(Util.getProperty("tetrapod.cache", "cache"));
+      final File cacheDir = new File(Util.getProperty("webroot.cache", "cache"));
       final String name = Util.digest(url.toString());
       final File webDir = new File(cacheDir, name);
       final File zipFile = new File(cacheDir, name + ".zip");

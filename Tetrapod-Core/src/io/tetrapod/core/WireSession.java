@@ -205,8 +205,8 @@ public class WireSession extends Session {
                sendResponse(new Error(ERROR_SERIALIZATION), header.requestId);
             }
          } catch (ClassCastException e) {
+            logger.error(e.getMessage());
             logger.error("Serialization Error on {}", header.dump());
-            logger.error(e.getMessage(), e);
          }
       } else if (relayHandler != null) {
          if (commsLogIgnore(header.structId)) {
