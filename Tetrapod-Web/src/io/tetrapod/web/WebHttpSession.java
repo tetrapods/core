@@ -35,7 +35,6 @@ import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.rpc.Error;
 import io.tetrapod.core.serialize.datasources.ByteBufDataSource;
 import io.tetrapod.core.utils.Util;
-import io.tetrapod.core.web.*;
 import io.tetrapod.protocol.core.*;
 
 public class WebHttpSession extends WebSession {
@@ -59,6 +58,7 @@ public class WebHttpSession extends WebSession {
 
    private String                              httpReferrer      = null;
    private String                              domain            = null;
+   private String                              build             = null;
 
    public WebHttpSession(SocketChannel ch, Session.Helper helper, Map<String, WebRoot> roots, String wsLocation) {
       super(ch, helper);
@@ -117,6 +117,9 @@ public class WebHttpSession extends WebSession {
       }
       if (frame instanceof PingWebSocketFrame) {
          ctx.channel().write(new PongWebSocketFrame(frame.content().retain()));
+         return;
+      }
+      if (frame instanceof PongWebSocketFrame) {
          return;
       }
       if (!(frame instanceof TextWebSocketFrame)) {
@@ -201,20 +204,19 @@ public class WebHttpSession extends WebSession {
    }
 
    private void handlePoll(final ChannelHandlerContext ctx, final FullHttpRequest req) throws Exception {
-      //logger.debug("{} POLLER: {} keepAlive = {}", this, req.getUri(), HttpHeaders.isKeepAlive(req));
+      logger.debug("{} POLLER: {} keepAlive = {}", this, req.getUri(), HttpHeaders.isKeepAlive(req));
       final JSONObject params = new JSONObject(getContent(req));
 
       // authenticate this session, if needed
       if (params.has("_token")) {
-         final EntityToken t = EntityToken.decode(params.getString("_token"));
-         if (t != null) {
-            if (relayHandler.validate(t.entityId, t.nonce)) {
-               setTheirEntityId(t.entityId);
-               setTheirEntityType(Core.TYPE_CLIENT);
-            } else {
-               sendHttpResponse(ctx, req, new DefaultFullHttpResponse(HTTP_1_1, BAD_REQUEST));
-               return;
-            }
+         Integer clientId = LongPollToken.validateToken(params.getString("_token"));
+         if (clientId != null) {
+            setTheirEntityId(clientId);
+            setTheirEntityType(Core.TYPE_CLIENT);
+            LongPollQueue.getQueue(clientId, true); // init long poll queue
+         } else {
+            sendHttpResponse(ctx, req, new DefaultFullHttpResponse(HTTP_1_1, BAD_REQUEST));
+            return;
          }
       }
 
@@ -226,15 +228,16 @@ public class WebHttpSession extends WebSession {
          final RequestHeader header = WebContext.makeRequestHeader(this, null, params);
 
          header.fromType = Core.TYPE_CLIENT;
-         header.fromId = getTheirEntityId();
+         header.fromChildId = getTheirEntityId();
+         header.fromParentId = getMyEntityId();
          synchronized (contexts) {
             contexts.put(header.requestId, ctx);
          }
          readAndDispatchRequest(header, params);
 
-      } else {
+      } else if (getTheirEntityId() != 0) {
          getDispatcher().dispatch(() -> {
-            final LongPollQueue messages = LongPollQueue.getQueue(getTheirEntityId());
+            final LongPollQueue messages = LongPollQueue.getQueue(getTheirEntityId(), false);
             final long startTime = System.currentTimeMillis();
             // long poll -- wait until there are messages in queue, and return them
             assert messages != null;
@@ -245,7 +248,7 @@ public class WebHttpSession extends WebSession {
    }
 
    private void longPoll(final int millis, final LongPollQueue messages, final long startTime, final ChannelHandlerContext ctx,
-            final FullHttpRequest req) {
+         final FullHttpRequest req) {
       getDispatcher().dispatch(millis, TimeUnit.MILLISECONDS, () -> {
          if (messages.tryLock()) {
             try {
@@ -267,6 +270,7 @@ public class WebHttpSession extends WebSession {
                      longPoll(50, messages, startTime, ctx, req);
                   }
                }
+               messages.setLastDrain(System.currentTimeMillis());
             } finally {
                messages.unlock();
             }
@@ -285,7 +289,8 @@ public class WebHttpSession extends WebSession {
          logger.debug("{} WEB API REQUEST: {} keepAlive = {}", this, req.getUri(), HttpHeaders.isKeepAlive(req));
          header.requestId = requestCounter.incrementAndGet();
          header.fromType = Core.TYPE_WEBAPI;
-         header.fromId = getMyEntityId();
+         header.fromParentId = getMyEntityId();
+         header.fromChildId = getTheirEntityId();
 
          final ResponseHandler handler = new ResponseHandler() {
             @Override
@@ -302,8 +307,11 @@ public class WebHttpSession extends WebSession {
                if (body == null || body.trim().isEmpty()) {
                   body = req.getUri();
                }
-               final WebAPIRequest request = new WebAPIRequest(route.path, getHeaders(req).toString(), context.getRequestParams().toString(),
-                        body);
+
+               final WebAPIRequest request = new WebAPIRequest(route.path, getHeaders(req).toString(),
+                     context.getRequestParams().toString(),
+                     body, req.getUri());
+
                final int toEntityId = relayHandler.getAvailableService(header.contractId);
                if (toEntityId != 0) {
                   final Session ses = relayHandler.getRelaySession(toEntityId, header.contractId);
@@ -324,6 +332,11 @@ public class WebHttpSession extends WebSession {
                // @web() specific Request mapping
                final Structure request = readRequest(header, context.getRequestParams());
                if (request != null) {
+
+                  if (header.contractId == TetrapodContract.CONTRACT_ID && header.toId == 0) {
+                     header.toId = Core.DIRECT;
+                  }
+
                   relayRequest(header, request, handler);
                } else {
                   handler.fireResponse(new Error(ERROR_UNKNOWN_REQUEST), header);
@@ -414,7 +427,7 @@ public class WebHttpSession extends WebSession {
          if (payload == null) {
             payload = jo.toStringWithout("__http");
          }
-         ByteBuf buf = WebContext.makeByteBufResult(payload);
+         ByteBuf buf = WebContext.makeByteBufResult(payload + '\n');
          HttpResponseStatus status = HttpResponseStatus.valueOf(jo.optInt("__httpStatus", OK.code()));
          FullHttpResponse httpResponse = new DefaultFullHttpResponse(HTTP_1_1, status, buf);
          httpResponse.headers().set(CONTENT_TYPE, jo.optString("__httpMime", "application/json"));
@@ -555,12 +568,14 @@ public class WebHttpSession extends WebSession {
       } else {
          // queue the message for long poller to retrieve later
          if (!commsLogIgnore(header.structId)) {
-            commsLog("%s  [M] ~] Message:%d %s (to %d)", this, header.structId, getNameFor(header), header.toId);
+            commsLog("%s  [M] ~] Message:%d %s (to %d)", this, header.structId, getNameFor(header), header.toChildId);
          }
-         final LongPollQueue messages = LongPollQueue.getQueue(getTheirEntityId());
-         // FIXME: Need a sensible way to protect against memory gobbling if this queue isn't cleared fast enough
-         messages.add(toJSON(header, payload, ENVELOPE_MESSAGE));
-         //logger.debug("{} Queued {} messages for longPoller {}", this, messages.size(), messages.getEntityId());
+         final LongPollQueue messages = LongPollQueue.getQueue(getTheirEntityId(), false);
+         if (messages != null) {
+            // FIXME: Need a sensible way to protect against memory gobbling if this queue isn't cleared fast enough
+            messages.add(toJSON(header, payload, ENVELOPE_MESSAGE));
+            logger.debug("{} Queued {} messages for longPoller {}", this, messages.size(), messages.getEntityId());
+         }
       }
    }
 
@@ -600,19 +615,28 @@ public class WebHttpSession extends WebSession {
       return s.getContractId() == r.getContractId() && s.getStructId() == r.getStructId();
    }
 
-   public String getHttpReferrer() {
+   public synchronized String getHttpReferrer() {
       return httpReferrer;
    }
 
-   public void setHttpReferrer(String httpReferrer) {
+   public synchronized void setHttpReferrer(String httpReferrer) {
       this.httpReferrer = httpReferrer;
    }
 
-   public String getDomain() {
+   public synchronized String getDomain() {
       return domain;
    }
 
-   public void setDomain(String domain) {
+   public synchronized void setDomain(String domain) {
       this.domain = domain;
    }
+
+   public synchronized void setBuild(String build) {
+      this.build = build;
+   }
+
+   public synchronized String getBuild() {
+      return build;
+   }
+
 }

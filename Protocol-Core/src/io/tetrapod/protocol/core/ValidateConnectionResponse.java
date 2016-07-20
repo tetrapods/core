@@ -11,12 +11,13 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
 
-@SuppressWarnings("unused")
+@SuppressWarnings("all")
 public class ValidateConnectionResponse extends Response {
    
    public static final int STRUCT_ID = 1291890;
    public static final int CONTRACT_ID = CoreContract.CONTRACT_ID;
-    
+   public static final int SUB_CONTRACT_ID = CoreContract.SUB_CONTRACT_ID;
+
    public ValidateConnectionResponse() {
       defaults();
    }
@@ -59,6 +60,10 @@ public class ValidateConnectionResponse extends Response {
   
    public final int getContractId() {
       return ValidateConnectionResponse.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return ValidateConnectionResponse.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

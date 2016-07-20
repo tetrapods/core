@@ -1,0 +1,29 @@
+#!/bin/sh
+
+rotateConsole() {
+   if [ -s logs/console.$service.log ] 
+   then
+      rm logs/console.$service.log.5 2> /dev/null
+      mv logs/console.$service.log.4 logs/console.$service.log.5 2> /dev/null
+      mv logs/console.$service.log.3 logs/console.$service.log.4 2> /dev/null
+      mv logs/console.$service.log.2 logs/console.$service.log.3 2> /dev/null
+      mv logs/console.$service.log.1 logs/console.$service.log.2 2> /dev/null
+      mv logs/console.$service.log logs/console.$service.log.1 2> /dev/null
+   fi 
+}
+
+main() {
+   ## cd to parent dir of script
+   DIR=$( cd "$( dirname "$0" )" && pwd )
+   cd $DIR/..
+
+   ## service name is base name of ../.. (two levels to get by build num)
+   service=$( cd .. && pwd | xargs basename )
+
+   vmargs=`grep vmargs.$service cluster.properties | cut -d= -f2-`
+   mkdir -p logs
+   rotateConsole
+   exec nohup java $vmargs -DPID=$! -cp "jars/*" io.tetrapod.core.Launcher $service $@ < /dev/null > logs/console.$service.log 2>&1 &
+}
+
+main $@

@@ -11,7 +11,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
 
-@SuppressWarnings("unused")
+@SuppressWarnings("all")
 public class BuildCommand extends Structure {
    
    public static final int BUILD = 1; 
@@ -24,7 +24,8 @@ public class BuildCommand extends Structure {
    
    public static final int STRUCT_ID = 4239258;
    public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;
-    
+   public static final int SUB_CONTRACT_ID = TetrapodContract.SUB_CONTRACT_ID;
+
    public BuildCommand() {
       defaults();
    }
@@ -61,7 +62,6 @@ public class BuildCommand extends Structure {
       data.writeEndTag();
    }
    
-   @SuppressWarnings("Duplicates")
    @Override
    public final void read(DataSource data) throws IOException {
       defaults();
@@ -85,11 +85,14 @@ public class BuildCommand extends Structure {
       return BuildCommand.CONTRACT_ID;
    }
 
+   public final int getSubContractId() {
+      return BuildCommand.SUB_CONTRACT_ID;
+   }
+
    public final int getStructId() {
       return BuildCommand.STRUCT_ID;
    }
 
-   @SuppressWarnings("Duplicates")
    public final String[] tagWebNames() {
       // Note do not use this tags in long term serializations (to disk or databases) as
       // implementors are free to rename them however they wish.  A null means the field

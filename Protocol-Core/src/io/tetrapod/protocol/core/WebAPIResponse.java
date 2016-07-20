@@ -11,12 +11,13 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
 
-@SuppressWarnings("unused")
+@SuppressWarnings("all")
 public class WebAPIResponse extends Response {
    
    public static final int STRUCT_ID = 9652194;
    public static final int CONTRACT_ID = CoreContract.CONTRACT_ID;
-    
+   public static final int SUB_CONTRACT_ID = CoreContract.SUB_CONTRACT_ID;
+
    public WebAPIResponse() {
       defaults();
    }
@@ -64,6 +65,10 @@ public class WebAPIResponse extends Response {
   
    public final int getContractId() {
       return WebAPIResponse.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return WebAPIResponse.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

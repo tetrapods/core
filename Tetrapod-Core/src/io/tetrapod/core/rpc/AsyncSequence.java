@@ -61,7 +61,7 @@ public class AsyncSequence {
    }
 
    private final ArrayList<Object>                 sequence       = new ArrayList<>();
-   private final ConcurrentHashMap<String, Object> sequenceValues = new ConcurrentHashMap();
+   private final ConcurrentHashMap<String, Object> sequenceValues = new ConcurrentHashMap<>();
    private int                                     ix             = 0;
    private volatile int                            errorCode      = 0;
    private volatile Exception                      errorException = null;
@@ -215,13 +215,15 @@ public class AsyncSequence {
       return Response.ASYNC;
    }
 
+
    public ResponseHandler responseHandlerFor(IResponseHandlerErr handler) {
       return new SequenceResponseHandler(this, handler);
    }
 
+
    private static class SequenceResponseHandler extends ResponseHandler {
       private final AsyncSequence       seq;
-      private final IResponseHandlerErr handler;
+      private IResponseHandlerErr handler;
 
       public SequenceResponseHandler(AsyncSequence seq, IResponseHandlerErr handler) {
          this.seq = seq;

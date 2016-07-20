@@ -1,6 +1,9 @@
 package io.tetrapod.core.rpc;
 
+import io.tetrapod.core.ServiceException;
 import io.tetrapod.core.Session;
+import io.tetrapod.core.tasks.Task;
+import io.tetrapod.core.utils.Util;
 import io.tetrapod.protocol.core.CoreContract;
 import io.tetrapod.protocol.core.RequestHeader;
 
@@ -8,12 +11,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class Async {
-   public static final Logger logger   = LoggerFactory.getLogger(Async.class);
+   public static final Logger logger    = LoggerFactory.getLogger(Async.class);
 
-   public final long          sendTime = System.currentTimeMillis();
+   public final long          sendTime  = System.currentTimeMillis();
    public final RequestHeader header;
    public final Request       request;
-   public final Session       session;
+   public final Session       session; 
 
    private Response           response;
    private ResponseHandler    handler;
@@ -33,13 +36,49 @@ public class Async {
       return handler != null;
    }
 
+   public <TValue, TResp extends Response> Task<ResponseAndValue<TResp, TValue>> asTask(TValue value) {
+      Task<ResponseAndValue<TResp, TValue>> future = new Task<>();
+      handle(resp -> {
+         if (resp.isError()) {
+            future.completeExceptionally(new ErrorResponseException(resp.errorCode()));
+         } else {
+            future.complete(new ResponseAndValue<>(Util.cast(resp), value));
+         }
+      });
+      return addLogging(future);
+   }
+
+   private <T> Task<T> addLogging(Task<T> future) {
+      return future.exceptionally(throwable -> {
+         ErrorResponseException ere = Util.getThrowableInChain(throwable, ErrorResponseException.class);
+         if (ere == null || ere.errorCode == CoreContract.ERROR_UNKNOWN) {
+            logger.error("**TASK ERROR** Error executing request task {} {}", request.getClass().getSimpleName(), header.dump(), throwable);
+         }
+         throw ServiceException.wrapIfChecked(throwable);
+      });
+   }
+
+   public <TResp extends Response> Task<TResp> asTask() {
+      Task<TResp> future = new Task<>();
+      handle(resp -> {
+         if (resp.isError()) {
+            future.completeExceptionally(new ErrorResponseException(resp.errorCode()));
+         } else {
+            future.complete(Util.cast(resp));
+         }
+      });
+
+      return addLogging(future);
+   }
+
    public interface IResponseHandler {
-      public void onResponse(Response res);
+      void onResponse(Response res);
    }
 
    public interface IResponseHandlerErr {
-      public void onResponse(Response res) throws Exception;
+      void onResponse(Response res) throws Exception;
    }
+
 
    public synchronized void handle(IResponseHandler handler) {
       handle(new ResponseHandler() {
@@ -90,7 +129,7 @@ public class Async {
    }
 
    public boolean isTimedout() {
-      return header == null ? false : System.currentTimeMillis() - sendTime > header.timeout * 1000;
+      return header != null && System.currentTimeMillis() - sendTime > header.timeout * 1000;
    }
 
    public synchronized Response waitForResponse() {

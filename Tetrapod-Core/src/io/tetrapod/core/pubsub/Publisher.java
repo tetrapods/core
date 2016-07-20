@@ -14,20 +14,9 @@ import io.tetrapod.protocol.core.*;
 
 /**
  * Manages the pub-sub layer for a service
- * 
- * TODO:
- * <ul>
- * <li>All services connect to every tetrapod & messages routed accordingly
- * <li>tetrapods only gossip about each other, and services connect to all tetrapods to become available?
- * 
- * <li>Tetrapod sends client disconnection messages back to services with subscribers
- * <li>Tetrapod sends clients disconnection messages to clients when a service connection is lost
- * 
- * <li>Topics can buffer messages for short disconnections (maybe)
- * <li>Unit tests & documentation
- * </ul>
  */
-public class Publisher implements TopicUnsubscribedMessage.Handler, TopicNotFoundMessage.Handler, SubscriberNotFoundMessage.Handler {
+public class Publisher implements TopicUnsubscribedMessage.Handler, TopicNotFoundMessage.Handler, TopicUnpublishedMessage.Handler,
+      SubscriberNotFoundMessage.Handler {
    private static final Logger       logger       = LoggerFactory.getLogger(Publisher.class);
 
    private final DefaultService      service;
@@ -39,7 +28,7 @@ public class Publisher implements TopicUnsubscribedMessage.Handler, TopicNotFoun
    public Publisher(DefaultService service) {
       this.service = service;
       service.addMessageHandler(new TopicUnsubscribedMessage(), this);
-      //service.addMessageHandler(new TopicUnpublishedMessage(), this);
+      service.addMessageHandler(new TopicUnpublishedMessage(), this);
       service.addMessageHandler(new TopicNotFoundMessage(), this);
       service.addMessageHandler(new SubscriberNotFoundMessage(), this);
    }
@@ -50,18 +39,18 @@ public class Publisher implements TopicUnsubscribedMessage.Handler, TopicNotFoun
       return topic;
    }
 
-   public void subscribe(int topicId, int entityId, boolean once) {
+   public void subscribe(int topicId, int entityId, int childId, boolean once) {
       final Topic topic = topics.get(topicId);
       if (topic == null) {
          logger.warn("subscribe: Could not find topic for {}", topicId);
       }
-      topic.subscribe(entityId, once);
+      topic.subscribe(entityId, childId, once);
    }
 
-   public void unsubscribe(int topicId, int entityId) {
+   public void unsubscribe(int topicId, int entityId, int childId) {
       final Topic topic = topics.get(topicId);
       if (topic != null) {
-         topic.unsubscribe(entityId);
+         topic.unsubscribe(entityId, childId);
       } else {
          logger.warn("unsubscribe: Could not find topic for {} ", topicId);
       }
@@ -69,10 +58,10 @@ public class Publisher implements TopicUnsubscribedMessage.Handler, TopicNotFoun
 
    public int getEntityId() {
       return service.getEntityId();
-   } 
+   }
 
-   public boolean sendMessage(Message msg, int toEntityId, int topicId) {
-      return service.sendPrivateMessage(msg, toEntityId, topicId);
+   public boolean sendMessage(Message msg, int toEntityId, int childId, int topicId) {
+      return service.sendPrivateMessage(msg, toEntityId, childId, topicId);
    }
 
    public void unpublish(int topicId) {
@@ -108,31 +97,31 @@ public class Publisher implements TopicUnsubscribedMessage.Handler, TopicNotFoun
    public void messageTopicUnsubscribed(TopicUnsubscribedMessage m, MessageContext ctx) {
       if (m.publisherId == service.getEntityId()) {
          logger.info("@@@@@ UNSUBSCRIBING DISCONNECTED SUBSCRIBER {}", m.dump());
-         unsubscribe(m.topicId, m.entityId);
+         unsubscribe(m.topicId, m.entityId, m.childId);
       }
    }
 
-   //   @Override
-   //   public void messageTopicUnpublished(TopicUnpublishedMessage m, MessageContext ctx) {
-   //      //logger.info("@@@@@ {} {}", m.dump(), ctx.header.dump());
-   //      if (m.publisherId == service.getEntityId()) {
-   //         // call topic unpublish listener
-   //         // re-publish
-   //         final Topic orig = topics.get(m.topicId);
-   //         if (orig != null) {
-   //            logger.info("@@@@@ REPUBLISHING {}", orig);
-   //            final Topic topic = new Topic(this, orig.topicId);
-   //            for (Topic.Subscriber s : orig.getSubscribers()) {
-   //               topic.subscribe(s.entityId, true);
-   //            }
-   //            topics.put(topic.topicId, topic);
-   //         }
-   //      }
-   //   }
+   @Override
+   public void messageTopicUnpublished(TopicUnpublishedMessage m, MessageContext ctx) {
+      if (m.publisherId == service.getEntityId()) {
+         logger.info("@@@@@ {} {}", m.dump(), ctx.header.dump());
+         //         // call topic unpublish listener
+         //         // re-publish
+         //         final Topic orig = topics.get(m.topicId);
+         //         if (orig != null) {
+         //            logger.info("@@@@@ REPUBLISHING {}", orig);
+         //            final Topic topic = new Topic(this, orig.topicId);
+         //            for (Topic.Subscriber s : orig.getSubscribers()) {
+         //               topic.subscribe(s.entityId, true);
+         //            }
+         //            topics.put(topic.topicId, topic);
+         //         }
+      }
+   }
 
-   public void unsubscribeFromAllTopics(int entityId) {
+   public void unsubscribeFromAllTopics(int entityId, int childId) {
       for (Topic t : topics.values()) {
-         t.unsubscribe(entityId);
+         t.unsubscribe(entityId, childId);
       }
    }
 
@@ -156,7 +145,7 @@ public class Publisher implements TopicUnsubscribedMessage.Handler, TopicNotFoun
    @Override
    public void messageSubscriberNotFound(SubscriberNotFoundMessage m, MessageContext ctx) {
       if (m.publisherId == service.getEntityId()) {
-         unsubscribe(m.topicId, m.entityId);
+         unsubscribe(m.topicId, m.entityId, m.childId);
       }
    }
 

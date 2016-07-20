@@ -4,6 +4,7 @@ package io.tetrapod.protocol.core;
 
 import io.*;
 import io.tetrapod.core.rpc.*;
+import io.tetrapod.protocol.core.Admin;
 import io.tetrapod.core.serialize.*;
 import io.tetrapod.protocol.core.TypeDescriptor;
 import io.tetrapod.protocol.core.StructDescription;
@@ -15,12 +16,13 @@ import java.util.concurrent.*;
  * An error in any one of the build commands stops processing the remaining ones
  */
 
-@SuppressWarnings("unused")
+@SuppressWarnings("all")
 public class ExecuteBuildCommandRequest extends Request {
 
    public static final int STRUCT_ID = 7902304;
    public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;
-   
+   public static final int SUB_CONTRACT_ID = TetrapodContract.SUB_CONTRACT_ID;
+
    public ExecuteBuildCommandRequest() {
       defaults();
    }
@@ -75,6 +77,10 @@ public class ExecuteBuildCommandRequest extends Request {
       return ExecuteBuildCommandRequest.CONTRACT_ID;
    }
 
+   public final int getSubContractId() {
+      return ExecuteBuildCommandRequest.SUB_CONTRACT_ID;
+   }
+
    public final int getStructId() {
       return ExecuteBuildCommandRequest.STRUCT_ID;
    }
@@ -118,9 +124,9 @@ public class ExecuteBuildCommandRequest extends Request {
    }
 
    public final Response securityCheck(RequestContext ctx) {
-      return ctx.securityCheck(this, accountId, authToken);
+      return ctx.securityCheck(this, accountId, authToken, Admin.RIGHTS_CLUSTER_WRITE);
    }
-      
+       
    protected boolean isSensitive(String fieldName) {
       if (fieldName.equals("authToken")) return true;
       return false;

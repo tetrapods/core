@@ -33,5 +33,9 @@
          <directory>webContent</directory>
          <outputDirectory>webContent</outputDirectory>
       </fileSet>
+      <fileSet>
+         <directory>www</directory>
+         <outputDirectory>www</outputDirectory>
+      </fileSet>
    </fileSets>
 </assembly>

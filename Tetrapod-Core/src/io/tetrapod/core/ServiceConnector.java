@@ -8,6 +8,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import javax.net.ssl.SSLContext;
 
+import io.tetrapod.core.tasks.Task;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,7 +55,7 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
    }
 
    public void shutdown() {
-      server.stop();
+      server.close();
       for (DirectServiceInfo service : services.values()) {
          service.close();
       }
@@ -72,6 +73,10 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
       public Session makeSession(SocketChannel ch) {
          final Session ses = super.makeSession(ch);
          ses.setName("Direct");
+         ses.setMyEntityId(service.getEntityId());
+         if (service instanceof RelayHandler) {
+            ses.setRelayHandler((RelayHandler) service);
+         }
          return ses;
       }
    }
@@ -128,20 +133,20 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
             pending = true;
             valid = false;
             service.clusterClient.getSession().sendRequest(new DirectConnectionRequest(token, service.getEntityId()), entityId, (byte) 30)
-                     .handle(res -> {
-                        if (res.isError()) {
-                           if (res.errorCode() == CoreContract.ERROR_NOT_CONFIGURED
-                                    || res.errorCode() == CoreContract.ERROR_SERVICE_UNAVAILABLE
-                                    || res.errorCode() == CoreContract.ERROR_TIMEOUT) {
-                              logger.info("DirectConnectionRequest to {} =  {}", entityId, res);
-                           } else {
-                              logger.error("DirectConnectionRequest to {} =  {}", entityId, res);
-                           }
-                           failure();
+                  .handle(res -> {
+                     if (res.isError()) {
+                        if (res.errorCode() == CoreContract.ERROR_NOT_CONFIGURED
+                              || res.errorCode() == CoreContract.ERROR_SERVICE_UNAVAILABLE
+                              || res.errorCode() == CoreContract.ERROR_TIMEOUT) {
+                           logger.info("DirectConnectionRequest to {} =  {}", entityId, res);
                         } else {
-                           service.dispatcher.dispatchHighPriority(() -> connect((DirectConnectionResponse) res));
+                           logger.error("DirectConnectionRequest to {} =  {}", entityId, res);
                         }
-                     });
+                        failure();
+                     } else {
+                        service.dispatcher.dispatchHighPriority(() -> connect((DirectConnectionResponse) res));
+                     }
+                  });
          }
       }
 
@@ -190,7 +195,7 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
       }
 
       public synchronized void considerConnecting() {
-         if (entityId != service.parentId && !pending) {
+         if (entityId != service.entityId && entityId != service.parentId && !pending) {
             service.dispatcher.dispatch(() -> handshake());
          }
       }
@@ -302,6 +307,19 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
       }
    }
 
+   public <TResp extends Response> Task<TResp> sendRequestTask(Request req, int toEntityId) {
+      Task<TResp> future = new Task<>();
+      Async async = sendRequest(req, toEntityId);
+      async.handle(resp -> {
+         if (resp.isError()) {
+            future.completeExceptionally(new ErrorResponseException(resp.errorCode()));
+         } else {
+            future.complete(Util.cast(resp));
+         }
+      });
+      return future;
+   }
+
    public Async sendRequest(Request req, int toEntityId) {
       if (toEntityId == Core.UNADDRESSED) {
          Entity e = service.services.getRandomAvailableService(req.getContractId());
@@ -316,7 +334,8 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
          header.contractId = req.getContractId();
          header.structId = req.getStructId();
          header.toId = toEntityId;
-         header.fromId = service.getEntityId();
+         header.fromParentId = service.getEntityId();
+         header.fromChildId = 0;
          header.fromType = service.getEntityType();
          header.timeout = 30;
          return service.dispatchRequest(header, req, null);
@@ -325,13 +344,13 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
       return ses.sendRequest(req, toEntityId, (byte) 30);
    }
 
-   public boolean sendMessage(Message msg, int toEntityId) {
+   public boolean sendMessage(Message msg, int toEntityId, int toChildId) {
       Session ses = getSession(toEntityId);
       if (ses == null || !ses.isConnected()) {
          logger.warn("Could not send {} to {}. No Session", msg.dump(), toEntityId);
          return false; // BUFFER on fail?
       }
-      ses.sendMessage(msg, toEntityId);
+      ses.sendMessage(msg, toEntityId, toChildId);
       return true;
    }
 
@@ -377,7 +396,7 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
 
    @Override
    public Response requestDirectConnection(DirectConnectionRequest r, RequestContext ctx) {
-      final DirectServiceInfo s = getDirectServiceInfo(ctx.header.fromId);
+      final DirectServiceInfo s = getDirectServiceInfo(ctx.header.fromParentId);
       synchronized (s) {
          s.theirToken = r.token;
          return new DirectConnectionResponse(new ServerAddress(Util.getHostName(), server.getPort()), s.token);

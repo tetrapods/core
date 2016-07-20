@@ -1,7 +1,6 @@
 java package io.tetrapod.protocol.core
 java outdir "../src"
-javascript out "../../Tetrapod-Tetrapod/webContent/protocol/tetrapod.js"
-#javascript out "../rsc/protocol/tetrapod.js"
+javascript out "../../Tetrapod-Web/webContent/protocol/tetrapod.js"
 
 // The core tetrapod service
 service Tetrapod @version(1) @id(1) @web(api) 
@@ -52,14 +51,11 @@ internal request ClusterJoin
    4: int entityId
    5: int servicePort
    6: int clusterPort
-   7: string build
-    
+   7: string build     
 
-internal request Unregister
-   1: int entityId
+internal request Unregister  
     
-internal request ServicesSubscribe
-   1: string adminToken
+internal request ServicesSubscribe 
    
 internal request ServicesUnsubscribe
 
@@ -71,10 +67,10 @@ internal request ServiceStatusUpdate
 internal request AddServiceInformation
    1: ContractDescription info
    
-internal request LogRegistryStats 
+admin request LogRegistryStats  @rights(Admin.RIGHTS_CLUSTER_READ)
+   1: int accountId
+   2: string authToken @sensitive
 
-internal request CloseClientConnection
-   1: string data
 
 public request AdminLogin @web(admin_login)
    1: string email @sensitive
@@ -94,107 +90,71 @@ public response AdminAuthorize
    2: string email
    
 // get a short-lived session token with rights encoded    
-admin request AdminSessionToken @web(admin_session_token)
+public request AdminSessionToken @web(admin_session_token)
    1: int accountId
    2: string authToken @sensitive  // a valid login token
    
-admin response AdminSessionToken    
+public response AdminSessionToken    
    1: string sessionToken @sensitive // a short lived session token
-   
-internal request AdminCreate
-   1: string token @sensitive
-   2: string email @sensitive
-   3: string password @sensitive
-   4: long rights
-   
-internal request AdminDelete
-   1: string token @sensitive
-   2: int accountId
-   
-internal request AdminChangePassword
-   1: string token @sensitive
-   2: string oldPassword @sensitive
-   3: string newPassword @sensitive
-   
-internal request AdminResetPassword
-   1: string token @sensitive
-   2: int accountId
-   3: string password @sensitive 
-   
-internal request AdminChangeRights
-   1: string token @sensitive
-   2: int accountId
-   3: long rights 
-   
-public struct Admin
+ 
+admin request AdminCreate  @rights(Admin.RIGHTS_USER_WRITE)
    1: int accountId
-   2: string email @sensitive
-   3: string hash @sensitive
-   4: long rights      
-   5: long[] loginAttempts 
-
-   const int MAX_LOGIN_ATTEMPTS    = 5
+   2: string authToken @sensitive
+   3: string email @sensitive
+   4: string password @sensitive
+   5: long rights
    
-   const int RIGHTS_CLUSTER_READ   = 1
-   const int RIGHTS_CLUSTER_WRITE  = 2
-   const int RIGHTS_USER_READ      = 4
-   const int RIGHTS_USER_WRITE     = 8
-   const int RIGHTS_RESERVED_1     = 16
-   const int RIGHTS_RESERVED_2     = 32
-   const int RIGHTS_RESERVED_3     = 64
-   const int RIGHTS_RESERVED_4     = 128   
-   const int RIGHTS_APP_SET_1      = 256  
-   const int RIGHTS_APP_SET_2      = 512
-   const int RIGHTS_APP_SET_3      = 1024
-   const int RIGHTS_APP_SET_4      = 2048
-
-public request KeepAlive
-
-internal request SetAlternateId
-   1: int entityId
-   2: int alternateId
+admin request AdminDelete @rights(Admin.RIGHTS_USER_WRITE)
+   1: int accountId
+   2: string authToken @sensitive
+   3: int targetAccountId
    
-public request SetEntityReferrer
-   1: string referrer
-
-internal request GetEntityInfo
-   1: int entityId
-
-   error UNKNOWN_ENTITY_ID
-
-internal response GetEntityInfo
-   1: string build   
-   2: string name     // entity name
-   3: string host     // host/ip of the entity
-   4: string referrer // referrer of first request (clients only)
-   5: string domain   // domain request was sent to (clients only)
-
+admin request AdminChangePassword @rights(Admin.RIGHTS_USER_WRITE)
+   1: int accountId
+   2: string authToken @sensitive
+   3: string oldPassword @sensitive
+   4: string newPassword @sensitive
+   
+admin request AdminResetPassword @rights(Admin.RIGHTS_USER_WRITE)
+   1: int accountId
+   2: string authToken @sensitive
+   3: int targetAccountId
+   4: string password @sensitive 
+   
+admin request AdminChangeRights @rights(Admin.RIGHTS_USER_WRITE)
+   1: int accountId
+   2: string authToken @sensitive
+   3: int targetAccountId
+   4: long rights 
+     
 ################################# MESSAGES #################################
 
 // a special message to avoid race conditions on the Register response
 public message Entity 
    1: int entityId
   
-##### Registry Topic Messages #####  
+##### Pubsub Topic Messages #####  
 
-internal message Registry.TopicPublished
+internal message Pubsub.TopicPublished
    1: int publisherId
    2: int topicId
 
-internal message Registry.TopicUnpublished
+internal message Pubsub.TopicUnpublished
    1: int publisherId
    2: int topicId
 
-internal message Registry.TopicSubscribed
-   1: int publisherId
-   2: int topicId
-   3: int entityId
-   4: boolean once
-
-internal message Registry.TopicUnsubscribed
+internal message Pubsub.TopicSubscribed
    1: int publisherId
    2: int topicId
    3: int entityId
+   4: int childId
+   5: boolean once
+
+internal message Pubsub.TopicUnsubscribed
+   1: int publisherId
+   2: int topicId
+   3: int entityId
+   4: int childId
 
 #### Feedback messages
 
@@ -206,19 +166,20 @@ internal message SubscriberNotFound
    1: int publisherId
    2: int topicId
    3: int entityId
+   4: int childId
 
    
 ##### Building #############
 
-admin request GetServiceBuildInfo
+admin request GetServiceBuildInfo  @rights(Admin.RIGHTS_CLUSTER_READ)
    1: int accountId
    2: string authToken @sensitive
    
-admin response  GetServiceBuildInfo
+admin response  GetServiceBuildInfo 
    1: BuildInfo<list> services
    
 // An error in any one of the build commands stops processing the remaining ones
-admin request ExecuteBuildCommand
+admin request ExecuteBuildCommand   @rights(Admin.RIGHTS_CLUSTER_WRITE)
    1: int accountId
    2: string authToken @sensitive
    3: BuildCommand<list> commands
@@ -262,20 +223,20 @@ internal message Services.ServiceRemoved
 internal message Services.ServiceUpdated
 	1: int entityId
 	2: int status
+ 
 	
 ## 3rd party auth add-ons
-
-internal request VerifyEntityToken
-   1: int entityId
-   2: string token
-     
+ 
 
 public request RaftLeader
 public response RaftLeader 
    1: ServerAddress leader
 
-internal request RaftStats
-internal response RaftStats 
+admin request RaftStats @rights(Admin.RIGHTS_CLUSTER_READ)
+   1: int accountId
+   2: string authToken @sensitive
+   
+admin response RaftStats 
    1: byte role
    2: long curTerm
    3: long lastTerm
@@ -285,9 +246,10 @@ internal response RaftStats
    7: int[] peers
       
 ## Cluster Messages
-
-internal request AdminSubscribe
-   1: string adminToken @sensitive
+ 
+admin request AdminSubscribe @rights(Admin.RIGHTS_CLUSTER_READ)
+   1: int accountId
+   2: string authToken @sensitive
    
 internal struct ClusterProperty
    1: string key
@@ -302,13 +264,21 @@ internal message Cluster.ClusterPropertyRemoved
    
 internal message Cluster.ClusterSynced         
    
-internal request SetClusterProperty
-   1: string adminToken @sensitive
-   2: ClusterProperty property
+internal request InternalSetClusterProperty
+   1: ClusterProperty property 
+   
+admin request SetClusterProperty @rights(Admin.RIGHTS_CLUSTER_WRITE)
+   1: int accountId
+   2: string authToken @sensitive
+   3: ClusterProperty property
 
-internal request DelClusterProperty
-   1: string adminToken @sensitive
-   2: string key 
+admin request DelClusterProperty @rights(Admin.RIGHTS_CLUSTER_WRITE)
+   1: int accountId
+   2: string authToken @sensitive
+   3: string key 
+            
+internal message Cluster.RegisterContract
+   1: ContractDescription info
       
 // notification of an existing tetrapod cluster member    
 internal message Cluster.ClusterMember
@@ -324,19 +294,21 @@ internal struct WebRootDef
    2: string path // resource root path name 
    3: string file // location of static files to serve
 
-internal message WebRootAdded  
+internal message Cluster.WebRootAdded  
    1: WebRootDef def
    
-internal message WebRootRemoved       
+internal message  Cluster.WebRootRemoved       
    1: string name
     
-internal request SetWebRoot @web(set_web_root)
-   1: string adminToken @sensitive
-   2: WebRootDef def
+admin request SetWebRoot @web(set_web_root) @rights(Admin.RIGHTS_CLUSTER_WRITE)
+   1: int accountId
+   2: string authToken @sensitive
+   3: WebRootDef def
 
-internal request DelWebRoot
-   1: string adminToken @sensitive
-   2: string name
+admin request DelWebRoot @rights(Admin.RIGHTS_CLUSTER_WRITE)
+   1: int accountId
+   2: string authToken @sensitive
+   3: string name
                 
 internal message AdminUserAdded  
    1: Admin admin
@@ -356,8 +328,10 @@ internal request Unlock
    1: string key
    2: string uuid
    
-internal request Snapshot
-   1: string adminToken @sensitive 
+admin request Snapshot  @rights(Admin.RIGHTS_CLUSTER_WRITE)
+   1: int accountId
+   2: string authToken @sensitive
+    
    
 ########### OWNERSHIP SERVICES ###########    
 
@@ -407,19 +381,14 @@ internal message Ownership.ReleaseOwnership
    
 ##########################################          
  
-internal request TetrapodClientSessions
-
-internal response TetrapodClientSessions  
-   1: int[] clientSessions    
-     
-##########################################          
  
-internal request NagiosStatus
-   1: string adminToken
-   2: string hostname
-   3: boolean toggle
+admin request NagiosStatus @rights(Admin.RIGHTS_CLUSTER_WRITE)
+   1: int accountId
+   2: string authToken @sensitive
+   3: string hostname
+   4: boolean toggle
 
-internal response NagiosStatus  
+admin response NagiosStatus  
    1: boolean enabled 
  
  internal message NagiosStatus

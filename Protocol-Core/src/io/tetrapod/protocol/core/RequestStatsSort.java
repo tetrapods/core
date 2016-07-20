@@ -6,7 +6,7 @@ import io.*;
 import io.tetrapod.core.rpc.*;
 import java.util.*;
 
-@SuppressWarnings("unused")
+@SuppressWarnings("all")
 public enum RequestStatsSort implements Enum_int<RequestStatsSort> {
    COUNT((int)1), 
    TOTAL_TIME((int)2), 

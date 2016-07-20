@@ -11,12 +11,13 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
 
-@SuppressWarnings("unused")
+@SuppressWarnings("all")
 public class DirectConnectionResponse extends Response {
    
    public static final int STRUCT_ID = 16162197;
    public static final int CONTRACT_ID = CoreContract.CONTRACT_ID;
-    
+   public static final int SUB_CONTRACT_ID = CoreContract.SUB_CONTRACT_ID;
+
    public DirectConnectionResponse() {
       defaults();
    }
@@ -64,6 +65,10 @@ public class DirectConnectionResponse extends Response {
   
    public final int getContractId() {
       return DirectConnectionResponse.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return DirectConnectionResponse.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

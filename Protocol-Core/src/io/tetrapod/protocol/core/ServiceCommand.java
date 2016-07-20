@@ -15,12 +15,13 @@ import java.util.concurrent.*;
  * allows an empty or one-string-arg-called-data request to be called from admin app's service menu
  */
 
-@SuppressWarnings("unused")
+@SuppressWarnings("all")
 public class ServiceCommand extends Structure {
    
    public static final int STRUCT_ID = 5461687;
    public static final int CONTRACT_ID = CoreContract.CONTRACT_ID;
-    
+   public static final int SUB_CONTRACT_ID = CoreContract.SUB_CONTRACT_ID;
+
    public ServiceCommand() {
       defaults();
    }
@@ -61,7 +62,6 @@ public class ServiceCommand extends Structure {
       data.writeEndTag();
    }
    
-   @SuppressWarnings("Duplicates")
    @Override
    public final void read(DataSource data) throws IOException {
       defaults();
@@ -86,11 +86,14 @@ public class ServiceCommand extends Structure {
       return ServiceCommand.CONTRACT_ID;
    }
 
+   public final int getSubContractId() {
+      return ServiceCommand.SUB_CONTRACT_ID;
+   }
+
    public final int getStructId() {
       return ServiceCommand.STRUCT_ID;
    }
 
-   @SuppressWarnings("Duplicates")
    public final String[] tagWebNames() {
       // Note do not use this tags in long term serializations (to disk or databases) as
       // implementors are free to rename them however they wish.  A null means the field

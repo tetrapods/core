@@ -4,6 +4,7 @@ package io.tetrapod.protocol.core;
 
 import io.*;
 import io.tetrapod.core.rpc.*;
+import io.tetrapod.protocol.core.Admin;
 import io.tetrapod.core.serialize.*;
 import io.tetrapod.protocol.core.TypeDescriptor;
 import io.tetrapod.protocol.core.StructDescription;
@@ -11,12 +12,13 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
 
-@SuppressWarnings("unused")
-public class AdminLoginRequest extends Request {
+@SuppressWarnings("all")
+public class AdminLoginRequest extends RequestWithResponse<AdminLoginResponse> {
 
    public static final int STRUCT_ID = 14191480;
    public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;
-   
+   public static final int SUB_CONTRACT_ID = TetrapodContract.SUB_CONTRACT_ID;
+
    public AdminLoginRequest() {
       defaults();
    }
@@ -64,6 +66,10 @@ public class AdminLoginRequest extends Request {
    
    public final int getContractId() {
       return AdminLoginRequest.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return AdminLoginRequest.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

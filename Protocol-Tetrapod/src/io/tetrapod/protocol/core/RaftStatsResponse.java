@@ -11,12 +11,13 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
 
-@SuppressWarnings("unused")
+@SuppressWarnings("all")
 public class RaftStatsResponse extends Response {
    
    public static final int STRUCT_ID = 13186680;
    public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;
-    
+   public static final int SUB_CONTRACT_ID = TetrapodContract.SUB_CONTRACT_ID;
+
    public RaftStatsResponse() {
       defaults();
    }
@@ -40,7 +41,7 @@ public class RaftStatsResponse extends Response {
    public int[] peers;
 
    public final Structure.Security getSecurity() {
-      return Security.INTERNAL;
+      return Security.ADMIN;
    }
 
    public final void defaults() {
@@ -89,6 +90,10 @@ public class RaftStatsResponse extends Response {
   
    public final int getContractId() {
       return RaftStatsResponse.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return RaftStatsResponse.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

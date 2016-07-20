@@ -4,6 +4,7 @@ package io.tetrapod.protocol.core;
 
 import io.*;
 import io.tetrapod.core.rpc.*;
+import io.tetrapod.protocol.core.Admin;
 import io.tetrapod.core.serialize.*;
 import io.tetrapod.protocol.core.TypeDescriptor;
 import io.tetrapod.protocol.core.StructDescription;
@@ -11,12 +12,13 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
 
-@SuppressWarnings("unused")
-public class GetServiceBuildInfoRequest extends Request {
+@SuppressWarnings("all")
+public class GetServiceBuildInfoRequest extends RequestWithResponse<GetServiceBuildInfoResponse> {
 
    public static final int STRUCT_ID = 4482593;
    public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;
-   
+   public static final int SUB_CONTRACT_ID = TetrapodContract.SUB_CONTRACT_ID;
+
    public GetServiceBuildInfoRequest() {
       defaults();
    }
@@ -66,6 +68,10 @@ public class GetServiceBuildInfoRequest extends Request {
       return GetServiceBuildInfoRequest.CONTRACT_ID;
    }
 
+   public final int getSubContractId() {
+      return GetServiceBuildInfoRequest.SUB_CONTRACT_ID;
+   }
+
    public final int getStructId() {
       return GetServiceBuildInfoRequest.STRUCT_ID;
    }
@@ -107,9 +113,9 @@ public class GetServiceBuildInfoRequest extends Request {
    }
 
    public final Response securityCheck(RequestContext ctx) {
-      return ctx.securityCheck(this, accountId, authToken);
+      return ctx.securityCheck(this, accountId, authToken, Admin.RIGHTS_CLUSTER_READ);
    }
-      
+       
    protected boolean isSensitive(String fieldName) {
       if (fieldName.equals("authToken")) return true;
       return false;

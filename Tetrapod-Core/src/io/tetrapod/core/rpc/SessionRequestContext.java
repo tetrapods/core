@@ -12,7 +12,7 @@ public class SessionRequestContext extends RequestContext {
 
    private final static boolean USE_SECURITY = true;
 
-   public final Session session;
+   public final Session         session;
 
    public SessionRequestContext(RequestHeader header, Session session) {
       super(header);
@@ -37,13 +37,20 @@ public class SessionRequestContext extends RequestContext {
    }
 
    @Override
-   public Response securityCheck(Request request, int accountId, String authToken) {
+   public Response securityCheck(Request request, int accountId, String authToken, int adminRightsRequired) {
       if (USE_SECURITY) {
          Value<Integer> error = new Value<>(ERROR_INVALID_RIGHTS);
          Security mine = request.getSecurity();
          Security theirs = getSenderSecurity(accountId, authToken, error);
-         if (theirs.ordinal() < mine.ordinal())
+         if (header.fromType == Core.TYPE_SERVICE || header.fromType == Core.TYPE_TETRAPOD) {
+            theirs = Security.INTERNAL;
+         } else if (mine == Security.ADMIN) {
+            AdminAuthToken.validateAdminToken(accountId, authToken, adminRightsRequired);
+            theirs = Security.ADMIN;
+         }
+         if (theirs.ordinal() < mine.ordinal()) {
             return new Error(error.get());
+         }
       }
       return null;
    }
@@ -51,8 +58,6 @@ public class SessionRequestContext extends RequestContext {
    private Security getSenderSecurity() {
       if (header.fromType == Core.TYPE_TETRAPOD || header.fromType == Core.TYPE_SERVICE)
          return Security.INTERNAL;
-      if (header.fromType == Core.TYPE_ADMIN)
-         return Security.ADMIN;
       return Security.PUBLIC;
    }
 
@@ -60,10 +65,19 @@ public class SessionRequestContext extends RequestContext {
       Security senderSecurity = getSenderSecurity();
       if (senderSecurity == Security.PUBLIC) {
          // upgrade them to protected if their token is good
-         DecodedSession d = LoginAuthToken.decodeSessionToken(authToken, accountId, header.fromId);
+         DecodedSession d = LoginAuthToken.decodeSessionToken(authToken, accountId, header.fromParentId);
          if (d != null && d.timeLeft >= 0) {
             senderSecurity = Security.PROTECTED;
          } else {
+            try {
+               // see if the token is an admin token
+               AdminAuthToken.validateAdminToken(accountId, authToken, 0);
+               if (header.fromType == Core.TYPE_CLIENT) {
+                  header.fromType = Core.TYPE_ADMIN;
+               }
+               return Security.ADMIN;
+            } catch (Exception e) {}
+
             errorCode.set((d != null && d.timeLeft < 0) ? ERROR_RIGHTS_EXPIRED : ERROR_SECURITY);
          }
       }

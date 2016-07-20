@@ -4,6 +4,7 @@ package io.tetrapod.protocol.core;
 
 import io.*;
 import io.tetrapod.core.rpc.*;
+import io.tetrapod.protocol.core.Admin;
 import io.tetrapod.core.serialize.*;
 import io.tetrapod.protocol.core.TypeDescriptor;
 import io.tetrapod.protocol.core.StructDescription;
@@ -11,12 +12,13 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
 
-@SuppressWarnings("unused")
-public class ClaimOwnershipRequest extends Request {
+@SuppressWarnings("all")
+public class ClaimOwnershipRequest extends RequestWithResponse<ClaimOwnershipResponse> {
 
    public static final int STRUCT_ID = 4158859;
    public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;
-   
+   public static final int SUB_CONTRACT_ID = TetrapodContract.SUB_CONTRACT_ID;
+
    public ClaimOwnershipRequest() {
       defaults();
    }
@@ -69,6 +71,10 @@ public class ClaimOwnershipRequest extends Request {
    
    public final int getContractId() {
       return ClaimOwnershipRequest.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return ClaimOwnershipRequest.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

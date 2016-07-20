@@ -11,12 +11,13 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
 
-@SuppressWarnings("unused")
+@SuppressWarnings("all")
 public class TopicPublishedMessage extends Message {
    
    public static final int STRUCT_ID = 6873263;
    public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;
-    
+   public static final int SUB_CONTRACT_ID = TetrapodContract.SUB_CONTRACT_ID;
+
    public TopicPublishedMessage() {
       defaults();
    }
@@ -64,6 +65,10 @@ public class TopicPublishedMessage extends Message {
    
    public final int getContractId() {
       return TopicPublishedMessage.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return TopicPublishedMessage.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

@@ -6,10 +6,10 @@
    <name>Protocol-Web</name>
 
    <parent>
-      <groupId>io.tetrapod.private</groupId>
+      <groupId>io.tetrapod.platform</groupId>
       <artifactId>root</artifactId>
       <version>0.0.1-SNAPSHOT</version>
-      <relativePath>../../build/</relativePath>
+      <relativePath>../build/</relativePath>
    </parent>
 
    <dependencies>

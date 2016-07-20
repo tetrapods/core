@@ -1,8 +1,5 @@
 package io.tetrapod.core.registry;
 
-import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,34 +14,13 @@ import io.tetrapod.protocol.core.Entity;
  */
 public class EntityInfo extends Entity implements Comparable<EntityInfo> {
 
-   public static final Logger            logger      = LoggerFactory.getLogger(EntityInfo.class);
+   public static final Logger    logger = LoggerFactory.getLogger(EntityInfo.class);
 
-   /**
-    * This entity's published topics
-    * 
-    * Maps topicId => Topic
-    */
-   protected Map<Integer, RegistryTopic> topics;
+   protected Session             session; 
+   protected Long                lastContact;
+   protected Long                goneSince;
 
-   /**
-    * This entity's subscriptions
-    * 
-    * Maps topic key => Topic
-    */
-   protected Map<Long, RegistryTopic>    subscriptions;
-
-   protected Session                     session;
-
-   /**
-    * An alternate not-necessarily-unique ID. This can be set by a service and used as a broadcast target. This is only set on the tetrapod
-    * that owns the entity.
-    */
-   protected final AtomicInteger         alternateId = new AtomicInteger(0);
-
-   protected Long                        lastContact;
-   protected Long                        goneSince;
-
-   protected SequentialWorkQueue         queue;
+   protected SequentialWorkQueue queue;
 
    public EntityInfo() {}
 
@@ -54,7 +30,7 @@ public class EntityInfo extends Entity implements Comparable<EntityInfo> {
    }
 
    public EntityInfo(int entityId, int parentId, long reclaimToken, String host, int status, byte type, String name, int version,
-            int contractId, String build) {
+         int contractId, String build) {
       super(entityId, parentId, reclaimToken, host, status, type, name, version, contractId, build);
    }
 
@@ -70,13 +46,6 @@ public class EntityInfo extends Entity implements Comparable<EntityInfo> {
    }
 
    /**
-    * Returns true if this is an admin
-    */
-   public boolean isAdmin() {
-      return type == Core.TYPE_ADMIN;
-   }
-
-   /**
     * Returns true if this is a client
     */
    public boolean isClient() {
@@ -89,66 +58,6 @@ public class EntityInfo extends Entity implements Comparable<EntityInfo> {
 
    public boolean isGone() {
       return (status & Core.STATUS_GONE) != 0;
-   }
-
-   public synchronized RegistryTopic getTopic(int topicId) {
-      return topics == null ? null : topics.get(topicId);
-   }
-
-   public synchronized RegistryTopic publish(int topicId) {
-      final RegistryTopic topic = new RegistryTopic(entityId, topicId);
-      if (topics == null) {
-         topics = new HashMap<>();
-      }
-      topics.put(topic.topicId, topic);
-      //logger.debug("======= PUBLISHED {} : {}", this, topic);
-      return topic;
-   }
-
-   public synchronized RegistryTopic unpublish(int topicId) {
-      if (topics != null) {
-         return topics.remove(topicId);
-      } else {
-         return null;
-      }
-   }
-
-   public synchronized void subscribe(RegistryTopic topic) {
-      if (subscriptions == null) {
-         subscriptions = new HashMap<>();
-      }
-      subscriptions.put(topic.key(), topic);
-      //logger.debug("======= SUBSCRIBED {} to {}", this, topic);
-   }
-
-   public synchronized void unsubscribe(RegistryTopic topic) {
-      if (subscriptions != null) {
-         subscriptions.remove(topic.key());
-      }
-   }
-
-   public synchronized List<RegistryTopic> getTopics() {
-      final List<RegistryTopic> list = new ArrayList<RegistryTopic>();
-      if (topics != null) {
-         list.addAll(topics.values());
-      }
-      return list;
-   }
-
-   public synchronized List<RegistryTopic> getSubscriptions() {
-      final List<RegistryTopic> list = new ArrayList<RegistryTopic>();
-      if (subscriptions != null) {
-         list.addAll(subscriptions.values());
-      }
-      return list;
-   }
-
-   public synchronized int getNumTopics() {
-      return topics == null ? 0 : topics.size();
-   }
-
-   public synchronized int getNumSubscriptions() {
-      return subscriptions == null ? 0 : subscriptions.size();
    }
 
    @Override
@@ -189,7 +98,8 @@ public class EntityInfo extends Entity implements Comparable<EntityInfo> {
    }
 
    /**
-    * Returns true if this service is considered available. Checks all status bits that might cause unavailability
+    * Returns true if this service is considered available. Checks all status bits that
+    * might cause unavailability
     * 
     * @return
     */
@@ -220,14 +130,6 @@ public class EntityInfo extends Entity implements Comparable<EntityInfo> {
          }
       }
       return queue.process();
-   }
-
-   public synchronized int getAlternateId() {
-      return alternateId.get();
-   }
-
-   public synchronized void setAlternateId(int id) {
-      alternateId.set(id);
    }
 
    public synchronized void setLastContact(Long val) {

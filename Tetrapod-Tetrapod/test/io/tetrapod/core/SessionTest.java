@@ -59,7 +59,7 @@ public class SessionTest {
 
       Util.sleep(2000);
 
-      svc2.sendMessage(new ServiceAddedMessage(), svc1.getEntityId());
+      svc2.sendMessage(new ServiceAddedMessage(), svc1.getEntityId(), 0);
 
       Util.sleep(2000);
 

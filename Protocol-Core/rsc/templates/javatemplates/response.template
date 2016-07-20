@@ -12,14 +12,15 @@ import java.util.*;
 import java.util.concurrent.*;
 
 {{classcomment}}
-@SuppressWarnings("unused")
+@SuppressWarnings("all")
 public class {{class}} extends Response {
    
    {{constants}}
    
    public static final int STRUCT_ID = {{structid}};
    public static final int CONTRACT_ID = {{service}}.CONTRACT_ID;
-    
+   public static final int SUB_CONTRACT_ID = {{service}}.SUB_CONTRACT_ID;
+
    public {{class}}() {
       defaults();
    }
@@ -60,6 +61,10 @@ public class {{class}} extends Response {
   
    public final int getContractId() {
       return {{class}}.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return {{class}}.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

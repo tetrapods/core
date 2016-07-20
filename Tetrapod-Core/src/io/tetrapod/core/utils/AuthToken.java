@@ -86,7 +86,7 @@ public class AuthToken {
     * @param values the values which form the basis of the token
     * @return the base64 encoded token
     */
-   protected static String encode(Mac theMac, int... values) {
+   public static String encode(Mac theMac, int... values) {
       return encode(theMac, values, values.length);
    }
 
@@ -153,7 +153,7 @@ public class AuthToken {
     * @return true if it decodes successfully, and as a side effect fills in values with
     *         any values which were encoded in token
     */
-   protected static boolean decode(Mac theMac, int[] values, int numInToken, String token) {
+   public static boolean decode(Mac theMac, int[] values, int numInToken, String token) {
       ByteBuf tokenBuf = null;
       try {
          tokenBuf = Base64.decode(Unpooled.wrappedBuffer(token.getBytes()), Base64Dialect.URL_SAFE);
@@ -187,10 +187,17 @@ public class AuthToken {
    }
 
    public static String generateSharedSecret() {
-      byte[] b = new byte[64];
-      Random r = new SecureRandom();
-      r.nextBytes(b);
-      return Base64.encode(Unpooled.wrappedBuffer(b), Base64Dialect.STANDARD).toString(Charset.forName("UTF-8"));
+      return Base64.encode(Unpooled.wrappedBuffer(generateRandomBytes(64)), Base64Dialect.STANDARD).toString(Charset.forName("UTF-8"));
    }
 
+   public static String generateUrlSafeSharedSecret() {
+      return Base64.encode(Unpooled.wrappedBuffer(generateRandomBytes(64)), Base64Dialect.URL_SAFE).toString(Charset.forName("UTF-8"));
+   }
+
+   public static byte[] generateRandomBytes(int len) {
+      byte[] b = new byte[len];
+      Random r = new SecureRandom();
+      r.nextBytes(b);
+      return b;
+   }
 }

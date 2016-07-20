@@ -11,12 +11,13 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
 
-@SuppressWarnings("unused")
+@SuppressWarnings("all")
 public class ReleaseOwnershipMessage extends Message {
    
    public static final int STRUCT_ID = 9542348;
    public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;
-    
+   public static final int SUB_CONTRACT_ID = TetrapodContract.SUB_CONTRACT_ID;
+
    public ReleaseOwnershipMessage() {
       defaults();
    }
@@ -69,6 +70,10 @@ public class ReleaseOwnershipMessage extends Message {
    
    public final int getContractId() {
       return ReleaseOwnershipMessage.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return ReleaseOwnershipMessage.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

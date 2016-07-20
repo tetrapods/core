@@ -1,22 +1,25 @@
 package io.tetrapod.web;
 
+import java.io.IOException;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.socket.SocketChannel;
-import io.tetrapod.core.*;
+import io.tetrapod.core.Session;
+import io.tetrapod.core.StructureFactory;
 import io.tetrapod.core.json.JSONObject;
 import io.tetrapod.core.rpc.Structure;
 import io.tetrapod.core.serialize.datasources.*;
 import io.tetrapod.protocol.core.*;
 
-import java.io.IOException;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import org.slf4j.*;
-
 abstract class WebSession extends Session {
    private static final Logger   logger       = LoggerFactory.getLogger(WebSession.class);
 
    protected final AtomicInteger requestCount = new AtomicInteger(0);
+   private int                   alternateId;
 
    public WebSession(SocketChannel channel, Session.Helper helper) {
       super(channel, helper);
@@ -31,7 +34,9 @@ abstract class WebSession extends Session {
          return null;
       }
       request.read(new WebJSONDataSource(params, request.tagWebNames()));
-      commsLog("%s  [%d] <- %s", this, header.requestId, request.dump());
+
+      if (!commsLogIgnore(header.structId))
+         commsLog("%s  [%d] <- %s", this, header.requestId, request.dump());
       return request;
    }
 
@@ -98,6 +103,14 @@ abstract class WebSession extends Session {
             break;
       }
       return jo;
+   }
+
+   public synchronized void setAlternateId(int alternateId) {
+      this.alternateId = alternateId;
+   }
+
+   public synchronized int getAlternateId() {
+      return alternateId;
    }
 
 }

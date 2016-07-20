@@ -11,12 +11,13 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
 
-@SuppressWarnings("unused")
+@SuppressWarnings("all")
 public class VoteResponse extends Response {
    
    public static final int STRUCT_ID = 6034296;
    public static final int CONTRACT_ID = RaftContract.CONTRACT_ID;
-    
+   public static final int SUB_CONTRACT_ID = RaftContract.SUB_CONTRACT_ID;
+
    public VoteResponse() {
       defaults();
    }
@@ -64,6 +65,10 @@ public class VoteResponse extends Response {
   
    public final int getContractId() {
       return VoteResponse.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return VoteResponse.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

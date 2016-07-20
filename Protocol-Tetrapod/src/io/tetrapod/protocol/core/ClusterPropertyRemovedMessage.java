@@ -11,12 +11,13 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
 
-@SuppressWarnings("unused")
+@SuppressWarnings("all")
 public class ClusterPropertyRemovedMessage extends Message {
    
    public static final int STRUCT_ID = 12285117;
    public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;
-    
+   public static final int SUB_CONTRACT_ID = TetrapodContract.SUB_CONTRACT_ID;
+
    public ClusterPropertyRemovedMessage() {
       defaults();
    }
@@ -59,6 +60,10 @@ public class ClusterPropertyRemovedMessage extends Message {
    
    public final int getContractId() {
       return ClusterPropertyRemovedMessage.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return ClusterPropertyRemovedMessage.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

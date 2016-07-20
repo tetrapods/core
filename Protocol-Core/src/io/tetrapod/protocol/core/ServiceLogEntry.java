@@ -11,7 +11,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
 
-@SuppressWarnings("unused")
+@SuppressWarnings("all")
 public class ServiceLogEntry extends Structure {
    
    public static final byte LEVEL_ALL = 0; 
@@ -24,7 +24,8 @@ public class ServiceLogEntry extends Structure {
    
    public static final int STRUCT_ID = 11222968;
    public static final int CONTRACT_ID = CoreContract.CONTRACT_ID;
-    
+   public static final int SUB_CONTRACT_ID = CoreContract.SUB_CONTRACT_ID;
+
    public ServiceLogEntry() {
       defaults();
    }
@@ -65,7 +66,6 @@ public class ServiceLogEntry extends Structure {
       data.writeEndTag();
    }
    
-   @SuppressWarnings("Duplicates")
    @Override
    public final void read(DataSource data) throws IOException {
       defaults();
@@ -90,11 +90,14 @@ public class ServiceLogEntry extends Structure {
       return ServiceLogEntry.CONTRACT_ID;
    }
 
+   public final int getSubContractId() {
+      return ServiceLogEntry.SUB_CONTRACT_ID;
+   }
+
    public final int getStructId() {
       return ServiceLogEntry.STRUCT_ID;
    }
 
-   @SuppressWarnings("Duplicates")
    public final String[] tagWebNames() {
       // Note do not use this tags in long term serializations (to disk or databases) as
       // implementors are free to rename them however they wish.  A null means the field

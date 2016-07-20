@@ -8,42 +8,79 @@ import io.tetrapod.core.*;
 import io.tetrapod.core.rpc.Structure;
 import io.tetrapod.protocol.core.WebRoute;
 
-@SuppressWarnings("unused")
+@SuppressWarnings("all")
 public class StorageContract extends Contract {
    public static final int VERSION = 1;
    public static final String NAME = "Storage";
    public static final int CONTRACT_ID = 3;
-   
+   public static final int SUB_CONTRACT_ID = 1;
+
    public static interface API extends APIHandler
       , StorageDeleteRequest.Handler
       , StorageGetRequest.Handler
       , StorageSetRequest.Handler
       {}
    
+   private volatile Structure[] requests = null;
+
    public Structure[] getRequests() {
-      return new Structure[] {
-         new StorageSetRequest(),
-         new StorageGetRequest(),
-         new StorageDeleteRequest(),
-      };
+      if (requests == null) {
+         synchronized(this) {
+            if (requests == null) {
+               requests = new Structure[] {
+                  new StorageSetRequest(),
+                  new StorageGetRequest(),
+                  new StorageDeleteRequest(),
+               };
+            }
+         }
+      }
+      return requests;
    }
    
+   private volatile Structure[] responses = null;
+
    public Structure[] getResponses() {
-      return new Structure[] {
-         new StorageGetResponse(),
-      };
+      if (responses == null) {
+         synchronized(this) {
+            if (responses == null) {
+               responses = new Structure[] {
+                  new StorageGetResponse(),
+               };
+            }
+         }
+      }
+      return responses;
    }
    
+   private volatile Structure[] messages = null;
+
    public Structure[] getMessages() {
-      return new Structure[] {
-         
-      };
+      if (messages == null) {
+         synchronized(this) {
+            if (messages == null) {
+               messages = new Structure[] {
+                  
+               };
+            }
+         }
+      }
+      return messages;
    }
    
+   private volatile Structure[] structs = null;
+
    public Structure[] getStructs() {
-      return new Structure[] {
-         
-      };
+      if (structs == null) {
+         synchronized(this) {
+            if (structs == null) {
+               structs = new Structure[] {
+                  
+               };
+            }
+         }
+      }
+      return structs;
    }
    
    public String getName() {
@@ -54,14 +91,25 @@ public class StorageContract extends Contract {
       return StorageContract.CONTRACT_ID;
    }
    
+   public int getSubContractId() {
+      return StorageContract.SUB_CONTRACT_ID;
+   }
+
    public int getContractVersion() {
       return StorageContract.VERSION;
    }
-   
+
+   private volatile WebRoute[] webRoutes = null;
+
    public WebRoute[] getWebRoutes() {
-      return new WebRoute[] {
-         
-      };
+      if (webRoutes == null) {
+         synchronized(this) {
+            webRoutes = new WebRoute[] {
+               
+            };
+         }
+      }
+      return webRoutes;
    }
 
 }

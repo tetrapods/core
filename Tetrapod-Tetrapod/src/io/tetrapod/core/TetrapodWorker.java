@@ -1,5 +1,7 @@
 package io.tetrapod.core;
 
+import java.util.Queue;
+
 import io.tetrapod.core.registry.EntityInfo;
 
 public class TetrapodWorker implements Runnable {
@@ -16,25 +18,36 @@ public class TetrapodWorker implements Runnable {
    public void run() {
       while (!service.isShuttingDown()) {
          for (final EntityInfo e : service.registry.getEntities()) {
-            if (!e.isQueueEmpty()) {
-               service.dispatcher.dispatch(() -> {
-                  // we turn off auto flush in case we end up writing a lot 
-                  final Session s = e.getSession();
-                  if (s != null) {
-                     s.setAutoFlush(false);
-                  }
-                  if (e.process()) {
-                     if (s != null) {
-                        s.flush();
-                     }
-                  }
-                  if (s != null) {
-                     s.setAutoFlush(true);
-                  }
-               });
+            drainQueue(e);
+         }
+         Queue<EntityInfo> deleted = service.registry.getDeletedEntities();
+         while (!deleted.isEmpty()) {
+            EntityInfo e = deleted.poll();
+            if (e != null) {
+               drainQueue(e);
             }
          }
          waitForWork();
+      }
+   }
+
+   private void drainQueue(EntityInfo e) {
+      if (!e.isQueueEmpty()) {
+         service.dispatcher.dispatch(() -> {
+            // we turn off auto flush in case we end up writing a lot 
+            final Session s = e.getSession();
+            if (s != null) {
+               s.setAutoFlush(false);
+            }
+            if (e.process()) {
+               if (s != null) {
+                  s.flush();
+               }
+            }
+            if (s != null) {
+               s.setAutoFlush(true);
+            }
+         });
       }
    }
 

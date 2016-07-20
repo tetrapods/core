@@ -4,6 +4,7 @@ package io.tetrapod.protocol.core;
 
 import io.*;
 import io.tetrapod.core.rpc.*;
+import io.tetrapod.protocol.core.Admin;
 import io.tetrapod.core.serialize.*;
 import io.tetrapod.protocol.core.TypeDescriptor;
 import io.tetrapod.protocol.core.StructDescription;
@@ -11,12 +12,13 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
 
-@SuppressWarnings("unused")
-public class RegisterRequest extends Request {
+@SuppressWarnings("all")
+public class RegisterRequest extends RequestWithResponse<RegisterResponse> {
 
    public static final int STRUCT_ID = 10895179;
    public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;
-   
+   public static final int SUB_CONTRACT_ID = TetrapodContract.SUB_CONTRACT_ID;
+
    public RegisterRequest() {
       defaults();
    }
@@ -84,6 +86,10 @@ public class RegisterRequest extends Request {
    
    public final int getContractId() {
       return RegisterRequest.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return RegisterRequest.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {

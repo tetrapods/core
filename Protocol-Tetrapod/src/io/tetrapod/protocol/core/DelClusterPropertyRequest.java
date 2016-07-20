@@ -4,6 +4,7 @@ package io.tetrapod.protocol.core;
 
 import io.*;
 import io.tetrapod.core.rpc.*;
+import io.tetrapod.protocol.core.Admin;
 import io.tetrapod.core.serialize.*;
 import io.tetrapod.protocol.core.TypeDescriptor;
 import io.tetrapod.protocol.core.StructDescription;
@@ -11,37 +12,42 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
 
-@SuppressWarnings("unused")
+@SuppressWarnings("all")
 public class DelClusterPropertyRequest extends Request {
 
    public static final int STRUCT_ID = 15970020;
    public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;
-   
+   public static final int SUB_CONTRACT_ID = TetrapodContract.SUB_CONTRACT_ID;
+
    public DelClusterPropertyRequest() {
       defaults();
    }
 
-   public DelClusterPropertyRequest(String adminToken, String key) {
-      this.adminToken = adminToken;
+   public DelClusterPropertyRequest(int accountId, String authToken, String key) {
+      this.accountId = accountId;
+      this.authToken = authToken;
       this.key = key;
    }   
 
-   public String adminToken;
+   public int accountId;
+   public String authToken;
    public String key;
 
    public final Structure.Security getSecurity() {
-      return Security.INTERNAL;
+      return Security.ADMIN;
    }
 
    public final void defaults() {
-      adminToken = null;
+      accountId = 0;
+      authToken = null;
       key = null;
    }
    
    @Override
    public final void write(DataSource data) throws IOException {
-      data.write(1, this.adminToken);
-      data.write(2, this.key);
+      data.write(1, this.accountId);
+      data.write(2, this.authToken);
+      data.write(3, this.key);
       data.writeEndTag();
    }
    
@@ -51,8 +57,9 @@ public class DelClusterPropertyRequest extends Request {
       while (true) {
          int tag = data.readTag();
          switch (tag) {
-            case 1: this.adminToken = data.read_string(tag); break;
-            case 2: this.key = data.read_string(tag); break;
+            case 1: this.accountId = data.read_int(tag); break;
+            case 2: this.authToken = data.read_string(tag); break;
+            case 3: this.key = data.read_string(tag); break;
             case Codec.END_TAG:
                return;
             default:
@@ -64,6 +71,10 @@ public class DelClusterPropertyRequest extends Request {
    
    public final int getContractId() {
       return DelClusterPropertyRequest.CONTRACT_ID;
+   }
+
+   public final int getSubContractId() {
+      return DelClusterPropertyRequest.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {
@@ -85,9 +96,10 @@ public class DelClusterPropertyRequest extends Request {
       // Note do not use this tags in long term serializations (to disk or databases) as 
       // implementors are free to rename them however they wish.  A null means the field
       // is not to participate in web serialization (remaining at default)
-      String[] result = new String[2+1];
-      result[1] = "adminToken";
-      result[2] = "key";
+      String[] result = new String[3+1];
+      result[1] = "accountId";
+      result[2] = "authToken";
+      result[3] = "key";
       return result;
    }
    
@@ -101,13 +113,18 @@ public class DelClusterPropertyRequest extends Request {
       desc.tagWebNames = tagWebNames();
       desc.types = new TypeDescriptor[desc.tagWebNames.length];
       desc.types[0] = new TypeDescriptor(TypeDescriptor.T_STRUCT, getContractId(), getStructId());
-      desc.types[1] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
+      desc.types[1] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
       desc.types[2] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
+      desc.types[3] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
       return desc;
    }
 
+   public final Response securityCheck(RequestContext ctx) {
+      return ctx.securityCheck(this, accountId, authToken, Admin.RIGHTS_CLUSTER_WRITE);
+   }
+       
    protected boolean isSensitive(String fieldName) {
-      if (fieldName.equals("adminToken")) return true;
+      if (fieldName.equals("authToken")) return true;
       return false;
    }
 }

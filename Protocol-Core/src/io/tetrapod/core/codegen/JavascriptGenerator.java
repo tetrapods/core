@@ -48,12 +48,17 @@ class JavascriptGenerator implements LanguageGenerator {
             String contractName = context.serviceName;
             t.add("contractName", contractName);
             String contractId = context.serviceAnnotations.getFirst("id");
+            String subContractId = context.serviceAnnotations.getFirst("subId");
+            if (subContractId == null) {
+               subContractId = "1";
+            }
             for (Class c : context.classes) {
                Template sub = template("register");
                sub.add("contractClass", contractName);
                sub.add("class", c.name);
                sub.add("type", c.type);
                sub.add("contractId", contractId);
+               sub.add("subContractId", subContractId);
                sub.add("structId", c.getStructId());
                t.add("register", sub);
                TreeMap<String, String> fields = new TreeMap<>();
