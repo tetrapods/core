@@ -35,7 +35,7 @@ public class MaintenanceHandler extends SimpleChannelInboundHandler<FullHttpRequ
 
    @Override
    protected void channelRead0(ChannelHandlerContext ctx, FullHttpRequest request) throws Exception {
-
+      boolean bypass = false;
       String uri = request.getUri();
       if (!uri.startsWith("/admin") && !uri.startsWith("/protocol")) {
          String maintenanceMode = Util.getProperty("maintenanceMode","");
@@ -49,13 +49,16 @@ public class MaintenanceHandler extends SimpleChannelInboundHandler<FullHttpRequ
                      authToken = cookie.value();
                      break;
                   }
+                  if (cookie.name().equals("bypass-maintenance")) {
+                     bypass = true;
+                  }
                }
 
                if (!Util.isEmpty(authToken)) {
                   authToken = URLDecoder.decode(authToken, "UTF-8");
                }
             }
-            if (AdminAuthToken.decodeLoginToken(authToken) == 0) {
+            if (!bypass && AdminAuthToken.decodeLoginToken(authToken) == 0) {
                HttpResponse response = getResponse(maintenanceMode);
                ChannelFuture f = ctx.writeAndFlush(response);
                f.addListener(ChannelFutureListener.CLOSE);
