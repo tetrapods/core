@@ -260,6 +260,7 @@ class JavaGenerator implements LanguageGenerator {
    }
 
    private void addConstantValues(List<Field> fields, Template global) throws ParseException, IOException {
+      checkForDupes(fields);
       for (Field f : fields) {
          if (!f.isConstant())
             continue;
@@ -273,7 +274,19 @@ class JavaGenerator implements LanguageGenerator {
       }
    }
 
+   private void checkForDupes(List<Field> fields) throws ParseException{
+      if (fields != null && fields.size() > 0) {
+         Set<String> dupeChecker = new HashSet<>(fields.size());
+         for (Field field : fields) {
+            if (!dupeChecker.add(field.name)) {
+               throw new ParseException("trying to add field " + field.name + " more then once");
+            }
+         }
+      }
+   }
+
    private void addAllAsConstantValues(List<Field> fields, Template global) throws ParseException, IOException {
+      checkForDupes(fields);
       for (Field f : fields) {
          Template sub = template("field.constants");
          sub.add("default", f.defaultValue);
@@ -458,6 +471,7 @@ class JavaGenerator implements LanguageGenerator {
    }
 
    private void generateEnum(ClassLike c) throws IOException, ParseException {
+      checkForDupes(c.fields);
       Template t = template("enum");
       t.add("class", c.name);
       t.add("package", packageName);
