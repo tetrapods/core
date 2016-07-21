@@ -282,7 +282,7 @@ class JavaGenerator implements LanguageGenerator {
             if (!dupeCheckerName.add(field.name)) {
                throw new ParseException("trying to add field " + field.name + " more then once");
             }
-            if (field.isEnum() && !dupeCheckerName.add(field.defaultValue)) {
+            if (field.isEnum() && !dupeCheckerValue.add(field.defaultValue)) {
                throw new ParseException("trying to add enum field " + field.name + " with a value " + field.defaultValue + " that's in use");
             }
          }
