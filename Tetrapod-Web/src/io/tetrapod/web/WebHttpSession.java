@@ -70,6 +70,8 @@ public class WebHttpSession extends WebSession {
       ch.pipeline().addLast("api", this);
       ch.pipeline().addLast("deflater", new HttpContentCompressor(6));
       ch.pipeline().addLast("files", new WebStaticFileHandler(roots));
+
+      ch.pipeline().addLast("maintenance", new MaintenanceHandler(roots.get("tetrapod")));
    }
 
    @Override
