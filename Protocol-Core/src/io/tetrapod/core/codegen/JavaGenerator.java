@@ -276,10 +276,14 @@ class JavaGenerator implements LanguageGenerator {
 
    private void checkForDupes(List<Field> fields) throws ParseException{
       if (fields != null && fields.size() > 0) {
-         Set<String> dupeChecker = new HashSet<>(fields.size());
+         Set<String> dupeCheckerName = new HashSet<>(fields.size());
+         Set<String> dupeCheckerValue = new HashSet<>(fields.size());
          for (Field field : fields) {
-            if (!dupeChecker.add(field.name)) {
+            if (!dupeCheckerName.add(field.name)) {
                throw new ParseException("trying to add field " + field.name + " more then once");
+            }
+            if (field.isEnum() && !dupeCheckerName.add(field.defaultValue)) {
+               throw new ParseException("trying to add enum field " + field.name + " with a value " + field.defaultValue + " that's in use");
             }
          }
       }
