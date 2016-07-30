@@ -372,9 +372,20 @@ public class Util {
       }
    }
 
+   public static boolean isEmptyJs(String val) {
+      return isEmpty(val) || "undefined".equals(val);
+   }
    public static boolean isEmpty(String val) {
       return val == null || val.length() == 0;
    }
+
+   public static String capitalizeFirst(String val) {
+      if (isEmpty(val)) {
+         return val;
+      }
+      return val.substring(0,1).toUpperCase() + val.substring(1);
+   }
+
 
    public final static String ALPHANUMERIC_CHARS           = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
    public final static String ALPHANUMERIC_CHARS_UPPERCASE = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";

@@ -312,6 +312,19 @@ public class Task<T> extends CompletableFuture<T> {
       return "request" + name.substring(0, name.length() - 7) + "()";
    }
 
+
+   /**
+    * Logs the output of a task, if it ends exceptionally and rethrows the error
+    *
+    * @return  Returns the chained task
+    */
+   public Task<T> logError() {
+      return exceptionally(th -> {
+         logger.error("Error executing task", th);
+         throw ServiceException.wrapIfChecked(th);
+      });
+   }
+
    static class TaskFutureAdapter<T> implements Runnable {
       Task<T> task;
       Future<T> future;
