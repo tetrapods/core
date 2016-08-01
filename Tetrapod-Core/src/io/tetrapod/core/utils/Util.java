@@ -15,7 +15,10 @@ import javax.naming.directory.*;
 import javax.net.ssl.*;
 import javax.xml.bind.DatatypeConverter;
 
+import com.sun.javaws.exceptions.ErrorCodeResponseException;
+import io.tetrapod.core.ServiceException;
 import io.tetrapod.core.json.*;
+import io.tetrapod.core.rpc.ErrorResponseException;
 import io.tetrapod.core.rpc.Flags_int;
 
 /**
@@ -706,6 +709,47 @@ public class Util {
          }
          t = t.getCause();
       } while (true);
+   }
+
+   /**
+    * Given a throwable, if it contains an ErrorResponseException in its cause chain, and that code matches one of the codes
+    * specified, it will return true.  Otherwise it will rethorw the exception, wrapping it as an unchecked exception if necessary.
+    * @param t The throwable to check
+    * @param errorCodes One or more error cods to check for
+    * @return returns true if the error code was found, or re-throws the original exception if not.
+    * @throws RuntimeException  The function can throw a runtime exception if it doesn't match the error code specified
+    */
+   public static boolean hasErrorCodeOrThrow(Throwable t, int ... errorCodes) {
+      return hasErrorCode(true, t, errorCodes);
+   }
+
+   /**
+    * Given a throwable, if it contains an ErrorResponseException in its cause chain, and that code matches one of the codes
+    * specified, it will return true.  Otherwise it will return false;
+    * @param t The throwable to check
+    * @param errorCodes One or more error cods to check for
+    * @return returns true if the error code was found, false if not
+    */
+   public static boolean hasErrorCode(Throwable t, int ... errorCodes) {
+      return hasErrorCode(false, t, errorCodes);
+   }
+
+   private static boolean hasErrorCode(boolean rethrowIFNotFound, Throwable t, int ... errorCodes) {
+      if (errorCodes.length == 0) {
+         throw new IllegalArgumentException("You must specify at least one error code");
+      }
+      ErrorResponseException ex = getThrowableInChain(t, ErrorResponseException.class);
+      if (ex != null) {
+         for (int errorCode : errorCodes) {
+            if (ex.errorCode == errorCode) {
+               return true;
+            }
+         }
+      }
+      if (rethrowIFNotFound) {
+         throw ServiceException.wrapIfChecked(t);
+      }
+      return false;
    }
 
    public interface ValueMaker<K, V> {
