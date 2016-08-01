@@ -461,11 +461,11 @@ public class WebService extends DefaultService
       // reg the web routes
       if (m.info.routes != null) {
          for (WebRoute r : m.info.routes) {
-            webRoutes.setRoute(r.path, r.contractId, r.structId);
-            logger.debug("Setting Web route [{}] for {}", r.path, r.contractId);
+            webRoutes.setRoute(r.path, r.contractId, r.subContractId, r.structId);
+            logger.debug("Setting Web route [{}] for {} {}", r.path, r.contractId, r.subContractId);
          }
       }
-      webRoutes.clear(m.info.contractId, m.info.routes);
+      webRoutes.clear(m.info.contractId, m.info.subContractId, m.info.routes);
    }
 
    //////////////////////////////////////////////////////////////////////////////////////////

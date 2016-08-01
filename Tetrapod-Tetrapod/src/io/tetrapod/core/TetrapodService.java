@@ -63,7 +63,7 @@ public class TetrapodService extends DefaultService
 
       // add tetrapod web routes
       for (WebRoute r : contract.getWebRoutes()) {
-         getWebRoutes().setRoute(r.path, r.contractId, r.structId);
+         getWebRoutes().setRoute(r.path, r.contractId, r.subContractId, r.structId);
       }
    }
 

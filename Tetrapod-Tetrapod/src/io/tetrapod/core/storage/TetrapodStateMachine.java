@@ -173,11 +173,11 @@ public class TetrapodStateMachine extends StorageStateMachine<TetrapodStateMachi
       // reg the web routes
       if (info.routes != null) {
          for (WebRoute r : info.routes) {
-            webRoutes.setRoute(r.path, r.contractId, r.structId);
-            logger.debug("Setting Web route [{}] for {}", r.path, r.contractId);
+            webRoutes.setRoute(r.path, r.contractId, r.subContractId, r.structId);
+            logger.debug("Setting Web route [{}] for {} {}", r.path, r.contractId, r.subContractId);
          }
       }
-      webRoutes.clear(info.contractId, info.routes);
+      webRoutes.clear(info.contractId, info.subContractId, info.routes);
       // keep local cache of contracts
       contracts.put(new ContractKey(info.contractId, info.subContractId), info);
    }

@@ -22,15 +22,17 @@ public class WebRoute extends Structure {
       defaults();
    }
 
-   public WebRoute(String path, int structId, int contractId) {
+   public WebRoute(String path, int structId, int contractId, int subContractId) {
       this.path = path;
       this.structId = structId;
       this.contractId = contractId;
+      this.subContractId = subContractId;
    }   
    
    public String path;
    public int structId;
    public int contractId;
+   public int subContractId;
 
    public final Structure.Security getSecurity() {
       return Security.INTERNAL;
@@ -40,6 +42,7 @@ public class WebRoute extends Structure {
       path = null;
       structId = 0;
       contractId = 0;
+      subContractId = 0;
    }
    
    @Override
@@ -47,6 +50,7 @@ public class WebRoute extends Structure {
       data.write(1, this.path);
       data.write(2, this.structId);
       data.write(3, this.contractId);
+      data.write(4, this.subContractId);
       data.writeEndTag();
    }
    
@@ -59,6 +63,7 @@ public class WebRoute extends Structure {
             case 1: this.path = data.read_string(tag); break;
             case 2: this.structId = data.read_int(tag); break;
             case 3: this.contractId = data.read_int(tag); break;
+            case 4: this.subContractId = data.read_int(tag); break;
             case Codec.END_TAG:
                return;
             default:
@@ -84,10 +89,11 @@ public class WebRoute extends Structure {
       // Note do not use this tags in long term serializations (to disk or databases) as
       // implementors are free to rename them however they wish.  A null means the field
       // is not to participate in web serialization (remaining at default)
-      String[] result = new String[3+1];
+      String[] result = new String[4+1];
       result[1] = "path";
       result[2] = "structId";
       result[3] = "contractId";
+      result[4] = "subContractId";
       return result;
    }
 
@@ -104,6 +110,7 @@ public class WebRoute extends Structure {
       desc.types[1] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
       desc.types[2] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
       desc.types[3] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
+      desc.types[4] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
       return desc;
    }
 
@@ -123,6 +130,8 @@ public class WebRoute extends Structure {
          return false;
       if (contractId != that.contractId)
          return false;
+      if (subContractId != that.subContractId)
+         return false;
 
       return true;
    }
@@ -133,6 +142,7 @@ public class WebRoute extends Structure {
       result = 31 * result + (path != null ? path.hashCode() : 0);
       result = 31 * result + structId;
       result = 31 * result + contractId;
+      result = 31 * result + subContractId;
       return result;
    }
 
