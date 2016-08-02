@@ -69,7 +69,6 @@ public class Launcher {
          Method initMethod = asyncClass.getMethod("init");
          initMethod.invoke(null);
       } catch (Throwable e) {
-         int x = 1;
       }
    }
 
