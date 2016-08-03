@@ -15,7 +15,6 @@ import javax.naming.directory.*;
 import javax.net.ssl.*;
 import javax.xml.bind.DatatypeConverter;
 
-import com.sun.javaws.exceptions.ErrorCodeResponseException;
 import io.tetrapod.core.ServiceException;
 import io.tetrapod.core.json.*;
 import io.tetrapod.core.rpc.ErrorResponseException;
