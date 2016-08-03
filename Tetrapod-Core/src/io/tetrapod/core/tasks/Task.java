@@ -421,6 +421,16 @@ public class Task<T> extends CompletableFuture<T> {
       });
    }
 
+   /**
+    * Helper method to ignore the results of the current chain and return a void task.  Helfull if you don't care about
+    * the results, but just want to chain it to make sure it completes.
+    *
+    * @return The void task
+    */
+   public Task<Void> thenVoid() {
+      return thenApply(ignore->null);
+   }
+
    @Override
    public <U> Task<U> thenApply(final Function<? super T, ? extends U> fn) {
       final Function<? super T, ? extends U> wrap = TaskContext.wrap(fn);
