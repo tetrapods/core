@@ -143,6 +143,24 @@ public class Task<T> extends CompletableFuture<T> {
       return t;
    }
 
+   /**
+    * Returns a fulfilled Task<Response> where the Response has the error code specified
+    * @param errorCode  The error code to create the error response with
+    * @return fulfilled Task<Response> with error code
+    */
+   public static Task<Response> errorResponse(int errorCode) {
+      return Task.from(Response.error(errorCode));
+   }
+
+   /**
+    * Returns a generic success response task.
+    * @return A fulfilled Task<Response> which ended as a success
+    */
+   public static Task<Response> successResponse() {
+      return Task.from(Response.SUCCESS);
+   }
+
+
 
    protected boolean internalComplete(T value) {
       return super.complete(value);
@@ -401,6 +419,16 @@ public class Task<T> extends CompletableFuture<T> {
             throw ServiceException.wrap(throwable);
          }
       });
+   }
+
+   /**
+    * Helper method to ignore the results of the current chain and return a void task.  Helfull if you don't care about
+    * the results, but just want to chain it to make sure it completes.
+    *
+    * @return The void task
+    */
+   public Task<Void> thenVoid() {
+      return thenApply(ignore->null);
    }
 
    @Override

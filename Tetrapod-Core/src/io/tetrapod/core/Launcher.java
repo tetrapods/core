@@ -1,6 +1,7 @@
 package io.tetrapod.core;
 
 import java.io.*;
+import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -28,6 +29,7 @@ public class Launcher {
    private static String              serviceClass = null;
 
    public static void main(String[] args) {
+      asyncInit();
       loadProperties("cfg/service.properties");
       loadClusterProperties();
       loadSecretProperties();
@@ -58,6 +60,15 @@ public class Launcher {
       } catch (Throwable t) {
          t.printStackTrace();
          usage();
+      }
+   }
+
+   private static void asyncInit() {
+      try {
+         Class<?> asyncClass = Class.forName("com.ea.async.Async");
+         Method initMethod = asyncClass.getMethod("init");
+         initMethod.invoke(null);
+      } catch (Throwable e) {
       }
    }
 
