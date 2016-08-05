@@ -691,6 +691,18 @@ public class Util {
       return ex;
    }
 
+
+   /**
+    * Given a throwable, this will find if there is a throwable that is descendant from the specified class.
+    * @param t The throwable to check
+    * @param throwableClass The throwable class to check for
+    * @param <T> The throwable type to search for
+    * @return true if found in chain, false if not
+    */
+   public static <T extends Throwable> boolean isThrowableInChain(Throwable t, Class<T> throwableClass) {
+      return getThrowableInChain(t, throwableClass) != null;
+   }
+
    /**
     * Given a throwable, this will find if there is a throwable that is descendant from the specified class or null if not found.
     * @param t The throwable to check
