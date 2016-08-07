@@ -117,6 +117,10 @@ public interface DataSource {
 
    public <T extends Enum_String<T>> void write(int tag, T[] array) throws IOException;
 
+   public void write_enum_list(int tag, List array) throws IOException;
+
+   public <T extends Enum> List<T> read_enum_list(int tag, Class<T> c) throws IOException;
+
    public void skip(int tag) throws IOException;
 
    public void writeEndTag() throws IOException;

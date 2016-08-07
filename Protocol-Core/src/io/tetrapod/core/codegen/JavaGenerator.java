@@ -368,7 +368,7 @@ class JavaGenerator implements LanguageGenerator {
          if (f.collectionType == null) {
             primTemplate = structTemplate = f.interiorType.startsWith("flags") ? "field.flags" : "field.enum";
          } else if (f.interiorType.startsWith("enum") && f.collectionType.equals("<list>")) {
-            primTemplate = structTemplate = "field.list.structs";
+            primTemplate = structTemplate = "field.list.enum";
          } else {
             primTemplate = structTemplate = f.interiorType.startsWith("flag") ? "field.array.flags" : "field.array.enum";
          }
