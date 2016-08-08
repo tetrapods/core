@@ -156,7 +156,7 @@ public class WebHttpSession extends WebSession {
       if (wsLocation != null && wsLocation.equals(req.getUri())) {
 
          String host = req.headers().get("Host");
-         String origin = req.headers().get("origin");
+         String origin = req.headers().get("Origin");
          if (origin != null && host != null) {
             if (!(origin.equals("http://"+host) || origin.equals("https://"+host))) {
                sendHttpResponse(ctx, req, new DefaultFullHttpResponse(HTTP_1_1, UNAUTHORIZED));
