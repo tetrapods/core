@@ -66,19 +66,28 @@ public class SessionRequestContext extends RequestContext {
       if (senderSecurity == Security.PUBLIC) {
          // upgrade them to protected if their token is good
          DecodedSession d = LoginAuthToken.decodeSessionToken(authToken, accountId, header.fromParentId);
-         if (d != null && d.timeLeft >= 0 && d.accountId == accountId) {
-            senderSecurity = Security.PROTECTED;
-         } else {
+         if (d != null) {
+            if (d.timeLeft >= 0 && d.accountId == accountId) {
+               senderSecurity = Security.PROTECTED;
+            }
+         } else { // see if the token is an admin token
             try {
-               // see if the token is an admin token
                AdminAuthToken.validateAdminToken(accountId, authToken, 0);
                if (header.fromType == Core.TYPE_CLIENT) {
                   header.fromType = Core.TYPE_ADMIN;
                }
                return Security.ADMIN;
             } catch (Exception e) {}
-
-            errorCode.set((d != null && d.timeLeft < 0) ? ERROR_RIGHTS_EXPIRED : ERROR_SECURITY);
+         }
+         // handle errors
+         if (d == null) {
+            errorCode.set(ERROR_SECURITY);
+         } else {
+            if (d.accountId != accountId) {
+               errorCode.set(ERROR_INVALID_RIGHTS);
+            } else if (d.timeLeft < 0) {
+               errorCode.set(ERROR_RIGHTS_EXPIRED);
+            }
          }
       }
       return senderSecurity;
