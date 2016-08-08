@@ -76,6 +76,9 @@ public class LoginAuthToken {
       if (!AuthToken.decode(MAC_SESSION, vals, 5, token)) {
          return null;
       }
+      if (vals[2] != accountId) {
+         return null;
+      }
       DecodedSession d = new DecodedSession();
       d.accountId = accountId;
       d.timeLeft = vals[0] - AuthToken.timeNowInMinutes();
@@ -86,6 +89,9 @@ public class LoginAuthToken {
    public static DecodedSession decodeSessionToken(String token, int accountId, int entityId) {
       int[] vals = { 0, 0, accountId, entityId, 0};
       if (!AuthToken.decode(MAC_SESSION, vals, 5, token)) {
+         return null;
+      }
+      if (vals[2] != accountId) {
          return null;
       }
       DecodedSession d = new DecodedSession();
