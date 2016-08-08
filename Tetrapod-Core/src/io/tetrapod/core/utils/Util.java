@@ -15,7 +15,9 @@ import javax.naming.directory.*;
 import javax.net.ssl.*;
 import javax.xml.bind.DatatypeConverter;
 
+import io.tetrapod.core.ServiceException;
 import io.tetrapod.core.json.*;
+import io.tetrapod.core.rpc.ErrorResponseException;
 import io.tetrapod.core.rpc.Flags_int;
 
 /**
@@ -372,9 +374,20 @@ public class Util {
       }
    }
 
+   public static boolean isEmptyJs(String val) {
+      return isEmpty(val) || "undefined".equals(val);
+   }
    public static boolean isEmpty(String val) {
       return val == null || val.length() == 0;
    }
+
+   public static String capitalizeFirst(String val) {
+      if (isEmpty(val)) {
+         return val;
+      }
+      return val.substring(0,1).toUpperCase() + val.substring(1);
+   }
+
 
    public final static String ALPHANUMERIC_CHARS           = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
    public final static String ALPHANUMERIC_CHARS_UPPERCASE = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -678,6 +691,18 @@ public class Util {
       return ex;
    }
 
+
+   /**
+    * Given a throwable, this will find if there is a throwable that is descendant from the specified class.
+    * @param t The throwable to check
+    * @param throwableClass The throwable class to check for
+    * @param <T> The throwable type to search for
+    * @return true if found in chain, false if not
+    */
+   public static <T extends Throwable> boolean isThrowableInChain(Throwable t, Class<T> throwableClass) {
+      return getThrowableInChain(t, throwableClass) != null;
+   }
+
    /**
     * Given a throwable, this will find if there is a throwable that is descendant from the specified class or null if not found.
     * @param t The throwable to check
@@ -695,6 +720,47 @@ public class Util {
          }
          t = t.getCause();
       } while (true);
+   }
+
+   /**
+    * Given a throwable, if it contains an ErrorResponseException in its cause chain, and that code matches one of the codes
+    * specified, it will return true.  Otherwise it will rethorw the exception, wrapping it as an unchecked exception if necessary.
+    * @param t The throwable to check
+    * @param errorCodes One or more error cods to check for
+    * @return returns true if the error code was found, or re-throws the original exception if not.
+    * @throws RuntimeException  The function can throw a runtime exception if it doesn't match the error code specified
+    */
+   public static boolean hasErrorCodeOrThrow(Throwable t, int ... errorCodes) {
+      return hasErrorCode(true, t, errorCodes);
+   }
+
+   /**
+    * Given a throwable, if it contains an ErrorResponseException in its cause chain, and that code matches one of the codes
+    * specified, it will return true.  Otherwise it will return false;
+    * @param t The throwable to check
+    * @param errorCodes One or more error cods to check for
+    * @return returns true if the error code was found, false if not
+    */
+   public static boolean hasErrorCode(Throwable t, int ... errorCodes) {
+      return hasErrorCode(false, t, errorCodes);
+   }
+
+   private static boolean hasErrorCode(boolean rethrowIFNotFound, Throwable t, int ... errorCodes) {
+      if (errorCodes.length == 0) {
+         throw new IllegalArgumentException("You must specify at least one error code");
+      }
+      ErrorResponseException ex = getThrowableInChain(t, ErrorResponseException.class);
+      if (ex != null) {
+         for (int errorCode : errorCodes) {
+            if (ex.errorCode == errorCode) {
+               return true;
+            }
+         }
+      }
+      if (rethrowIFNotFound) {
+         throw ServiceException.wrapIfChecked(t);
+      }
+      return false;
    }
 
    public interface ValueMaker<K, V> {

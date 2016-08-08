@@ -7,6 +7,7 @@ import io.tetrapod.core.rpc.Flags_int;
 import io.tetrapod.core.rpc.Flags_long;
 import io.tetrapod.core.rpc.Structure;
 import io.tetrapod.core.serialize.*;
+import io.tetrapod.core.utils.Util;
 
 import java.io.IOException;
 import java.lang.reflect.Array;
@@ -617,6 +618,67 @@ public class JSONDataSource implements DataSource {
          JSONArray arr = new JSONArray(strArray);
          json.put(k, arr);
       }
+   }
+
+   @Override
+   public void write_enum_list(int tag, List array) throws IOException {
+      String k = key(tag);
+      if (k != null) {
+         JSONArray arr;
+         if (!Util.isEmpty(array)) {
+            Object e0 = array.get(0);
+
+            if (e0 instanceof Enum_int) {
+               ArrayList<Integer> vals = new ArrayList<>();
+               for (Object o : array) {
+                  vals.add(((Enum_int)o).getValue());
+               }
+               arr = new JSONArray(vals);
+            } else if (e0 instanceof Enum_String) {
+               ArrayList<String> vals = new ArrayList<>();
+               for (Object o : array) {
+                  vals.add(((Enum_String)o).getValue());
+               }
+               arr = new JSONArray(vals);
+            } else {
+               throw new IOException("Invalid enum type");
+            }
+         } else {
+            arr = new JSONArray();
+         }
+         json.put(k, arr);
+      }
+   }
+
+   @Override
+   public <T extends Enum> List<T> read_enum_list(int tag, Class<T> c) throws IOException {
+      JSONArray arr = getJSONArrayOrNull(json, key(tag));
+      if (arr == null)
+         return null;
+      List<T> res = new ArrayList<>();
+      try {
+         Method m;
+         if (c.isAssignableFrom(Enum_int.class)) {
+            m = c.getMethod("from", int.class);
+            for (int i = 0; i < arr.length(); i++) {
+               if (arr.get(i) instanceof String) {
+                  res.add(Util.cast(m.invoke(null, arr.getString(i))));
+               }
+            }
+         } else if (c.isAssignableFrom(Enum_int.class)) {
+            m = c.getMethod("from", String.class);
+            for (int i = 0; i < arr.length(); i++) {
+               if (arr.get(i) instanceof Integer) {
+                  res.add(Util.cast(m.invoke(null, arr.getInt(i))));
+               }
+            }
+         } else {
+            throw new IOException("Unknown enum type");
+         }
+      } catch (Exception e) {
+         throw new IOException(e);
+      }
+      return res;
    }
 
    protected String key(int tag) {

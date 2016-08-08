@@ -5,6 +5,7 @@ package io.tetrapod.core.tasks;
  * @author paulm
  *         Created: 6/28/16
  */
+@FunctionalInterface
 public interface Func0<TRet> {
    TRet apply();
 }

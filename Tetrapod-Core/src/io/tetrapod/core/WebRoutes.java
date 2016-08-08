@@ -9,9 +9,9 @@ public class WebRoutes {
 
    private final Map<String, WebRoute> routes = new ConcurrentHashMap<>();
 
-   public void setRoute(String path, int contractId, int structId) {
+   public void setRoute(String path, int contractId, int subContractId, int structId) {
       // "/api/LoginRequest  contractId=2, structId=1244334
-      WebRoute r = new WebRoute(path, structId, contractId);
+      WebRoute r = new WebRoute(path, structId, contractId, subContractId);
       routes.put(path, r);
    }
 
@@ -45,9 +45,9 @@ public class WebRoutes {
    /**
     * Removes all routes for a contract that aren't in the existing set
     */
-   public void clear(int contractId, WebRoute[] existing) {
+   public void clear(int contractId, int subContractId, WebRoute[] existing) {
       for (WebRoute r : routes.values()) {
-         if (r.contractId == contractId) {
+         if (r.contractId == contractId && r.getSubContractId() == subContractId) {
             boolean found = false;
             for (WebRoute e : existing) {
                if (e.path.equals(r.path)) {
