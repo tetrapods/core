@@ -225,7 +225,7 @@ function TP_Server() {
       };
 
       // start rate-limiting if we have a lot of pending requests
-      if (numItems(requestContexts) > 25) {
+      if (numItems(requestContexts) > 20) {
          requestQueue.push(requestId);
          scheduleProcessRequestQueue();
       } else {
@@ -239,7 +239,7 @@ function TP_Server() {
          setTimeout(function() {
             pendingQueueTask = false;
             processRequestQueue();
-         }, 5);
+         }, 6);
       }
    }
 
