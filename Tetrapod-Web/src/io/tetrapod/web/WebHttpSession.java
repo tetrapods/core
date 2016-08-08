@@ -152,10 +152,8 @@ public class WebHttpSession extends WebSession {
          logger.debug("•••• Domain: {} ", getDomain());
       }
 
-      // req.getUri()
-
       // see if we need to start a web socket session
-      if (wsLocation.equals(req.getUri())) {
+      if (wsLocation != null && wsLocation.equals(req.getUri())) {
          WebSocketServerHandshakerFactory wsFactory = new WebSocketServerHandshakerFactory(wsLocation, null, false);
          synchronized (this) {
             handshaker = wsFactory.newHandshaker(req);
