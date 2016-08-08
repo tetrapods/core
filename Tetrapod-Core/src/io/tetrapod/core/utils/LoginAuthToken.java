@@ -52,7 +52,7 @@ public class LoginAuthToken {
    }
 
    public static DecodedLogin decodeLoginToken(String token) {
-      int[] vals = AuthToken.decode(token, 5);
+      int[] vals = AuthToken.decode(MAC_LOGIN, token, 5);
       if (vals == null || vals.length == 0) {
          return null;
       }
@@ -72,7 +72,7 @@ public class LoginAuthToken {
    }
 
    public static DecodedSession decodeSessionToken(String token, int accountId) {
-      int[] vals = AuthToken.decode(token, 5);
+      int[] vals = AuthToken.decode(MAC_SESSION, token, 5);
       if (vals == null || vals.length == 0 || vals[2] != accountId) {
          return null;
       }
@@ -84,7 +84,7 @@ public class LoginAuthToken {
       return d;
    }
    public static DecodedSession decodeSessionToken(String token, int accountId, int entityId) {
-      int[] vals = AuthToken.decode(token, 5);
+      int[] vals = AuthToken.decode(MAC_SESSION, token, 5);
       if (vals == null || vals.length == 0 || vals[2] != accountId || vals[3] == entityId) {
          return null;
       }

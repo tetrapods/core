@@ -48,7 +48,7 @@ public class AdminAuthToken {
    }
 
    public static int decodeLoginToken(String token) {
-      final int[] vals = AuthToken.decode(token, 2);
+      final int[] vals = AuthToken.decode(MAC_LOGIN, token, 2);
       if (vals != null && vals.length > 0) {
          int timeLeft = vals[0] - AuthToken.timeNowInMinutes();
          if (timeLeft > 0) {
@@ -64,7 +64,7 @@ public class AdminAuthToken {
    }
 
    public static Decoded decodeSessionToken(String token) {
-      final int[] vals = AuthToken.decode(token, 4);
+      final int[] vals = AuthToken.decode(MAC_SESSION, token, 4);
       if (vals != null && vals.length > 0) {
          int timeLeft = vals[0] - AuthToken.timeNowInMinutes();
          if (timeLeft > 0) {

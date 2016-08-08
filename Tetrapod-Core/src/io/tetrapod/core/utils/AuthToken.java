@@ -146,11 +146,13 @@ public class AuthToken {
     * Decodes an auth token. If there is at least one value in the token it assumes the
     * first value is a timeout value and checks it versus the current time.
     * 
+    *
+    * @param theMac the Mac to encode with for verifying token
     * @param token the base64 encoded token
     * @param numInToken the num of items in the token
     * @return the decoded int array
     */
-   public static int[] decode(String token, int numInToken) {
+   public static int[] decode(Mac theMac, String token, int numInToken) {
       ByteBuf tokenBuf = null;
       try {
          tokenBuf = Base64.decode(Unpooled.wrappedBuffer(token.getBytes()), Base64Dialect.URL_SAFE);
@@ -159,6 +161,10 @@ public class AuthToken {
          int[] decoded = new int[numInToken];
          for (int i = 0; i < numInToken; i++) {
             decoded[i] = bds.readVarInt();
+         }
+         String encoded = encode(theMac, decoded, numInToken);
+         if (!encoded.equals(token)) {
+            return null;
          }
          return decoded;
       } catch (Exception ignored) {} finally {

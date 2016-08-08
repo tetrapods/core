@@ -16,7 +16,7 @@ public class LegacyAuthToken {
    }
 
    public synchronized static int decodePublic(String token) {
-      int[] vals = AuthToken.decode(token, 4);
+      int[] vals = AuthToken.decode(MAC_LEGACY, token, 4);
       if (vals == null || vals.length == 0) {
          return 0;
       }
@@ -24,7 +24,7 @@ public class LegacyAuthToken {
    }
    
    public synchronized static int decodeTwitter(String token) {
-      int[] vals = AuthToken.decode(token, 5);
+      int[] vals = AuthToken.decode(MAC_LEGACY, token, 5);
       if (vals == null || vals.length == 0) {
          return 0;
       }
