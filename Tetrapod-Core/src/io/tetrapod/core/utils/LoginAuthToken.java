@@ -85,7 +85,7 @@ public class LoginAuthToken {
    }
    public static DecodedSession decodeSessionToken(String token, int accountId, int entityId) {
       int[] vals = AuthToken.decode(MAC_SESSION, token, 5);
-      if (vals == null || vals.length == 0 || vals[2] != accountId || vals[3] == entityId) {
+      if (vals == null || vals.length == 0 || vals[2] != accountId || vals[3] != entityId) {
          return null;
       }
       DecodedSession d = new DecodedSession();
