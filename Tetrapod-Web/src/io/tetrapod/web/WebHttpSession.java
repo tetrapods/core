@@ -154,6 +154,16 @@ public class WebHttpSession extends WebSession {
 
       // see if we need to start a web socket session
       if (wsLocation != null && wsLocation.equals(req.getUri())) {
+
+         String host = req.headers().get("Host");
+         String origin = req.headers().get("origin");
+         if (origin != null && host != null) {
+            if (!(origin.equals("http://"+host) || origin.equals("https://"+host))) {
+               sendHttpResponse(ctx, req, new DefaultFullHttpResponse(HTTP_1_1, UNAUTHORIZED));
+               return;
+            }
+         }
+
          WebSocketServerHandshakerFactory wsFactory = new WebSocketServerHandshakerFactory(wsLocation, null, false);
          synchronized (this) {
             handshaker = wsFactory.newHandshaker(req);
