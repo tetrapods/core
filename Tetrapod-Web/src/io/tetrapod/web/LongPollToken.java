@@ -41,8 +41,8 @@ public class LongPollToken {
    }
 
    public static Decoded decodeToken(String token) {
-      final int[] vals = new int[2];
-      if (AuthToken.decode(MAC_SESSION, vals, 2, token)) {
+      final int[] vals = AuthToken.decode(token, 2);
+      if (vals != null && vals.length > 0) {
          int timeLeft = vals[0] - AuthToken.timeNowInMinutes();
          if (timeLeft > 0) {
             Decoded d = new Decoded();
