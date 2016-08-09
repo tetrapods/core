@@ -20,6 +20,7 @@ public class CoreContract extends Contract {
    public static final int SUB_CONTRACT_ID = 1;
 
    public static interface API extends APIHandler
+      , DebugRequest.Handler
       , DirectConnectionRequest.Handler
       , DummyRequest.Handler
       , HostInfoRequest.Handler
@@ -69,6 +70,7 @@ public class CoreContract extends Contract {
                   new ServiceErrorLogsRequest(),
                   new ResetServiceErrorLogsRequest(),
                   new SetCommsLogLevelRequest(),
+                  new DebugRequest(),
                   new WebAPIRequest(),
                   new DirectConnectionRequest(),
                   new ValidateConnectionRequest(),

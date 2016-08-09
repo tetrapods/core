@@ -262,6 +262,11 @@ admin request SetCommsLogLevel @rights(Admin.RIGHTS_CLUSTER_WRITE)
 	3: string level
 
    
+admin request Debug @rights(Admin.RIGHTS_CLUSTER_WRITE)
+   1: int accountId
+   2: string authToken @sensitive
+   
+   
 public request WebAPI
    1: string route   // route name
    2: string headers // json string

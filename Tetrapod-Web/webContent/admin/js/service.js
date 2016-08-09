@@ -151,6 +151,10 @@ define(["knockout", "jquery", "bootbox", "alert", "app", "chart", "modules/build
          app.sendTo("Purge", {}, self.entityId);
       }
 
+      self.debug = function() {
+         app.sendTo("Debug", {}, self.entityId);
+      }
+
       self.releaseExcess = function() {
          bootbox.confirm("Are you sure you want to release excess rooms on: " + self.name + "[" + self.entityId + "]?", function(result) {
             if (result) {

@@ -1,384 +1,382 @@
 <div>
-   <h3 style="display: inline-block; margin: 5px;">Cluster Hosts &amp; Services</h3>
-   <div style="float: right; display: inline-block;">
-      <button class="btn btn-sm" data-bind="click: onClearAllErrors">Clear Errors</button>
-      <button class="btn btn-sm" data-bind="click: deployBuilds">Deploy</button>
-      <button class="btn btn-sm btn-maint" data-bind="click: toggleMaintenance, css: maintenanceMode() ? 'active' : ''">Maintenance</button>
-      <button class="btn btn-sm" data-bind="click: updateClientBuild">
-         Web Build:
-         <span data-bind="text: currentClientBuild"></span>
-      </button>
-   </div>
+	<h3 style="display: inline-block; margin: 5px;">Cluster Hosts &amp; Services</h3>
+	<div style="float: right; display: inline-block;">
+		<button class="btn btn-sm" data-bind="click: onClearAllErrors">Clear Errors</button>
+		<button class="btn btn-sm" data-bind="click: deployBuilds">Deploy</button>
+		<button class="btn btn-sm btn-maint" data-bind="click: toggleMaintenance, css: maintenanceMode() ? 'active' : ''">Maintenance</button>
+		<button class="btn btn-sm" data-bind="click: updateClientBuild">
+			Web Build:
+			<span data-bind="text: currentClientBuild"></span>
+		</button>
+	</div>
 </div>
 
 <div data-bind="foreach: hosts" class="host">
 
-   <div class="host-header">
-      <div class="host-info">
-         <div class="host-alarms" data-bind="click: toggleAlarm, visible: nagios() != null">
-            <i class="fa fw fa-bell-o" data-bind="visible: nagios() == true" style="color: green;"></i>
-            <i class="fa fw fa-bell-slash-o" data-bind="visible: nagios() == false" style="color: red;"></i>
-         </div>
-         <div class="host-name">
-            <i class="fa fa-server"></i>
-            <span data-bind="text: hostname"></span>
-         </div>
-         <div class="metric">
-            <div class="chart-wrap">
-               <div class="chart" data-bind="attr: {id: 'host-chart-load-' + hostname}"></div>
-               <div class="chart-val">
-                  <i class="fa fa-fire"></i>
-                  <span data-bind="text: 'Load: ' + load()"></span>
-               </div>
-            </div>
-         </div>
-         <div class="metric">
-            <div class="chart-wrap">
-               <div class="chart" data-bind="attr: {id: 'host-chart-disk-' + hostname}"></div>
-               <div class="chart-val">
-                  <i class="fa fa-database"></i>
-                  <span data-bind="text: 'Disk: ' + diskLabel()"></span>
-               </div>
-            </div>
-         </div>
-      </div>
-   </div>
+	<div class="host-header">
+		<div class="host-info">
+			<div class="host-alarms" data-bind="click: toggleAlarm, visible: nagios() != null">
+				<i class="fa fw fa-bell-o" data-bind="visible: nagios() == true" style="color: green;"></i> <i class="fa fw fa-bell-slash-o"
+					data-bind="visible: nagios() == false" style="color: red;"></i>
+			</div>
+			<div class="host-name">
+				<i class="fa fa-server"></i>
+				<span data-bind="text: hostname"></span>
+			</div>
+			<div class="metric">
+				<div class="chart-wrap">
+					<div class="chart" data-bind="attr: {id: 'host-chart-load-' + hostname}"></div>
+					<div class="chart-val">
+						<i class="fa fa-fire"></i>
+						<span data-bind="text: 'Load: ' + load()"></span>
+					</div>
+				</div>
+			</div>
+			<div class="metric">
+				<div class="chart-wrap">
+					<div class="chart" data-bind="attr: {id: 'host-chart-disk-' + hostname}"></div>
+					<div class="chart-val">
+						<i class="fa fa-database"></i>
+						<span data-bind="text: 'Disk: ' + diskLabel()"></span>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
 
-   <!-- ko if: services().length > 0 -->
-   <div id="cluster-table">
-      <table class="table table-bordered table-condensed">
-         <thead>
-            <tr>
-               <th>
-                  <div>
-                     <div class="dropdown">
-                        <a class="dropdown-toggle" data-toggle="dropdown" style="color: white" href="#">
-                           <i class="fa fa-gear fa-fw"></i>
-                           <i class="fa fa-caret-down"></i>
-                        </a>
-                        <ul class="dropdown-menu dropdown-service">
-                           <li>
-                              <a href="#" data-bind="click: onClearAllErrors">Clear All Errors</a>
-                              <a href="#" data-bind="click: upgradeHost">Upgrade Host...</a>
-                           </li>
-                        </ul>
-                     </div>
-                  </div>
-               </th>
-               <th>Name</th>
-               <th>Entity</th>
-               <th>Build</th>
-               <th>Status</th>
-               <th>Latency</th>
-               <th>RPS</th>
-               <th>MPS</th>
-               <th>Counter</th>
-            </tr>
-         </thead>
-         <tbody data-bind="foreach: services">
-            <tr data-bind='attr: {"class": row_style}'>
-               <td width="48" class="centered">
+	<!-- ko if: services().length > 0 -->
+	<div id="cluster-table">
+		<table class="table table-bordered table-condensed">
+			<thead>
+				<tr>
+					<th>
+						<div>
+							<div class="dropdown">
+								<a class="dropdown-toggle" data-toggle="dropdown" style="color: white" href="#">
+									<i class="fa fa-gear fa-fw"></i> <i class="fa fa-caret-down"></i>
+								</a>
+								<ul class="dropdown-menu dropdown-service">
+									<li>
+										<a href="#" data-bind="click: onClearAllErrors">Clear All Errors</a>
+										<a href="#" data-bind="click: upgradeHost">Upgrade Host...</a>
+									</li>
+								</ul>
+							</div>
+						</div>
+					</th>
+					<th>Name</th>
+					<th>Entity</th>
+					<th>Build</th>
+					<th>Status</th>
+					<th>Latency</th>
+					<th>RPS</th>
+					<th>MPS</th>
+					<th>Counter</th>
+				</tr>
+			</thead>
+			<tbody data-bind="foreach: services">
+				<tr data-bind='attr: {"class": row_style}'>
+					<td width="48" class="centered">
 
-                  <!-- ko if: requestStats().length > 0 -->
-                  <div class="modal fade" data-bind="attr: {id: 'request-stats-' + entityId}">
-                     <div class="modal-dialog request-stats-dialog">
-                        <div class="modal-content">
-                           <div class="modal-header">
-                              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                 <span aria-hidden="true">&times;</span>
-                              </button>
-                              <h4 class="modal-title">
-                                 <span data-bind="text: name"></span>
-                                 <span data-bind="text: entityId"></span>
-                                 over last
-                                 <span data-bind="text: requestStatsTimeRange"></span>
-                              </h4>
-                           </div>
-                           <div class="modal-body">
-                              <select title="domains" data-bind="options: requestStatsDomains , value: requestStatsDomain">
-                              </select>
+						<!-- ko if: requestStats().length > 0 -->
+						<div class="modal fade" data-bind="attr: {id: 'request-stats-' + entityId}">
+							<div class="modal-dialog request-stats-dialog">
+								<div class="modal-content">
+									<div class="modal-header">
+										<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+											<span aria-hidden="true">&times;</span>
+										</button>
+										<h4 class="modal-title">
+											<span data-bind="text: name"></span>
+											<span data-bind="text: entityId"></span>
+											over last
+											<span data-bind="text: requestStatsTimeRange"></span>
+										</h4>
+									</div>
+									<div class="modal-body">
+										<select title="domains" data-bind="options: requestStatsDomains , value: requestStatsDomain">
+										</select>
 
 
-                              <div class="service-histogram-wrap">
-                                 <div class="service-histogram" data-bind="attr: {id: 'service-stat-histogram-' + entityId}"></div>
-                              </div>
+										<div class="service-histogram-wrap">
+											<div class="service-histogram" data-bind="attr: {id: 'service-stat-histogram-' + entityId}"></div>
+										</div>
 
-                              <table class="table table-bordered table-condensed request-stats">
-                                 <tr>
-                                    <th data-bind="click: function(){reqSort(4)}">
-                                       Request
-                                       <i class="fa fa-fw" data-bind="css: {'fa-caret-down' : reqSort() == 4}"></i>
-                                    </th>
-                                    <th data-bind="click: function(){reqSort(1)}">
-                                       Invocations
-                                       <i class="fa fa-fw" data-bind="css: {'fa-caret-down' : reqSort() == 1}"></i>
-                                    </th>
-                                    <th data-bind="click: function(){reqSort(2)}">
-                                       Total (ms)
-                                       <i class="fa fa-fw" data-bind="css: {'fa-caret-down' : reqSort() == 2}"></i>
-                                    </th>
-                                    <th data-bind="click: function(){reqSort(3)}">
-                                       Avg (ms)
-                                       <i class="fa fa-fw" data-bind="css: {'fa-caret-down' : reqSort() == 3}"></i>
-                                    </th>
-                                    <th data-bind="click: function(){reqSort(4)}">
-                                       Errors
-                                       <i class="fa fa-fw" data-bind="css: {'fa-caret-down' : reqSort() == 4}"></i>
-                                    </th>
-                                 </tr>
-                                 <tbody data-bind="foreach: requestStats">
-                                    <tr>
-                                       <td align="right">
-                                          <div class="cell-label">
-                                             <a data-bind="text: name, attr: { 'title' : name }, click: statClicked"></a>
-                                          </div>
-                                       </td>
-                                       <td align="right">
-                                          <div class="cell-label">
-                                             <span data-bind="text: count"></span>
-                                             <meter data-bind="attr: {'value' : countPercent }"></meter>
-                                          </div>
-                                       </td>
-                                       <td align="right">
-                                          <div class="cell-label">
-                                             <span data-bind="text: totalTime"></span>
-                                             <meter data-bind="attr: {'value' : totalTimePercent }"></meter>
-                                          </div>
-                                       </td>
-                                       <td align="right">
-                                          <div class="cell-label">
-                                             <span data-bind="text: avgTime.toFixed(1)"></span>
-                                             <meter data-bind="attr: {'value' : avgTimePercent }"></meter>
-                                          </div>
-                                       </td>
-                                       <td align="right">
-                                          <div class="cell-label">
-                                             <span data-bind="text: (errorRate.toFixed(1) *100) +'%'"></span>
-                                             <meter data-bind="attr: {'value' : errorRate }"></meter>
-                                          </div>
-                                       </td>
-                                    </tr>
-                                 </tbody>
-                              </table>
+										<table class="table table-bordered table-condensed request-stats">
+											<tr>
+												<th data-bind="click: function(){reqSort(4)}">
+													Request <i class="fa fa-fw" data-bind="css: {'fa-caret-down' : reqSort() == 4}"></i>
+												</th>
+												<th data-bind="click: function(){reqSort(1)}">
+													Invocations <i class="fa fa-fw" data-bind="css: {'fa-caret-down' : reqSort() == 1}"></i>
+												</th>
+												<th data-bind="click: function(){reqSort(2)}">
+													Total (ms) <i class="fa fa-fw" data-bind="css: {'fa-caret-down' : reqSort() == 2}"></i>
+												</th>
+												<th data-bind="click: function(){reqSort(3)}">
+													Avg (ms) <i class="fa fa-fw" data-bind="css: {'fa-caret-down' : reqSort() == 3}"></i>
+												</th>
+												<th data-bind="click: function(){reqSort(4)}">
+													Errors <i class="fa fa-fw" data-bind="css: {'fa-caret-down' : reqSort() == 4}"></i>
+												</th>
+											</tr>
+											<tbody data-bind="foreach: requestStats">
+												<tr>
+													<td align="right">
+														<div class="cell-label">
+															<a data-bind="text: name, attr: { 'title' : name }, click: statClicked"></a>
+														</div>
+													</td>
+													<td align="right">
+														<div class="cell-label">
+															<span data-bind="text: count"></span>
+															<meter data-bind="attr: {'value' : countPercent }"></meter>
+														</div>
+													</td>
+													<td align="right">
+														<div class="cell-label">
+															<span data-bind="text: totalTime"></span>
+															<meter data-bind="attr: {'value' : totalTimePercent }"></meter>
+														</div>
+													</td>
+													<td align="right">
+														<div class="cell-label">
+															<span data-bind="text: avgTime.toFixed(1)"></span>
+															<meter data-bind="attr: {'value' : avgTimePercent }"></meter>
+														</div>
+													</td>
+													<td align="right">
+														<div class="cell-label">
+															<span data-bind="text: (errorRate.toFixed(1) *100) +'%'"></span>
+															<meter data-bind="attr: {'value' : errorRate }"></meter>
+														</div>
+													</td>
+												</tr>
+											</tbody>
+										</table>
 
-                              <!-- ko if: rpcStat() != null -->
-                              <div class="rpc-selected-stat">
-                                 <h4 data-bind="text: rpcStat().name"></h4>
-                                 <table class="table table-condensed">
-                                    <tr class="stats-column">
-                                       <td class="stats-column">
-                                          <span>Top Results</span>
-                                          <table class="table table-bordered table-condensed request-stats">
-                                             <tr>
-                                                <th>Result Code</th>
-                                                <th>Count</th>
-                                             </tr>
-                                             <tbody data-bind="foreach: { data: rpcStat().errors, as: 'err' }">
-                                                <tr>
-                                                   <td align="right">
-                                                      <div class="cell-label">
-                                                         <span data-bind="text:  err.id"></span>
-                                                      </div>
-                                                   </td>
-                                                   <td align="right">
-                                                      <div class="cell-label">
-                                                         <span data-bind="text: err.count"></span>
-                                                         <!-- <meter data-bind="attr: {'value' : countPercent }"></meter> -->
-                                                      </div>
-                                                   </td>
-                                                </tr>
-                                             </tbody>
-                                          </table>
-                                       </td>
+										<!-- ko if: rpcStat() != null -->
+										<div class="rpc-selected-stat">
+											<h4 data-bind="text: rpcStat().name"></h4>
+											<table class="table table-condensed">
+												<tr class="stats-column">
+													<td class="stats-column">
+														<span>Top Results</span>
+														<table class="table table-bordered table-condensed request-stats">
+															<tr>
+																<th>Result Code</th>
+																<th>Count</th>
+															</tr>
+															<tbody data-bind="foreach: { data: rpcStat().errors, as: 'err' }">
+																<tr>
+																	<td align="right">
+																		<div class="cell-label">
+																			<span data-bind="text:  err.id"></span>
+																		</div>
+																	</td>
+																	<td align="right">
+																		<div class="cell-label">
+																			<span data-bind="text: err.count"></span>
+																			<!-- <meter data-bind="attr: {'value' : countPercent }"></meter> -->
+																		</div>
+																	</td>
+																</tr>
+															</tbody>
+														</table>
+													</td>
 
-                                       <td class="stats-column">
-                                          <span>Top Callers</span>
-                                          <table class="table table-bordered table-condensed request-stats">
-                                             <tr>
-                                                <th>Entity</th>
-                                                <th>Count</th>
-                                             </tr>
-                                             <tbody data-bind="foreach: { data: rpcStat().entities, as: 'e' }">
-                                                <tr>
-                                                   <td align="right">
-                                                      <div class="cell-label">
-                                                         <span data-bind="text: e.id"></span>
-                                                      </div>
-                                                   </td>
-                                                   <td align="right">
-                                                      <div class="cell-label">
-                                                         <span data-bind="text: e.count"></span>
-                                                         <!-- <meter data-bind="attr: {'value' : countPercent }"></meter> -->
-                                                      </div>
-                                                   </td>
-                                                </tr>
-                                             </tbody>
-                                          </table>
-                                       </td>
-                                    </tr>
-                                 </table>
-                              </div>
-                              <!-- /ko -->
+													<td class="stats-column">
+														<span>Top Callers</span>
+														<table class="table table-bordered table-condensed request-stats">
+															<tr>
+																<th>Entity</th>
+																<th>Count</th>
+															</tr>
+															<tbody data-bind="foreach: { data: rpcStat().entities, as: 'e' }">
+																<tr>
+																	<td align="right">
+																		<div class="cell-label">
+																			<span data-bind="text: e.id"></span>
+																		</div>
+																	</td>
+																	<td align="right">
+																		<div class="cell-label">
+																			<span data-bind="text: e.count"></span>
+																			<!-- <meter data-bind="attr: {'value' : countPercent }"></meter> -->
+																		</div>
+																	</td>
+																</tr>
+															</tbody>
+														</table>
+													</td>
+												</tr>
+											</table>
+										</div>
+										<!-- /ko -->
 
-                           </div>
-                        </div>
-                        <!-- /.modal-content -->
-                     </div>
-                     <!-- /.modal-dialog -->
-                  </div>
-                  <!-- /.modal -->
-                  <!-- /ko -->
+									</div>
+								</div>
+								<!-- /.modal-content -->
+							</div>
+							<!-- /.modal-dialog -->
+						</div>
+						<!-- /.modal -->
+						<!-- /ko -->
 
-                  <div class="dropdown" data-bind="attr: {id: 'dropdown-' + entityId}">
-                     <a class="dropdown-toggle" data-toggle="dropdown" href="#">
-                        <i class="fa fa-gear fa-fw"></i>
-                        <i class="fa fa-caret-down"></i>
-                     </a>
-                     <ul class="dropdown-menu dropdown-service">
-                        <li class="disabled">
-                           <a href="#" data-bind="text: name +' '+entityString()"></a>
-                        </li>
+						<div class="dropdown" data-bind="attr: {id: 'dropdown-' + entityId}">
+							<a class="dropdown-toggle" data-toggle="dropdown" href="#">
+								<i class="fa fa-gear fa-fw"></i> <i class="fa fa-caret-down"></i>
+							</a>
+							<ul class="dropdown-menu dropdown-service">
+								<li class="disabled">
+									<a href="#" data-bind="text: name +' '+entityString()"></a>
+								</li>
 
-                        <!-- ko foreach: commands -->
+								<!-- ko foreach: commands -->
+								<li>
+									<a href="#" data-bind="click: function() { $parent.execute($data) }, text: name"></a>
+								</li>
+								<!-- /ko -->
                         <li>
-                           <a href="#" data-bind="click: function() { $parent.execute($data) }, text: name"></a>
-                        </li>
-                        <!-- /ko -->
-
-                        <li class="divider"></li>
-                        <li>
-                           <a href="#" data-bind="click: setCommsLogLevel">Set Comms Log Level...</a>
-                        </li>
-                        <li>
-                           <a href="#" data-bind="click: pause, visible: canPause()">
-                              <i class="fa fa-pause fa-fw"></i>
-                              Pause
-                           </a>
-                        </li>
-                        <li>
-                           <a href="#" data-bind="click: purge, visible: canPause()">
-                              <i class="fa fa-user-times fa-fw"></i>
-                              Purge
-                           </a>
-                        </li>
-                        <li>
-                           <a href="#" data-bind="click: unpause, visible: canUnpause()">
-                              <i class="fa fa-play fa-fw"></i>
-                              Resume
+                           <a href="#" data-bind="click: debug">
+                              <i class="fa fa-bug fa-fw"></i> Debug
                            </a>
                         </li>
 
-                        <li class="divider" data-bind=" visible: !isGone()"></li>
+								<li class="divider"></li>
+								<li>
+									<a href="#" data-bind="click: setCommsLogLevel">Set Comms Log Level...</a>
+								</li>
+								<li>
+									<a href="#" data-bind="click: pause, visible: canPause()">
+										<i class="fa fa-pause fa-fw"></i> Pause
+									</a>
+								</li>
+								<li>
+									<a href="#" data-bind="click: purge, visible: canPause()">
+										<i class="fa fa-user-times fa-fw"></i> Purge
+									</a>
+								</li>
+								<li>
+									<a href="#" data-bind="click: unpause, visible: canUnpause()">
+										<i class="fa fa-play fa-fw"></i> Resume
+									</a>
+								</li>
 
-                        <li>
-                           <a href="#" data-bind="click: restart, visible: !isGone()">
-                              <i class="fa fa-refresh fa-fw"></i>
-                              Restart
-                           </a>
-                        </li>
+								<li class="divider" data-bind=" visible: !isGone()"></li>
 
-                        <li>
-                           <a href="#" data-bind="click: shutdown, visible: !isGone()">
-                              <i class="fa fa-power-off fa-fw"></i>
-                              Shutdown
-                           </a>
-                        </li>
-                        <li>
-                           <a href="#" data-bind="click: deleteService, visible: isGone()">
-                              <i class="fa fa-trash-o fa-fw"></i>
-                              Delete
-                           </a>
-                        </li>
+								<li>
+									<a href="#" data-bind="click: restart, visible: !isGone()">
+										<i class="fa fa-refresh fa-fw"></i> Restart
+									</a>
+								</li>
 
-                     </ul>
-                  </div>
-               <td>
-                  <img data-bind="attr:{src: iconURL().indexOf('fa-')==0 ? '/admin/media/lizard.png' : iconURL()}, visible: iconURL().indexOf('fa-') != 0" class="service-icon">
-                  <i class="service-fa fa fa-fw" data-bind="css:iconURL, visible: iconURL().indexOf('fa-') == 0"></i>
-                  <span class="service-name" data-bind="text: name"></span>
-               </td>
-               <td class="centered" style="cursor: pointer;">
-                  <i class="fa fa-warning fa-fw" style="float: left; color: orange" data-bind="visible: hasWarningsOnly(), click: showErrors"></i>
-                  <i class="fa fa-exclamation-circle fa-fw" style="float: left; color: red" data-bind="visible: hasErrors(), click: showErrors"></i>
-                  <i class="fa fa-exclamation-circle fa-fw" style="float: left; visibility: hidden" data-bind="visible: !hasErrorsOrWarnings(), click: showErrors"></i>
-                  <i class="fa fa-remove fa-fw clear-errors-btn" data-bind="visible: hasErrorsOrWarnings(), click: clearErrors"></i>
-                  <i class="fa fa-fw clear-errors-btn" data-bind="visible: !hasErrorsOrWarnings()">&nbsp;</i>
-                  <a data-bind="text: entityString, click: showLogs"></a>
-                  <i class="fa fa-area-chart fa-fw" style="float: right; color: #aaa" data-bind="visible: !isGone(), click: showRequestStats"></i>
-               </td>
-               <td class="centered">
-                  <span data-bind="text: build"></span>
-               </td>
-               <td data-bind="attr: {'class':status_style}">
-                  <span data-bind="text: statusName()"></span>
-               </td>
-               <td class="service-chart-wrap">
-                  <div class="service-chart" data-bind="attr: {id: 'service-chart-latency-' + entityId}"></div>
-                  <span class="service-chart-val" data-bind="text: latency"></span>
-               </td>
-               <td class="service-chart-wrap" data-bind="click: showRequestStats">
-                  <div class="service-chart" data-bind="attr: {id: 'service-chart-rps-' + entityId}"></div>
-                  <span class="service-chart-val" data-bind="text: rps"></span>
-               </td>
-               <td class="service-chart-wrap">
-                  <div class="service-chart" data-bind="attr: {id: 'service-chart-mps-' + entityId}"></div>
-                  <span class="service-chart-val" data-bind="text: mps"></span>
-               </td>
-               <td class="service-chart-wrap">
-                  <div class="service-chart" data-bind="attr: {id: 'service-chart-counter-' + entityId}"></div>
-                  <span class="service-chart-val" data-bind="text: counter"></span>
-               </td>
-            </tr>
+								<li>
+									<a href="#" data-bind="click: shutdown, visible: !isGone()">
+										<i class="fa fa-power-off fa-fw"></i> Shutdown
+									</a>
+								</li>
+								<li>
+									<a href="#" data-bind="click: deleteService, visible: isGone()">
+										<i class="fa fa-trash-o fa-fw"></i> Delete
+									</a>
+								</li>
 
-            <tr data-bind='visible: expanded'>
-               <td></td>
-               <td colspan="9" data-bind="attr: {id: 'service-details-' + entityId}">
-                  <div class="service-details">
-                     <div class="service-logs" data-bind="attr: {id: 'service-logs-' + entityId}">
-                        <ul data-bind="foreach: logs">
-                           <li data-bind="attr: {'class':levelStyle}">
-                              <span data-bind="text: timestamp"></span>
-                              <span data-bind="text: thread"></span>
-                              <span data-bind="text: logger"></span>
-                              <span class="service-logs-msg" data-bind="text: msg"></span>
-                           </li>
-                        </ul>
-                     </div>
-                     <div class="service-details-footer" align="right">
-                        <div class="service-metrics">
-                           <span class="stat">
-                              <label>Memory Usage:</label>
-                              <span data-bind="text: memory"></span>
-                              %
-                           </span>
-                           <span class="stat">
-                              <label>Thread Count:</label>
-                              <span data-bind="text: threads"></span>
-                           </span>
-                           <span class="stat">
+							</ul>
+						</div>
+					<td>
+						<img
+							data-bind="attr:{src: iconURL().indexOf('fa-')==0 ? '/admin/media/lizard.png' : iconURL()}, visible: iconURL().indexOf('fa-') != 0"
+							class="service-icon">
+						<i class="service-fa fa fa-fw" data-bind="css:iconURL, visible: iconURL().indexOf('fa-') == 0"></i>
+						<span class="service-name" data-bind="text: name"></span>
+					</td>
+					<td class="centered" style="cursor: pointer;">
+						<i class="fa fa-warning fa-fw" style="float: left; color: orange"
+							data-bind="visible: hasWarningsOnly(), click: showErrors"></i> <i class="fa fa-exclamation-circle fa-fw"
+							style="float: left; color: red" data-bind="visible: hasErrors(), click: showErrors"></i> <i
+							class="fa fa-exclamation-circle fa-fw" style="float: left; visibility: hidden"
+							data-bind="visible: !hasErrorsOrWarnings(), click: showErrors"></i> <i class="fa fa-remove fa-fw clear-errors-btn"
+							data-bind="visible: hasErrorsOrWarnings(), click: clearErrors"></i> <i class="fa fa-fw clear-errors-btn"
+							data-bind="visible: !hasErrorsOrWarnings()">&nbsp;</i>
+						<a data-bind="text: entityString, click: showLogs"></a>
+						<i class="fa fa-area-chart fa-fw" style="float: right; color: #aaa"
+							data-bind="visible: !isGone(), click: showRequestStats"></i>
+					</td>
+					<td class="centered">
+						<span data-bind="text: build"></span>
+					</td>
+					<td data-bind="attr: {'class':status_style}">
+						<span data-bind="text: statusName()"></span>
+					</td>
+					<td class="service-chart-wrap">
+						<div class="service-chart" data-bind="attr: {id: 'service-chart-latency-' + entityId}"></div>
+						<span class="service-chart-val" data-bind="text: latency"></span>
+					</td>
+					<td class="service-chart-wrap" data-bind="click: showRequestStats">
+						<div class="service-chart" data-bind="attr: {id: 'service-chart-rps-' + entityId}"></div>
+						<span class="service-chart-val" data-bind="text: rps"></span>
+					</td>
+					<td class="service-chart-wrap">
+						<div class="service-chart" data-bind="attr: {id: 'service-chart-mps-' + entityId}"></div>
+						<span class="service-chart-val" data-bind="text: mps"></span>
+					</td>
+					<td class="service-chart-wrap">
+						<div class="service-chart" data-bind="attr: {id: 'service-chart-counter-' + entityId}"></div>
+						<span class="service-chart-val" data-bind="text: counter"></span>
+					</td>
+				</tr>
 
-                              <label>Log Level:</label>
-                              <select data-bind="options:     logLevels,
+				<tr data-bind='visible: expanded'>
+					<td></td>
+					<td colspan="9" data-bind="attr: {id: 'service-details-' + entityId}">
+						<div class="service-details">
+							<div class="service-logs" data-bind="attr: {id: 'service-logs-' + entityId}">
+								<ul data-bind="foreach: logs">
+									<li data-bind="attr: {'class':levelStyle}">
+										<span data-bind="text: timestamp"></span>
+										<span data-bind="text: thread"></span>
+										<span data-bind="text: logger"></span>
+										<span class="service-logs-msg" data-bind="text: msg"></span>
+									</li>
+								</ul>
+							</div>
+							<div class="service-details-footer" align="right">
+								<div class="service-metrics">
+									<span class="stat">
+										<label>Memory Usage:</label>
+										<span data-bind="text: memory"></span>
+										%
+									</span>
+									<span class="stat">
+										<label>Thread Count:</label>
+										<span data-bind="text: threads"></span>
+									</span>
+									<span class="stat">
+
+										<label>Log Level:</label>
+										<select
+											data-bind="options:     logLevels,
                                               optionsText: function(item) { return getLogLevelStyle(item);  },
                                                    value: logLevel,"></select>
-                           </span>
+									</span>
 
-                           <span class="stat">
-                              <label> <input type="checkbox" data-bind="checked: autoScrollLogs" name="Auto Scroll" /> Auto Scroll
-                              </label>
-                           </span>
-                        </div>
+									<span class="stat">
+										<label> <input type="checkbox" data-bind="checked: autoScrollLogs" name="Auto Scroll" /> Auto Scroll
+										</label>
+									</span>
+								</div>
 
-                     </div>
-                  </div>
-               </td>
-            </tr>
+							</div>
+						</div>
+					</td>
+				</tr>
 
-         </tbody>
-      </table>
+			</tbody>
+		</table>
 
-   </div>
-   <!-- /ko -->
+	</div>
+	<!-- /ko -->
 
 
 </div>
