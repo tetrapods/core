@@ -85,9 +85,7 @@ public class LoginAuthToken {
    }
    public static DecodedSession decodeSessionToken(String token, int accountId, int entityId) {
       int[] vals = AuthToken.decode(MAC_SESSION, token, 5);
-//      if (vals == null || vals.length == 0 || vals[2] != accountId || vals[3] != entityId) {
-      // commenting this out for now, not sure if want to check the entity id, it is certainly causing an issue checking it
-      if (vals == null || vals.length == 0 || vals[2] != accountId) {
+      if (vals == null || vals.length == 0 || vals[2] != accountId || vals[3] != entityId) {
          return null;
       }
       DecodedSession d = new DecodedSession();
