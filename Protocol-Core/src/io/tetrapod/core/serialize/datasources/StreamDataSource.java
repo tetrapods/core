@@ -6,7 +6,7 @@ import io.tetrapod.core.rpc.Flags_long;
 import io.tetrapod.core.rpc.Enum_int;
 import io.tetrapod.core.rpc.Structure;
 import io.tetrapod.core.serialize.*;
-
+                      
 import java.io.IOException;
 import java.lang.reflect.Array;
 import java.lang.reflect.Method;
@@ -555,6 +555,58 @@ abstract public class StreamDataSource implements DataSource {
       }
       writeVarInt(temp.rawCount());
       writeRawBytes(temp.rawBuffer(), 0, temp.rawCount());
+   }
+
+   @Override
+   public void write_enum_list(int tag, List array) throws IOException {
+      writeTag(tag, TYPE_LENGTH_DELIM);
+      TempBufferDataSource temp = getTempBuffer();
+      if (array == null) {
+         array = Collections.EMPTY_LIST;
+      }
+      temp.writeVarInt(array.size());
+      if (array.size() > 0) {
+         Object e0 = array.get(0);
+         for (Object o : array) {
+            if (e0 instanceof Enum_int) {
+               temp.writeVarInt(((Enum_int) o).getValue());
+            } else if (e0 instanceof Enum_String) {
+               temp.writeStringNoTag(((Enum_String) o).getValue());
+            }
+         }
+      }
+      writeVarInt(temp.rawCount());
+      writeRawBytes(temp.rawBuffer(), 0, temp.rawCount());
+   }
+
+   @Override
+   @SuppressWarnings("unchecked")
+   public <T extends Enum> List<T> read_enum_list(int tag, Class<T> c) throws IOException {
+      readVarInt(); // byte length
+      int len = readVarInt();
+      List<T> array = new ArrayList<>();
+      try {
+         Method m;
+         if (c.isAssignableFrom(Enum_int.class)) {
+            m = c.getMethod("from", int.class);
+            for (int i = 0; i < len; i++) {
+               array.add((T) m.invoke(null, readVarInt()));
+            }
+         } else if (c.isAssignableFrom(Enum_int.class)) {
+            m = c.getMethod("from", String.class);
+            for (int i = 0; i < len; i++) {
+               String s = read_string(0);
+               if (s != null) {
+                  array.add((T) m.invoke(null, s));
+               }
+            }
+         } else {
+            throw new IOException("Unknown enum type");
+         }
+      } catch (Exception e) {
+         throw new IOException(e);
+      }
+      return array;
    }
 
    @Override

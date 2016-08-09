@@ -311,6 +311,7 @@ internal struct WebRoute
    1: string path
    2: int structId
    3: int contractId
+   4: int subContractId
 
 internal struct TypeDescriptor
    1: byte type

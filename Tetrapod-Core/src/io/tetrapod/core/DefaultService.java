@@ -1091,4 +1091,26 @@ public class DefaultService
       addPeerContracts(subService.getContract());
    }
 
+   /**
+    * Designed to wrap a unit of work in a lambda that returns a Task<Response> and in return sends an Async response, then
+    * fulfills that response when its complete.  This facilitates the ability to do a com.ea.async.Await(method) on other tasks
+    * since those require that the method they are called from returns a task.
+    *
+    * @param ctx  The RequestContext for the current call
+    * @param taskResponse The task response, typically expressed as a lambda
+    * @return The response to return from the service method.
+    */
+   public Response doAsync(RequestContext ctx, TaskResponse taskResponse) {
+      return taskResponse.doTask().toResponse(ctx);
+   }
+
+   @FunctionalInterface
+   public interface TaskResponse<T extends Response> {
+
+      /**
+       * This should be a unit of work that returns a Task<T extends Response>.
+       * @return  The Task that contains the response of the service method
+       */
+      Task<T> doTask();
+   }
 }

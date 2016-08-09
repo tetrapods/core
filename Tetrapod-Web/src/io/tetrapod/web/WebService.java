@@ -74,11 +74,12 @@ public class WebService extends DefaultService
       logger.info(" ***** READY TO SERVE ***** ");
       try {
          if (isStartingUp()) {
-            servers.add(new Server(Util.getProperty("tetrapod.http.port", DEFAULT_HTTP_PORT), (ch) -> makeWebSession(ch), dispatcher));
+            servers.add(new Server(Util.getProperty("tetrapod.http.port", DEFAULT_HTTP_PORT), (ch) -> makeWebSession(ch, Util.isLocal()),
+                  dispatcher));
             // create secure port servers, if configured
             if (sslContext != null) {
-               servers.add(new Server(Util.getProperty("tetrapod.https.port", DEFAULT_HTTPS_PORT), (ch) -> makeWebSession(ch), dispatcher,
-                     sslContext, false));
+               servers.add(new Server(Util.getProperty("tetrapod.https.port", DEFAULT_HTTPS_PORT), (ch) -> makeWebSession(ch, true),
+                     dispatcher, sslContext, false));
             }
             scheduleHealthCheck();
 
@@ -158,8 +159,8 @@ public class WebService extends DefaultService
             CloseClientConnectionRequest.STRUCT_ID, true), };
    }
 
-   public Session makeWebSession(SocketChannel ch) {
-      final WebHttpSession ses = new WebHttpSession(ch, this, webInstaller.getWebRoots(), "/sockets");
+   public Session makeWebSession(SocketChannel ch, boolean allowWebSockets) {
+      final WebHttpSession ses = new WebHttpSession(ch, this, webInstaller.getWebRoots(), allowWebSockets ? "/sockets" : null);
       ses.setRelayHandler(this);
       ses.setMyEntityId(getEntityId());
       ses.setMyEntityType(Core.TYPE_SERVICE);
@@ -461,11 +462,11 @@ public class WebService extends DefaultService
       // reg the web routes
       if (m.info.routes != null) {
          for (WebRoute r : m.info.routes) {
-            webRoutes.setRoute(r.path, r.contractId, r.structId);
-            logger.debug("Setting Web route [{}] for {}", r.path, r.contractId);
+            webRoutes.setRoute(r.path, r.contractId, r.subContractId, r.structId);
+            logger.debug("Setting Web route [{}] for {} {}", r.path, r.contractId, r.subContractId);
          }
       }
-      webRoutes.clear(m.info.contractId, m.info.routes);
+      webRoutes.clear(m.info.contractId, m.info.subContractId, m.info.routes);
    }
 
    //////////////////////////////////////////////////////////////////////////////////////////

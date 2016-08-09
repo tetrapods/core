@@ -16,16 +16,16 @@ public class LegacyAuthToken {
    }
 
    public synchronized static int decodePublic(String token) {
-      int[] vals = new int[4];
-      if (!AuthToken.decode(MAC_LEGACY, vals, 4, token)) {
+      int[] vals = AuthToken.decode(MAC_LEGACY, token, 4);
+      if (vals == null || vals.length == 0) {
          return 0;
       }
       return vals[2];
    }
    
    public synchronized static int decodeTwitter(String token) {
-      int[] vals = new int[5];
-      if (!AuthToken.decode(MAC_LEGACY, vals, 5, token)) {
+      int[] vals = AuthToken.decode(MAC_LEGACY, token, 5);
+      if (vals == null || vals.length == 0) {
          return 0;
       }
       return vals[1];
