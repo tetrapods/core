@@ -470,6 +470,7 @@ public class TetrapodService extends DefaultService
    public void subscribeToCluster(Session ses, int toEntityId, int toChildId) {
       if (ses.getTheirEntityType() == Core.TYPE_SERVICE) {
          // also auto-subscribe to services topic
+         logger.info("Subscribing {} to services topic-{}", toEntityId, servicesTopic.topicId);
          synchronized (servicesTopic) {
             subscribe(servicesTopic.topicId, toEntityId, toChildId);
             for (EntityInfo e : registry.getServices()) {
