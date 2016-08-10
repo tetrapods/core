@@ -15,6 +15,8 @@ import javax.naming.directory.*;
 import javax.net.ssl.*;
 import javax.xml.bind.DatatypeConverter;
 
+import io.netty.handler.codec.http.Cookie;
+import io.netty.handler.codec.http.CookieDecoder;
 import io.tetrapod.core.ServiceException;
 import io.tetrapod.core.json.*;
 import io.tetrapod.core.rpc.ErrorResponseException;
@@ -762,6 +764,45 @@ public class Util {
       }
       return false;
    }
+
+
+   @SuppressWarnings("deprecation")
+   public static List<Integer> getAccountIdsFromCookiesAndParams(String headers, String params) {
+      List<String> auths = new ArrayList<>();
+      if (params != null) {
+         JSONObject paramObj = new JSONObject(params);
+         String auth = paramObj.optString("auth", null);
+         if (auth != null) {
+            auths.add(auth);
+         }
+      }
+
+      if (headers !=null) {
+         JSONObject jo = new JSONObject(headers);
+         String cookie = jo.optString("Cookie", "");
+         Set<Cookie> cookies = CookieDecoder.decode(cookie);
+         for (Cookie c : cookies) {
+            if (c.getName().equals("auth") || c.getName().equals("zdauth")) {
+               try {
+                  String auth = URLDecoder.decode(c.getValue(), "UTF-8");
+                  auth = auth.substring(auth.lastIndexOf(';') + 1);
+                  auths.add(auth);
+               } catch (UnsupportedEncodingException e) {}
+            }
+         }
+      }
+
+
+      ArrayList<Integer> ids = new ArrayList<>();
+      for (String authToken : auths) {
+         LoginAuthToken.DecodedLogin decode = LoginAuthToken.decodeLoginToken(authToken);
+         if (decode != null && decode.timeLeft > 0) {
+            ids.add(decode.accountId);
+         }
+      }
+      return ids;
+   }
+
 
    public interface ValueMaker<K, V> {
       public V make();

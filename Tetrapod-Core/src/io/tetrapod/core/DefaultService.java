@@ -1063,6 +1063,12 @@ public class DefaultService
    }
 
    @Override
+   public Response requestDebug(DebugRequest r, RequestContext ctx) {
+      services.dump();
+      return Response.SUCCESS;
+   }
+
+   @Override
    public Response requestHostInfo(HostInfoRequest r, RequestContext ctx) {
       return new HostInfoResponse(Util.getHostName(), (byte) Metrics.getNumCores(), null);
    }
@@ -1092,15 +1098,15 @@ public class DefaultService
    }
 
    /**
-    * Designed to wrap a unit of work in a lambda that returns a Task<Response> and in return sends an Async response, then
-    * fulfills that response when its complete.  This facilitates the ability to do a com.ea.async.Await(method) on other tasks
-    * since those require that the method they are called from returns a task.
+    * Designed to wrap a unit of work in a lambda that returns a Task<Response> and in return sends an Async response, then fulfills that
+    * response when its complete. This facilitates the ability to do a com.ea.async.Await(method) on other tasks since those require that
+    * the method they are called from returns a task.
     *
-    * @param ctx  The RequestContext for the current call
+    * @param ctx The RequestContext for the current call
     * @param taskResponse The task response, typically expressed as a lambda
     * @return The response to return from the service method.
     */
-   public Response doAsync(RequestContext ctx, TaskResponse taskResponse) {
+   public Response doAsync(RequestContext ctx, TaskResponse<?> taskResponse) {
       return taskResponse.doTask().toResponse(ctx);
    }
 
@@ -1109,7 +1115,8 @@ public class DefaultService
 
       /**
        * This should be a unit of work that returns a Task<T extends Response>.
-       * @return  The Task that contains the response of the service method
+       * 
+       * @return The Task that contains the response of the service method
        */
       Task<T> doTask();
    }

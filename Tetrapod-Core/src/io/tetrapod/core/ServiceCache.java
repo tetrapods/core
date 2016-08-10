@@ -56,8 +56,8 @@ public class ServiceCache implements TetrapodContract.Services.API {
          }
       }
       logger.info("*** {}", m.dump());
-   } 
-   
+   }
+
    private void removeService(int entityId) {
       Entity e = services.remove(entityId);
       if (e != null) {
@@ -163,4 +163,15 @@ public class ServiceCache implements TetrapodContract.Services.API {
       services.clear();
       serviceLists.clear();
    }
+
+   public void dump() {
+      StringBuilder sb = new StringBuilder();
+      sb.append("\n******************** SERVICE CACHE ********************\n");
+      for (Entity e : services.values()) {
+         sb.append(String.format("\t %d %16s %8s\n", e.entityId, e.name, e.status));
+      }
+      sb.append("*******************************************************\n");
+      logger.info("{}", sb);
+   }
+
 }
