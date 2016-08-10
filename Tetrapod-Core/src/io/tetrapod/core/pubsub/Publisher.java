@@ -16,7 +16,7 @@ import io.tetrapod.protocol.core.*;
  * Manages the pub-sub layer for a service
  */
 public class Publisher implements TopicUnsubscribedMessage.Handler, TopicNotFoundMessage.Handler, TopicUnpublishedMessage.Handler,
-      SubscriberNotFoundMessage.Handler {
+      SubscriberNotFoundMessage.Handler, ServiceRemovedMessage.Handler {
    private static final Logger       logger       = LoggerFactory.getLogger(Publisher.class);
 
    private final DefaultService      service;
@@ -31,6 +31,7 @@ public class Publisher implements TopicUnsubscribedMessage.Handler, TopicNotFoun
       service.addMessageHandler(new TopicUnpublishedMessage(), this);
       service.addMessageHandler(new TopicNotFoundMessage(), this);
       service.addMessageHandler(new SubscriberNotFoundMessage(), this);
+      service.addMessageHandler(new ServiceRemovedMessage(), this);
    }
 
    public Topic publish() {
@@ -126,7 +127,7 @@ public class Publisher implements TopicUnsubscribedMessage.Handler, TopicNotFoun
    }
 
    /**
-    * Sent from a tetrapod when it receives a broadcast for a topic it doesn't currently track
+    * Sent from a parent when it receives a broadcast for a topic it doesn't currently track
     */
    @Override
    public void messageTopicNotFound(TopicNotFoundMessage m, MessageContext ctx) {
@@ -146,6 +147,16 @@ public class Publisher implements TopicUnsubscribedMessage.Handler, TopicNotFoun
    public void messageSubscriberNotFound(SubscriberNotFoundMessage m, MessageContext ctx) {
       if (m.publisherId == service.getEntityId()) {
          unsubscribe(m.topicId, m.entityId, m.childId);
+      }
+   }
+
+   /**
+    * If a service is deleted, immediately clear all subscriptions it had.
+    */
+   @Override
+   public void messageServiceRemoved(ServiceRemovedMessage m, MessageContext ctx) {
+      for (Topic t : topics.values()) {
+         t.clear(m.entityId);
       }
    }
 

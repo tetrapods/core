@@ -417,7 +417,14 @@ public class WebService extends DefaultService
       logger.debug("******* {} {}", ctx.header.dump(), m.dump());
       final ServiceTopic topic = topics.get(topicKey(m.publisherId, m.topicId));
       if (topic != null) {
-         topic.subscribe(m.childId, m.once);
+
+         final Session s = clients.get(m.childId);
+         if (s != null) {
+            topic.subscribe(m.childId, m.once);
+         } else {
+            sendMessage(new SubscriberNotFoundMessage(topic.ownerId, topic.topicId, m.entityId, m.childId), topic.ownerId, 0);
+         }
+
       } else {
          logger.info("Could not find publisher entity {}", ctx.header.fromId);
       }

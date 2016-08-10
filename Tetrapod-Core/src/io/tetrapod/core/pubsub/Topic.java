@@ -15,7 +15,7 @@ public class Topic {
    public final Publisher                       publisher;
    public final int                             topicId;
 
-   private final Map<Integer, Subscriber>       subscribers = new ConcurrentHashMap<>();
+   private final Map<Long, Subscriber>          subscribers = new ConcurrentHashMap<>();
    private final Map<Integer, ParentSubscriber> parents     = new ConcurrentHashMap<>();
    private final List<SubscriptionListener>     listeners   = new ArrayList<>();
 
@@ -28,7 +28,16 @@ public class Topic {
       this.topicId = topicId;
    }
 
-   public class Subscriber {
+   @Override
+   public String toString() {
+      return String.format("Topic-%d", topicId);
+   }
+   
+   public static long makeKey(int entityId, int childId) {
+      return ((long) entityId << 32) | childId;
+   }
+
+   public static class Subscriber {
       public final int entityId;
       public final int childId;
 
@@ -36,9 +45,13 @@ public class Topic {
          this.entityId = entityId;
          this.childId = childId;
       }
+
+      public long key() {
+         return makeKey(entityId, childId);
+      }
    }
 
-   public class ParentSubscriber extends Subscriber {
+   public static class ParentSubscriber extends Subscriber {
       public boolean init = false;
 
       public ParentSubscriber(int entityId) {
@@ -55,6 +68,22 @@ public class Topic {
       ParentSubscriber parent = parents.get(parentId);
       if (parent != null) {
          parent.init = false;
+      }
+   }
+
+   /**
+    * Delete a parent & all child subs
+    */
+   public void clear(int parentId) {
+      ParentSubscriber parent = parents.remove(parentId);
+      if (parent != null) {
+         logger.info("Clearing topic {} subscriptions for parent-{}", this, parentId);
+         for (Subscriber s : subscribers.values()) {
+            if (s.entityId == parentId) {
+               logger.info("Clearing topic {} subscriptions for child-{}", this, s.childId);
+               subscribers.remove(s.key());
+            }
+         }
       }
    }
 
@@ -79,10 +108,10 @@ public class Topic {
    }
 
    public synchronized void subscribe(int entityId, int childId, boolean once) {
-      Subscriber sub = subscribers.get(entityId);
+      Subscriber sub = subscribers.get(makeKey(entityId, childId));
       if (sub == null) {
-         sub = new Subscriber(entityId, 0);
-         subscribers.put(entityId, sub);
+         sub = new Subscriber(entityId, childId);
+         subscribers.put(sub.key(), sub);
       }
       final int parentId = entityId;
       ParentSubscriber parent = parents.get(parentId);
@@ -104,9 +133,10 @@ public class Topic {
    }
 
    public synchronized void unsubscribe(int entityId, int childId) {
-      Subscriber sub = subscribers.remove(entityId);
+      logger.info("unsubscribe {} {}", entityId, childId);
+      Subscriber sub = subscribers.remove(makeKey(entityId, childId));
       if (sub != null) {
-         final Subscriber parent = subscribers.get(entityId);
+         final Subscriber parent = parents.get(entityId);
          if (parent != null) {
             publisher.sendMessage(new TopicUnsubscribedMessage(publisher.getEntityId(), topicId, entityId, childId), parent.entityId, 0,
                   topicId);
