@@ -417,14 +417,16 @@ public class WebService extends DefaultService
       logger.debug("******* {} {}", ctx.header.dump(), m.dump());
       final ServiceTopic topic = topics.get(topicKey(m.publisherId, m.topicId));
       if (topic != null) {
-
-         final Session s = clients.get(m.childId);
-         if (s != null) {
-            topic.subscribe(m.childId, m.once);
+         if (m.childId != 0) {
+            final Session s = clients.get(m.childId);
+            if (s != null) {
+               topic.subscribe(m.childId, m.once);
+            } else {
+               sendMessage(new SubscriberNotFoundMessage(topic.ownerId, topic.topicId, m.entityId, m.childId), topic.ownerId, 0);
+            }
          } else {
-            sendMessage(new SubscriberNotFoundMessage(topic.ownerId, topic.topicId, m.entityId, m.childId), topic.ownerId, 0);
+            topic.subscribe(m.childId, m.once);
          }
-
       } else {
          logger.info("Could not find publisher entity {}", ctx.header.fromId);
       }
@@ -434,8 +436,8 @@ public class WebService extends DefaultService
    public void messageTopicUnsubscribed(final TopicUnsubscribedMessage m, MessageContext ctx) {
       logger.debug("******* {} {}", ctx.header.dump(), m.dump());
       final ServiceTopic topic = topics.get(topicKey(m.publisherId, m.topicId));
-      if (topic != null) {
-         if (topic.unsubscribe(entityId, true)) {
+      if (topic != null) {        
+         if (topic.unsubscribe(m.childId, true)) {
             final Session s = clients.get(m.childId);
             if (s != null) {
                s.sendMessage(new TopicUnsubscribedMessage(m.publisherId, topic.topicId, entityId, m.childId), entityId, m.childId);

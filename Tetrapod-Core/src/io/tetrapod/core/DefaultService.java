@@ -766,7 +766,7 @@ public class DefaultService
       }
    }
 
-   public boolean sendPrivateMessage(Message msg, int toEntityId, int toChildId, int topicId) {
+   public boolean sendPrivateMessage(Message msg, int toEntityId, int toChildId) {
       if (serviceConnector != null
             && (serviceConnector.hasService(toEntityId) || (services != null && services.isServiceExistant(toEntityId)))) {
          return serviceConnector.sendMessage(msg, toEntityId, toChildId);

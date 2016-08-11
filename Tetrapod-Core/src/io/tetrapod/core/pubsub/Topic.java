@@ -133,7 +133,7 @@ public class Topic {
    }
 
    public synchronized void unsubscribe(int entityId, int childId) {
-      logger.info("unsubscribe {} {}", entityId, childId);
+      logger.info("{} unsubscribe {} {}", this, entityId, childId);
       Subscriber sub = subscribers.remove(makeKey(entityId, childId));
       if (sub != null) {
          final Subscriber parent = parents.get(entityId);

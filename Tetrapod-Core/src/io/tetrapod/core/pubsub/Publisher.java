@@ -62,7 +62,7 @@ public class Publisher implements TopicUnsubscribedMessage.Handler, TopicNotFoun
    }
 
    public boolean sendMessage(Message msg, int toEntityId, int childId, int topicId) {
-      return service.sendPrivateMessage(msg, toEntityId, childId, topicId);
+      return service.sendPrivateMessage(msg, toEntityId, childId);
    }
 
    public void unpublish(int topicId) {
