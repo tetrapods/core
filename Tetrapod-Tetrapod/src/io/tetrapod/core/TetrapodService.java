@@ -470,8 +470,9 @@ public class TetrapodService extends DefaultService
    public void subscribeToCluster(Session ses, int toEntityId, int toChildId) {
       if (ses.getTheirEntityType() == Core.TYPE_SERVICE) {
          // also auto-subscribe to services topic
+         logger.info("Subscribing {} to services topic-{}", toEntityId, servicesTopic.topicId);
          synchronized (servicesTopic) {
-            subscribe(servicesTopic.topicId, toEntityId, toChildId);
+            servicesTopic.subscribe(toEntityId, toChildId, false); 
             for (EntityInfo e : registry.getServices()) {
                e.queue(() -> ses.sendMessage(new ServiceAddedMessage(e), toEntityId, toChildId));
             }
@@ -500,7 +501,7 @@ public class TetrapodService extends DefaultService
          subscribe(servicesTopic.topicId, toEntityId, toChildId);
          // send all current services 
          for (EntityInfo e : registry.getServices()) {
-            e.queue(() -> sendPrivateMessage(new ServiceAddedMessage(e), toEntityId, toChildId, servicesTopic.topicId));
+            e.queue(() -> sendPrivateMessage(new ServiceAddedMessage(e), toEntityId, toChildId));
          }
       }
    }
