@@ -77,10 +77,10 @@ public class Topic {
    public void clear(int parentId) {
       ParentSubscriber parent = parents.remove(parentId);
       if (parent != null) {
-         logger.info("Clearing topic {} subscriptions for parent-{}", this, parentId);
+         logger.debug("Clearing topic {} subscriptions for parent-{}", this, parentId);
          for (Subscriber s : subscribers.values()) {
             if (s.entityId == parentId) {
-               logger.info("Clearing topic {} subscriptions for child-{}", this, s.childId);
+               logger.debug("Clearing topic {} subscriptions for child-{}", this, s.childId);
                subscribers.remove(s.key());
             }
          }
@@ -133,7 +133,7 @@ public class Topic {
    }
 
    public synchronized void unsubscribe(int entityId, int childId) {
-      logger.info("{} unsubscribe {} {}", this, entityId, childId);
+      logger.debug("{} unsubscribe {} {}", this, entityId, childId);
       Subscriber sub = subscribers.remove(makeKey(entityId, childId));
       if (sub != null) {
          final Subscriber parent = parents.get(entityId);
