@@ -140,6 +140,7 @@ public class TetrapodContract extends Contract {
                   new GetServiceBuildInfoResponse(),
                   new RaftLeaderResponse(),
                   new RaftStatsResponse(),
+                  new AdminSubscribeResponse(),
                   new LockResponse(),
                   new ClaimOwnershipResponse(),
                   new NagiosStatusResponse(),

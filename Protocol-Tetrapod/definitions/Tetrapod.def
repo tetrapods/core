@@ -250,6 +250,10 @@ admin response RaftStats
 admin request AdminSubscribe @rights(Admin.RIGHTS_CLUSTER_READ)
    1: int accountId
    2: string authToken @sensitive
+
+admin response AdminSubscribe 
+   1: int publisherId
+   2: int topicId
    
 internal struct ClusterProperty
    1: string key

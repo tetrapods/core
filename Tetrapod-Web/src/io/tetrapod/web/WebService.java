@@ -172,7 +172,7 @@ public class WebService extends DefaultService
             if (ses.getTheirEntityId() != 0) {
                clients.remove(ses.getTheirEntityId());
                if (LongPollQueue.getQueue(ses.getTheirEntityId(), false) == null) {
-                  clearAllSubscriptions(ses.getTheirEntityId());
+                  clearAllSubscriptionsForSubscriber(ses.getTheirEntityId());
                }
             }
          }
@@ -238,7 +238,7 @@ public class WebService extends DefaultService
             if (topic != null) {
                synchronized (topic) {
                   for (final Subscriber s : topic.getSubscribers()) {
-                     if (s.entityId == 0) {
+                     if (s.childId == 0) {
                         // that's us, dispatch to self
                         ByteBufDataSource reader = new ByteBufDataSource(buf);
                         final Object obj = StructureFactory.make(header.contractId, header.structId);
@@ -251,7 +251,7 @@ public class WebService extends DefaultService
                         }
                         buf.readerIndex(ri);
                      } else {
-                        WebHttpSession ses = clients.get(s.entityId);
+                        WebHttpSession ses = clients.get(s.childId);
                         if (ses != null) {
                            ses.sendRelayedMessage(header, buf, isBroadcast);
                            buf.readerIndex(ri);
@@ -308,8 +308,6 @@ public class WebService extends DefaultService
          }
       }
 
-      // TODO: Terminate long polling clients that haven't checked in
-
       // for all of our clients:
       for (final WebSession ses : clients.values()) {
          // special check for long-polling clients
@@ -319,8 +317,7 @@ public class WebService extends DefaultService
       }
 
       for (int childId : LongPollQueue.removeExpired(System.currentTimeMillis() - Util.ONE_MINUTE)) {
-         // TODO: cleanup
-         clearAllSubscriptions(childId);
+         clearAllSubscriptionsForSubscriber(childId);
       }
 
    }
@@ -367,7 +364,9 @@ public class WebService extends DefaultService
    }
 
    @Override
-   public void messageServiceRemoved(ServiceRemovedMessage m, MessageContext ctx) {}
+   public void messageServiceRemoved(ServiceRemovedMessage m, MessageContext ctx) {
+      clearAllSubscriptionsForPublisher(m.entityId);
+   }
 
    @Override
    public void messageServiceUpdated(ServiceUpdatedMessage m, MessageContext ctx) {
@@ -397,12 +396,12 @@ public class WebService extends DefaultService
       if (topic != null) {
          synchronized (topic) {
             for (Subscriber sub : topic.getSubscribers().toArray(new Subscriber[0])) {
-               if (topic.unsubscribe(sub.entityId, true)) {
-                  final Session s = clients.get(sub.entityId);
+               if (topic.unsubscribe(sub.childId, true)) {
+                  final Session s = clients.get(sub.childId);
                   if (s != null) {
                      // notify the subscriber that they have been unsubscribed from this topic
-                     s.sendMessage(new TopicUnsubscribedMessage(m.publisherId, topic.topicId, entityId, sub.entityId), entityId,
-                           sub.entityId);
+                     s.sendMessage(new TopicUnsubscribedMessage(m.publisherId, topic.topicId, entityId, sub.childId), entityId,
+                           sub.childId);
                   }
                }
             }
@@ -436,7 +435,7 @@ public class WebService extends DefaultService
    public void messageTopicUnsubscribed(final TopicUnsubscribedMessage m, MessageContext ctx) {
       logger.debug("******* {} {}", ctx.header.dump(), m.dump());
       final ServiceTopic topic = topics.get(topicKey(m.publisherId, m.topicId));
-      if (topic != null) {        
+      if (topic != null) {
          if (topic.unsubscribe(m.childId, true)) {
             final Session s = clients.get(m.childId);
             if (s != null) {
@@ -518,8 +517,11 @@ public class WebService extends DefaultService
       return Response.error(WebContract.ERROR_UNKNOWN_ALT_ID);
    }
 
-   private void clearAllSubscriptions(final int childId) {
-      logger.debug("clearAllSubscriptions: {}", childId);
+   /**
+    * We've lost a child connection -- notify publishers that they have unsubscribed
+    */
+   private void clearAllSubscriptionsForSubscriber(final int childId) {
+      logger.debug("clearAllSubscriptionsForSubscriber: {}", childId);
       // Unsubscribe from all subscriptions we're managing
       for (ServiceTopic topic : topics.values()) {
          if (topic.unsubscribe(childId, true)) {
@@ -529,4 +531,22 @@ public class WebService extends DefaultService
       }
    }
 
+   /**
+    * A publisher is gone -- notify subscribers that they are gone
+    */
+   private void clearAllSubscriptionsForPublisher(final int publisherId) {
+      logger.debug("clearAllSubscriptionsForPublisher: {}", publisherId);
+      // Unsubscribe from all subscriptions we're managing
+      for (ServiceTopic topic : topics.values()) {
+         if (topic.ownerId == publisherId) {
+            for (Subscriber s : topic.getSubscribers()) {
+               WebHttpSession ses = clients.get(s.childId);
+               if (ses != null) {
+                  ses.sendMessage(new TopicUnsubscribedMessage(topic.ownerId, topic.topicId, entityId, s.childId), entityId, s.childId);
+               }
+            }
+         }
+
+      }
+   }
 }

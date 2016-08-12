@@ -3,7 +3,7 @@ package io.tetrapod.web;
 import java.util.*;
 
 import io.tetrapod.core.utils.SequentialWorkQueue;
-import io.tetrapod.protocol.core.Subscriber;
+import io.tetrapod.protocol.web.Subscriber;
 
 /**
  * A data structure to manage a Topic for pub/sub. Topics have an owner, a reference ID, and a list of subscribers. If the same client

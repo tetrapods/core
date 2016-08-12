@@ -308,10 +308,6 @@ internal message ServiceStats.ServiceStats
     
 ################################# STRUCTURES #################################
 
-internal struct Subscriber
-   1: int entityId  
-   2: int counter  
-
 internal struct WebRoute
    1: string path
    2: int structId

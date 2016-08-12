@@ -812,7 +812,7 @@ public class TetrapodService extends DefaultService
       }
       logger.info("Subscribing services({}) {} {}", servicesTopic.topicId, ctx.header.fromParentId, ctx.header.fromChildId);
       subscribeToServices(ses, ctx.header.fromParentId, ctx.header.fromChildId);
-      return Response.SUCCESS;
+      return new AdminSubscribeResponse(entityId, adminTopic.topicId);
    }
 
    @Override
