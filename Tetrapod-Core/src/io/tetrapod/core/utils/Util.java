@@ -256,7 +256,7 @@ public class Util {
       while (i < n) {
          char c = chars[i];
 
-         // escape html < and > and &
+         // escape html
          if (c == '<') {
             sb.append("&lt;");
             i++;
@@ -279,6 +279,11 @@ public class Util {
          }
          if (c == '\'') {
             sb.append("&#x27;");
+            i++;
+            continue;
+         }
+         if (c == '/') {
+            sb.append("&#x2F;");
             i++;
             continue;
          }
