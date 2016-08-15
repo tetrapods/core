@@ -30,8 +30,8 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
 
    private final DefaultService            service;
    private final SSLContext                sslContext;
-
    private Server                          server;
+   private ServiceConnectionClosedListener listener;
 
    public ServiceConnector(DefaultService service, SSLContext sslContext) {
       this.service = service;
@@ -52,6 +52,10 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
             }
          }
       }
+   }
+
+   public interface ServiceConnectionClosedListener {
+      public void onServiceConnectionClosed(int entityId);
    }
 
    public void shutdown() {
@@ -120,6 +124,9 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
       @Override
       public void onSessionStop(Session ses) {
          failure();
+         if (listener != null) {
+            listener.onServiceConnectionClosed(entityId);
+         }
       }
 
       @Override
@@ -414,5 +421,9 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
             s.valid = true;
          }
       }
+   }
+
+   public void setServiceConnectionClosedListener(ServiceConnectionClosedListener listener) {
+      this.listener = listener;
    }
 }
