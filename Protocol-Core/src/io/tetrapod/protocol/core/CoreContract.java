@@ -136,7 +136,6 @@ public class CoreContract extends Contract {
                   new Admin(),
                   new StatPair(),
                   new RequestStat(),
-                  new Subscriber(),
                   new WebRoute(),
                   new TypeDescriptor(),
                   new ContractDescription(),

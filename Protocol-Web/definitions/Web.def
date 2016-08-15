@@ -37,6 +37,9 @@ internal response GetClientInfo
    4: string referrer // referrer of first request (clients only)
    5: string domain   // domain request was sent to (clients only)
 
+internal struct Subscriber
+   1: int childId  
+   2: int counter  
      
 ##########################################          
 

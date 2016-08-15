@@ -152,7 +152,6 @@ function TP_Core(server) {
    server.register("response", "Core", "ValidateConnection", 1, 1291890);
    server.register("request", "Core", "Dummy", 1, 6747086);
    server.register("message", "Core", "ServiceStats", 1, 469976);
-   server.register("struct", "Core", "Subscriber", 1, 16013581);
    server.register("struct", "Core", "WebRoute", 1, 4890284);
    server.register("struct", "Core", "TypeDescriptor", 1, 6493266);
    server.register("struct", "Core", "ContractDescription", 1, 7323457);

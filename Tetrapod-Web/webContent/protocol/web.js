@@ -19,6 +19,7 @@ function TP_Web(server) {
    server.register("request", "Web", "SetAlternateId", 22, 10499521);
    server.register("request", "Web", "GetClientInfo", 22, 3498983);
    server.register("response", "Web", "GetClientInfo", 22, 9293453);
+   server.register("struct", "Web", "Subscriber", 22, 16013581);
    server.register("request", "Web", "CloseClientConnection", 22, 3310279);
    server.register("request", "Web", "ClientSessions", 22, 1046006);
    server.register("response", "Web", "ClientSessions", 22, 2637706);

@@ -1,4 +1,5 @@
-define(["knockout", "jquery", "alert", "toolbox", "protocol/server", "protocol/tetrapod", "protocol/core", "protocol/web"], function(ko, $, Alert, toolbox, Server, Tetrapod, CoreProt, Web) {
+define([ "knockout", "jquery", "alert", "toolbox", "protocol/server", "protocol/tetrapod", "protocol/core",
+      "protocol/web" ], function(ko, $, Alert, toolbox, Server, Tetrapod, CoreProt, Web) {
    return new App();
 
    function App() {
@@ -20,16 +21,24 @@ define(["knockout", "jquery", "alert", "toolbox", "protocol/server", "protocol/t
       self.email = ko.observable();
       self.accountId = ko.observable();
       self.alertResponse = alertResponse;
-      self.isProd = self.name == "orgs.chatbox.com" || self.name == "pgx.chatbox.com" || (self.name.indexOf(".prod.") > 0);
+      self.isProd = self.name == "orgs.chatbox.com" || self.name == "pgx.chatbox.com"
+            || (self.name.indexOf(".prod.") > 0);
       self.sendTo = sendTo;
       self.sendAny = sendAny;
       self.sendDirect = sendDirect;
 
+      server.addMessageHandler("TopicUnsubscribed", function(msg) {
+         var topicKey = msg.publisherId + '.' + msg.topicId;
+         if (topicKey == self.adminTopicKey) {
+            subscribeAdminTopic();
+         }
+      });
+
       function run(clusterModel) {
          ko.bindingHandlers.stopBinding = {
-            init: function() {
+            init : function() {
                return {
-                  controlsDescendantBindings: true
+                  controlsDescendantBindings : true
                };
             }
          };
@@ -45,17 +54,18 @@ define(["knockout", "jquery", "alert", "toolbox", "protocol/server", "protocol/t
       }
 
       function connect() {
-         server.connect(window.location.hostname, window.location.protocol == 'https:').listen(onConnected, onDisconnected);
+         server.connect(window.location.hostname, window.location.protocol == 'https:').listen(onConnected,
+               onDisconnected);
       }
 
       function onConnected() {
          $('#disconnected-alertbox').hide();
          model.clear();
          server.sendDirect("Web.Register", {
-            build: 0,
-            contractId: 0,
-            name: "Web-Admin",
-            token: token
+            build : 0,
+            contractId : 0,
+            name : "Web-Admin",
+            token : token
          }, onRegistered);
       }
 
@@ -71,7 +81,7 @@ define(["knockout", "jquery", "alert", "toolbox", "protocol/server", "protocol/t
             token = result.token;
             if (self.authtoken != null && self.authtoken != "") {
                server.send("AdminAuthorize", {
-                  token: self.authtoken
+                  token : self.authtoken
                }, onLogin);
             } else {
                onLogout();
@@ -83,8 +93,8 @@ define(["knockout", "jquery", "alert", "toolbox", "protocol/server", "protocol/t
          var email = $('#email').val().trim();
          var pwd = $('#password').val();
          server.send("AdminLogin", {
-            email: email,
-            password: pwd
+            email : email,
+            password : pwd
          }, function(result) {
             if (result.isError()) {
                Alert.error('Login Failed');
@@ -111,10 +121,7 @@ define(["knockout", "jquery", "alert", "toolbox", "protocol/server", "protocol/t
             refreshLoginToken(function() {
                $('#login-wrapper').hide();
                $('#app-wrapper').show();
-               server.send("AdminSubscribe", {
-                  accountId: self.accountId(),
-                  authToken: self.sessionToken
-               }, server.logResponse);
+               subscribeAdminTopic();
                setInterval(refreshLoginToken, 60000 * 10); // refresh token every 10 minutes
             });
 
@@ -123,10 +130,23 @@ define(["knockout", "jquery", "alert", "toolbox", "protocol/server", "protocol/t
          }
       }
 
+      function subscribeAdminTopic() {
+         server.send("AdminSubscribe", {
+            accountId : self.accountId(),
+            authToken : self.sessionToken
+         }, function(res) {
+            if (res.isError()) {
+               server.logResponse(res);
+            } else {
+               self.adminTopicKey = res.publisherId + '.' + res.topicId;
+            }
+         });
+      }
+
       function refreshLoginToken(callback) {
          server.send("AdminSessionToken", {
-            accountId: self.accountId(),
-            authToken: self.authtoken,
+            accountId : self.accountId(),
+            authToken : self.authtoken,
          }, function(result) {
             if (result.isError()) {
                onLogout(true);

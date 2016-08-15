@@ -12,37 +12,37 @@ import java.util.*;
 import java.util.concurrent.*;
 
 @SuppressWarnings("all")
-public class Subscriber extends Structure {
+public class AdminSubscribeResponse extends Response {
    
-   public static final int STRUCT_ID = 16013581;
-   public static final int CONTRACT_ID = CoreContract.CONTRACT_ID;
-   public static final int SUB_CONTRACT_ID = CoreContract.SUB_CONTRACT_ID;
+   public static final int STRUCT_ID = 5933629;
+   public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;
+   public static final int SUB_CONTRACT_ID = TetrapodContract.SUB_CONTRACT_ID;
 
-   public Subscriber() {
+   public AdminSubscribeResponse() {
       defaults();
    }
 
-   public Subscriber(int entityId, int counter) {
-      this.entityId = entityId;
-      this.counter = counter;
+   public AdminSubscribeResponse(int publisherId, int topicId) {
+      this.publisherId = publisherId;
+      this.topicId = topicId;
    }   
    
-   public int entityId;
-   public int counter;
+   public int publisherId;
+   public int topicId;
 
    public final Structure.Security getSecurity() {
-      return Security.INTERNAL;
+      return Security.ADMIN;
    }
 
    public final void defaults() {
-      entityId = 0;
-      counter = 0;
+      publisherId = 0;
+      topicId = 0;
    }
    
    @Override
    public final void write(DataSource data) throws IOException {
-      data.write(1, this.entityId);
-      data.write(2, this.counter);
+      data.write(1, this.publisherId);
+      data.write(2, this.topicId);
       data.writeEndTag();
    }
    
@@ -52,8 +52,8 @@ public class Subscriber extends Structure {
       while (true) {
          int tag = data.readTag();
          switch (tag) {
-            case 1: this.entityId = data.read_int(tag); break;
-            case 2: this.counter = data.read_int(tag); break;
+            case 1: this.publisherId = data.read_int(tag); break;
+            case 2: this.topicId = data.read_int(tag); break;
             case Codec.END_TAG:
                return;
             default:
@@ -62,36 +62,36 @@ public class Subscriber extends Structure {
          }
       }
    }
-
+  
    public final int getContractId() {
-      return Subscriber.CONTRACT_ID;
+      return AdminSubscribeResponse.CONTRACT_ID;
    }
 
    public final int getSubContractId() {
-      return Subscriber.SUB_CONTRACT_ID;
+      return AdminSubscribeResponse.SUB_CONTRACT_ID;
    }
 
    public final int getStructId() {
-      return Subscriber.STRUCT_ID;
+      return AdminSubscribeResponse.STRUCT_ID;
    }
 
    public final String[] tagWebNames() {
-      // Note do not use this tags in long term serializations (to disk or databases) as
+      // Note do not use this tags in long term serializations (to disk or databases) as 
       // implementors are free to rename them however they wish.  A null means the field
       // is not to participate in web serialization (remaining at default)
       String[] result = new String[2+1];
-      result[1] = "entityId";
-      result[2] = "counter";
+      result[1] = "publisherId";
+      result[2] = "topicId";
       return result;
    }
 
    public final Structure make() {
-      return new Subscriber();
+      return new AdminSubscribeResponse();
    }
 
    public final StructDescription makeDescription() {
-      StructDescription desc = new StructDescription();
-      desc.name = "Subscriber";
+      StructDescription desc = new StructDescription();      
+      desc.name = "AdminSubscribeResponse";
       desc.tagWebNames = tagWebNames();
       desc.types = new TypeDescriptor[desc.tagWebNames.length];
       desc.types[0] = new TypeDescriptor(TypeDescriptor.T_STRUCT, getContractId(), getStructId());
@@ -99,31 +99,4 @@ public class Subscriber extends Structure {
       desc.types[2] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
       return desc;
    }
-
-   @Override
-   @SuppressWarnings("RedundantIfStatement")
-   public boolean equals(Object o) {
-      if (this == o)
-         return true;
-      if (o == null || getClass() != o.getClass())
-         return false;
-
-      Subscriber that = (Subscriber) o;
-
-      if (entityId != that.entityId)
-         return false;
-      if (counter != that.counter)
-         return false;
-
-      return true;
-   }
-
-   @Override
-   public int hashCode() {
-      int result = 0;
-      result = 31 * result + entityId;
-      result = 31 * result + counter;
-      return result;
-   }
-
-}
+ }

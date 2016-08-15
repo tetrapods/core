@@ -72,6 +72,7 @@ function TP_Tetrapod(server) {
    server.register("request", "Tetrapod", "RaftStats", 1, 15652108);
    server.register("response", "Tetrapod", "RaftStats", 1, 13186680);
    server.register("request", "Tetrapod", "AdminSubscribe", 1, 4415191);
+   server.register("response", "Tetrapod", "AdminSubscribe", 1, 5933629);
    server.register("struct", "Tetrapod", "ClusterProperty", 1, 16245306);
    server.register("message", "Tetrapod", "ClusterPropertyAdded", 1, 5735715);
    server.register("message", "Tetrapod", "ClusterPropertyRemoved", 1, 12285117);

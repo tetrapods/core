@@ -83,7 +83,7 @@ public class WebContract extends Contract {
          synchronized(this) {
             if (structs == null) {
                structs = new Structure[] {
-                  
+                  new Subscriber(),
                };
             }
          }
