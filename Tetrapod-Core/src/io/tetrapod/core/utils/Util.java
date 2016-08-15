@@ -282,11 +282,11 @@ public class Util {
             i++;
             continue;
          }
-         if (c == '/') {
-            sb.append("&#x2F;");
-            i++;
-            continue;
-         }
+//         if (c == '/') {
+//            sb.append("&#x2F;");
+//            i++;
+//            continue;
+//         }
 
          i++;
          sb.append(c);
