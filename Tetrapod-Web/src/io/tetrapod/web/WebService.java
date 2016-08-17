@@ -320,6 +320,9 @@ public class WebService extends DefaultService
          clearAllSubscriptionsForSubscriber(childId);
       }
 
+      if (serviceConnector != null) {
+         serviceConnector.setServiceConnectionClosedListener(entityId -> clearAllSubscriptionsForPublisher(entityId));
+      }
    }
 
    private int getNumActiveClients() {
@@ -364,9 +367,7 @@ public class WebService extends DefaultService
    }
 
    @Override
-   public void messageServiceRemoved(ServiceRemovedMessage m, MessageContext ctx) {
-      clearAllSubscriptionsForPublisher(m.entityId);
-   }
+   public void messageServiceRemoved(ServiceRemovedMessage m, MessageContext ctx) {}
 
    @Override
    public void messageServiceUpdated(ServiceUpdatedMessage m, MessageContext ctx) {
@@ -532,7 +533,9 @@ public class WebService extends DefaultService
    }
 
    /**
-    * A publisher is gone -- notify subscribers that they are gone
+    * FIXME - call when we lose our personal connection:
+    * 
+    * A publisher is gone -- notify subscribers that they are gone.
     */
    private void clearAllSubscriptionsForPublisher(final int publisherId) {
       logger.debug("clearAllSubscriptionsForPublisher: {}", publisherId);
