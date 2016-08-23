@@ -2,7 +2,6 @@ package io.tetrapod.web;
 
 import java.util.*;
 
-import io.tetrapod.core.utils.SequentialWorkQueue;
 import io.tetrapod.protocol.web.Subscriber;
 
 /**
@@ -16,8 +15,6 @@ public class ServiceTopic {
    public final int                       ownerId;
 
    private final Map<Integer, Subscriber> subscribers = new HashMap<>();
-
-   protected SequentialWorkQueue          queue       = new SequentialWorkQueue();
 
    public ServiceTopic(int ownerId, int topicId) {
       this.topicId = topicId;
@@ -76,28 +73,6 @@ public class ServiceTopic {
 
    public long key() {
       return ((long) (ownerId) << 32) | topicId;
-   }
-
-   public synchronized void queue(final Runnable task) {
-      queue.queue(task);
-   }
-
-   public synchronized boolean isQueueEmpty() {
-      return queue == null ? true : queue.isQueueEmpty();
-   }
-
-   /**
-    * Process the pending work queued for this entity.
-    * 
-    * @return true if any queued work was processed.
-    */
-   public boolean process() {
-      synchronized (this) {
-         if (queue == null) {
-            return false;
-         }
-      }
-      return queue.process();
    }
 
 }
