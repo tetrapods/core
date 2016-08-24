@@ -11,7 +11,7 @@ public class InternalRequestContext extends SessionRequestContext {
    }
 
    @Override
-   public void handlePendingResponse(Response res, int originalRequestId) {
+   public void handlePendingResponse(Response res, int originalRequestId, long contextId) {
       handler.onResponse(res);
    }
 

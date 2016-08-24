@@ -74,11 +74,13 @@ public struct RequestHeader
    7: int 	version
    8: int   contractId
    9: int 	structId
+  10: long  contextId
    
 public struct ResponseHeader
    1: int requestId 
    2: int contractId
    3: int structId
+   4: long contextId
    
 public struct MessageHeader
    1: int fromId
@@ -87,11 +89,10 @@ public struct MessageHeader
    4: int toChildId
    5: int contractId
    6: int structId
-   7: byte flags       
+   7: byte flags        
    
    const byte FLAGS_ALTERNATE = 1
-   
-   
+      
 ################################ STRUCTURES ###################
 
 // allows an empty or one-string-arg-called-data request to be called from admin app's service menu
