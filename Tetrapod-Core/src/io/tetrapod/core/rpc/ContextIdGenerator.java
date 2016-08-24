@@ -27,4 +27,8 @@ public class ContextIdGenerator {
       contextId.set(ctxId);
    }
 
+   public static void clear() {
+      contextId.set(null);
+   }
+
 }
