@@ -534,7 +534,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
             }
          }
          commsLog.debug(String.format(format, args));
-         logger.debug(String.format(format, args));
+         //logger.debug(String.format(format, args));
       }
       return true;
    }
