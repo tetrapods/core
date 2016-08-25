@@ -22,15 +22,17 @@ public class ResponseHeader extends Structure {
       defaults();
    }
 
-   public ResponseHeader(int requestId, int contractId, int structId) {
+   public ResponseHeader(int requestId, int contractId, int structId, long contextId) {
       this.requestId = requestId;
       this.contractId = contractId;
       this.structId = structId;
+      this.contextId = contextId;
    }   
    
    public int requestId;
    public int contractId;
    public int structId;
+   public long contextId;
 
    public final Structure.Security getSecurity() {
       return Security.PUBLIC;
@@ -40,6 +42,7 @@ public class ResponseHeader extends Structure {
       requestId = 0;
       contractId = 0;
       structId = 0;
+      contextId = 0;
    }
    
    @Override
@@ -47,6 +50,7 @@ public class ResponseHeader extends Structure {
       data.write(1, this.requestId);
       data.write(2, this.contractId);
       data.write(3, this.structId);
+      data.write(4, this.contextId);
       data.writeEndTag();
    }
    
@@ -59,6 +63,7 @@ public class ResponseHeader extends Structure {
             case 1: this.requestId = data.read_int(tag); break;
             case 2: this.contractId = data.read_int(tag); break;
             case 3: this.structId = data.read_int(tag); break;
+            case 4: this.contextId = data.read_long(tag); break;
             case Codec.END_TAG:
                return;
             default:
@@ -84,10 +89,11 @@ public class ResponseHeader extends Structure {
       // Note do not use this tags in long term serializations (to disk or databases) as
       // implementors are free to rename them however they wish.  A null means the field
       // is not to participate in web serialization (remaining at default)
-      String[] result = new String[3+1];
+      String[] result = new String[4+1];
       result[1] = "requestId";
       result[2] = "contractId";
       result[3] = "structId";
+      result[4] = "contextId";
       return result;
    }
 
@@ -104,6 +110,7 @@ public class ResponseHeader extends Structure {
       desc.types[1] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
       desc.types[2] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
       desc.types[3] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
+      desc.types[4] = new TypeDescriptor(TypeDescriptor.T_LONG, 0, 0);
       return desc;
    }
 
@@ -123,6 +130,8 @@ public class ResponseHeader extends Structure {
          return false;
       if (structId != that.structId)
          return false;
+      if (contextId != that.contextId)
+         return false;
 
       return true;
    }
@@ -133,6 +142,7 @@ public class ResponseHeader extends Structure {
       result = 31 * result + requestId;
       result = 31 * result + contractId;
       result = 31 * result + structId;
+      result = 31 * result + (int) (contextId ^ (contextId >>> 32));
       return result;
    }
 

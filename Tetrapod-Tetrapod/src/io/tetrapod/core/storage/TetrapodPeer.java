@@ -3,8 +3,7 @@ package io.tetrapod.core.storage;
 import java.net.ConnectException;
 import java.util.concurrent.TimeUnit;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.slf4j.*;
 
 import io.netty.channel.socket.SocketChannel;
 import io.tetrapod.core.*;
@@ -128,16 +127,16 @@ public class TetrapodPeer implements Session.Listener, SessionFactory {
    private synchronized void joinCluster() {
       joined = true;
       session.sendRequest(new ClusterJoinRequest(service.getStatus(), Util.getHostName(), service.getEntityId(), service.getServicePort(),
-               service.getClusterPort(), service.buildName), Core.DIRECT).handle(res -> {
-                  if (res.isError()) {
-                     logger.error("ClusterJoinRequest Failed {}", res);
-                     synchronized (TetrapodPeer.this) {
-                        joined = false;
-                     }
-                  } else {
-                     logger.info("ClusterJoinRequest Succeeded");
+            service.getClusterPort(), service.buildName), Core.DIRECT).handle(res -> {
+               if (res.isError()) {
+                  logger.error("ClusterJoinRequest Failed {}", res);
+                  synchronized (TetrapodPeer.this) {
+                     joined = false;
                   }
-               });
+               } else {
+                  logger.info("ClusterJoinRequest Succeeded");
+               }
+            });
    }
 
 }
