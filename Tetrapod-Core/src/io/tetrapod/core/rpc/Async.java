@@ -85,6 +85,7 @@ public class Async {
          @Override
          public void onResponse(Response res) {
             try {
+               ContextIdGenerator.setContextId(header.contextId);
                handler.onResponse(res);
             } catch (AsyncSequenceRejectException e) {
                // ignore, sequence reject handler called
@@ -107,6 +108,7 @@ public class Async {
    public synchronized void handle(ResponseHandler handler) {
       this.handler = handler;
       if (response != null) {
+         ContextIdGenerator.setContextId(header.contextId);
          handler.fireResponse(response, header);
       }
    }
@@ -120,6 +122,7 @@ public class Async {
       response = res;
       if (handler != null) {
          try {
+            ContextIdGenerator.setContextId(header.contextId);
             handler.fireResponse(res, header);
          } catch (Throwable e) {
             logger.error(e.getMessage(), e);

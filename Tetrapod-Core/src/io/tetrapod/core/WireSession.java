@@ -137,7 +137,7 @@ public class WireSession extends Session {
             if (res != null) {
                res.read(reader);
                if (!commsLogIgnore(async.header.structId))
-                  logged = commsLog("%s  [%d] <- %s", this, header.requestId, res.dump());
+                  logged = commsLog("%s %016X  [%d] <- %s", this, header.contextId, header.requestId, res.dump());
                // we dispatch responses as high priority to prevent certain 
                // forms of live-lock when the dispatch thread pool is exhausted
                getDispatcher().dispatchHighPriority(() -> {
@@ -164,12 +164,13 @@ public class WireSession extends Session {
             //            }
 
             if (!commsLogIgnore(async.header.structId))
-               logged = commsLog("%s  [%d] <- Response.%s", this, header.requestId,
+               logged = commsLog("%s %016X [%d] <- Response.%s", this, header.contextId, header.requestId,
                      res == null ? StructureFactory.getName(header.contractId, header.structId) : res.dump());
             relayResponse(header, async, in);
          }
          if (!logged && !commsLogIgnore(async.header.structId)) {
-            logged = commsLog("%s  [%d] <- Response.%s", this, header.requestId, StructureFactory.getName(header.contractId, header.structId));
+            logged = commsLog("%s %016X [%d] <- Response.%s", this, header.contextId, header.requestId,
+                  StructureFactory.getName(header.contractId, header.structId));
          }
       } else {
          // Typical if the request timed out earlier, and now we've finally received the actual response, it's too late 
@@ -197,12 +198,12 @@ public class WireSession extends Session {
             if (req != null) {
                req.read(reader);
                if (!commsLogIgnore(req))
-                  logged = commsLog("%s  [%d] <- %s (from %d.%d)", this, header.requestId, req.dump(), header.fromParentId,
-                        header.fromChildId);
+                  logged = commsLog("%s %016X [%d] <- %s (from %d.%d)", this, header.contextId, header.requestId, req.dump(),
+                        header.fromParentId, header.fromChildId);
                dispatchRequest(header, req);
             } else {
                logger.warn("Could not find request structure {}", header.structId);
-               sendResponse(new Error(ERROR_SERIALIZATION), header.requestId);
+               sendResponse(new Error(ERROR_SERIALIZATION), header.requestId, header.contextId);
             }
          } catch (ClassCastException e) {
             logger.error(e.getMessage());
@@ -210,14 +211,14 @@ public class WireSession extends Session {
          }
       } else if (relayHandler != null) {
          if (commsLogIgnore(header.structId)) {
-            logged = commsLog("%s  [%d] <- Request.%s (from %d.%d)", this, header.requestId,
+            logged = commsLog("%s %016X [%d] <- Request.%s (from %d.%d)", this, header.contextId, header.requestId,
                   StructureFactory.getName(header.contractId, header.structId), header.fromParentId, header.fromChildId);
          }
          relayRequest(header, in);
       }
 
       if (!logged && !commsLogIgnore(header.structId))
-         logged = commsLog("%s  [%d] <- Request.%s (from %d.%d)", this, header.requestId,
+         logged = commsLog("%s %016X [%d] <- Request.%s (from %d.%d)", this, header.contextId, header.requestId,
                StructureFactory.getName(header.contractId, header.structId), header.fromParentId, header.fromChildId);
    }
 
@@ -353,13 +354,13 @@ public class WireSession extends Session {
       if (ses != null) {
          if (ses.getTheirEntityType() == Core.TYPE_CLIENT) {
             logger.warn("Something's trying to send a request to a client {}", header.dump());
-            sendResponse(new Error(ERROR_SECURITY), header.requestId);
+            sendResponse(new Error(ERROR_SECURITY), header.requestId, header.contextId);
          } else {
             ses.sendRelayedRequest(header, in, this, null);
          }
       } else {
          logger.warn("Could not find a relay session for {}", header.dump());
-         sendResponse(new Error(ERROR_SERVICE_UNAVAILABLE), header.requestId);
+         sendResponse(new Error(ERROR_SERVICE_UNAVAILABLE), header.requestId, header.contextId);
       }
    }
 

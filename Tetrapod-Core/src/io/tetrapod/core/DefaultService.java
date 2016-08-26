@@ -596,7 +596,8 @@ public class DefaultService
          final Context context = dispatcher.requestTimes.time();
          if (!dispatcher.dispatch(() -> {
             final long dispatchTime = System.nanoTime();
-
+            ContextIdGenerator.setContextId(header.contextId);
+            
             Runnable onResult = () -> {
                final long elapsed = System.nanoTime() - dispatchTime;
                stats.recordRequest(header.fromParentId, req, elapsed, async.getErrorCode());

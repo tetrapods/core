@@ -383,7 +383,7 @@ public class TetrapodService extends DefaultService
 
    private void scheduleHealthCheck() {
       if (!isShuttingDown()) {
-         dispatcher.dispatch(1, TimeUnit.SECONDS, () -> {
+         dispatcher.dispatch(200, TimeUnit.MILLISECONDS, () -> {
             if (dispatcher.isRunning()) {
                try {
                   healthCheck();
@@ -472,7 +472,7 @@ public class TetrapodService extends DefaultService
          // also auto-subscribe to services topic
          logger.info("Subscribing {} to services topic-{}", toEntityId, servicesTopic.topicId);
          synchronized (servicesTopic) {
-            servicesTopic.subscribe(toEntityId, toChildId, false); 
+            servicesTopic.subscribe(toEntityId, toChildId, false);
             for (EntityInfo e : registry.getServices()) {
                e.queue(() -> ses.sendMessage(new ServiceAddedMessage(e), toEntityId, toChildId));
             }
