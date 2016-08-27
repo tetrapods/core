@@ -194,6 +194,14 @@ public class Util {
       return Integer.parseInt(val);
    }
 
+   public static long getProperty(String key, long defaultValue) {
+      final String val = getProperty(key);
+      if (val == null) {
+         return defaultValue;
+      }
+      return Long.parseLong(val);
+   }
+
    public static boolean getProperty(String key, boolean defaultValue) {
       final String val = getProperty(key);
       if (val == null) {
