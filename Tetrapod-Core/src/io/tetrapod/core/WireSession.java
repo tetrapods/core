@@ -7,6 +7,7 @@ import io.netty.channel.*;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import io.netty.util.ReferenceCountUtil;
+import io.tetrapod.core.logging.CommsLogWriter;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.rpc.Error;
 import io.tetrapod.core.serialize.DataSource;
@@ -198,8 +199,9 @@ public class WireSession extends Session {
             if (req != null) {
                req.read(reader);
                if (!commsLogIgnore(req))
-                  logged = commsLog("%s %016X [%d] <- %s (from %d.%d)", this, header.contextId, header.requestId, req.dump(),
-                        header.fromParentId, header.fromChildId);
+                  CommsLogWriter.append(this, header, req);
+               logged = commsLog("%s %016X [%d] <- %s (from %d.%d)", this, header.contextId, header.requestId, req.dump(),
+                     header.fromParentId, header.fromChildId);
                dispatchRequest(header, req);
             } else {
                logger.warn("Could not find request structure {}", header.structId);

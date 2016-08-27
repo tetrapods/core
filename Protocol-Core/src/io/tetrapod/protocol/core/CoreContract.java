@@ -131,6 +131,7 @@ public class CoreContract extends Contract {
                   new RequestHeader(),
                   new ResponseHeader(),
                   new MessageHeader(),
+                  new CommsLogHeader(),
                   new ServiceCommand(),
                   new ServerAddress(),
                   new Admin(),

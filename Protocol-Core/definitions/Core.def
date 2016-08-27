@@ -92,6 +92,15 @@ public struct MessageHeader
    7: byte flags        
    
    const byte FLAGS_ALTERNATE = 1
+
+public struct CommsLogHeader
+   1: long  timestamp
+   2: LogHeaderType type
+
+   enum int LogHeaderType.REQUEST      = 1
+   enum int LogHeaderType.RESPONSE     = 2
+   enum int LogHeaderType.MESSAGE      = 3
+   enum int LogHeaderType.EVENT        = 4
       
 ################################ STRUCTURES ###################
 
