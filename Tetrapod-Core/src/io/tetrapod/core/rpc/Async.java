@@ -108,7 +108,9 @@ public class Async {
    public synchronized void handle(ResponseHandler handler) {
       this.handler = handler;
       if (response != null) {
-         ContextIdGenerator.setContextId(header.contextId);
+         if (header != null) {
+            ContextIdGenerator.setContextId(header.contextId);
+         }
          handler.fireResponse(response, header);
       }
    }
