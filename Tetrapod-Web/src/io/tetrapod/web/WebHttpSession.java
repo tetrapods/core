@@ -301,7 +301,7 @@ public class WebHttpSession extends WebSession {
          final ResponseHandler handler = new ResponseHandler() {
             @Override
             public void onResponse(Response res) {
-               //logger.info("{} WEB API RESPONSE: {} {} ms", WebHttpSession.this, res, (System.currentTimeMillis() - t0));
+               logger.info("{} WEB API RESPONSE: {} ", WebHttpSession.this, res);
                handleWebAPIResponse(ctx, req, res);
             }
          };
@@ -323,7 +323,7 @@ public class WebHttpSession extends WebSession {
                   if (ses != null) {
                      header.contractId = Core.CONTRACT_ID;
                      header.toId = toEntityId;
-                     //logger.info("{} WEB API REQEUST ROUTING TO {} {}", this, toEntityId, header.dump());
+                     logger.info("{} WEB API REQUEST ROUTING TO {} {}", this, toEntityId, header.dump());
                      relayRequest(header, request, ses, handler);
                   } else {
                      logger.debug("{} Could not find a relay session for {} {}", this, header.toId, header.contractId);

@@ -1682,6 +1682,16 @@ public class JSONObject {
       return writer.toString();
    }
    
+   public JSONObject copyWithoutPrefix(String prefix) {
+      JSONObject newJson = new JSONObject();
+      for (Object key : this.keySet()) {
+         if (!key.toString().startsWith(prefix)) {
+            newJson.put(key.toString(), this.map.get(key));
+         }
+      }
+      return newJson;
+   }
+   
    // support using Enum_String as keys
    
    public <T> JSONObject put(Enum_String<T> key, Object value) throws JSONException {
