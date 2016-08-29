@@ -172,13 +172,14 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
       }
 
       private synchronized void validate(Session ses, String theirToken) {
-         ses.sendRequest(new ValidateConnectionRequest(service.getEntityId(), theirToken), Core.DIRECT).handle(res -> {
-            if (res.isError()) {
-               failure();
-            } else {
-               finish(ses, ((ValidateConnectionResponse) res).token);
-            }
-         });
+         ses.sendRequest(new ValidateConnectionRequest(service.getEntityId(), theirToken), Core.DIRECT)
+               .handle(res -> {
+                  if (res.isError()) {
+                     failure();
+                  } else {
+                     finish(ses, ((ValidateConnectionResponse) res).token);
+                  }
+               });
       }
 
       private synchronized void finish(Session ses, String token) {
@@ -345,6 +346,7 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
          header.fromChildId = 0;
          header.fromType = service.getEntityType();
          header.timeout = 30;
+         header.contextId = ContextIdGenerator.getContextId();
          return service.dispatchRequest(header, req, null);
       }
       final Session ses = getSession(req, toEntityId);

@@ -73,7 +73,9 @@ public class WebStaticFileHandler extends SimpleChannelInboundHandler<FullHttpRe
          sendError(ctx, BAD_REQUEST);
          return;
       }
+
       if (request.getMethod() != GET) {
+         logger.debug("Found a non-GET Request {}", request);
          sendError(ctx, METHOD_NOT_ALLOWED);
          return;
       }

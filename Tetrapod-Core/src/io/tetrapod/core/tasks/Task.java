@@ -431,6 +431,10 @@ public class Task<T> extends CompletableFuture<T> {
       return thenApply(ignore->null);
    }
 
+   public <U> Task<U> thenApply(final Supplier<? extends U> fn) {
+      return thenApply((nil)-> fn.get());
+   }
+
    @Override
    public <U> Task<U> thenApply(final Function<? super T, ? extends U> fn) {
       final Function<? super T, ? extends U> wrap = TaskContext.wrap(fn);
@@ -529,6 +533,14 @@ public class Task<T> extends CompletableFuture<T> {
             throw ServiceException.wrapIfChecked(t);
          }
       });
+   }
+
+   /**
+    * After successful execution of this task, will return a Response.SUCCESS.
+    * @return
+    */
+   public Task<Response> thenSuccessResponse() {
+      return thenApply(resp-> Response.SUCCESS);
    }
 
    @Override

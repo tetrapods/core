@@ -596,7 +596,8 @@ public class DefaultService
          final Context context = dispatcher.requestTimes.time();
          if (!dispatcher.dispatch(() -> {
             final long dispatchTime = System.nanoTime();
-
+            ContextIdGenerator.setContextId(header.contextId);
+            
             Runnable onResult = () -> {
                final long elapsed = System.nanoTime() - dispatchTime;
                stats.recordRequest(header.fromParentId, req, elapsed, async.getErrorCode());
@@ -1107,7 +1108,11 @@ public class DefaultService
     * @return The response to return from the service method.
     */
    public Response doAsync(RequestContext ctx, TaskResponse<?> taskResponse) {
-      return taskResponse.doTask().toResponse(ctx);
+      try {
+         return taskResponse.doTask().toResponse(ctx);
+      } catch (Throwable throwable) {
+         throw ServiceException.wrapIfChecked(throwable);
+      }
    }
 
    @FunctionalInterface
@@ -1118,6 +1123,6 @@ public class DefaultService
        * 
        * @return The Task that contains the response of the service method
        */
-      Task<T> doTask();
+      Task<T> doTask() throws Throwable;
    }
 }
