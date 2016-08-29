@@ -3,7 +3,7 @@ java outdir "../src"
 javascript out "../../Tetrapod-Web/webContent/protocol/tetrapod.js"
 
 // The core tetrapod service
-service Tetrapod @version(1) @id(1) @web(api) 
+service Tetrapod @version(1) @id(1) @web(api) @sync
 
 error HOSTNAME_MISMATCH
 error INVALID_CREDENTIALS

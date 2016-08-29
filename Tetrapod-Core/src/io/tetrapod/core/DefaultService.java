@@ -634,18 +634,22 @@ public class DefaultService
                         }
                      });
                Response res = req.securityCheck(ctx);
-               if (res == null) {
-                  res = req.dispatch(svc, ctx);
-               }
-               if (res != null) {
-                  if (res != Response.PENDING) {
-                     async.setResponse(res);
-                  }
+               if (res == null && req instanceof TaskDispatcher) {
+                  Task<? extends Response> task = ((TaskDispatcher) req).dispatchTask(svc, ctx);
+                  task.thenAccept(async::setResponse)
+                          .exceptionally(ex-> Task.handleException(ctx,ex));
                } else {
-                  async.setResponse(new Error(ERROR_UNKNOWN));
+                  if (res == null) {
+                     res = req.dispatch(svc, ctx);
+                  }
+                  if (res != null) {
+                     if (res != Response.PENDING) {
+                        async.setResponse(res);
+                     }
+                  } else {
+                     async.setResponse(new Error(ERROR_UNKNOWN));
+                  }
                }
-            } catch (ErrorResponseException e) {
-               async.setResponse(new Error(e.errorCode));
             } catch (Throwable e) {
                ErrorResponseException ere = Util.getThrowableInChain(e, ErrorResponseException.class);
                if (ere != null && ere.errorCode != ERROR_UNKNOWN) {
@@ -670,6 +674,17 @@ public class DefaultService
       }
 
       return async;
+   }
+
+   private Void handleException(Throwable throwable, Async async) {
+      ErrorResponseException ere = Util.getThrowableInChain(throwable, ErrorResponseException.class);
+      if (ere != null && ere.errorCode != ERROR_UNKNOWN) {
+         async.setResponse(new Error(ere.errorCode));
+      } else {
+         logger.error(throwable.getMessage(), throwable);
+         async.setResponse(new Error(ERROR_UNKNOWN));
+      }
+      return null;
    }
 
    public Response sendPendingRequest(Request req, int toEntityId, PendingResponseHandler handler) {

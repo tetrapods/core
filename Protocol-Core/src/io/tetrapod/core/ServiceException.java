@@ -1,6 +1,6 @@
 package io.tetrapod.core;
 
-import io.tetrapod.core.utils.Util;
+import io.tetrapod.core.utils.CoreUtil;
 
 /**
  * This class is designed to take exceptions (checked or otherwise) and turn them into unchecked exceptions.  Throwing
@@ -20,7 +20,7 @@ public class ServiceException extends RuntimeException {
     */
    public static ServiceException wrap(Throwable throwable) {
       if (throwable instanceof ServiceException) {
-         return Util.cast(throwable);
+         return CoreUtil.cast(throwable);
       } else {
          return new ServiceException(throwable);
       }
@@ -33,7 +33,7 @@ public class ServiceException extends RuntimeException {
     */
    public static RuntimeException wrapIfChecked(Throwable throwable) {
       if (throwable instanceof RuntimeException) {
-         return Util.cast(throwable);
+         return CoreUtil.cast(throwable);
       } else {
          return new ServiceException(throwable);
       }
