@@ -115,9 +115,6 @@ public class Server extends ChannelInitializer<SocketChannel> implements Session
       WEAK_CIPHERS.add("TLS_DHE_RSA_WITH_AES_128_CBC_SHA256");
       WEAK_CIPHERS.add("TLS_DHE_RSA_WITH_AES_256_CBC_SHA");
       WEAK_CIPHERS.add("TLS_DHE_RSA_WITH_AES_256_CBC_SHA256");
-      WEAK_CIPHERS.add("TLS_DHE_RSA_WITH_AES_256_CBC_SHA256");
-      
-      //EDH-RSA-DES-CBC3-SHA
    }
 
    private void startSession(final SocketChannel ch) throws Exception {
