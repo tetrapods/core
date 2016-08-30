@@ -27,6 +27,7 @@ package io.tetrapod.core.tasks;
  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import com.sun.jmx.mbeanserver.Util;
 import io.tetrapod.core.ServiceException;
 import io.tetrapod.core.StructureFactory;
 import io.tetrapod.core.rpc.ErrorResponseException;
@@ -37,10 +38,12 @@ import io.tetrapod.protocol.core.CoreContract;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -784,12 +787,36 @@ public class Task<T> extends CompletableFuture<T> {
       return from(CompletableFuture.allOf(cfs));
    }
 
+   @SafeVarargs
+   public static <T> Task<List<T>> all(CompletableFuture<T> ... cfs) {
+      return from(CompletableFuture.allOf((CompletableFuture<?>[]) cfs)).thenApply(() -> getTasks(cfs));
+   }
+
+
    /**
     * @throws NullPointerException if the collection or any of its elements are
     *                              {@code null}
     */
    public static <F extends CompletableFuture<?>, C extends Collection<F>> Task<Void> allOf(C cfs) {
       return from(CompletableFuture.allOf(cfs.toArray(new CompletableFuture[cfs.size()])));
+   }
+
+
+   public static <T, F extends CompletableFuture<T>, C extends Collection<F>> Task<List<T>> all(C collection) {
+      F cfs[] = Util.cast(collection.toArray());
+      return all(cfs);
+   }
+
+   public static <T, F extends CompletableFuture<T>> List<T> getTasks(F[] cfs) {
+      try {
+         List<T> tasks = new ArrayList<T>(cfs.length);
+         for (CompletableFuture<T> cf : cfs) {
+            tasks.add(cf.get());
+         }
+         return tasks;
+      } catch (Throwable e) {
+         throw ServiceException.wrapIfChecked(e);
+      }
    }
 
    /**
@@ -801,6 +828,11 @@ public class Task<T> extends CompletableFuture<T> {
       @SuppressWarnings("rawtypes")
       final CompletableFuture[] futureArray = futureList.toArray(new CompletableFuture[futureList.size()]);
       return from(CompletableFuture.allOf(futureArray));
+   }
+
+   public static <T, F extends CompletableFuture<T>> Task<List<T>> all(Stream<F> cfs) {
+      final List<F> futureList = cfs.collect(Collectors.toList());
+      return all(futureList);
    }
 
    /**
