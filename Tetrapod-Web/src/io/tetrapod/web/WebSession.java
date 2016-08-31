@@ -11,6 +11,7 @@ import io.netty.channel.socket.SocketChannel;
 import io.tetrapod.core.Session;
 import io.tetrapod.core.StructureFactory;
 import io.tetrapod.core.json.JSONObject;
+import io.tetrapod.core.logging.CommsLogger;
 import io.tetrapod.core.rpc.Structure;
 import io.tetrapod.core.serialize.datasources.*;
 import io.tetrapod.protocol.core.*;
@@ -35,7 +36,7 @@ abstract class WebSession extends Session {
       }
       request.read(new WebJSONDataSource(params, request.tagWebNames()));
 
-      if (!commsLogIgnore(header.structId))
+      if (!CommsLogger.commsLogIgnore(header.structId))
          commsLog("%s %016X [%d] <- %s", this, header.contextId, header.requestId, request.dump());
       return request;
    }

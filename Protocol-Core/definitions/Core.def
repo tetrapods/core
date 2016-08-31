@@ -95,8 +95,9 @@ public struct MessageHeader
 
 public struct CommsLogHeader
    1: long  timestamp
-   2: LogHeaderType type
-
+   2: LogHeaderType type 
+   3: StructDescription def
+      
    enum int LogHeaderType.REQUEST      = 1
    enum int LogHeaderType.RESPONSE     = 2
    enum int LogHeaderType.MESSAGE      = 3

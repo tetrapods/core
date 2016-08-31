@@ -22,13 +22,15 @@ public class CommsLogHeader extends Structure {
       defaults();
    }
 
-   public CommsLogHeader(long timestamp, LogHeaderType type) {
+   public CommsLogHeader(long timestamp, LogHeaderType type, StructDescription def) {
       this.timestamp = timestamp;
       this.type = type;
+      this.def = def;
    }   
    
    public long timestamp;
    public LogHeaderType type;
+   public StructDescription def;
 
    public final Structure.Security getSecurity() {
       return Security.PUBLIC;
@@ -37,12 +39,14 @@ public class CommsLogHeader extends Structure {
    public final void defaults() {
       timestamp = 0;
       type = null;
+      def = null;
    }
    
    @Override
    public final void write(DataSource data) throws IOException {
       data.write(1, this.timestamp);
       if (this.type != null) data.write(2, this.type.value);
+      if (this.def != null) data.write(3, this.def);
       data.writeEndTag();
    }
    
@@ -54,6 +58,7 @@ public class CommsLogHeader extends Structure {
          switch (tag) {
             case 1: this.timestamp = data.read_long(tag); break;
             case 2: this.type = LogHeaderType.from(data.read_int(tag)); break;
+            case 3: this.def = data.read_struct(tag, new StructDescription()); break;
             case Codec.END_TAG:
                return;
             default:
@@ -79,9 +84,10 @@ public class CommsLogHeader extends Structure {
       // Note do not use this tags in long term serializations (to disk or databases) as
       // implementors are free to rename them however they wish.  A null means the field
       // is not to participate in web serialization (remaining at default)
-      String[] result = new String[2+1];
+      String[] result = new String[3+1];
       result[1] = "timestamp";
       result[2] = "type";
+      result[3] = "def";
       return result;
    }
 
@@ -97,6 +103,7 @@ public class CommsLogHeader extends Structure {
       desc.types[0] = new TypeDescriptor(TypeDescriptor.T_STRUCT, getContractId(), getStructId());
       desc.types[1] = new TypeDescriptor(TypeDescriptor.T_LONG, 0, 0);
       desc.types[2] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
+      desc.types[3] = new TypeDescriptor(TypeDescriptor.T_STRUCT, StructDescription.CONTRACT_ID, StructDescription.STRUCT_ID);
       return desc;
    }
 
@@ -114,6 +121,8 @@ public class CommsLogHeader extends Structure {
          return false;
       if (type != null ? !type.equals(that.type) : that.type != null)
          return false;
+      if (def != null ? !def.equals(that.def) : that.def != null)
+         return false;
 
       return true;
    }
@@ -123,6 +132,7 @@ public class CommsLogHeader extends Structure {
       int result = 0;
       result = 31 * result + (int) (timestamp ^ (timestamp >>> 32));
       result = 31 * result + (type != null ? type.hashCode() : 0);
+      result = 31 * result + (def != null ? def.hashCode() : 0);
       return result;
    }
 

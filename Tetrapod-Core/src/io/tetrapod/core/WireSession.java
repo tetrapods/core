@@ -7,7 +7,7 @@ import io.netty.channel.*;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import io.netty.util.ReferenceCountUtil;
-import io.tetrapod.core.logging.CommsLogWriter;
+import io.tetrapod.core.logging.CommsLogger;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.rpc.Error;
 import io.tetrapod.core.serialize.DataSource;
@@ -137,7 +137,7 @@ public class WireSession extends Session {
             final Structure res = StructureFactory.make(header.contractId, header.structId);
             if (res != null) {
                res.read(reader);
-               if (!commsLogIgnore(async.header.structId))
+               if (!CommsLogger.commsLogIgnore(async.header.structId))
                   logged = commsLog("%s %016X  [%d] <- %s", this, header.contextId, header.requestId, res.dump());
                // we dispatch responses as high priority to prevent certain 
                // forms of live-lock when the dispatch thread pool is exhausted
@@ -164,12 +164,12 @@ public class WireSession extends Session {
             //               }
             //            }
 
-            if (!commsLogIgnore(async.header.structId))
+            if (!CommsLogger.commsLogIgnore(async.header.structId))
                logged = commsLog("%s %016X [%d] <- Response.%s", this, header.contextId, header.requestId,
                      res == null ? StructureFactory.getName(header.contractId, header.structId) : res.dump());
             relayResponse(header, async, in);
          }
-         if (!logged && !commsLogIgnore(async.header.structId)) {
+         if (!logged && !CommsLogger.commsLogIgnore(async.header.structId)) {
             logged = commsLog("%s %016X [%d] <- Response.%s", this, header.contextId, header.requestId,
                   StructureFactory.getName(header.contractId, header.structId));
          }
@@ -198,8 +198,8 @@ public class WireSession extends Session {
             final Request req = (Request) StructureFactory.make(header.contractId, header.structId);
             if (req != null) {
                req.read(reader);
-               if (!commsLogIgnore(req))
-                  CommsLogWriter.append(this, header, req);
+               if (!CommsLogger.commsLogIgnore(req))
+                  CommsLogger.append(this, header, req);
                logged = commsLog("%s %016X [%d] <- %s (from %d.%d)", this, header.contextId, header.requestId, req.dump(),
                      header.fromParentId, header.fromChildId);
                dispatchRequest(header, req);
@@ -212,14 +212,14 @@ public class WireSession extends Session {
             logger.error("Serialization Error on {}", header.dump());
          }
       } else if (relayHandler != null) {
-         if (commsLogIgnore(header.structId)) {
+         if (CommsLogger.commsLogIgnore(header.structId)) {
             logged = commsLog("%s %016X [%d] <- Request.%s (from %d.%d)", this, header.contextId, header.requestId,
                   StructureFactory.getName(header.contractId, header.structId), header.fromParentId, header.fromChildId);
          }
          relayRequest(header, in);
       }
 
-      if (!logged && !commsLogIgnore(header.structId))
+      if (!logged && !CommsLogger.commsLogIgnore(header.structId))
          logged = commsLog("%s %016X [%d] <- Request.%s (from %d.%d)", this, header.contextId, header.requestId,
                StructureFactory.getName(header.contractId, header.structId), header.fromParentId, header.fromChildId);
    }
@@ -234,7 +234,8 @@ public class WireSession extends Session {
          header.fromId = theirId;
       }
 
-      if (!commsLogIgnore(header.structId)) {
+      //CommsLogger.append(header, isBroadcast);
+      if (!CommsLogger.commsLogIgnore(header.structId)) {
          commsLog("%s  [%s] <- Message: %s (to %d.%d t%d f%d)", this, isBroadcast ? "B" : "M", getNameFor(header), header.toParentId,
                header.toChildId, header.topicId, header.flags);
       }

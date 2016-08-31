@@ -25,6 +25,7 @@ import io.netty.handler.codec.http.websocketx.*;
 import io.netty.util.*;
 import io.tetrapod.core.*;
 import io.tetrapod.core.json.*;
+import io.tetrapod.core.logging.CommsLogger;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.rpc.Error;
 import io.tetrapod.core.serialize.datasources.ByteBufDataSource;
@@ -521,7 +522,7 @@ public class WebHttpSession extends WebSession {
       } else {
          // HACK: for http responses we need to write to the response to the correct ChannelHandlerContext
          if (res != Response.PENDING) {
-            if (!commsLogIgnore(res))
+            if (!CommsLogger.commsLogIgnore(res))
                commsLog("%s %016X [%d] => %s", this, contextId, requestId, res.dump());
             final Object buffer = makeFrame(res, requestId, contextId);
             if (buffer != null && channel.isActive()) {
@@ -543,7 +544,7 @@ public class WebHttpSession extends WebSession {
          super.sendRelayedResponse(header, payload);
       } else {
          // HACK: for http responses we need to write to the response to the correct ChannelHandlerContext
-         if (!commsLogIgnore(header.structId))
+         if (!CommsLogger.commsLogIgnore(header.structId))
             commsLog("%s %016X [%d] ~> Response:%d", this, header.contextId, header.requestId, header.structId);
          ChannelHandlerContext ctx = getContext(header.requestId);
          final Object buffer = makeFrame(header, payload, ENVELOPE_RESPONSE);
@@ -572,7 +573,7 @@ public class WebHttpSession extends WebSession {
          super.sendRelayedMessage(header, payload, broadcast);
       } else {
          // queue the message for long poller to retrieve later
-         if (!commsLogIgnore(header.structId)) {
+         if (!CommsLogger.commsLogIgnore(header.structId)) {
             commsLog("%s  [M] ~] Message:%d %s (to %d)", this, header.structId, getNameFor(header), header.toChildId);
          }
          final LongPollQueue messages = LongPollQueue.getQueue(getTheirEntityId(), false);

@@ -17,7 +17,7 @@ import com.codahale.metrics.Timer.Context;
 
 import ch.qos.logback.classic.LoggerContext;
 import io.netty.channel.socket.SocketChannel;
-import io.tetrapod.core.logging.CommsLogWriter;
+import io.tetrapod.core.logging.CommsLogger;
 import io.tetrapod.core.pubsub.*;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.rpc.Error;
@@ -87,7 +87,7 @@ public class DefaultService
                   Util.getProperty("tetrapod.jks.pwd", "4pod.dop4").toCharArray());
          }
 
-         CommsLogWriter.init();
+         CommsLogger.init();
       } catch (Exception e) {
          fail(e);
       }
@@ -320,7 +320,7 @@ public class DefaultService
          }
       }
 
-      CommsLogWriter.SINGLETON.shutdown();
+      CommsLogger.shutdown();
       // If JVM doesn't gracefully terminate after 1 minute, explicitly kill the process
       final Thread hitman = new Thread(() -> {
          Util.sleep(Util.ONE_MINUTE);

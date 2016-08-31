@@ -32,6 +32,10 @@ public class StructureFactory {
       return null;
    }
 
+   public static boolean has(int contractId, int structId) {
+      return knownStructs.containsKey(makeKey(contractId, structId));
+   }
+
    private static long makeKey(int contractId, int structId) {
       return ((long) contractId << 32) | (long) structId;
    }

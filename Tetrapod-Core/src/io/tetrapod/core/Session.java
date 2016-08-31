@@ -21,6 +21,7 @@ import io.netty.channel.*;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.DecoderException;
 import io.netty.util.ReferenceCountUtil;
+import io.tetrapod.core.logging.CommsLogger;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.rpc.Error;
 import io.tetrapod.core.tasks.Task;
@@ -270,7 +271,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
       if (channel.isActive()) {
          pendingRequests.put(header.requestId, async);
 
-         if (!commsLogIgnore(req))
+         if (!CommsLogger.commsLogIgnore(req))
             commsLog("%s %016X [%d] => %s (to %d)", this, header.contextId, header.requestId, req.dump(), header.toId);
 
          final Object buffer = makeFrame(header, req, ENVELOPE_REQUEST);
@@ -283,11 +284,11 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
          async.setResponse(ERROR_CONNECTION_CLOSED);
       }
       return async;
-   } 
-   
+   }
+
    public void sendResponse(Response res, int requestId, long contextId) {
       if (res != Response.PENDING) {
-         if (!commsLogIgnore(res))
+         if (!CommsLogger.commsLogIgnore(res))
             commsLog("%s %016X [%d] => %s", this, contextId, requestId, res.dump());
          final Object buffer = makeFrame(res, requestId, contextId);
          if (buffer != null) {
@@ -303,7 +304,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
    public void sendAltBroadcastMessage(Message msg, int toAltId) {
       final int myEntityId = getMyEntityId();
       if (myEntityId != 0) {
-         if (!commsLogIgnore(msg))
+         if (!CommsLogger.commsLogIgnore(msg))
             commsLog("%s  [A] => %s (to altId-%d)", this, msg.dump(), toAltId);
          final Object buffer = makeFrame(
                new MessageHeader(myEntityId, 0, theirId, toAltId, msg.getContractId(), msg.getStructId(), MessageHeader.FLAGS_ALTERNATE),
@@ -318,7 +319,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
    public void sendTopicBroadcastMessage(Message msg, int toId, int topicId) {
       final int myEntityId = getMyEntityId();
       if (myEntityId != 0) {
-         if (!commsLogIgnore(msg))
+         if (!CommsLogger.commsLogIgnore(msg))
             commsLog("%s  [B] => %s (to TOPIC:%d-#%d)", this, msg.dump(), toId, topicId);
          final Object buffer = makeFrame(new MessageHeader(myEntityId, topicId, toId, 0, msg.getContractId(), msg.getStructId(), (byte) 0),
                msg, ENVELOPE_BROADCAST);
@@ -332,7 +333,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
    public void sendMessage(Message msg, int toEntityId, int toChildId) {
       final int myEntityId = getMyEntityId();
       if (myEntityId != 0) {
-         if (!commsLogIgnore(msg))
+         if (!CommsLogger.commsLogIgnore(msg))
             commsLog("%s  [M] => %s (to %d.%d)", this, msg.dump(), toEntityId, toChildId);
          final Object buffer = makeFrame(
                new MessageHeader(myEntityId, 0, toEntityId, toChildId, msg.getContractId(), msg.getStructId(), (byte) 0), msg,
@@ -372,7 +373,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
 
    public void sendRelayedMessage(MessageHeader header, ByteBuf payload, boolean broadcast) {
       assert header.fromId != 0;
-      if (!commsLogIgnore(header.structId)) {
+      if (!CommsLogger.commsLogIgnore(header.structId)) {
          commsLog("%s  [%s] ~> Message:%d %s (to %d.%d)", this, broadcast ? "B" : "M", header.structId, getNameFor(header),
                header.toParentId, header.toChildId);
       }
@@ -384,7 +385,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
       final Async async = new Async(null, header, originator, handler);
       int origRequestId = async.header.requestId;
       int newRequestId = addPendingRequest(async);
-      if (!commsLogIgnore(header.structId))
+      if (!CommsLogger.commsLogIgnore(header.structId))
          commsLog("%s %016X [%d/%d] ~> Request:%s", this, header.contextId, newRequestId, origRequestId,
                StructureFactory.getName(header.contractId, header.structId));
       // making a new header lets us not worry about synchronizing the change the requestId
@@ -398,8 +399,9 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
    }
 
    public void sendRelayedResponse(ResponseHeader header, ByteBuf payload) {
-      if (!commsLogIgnore(header.structId))
-         commsLog("%s %016X [%d] ~> Response:%s", this, header.contextId, header.requestId, StructureFactory.getName(header.contractId, header.structId));
+      if (!CommsLogger.commsLogIgnore(header.structId))
+         commsLog("%s %016X [%d] ~> Response:%s", this, header.contextId, header.requestId,
+               StructureFactory.getName(header.contractId, header.structId));
       writeFrame(makeFrame(header, payload, ENVELOPE_RESPONSE));
    }
 
@@ -526,40 +528,13 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
       return "Unknown";
    }
 
+   @Deprecated
    public boolean commsLog(String format, Object... args) {
-      if (commsLog.isDebugEnabled()) {
-         for (int i = 0; i < args.length; i++) {
-            if (args[i] == this) {
-               args[i] = String.format("%s:%d", getClass().getSimpleName().substring(0, 4), sessionNum);
-            }
-         }
-         commsLog.debug(String.format(format, args));
-         //logger.debug(String.format(format, args));
-      }
-      return true;
+      return CommsLogger.commsLog(this, format, args);
    }
 
    public String getNameFor(MessageHeader header) {
       return StructureFactory.getName(header.contractId, header.structId);
-   }
-
-   public boolean commsLogIgnore(Structure struct) {
-      return commsLogIgnore(struct.getStructId());
-   }
-
-   public boolean commsLogIgnore(int structId) {
-      if (commsLog.isTraceEnabled())
-         return false;
-      switch (structId) {
-         case ServiceLogsRequest.STRUCT_ID:
-         case ServiceStatsMessage.STRUCT_ID:
-         case DummyRequest.STRUCT_ID:
-         case AppendEntriesRequest.STRUCT_ID:
-         case RaftStatsRequest.STRUCT_ID:
-         case RaftStatsResponse.STRUCT_ID:
-            return true;
-      }
-      return !commsLog.isDebugEnabled();
    }
 
 }
