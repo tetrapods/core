@@ -40,6 +40,7 @@ public class Topic {
    public static class Subscriber {
       public final int entityId;
       public final int childId;
+      public int count;
 
       public Subscriber(int entityId, int childId) {
          this.entityId = entityId;
@@ -112,7 +113,10 @@ public class Topic {
       if (sub == null) {
          sub = new Subscriber(entityId, childId);
          subscribers.put(sub.key(), sub);
+      } else if (!once) {
+         sub.count++;
       }
+      
       final int parentId = entityId;
       ParentSubscriber parent = parents.get(parentId);
       if (parent == null) {
@@ -132,13 +136,17 @@ public class Topic {
 
    }
 
-   public synchronized void unsubscribe(int entityId, int childId) {
+   public synchronized void unsubscribe(int entityId, int childId, boolean all) {
       logger.debug("{} unsubscribe {} {}", this, entityId, childId);
-      Subscriber sub = subscribers.remove(makeKey(entityId, childId));
+      Subscriber sub = subscribers.get(makeKey(entityId, childId));
       if (sub != null) {
+         sub.count--;
+         if (sub.count == 0 || all) {
+            subscribers.remove(sub.key());
+         }
          final Subscriber parent = parents.get(entityId);
          if (parent != null) {
-            publisher.sendMessage(new TopicUnsubscribedMessage(publisher.getEntityId(), topicId, entityId, childId), parent.entityId, 0,
+            publisher.sendMessage(new TopicUnsubscribedMessage(publisher.getEntityId(), topicId, entityId, childId, all), parent.entityId, 0,
                   topicId);
          }
       }

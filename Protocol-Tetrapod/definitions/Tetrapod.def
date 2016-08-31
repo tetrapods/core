@@ -155,6 +155,7 @@ internal message Pubsub.TopicUnsubscribed
    2: int topicId
    3: int entityId
    4: int childId
+   5: boolean all
 
 #### Feedback messages
 
