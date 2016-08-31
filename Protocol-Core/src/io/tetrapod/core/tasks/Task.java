@@ -350,6 +350,12 @@ public class Task<T> extends CompletableFuture<T> {
          throw ServiceException.wrapIfChecked(th);
       });
    }
+   public Task<T> logAndIgnoreError() {
+      return exceptionally(th -> {
+         logger.error("Error executing task", th);
+         return null;
+      });
+   }
 
    public static <T extends Response> Task<T> error(int errorCode) {
       Task<T> task = new Task<T>();
