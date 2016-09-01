@@ -198,10 +198,7 @@ public class WireSession extends Session {
             final Request req = (Request) StructureFactory.make(header.contractId, header.structId);
             if (req != null) {
                req.read(reader);
-               if (!CommsLogger.commsLogIgnore(req))
-                  CommsLogger.append(this, header, req);
-               logged = commsLog("%s %016X [%d] <- %s (from %d.%d)", this, header.contextId, header.requestId, req.dump(),
-                     header.fromParentId, header.fromChildId);
+               CommsLogger.append(this, header, req);
                dispatchRequest(header, req);
             } else {
                logger.warn("Could not find request structure {}", header.structId);
@@ -212,16 +209,14 @@ public class WireSession extends Session {
             logger.error("Serialization Error on {}", header.dump());
          }
       } else if (relayHandler != null) {
-         if (CommsLogger.commsLogIgnore(header.structId)) {
-            logged = commsLog("%s %016X [%d] <- Request.%s (from %d.%d)", this, header.contextId, header.requestId,
-                  StructureFactory.getName(header.contractId, header.structId), header.fromParentId, header.fromChildId);
-         }
+         logged = CommsLogger.append(this, header, in);
          relayRequest(header, in);
       }
 
-      if (!logged && !CommsLogger.commsLogIgnore(header.structId))
-         logged = commsLog("%s %016X [%d] <- Request.%s (from %d.%d)", this, header.contextId, header.requestId,
-               StructureFactory.getName(header.contractId, header.structId), header.fromParentId, header.fromChildId);
+      if (!logged) {
+         logged = CommsLogger.append(this, header, in);
+      }
+
    }
 
    private void readMessage(ByteBuf in, boolean isBroadcast) throws IOException {
@@ -235,10 +230,11 @@ public class WireSession extends Session {
       }
 
       //CommsLogger.append(header, isBroadcast);
-      if (!CommsLogger.commsLogIgnore(header.structId)) {
-         commsLog("%s  [%s] <- Message: %s (to %d.%d t%d f%d)", this, isBroadcast ? "B" : "M", getNameFor(header), header.toParentId,
-               header.toChildId, header.topicId, header.flags);
-      }
+      CommsLogger.append(this, header, in);
+//      if (!CommsLogger.commsLogIgnore(header.structId)) {
+//         commsLog("%s  [%s] <- Message: %s (to %d.%d t%d f%d)", this, isBroadcast ? "B" : "M", getNameFor(header), header.toParentId,
+//               header.toChildId, header.topicId, header.flags);
+//      }
 
       boolean selfDispatch = header.topicId == 0 && header.toChildId == 0 && ((header.flags & MessageHeader.FLAGS_ALTERNATE) == 0)
             && (header.toParentId == myId || header.toParentId == UNADDRESSED);

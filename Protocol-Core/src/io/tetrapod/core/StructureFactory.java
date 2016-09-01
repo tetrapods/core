@@ -5,7 +5,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.rpc.Error;
-import io.tetrapod.protocol.core.CoreContract;
+import io.tetrapod.protocol.core.*;
 
 public class StructureFactory {
 
@@ -34,6 +34,14 @@ public class StructureFactory {
 
    public static boolean has(int contractId, int structId) {
       return knownStructs.containsKey(makeKey(contractId, structId));
+   }
+
+   public static StructDescription getDescription(int contractId, int structId) {
+      Structure s = knownStructs.get(makeKey(contractId, structId));
+      if (s != null) {
+         return s.makeDescription();
+      }
+      return null;
    }
 
    private static long makeKey(int contractId, int structId) {

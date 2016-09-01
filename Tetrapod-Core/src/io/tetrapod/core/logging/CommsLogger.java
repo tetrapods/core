@@ -8,8 +8,9 @@ import java.util.zip.GZIPOutputStream;
 import org.junit.Test;
 import org.slf4j.*;
 
+import io.netty.buffer.ByteBuf;
 import io.tetrapod.core.*;
-import io.tetrapod.core.rpc.*;
+import io.tetrapod.core.rpc.Structure;
 import io.tetrapod.core.utils.Util;
 import io.tetrapod.protocol.core.*;
 import io.tetrapod.protocol.raft.AppendEntriesRequest;
@@ -126,9 +127,39 @@ public class CommsLogger {
       }
    }
 
-   public static void append(Session session, RequestHeader header, Request req) {
-      StructDescription def = req.makeDescription(); // FIXME
-      SINGLETON.append(new CommsLogEntry(new CommsLogHeader(System.currentTimeMillis(), LogHeaderType.REQUEST, def), header, req));
+   public static void append(Session session, MessageHeader header, ByteBuf in) {
+      byte[] data = new byte[in.readableBytes()];
+      in.getBytes(in.readerIndex(), data);
+      //commsLog("%s  [%s] <- Message: %s (to %d.%d t%d f%d)", this, isBroadcast ? "B" : "M", getNameFor(header), header.toParentId,
+      //          header.toChildId, header.topicId, header.flags);
+   }
+
+   public static boolean append(Session session, RequestHeader header, ByteBuf in) {
+      byte[] data = new byte[in.readableBytes()];
+      in.getBytes(in.readerIndex(), data);
+      if (!commsLogIgnore(header.structId)) {
+         StructDescription def = StructureFactory.getDescription(header.contractId, header.structId);
+         SINGLETON.append(new CommsLogEntry(new CommsLogHeader(System.currentTimeMillis(), LogHeaderType.REQUEST, def), header, data));
+         if (commsLog.isDebugEnabled()) {
+            commsLog(session, "%s %016X [%d] <- %s (from %d.%d)", session, header.contextId, header.requestId,
+                  StructureFactory.getName(header.contractId, header.structId), header.fromParentId, header.fromChildId);
+         }
+         return true;
+      }
+      return false;
+   }
+
+   public static boolean append(Session session, RequestHeader header, Structure req) {
+      if (!commsLogIgnore(header.structId)) {
+         StructDescription def = req.makeDescription(); // FIXME, only include first time per file
+         SINGLETON.append(new CommsLogEntry(new CommsLogHeader(System.currentTimeMillis(), LogHeaderType.REQUEST, def), header, req));
+         if (commsLog.isDebugEnabled()) {
+            commsLog(session, "%s %016X [%d] <- %s (from %d.%d)", session, header.contextId, header.requestId, req.dump(),
+                  header.fromParentId, header.fromChildId);
+         }
+         return true;
+      }
+      return false;
    }
 
    public static void init() throws IOException {
@@ -183,9 +214,9 @@ public class CommsLogger {
          int ver = in.readInt();
          while (true) {
             CommsLogEntry e = CommsLogEntry.read(in);
-            System.out.println(
-                  e.header.timestamp + " " + e.header.type + " " + e.header.def.name + " : " + e.struct.dump() + "\n\t" + e.payload.dump());
+            System.out.println(e.header.timestamp + " " + e.header.type + " " + e.header.def.name + " : " + e.struct.dump());
          }
       } catch (IOException e) {}
    }
+
 }

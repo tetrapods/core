@@ -17,6 +17,11 @@ public class StructureAdapter extends Structure {
       this.description = desc;
       this.fields = new Object[desc.types.length];
    }
+   
+   @Override
+   public StructDescription makeDescription() {
+      return description;
+   }
 
    @SuppressWarnings("unchecked")
    @Override

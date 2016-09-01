@@ -12,9 +12,9 @@ public class CommsLogEntry {
 
    public final CommsLogHeader header;
    public final Structure      struct;
-   public final Structure      payload;
+   public final Object         payload;
 
-   public CommsLogEntry(CommsLogHeader header, Structure struct, Structure payload) {
+   public CommsLogEntry(CommsLogHeader header, Structure struct, Object payload) {
       assert header != null;
       assert struct != null;
       assert payload != null;
@@ -22,9 +22,6 @@ public class CommsLogEntry {
       this.header = header;
       this.struct = struct;
       this.payload = payload;
-      //      if (payload != null) {
-      //         header.payload = (byte[]) payload.toRawForm(TempBufferDataSource.forWriting());
-      //      }
    }
 
    private static Structure readPayload(IOStreamDataSource data, CommsLogHeader header, int contractId, int structId) throws IOException {
@@ -33,7 +30,6 @@ public class CommsLogEntry {
       }
       Structure payload = StructureFactory.make(contractId, structId);
       assert payload != null;
-      //payload.read(TempBufferDataSource.forReading(header.payload));
       payload.read(data);
       return payload;
    }
@@ -70,14 +66,15 @@ public class CommsLogEntry {
       assert struct != null;
       assert payload != null;
 
-      // FIXME sanitize payloads on write, based on @sensitive tags
       IOStreamDataSource data = IOStreamDataSource.forWriting(out);
       header.write(data);
       struct.write(data);
-      payload.write(data);
-      System.out.println("WRITING1: " + header.timestamp + " " + header.type + " " + header.def.name);
-      System.out.println("WRITING2: " + struct.dump());
-      System.out.println("WRITING3: " + payload.dump());
+      // FIXME sanitize payloads on write, based on @sensitive tags
+      if (payload instanceof Structure) {
+         ((Structure) payload).write(data);
+      } else {
+         out.write((byte[]) payload);
+      }
    }
 
 }
