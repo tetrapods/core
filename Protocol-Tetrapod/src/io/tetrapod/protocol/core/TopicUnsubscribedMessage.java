@@ -22,17 +22,19 @@ public class TopicUnsubscribedMessage extends Message {
       defaults();
    }
 
-   public TopicUnsubscribedMessage(int publisherId, int topicId, int entityId, int childId) {
+   public TopicUnsubscribedMessage(int publisherId, int topicId, int entityId, int childId, boolean all) {
       this.publisherId = publisherId;
       this.topicId = topicId;
       this.entityId = entityId;
       this.childId = childId;
+      this.all = all;
    }   
    
    public int publisherId;
    public int topicId;
    public int entityId;
    public int childId;
+   public boolean all;
 
    public final Structure.Security getSecurity() {
       return Security.INTERNAL;
@@ -43,6 +45,7 @@ public class TopicUnsubscribedMessage extends Message {
       topicId = 0;
       entityId = 0;
       childId = 0;
+      all = false;
    }
    
    @Override
@@ -51,6 +54,7 @@ public class TopicUnsubscribedMessage extends Message {
       data.write(2, this.topicId);
       data.write(3, this.entityId);
       data.write(4, this.childId);
+      data.write(5, this.all);
       data.writeEndTag();
    }
    
@@ -64,6 +68,7 @@ public class TopicUnsubscribedMessage extends Message {
             case 2: this.topicId = data.read_int(tag); break;
             case 3: this.entityId = data.read_int(tag); break;
             case 4: this.childId = data.read_int(tag); break;
+            case 5: this.all = data.read_boolean(tag); break;
             case Codec.END_TAG:
                return;
             default:
@@ -101,11 +106,12 @@ public class TopicUnsubscribedMessage extends Message {
       // Note do not use this tags in long term serializations (to disk or databases) as 
       // implementors are free to rename them however they wish.  A null means the field
       // is not to participate in web serialization (remaining at default)
-      String[] result = new String[4+1];
+      String[] result = new String[5+1];
       result[1] = "publisherId";
       result[2] = "topicId";
       result[3] = "entityId";
       result[4] = "childId";
+      result[5] = "all";
       return result;
    }
    
@@ -123,6 +129,7 @@ public class TopicUnsubscribedMessage extends Message {
       desc.types[2] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
       desc.types[3] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
       desc.types[4] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
+      desc.types[5] = new TypeDescriptor(TypeDescriptor.T_BOOLEAN, 0, 0);
       return desc;
    }
 }

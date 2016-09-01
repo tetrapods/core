@@ -726,15 +726,7 @@ public class Util {
     * @return The throwable that descneds T, or null if it's not in the chain
     */
    public static <T extends Throwable> T getThrowableInChain(Throwable t, Class<T> throwableClass) {
-      do {
-         if (throwableClass.isAssignableFrom(t.getClass())) {
-            return cast(t);
-         }
-         if (t.getCause() == null || t.getCause() == t) {
-            return null;
-         }
-         t = t.getCause();
-      } while (true);
+      return CoreUtil.getThrowableInChain(t, throwableClass);
    }
 
    /**

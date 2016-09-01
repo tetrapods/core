@@ -41,11 +41,13 @@ class JavaGenerator implements LanguageGenerator {
    private void generate(CodeGenContext context) throws IOException, ParseException {
       outputDir = context.serviceAnnotations.getFirst("java.outdir");
       packageName = context.serviceAnnotations.getFirst("java.package");
+      boolean allSync = context.serviceAnnotations.has("sync");
+      boolean someAsync = hasSomeAsync(allSync, context.classes);
       for (File f : getFilename("c").getParentFile().listFiles()) {
          f.delete();
       }
       for (Class c : context.classes) {
-         generateClass(c, context.serviceName + "Contract", context);
+         generateClass(c, context.serviceName + "Contract", context, allSync);
       }
       for (String name : context.enums.keySet()) {
          generateEnum(context.enums.get(name));
@@ -55,6 +57,18 @@ class JavaGenerator implements LanguageGenerator {
       }
 
       generateContract(context);
+   }
+
+   private boolean hasSomeAsync(boolean allSync, ArrayList<Class> classes) {
+      if (allSync) {
+         return false;
+      }
+      for (Class c : classes) {
+         if (!c.annotations.has("sync")) {
+            return true;
+         }
+      }
+      return false;
    }
 
    private void generateContract(CodeGenContext context) throws IOException, ParseException {
@@ -152,12 +166,17 @@ class JavaGenerator implements LanguageGenerator {
       return t.expand();
    }
 
-   private void generateClass(Class c, String serviceName, CodeGenContext context) throws IOException, ParseException {
+   private void generateClass(Class c, String serviceName, CodeGenContext context, boolean protocolSync) throws IOException, ParseException {
+      boolean sync = protocolSync || c.annotations.has("sync");
       Template t = template(c.type.toLowerCase());
       t.add("rawname", c.name);
       t.add("class", c.classname());
       t.add("package", packageName);
       t.add("security", c.security.toUpperCase());
+      t.add("dispatchFuncName", sync?"dispatch":"dispatchTask");
+      t.add("taskPrefix", sync?"":"Task.from(");
+      t.add("taskSuffix", sync?"":")");
+      t.add("taskImport", sync?"":"import io.tetrapod.core.tasks.Task;\n");
       t.add("classcomment", generateComment(c.comment));
       t.add("maxtag", "" + c.maxTag());
       t.add("structid", c.getStructId());
@@ -180,11 +199,15 @@ class JavaGenerator implements LanguageGenerator {
       addErrors(c.errors, false, serviceName, t);
       if (c.type.equals("request")) {
          Class resp = getResponse(c, context);
+         String typePrefix = sync?"":"Task";
          if (resp != null) {
-            t.add("requestGenerics", "RequestWithResponse<" + resp.classname() + ">");
+            t.add("requestGenerics", typePrefix+"RequestWithResponse<" + resp.classname() + ">");
+            t.add("responseClassType", sync?"Response":"Task<"+resp.classname()+">");
          } else {
-            t.add("requestGenerics", "Request");
+            t.add("requestGenerics", typePrefix+"Request");
+            t.add("responseClassType", sync?"Response":"Task<Response>");
          }
+         t.add("genericResponseClassType", sync?"Response":"Task<? extends Response>");
       }
       t.expandAndTrim(getFilename(c.classname()));
    }

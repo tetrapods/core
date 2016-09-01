@@ -1,7 +1,7 @@
 java package io.tetrapod.protocol.storage
 java outdir "../src"
  
-service Storage @version(1) @id(3)
+service Storage @version(1) @id(3) @sync
 
 
 ################################ STRUCTURES ################################
