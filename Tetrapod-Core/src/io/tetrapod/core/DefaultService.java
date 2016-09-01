@@ -807,8 +807,8 @@ public class DefaultService
       subscribe(topicId, entityId, childId, false);
    }
 
-   public void unsubscribe(int topicId, int entityId, int childId) {
-      publisher.unsubscribe(topicId, entityId, childId);
+   public void unsubscribe(int topicId, int entityId, int childId, boolean all) {
+      publisher.unsubscribe(topicId, entityId, childId, all);
    }
 
    public void unpublish(int topicId) {
