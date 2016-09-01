@@ -186,7 +186,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
    }
 
    protected void dispatchRequest(final RequestHeader header, final Request req) {
-      helper.dispatchRequest(header, req, this).handle(res -> sendResponse(res, header.requestId));
+      helper.dispatchRequest(header, req, this).handle(res -> sendResponse(res, header.requestId, header.contextId));
    }
 
    public void dispatchMessage(final MessageHeader header, final Message msg) {
@@ -224,7 +224,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
                   pendingRes = new Error(ERROR_UNKNOWN);
                }
                if (!pendingHandler.sendResponse(pendingRes)) {
-                  sendResponse(pendingRes, pendingHandler.originalRequestId);
+                  sendResponse(pendingRes, pendingHandler.originalRequestId, pendingHandler.contextId);
                }
             } else {
                logger.debug("Pending response returned from pending handler for {} @ {}", req, toId);
@@ -261,16 +261,17 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
       header.contractId = req.getContractId();
       header.structId = req.getStructId();
       header.fromType = myType;
+      header.contextId = ContextIdGenerator.getContextId();
       return sendRequest(req, header);
    }
 
-   public Async sendRequest(Request req, final RequestHeader header) {
+   private Async sendRequest(Request req, final RequestHeader header) {
       final Async async = new Async(req, header, this);
       if (channel.isActive()) {
          pendingRequests.put(header.requestId, async);
 
          if (!commsLogIgnore(req))
-            commsLog("%s  [%d] => %s (to %d)", this, header.requestId, req.dump(), header.toId);
+            commsLog("%s %016X [%d] => %s (to %d)", this, header.contextId, header.requestId, req.dump(), header.toId);
 
          final Object buffer = makeFrame(header, req, ENVELOPE_REQUEST);
          if (buffer != null) {
@@ -282,21 +283,21 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
          async.setResponse(ERROR_CONNECTION_CLOSED);
       }
       return async;
-   }
-
-   public void sendResponse(Response res, int requestId) {
+   } 
+   
+   public void sendResponse(Response res, int requestId, long contextId) {
       if (res != Response.PENDING) {
          if (!commsLogIgnore(res))
-            commsLog("%s  [%d] => %s", this, requestId, res.dump());
-         final Object buffer = makeFrame(res, requestId);
+            commsLog("%s %016X [%d] => %s", this, contextId, requestId, res.dump());
+         final Object buffer = makeFrame(res, requestId, contextId);
          if (buffer != null) {
             writeFrame(buffer);
          }
       }
    }
 
-   public Object makeFrame(Response res, int requestId) {
-      return makeFrame(new ResponseHeader(requestId, res.getContractId(), res.getStructId()), res, ENVELOPE_RESPONSE);
+   public Object makeFrame(Response res, int requestId, long contextId) {
+      return makeFrame(new ResponseHeader(requestId, res.getContractId(), res.getStructId(), contextId), res, ENVELOPE_RESPONSE);
    }
 
    public void sendAltBroadcastMessage(Message msg, int toAltId) {
@@ -384,11 +385,11 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
       int origRequestId = async.header.requestId;
       int newRequestId = addPendingRequest(async);
       if (!commsLogIgnore(header.structId))
-         commsLog("%s  [%d/%d] ~> Request:%s", this, newRequestId, origRequestId,
+         commsLog("%s %016X [%d/%d] ~> Request:%s", this, header.contextId, newRequestId, origRequestId,
                StructureFactory.getName(header.contractId, header.structId));
       // making a new header lets us not worry about synchronizing the change the requestId
       RequestHeader newHeader = new RequestHeader(newRequestId, header.fromParentId, header.fromChildId, header.toId, header.fromType,
-            header.timeout, header.version, header.contractId, header.structId);
+            header.timeout, header.version, header.contractId, header.structId, header.contextId);
       if (newHeader.toId == UNADDRESSED && (theirType != TYPE_TETRAPOD || header.contractId == TetrapodContract.CONTRACT_ID)) {
          newHeader.toId = theirId;
       }
@@ -398,7 +399,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
 
    public void sendRelayedResponse(ResponseHeader header, ByteBuf payload) {
       if (!commsLogIgnore(header.structId))
-         commsLog("%s  [%d] ~> Response:%s", this, header.requestId, StructureFactory.getName(header.contractId, header.structId));
+         commsLog("%s %016X [%d] ~> Response:%s", this, header.contextId, header.requestId, StructureFactory.getName(header.contractId, header.structId));
       writeFrame(makeFrame(header, payload, ENVELOPE_RESPONSE));
    }
 

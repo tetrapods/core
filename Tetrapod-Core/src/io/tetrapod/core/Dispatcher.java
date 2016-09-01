@@ -2,6 +2,7 @@ package io.tetrapod.core;
 
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
+import io.tetrapod.core.rpc.ContextIdGenerator;
 import io.tetrapod.core.utils.Util;
 
 import java.util.Calendar;
@@ -150,6 +151,7 @@ public class Dispatcher {
     */
    private void processTask(final Runnable task) {
       try {
+         ContextIdGenerator.clear();
          task.run();
       } catch (Throwable e) {
          logger.error(e.getMessage(), e);
@@ -166,6 +168,7 @@ public class Dispatcher {
       while (r != null) {
          workQueueSize.dec();
          try {
+            ContextIdGenerator.clear();
             r.run();
          } catch (Throwable e) {
             logger.error(e.getMessage(), e);

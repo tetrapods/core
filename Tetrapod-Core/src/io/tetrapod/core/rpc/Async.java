@@ -11,12 +11,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class Async {
-   public static final Logger logger    = LoggerFactory.getLogger(Async.class);
+   public static final Logger logger   = LoggerFactory.getLogger(Async.class);
 
-   public final long          sendTime  = System.currentTimeMillis();
+   public final long          sendTime = System.currentTimeMillis();
    public final RequestHeader header;
    public final Request       request;
-   public final Session       session; 
+   public final Session       session;
 
    private Response           response;
    private ResponseHandler    handler;
@@ -79,12 +79,14 @@ public class Async {
       void onResponse(Response res) throws Exception;
    }
 
-
    public synchronized void handle(IResponseHandler handler) {
       handle(new ResponseHandler() {
          @Override
          public void onResponse(Response res) {
             try {
+               if (header != null) {
+                  ContextIdGenerator.setContextId(header.contextId);
+               }
                handler.onResponse(res);
             } catch (AsyncSequenceRejectException e) {
                // ignore, sequence reject handler called
@@ -107,6 +109,9 @@ public class Async {
    public synchronized void handle(ResponseHandler handler) {
       this.handler = handler;
       if (response != null) {
+         if (header != null) {
+            ContextIdGenerator.setContextId(header.contextId);
+         }
          handler.fireResponse(response, header);
       }
    }
@@ -120,6 +125,9 @@ public class Async {
       response = res;
       if (handler != null) {
          try {
+            if (header != null) {
+               ContextIdGenerator.setContextId(header.contextId);
+            }
             handler.fireResponse(res, header);
          } catch (Throwable e) {
             logger.error(e.getMessage(), e);

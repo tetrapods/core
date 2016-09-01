@@ -228,7 +228,7 @@ public class WebService extends DefaultService
       if (isBroadcast) {
          if ((header.flags & MessageHeader.FLAGS_ALTERNATE) != 0) {
             for (WebHttpSession ses : clients.values()) {
-               if (ses.getAlternateId() == header.toChildId) {
+               if (header.toChildId == 0 || ses.getAlternateId() == header.toChildId) {
                   ses.sendRelayedMessage(header, buf, isBroadcast);
                   buf.readerIndex(ri);
                }

@@ -47,7 +47,7 @@ public class WebRoutes {
     */
    public void clear(int contractId, int subContractId, WebRoute[] existing) {
       for (WebRoute r : routes.values()) {
-         if (r.contractId == contractId && r.getSubContractId() == subContractId) {
+         if (r.contractId == contractId && r.subContractId == subContractId) {
             boolean found = false;
             for (WebRoute e : existing) {
                if (e.path.equals(r.path)) {

@@ -22,7 +22,7 @@ public class RequestHeader extends Structure {
       defaults();
    }
 
-   public RequestHeader(int requestId, int fromParentId, int fromChildId, int toId, byte fromType, byte timeout, int version, int contractId, int structId) {
+   public RequestHeader(int requestId, int fromParentId, int fromChildId, int toId, byte fromType, byte timeout, int version, int contractId, int structId, long contextId) {
       this.requestId = requestId;
       this.fromParentId = fromParentId;
       this.fromChildId = fromChildId;
@@ -32,6 +32,7 @@ public class RequestHeader extends Structure {
       this.version = version;
       this.contractId = contractId;
       this.structId = structId;
+      this.contextId = contextId;
    }   
    
    public int requestId;
@@ -43,6 +44,7 @@ public class RequestHeader extends Structure {
    public int version;
    public int contractId;
    public int structId;
+   public long contextId;
 
    public final Structure.Security getSecurity() {
       return Security.PUBLIC;
@@ -58,6 +60,7 @@ public class RequestHeader extends Structure {
       version = 0;
       contractId = 0;
       structId = 0;
+      contextId = 0;
    }
    
    @Override
@@ -71,6 +74,7 @@ public class RequestHeader extends Structure {
       data.write(7, this.version);
       data.write(8, this.contractId);
       data.write(9, this.structId);
+      data.write(10, this.contextId);
       data.writeEndTag();
    }
    
@@ -89,6 +93,7 @@ public class RequestHeader extends Structure {
             case 7: this.version = data.read_int(tag); break;
             case 8: this.contractId = data.read_int(tag); break;
             case 9: this.structId = data.read_int(tag); break;
+            case 10: this.contextId = data.read_long(tag); break;
             case Codec.END_TAG:
                return;
             default:
@@ -114,7 +119,7 @@ public class RequestHeader extends Structure {
       // Note do not use this tags in long term serializations (to disk or databases) as
       // implementors are free to rename them however they wish.  A null means the field
       // is not to participate in web serialization (remaining at default)
-      String[] result = new String[9+1];
+      String[] result = new String[10+1];
       result[1] = "requestId";
       result[2] = "fromParentId";
       result[3] = "fromChildId";
@@ -124,6 +129,7 @@ public class RequestHeader extends Structure {
       result[7] = "version";
       result[8] = "contractId";
       result[9] = "structId";
+      result[10] = "contextId";
       return result;
    }
 
@@ -146,6 +152,7 @@ public class RequestHeader extends Structure {
       desc.types[7] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
       desc.types[8] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
       desc.types[9] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
+      desc.types[10] = new TypeDescriptor(TypeDescriptor.T_LONG, 0, 0);
       return desc;
    }
 
@@ -177,6 +184,8 @@ public class RequestHeader extends Structure {
          return false;
       if (structId != that.structId)
          return false;
+      if (contextId != that.contextId)
+         return false;
 
       return true;
    }
@@ -193,6 +202,7 @@ public class RequestHeader extends Structure {
       result = 31 * result + version;
       result = 31 * result + contractId;
       result = 31 * result + structId;
+      result = 31 * result + (int) (contextId ^ (contextId >>> 32));
       return result;
    }
 

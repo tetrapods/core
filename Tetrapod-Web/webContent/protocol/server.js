@@ -379,19 +379,22 @@ function TP_Server() {
    function logResponse(result, req) {
       if (self.commsLog) {
          if (!isKeepAlive(req._contractId, req._structId) || self.commsLogKeepAlives) {
-            var str = logstamp() + ' [' + result._requestId + '] <- ' + nameOf(result) + ' '
+            var str = logstamp()  + ' [' + result._requestId + '] <- ' + nameOf(result) + ' '
                   + JSON.stringify(result, dropUnderscored);
             if (result.isError()) {
                if (result.errorCode != protocol.consts.Core.error.NOT_CONFIGURED) {
                   var err = getErrorStrings(result.errorCode);
                   err = err ? (" " + err + " ") : "";
+                  str += ' [' + result._contextId + ']'
                   console.warn(str + err);
                } else {
-                  str = logstamp() + ' [' + result._requestId + '] <- TETRAPOD.CONFIGURED_MSG '
+                  str = logstamp()  + ' [' + result._requestId + '] <- TETRAPOD.CONFIGURED_MSG '
                         + JSON.stringify(result, dropUnderscored) + ' Not Configured Message';
+                  str += ' [' + result._contextId + ']'
                   console.debug(str);
                }
             } else {
+               str += ' [' + result._contextId + ']'
                console.debug(str);
             }
          }

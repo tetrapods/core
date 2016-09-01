@@ -11,6 +11,7 @@ import io.netty.handler.codec.http.multipart.InterfaceHttpData.HttpDataType;
 import io.netty.util.CharsetUtil;
 import io.tetrapod.core.Session;
 import io.tetrapod.core.json.JSONObject;
+import io.tetrapod.core.rpc.ContextIdGenerator;
 import io.tetrapod.core.utils.Util;
 import io.tetrapod.protocol.core.RequestHeader;
 import io.tetrapod.protocol.core.WebRoute;
@@ -50,7 +51,7 @@ public class WebContext {
    }
 
    public static RequestHeader makeRequestHeader(Session s, WebRoute route, JSONObject params) {
-      RequestHeader header = new RequestHeader();
+      final RequestHeader header = new RequestHeader();
 
       header.toId = params.optInt("_toId", UNADDRESSED);
       header.fromChildId = s.getTheirEntityId();
@@ -69,6 +70,7 @@ public class WebContext {
          return null;
       }
       header.timeout = (byte) 30;
+      header.contextId = ContextIdGenerator.generate();
       return header;
    }
 

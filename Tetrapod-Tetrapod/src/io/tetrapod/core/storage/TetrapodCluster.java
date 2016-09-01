@@ -47,6 +47,7 @@ public class TetrapodCluster extends Storage
    private final Config                           cfg;
 
    private final Meter                            commands       = Metrics.meter(this, "commands");
+   private final SequentialWorkQueue              queue          = new SequentialWorkQueue();
 
    /**
     * The index of the command we joined the cluster
@@ -99,6 +100,10 @@ public class TetrapodCluster extends Storage
 
       startListening();
       loadProperties();
+   }
+
+   private void queue(Runnable task) {
+      queue.queue(task);
    }
 
    public void loadProperties() {
@@ -249,23 +254,13 @@ public class TetrapodCluster extends Storage
       return cluster.values();
    }
 
-   public void broadcast(Message msg) {
-      for (TetrapodPeer pod : getMembers()) {
-         if (pod.entityId != service.getEntityId()) {
-            if (pod.isConnected()) {
-               Session ses = pod.getSession();
-               ses.sendMessage(msg, ses.getTheirEntityId(), 0);
-            }
-         }
-      }
-   }
-
    private long lastStatsLog;
 
    /**
     * Scan our list of known tetrapods and establish a connection to any we are missing
     */
    public void service() {
+      queue.process();
       if (service.getEntityId() != 0) {
          for (TetrapodPeer pod : cluster.values()) {
             if (pod.entityId != service.getEntityId()) {
@@ -312,7 +307,7 @@ public class TetrapodCluster extends Storage
                prop.val = AESEncryptor.decryptSaltedAES(prop.val, state.secretKey);
                ses.sendMessage(new ClusterPropertyAddedMessage(prop), toEntityId, childId);
             }
-            for (ContractDescription info : state.contracts.values()) { 
+            for (ContractDescription info : state.contracts.values()) {
                ses.sendMessage(new RegisterContractMessage(info), toEntityId, childId);
             }
             for (WebRootDef def : state.webRootDefs.values()) {
@@ -586,7 +581,7 @@ public class TetrapodCluster extends Storage
             } catch (IOException ex) {
                logger.error(ex.getMessage(), ex);
             } finally {
-               ses.sendResponse(res, ctx.header.requestId);
+               ses.sendResponse(res, ctx.header.requestId, ctx.header.contextId);
             }
          });
          return Response.PENDING;
@@ -654,7 +649,7 @@ public class TetrapodCluster extends Storage
          } catch (Throwable t) {
             logger.error(t.getMessage(), t);
          } finally {
-            ctx.session.sendResponse(res, ctx.header.requestId);
+            ctx.session.sendResponse(res, ctx.header.requestId, ctx.header.contextId);
          }
       }
    }
@@ -796,38 +791,50 @@ public class TetrapodCluster extends Storage
    }
 
    private void onSetClusterPropertyCommand(SetClusterPropertyCommand command) {
-      ClusterProperty prop = command.getProperty();
-      prop = new ClusterProperty(prop.key, prop.secret, prop.val);
-      prop.val = AESEncryptor.decryptSaltedAES(prop.val, state.secretKey);
-      service.broadcastClusterMessage(new ClusterPropertyAddedMessage(prop));
+      final ClusterProperty orig = command.getProperty();
 
-      if (prop.secret) {
-         prop.val = ""; // we don't want to send secret values to admin connections
-      }
-      service.broadcastAdminMessage(new ClusterPropertyAddedMessage(prop));
+      queue(() -> {
+         final ClusterProperty prop = new ClusterProperty(orig.key, orig.secret, orig.val);
+         prop.val = AESEncryptor.decryptSaltedAES(prop.val, state.secretKey);
+         service.broadcastClusterMessage(new ClusterPropertyAddedMessage(prop));
+         if (prop.secret) {
+            prop.val = ""; // we don't want to send secret values to admin connections
+         }
+         service.broadcastAdminMessage(new ClusterPropertyAddedMessage(prop));
+      });
    }
 
    private void onDelClusterPropertyCommand(DelClusterPropertyCommand command) {
-      service.broadcastClusterMessage(new ClusterPropertyRemovedMessage(command.getProperty()));
-      service.broadcastAdminMessage(new ClusterPropertyRemovedMessage(command.getProperty()));
+      queue(() -> {
+         service.broadcastClusterMessage(new ClusterPropertyRemovedMessage(command.getProperty()));
+         service.broadcastAdminMessage(new ClusterPropertyRemovedMessage(command.getProperty()));
+      });
    }
 
    private void onSetWebRouteCommand(SetWebRouteCommand command) {
-      service.broadcastClusterMessage(new WebRootAddedMessage(command.getWebRouteDef()));
-      service.broadcastAdminMessage(new WebRootAddedMessage(command.getWebRouteDef()));
+      queue(() -> {
+         service.broadcastClusterMessage(new WebRootAddedMessage(command.getWebRouteDef()));
+         service.broadcastAdminMessage(new WebRootAddedMessage(command.getWebRouteDef()));
+      });
    }
 
    private void onDelWebRouteCommand(DelWebRouteCommand command) {
-      service.broadcastClusterMessage(new WebRootRemovedMessage(command.getWebRouteName()));
-      service.broadcastAdminMessage(new WebRootRemovedMessage(command.getWebRouteName()));
+      queue(() -> {
+         service.broadcastClusterMessage(new WebRootRemovedMessage(command.getWebRouteName()));
+         service.broadcastAdminMessage(new WebRootRemovedMessage(command.getWebRouteName()));
+      });
    }
 
    private void onDelAdminUserCommand(DelAdminUserCommand command) {
-      service.broadcastAdminMessage(new AdminUserRemovedMessage(command.getAccountId()));
+      queue(() -> {
+         service.broadcastAdminMessage(new AdminUserRemovedMessage(command.getAccountId()));
+      });
    }
 
    private void onAddAdminUserCommand(AddAdminUserCommand command) {
-      service.broadcastAdminMessage(new AdminUserAddedMessage(command.getAdminUser()));
+      queue(() -> {
+         service.broadcastAdminMessage(new AdminUserAddedMessage(command.getAdminUser()));
+      });
    }
 
    public boolean isReady() {
@@ -1045,7 +1052,9 @@ public class TetrapodCluster extends Storage
    }
 
    private void onRegisterContractCommand(RegisterContractCommand command) {
-      service.broadcastClusterMessage(new RegisterContractMessage(command.getContractDescription()));
+      queue(() -> {
+         service.broadcastClusterMessage(new RegisterContractMessage(command.getContractDescription()));
+      });
    }
 
    public long getCommitIndex() {

@@ -70,7 +70,7 @@ public class LogBuffer extends AppenderBase<ILoggingEvent> {
          logStack(sb, e.getThrowableProxy());
          msg = sb.toString();
       }
-      if (msg.length() > MAX_MESSAGE_LEN) {
+      if (msg != null && msg.length() > MAX_MESSAGE_LEN) {
          msg = msg.substring(0, MAX_MESSAGE_LEN - 3) + "...";
       }
       return new ServiceLogEntry(msg, convert(e.getLevel()), e.getTimeStamp(), e.getThreadName(), e.getLoggerName());

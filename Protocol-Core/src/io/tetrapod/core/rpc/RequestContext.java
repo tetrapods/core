@@ -14,7 +14,7 @@ abstract public class RequestContext {
 
    abstract public Response securityCheck(Request request);
 
-   abstract public void handlePendingResponse(Response res, int originalRequestId);
+   abstract public void handlePendingResponse(Response res, int originalRequestId, long contextId);
 
    public boolean isFromClient() {
       return header.fromType == Core.TYPE_CLIENT;
@@ -26,11 +26,11 @@ abstract public class RequestContext {
    
    public void respondWith(Response res) {
       assert res != Response.PENDING;
-      handlePendingResponse(res, header.requestId);
+      handlePendingResponse(res, header.requestId, header.contextId);
    }
    
    public void respondWith(int errorCode) {
-      handlePendingResponse(Response.error(errorCode), header.requestId);
+      handlePendingResponse(Response.error(errorCode), header.requestId, header.contextId);
    }
 
 }

@@ -36,7 +36,7 @@ abstract class WebSession extends Session {
       request.read(new WebJSONDataSource(params, request.tagWebNames()));
 
       if (!commsLogIgnore(header.structId))
-         commsLog("%s  [%d] <- %s", this, header.requestId, request.dump());
+         commsLog("%s %016X [%d] <- %s", this, header.contextId, header.requestId, request.dump());
       return request;
    }
 
@@ -93,6 +93,7 @@ abstract class WebSession extends Session {
             jo.put("_contractId", respH.contractId);
             jo.put("_structId", respH.structId);
             jo.put("_requestId", respH.requestId);
+            jo.put("_contextId", String.format("%016X", respH.contextId));
             break;
 
          case MessageHeader.STRUCT_ID:
