@@ -1,5 +1,7 @@
 package io.tetrapod.core.rpc;
 
+import io.tetrapod.core.tasks.Task;
+
 abstract public class Response extends Structure {
 
    public static final Success SUCCESS = new Success();
@@ -9,6 +11,16 @@ abstract public class Response extends Structure {
    public static final Response error(int errorCode) {
       return new Error(errorCode);
    }
+
+   public static <T extends Response> Task<T> errorTask(int errorCode) {
+      return Task.errorResponse(errorCode);
+   }
+
+   public static Task<Response> successTask() {
+      return Task.successResponse();
+   }
+
+
 
    public boolean isError() {
       return false;

@@ -48,10 +48,10 @@ public class Publisher implements TopicUnsubscribedMessage.Handler, TopicNotFoun
       topic.subscribe(entityId, childId, once);
    }
 
-   public void unsubscribe(int topicId, int entityId, int childId) {
+   public void unsubscribe(int topicId, int entityId, int childId, boolean all) {
       final Topic topic = topics.get(topicId);
       if (topic != null) {
-         topic.unsubscribe(entityId, childId);
+         topic.unsubscribe(entityId, childId, all);
       } else {
          logger.warn("unsubscribe: Could not find topic for {} ", topicId);
       }
@@ -98,7 +98,7 @@ public class Publisher implements TopicUnsubscribedMessage.Handler, TopicNotFoun
    public void messageTopicUnsubscribed(TopicUnsubscribedMessage m, MessageContext ctx) {
       if (m.publisherId == service.getEntityId()) {
          logger.info("@@@@@ UNSUBSCRIBING DISCONNECTED SUBSCRIBER {}", m.dump());
-         unsubscribe(m.topicId, m.entityId, m.childId);
+         unsubscribe(m.topicId, m.entityId, m.childId, m.all);
       }
    }
 
@@ -122,7 +122,7 @@ public class Publisher implements TopicUnsubscribedMessage.Handler, TopicNotFoun
 
    public void unsubscribeFromAllTopics(int entityId, int childId) {
       for (Topic t : topics.values()) {
-         t.unsubscribe(entityId, childId);
+         t.unsubscribe(entityId, childId, true);
       }
    }
 
@@ -146,7 +146,7 @@ public class Publisher implements TopicUnsubscribedMessage.Handler, TopicNotFoun
    @Override
    public void messageSubscriberNotFound(SubscriberNotFoundMessage m, MessageContext ctx) {
       if (m.publisherId == service.getEntityId()) {
-         unsubscribe(m.topicId, m.entityId, m.childId);
+         unsubscribe(m.topicId, m.entityId, m.childId, true);
       }
    }
 

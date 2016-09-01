@@ -632,7 +632,7 @@ public class TetrapodService extends DefaultService
    public Response requestServicesUnsubscribe(ServicesUnsubscribeRequest r, RequestContext ctx) {
       // TODO: validate
       synchronized (servicesTopic) {
-         unsubscribe(servicesTopic.topicId, ctx.header.fromParentId, 0);
+         unsubscribe(servicesTopic.topicId, ctx.header.fromParentId, 0, false);
       }
       return Response.SUCCESS;
    }

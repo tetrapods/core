@@ -2,7 +2,7 @@ java package io.tetrapod.protocol.web
 java outdir "../src" 
 javascript out "../../Tetrapod-Web/webContent/protocol/web.js"
 
-service Web @version(1) @id(22)
+service Web @version(1) @id(22) @sync
  
 error UNKNOWN_CLIENT_ID
 error UNKNOWN_ALT_ID

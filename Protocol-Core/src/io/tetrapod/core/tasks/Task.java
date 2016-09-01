@@ -27,20 +27,23 @@ package io.tetrapod.core.tasks;
  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import com.sun.jmx.mbeanserver.Util;
 import io.tetrapod.core.ServiceException;
 import io.tetrapod.core.StructureFactory;
 import io.tetrapod.core.rpc.ErrorResponseException;
 import io.tetrapod.core.rpc.RequestContext;
 import io.tetrapod.core.rpc.Response;
-import io.tetrapod.core.utils.Util;
+import io.tetrapod.core.utils.CoreUtil;
 import io.tetrapod.protocol.core.CoreContract;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -148,8 +151,10 @@ public class Task<T> extends CompletableFuture<T> {
     * @param errorCode  The error code to create the error response with
     * @return fulfilled Task<Response> with error code
     */
-   public static Task<Response> errorResponse(int errorCode) {
-      return Task.from(Response.error(errorCode));
+   public static <T extends Response> Task<T> errorResponse(int errorCode) {
+      Task<T> task = new Task<T>();
+      task.completeExceptionally(new ErrorResponseException(errorCode));
+      return task;
    }
 
    /**
@@ -307,23 +312,26 @@ public class Task<T> extends CompletableFuture<T> {
             throw new ServiceException("Tried to convert a Task to a response that isn't a Response. " + res.getClass());
          }
          return null;
-      }).exceptionally(parentEx -> {
-         ErrorResponseException e = Util.getThrowableInChain(parentEx, ErrorResponseException.class);
-         if (e != null && e.errorCode != CoreContract.ERROR_UNKNOWN) {
-            ctx.respondWith(e.errorCode);
-         } else {
-            logger.error("**TASK ERROR** Chain failed while dispatching {} Error: {} {} ",
-                    makeRequestName(StructureFactory.getName(ctx.header.contractId, ctx.header.structId)),
-                    parentEx.getMessage(),
-                    ctx.header.dump(), parentEx);
-            ctx.respondWith(CoreContract.ERROR_UNKNOWN);
-         }
-         return null;
-      });
+      }).exceptionally(parentEx -> handleException(ctx, parentEx));
       return Response.ASYNC;
    }
 
-   private String makeRequestName(String name) {
+   public static Void handleException(RequestContext ctx, Throwable parentEx) {
+      ErrorResponseException e = CoreUtil.getThrowableInChain(parentEx, ErrorResponseException.class);
+      if (e != null && e.errorCode != CoreContract.ERROR_UNKNOWN) {
+         ctx.respondWith(e.errorCode);
+      } else {
+         logger.error("**TASK ERROR** Chain failed while dispatching {} Error: {} {} ",
+                 makeRequestName(StructureFactory.getName(ctx.header.contractId, ctx.header.structId)),
+                 parentEx.getMessage(),
+                 ctx.header.dump(), parentEx);
+         ctx.respondWith(CoreContract.ERROR_UNKNOWN);
+      }
+      return null;
+   }
+
+
+   private static String makeRequestName(String name) {
       if (name == null || name.length() < 7) {
          return "";
       }
@@ -341,6 +349,18 @@ public class Task<T> extends CompletableFuture<T> {
          logger.error("Error executing task", th);
          throw ServiceException.wrapIfChecked(th);
       });
+   }
+   public Task<T> logAndIgnoreError() {
+      return exceptionally(th -> {
+         logger.error("Error executing task", th);
+         return null;
+      });
+   }
+
+   public static <T extends Response> Task<T> error(int errorCode) {
+      Task<T> task = new Task<T>();
+      task.completeExceptionally(new ErrorResponseException(errorCode));
+      return task;
    }
 
    static class TaskFutureAdapter<T> implements Runnable {
@@ -526,7 +546,7 @@ public class Task<T> extends CompletableFuture<T> {
     */
    public Task<T> exceptionallyOnErrorCode(int code, final Func0<? extends T> fn) {
       return exceptionally(t -> {
-         ErrorResponseException ere = Util.getThrowableInChain(t, ErrorResponseException.class);
+         ErrorResponseException ere = CoreUtil.getThrowableInChain(t, ErrorResponseException.class);
          if (ere != null && ere.errorCode == code) {
             return fn.apply();
          } else {
@@ -773,12 +793,36 @@ public class Task<T> extends CompletableFuture<T> {
       return from(CompletableFuture.allOf(cfs));
    }
 
+   @SafeVarargs
+   public static <T> Task<List<T>> all(CompletableFuture<T> ... cfs) {
+      return from(CompletableFuture.allOf((CompletableFuture<?>[]) cfs)).thenApply(() -> getTasks(cfs));
+   }
+
+
    /**
     * @throws NullPointerException if the collection or any of its elements are
     *                              {@code null}
     */
    public static <F extends CompletableFuture<?>, C extends Collection<F>> Task<Void> allOf(C cfs) {
       return from(CompletableFuture.allOf(cfs.toArray(new CompletableFuture[cfs.size()])));
+   }
+
+
+   public static <T, F extends CompletableFuture<T>, C extends Collection<F>> Task<List<T>> all(C collection) {
+      F cfs[] = Util.cast(collection.toArray());
+      return all(cfs);
+   }
+
+   public static <T, F extends CompletableFuture<T>> List<T> getTasks(F[] cfs) {
+      try {
+         List<T> tasks = new ArrayList<T>(cfs.length);
+         for (CompletableFuture<T> cf : cfs) {
+            tasks.add(cf.get());
+         }
+         return tasks;
+      } catch (Throwable e) {
+         throw ServiceException.wrapIfChecked(e);
+      }
    }
 
    /**
@@ -790,6 +834,11 @@ public class Task<T> extends CompletableFuture<T> {
       @SuppressWarnings("rawtypes")
       final CompletableFuture[] futureArray = futureList.toArray(new CompletableFuture[futureList.size()]);
       return from(CompletableFuture.allOf(futureArray));
+   }
+
+   public static <T, F extends CompletableFuture<T>> Task<List<T>> all(Stream<F> cfs) {
+      final List<F> futureList = cfs.collect(Collectors.toList());
+      return all(futureList);
    }
 
    /**
