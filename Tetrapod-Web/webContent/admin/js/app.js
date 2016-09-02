@@ -26,6 +26,7 @@ define([ "knockout", "jquery", "alert", "toolbox", "protocol/server", "protocol/
       self.sendTo = sendTo;
       self.sendAny = sendAny;
       self.sendDirect = sendDirect;
+      self.addArgs = addArgs;
 
       server.addMessageHandler("TopicUnsubscribed", function(msg) {
          var topicKey = msg.publisherId + '.' + msg.topicId;
