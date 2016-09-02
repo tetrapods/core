@@ -68,13 +68,13 @@ define(["knockout", "jquery", "bootbox", "alert", "app", "chart", "modules/build
                   var args = {
                      data: result
                   };
-                  addArgs(args);
+                  app.addArgs(args);
                   app.server.sendRequest(command.contractId, command.structId, args, self.entityId, app.alertResponse);
                }
             });
          } else {
             var args = {};
-            addArgs(args);
+            app.addArgs(args);
             app.server.sendRequest(command.contractId, command.structId, args, self.entityId, app.alertResponse);
          }
       }
