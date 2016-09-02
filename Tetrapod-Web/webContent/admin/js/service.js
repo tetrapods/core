@@ -65,7 +65,7 @@ define(["knockout", "jquery", "bootbox", "alert", "app", "chart", "modules/build
          if (command.hasArgument) {
             bootbox.prompt("Enter argument value:", function(result) {
                if (result !== null) {
-                  app.server.sendRequest(command.contractId, command.structId, {
+                  app.sendDirect(command.contractId, command.structId, {
                      data: result
                   }, self.entityId, app.alertResponse);
                }
