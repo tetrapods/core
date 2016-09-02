@@ -36,8 +36,9 @@ abstract class WebSession extends Session {
       }
       request.read(new WebJSONDataSource(params, request.tagWebNames()));
 
-      if (!CommsLogger.commsLogIgnore(header.structId))
-         commsLog("%s %016X [%d] <- %s", this, header.contextId, header.requestId, request.dump());
+      CommsLogger.append(this, false, header, request);
+      //      if (!CommsLogger.commsLogIgnore(header.structId))
+      //         commsLog("%s %016X [%d] <- %s", this, header.contextId, header.requestId, request.dump());
       return request;
    }
 

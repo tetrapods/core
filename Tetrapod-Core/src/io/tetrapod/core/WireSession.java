@@ -137,8 +137,7 @@ public class WireSession extends Session {
             final Structure res = StructureFactory.make(header.contractId, header.structId);
             if (res != null) {
                res.read(reader);
-               if (!CommsLogger.commsLogIgnore(async.header.structId))
-                  logged = commsLog("%s %016X  [%d] <- %s", this, header.contextId, header.requestId, res.dump());
+               logged = CommsLogger.append(this, false, header, res);
                // we dispatch responses as high priority to prevent certain 
                // forms of live-lock when the dispatch thread pool is exhausted
                getDispatcher().dispatchHighPriority(() -> {
@@ -152,26 +151,11 @@ public class WireSession extends Session {
                logger.warn("{} Could not find response structure {}", this, header.structId);
             }
          } else if (relayHandler != null) {
-
-            // HACK: Expensive, for better debug logs. 
-            Response res = null;
-            //            if (logger.isDebugEnabled() && header.structId == 1) {
-            //               res = (Response) StructureFactory.make(async.header.contractId, header.structId);
-            //               if (res != null) {
-            //                  int mark = in.readerIndex();
-            //                  res.read(reader);
-            //                  in.readerIndex(mark);
-            //               }
-            //            }
-
-            if (!CommsLogger.commsLogIgnore(async.header.structId))
-               logged = commsLog("%s %016X [%d] <- Response.%s", this, header.contextId, header.requestId,
-                     res == null ? StructureFactory.getName(header.contractId, header.structId) : res.dump());
+            logged = CommsLogger.append(this,false,  header, in);
             relayResponse(header, async, in);
          }
-         if (!logged && !CommsLogger.commsLogIgnore(async.header.structId)) {
-            logged = commsLog("%s %016X [%d] <- Response.%s", this, header.contextId, header.requestId,
-                  StructureFactory.getName(header.contractId, header.structId));
+         if (!logged) {
+            CommsLogger.append(this, false, header, in);
          }
       } else {
          // Typical if the request timed out earlier, and now we've finally received the actual response, it's too late 
@@ -198,7 +182,7 @@ public class WireSession extends Session {
             final Request req = (Request) StructureFactory.make(header.contractId, header.structId);
             if (req != null) {
                req.read(reader);
-               CommsLogger.append(this, header, req);
+               CommsLogger.append(this, false, header, req);
                dispatchRequest(header, req);
             } else {
                logger.warn("Could not find request structure {}", header.structId);
@@ -209,12 +193,12 @@ public class WireSession extends Session {
             logger.error("Serialization Error on {}", header.dump());
          }
       } else if (relayHandler != null) {
-         logged = CommsLogger.append(this, header, in);
+         logged = CommsLogger.append(this, false, header, in);
          relayRequest(header, in);
       }
 
       if (!logged) {
-         logged = CommsLogger.append(this, header, in);
+         logged = CommsLogger.append(this,false,  header, in);
       }
 
    }
@@ -230,11 +214,11 @@ public class WireSession extends Session {
       }
 
       //CommsLogger.append(header, isBroadcast);
-      CommsLogger.append(this, header, in);
-//      if (!CommsLogger.commsLogIgnore(header.structId)) {
-//         commsLog("%s  [%s] <- Message: %s (to %d.%d t%d f%d)", this, isBroadcast ? "B" : "M", getNameFor(header), header.toParentId,
-//               header.toChildId, header.topicId, header.flags);
-//      }
+      CommsLogger.append(this, false, header, in);
+      //      if (!CommsLogger.commsLogIgnore(header.structId)) {
+      //         commsLog("%s  [%s] <- Message: %s (to %d.%d t%d f%d)", this, isBroadcast ? "B" : "M", getNameFor(header), header.toParentId,
+      //               header.toChildId, header.topicId, header.flags);
+      //      }
 
       boolean selfDispatch = header.topicId == 0 && header.toChildId == 0 && ((header.flags & MessageHeader.FLAGS_ALTERNATE) == 0)
             && (header.toParentId == myId || header.toParentId == UNADDRESSED);

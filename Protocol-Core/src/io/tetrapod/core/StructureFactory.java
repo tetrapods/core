@@ -1,6 +1,6 @@
 package io.tetrapod.core;
 
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import io.tetrapod.core.rpc.*;
@@ -63,6 +63,14 @@ public class StructureFactory {
          return c.toString();
       }
       return String.format("<%d,%d>", contractId, structId);
+   }
+
+   public static List<StructDescription> getAllKnownStructures() {
+      List<StructDescription> defs = new ArrayList<>();
+      for (Structure s : knownStructs.values()) {
+         defs.add(s.makeDescription());
+      }
+      return defs;
    }
 
 }

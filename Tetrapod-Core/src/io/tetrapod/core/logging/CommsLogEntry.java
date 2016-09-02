@@ -25,12 +25,11 @@ public class CommsLogEntry {
    }
 
    private static Structure readPayload(IOStreamDataSource data, CommsLogHeader header, int contractId, int structId) throws IOException {
-      if (header.def != null & !StructureFactory.has(contractId, structId)) {
-         StructureFactory.add(new StructureAdapter(header.def));
-      }
       Structure payload = StructureFactory.make(contractId, structId);
       assert payload != null;
-      payload.read(data);
+      if (payload != null) {
+         payload.read(data);
+      }
       return payload;
    }
 

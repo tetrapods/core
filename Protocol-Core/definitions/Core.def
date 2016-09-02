@@ -96,7 +96,7 @@ public struct MessageHeader
 public struct CommsLogHeader
    1: long  timestamp
    2: LogHeaderType type 
-   3: StructDescription def
+   3: boolean sending // true of sending, false if received
       
    enum int LogHeaderType.REQUEST      = 1
    enum int LogHeaderType.RESPONSE     = 2

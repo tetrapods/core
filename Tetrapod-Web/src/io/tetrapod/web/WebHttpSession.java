@@ -388,7 +388,8 @@ public class WebHttpSession extends WebSession {
                }
             }
          } else {
-            ctx.writeAndFlush(makeFrame(res, 0, 0));
+            // a blank response
+            ctx.writeAndFlush(makeFrame(new ResponseHeader(0, 0, 0, 0), res, ENVELOPE_RESPONSE));
          }
          if (cf != null && !keepAlive) {
             cf.addListener(ChannelFutureListener.CLOSE);
@@ -522,9 +523,9 @@ public class WebHttpSession extends WebSession {
       } else {
          // HACK: for http responses we need to write to the response to the correct ChannelHandlerContext
          if (res != Response.PENDING) {
-            if (!CommsLogger.commsLogIgnore(res))
-               commsLog("%s %016X [%d] => %s", this, contextId, requestId, res.dump());
-            final Object buffer = makeFrame(res, requestId, contextId);
+            final ResponseHeader header = new ResponseHeader(requestId, res.getContractId(), res.getStructId(), contextId);
+            CommsLogger.append(this, true, header, res);
+            final Object buffer = makeFrame(header, res, ENVELOPE_RESPONSE);
             if (buffer != null && channel.isActive()) {
                ChannelHandlerContext ctx = getContext(requestId);
                if (ctx != null) {
@@ -543,9 +544,10 @@ public class WebHttpSession extends WebSession {
       if (isWebSocket()) {
          super.sendRelayedResponse(header, payload);
       } else {
+         CommsLogger.append(this, true, header, payload);
+         //         if (!CommsLogger.commsLogIgnore(header.structId))
+         //            commsLog("%s %016X [%d] ~> Response:%d", this, header.contextId, header.requestId, header.structId);
          // HACK: for http responses we need to write to the response to the correct ChannelHandlerContext
-         if (!CommsLogger.commsLogIgnore(header.structId))
-            commsLog("%s %016X [%d] ~> Response:%d", this, header.contextId, header.requestId, header.structId);
          ChannelHandlerContext ctx = getContext(header.requestId);
          final Object buffer = makeFrame(header, payload, ENVELOPE_RESPONSE);
          if (ctx != null) {
@@ -573,9 +575,10 @@ public class WebHttpSession extends WebSession {
          super.sendRelayedMessage(header, payload, broadcast);
       } else {
          // queue the message for long poller to retrieve later
-         if (!CommsLogger.commsLogIgnore(header.structId)) {
-            commsLog("%s  [M] ~] Message:%d %s (to %d)", this, header.structId, getNameFor(header), header.toChildId);
-         }
+         CommsLogger.append(this, true, header, payload);
+         //         if (!CommsLogger.commsLogIgnore(header.structId)) {
+         //            commsLog("%s  [M] ~] Message:%d %s (to %d)", this, header.structId, getNameFor(header), header.toChildId);
+         //         }
          final LongPollQueue messages = LongPollQueue.getQueue(getTheirEntityId(), false);
          if (messages != null) {
             // FIXME: Need a sensible way to protect against memory gobbling if this queue isn't cleared fast enough
