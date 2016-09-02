@@ -71,7 +71,7 @@ define(["knockout", "jquery", "bootbox", "alert", "app", "chart", "modules/build
                }
             });
          } else {
-            app.server.sendRequest(command.contractId, command.structId, {}, self.entityId, app.alertResponse);
+            app.sendDirect(command.contractId, command.structId, {}, self.entityId, app.alertResponse);
          }
       }
 
