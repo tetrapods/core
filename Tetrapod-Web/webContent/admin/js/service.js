@@ -65,13 +65,17 @@ define(["knockout", "jquery", "bootbox", "alert", "app", "chart", "modules/build
          if (command.hasArgument) {
             bootbox.prompt("Enter argument value:", function(result) {
                if (result !== null) {
-                  app.server.sendRequest(command.contractId, command.structId, {
+                  var args = {
                      data: result
-                  }, self.entityId, app.alertResponse);
+                  };
+                  addArgs(args);
+                  app.server.sendRequest(command.contractId, command.structId, args, self.entityId, app.alertResponse);
                }
             });
          } else {
-            app.sendDirect(command.contractId, command.structId, {}, self.entityId, app.alertResponse);
+            var args = {};
+            addArgs(args);
+            app.server.sendRequest(command.contractId, command.structId, args, self.entityId, app.alertResponse);
          }
       }
 
