@@ -12,9 +12,16 @@ public class StructureFactory {
    private static final Map<Long, Structure> knownStructs = new ConcurrentHashMap<>();
 
    public static synchronized void add(Structure s) {
-      long key = makeKey(s.getContractId(), s.getStructId());
+      final long key = makeKey(s.getContractId(), s.getStructId());
       // newest wins
       knownStructs.put(key, s);
+   }
+
+   public static synchronized void addIfNew(Structure s) {
+      final long key = makeKey(s.getContractId(), s.getStructId());
+      if (!knownStructs.containsKey(key)) {
+         knownStructs.put(key, s);
+      }
    }
 
    public static synchronized Structure make(int contractId, int structId) {

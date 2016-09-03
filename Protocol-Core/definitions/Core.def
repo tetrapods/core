@@ -93,6 +93,9 @@ public struct MessageHeader
    
    const byte FLAGS_ALTERNATE = 1
 
+public struct CommsLogFileHeader
+   1: StructDescription<list> structs
+
 public struct CommsLogHeader
    1: long  timestamp
    2: LogHeaderType type 

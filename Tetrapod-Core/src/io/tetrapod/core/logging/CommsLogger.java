@@ -95,14 +95,11 @@ public class CommsLogger {
       dir.mkdirs();
       currentLogFile = new File(dir, "current.log");
       out = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(currentLogFile, false)));
-      List<StructDescription> defs = StructureFactory.getAllKnownStructures();
-      out.writeInt(LOG_FILE_VERSION);
-      out.writeInt(defs.size());
 
+      CommsLogFileHeader header = new CommsLogFileHeader(StructureFactory.getAllKnownStructures());
+      out.writeInt(LOG_FILE_VERSION);
       IOStreamDataSource data = IOStreamDataSource.forWriting(out);
-      for (StructDescription def : defs) {
-         def.write(data);
-      }
+      header.write(data);
 
       logOpenTime = LocalDateTime.now();
    }
@@ -123,30 +120,19 @@ public class CommsLogger {
       try (DataInputStream in = new DataInputStream(new BufferedInputStream(new FileInputStream(file)))) {
          @SuppressWarnings("unused")
          int ver = in.readInt();
-         int defCount = in.readInt();
-
-         List<StructDescription> defs = new ArrayList<>();
-         IOStreamDataSource data = IOStreamDataSource.forReading(in);
-         for (int i = 0; i < defCount; i++) {
-            StructDescription def = new StructDescription();
-            def.read(data);
-            defs.add(def);
-         }
+         IOStreamDataSource dataIn = IOStreamDataSource.forReading(in);
+         CommsLogFileHeader header = new CommsLogFileHeader();
+         header.read(dataIn);
 
          try (DataOutputStream out = new DataOutputStream(new BufferedOutputStream(new GZIPOutputStream(new FileOutputStream(gzFile))))) {
             out.writeInt(LOG_FILE_VERSION);
-            out.writeInt(defs.size());
-            data = IOStreamDataSource.forWriting(out);
-            for (StructDescription def : defs) {
-               def.write(data);
-            }
-
+            IOStreamDataSource dataOut = IOStreamDataSource.forWriting(out);
+            header.write(dataOut);
             while (true) {
-               CommsLogEntry.read(in).write(out);
+               CommsLogEntry.read(dataIn).write(out);
             }
          } catch (IOException e) {}
       }
-
    }
 
    public void append(CommsLogEntry entry) {
@@ -278,22 +264,23 @@ public class CommsLogger {
 
    @Test
    public void test() throws FileNotFoundException, IOException {
-      File file = new File("/Users/adavidson/workspace/tetrapod/core/Tetrapod-Web/logs/comms/2016-09-01/current.log");
+      File file = new File("/Users/adavidson/workspace/tetrapod/core/Tetrapod-Web/logs/comms/2016-09-03/current.log");
       try (DataInputStream in = new DataInputStream(new BufferedInputStream(new FileInputStream(file)))) {
          @SuppressWarnings("unused")
          int ver = in.readInt();
-         int defCount = in.readInt();
-
          IOStreamDataSource data = IOStreamDataSource.forReading(in);
-         for (int i = 0; i < defCount; i++) {
-            StructDescription def = new StructDescription();
-            def.read(data);
-            StructureFactory.add(new StructureAdapter(def));
+         CommsLogFileHeader header = new CommsLogFileHeader();
+         header.read(data);
+         for (StructDescription def : header.structs) {
+            StructureFactory.addIfNew(new StructureAdapter(def));
          }
 
          while (true) {
-            CommsLogEntry e = CommsLogEntry.read(in);
+            CommsLogEntry e = CommsLogEntry.read(data);
             System.out.println(e.header.timestamp + " " + e.header.type + " : " + e.struct.dump());
+            if (e.payload instanceof Structure) {
+               System.out.println("\t" + ((Structure)e.payload).dump());
+            }
          }
       } catch (IOException e) {}
    }

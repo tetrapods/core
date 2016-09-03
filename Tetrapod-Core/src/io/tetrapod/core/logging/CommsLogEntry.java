@@ -4,8 +4,7 @@ import java.io.*;
 
 import io.tetrapod.core.StructureFactory;
 import io.tetrapod.core.rpc.Structure;
-import io.tetrapod.core.serialize.StructureAdapter;
-import io.tetrapod.core.serialize.datasources.*;
+import io.tetrapod.core.serialize.datasources.IOStreamDataSource;
 import io.tetrapod.protocol.core.*;
 
 public class CommsLogEntry {
@@ -33,8 +32,8 @@ public class CommsLogEntry {
       return payload;
    }
 
-   public static CommsLogEntry read(DataInputStream in) throws IOException {
-      IOStreamDataSource data = IOStreamDataSource.forReading(in);
+   public static CommsLogEntry read(IOStreamDataSource data) throws IOException {
+      //      IOStreamDataSource data = IOStreamDataSource.forReading(in);
       CommsLogHeader header = new CommsLogHeader();
       header.read(data);
 
