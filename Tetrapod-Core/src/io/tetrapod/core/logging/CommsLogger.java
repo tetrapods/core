@@ -3,9 +3,8 @@ package io.tetrapod.core.logging;
 import java.io.*;
 import java.time.*;
 import java.util.*;
-import java.util.zip.GZIPOutputStream;
+import java.util.zip.*;
 
-import org.junit.Test;
 import org.slf4j.*;
 
 import io.netty.buffer.ByteBuf;
@@ -25,7 +24,9 @@ public class CommsLogger {
    private static final Logger       logger           = LoggerFactory.getLogger(CommsLogger.class);
    private static final Logger       commsLog         = LoggerFactory.getLogger("comms");
 
-   private static final boolean      LOG_TEXT_CONSOLE = true;
+   private static final boolean      ENABLED          = true;
+
+   private static final boolean      LOG_TEXT_CONSOLE = false;
 
    private static final int          LOG_FILE_VERSION = 1;
 
@@ -135,14 +136,14 @@ public class CommsLogger {
       }
    }
 
-   public void append(CommsLogEntry entry) {
+   private void append(CommsLogEntry entry) {
       synchronized (buffer) {
          buffer.add(entry);
       }
    }
 
    public static void append(Session session, boolean sending, MessageHeader header, ByteBuf in) {
-      if (!commsLogIgnore(header.structId)) {
+      if (ENABLED && !commsLogIgnore(header.structId)) {
          byte[] data = new byte[in.readableBytes()];
          in.getBytes(in.readerIndex(), data);
          SINGLETON.append(new CommsLogEntry(new CommsLogHeader(System.currentTimeMillis(), LogHeaderType.MESSAGE, sending), header, data));
@@ -155,7 +156,7 @@ public class CommsLogger {
    }
 
    public static void append(Session session, boolean sending, MessageHeader header, Message msg) {
-      if (!commsLogIgnore(header.structId)) {
+      if (ENABLED && !commsLogIgnore(header.structId)) {
          SINGLETON.append(new CommsLogEntry(new CommsLogHeader(System.currentTimeMillis(), LogHeaderType.MESSAGE, sending), header, msg));
          if (commsLog.isDebugEnabled()) {
             boolean isBroadcast = header.toChildId == 0 && header.topicId != 1;
@@ -166,7 +167,7 @@ public class CommsLogger {
    }
 
    public static boolean append(Session session, boolean sending, RequestHeader header, ByteBuf in) {
-      if (!commsLogIgnore(header.structId)) {
+      if (ENABLED && !commsLogIgnore(header.structId)) {
          byte[] data = new byte[in.readableBytes()];
          in.getBytes(in.readerIndex(), data);
          SINGLETON.append(new CommsLogEntry(new CommsLogHeader(System.currentTimeMillis(), LogHeaderType.REQUEST, sending), header, data));
@@ -180,7 +181,7 @@ public class CommsLogger {
    }
 
    public static boolean append(Session session, boolean sending, RequestHeader header, Structure req) {
-      if (!commsLogIgnore(header.structId)) {
+      if (ENABLED && !commsLogIgnore(header.structId)) {
          SINGLETON.append(new CommsLogEntry(new CommsLogHeader(System.currentTimeMillis(), LogHeaderType.REQUEST, sending), header, req));
          if (commsLog.isDebugEnabled()) {
             commsLog(session, "%016X [%d] %s %s (from %d.%d)", header.contextId, header.requestId, sending ? "->" : "<-", req.dump(),
@@ -192,7 +193,7 @@ public class CommsLogger {
    }
 
    public static boolean append(Session session, boolean sending, ResponseHeader header, ByteBuf in) {
-      if (!commsLogIgnore(header.structId)) {
+      if (ENABLED && !commsLogIgnore(header.structId)) {
          byte[] data = new byte[in.readableBytes()];
          in.getBytes(in.readerIndex(), data);
          SINGLETON.append(new CommsLogEntry(new CommsLogHeader(System.currentTimeMillis(), LogHeaderType.RESPONSE, sending), header, data));
@@ -205,7 +206,7 @@ public class CommsLogger {
    }
 
    public static boolean append(Session session, boolean sending, ResponseHeader header, Structure res) {
-      if (!commsLogIgnore(header.structId)) {
+      if (ENABLED && !commsLogIgnore(header.structId)) {
          SINGLETON.append(new CommsLogEntry(new CommsLogHeader(System.currentTimeMillis(), LogHeaderType.RESPONSE, sending), header, res));
          if (commsLog.isDebugEnabled()) {
             commsLog(session, "%016X [%d] %s %s", header.contextId, header.requestId, sending ? "->" : "<-", res.dump());
@@ -261,11 +262,46 @@ public class CommsLogger {
    public static void shutdown() {
       SINGLETON.doShutdown();
    }
+   //
+   //   @Test
+   //   public void test() throws FileNotFoundException, IOException {
+   //      File file = new File("/Users/adavidson/workspace/tetrapod/core/Tetrapod-Web/logs/comms/2016-09-03/current.log");
+   //      
+   //      try (DataInputStream in = new DataInputStream(new BufferedInputStream(new FileInputStream(file)))) {
+   //         @SuppressWarnings("unused")
+   //         int ver = in.readInt();
+   //         IOStreamDataSource data = IOStreamDataSource.forReading(in);
+   //         CommsLogFileHeader header = new CommsLogFileHeader();
+   //         header.read(data);
+   //         for (StructDescription def : header.structs) {
+   //            StructureFactory.addIfNew(new StructureAdapter(def));
+   //         }
+   //
+   //         while (true) {
+   //            CommsLogEntry e = CommsLogEntry.read(data);
+   //            System.out.println(e.header.timestamp + " " + e.header.type + " : " + e.struct.dump());
+   //            if (e.payload instanceof Structure) {
+   //               System.out.println("\t" + ((Structure) e.payload).dump());
+   //            }
+   //         }
+   //      } catch (IOException e) {}
+   //   }
 
-   @Test
-   public void test() throws FileNotFoundException, IOException {
-      File file = new File("/Users/adavidson/workspace/tetrapod/core/Tetrapod-Web/logs/comms/2016-09-03/current.log");
+   public static List<CommsLogEntry> readCompressedLogFile(File file) throws FileNotFoundException, IOException {
+      try (DataInputStream in = new DataInputStream(new GZIPInputStream(new BufferedInputStream(new FileInputStream(file))))) {
+         return readLogFile(in);
+      }
+   }
+
+   public static List<CommsLogEntry> readUncompressedLogFile(File file) throws FileNotFoundException, IOException {
       try (DataInputStream in = new DataInputStream(new BufferedInputStream(new FileInputStream(file)))) {
+         return readLogFile(in);
+      }
+   }
+
+   public static List<CommsLogEntry> readLogFile(DataInputStream in) {
+      final List<CommsLogEntry> list = new ArrayList<>();
+      try {
          @SuppressWarnings("unused")
          int ver = in.readInt();
          IOStreamDataSource data = IOStreamDataSource.forReading(in);
@@ -274,15 +310,27 @@ public class CommsLogger {
          for (StructDescription def : header.structs) {
             StructureFactory.addIfNew(new StructureAdapter(def));
          }
-
          while (true) {
-            CommsLogEntry e = CommsLogEntry.read(data);
-            System.out.println(e.header.timestamp + " " + e.header.type + " : " + e.struct.dump());
-            if (e.payload instanceof Structure) {
-               System.out.println("\t" + ((Structure)e.payload).dump());
-            }
+            list.add(CommsLogEntry.read(data));
          }
       } catch (IOException e) {}
+      return list;
    }
+ 
 
+   public static List<File> filesForDateRange(long minTime, long maxTime) {
+      List<File> files = new ArrayList<>();
+      File logs = new File(Util.getProperty("tetrapod.logs.comms", "logs/comms/"));
+      LocalDateTime minDateTime = LocalDateTime.ofInstant(Instant.ofEpochSecond(minTime/1000), TimeZone.getDefault().toZoneId());
+      LocalDateTime maxDateTime = LocalDateTime.ofInstant(Instant.ofEpochSecond(maxTime/1000), TimeZone.getDefault().toZoneId());
+      LocalDateTime time = minDateTime;
+      while (!time.isAfter(maxDateTime)) {
+         File dir = new File(logs, String.format("%d-%02d-%02d", time.getYear(), time.getMonthValue(), time.getDayOfMonth()));
+         File file = new File(dir,
+               String.format("%d-%02d-%02d_%02d.comms.gz", time.getYear(), time.getMonthValue(), time.getDayOfMonth(), time.getHour()));
+         files.add(file);
+         time = time.plusHours(1);
+      }
+      return files;
+   }
 }
