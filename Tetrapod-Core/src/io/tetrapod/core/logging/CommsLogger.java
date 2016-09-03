@@ -24,9 +24,9 @@ public class CommsLogger {
    private static final Logger       logger           = LoggerFactory.getLogger(CommsLogger.class);
    private static final Logger       commsLog         = LoggerFactory.getLogger("comms");
 
-   private static final boolean      ENABLED          = true;
+   private static boolean            ENABLED          = true;
 
-   private static final boolean      LOG_TEXT_CONSOLE = false;
+   private static boolean            LOG_TEXT_CONSOLE = true;
 
    private static final int          LOG_FILE_VERSION = 1;
 
@@ -94,15 +94,16 @@ public class CommsLogger {
       LocalDate date = LocalDate.now();
       File dir = new File(logs, String.format("%d-%02d-%02d", date.getYear(), date.getMonthValue(), date.getDayOfMonth()));
       dir.mkdirs();
-      currentLogFile = new File(dir, "current.log");
-      out = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(currentLogFile, false)));
+
+      logOpenTime = LocalDateTime.now();
+      currentLogFile = new File(dir, String.format("%d-%02d-%02d_%02d.comms", logOpenTime.getYear(), logOpenTime.getMonthValue(),
+            logOpenTime.getDayOfMonth(), logOpenTime.getHour()));
+      out = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(currentLogFile, true)));
 
       CommsLogFileHeader header = new CommsLogFileHeader(StructureFactory.getAllKnownStructures());
       out.writeInt(LOG_FILE_VERSION);
       IOStreamDataSource data = IOStreamDataSource.forWriting(out);
       header.write(data);
-
-      logOpenTime = LocalDateTime.now();
    }
 
    private void closeLogFile() throws IOException {
@@ -113,12 +114,12 @@ public class CommsLogger {
 
    private void archiveLogFile() throws IOException {
       // rename and gzip/upload
-      final File file = new File(currentLogFile.getParent(), String.format("%d-%02d-%02d_%02d.comms", logOpenTime.getYear(),
-            logOpenTime.getMonthValue(), logOpenTime.getDayOfMonth(), logOpenTime.getHour()));
-      currentLogFile.renameTo(file);
+      //      final File file = new File(currentLogFile.getParent(), String.format("%d-%02d-%02d_%02d.comms", logOpenTime.getYear(),
+      //            logOpenTime.getMonthValue(), logOpenTime.getDayOfMonth(), logOpenTime.getHour()));
+      //currentLogFile.renameTo(file);
       final File gzFile = new File(currentLogFile.getParent(), String.format("%d-%02d-%02d_%02d.comms.gz", logOpenTime.getYear(),
             logOpenTime.getMonthValue(), logOpenTime.getDayOfMonth(), logOpenTime.getHour()));
-      try (DataInputStream in = new DataInputStream(new BufferedInputStream(new FileInputStream(file)))) {
+      try (DataInputStream in = new DataInputStream(new BufferedInputStream(new FileInputStream(currentLogFile)))) {
          @SuppressWarnings("unused")
          int ver = in.readInt();
          IOStreamDataSource dataIn = IOStreamDataSource.forReading(in);
@@ -262,30 +263,14 @@ public class CommsLogger {
    public static void shutdown() {
       SINGLETON.doShutdown();
    }
-   //
-   //   @Test
-   //   public void test() throws FileNotFoundException, IOException {
-   //      File file = new File("/Users/adavidson/workspace/tetrapod/core/Tetrapod-Web/logs/comms/2016-09-03/current.log");
-   //      
-   //      try (DataInputStream in = new DataInputStream(new BufferedInputStream(new FileInputStream(file)))) {
-   //         @SuppressWarnings("unused")
-   //         int ver = in.readInt();
-   //         IOStreamDataSource data = IOStreamDataSource.forReading(in);
-   //         CommsLogFileHeader header = new CommsLogFileHeader();
-   //         header.read(data);
-   //         for (StructDescription def : header.structs) {
-   //            StructureFactory.addIfNew(new StructureAdapter(def));
-   //         }
-   //
-   //         while (true) {
-   //            CommsLogEntry e = CommsLogEntry.read(data);
-   //            System.out.println(e.header.timestamp + " " + e.header.type + " : " + e.struct.dump());
-   //            if (e.payload instanceof Structure) {
-   //               System.out.println("\t" + ((Structure) e.payload).dump());
-   //            }
-   //         }
-   //      } catch (IOException e) {}
-   //   }
+
+   public static List<CommsLogEntry> readLogFile(File file) throws FileNotFoundException, IOException {
+      if (file.getName().endsWith(".gz")) {
+         return readCompressedLogFile(file);
+      } else {
+         return readUncompressedLogFile(file);
+      }
+   }
 
    public static List<CommsLogEntry> readCompressedLogFile(File file) throws FileNotFoundException, IOException {
       try (DataInputStream in = new DataInputStream(new GZIPInputStream(new BufferedInputStream(new FileInputStream(file))))) {
@@ -316,19 +301,25 @@ public class CommsLogger {
       } catch (IOException e) {}
       return list;
    }
- 
 
-   public static List<File> filesForDateRange(long minTime, long maxTime) {
+   public static List<File> filesForDateRange(File logDir, long minTime, long maxTime) {
       List<File> files = new ArrayList<>();
-      File logs = new File(Util.getProperty("tetrapod.logs.comms", "logs/comms/"));
-      LocalDateTime minDateTime = LocalDateTime.ofInstant(Instant.ofEpochSecond(minTime/1000), TimeZone.getDefault().toZoneId());
-      LocalDateTime maxDateTime = LocalDateTime.ofInstant(Instant.ofEpochSecond(maxTime/1000), TimeZone.getDefault().toZoneId());
+      LocalDateTime minDateTime = LocalDateTime.ofInstant(Instant.ofEpochSecond(minTime / 1000), TimeZone.getDefault().toZoneId());
+      LocalDateTime maxDateTime = LocalDateTime.ofInstant(Instant.ofEpochSecond(maxTime / 1000), TimeZone.getDefault().toZoneId());
       LocalDateTime time = minDateTime;
       while (!time.isAfter(maxDateTime)) {
-         File dir = new File(logs, String.format("%d-%02d-%02d", time.getYear(), time.getMonthValue(), time.getDayOfMonth()));
+         File dir = new File(logDir, String.format("%d-%02d-%02d", time.getYear(), time.getMonthValue(), time.getDayOfMonth()));
          File file = new File(dir,
                String.format("%d-%02d-%02d_%02d.comms.gz", time.getYear(), time.getMonthValue(), time.getDayOfMonth(), time.getHour()));
-         files.add(file);
+         if (file.exists()) {
+            files.add(file);
+         } else {
+            file = new File(dir,
+                  String.format("%d-%02d-%02d_%02d.comms", time.getYear(), time.getMonthValue(), time.getDayOfMonth(), time.getHour()));
+            if (file.exists()) {
+               files.add(file);
+            }
+         }
          time = time.plusHours(1);
       }
       return files;

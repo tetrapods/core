@@ -75,4 +75,33 @@ public class CommsLogEntry {
       }
    }
 
+   public boolean matches(long minTime, long maxTime, long contextId) {
+      if (header.timestamp >= minTime && header.timestamp <= maxTime) {         
+         switch (header.type) {
+            case MESSAGE: {
+               //MessageHeader h = (MessageHeader) struct;
+               return false;
+            }
+            case REQUEST: {
+               RequestHeader h = (RequestHeader) struct;
+               return h.contextId == contextId;
+            }
+            case RESPONSE: {
+               ResponseHeader h = (ResponseHeader) struct;
+               return h.contextId == contextId;
+            }
+            case EVENT:
+               return false;
+         }
+      }
+      return false;
+   }
+
+   public String description() {
+      return String.format("[%d] %s : %s : %s", header.timestamp, header.type, struct.dump(), ((Structure) payload).dump());
+      //      System.out.println(header.timestamp + " " + header.type + " : " + struct.dump());
+      //      if (payload instanceof Structure) {
+      //         System.out.println("\t" + ((Structure) payload).dump());
+      //      }
+   }
 }
