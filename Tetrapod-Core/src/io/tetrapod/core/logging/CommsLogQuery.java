@@ -16,7 +16,7 @@ public class CommsLogQuery {
 
    public static void main(String args[]) throws FileNotFoundException, IOException {
       File logDir = new File("/Users/adavidson/workspace/tetrapod/core/Tetrapod-Web/logs/comms");
-      long contextId = 0x58BBA6D520BED86Al;
+      long contextId = 4214381351969146732L;
       logger.info("CommsLogQuery search for contextId={}", contextId);
       long minTime = System.currentTimeMillis() - 1000 * 60 * 60 * 30;
       long maxTime = System.currentTimeMillis();
@@ -26,10 +26,15 @@ public class CommsLogQuery {
          logger.info("FILE = {}", f);
          if (f.exists()) {
             logger.info("READING FILE = {}", f);
-            for (CommsLogEntry e : CommsLogger.readLogFile(f)) {
-               if (e.matches(minTime, maxTime, contextId)) {
-                  logger.info("{}", e.description());
+            try {
+               for (CommsLogEntry e : CommsLogger.readLogFile(f)) {
+                  if (e.matches(minTime, maxTime, contextId)) {
+                     logger.info("MATCH: {}", e.description());
+                  }
                }
+            } catch (Exception e) {
+               logger.error("Error Reading {} ", f);
+               logger.error(e.getMessage(), e);
             }
          }
       }
