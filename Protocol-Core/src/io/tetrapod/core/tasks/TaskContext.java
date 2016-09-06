@@ -27,6 +27,9 @@ package io.tetrapod.core.tasks;
  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import com.sun.jmx.mbeanserver.Util;
+import io.tetrapod.core.ServiceException;
+
 import java.util.Deque;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -60,6 +63,13 @@ public class TaskContext {
 
    public void setDefaultExecutor(Executor defaultExecutor) {
       this.defaultExecutor = defaultExecutor;
+   }
+
+   public static TaskContext pushNew()
+   {
+       final TaskContext context = new TaskContext();
+       context.push();
+       return context;
    }
 
    /**
@@ -108,12 +118,12 @@ public class TaskContext {
    /**
     * Gets the current execution context for this thread from the stack.
     *
-    * @return the current context or null if there is none.
+    * @return the current context
     */
    public static TaskContext current() {
       final Deque<TaskContext> stack = contextStacks.get();
       if (stack == null) {
-         return null;
+         throw new ServiceException("Attempted to get task context when non was established");
       }
       return stack.peekLast();
    }
@@ -322,6 +332,14 @@ public class TaskContext {
       } else {
          properties.remove(name);
       }
+   }
+
+   public static void set(String name, Object value) {
+      current().setProperty(name, value);
+   }
+
+   public static <T> T get(String name) {
+      return Util.cast(current().getProperty(name));
    }
 
    protected Map<String, Object> properties() {

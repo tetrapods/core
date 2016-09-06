@@ -363,6 +363,10 @@ public class Task<T> extends CompletableFuture<T> {
       return task;
    }
 
+   public static Task<Void> voidTask() {
+      return fromNull();
+   }
+
    static class TaskFutureAdapter<T> implements Runnable {
       Task<T> task;
       Future<T> future;

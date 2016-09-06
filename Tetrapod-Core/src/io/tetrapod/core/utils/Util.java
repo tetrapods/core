@@ -21,6 +21,7 @@ import io.tetrapod.core.ServiceException;
 import io.tetrapod.core.json.*;
 import io.tetrapod.core.rpc.ErrorResponseException;
 import io.tetrapod.core.rpc.Flags_int;
+import io.tetrapod.protocol.core.CoreContract;
 
 /**
  * A random collection of useful static utility methods
@@ -806,6 +807,11 @@ public class Util {
          }
       }
       return ids;
+   }
+
+   public static int getErrorCodeFromChain(Throwable e) {
+      ErrorResponseException ere = getThrowableInChain(e, ErrorResponseException.class);
+      return ere == null? CoreContract.ERROR_UNKNOWN:ere.errorCode;
    }
 
 

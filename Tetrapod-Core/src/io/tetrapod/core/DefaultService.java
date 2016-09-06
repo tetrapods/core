@@ -11,6 +11,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.SSLContext;
 
+import io.tetrapod.core.tasks.TaskContext;
 import org.slf4j.*;
 
 import com.codahale.metrics.Timer.Context;
