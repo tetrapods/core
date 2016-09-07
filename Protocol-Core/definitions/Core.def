@@ -4,7 +4,7 @@ javascript out "../../Tetrapod-Web/webContent/protocol/core.js"
 #javascript out "../rsc/protocol/core.js"
 
 // The core tetrapod service
-service Core @version(1) @id(1)
+service Core @version(1) @id(1) @sync
 
 struct Core
    const int   UNADDRESSED    = 0 // request is not addressed to a specific entity 

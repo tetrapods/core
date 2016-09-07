@@ -40,10 +40,12 @@ public class Topic {
    public static class Subscriber {
       public final int entityId;
       public final int childId;
+      public int count;
 
-      public Subscriber(int entityId, int childId) {
+      public Subscriber(int entityId, int childId, int count) {
          this.entityId = entityId;
          this.childId = childId;
+         this.count = count;
       }
 
       public long key() {
@@ -55,7 +57,7 @@ public class Topic {
       public boolean init = false;
 
       public ParentSubscriber(int entityId) {
-         super(entityId, 0);
+         super(entityId, 0, 0);
       }
    }
 
@@ -110,9 +112,12 @@ public class Topic {
    public synchronized void subscribe(int entityId, int childId, boolean once) {
       Subscriber sub = subscribers.get(makeKey(entityId, childId));
       if (sub == null) {
-         sub = new Subscriber(entityId, childId);
+         sub = new Subscriber(entityId, childId, 1);
          subscribers.put(sub.key(), sub);
+      } else if (!once) {
+         sub.count++;
       }
+      
       final int parentId = entityId;
       ParentSubscriber parent = parents.get(parentId);
       if (parent == null) {
@@ -132,13 +137,17 @@ public class Topic {
 
    }
 
-   public synchronized void unsubscribe(int entityId, int childId) {
+   public synchronized void unsubscribe(int entityId, int childId, boolean all) {
       logger.debug("{} unsubscribe {} {}", this, entityId, childId);
-      Subscriber sub = subscribers.remove(makeKey(entityId, childId));
+      Subscriber sub = subscribers.get(makeKey(entityId, childId));
       if (sub != null) {
+         sub.count--;
+         if (sub.count == 0 || all) {
+            subscribers.remove(sub.key());
+         }
          final Subscriber parent = parents.get(entityId);
          if (parent != null) {
-            publisher.sendMessage(new TopicUnsubscribedMessage(publisher.getEntityId(), topicId, entityId, childId), parent.entityId, 0,
+            publisher.sendMessage(new TopicUnsubscribedMessage(publisher.getEntityId(), topicId, entityId, childId, all), parent.entityId, 0,
                   topicId);
          }
       }

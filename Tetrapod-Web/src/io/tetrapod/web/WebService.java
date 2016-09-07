@@ -401,7 +401,7 @@ public class WebService extends DefaultService
                   final Session s = clients.get(sub.childId);
                   if (s != null) {
                      // notify the subscriber that they have been unsubscribed from this topic
-                     s.sendMessage(new TopicUnsubscribedMessage(m.publisherId, topic.topicId, entityId, sub.childId), entityId,
+                     s.sendMessage(new TopicUnsubscribedMessage(m.publisherId, topic.topicId, entityId, sub.childId, true), entityId,
                            sub.childId);
                   }
                }
@@ -437,10 +437,10 @@ public class WebService extends DefaultService
       logger.debug("******* {} {}", ctx.header.dump(), m.dump());
       final ServiceTopic topic = topics.get(topicKey(m.publisherId, m.topicId));
       if (topic != null) {
-         if (topic.unsubscribe(m.childId, true)) {
+         if (topic.unsubscribe(m.childId, m.all)) {
             final Session s = clients.get(m.childId);
             if (s != null) {
-               s.sendMessage(new TopicUnsubscribedMessage(m.publisherId, topic.topicId, entityId, m.childId), entityId, m.childId);
+               s.sendMessage(new TopicUnsubscribedMessage(m.publisherId, topic.topicId, entityId, m.childId, m.all), entityId, m.childId);
             }
          }
       } else {
@@ -527,7 +527,7 @@ public class WebService extends DefaultService
       for (ServiceTopic topic : topics.values()) {
          if (topic.unsubscribe(childId, true)) {
             // notify the publisher that this client's subscription is now dead
-            sendMessage(new TopicUnsubscribedMessage(topic.ownerId, topic.topicId, entityId, childId), topic.ownerId, 0);
+            sendMessage(new TopicUnsubscribedMessage(topic.ownerId, topic.topicId, entityId, childId, true), topic.ownerId, 0);
          }
       }
    }
@@ -545,7 +545,7 @@ public class WebService extends DefaultService
             for (Subscriber s : topic.getSubscribers()) {
                WebHttpSession ses = clients.get(s.childId);
                if (ses != null) {
-                  ses.sendMessage(new TopicUnsubscribedMessage(topic.ownerId, topic.topicId, entityId, s.childId), entityId, s.childId);
+                  ses.sendMessage(new TopicUnsubscribedMessage(topic.ownerId, topic.topicId, entityId, s.childId, true), entityId, s.childId);
                }
             }
          }

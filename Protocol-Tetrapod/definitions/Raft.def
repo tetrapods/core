@@ -1,7 +1,7 @@
 java package io.tetrapod.protocol.raft
 java outdir "../src"
  
-service Raft @version(1) @id(16)
+service Raft @version(1) @id(16) @sync
 
 error NO_LEADER               
  
