@@ -3,6 +3,7 @@ package io.tetrapod.core;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.tetrapod.core.rpc.ContextIdGenerator;
+import io.tetrapod.core.tasks.TaskContext;
 import io.tetrapod.core.utils.Util;
 
 import java.util.Calendar;
@@ -120,8 +121,20 @@ public class Dispatcher {
     * 
     * If the queue is > overloadThreshold, we will not queue, and will return false.
     */
-   public boolean dispatch(final Runnable r, final int overloadThreshold, final Priority priority) {
-      assert r != null;
+   public boolean dispatch(final Runnable initialRunnable, final int overloadThreshold, final Priority priority) {
+      assert initialRunnable != null;
+
+      final Runnable r = () -> {
+         TaskContext ctx = TaskContext.pushNew();
+         try {
+            ContextIdGenerator.clear();
+            initialRunnable.run();
+         } finally {
+            ctx.pop();
+         }
+      };
+
+
       try {
          threadPool.submit(() -> processTask(r));
       } catch (RejectedExecutionException e) {
@@ -151,7 +164,6 @@ public class Dispatcher {
     */
    private void processTask(final Runnable task) {
       try {
-         ContextIdGenerator.clear();
          task.run();
       } catch (Throwable e) {
          logger.error(e.getMessage(), e);
