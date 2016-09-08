@@ -118,12 +118,12 @@ public class TaskContext {
    /**
     * Gets the current execution context for this thread from the stack.
     *
-    * @return the current context
+    * @return the current context or null if there is none.
     */
    public static TaskContext current() {
       final Deque<TaskContext> stack = contextStacks.get();
       if (stack == null) {
-         throw new ServiceException("Attempted to get task context when non was established");
+         return null;
       }
       return stack.peekLast();
    }
