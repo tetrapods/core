@@ -148,7 +148,7 @@ public class CommsLogger {
             buffer.add(entry);
          }
          if (commsLog.isDebugEnabled()) {
-            final String str = entry.description();
+            final String str = entry.toString();
             commsLog.debug(str);
             if (LOG_TEXT_CONSOLE) {
                logger.debug(str);
@@ -310,7 +310,9 @@ public class CommsLogger {
             StructureFactory.addIfNew(new StructureAdapter(def));
          }
          while (true) {
-            list.add(CommsLogEntry.read(data));
+            CommsLogEntry e = CommsLogEntry.read(data);
+            //logger.info("READING {}", e);
+            list.add(e);
          }
       } catch (IOException e) {}
       return list;

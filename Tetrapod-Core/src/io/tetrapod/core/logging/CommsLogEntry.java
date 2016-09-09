@@ -2,17 +2,19 @@ package io.tetrapod.core.logging;
 
 import java.io.*;
 import java.lang.reflect.Field;
-import java.text.DateFormat;
 import java.time.*;
-import java.time.format.*;
 import java.util.TimeZone;
 
+import org.slf4j.*;
+
 import io.tetrapod.core.*;
-import io.tetrapod.core.rpc.Structure;
+import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.serialize.datasources.*;
 import io.tetrapod.protocol.core.*;
 
 public class CommsLogEntry {
+
+   public static final Logger  logger = LoggerFactory.getLogger(CommsLogEntry.class);
 
    public final CommsLogHeader header;
    public final Structure      struct;
@@ -38,10 +40,10 @@ public class CommsLogEntry {
    }
 
    public static CommsLogEntry read(IOStreamDataSource data) throws IOException {
-      //      IOStreamDataSource data = IOStreamDataSource.forReading(in);
       CommsLogHeader header = new CommsLogHeader();
       header.read(data);
-
+      if (header.type == null)
+         throw new IOException();
       switch (header.type) {
          case MESSAGE: {
             MessageHeader msgHeader = new MessageHeader();
@@ -110,8 +112,8 @@ public class CommsLogEntry {
    }
 
    private void sanitize(Structure struct) throws IOException {
-      try {
-         for (Field f : payload.getClass().getFields()) {
+      try { 
+         for (Field f : struct.getClass().getFields()) {
             if (struct.isSensitive(f.getName())) {
                if (f.getType().isPrimitive()) {
                   if (f.getType() == int.class) {
@@ -176,8 +178,9 @@ public class CommsLogEntry {
       return StructureFactory.getName(header.contractId, header.structId);
    }
 
-   public String description() {
-      String ses = (header.sesType == SessionType.WEB ? "Web" : "Wire");
+   @Override
+   public String toString() {
+      String ses = (header.sesType == SessionType.WEB ? "Http" : "Wire");
 
       String direction = header.sending ? "->" : "<-";
       long contextId = 0;
@@ -188,7 +191,7 @@ public class CommsLogEntry {
 
       Structure s = getPayloadStruct();
       String payloadDetails = "";
-      if (s != null) {
+      if (s != null && s.getStructId() != Success.STRUCT_ID && s.getStructId() != io.tetrapod.core.rpc.Error.STRUCT_ID) {
          payloadDetails = s.dump();
       }
       switch (header.type) {
@@ -209,15 +212,13 @@ public class CommsLogEntry {
          case RESPONSE: {
             ResponseHeader h = (ResponseHeader) struct;
             contextId = h.contextId;
-            if (s != null && s.getStructId() == 1) {
+            if (s != null && s.getStructId() == io.tetrapod.core.rpc.Error.STRUCT_ID) {
                io.tetrapod.core.rpc.Error e = (io.tetrapod.core.rpc.Error) s;
                name = Contract.getErrorCode(e.code, e.getContractId());
-               payloadDetails = "";
             } else {
                name = getNameFor(h);
             }
             details = String.format("requestId=%d", h.requestId);
-
             break;
          }
          default: {

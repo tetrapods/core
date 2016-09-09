@@ -83,6 +83,12 @@ public class ValidateConnectionResponse extends Response {
       return new ValidateConnectionResponse();
    }
 
+   @Override
+   public boolean isSensitive(String fieldName) {
+      if (fieldName.equals("token")) return true;
+      return false;
+   }
+
    public final StructDescription makeDescription() {
       StructDescription desc = new StructDescription();      
       desc.name = "ValidateConnectionResponse";

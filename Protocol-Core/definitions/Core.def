@@ -291,30 +291,30 @@ admin request Debug @rights(Admin.RIGHTS_CLUSTER_WRITE)
    
    
 public request WebAPI
-   1: string route   // route name
-   2: string headers // json string
-   3: string params  // json string
-   4: string body    // json string
+   1: string route               // route name
+   2: string headers @sensitive  // json string
+   3: string params  @sensitive  // json string
+   4: string body    @sensitive  // json string
    5: string uri
  
 public response WebAPI
-   1: string json
+   1: string json @sensitive
    2: string redirect
 
 internal request DirectConnection
-   1: string token
+   1: string token @sensitive
    2: int entityId
 
 internal response DirectConnection
    1: ServerAddress address
-   2: string token
+   2: string token @sensitive
    
 public request ValidateConnection
    1: int entityId
    2: string token @sensitive
 
 public response ValidateConnection
-   1: string token   
+   1: string token @sensitive
    
 public request Dummy // dummy request for RPC load testing
  
