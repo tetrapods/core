@@ -112,7 +112,7 @@ public class CommsLogEntry {
    }
 
    private void sanitize(Structure struct) throws IOException {
-      try { 
+      try {
          for (Field f : struct.getClass().getFields()) {
             if (struct.isSensitive(f.getName())) {
                if (f.getType().isPrimitive()) {
@@ -192,7 +192,11 @@ public class CommsLogEntry {
       Structure s = getPayloadStruct();
       String payloadDetails = "";
       if (s != null && s.getStructId() != Success.STRUCT_ID && s.getStructId() != io.tetrapod.core.rpc.Error.STRUCT_ID) {
-         payloadDetails = s.dump();
+         try {
+            payloadDetails = s.dump();
+         } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+         }
       }
       switch (header.type) {
          case MESSAGE: {

@@ -89,7 +89,8 @@ public struct MessageHeader
    4: int toChildId
    5: int contractId
    6: int structId
-   7: byte flags        
+   7: byte flags    
+   8: long contextId    
    
    const byte FLAGS_ALTERNATE = 1
 

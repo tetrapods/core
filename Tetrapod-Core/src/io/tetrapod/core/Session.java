@@ -308,7 +308,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
       final int myEntityId = getMyEntityId();
       if (myEntityId != 0) {
          final MessageHeader header = new MessageHeader(myEntityId, 0, theirId, toAltId, msg.getContractId(), msg.getStructId(),
-               MessageHeader.FLAGS_ALTERNATE);
+               MessageHeader.FLAGS_ALTERNATE, ContextIdGenerator.getContextId());
          CommsLogger.append(this, true, header, msg);
          //         if (!CommsLogger.commsLogIgnore(msg))
          //            commsLog("%s  [A] => %s (to altId-%d)", this, msg.dump(), toAltId);
@@ -323,7 +323,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
    public void sendTopicBroadcastMessage(Message msg, int toId, int topicId) {
       final int myEntityId = getMyEntityId();
       if (myEntityId != 0) {
-         final MessageHeader header = new MessageHeader(myEntityId, topicId, toId, 0, msg.getContractId(), msg.getStructId(), (byte) 0);
+         final MessageHeader header = new MessageHeader(myEntityId, topicId, toId, 0, msg.getContractId(), msg.getStructId(), (byte) 0, ContextIdGenerator.getContextId());
          CommsLogger.append(this, true, header, msg);
          //         if (!CommsLogger.commsLogIgnore(msg))
          //            commsLog("%s  [B] => %s (to TOPIC:%d-#%d)", this, msg.dump(), toId, topicId);
@@ -339,7 +339,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
       final int myEntityId = getMyEntityId();
       if (myEntityId != 0) {
          final MessageHeader header = new MessageHeader(myEntityId, 0, toEntityId, toChildId, msg.getContractId(), msg.getStructId(),
-               (byte) 0);
+               (byte) 0, ContextIdGenerator.getContextId());
          CommsLogger.append(this, true, header, msg);
          //         if (!CommsLogger.commsLogIgnore(msg))
          //            commsLog("%s  [M] => %s (to %d.%d)", this, msg.dump(), toEntityId, toChildId);
