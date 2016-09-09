@@ -133,6 +133,7 @@ public class CoreContract extends Contract {
                   new MessageHeader(),
                   new CommsLogFileHeader(),
                   new CommsLogHeader(),
+                  new MissingStructDef(),
                   new ServiceCommand(),
                   new ServerAddress(),
                   new Admin(),

@@ -183,7 +183,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
    }
 
    protected void dispatchRequest(final RequestHeader header, final Request req) {
-      helper.dispatchRequest(header, req, this).handle(res -> sendResponse(res, header.requestId, header.contextId));
+      helper.dispatchRequest(header, req, this).handle(res -> sendResponse(res, header));
    }
 
    public void dispatchMessage(final MessageHeader header, final Message msg) {
@@ -221,7 +221,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
                   pendingRes = new Error(ERROR_UNKNOWN);
                }
                if (!pendingHandler.sendResponse(pendingRes)) {
-                  sendResponse(pendingRes, pendingHandler.originalRequestId, pendingHandler.contextId);
+                  sendResponse(pendingRes, pendingHandler.context.header);
                }
             } else {
                logger.debug("Pending response returned from pending handler for {} @ {}", req, toId);
@@ -283,10 +283,10 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
       return async;
    }
 
-   public void sendResponse(Response res, int requestId, long contextId) {
+   public void sendResponse(Response res, RequestHeader reqHeader) {
       if (res != Response.PENDING) {
-         final ResponseHeader header = new ResponseHeader(requestId, res.getContractId(), res.getStructId(), contextId);
-         CommsLogger.append(this, true, header, res);
+         final ResponseHeader header = new ResponseHeader(reqHeader.requestId, res.getContractId(), res.getStructId(), reqHeader.contextId);
+         CommsLogger.append(this, true, header, res, reqHeader.structId);
          //         if (!CommsLogger.commsLogIgnore(res))
          //            commsLog("%s %016X [%d] => %s", this, contextId, requestId, res.dump());
          final Object buffer = makeFrame(header, res, ENVELOPE_RESPONSE);
@@ -398,8 +398,8 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
       return async;
    }
 
-   public void sendRelayedResponse(ResponseHeader header, ByteBuf payload) {
-      CommsLogger.append(this, true, header, payload);
+   public void sendRelayedResponse(ResponseHeader header, Async async, ByteBuf payload) {
+      CommsLogger.append(this, true, header, payload, async.header.structId);
       //      if (!CommsLogger.commsLogIgnore(header.structId))
       //         commsLog("%s %016X [%d] ~> Response:%s", this, header.contextId, header.requestId,
       //               StructureFactory.getName(header.contractId, header.structId));

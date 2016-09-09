@@ -137,7 +137,7 @@ public class WireSession extends Session {
             final Structure res = StructureFactory.make(header.contractId, header.structId);
             if (res != null) {
                res.read(reader);
-               logged = CommsLogger.append(this, false, header, res);
+               logged = CommsLogger.append(this, false, header, res, async.header.structId);
                // we dispatch responses as high priority to prevent certain 
                // forms of live-lock when the dispatch thread pool is exhausted
                getDispatcher().dispatchHighPriority(() -> {
@@ -151,11 +151,11 @@ public class WireSession extends Session {
                logger.warn("{} Could not find response structure {}", this, header.structId);
             }
          } else if (relayHandler != null) {
-            logged = CommsLogger.append(this,false,  header, in);
+            logged = CommsLogger.append(this, false, header, in, async.header.structId);
             relayResponse(header, async, in);
          }
          if (!logged) {
-            CommsLogger.append(this, false, header, in);
+            CommsLogger.append(this, false, header, in, async.header.structId);
          }
       } else {
          // Typical if the request timed out earlier, and now we've finally received the actual response, it's too late 
@@ -186,7 +186,7 @@ public class WireSession extends Session {
                dispatchRequest(header, req);
             } else {
                logger.warn("Could not find request structure {}", header.structId);
-               sendResponse(new Error(ERROR_SERIALIZATION), header.requestId, header.contextId);
+               sendResponse(new Error(ERROR_SERIALIZATION), header);
             }
          } catch (ClassCastException e) {
             logger.error(e.getMessage());
@@ -198,7 +198,7 @@ public class WireSession extends Session {
       }
 
       if (!logged) {
-         logged = CommsLogger.append(this,false,  header, in);
+         logged = CommsLogger.append(this, false, header, in);
       }
 
    }
@@ -337,19 +337,19 @@ public class WireSession extends Session {
       if (ses != null) {
          if (ses.getTheirEntityType() == Core.TYPE_CLIENT) {
             logger.warn("Something's trying to send a request to a client {}", header.dump());
-            sendResponse(new Error(ERROR_SECURITY), header.requestId, header.contextId);
+            sendResponse(new Error(ERROR_SECURITY), header);
          } else {
             ses.sendRelayedRequest(header, in, this, null);
          }
       } else {
          logger.warn("Could not find a relay session for {}", header.dump());
-         sendResponse(new Error(ERROR_SERVICE_UNAVAILABLE), header.requestId, header.contextId);
+         sendResponse(new Error(ERROR_SERVICE_UNAVAILABLE), header);
       }
    }
 
    private void relayResponse(ResponseHeader header, Async async, ByteBuf in) {
       header.requestId = async.header.requestId;
-      async.session.sendRelayedResponse(header, in);
+      async.session.sendRelayedResponse(header, async, in);
    }
 
    public static String dumpBuffer(ByteBuf buf) {

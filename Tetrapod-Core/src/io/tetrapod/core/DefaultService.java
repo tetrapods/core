@@ -619,7 +619,7 @@ public class DefaultService
                   if ((getStatus() & Core.STATUS_OVERLOADED) == 0) {
                      logger.warn("Service is overloaded. Dispatch time is {}ms", Util.nanosToMillis(dispatchTime - start));
                   }
-                  // If it took a while to get dispatched, so set STATUS_OVERLOADED flag as a back-pressure signal
+                  // if it took a while to get dispatched, so set STATUS_OVERLOADED flag as a back-pressure signal
                   setStatus(Core.STATUS_OVERLOADED);
                } else {
                   clearStatus(Core.STATUS_OVERLOADED);

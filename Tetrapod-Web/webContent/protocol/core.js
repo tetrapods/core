@@ -122,6 +122,7 @@ function TP_Core(server) {
    server.register("struct", "Core", "MessageHeader", 1, 11760427);
    server.register("struct", "Core", "CommsLogFileHeader", 1, 11154645);
    server.register("struct", "Core", "CommsLogHeader", 1, 8830315);
+   server.register("struct", "Core", "MissingStructDef", 1, 14245815);
    server.register("struct", "Core", "ServiceCommand", 1, 5461687);
    server.register("struct", "Core", "ServerAddress", 1, 14893956);
    server.register("struct", "Core", "Admin", 1, 16753598);

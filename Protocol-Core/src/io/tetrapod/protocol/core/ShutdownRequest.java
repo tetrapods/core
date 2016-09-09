@@ -116,7 +116,8 @@ public class ShutdownRequest extends Request {
       return ctx.securityCheck(this, accountId, authToken, Admin.RIGHTS_CLUSTER_WRITE);
    }
        
-   protected boolean isSensitive(String fieldName) {
+   @Override
+   public boolean isSensitive(String fieldName) {
       if (fieldName.equals("authToken")) return true;
       return false;
    }

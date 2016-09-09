@@ -95,7 +95,8 @@ public class ClusterProperty extends Structure {
       return new ClusterProperty();
    }
 
-   protected boolean isSensitive(String fieldName) {
+   @Override
+   public boolean isSensitive(String fieldName) {
       if (fieldName.equals("val")) return true;
       return false;
    }

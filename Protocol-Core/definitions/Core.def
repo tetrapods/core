@@ -106,6 +106,8 @@ public struct CommsLogHeader
    enum int LogHeaderType.MESSAGE      = 3
    enum int LogHeaderType.EVENT        = 4
       
+public struct MissingStructDef
+      
 ################################ STRUCTURES ###################
 
 // allows an empty or one-string-arg-called-data request to be called from admin app's service menu

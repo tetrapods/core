@@ -13,14 +13,10 @@ public abstract class PendingResponseHandler {
    public static final Logger  logger = LoggerFactory.getLogger(PendingResponseHandler.class);
 
    public final RequestContext context;
-   public final int            originalRequestId;
-   public final long           contextId;
    public final Session        session;
 
    public PendingResponseHandler(RequestContext ctx) {
       this.context = ctx;
-      this.contextId = ctx.header.contextId;
-      this.originalRequestId = ctx.header.requestId;
       if (ctx instanceof SessionRequestContext) {
          this.session = ((SessionRequestContext) ctx).session;
       } else {
@@ -29,10 +25,8 @@ public abstract class PendingResponseHandler {
    }
 
    public PendingResponseHandler(PendingResponseHandler handler) {
-      this.originalRequestId = handler.originalRequestId;
       this.session = handler.session;
       this.context = handler.context;
-      this.contextId = handler.contextId;
    }
 
    abstract public Response onResponse(Response res);
@@ -41,10 +35,10 @@ public abstract class PendingResponseHandler {
    public boolean sendResponse(Response pendingRes) {
       assert pendingRes != Response.PENDING;
       if (context != null) {
-         context.handlePendingResponse(pendingRes, originalRequestId, contextId);
+         context.handlePendingResponse(pendingRes, context.header);
          return true;
       } else if (session != null) {
-         session.sendResponse(pendingRes, originalRequestId, contextId);
+         session.sendResponse(pendingRes, context.header);
          return true;
       } else {
          return false;

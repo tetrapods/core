@@ -581,7 +581,7 @@ public class TetrapodCluster extends Storage
             } catch (IOException ex) {
                logger.error(ex.getMessage(), ex);
             } finally {
-               ses.sendResponse(res, ctx.header.requestId, ctx.header.contextId);
+               ses.sendResponse(res, ctx.header);
             }
          });
          return Response.PENDING;
@@ -649,7 +649,7 @@ public class TetrapodCluster extends Storage
          } catch (Throwable t) {
             logger.error(t.getMessage(), t);
          } finally {
-            ctx.session.sendResponse(res, ctx.header.requestId, ctx.header.contextId);
+            ctx.session.sendResponse(res, ctx.header);
          }
       }
    }
