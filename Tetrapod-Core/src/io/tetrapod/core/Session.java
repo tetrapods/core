@@ -106,6 +106,10 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
       return name;
    }
 
+   public SessionType getSessionType() {
+      return SessionType.UNKNOWN;
+   }
+
    /**
     * Check to see if this session is still alive and close it, if not
     */
@@ -528,11 +532,6 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
       }
       return "Unknown";
    }
-
-   //   @Deprecated
-   //   public boolean commsLog(String format, Object... args) {
-   //      return CommsLogger.commsLog(this, format, args);
-   //   }
 
    public String getNameFor(MessageHeader header) {
       return StructureFactory.getName(header.contractId, header.structId);

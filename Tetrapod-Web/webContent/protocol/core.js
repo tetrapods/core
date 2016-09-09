@@ -96,6 +96,11 @@ function TP_Core(server) {
       AVERAGE_TIME : 3,
       ERRORS : 4
    };
+   self.Core.SessionType = {
+      UNKNOWN : 0,
+      WIRE : 1,
+      WEB : 2
+   };
    
    self.Core.error = {};
    self.Core.error.CONNECTION_CLOSED = 7;

@@ -163,7 +163,8 @@ public class CommsLogger {
       if (ENABLED && !commsLogIgnore(header.structId)) {
          byte[] data = new byte[in.readableBytes()];
          in.getBytes(in.readerIndex(), data);
-         SINGLETON.append(new CommsLogEntry(new CommsLogHeader(System.currentTimeMillis(), LogHeaderType.MESSAGE, sending), header, data));
+         SINGLETON.append(new CommsLogEntry(new CommsLogHeader(System.currentTimeMillis(), LogHeaderType.MESSAGE, sending,
+               session.getSessionType(), session.getSessionNum()), header, data));
          //         if (commsLog.isDebugEnabled()) {
          //            boolean isBroadcast = header.toChildId == 0 && header.topicId != 1;
          //            commsLog(session, "[%s] %s Message: %s (to %d.%d t%d f%d)", isBroadcast ? "B" : "M", sending ? "->" : "<-", getNameFor(header),
@@ -174,7 +175,8 @@ public class CommsLogger {
 
    public static void append(Session session, boolean sending, MessageHeader header, Message msg) {
       if (ENABLED && !commsLogIgnore(header.structId)) {
-         SINGLETON.append(new CommsLogEntry(new CommsLogHeader(System.currentTimeMillis(), LogHeaderType.MESSAGE, sending), header, msg));
+         SINGLETON.append(new CommsLogEntry(new CommsLogHeader(System.currentTimeMillis(), LogHeaderType.MESSAGE, sending,
+               session.getSessionType(), session.getSessionNum()), header, msg));
          //         if (commsLog.isDebugEnabled()) {
          //            boolean isBroadcast = header.toChildId == 0 && header.topicId != 1;
          //            commsLog(session, "[%s] %s Message: %s (to %d.%d t%d f%d)", isBroadcast ? "B" : "M", sending ? "->" : "<-", getNameFor(header),
@@ -187,7 +189,8 @@ public class CommsLogger {
       if (ENABLED && !commsLogIgnore(header.structId)) {
          byte[] data = new byte[in.readableBytes()];
          in.getBytes(in.readerIndex(), data);
-         SINGLETON.append(new CommsLogEntry(new CommsLogHeader(System.currentTimeMillis(), LogHeaderType.REQUEST, sending), header, data));
+         SINGLETON.append(new CommsLogEntry(new CommsLogHeader(System.currentTimeMillis(), LogHeaderType.REQUEST, sending,
+               session.getSessionType(), session.getSessionNum()), header, data));
          //         if (commsLog.isDebugEnabled()) {
          //            commsLog(session, "%016X [%d] %s %s (from %d.%d)", header.contextId, header.requestId, sending ? "->" : "<-",
          //                  StructureFactory.getName(header.contractId, header.structId), header.fromParentId, header.fromChildId);
@@ -199,7 +202,8 @@ public class CommsLogger {
 
    public static boolean append(Session session, boolean sending, RequestHeader header, Structure req) {
       if (ENABLED && !commsLogIgnore(header.structId)) {
-         SINGLETON.append(new CommsLogEntry(new CommsLogHeader(System.currentTimeMillis(), LogHeaderType.REQUEST, sending), header, req));
+         SINGLETON.append(new CommsLogEntry(new CommsLogHeader(System.currentTimeMillis(), LogHeaderType.REQUEST, sending,
+               session.getSessionType(), session.getSessionNum()), header, req));
          //         if (commsLog.isDebugEnabled()) {
          //            commsLog(session, "%016X [%d] %s %s (from %d.%d)", header.contextId, header.requestId, sending ? "->" : "<-", req.dump(),
          //                  header.fromParentId, header.fromChildId);
@@ -210,10 +214,11 @@ public class CommsLogger {
    }
 
    public static boolean append(Session session, boolean sending, ResponseHeader header, ByteBuf in, int requestStructId) {
-      if (ENABLED && !commsLogIgnore(header.structId)) {
+      if (ENABLED && !commsLogIgnore(header.structId) && !commsLogIgnore(requestStructId)) {
          byte[] data = new byte[in.readableBytes()];
          in.getBytes(in.readerIndex(), data);
-         SINGLETON.append(new CommsLogEntry(new CommsLogHeader(System.currentTimeMillis(), LogHeaderType.RESPONSE, sending), header, data));
+         SINGLETON.append(new CommsLogEntry(new CommsLogHeader(System.currentTimeMillis(), LogHeaderType.RESPONSE, sending,
+               session.getSessionType(), session.getSessionNum()), header, data));
          //         if (commsLog.isDebugEnabled()) {
          //            commsLog(session, "%016X [%d] %s %s", header.contextId, header.requestId, sending ? "->" : "<-", getNameFor(header));
          //         }
@@ -223,8 +228,9 @@ public class CommsLogger {
    }
 
    public static boolean append(Session session, boolean sending, ResponseHeader header, Structure res, int requestStructId) {
-      if (ENABLED && !commsLogIgnore(header.structId)) {
-         SINGLETON.append(new CommsLogEntry(new CommsLogHeader(System.currentTimeMillis(), LogHeaderType.RESPONSE, sending), header, res));
+      if (ENABLED && !commsLogIgnore(header.structId) && !commsLogIgnore(requestStructId)) {
+         SINGLETON.append(new CommsLogEntry(new CommsLogHeader(System.currentTimeMillis(), LogHeaderType.RESPONSE, sending,
+               session.getSessionType(), session.getSessionNum()), header, res));
          //         if (commsLog.isDebugEnabled()) {
          //            commsLog(session, "%016X [%d] %s %s", header.contextId, header.requestId, sending ? "->" : "<-", res.dump());
          //         }
@@ -247,14 +253,6 @@ public class CommsLogger {
          }
       }
       return true;
-   }
-
-   private static String getNameFor(MessageHeader header) {
-      return StructureFactory.getName(header.contractId, header.structId);
-   }
-
-   private static String getNameFor(ResponseHeader header) {
-      return StructureFactory.getName(header.contractId, header.structId);
    }
 
    public static boolean commsLogIgnore(Structure struct) {

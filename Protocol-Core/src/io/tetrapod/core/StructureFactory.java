@@ -62,13 +62,17 @@ public class StructureFactory {
                return Response.SUCCESS.toString();
             case Pending.STRUCT_ID:
                return Pending.SUCCESS.toString();
+            case Error.STRUCT_ID:
+               return "ERROR";
          }
+         
       }
       long key = makeKey(contractId, structId);
       Structure c = knownStructs.get(key);
       if (c != null) {
          return c.toString();
       }
+      
       return String.format("<%d,%d>", contractId, structId);
    }
 

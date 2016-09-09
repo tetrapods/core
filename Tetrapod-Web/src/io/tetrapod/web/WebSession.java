@@ -26,6 +26,10 @@ abstract class WebSession extends Session {
       super(channel, helper);
    }
 
+   public SessionType getSessionType() {
+      return SessionType.WEB;
+   }
+
    abstract protected Object makeFrame(JSONObject jo, boolean keepAlive);
 
    protected Structure readRequest(RequestHeader header, JSONObject params) throws IOException {

@@ -100,11 +100,18 @@ public struct CommsLogHeader
    1: long  timestamp
    2: LogHeaderType type 
    3: boolean sending // true of sending, false if received
+   4: SessionType sesType
+   5: int sessionId
       
    enum int LogHeaderType.REQUEST      = 1
    enum int LogHeaderType.RESPONSE     = 2
    enum int LogHeaderType.MESSAGE      = 3
    enum int LogHeaderType.EVENT        = 4
+
+   enum int SessionType.UNKNOWN      = 0
+   enum int SessionType.WIRE         = 1
+   enum int SessionType.WEB          = 2
+
       
 public struct MissingStructDef
       
@@ -304,7 +311,7 @@ internal response DirectConnection
    
 public request ValidateConnection
    1: int entityId
-   2: string token
+   2: string token @sensitive
 
 public response ValidateConnection
    1: string token   

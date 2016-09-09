@@ -38,6 +38,10 @@ public class WireSession extends Session {
       channel.pipeline().addLast(this);
    }
 
+   public SessionType getSessionType() {
+      return SessionType.WIRE;
+   }
+
    private synchronized boolean needsHandshake() {
       return needsHandshake;
    }

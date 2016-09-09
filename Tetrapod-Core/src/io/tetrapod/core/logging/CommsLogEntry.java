@@ -7,7 +7,7 @@ import java.time.*;
 import java.time.format.*;
 import java.util.TimeZone;
 
-import io.tetrapod.core.StructureFactory;
+import io.tetrapod.core.*;
 import io.tetrapod.core.rpc.Structure;
 import io.tetrapod.core.serialize.datasources.*;
 import io.tetrapod.protocol.core.*;
@@ -177,16 +177,20 @@ public class CommsLogEntry {
    }
 
    public String description() {
-      String ses = "todo";
-      Structure s = getPayloadStruct();
+      String ses = (header.sesType == SessionType.WEB ? "Web" : "Wire");
+
       String direction = header.sending ? "->" : "<-";
       long contextId = 0;
       String details = null;
       LocalDateTime dt = LocalDateTime.ofInstant(Instant.ofEpochSecond(header.timestamp / 1000), TimeZone.getDefault().toZoneId());
       String time = dt.toString();
-
       String name = null;
 
+      Structure s = getPayloadStruct();
+      String payloadDetails = "";
+      if (s != null) {
+         payloadDetails = s.dump();
+      }
       switch (header.type) {
          case MESSAGE: {
             MessageHeader h = (MessageHeader) struct;
@@ -205,8 +209,15 @@ public class CommsLogEntry {
          case RESPONSE: {
             ResponseHeader h = (ResponseHeader) struct;
             contextId = h.contextId;
-            name = getNameFor(h);
+            if (s != null && s.getStructId() == 1) {
+               io.tetrapod.core.rpc.Error e = (io.tetrapod.core.rpc.Error) s;
+               name = Contract.getErrorCode(e.code, e.getContractId());
+               payloadDetails = "";
+            } else {
+               name = getNameFor(h);
+            }
             details = String.format("requestId=%d", h.requestId);
+
             break;
          }
          default: {
@@ -214,7 +225,8 @@ public class CommsLogEntry {
          }
       }
 
-      return String.format("%s [%016X] [%s] %s %s (%s) %s", time, contextId, ses, direction, name, details, s == null ? "" : s.dump());
+      return String.format("%s [%016X] [%s-%d] %s %s (%s) %s", time, contextId, ses, header.sessionId, direction, name, details,
+            payloadDetails);
 
       //return String.format("[%d] %s : %s : %s", header.timestamp, header.type, struct.dump(), ((Structure) payload).dump());
       //      System.out.println(header.timestamp + " " + header.type + " : " + struct.dump());
