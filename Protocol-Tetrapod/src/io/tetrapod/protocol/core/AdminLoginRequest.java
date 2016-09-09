@@ -112,7 +112,8 @@ public class AdminLoginRequest extends RequestWithResponse<AdminLoginResponse> {
       return desc;
    }
 
-   protected boolean isSensitive(String fieldName) {
+   @Override
+   public boolean isSensitive(String fieldName) {
       if (fieldName.equals("email")) return true;
       if (fieldName.equals("password")) return true;
       return false;

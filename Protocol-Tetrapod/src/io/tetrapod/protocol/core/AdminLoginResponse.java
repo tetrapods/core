@@ -89,7 +89,8 @@ public class AdminLoginResponse extends Response {
       return new AdminLoginResponse();
    }
 
-   protected boolean isSensitive(String fieldName) {
+   @Override
+   public boolean isSensitive(String fieldName) {
       if (fieldName.equals("token")) return true;
       return false;
    }
