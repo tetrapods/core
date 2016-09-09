@@ -11,6 +11,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.SSLContext;
 
+import io.tetrapod.core.tasks.TaskContext;
 import org.slf4j.*;
 
 import com.codahale.metrics.Timer.Context;
@@ -759,7 +760,7 @@ public class DefaultService
    }
 
    public Async sendDirectRequest(Request req) {
-      return clusterClient.getSession().sendRequest(req, Core.DIRECT, (byte) 30);
+      return TaskContext.wrapPushPopIfNeeded(() -> clusterClient.getSession().sendRequest(req, Core.DIRECT, (byte) 30));
    }
 
    public boolean isServiceExistant(int entityId) {
