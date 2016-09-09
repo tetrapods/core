@@ -148,8 +148,8 @@ public class CommsLogEntry {
       if (header.timestamp >= minTime && header.timestamp <= maxTime) {
          switch (header.type) {
             case MESSAGE: {
-               //MessageHeader h = (MessageHeader) struct;
-               return false;
+               MessageHeader h = (MessageHeader) struct;
+               return h.contextId == contextId;
             }
             case REQUEST: {
                RequestHeader h = (RequestHeader) struct;
