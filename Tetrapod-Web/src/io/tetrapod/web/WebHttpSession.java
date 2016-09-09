@@ -12,6 +12,7 @@ import java.nio.charset.Charset;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
+import io.tetrapod.core.tasks.TaskContext;
 import org.slf4j.*;
 
 import com.codahale.metrics.Timer;
@@ -70,30 +71,51 @@ public class WebHttpSession extends WebSession {
 
    @Override
    public void checkHealth() {
-      if (isConnected()) {
-         timeoutPendingRequests();
+      TaskContext taskContext = TaskContext.pushNew();
+      try {
+         if (isConnected()) {
+            timeoutPendingRequests();
+         }
+      } finally {
+         taskContext.pop();
       }
    }
 
    @Override
    public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-      if (msg instanceof FullHttpRequest) {
-         handleHttpRequest(ctx, (FullHttpRequest) msg);
-      } else if (msg instanceof WebSocketFrame) {
-         handleWebSocketFrame(ctx, (WebSocketFrame) msg);
+      TaskContext taskContext = TaskContext.pushNew();
+      try {
+         if (msg instanceof FullHttpRequest) {
+            handleHttpRequest(ctx, (FullHttpRequest) msg);
+         } else if (msg instanceof WebSocketFrame) {
+            handleWebSocketFrame(ctx, (WebSocketFrame) msg);
+         }
+      } finally {
+         taskContext.pop();
       }
    }
 
    @Override
    public void channelActive(final ChannelHandlerContext ctx) throws Exception {
-      fireSessionStartEvent();
-      scheduleHealthCheck();
+      TaskContext taskContext = TaskContext.pushNew();
+      try {
+         fireSessionStartEvent();
+         scheduleHealthCheck();
+      } finally {
+         taskContext.pop();
+      }
+
    }
 
    @Override
    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-      fireSessionStopEvent();
-      cancelAllPendingRequests();
+      TaskContext taskContext = TaskContext.pushNew();
+      try {
+         fireSessionStopEvent();
+         cancelAllPendingRequests();
+      } finally {
+         taskContext.pop();
+      }
    }
 
    public synchronized boolean isWebSocket() {
