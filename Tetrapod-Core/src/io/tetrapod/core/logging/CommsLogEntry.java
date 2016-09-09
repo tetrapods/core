@@ -201,6 +201,7 @@ public class CommsLogEntry {
       switch (header.type) {
          case MESSAGE: {
             MessageHeader h = (MessageHeader) struct;
+            contextId = h.contextId;
             //boolean isBroadcast = h.toChildId == 0 && h.topicId != 1;
             name = getNameFor(h);
             details = String.format("to %d.%d t%d f%d", h.toParentId, h.toChildId, h.topicId, h.flags);
