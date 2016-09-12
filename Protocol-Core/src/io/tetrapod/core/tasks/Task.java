@@ -309,7 +309,12 @@ public class Task<T> extends CompletableFuture<T> {
          if (res instanceof Response) {
             ctx.respondWith((Response)res);
          } else {
-            throw new ServiceException("Tried to convert a Task to a response that isn't a Response. " + res.getClass());
+            logger.error("**TASK ERROR** Tried to convert a Task to a response that isn't a Response. {}  ResponseClass: {} {} ",
+                    makeRequestName(StructureFactory.getName(ctx.header.contractId, ctx.header.structId)),
+                    res!=null?res.getClass().getName():"null",
+                    ctx.header.dump());
+
+            throw new ServiceException("Tried to convert a Task to a response that isn't a Response. " + (res!=null?res.getClass().getName():"null") );
          }
          return null;
       }).exceptionally(parentEx -> handleException(ctx, parentEx));
@@ -340,7 +345,7 @@ public class Task<T> extends CompletableFuture<T> {
 
 
    /**
-    * Logs the output of a task, if it ends exceptionally and rethrows the error
+    * Logs the output of a task, if it ends exceptionally and rethrows the error, wrapping it if needed
     *
     * @return  Returns the chained task
     */
@@ -350,9 +355,14 @@ public class Task<T> extends CompletableFuture<T> {
          throw ServiceException.wrapIfChecked(th);
       });
    }
+
+   /**
+    * Logs the output of a task, if it ends exceptionally and allows the task chain to continue with a null
+    * @return  Returns a Task that will return an error if it ends exceptionall.
+    */
    public Task<T> logAndIgnoreError() {
       return exceptionally(th -> {
-         logger.error("Error executing task", th);
+         logger.error("Ignoring error while executing task.", th);
          return null;
       });
    }
