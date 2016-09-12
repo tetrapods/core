@@ -382,4 +382,15 @@ public class TaskContext {
          }
       }
    }
+
+   public static Runnable wrapPushPop(Runnable runnable) {
+      return () -> {
+         TaskContext ctx = TaskContext.pushNew();
+         try {
+            runnable.run();
+         } finally {
+            ctx.pop();
+         }
+      };
+   }
 }
