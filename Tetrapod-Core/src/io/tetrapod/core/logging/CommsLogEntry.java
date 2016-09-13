@@ -61,7 +61,7 @@ public class CommsLogEntry {
             return new CommsLogEntry(header, resHeader, readPayload(data, header, resHeader.contractId, resHeader.structId));
          }
          case EVENT:
-            throw new RuntimeException("Not yet supported");
+            return null;
       }
       return null;
    }

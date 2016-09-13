@@ -292,23 +292,34 @@ public class CommsLogger {
       }
    }
 
-   public static List<CommsLogEntry> readLogFile(DataInputStream in) {
+   public static List<CommsLogEntry> readLogFile(DataInputStream in) throws IOException {
       final List<CommsLogEntry> list = new ArrayList<>();
-      try {
-         @SuppressWarnings("unused")
-         int ver = in.readInt();
-         IOStreamDataSource data = IOStreamDataSource.forReading(in);
-         CommsLogFileHeader header = new CommsLogFileHeader();
-         header.read(data);
-         for (StructDescription def : header.structs) {
-            StructureFactory.addIfNew(new StructureAdapter(def));
-         }
-         while (true) {
+      @SuppressWarnings("unused")
+      int ver = in.readInt();
+      IOStreamDataSource data = IOStreamDataSource.forReading(in);
+      CommsLogFileHeader header = new CommsLogFileHeader();
+      header.read(data);
+      for (StructDescription def : header.structs) {
+         StructureFactory.addIfNew(new StructureAdapter(def));
+      }
+      while (true) {
+         try {
+            in.mark(1024);
             CommsLogEntry e = CommsLogEntry.read(data);
-            //logger.info("READING {}", e);
-            list.add(e);
+            if (e != null) {
+               //logger.info("READING {}", e);
+               list.add(e);
+            }
+         } catch (EOFException e) {
+            break;
+         } catch (IOException e) {
+            // possibly a corrupt section of the file, we'll skip a byte and try again until we find something readable...
+            logger.error(e.getMessage(), e);
+            in.reset();
+            in.skipBytes(1);
          }
-      } catch (IOException e) {}
+      }
+
       return list;
    }
 
