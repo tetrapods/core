@@ -24,19 +24,36 @@ public class CommsLogger {
    private static final Logger       logger           = LoggerFactory.getLogger(CommsLogger.class);
    private static final Logger       commsLog         = LoggerFactory.getLogger("comms");
 
+   /**
+    * Disable / enable all of comms logging
+    */
    private static boolean            ENABLED          = true;
 
-   private static boolean            LOG_TEXT_CONSOLE = true;
+   /**
+    * For fast local debugging set to true and see all comms logs in the console
+    */
+   private static boolean            LOG_TEXT_CONSOLE = false;
 
    private static final int          LOG_FILE_VERSION = 1;
 
+   /**
+    * Maximum buffer size for un-written log items.
+    */
+   private static final int          MAX_LOG_BUFFER   = 1204 * 1024;
+
    private static CommsLogger        SINGLETON;
 
-   private DataOutputStream          out;
-   private LinkedList<CommsLogEntry> buffer           = new LinkedList<>();
    private volatile boolean          shutdown         = false;
+
+   /**
+    * Buffer of unwritten log items
+    */
+   private LinkedList<CommsLogEntry> buffer           = new LinkedList<>();
+
+   // current log file details
    private LocalDateTime             logOpenTime;
    private File                      currentLogFile;
+   private DataOutputStream          out;
 
    public CommsLogger() throws IOException {
       Thread t = new Thread(() -> writerThread(), "CommsLogWriter");
@@ -112,11 +129,10 @@ public class CommsLogger {
       }
    }
 
+   /**
+    * Re-saves current log file as a compressed file
+    */
    private void archiveLogFile() throws IOException {
-      // rename and gzip/upload
-      //      final File file = new File(currentLogFile.getParent(), String.format("%d-%02d-%02d_%02d.comms", logOpenTime.getYear(),
-      //            logOpenTime.getMonthValue(), logOpenTime.getDayOfMonth(), logOpenTime.getHour()));
-      //currentLogFile.renameTo(file);
       final File gzFile = new File(currentLogFile.getParent(), String.format("%d-%02d-%02d_%02d.comms.gz", logOpenTime.getYear(),
             logOpenTime.getMonthValue(), logOpenTime.getDayOfMonth(), logOpenTime.getHour()));
       try (DataInputStream in = new DataInputStream(new BufferedInputStream(new FileInputStream(currentLogFile)))) {
@@ -145,7 +161,9 @@ public class CommsLogger {
    private void append(CommsLogEntry entry) {
       try {
          synchronized (buffer) {
-            buffer.add(entry);
+            if (buffer.size() < MAX_LOG_BUFFER) {
+               buffer.add(entry);
+            }
          }
          if (commsLog.isDebugEnabled()) {
             final String str = entry.toString();
@@ -165,11 +183,6 @@ public class CommsLogger {
          in.getBytes(in.readerIndex(), data);
          SINGLETON.append(new CommsLogEntry(new CommsLogHeader(System.currentTimeMillis(), LogHeaderType.MESSAGE, sending,
                session.getSessionType(), session.getSessionNum()), header, data));
-         //         if (commsLog.isDebugEnabled()) {
-         //            boolean isBroadcast = header.toChildId == 0 && header.topicId != 1;
-         //            commsLog(session, "[%s] %s Message: %s (to %d.%d t%d f%d)", isBroadcast ? "B" : "M", sending ? "->" : "<-", getNameFor(header),
-         //                  header.toParentId, header.toChildId, header.topicId, header.flags);
-         //         }
       }
    }
 
@@ -177,11 +190,6 @@ public class CommsLogger {
       if (ENABLED && !commsLogIgnore(header.structId)) {
          SINGLETON.append(new CommsLogEntry(new CommsLogHeader(System.currentTimeMillis(), LogHeaderType.MESSAGE, sending,
                session.getSessionType(), session.getSessionNum()), header, msg));
-         //         if (commsLog.isDebugEnabled()) {
-         //            boolean isBroadcast = header.toChildId == 0 && header.topicId != 1;
-         //            commsLog(session, "[%s] %s Message: %s (to %d.%d t%d f%d)", isBroadcast ? "B" : "M", sending ? "->" : "<-", getNameFor(header),
-         //                  header.toParentId, header.toChildId, header.topicId, header.flags);
-         //         }
       }
    }
 
@@ -191,10 +199,6 @@ public class CommsLogger {
          in.getBytes(in.readerIndex(), data);
          SINGLETON.append(new CommsLogEntry(new CommsLogHeader(System.currentTimeMillis(), LogHeaderType.REQUEST, sending,
                session.getSessionType(), session.getSessionNum()), header, data));
-         //         if (commsLog.isDebugEnabled()) {
-         //            commsLog(session, "%016X [%d] %s %s (from %d.%d)", header.contextId, header.requestId, sending ? "->" : "<-",
-         //                  StructureFactory.getName(header.contractId, header.structId), header.fromParentId, header.fromChildId);
-         //         }
          return true;
       }
       return false;
@@ -204,10 +208,6 @@ public class CommsLogger {
       if (ENABLED && !commsLogIgnore(header.structId)) {
          SINGLETON.append(new CommsLogEntry(new CommsLogHeader(System.currentTimeMillis(), LogHeaderType.REQUEST, sending,
                session.getSessionType(), session.getSessionNum()), header, req));
-         //         if (commsLog.isDebugEnabled()) {
-         //            commsLog(session, "%016X [%d] %s %s (from %d.%d)", header.contextId, header.requestId, sending ? "->" : "<-", req.dump(),
-         //                  header.fromParentId, header.fromChildId);
-         //         }
          return true;
       }
       return false;
@@ -219,9 +219,6 @@ public class CommsLogger {
          in.getBytes(in.readerIndex(), data);
          SINGLETON.append(new CommsLogEntry(new CommsLogHeader(System.currentTimeMillis(), LogHeaderType.RESPONSE, sending,
                session.getSessionType(), session.getSessionNum()), header, data));
-         //         if (commsLog.isDebugEnabled()) {
-         //            commsLog(session, "%016X [%d] %s %s", header.contextId, header.requestId, sending ? "->" : "<-", getNameFor(header));
-         //         }
          return true;
       }
       return false;
@@ -231,9 +228,6 @@ public class CommsLogger {
       if (ENABLED && !commsLogIgnore(header.structId) && !commsLogIgnore(requestStructId)) {
          SINGLETON.append(new CommsLogEntry(new CommsLogHeader(System.currentTimeMillis(), LogHeaderType.RESPONSE, sending,
                session.getSessionType(), session.getSessionNum()), header, res));
-         //         if (commsLog.isDebugEnabled()) {
-         //            commsLog(session, "%016X [%d] %s %s", header.contextId, header.requestId, sending ? "->" : "<-", res.dump());
-         //         }
          return true;
       }
       return false;
