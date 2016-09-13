@@ -12,6 +12,7 @@ import io.tetrapod.core.rpc.Error;
 import io.tetrapod.core.serialize.DataSource;
 import io.tetrapod.core.serialize.StructureAdapter;
 import io.tetrapod.core.serialize.datasources.ByteBufDataSource;
+import io.tetrapod.core.tasks.TaskContext;
 import io.tetrapod.protocol.core.*;
 
 import java.io.IOException;
@@ -44,6 +45,7 @@ public class WireSession extends Session {
    @Override
    public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
       lastHeardFrom.set(System.currentTimeMillis());
+      TaskContext taskContext = TaskContext.pushNew();
       try {
          final ByteBuf in = (ByteBuf) msg;
          final int len = in.readInt() - 1;
@@ -57,6 +59,7 @@ public class WireSession extends Session {
          }
       } finally {
          ReferenceCountUtil.release(msg);
+         taskContext.pop();
       }
    }
 
