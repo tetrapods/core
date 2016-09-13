@@ -760,7 +760,7 @@ public class DefaultService
    }
 
    public Async sendDirectRequest(Request req) {
-      return TaskContext.wrapPushPopIfNeeded(() -> clusterClient.getSession().sendRequest(req, Core.DIRECT, (byte) 30));
+      return TaskContext.doPushPopIfNeeded(() -> clusterClient.getSession().sendRequest(req, Core.DIRECT, (byte) 30));
    }
 
    public boolean isServiceExistant(int entityId) {
