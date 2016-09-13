@@ -81,17 +81,25 @@ public class CommsLogEntry {
    }
 
    private Structure getPayloadStruct() {
-      Structure struct = null;
+      byte[] data = null;
+
       if (payload instanceof Structure) {
-         struct = (Structure) payload;
+         try {
+            TempBufferDataSource out = TempBufferDataSource.forWriting();
+            ((Structure) payload).write(out);
+            data = (byte[]) out.getUnderlyingObject();
+         } catch (IOException e) {}
       } else {
-         struct = makeStructFromHeader();
-         if (struct != null) {
-            try {
-               struct.read(TempBufferDataSource.forReading((byte[]) payload));
-            } catch (IOException e) {}
-         }
+         data = (byte[]) payload;
       }
+
+      Structure struct = makeStructFromHeader();
+      if (struct != null) {
+         try {
+            struct.read(TempBufferDataSource.forReading(data));
+         } catch (IOException e) {}
+      }
+
       if (struct == null) {
          struct = new MissingStructDef();
       }
