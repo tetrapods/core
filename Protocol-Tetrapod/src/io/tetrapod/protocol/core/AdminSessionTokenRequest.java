@@ -120,7 +120,8 @@ public class AdminSessionTokenRequest extends RequestWithResponse<AdminSessionTo
       return desc;
    }
 
-   protected boolean isSensitive(String fieldName) {
+   @Override
+   public boolean isSensitive(String fieldName) {
       if (fieldName.equals("authToken")) return true;
       return false;
    }

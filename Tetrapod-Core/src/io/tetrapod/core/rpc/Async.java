@@ -52,7 +52,7 @@ public class Async {
       return future.exceptionally(throwable -> {
          ErrorResponseException ere = Util.getThrowableInChain(throwable, ErrorResponseException.class);
          if (ere == null || ere.errorCode == CoreContract.ERROR_UNKNOWN) {
-            logger.error("**TASK ERROR** Error executing request task {} {}", request.getClass().getSimpleName(), header.dump(), throwable);
+            logger.error("**TASK ERROR** Error executing request task {} Error: {} {}", request.getClass().getSimpleName(), throwable.getMessage(), header.dump());
          }
          throw ServiceException.wrapIfChecked(throwable);
       });

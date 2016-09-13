@@ -68,7 +68,7 @@ public class LogBuffer extends AppenderBase<ILoggingEvent> {
 
          sb.append('\n');
          logStack(sb, e.getThrowableProxy());
-         msg = sb.toString();
+         msg += sb.toString();
       }
       if (msg != null && msg.length() > MAX_MESSAGE_LEN) {
          msg = msg.substring(0, MAX_MESSAGE_LEN - 3) + "...";

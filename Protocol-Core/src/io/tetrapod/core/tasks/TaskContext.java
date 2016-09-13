@@ -27,8 +27,8 @@ package io.tetrapod.core.tasks;
  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import com.sun.jmx.mbeanserver.Util;
 import io.tetrapod.core.ServiceException;
+import io.tetrapod.core.utils.CoreUtil;
 
 import java.util.Deque;
 import java.util.HashSet;
@@ -339,7 +339,7 @@ public class TaskContext {
    }
 
    public static <T> T get(String name) {
-      return Util.cast(current().getProperty(name));
+      return CoreUtil.cast(current().getProperty(name));
    }
 
    protected Map<String, Object> properties() {

@@ -130,7 +130,8 @@ public class AdminChangePasswordRequest extends Request {
       return ctx.securityCheck(this, accountId, authToken, Admin.RIGHTS_USER_WRITE);
    }
        
-   protected boolean isSensitive(String fieldName) {
+   @Override
+   public boolean isSensitive(String fieldName) {
       if (fieldName.equals("authToken")) return true;
       if (fieldName.equals("oldPassword")) return true;
       if (fieldName.equals("newPassword")) return true;

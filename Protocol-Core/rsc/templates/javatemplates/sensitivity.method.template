@@ -1,4 +1,5 @@
-protected boolean isSensitive(String fieldName) {
+@Override
+public boolean isSensitive(String fieldName) {
    {{sensitivityLine}}
    return false;
 }
