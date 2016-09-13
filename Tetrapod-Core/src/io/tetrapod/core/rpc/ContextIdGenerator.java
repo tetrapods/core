@@ -21,7 +21,7 @@ public class ContextIdGenerator {
 
    public static long getContextId() {
       if (!TaskContext.hasCurrent()) {
-         logger.warn("No task context set so we cannot get a context id", new Throwable());
+         logger.error("No task context set so we cannot get a context id", new Throwable());
          return 0;
       }
       Long ctxId = TaskContext.get(CONTEXT_ID);
@@ -33,7 +33,7 @@ public class ContextIdGenerator {
 
    public static void setContextId(long ctxId) {
       if (!TaskContext.hasCurrent()) {
-         logger.warn("No task context set so we cannot set a context id");
+         logger.error("No task context set so we cannot set a context id", new Throwable());
          return;
       }
 
