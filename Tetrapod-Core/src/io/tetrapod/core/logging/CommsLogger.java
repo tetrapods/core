@@ -45,6 +45,8 @@ public class CommsLogger {
 
    private volatile boolean          shutdown         = false;
 
+   private boolean                   hasGap           = false;
+
    private DefaultService            service;
 
    /**
@@ -100,7 +102,9 @@ public class CommsLogger {
          } catch (IOException e) {
             logger.error(e.getMessage(), e);
          }
-
+         synchronized (buffer) {
+            hasGap = false;
+         }
          Util.sleep(100);
       }
    }
@@ -167,6 +171,9 @@ public class CommsLogger {
          synchronized (buffer) {
             if (buffer.size() < MAX_LOG_BUFFER) {
                buffer.add(entry);
+            } else if (!hasGap) {
+               hasGap = true;
+               logger.warn("CommsLog buffer is full. Dropping items!");
             }
          }
          if (commsLog.isDebugEnabled()) {
