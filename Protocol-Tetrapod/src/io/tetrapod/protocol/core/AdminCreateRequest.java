@@ -137,7 +137,8 @@ public class AdminCreateRequest extends Request {
       return ctx.securityCheck(this, accountId, authToken, Admin.RIGHTS_USER_WRITE);
    }
        
-   protected boolean isSensitive(String fieldName) {
+   @Override
+   public boolean isSensitive(String fieldName) {
       if (fieldName.equals("authToken")) return true;
       if (fieldName.equals("email")) return true;
       if (fieldName.equals("password")) return true;
