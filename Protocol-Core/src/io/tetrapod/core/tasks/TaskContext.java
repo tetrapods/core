@@ -364,13 +364,13 @@ public class TaskContext {
    }
 
    /**
-    * Wraps a function in a task context push-pop if there ins't one already esablished.  This is appropriate for places
+    * Surrounds a function in a task context push-pop if there ins't one already established.  This is appropriate for places
     * where an entire tasks async context should be established on a system
     *
     * @param function  The function to wrap in a push-pop
     * @return  The wrapped runnable
     */
-   public static <T> T wrapPushPopIfNeeded(Func0<T> function) {
+   public static <T> T doPushPopIfNeeded(Func0<T> function) {
       if (hasCurrent()) {
          return function.apply();
       } else {
@@ -383,6 +383,25 @@ public class TaskContext {
       }
    }
 
+   public static void doPushPopIfNeeded(Runnable runnable) {
+      if (hasCurrent()) {
+         runnable.run();
+      } else {
+         TaskContext ctx = TaskContext.pushNew();
+         try {
+            runnable.run();
+         } finally {
+            ctx.pop();
+         }
+      }
+
+   }
+
+   /**
+    * Wraps a runnable in a push pop, to be executed when the runnable is executed.
+    * @param runnable The runnable to wrap
+    * @return The wrapped runnable
+    */
    public static Runnable wrapPushPop(Runnable runnable) {
       return () -> {
          TaskContext ctx = TaskContext.pushNew();

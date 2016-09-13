@@ -279,14 +279,18 @@ public class WireSession extends Session {
 
    @Override
    public void channelActive(final ChannelHandlerContext ctx) throws Exception {
-      writeHandshake();
-      scheduleHealthCheck();
+      TaskContext.doPushPopIfNeeded(()-> {
+         writeHandshake();
+         scheduleHealthCheck();
+      });
    }
 
    @Override
    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-      fireSessionStopEvent();
-      cancelAllPendingRequests();
+      TaskContext.doPushPopIfNeeded(()-> {
+         fireSessionStopEvent();
+         cancelAllPendingRequests();
+      });
    }
 
    private void writeHandshake() {
