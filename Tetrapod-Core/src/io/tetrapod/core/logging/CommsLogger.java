@@ -45,6 +45,8 @@ public class CommsLogger {
 
    private volatile boolean          shutdown         = false;
 
+   private DefaultService            service;
+
    /**
     * Buffer of unwritten log items
     */
@@ -55,7 +57,8 @@ public class CommsLogger {
    private File                      currentLogFile;
    private DataOutputStream          out;
 
-   public CommsLogger() throws IOException {
+   public CommsLogger(DefaultService service) throws IOException {
+      this.service = service;
       Thread t = new Thread(() -> writerThread(), "CommsLogWriter");
       t.start();
    }
@@ -117,7 +120,8 @@ public class CommsLogger {
             logOpenTime.getDayOfMonth(), logOpenTime.getHour()));
       out = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(currentLogFile, true)));
 
-      CommsLogFileHeader header = new CommsLogFileHeader(StructureFactory.getAllKnownStructures());
+      CommsLogFileHeader header = new CommsLogFileHeader(StructureFactory.getAllKnownStructures(), service.getShortName(),
+            service.getEntityId(), service.buildName, Util.getHostName());
       out.writeInt(LOG_FILE_VERSION);
       IOStreamDataSource data = IOStreamDataSource.forWriting(out);
       header.write(data);
@@ -233,8 +237,8 @@ public class CommsLogger {
       return false;
    }
 
-   public static void init() throws IOException {
-      SINGLETON = new CommsLogger();
+   public static void init(DefaultService service) throws IOException {
+      SINGLETON = new CommsLogger(service);
    }
 
    public static boolean commsLog(Session ses, String format, Object... args) {

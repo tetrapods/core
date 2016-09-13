@@ -96,13 +96,17 @@ public struct MessageHeader
 
 public struct CommsLogFileHeader
    1: StructDescription<list> structs
+   2: string serviceName
+   3: int entityId
+   4: string build
+   5: string host
 
 public struct CommsLogHeader
    1: long  timestamp
    2: LogHeaderType type 
    3: boolean sending // true of sending, false if received
    4: SessionType sesType
-   5: int sessionId
+   5: int sessionId   
       
    enum int LogHeaderType.REQUEST      = 1
    enum int LogHeaderType.RESPONSE     = 2

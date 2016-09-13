@@ -88,7 +88,7 @@ public class DefaultService
                   Util.getProperty("tetrapod.jks.pwd", "4pod.dop4").toCharArray());
          }
 
-         CommsLogger.init();
+         CommsLogger.init(this);
       } catch (Exception e) {
          fail(e);
       }
