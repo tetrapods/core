@@ -149,15 +149,15 @@ public class CommsLogEntry {
          switch (header.type) {
             case MESSAGE: {
                MessageHeader h = (MessageHeader) struct;
-               return h.contextId == contextId;
+               return contextId == 0 || h.contextId == contextId;
             }
             case REQUEST: {
                RequestHeader h = (RequestHeader) struct;
-               return h.contextId == contextId;
+               return contextId == 0 || h.contextId == contextId;
             }
             case RESPONSE: {
                ResponseHeader h = (ResponseHeader) struct;
-               return h.contextId == contextId;
+               return contextId == 0 || h.contextId == contextId;
             }
             case EVENT:
                return false;
