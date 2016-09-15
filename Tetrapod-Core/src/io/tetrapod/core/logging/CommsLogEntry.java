@@ -32,9 +32,10 @@ public class CommsLogEntry {
 
    private static Structure readPayload(IOStreamDataSource data, CommsLogHeader header, int contractId, int structId) throws IOException {
       Structure payload = StructureFactory.make(contractId, structId);
-      assert payload != null;
       if (payload != null) {
          payload.read(data);
+      } else {
+         logger.warn("Couldn't make structure for contractId={} structId={}", contractId, structId);
       }
       return payload;
    }
