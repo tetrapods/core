@@ -114,10 +114,10 @@ public class CommsLogger {
       if (currentLogFile != null) {
          archiveLogFile();
       }
+      final String prefix = Util.getProperty("APPNAME" + "_" + service.buildName);
       File logs = new File(Util.getProperty("tetrapod.logs", "logs"), "comms");
-      logs = new File(logs, Util.getProperty("APPNAME" + "_" + service.buildName));
       LocalDate date = LocalDate.now();
-      File dir = new File(logs, String.format("%d-%02d-%02d", date.getYear(), date.getMonthValue(), date.getDayOfMonth()));
+      File dir = new File(logs, String.format("%s_%d-%02d-%02d", prefix, date.getYear(), date.getMonthValue(), date.getDayOfMonth()));
       dir.mkdirs();
 
       logOpenTime = LocalDateTime.now();
@@ -142,7 +142,8 @@ public class CommsLogger {
     * Re-saves current log file as a compressed file
     */
    private void archiveLogFile() throws IOException {
-      final File gzFile = new File(currentLogFile.getParent(), String.format("%d-%02d-%02d_%02d.comms.gz", logOpenTime.getYear(),
+      final String prefix = Util.getProperty("APPNAME" + "_" + service.buildName);
+      final File gzFile = new File(currentLogFile.getParent(), String.format("%s_%d-%02d-%02d_%02d.comms.gz", prefix, logOpenTime.getYear(),
             logOpenTime.getMonthValue(), logOpenTime.getDayOfMonth(), logOpenTime.getHour()));
       try (DataInputStream in = new DataInputStream(new BufferedInputStream(new FileInputStream(currentLogFile)))) {
          @SuppressWarnings("unused")
