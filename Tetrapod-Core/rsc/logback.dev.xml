@@ -5,7 +5,7 @@
 		<file>${LOGDIR}/${PID}/${APPNAME}.log</file>
 
 		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-			<fileNamePattern>${LOGDIR}/${APPNAME}/%d/${APPNAME}_%i.log
+			<fileNamePattern>${LOGDIR}/${PID}/${APPNAME}/%d/${APPNAME}_%i.log
 			</fileNamePattern>
 			<maxHistory>14</maxHistory>
 			<totalSizeCap>2GB</totalSizeCap>
