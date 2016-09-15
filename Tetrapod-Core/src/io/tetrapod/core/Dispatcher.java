@@ -4,6 +4,7 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.tetrapod.core.rpc.ContextIdGenerator;
 import io.tetrapod.core.tasks.TaskContext;
+import io.tetrapod.core.tasks.TaskThreadPoolExecutor;
 import io.tetrapod.core.utils.Util;
 
 import java.util.Calendar;
@@ -46,7 +47,7 @@ public class Dispatcher {
 
    public Dispatcher(int maxThreads) {
       logger.info("Dispatcher starting with {} threads", maxThreads);
-      threadPool = new ThreadPoolExecutor(0, maxThreads, 5L, TimeUnit.SECONDS, new SynchronousQueue<>(), new ThreadFactory() {
+      threadPool = new TaskThreadPoolExecutor(0, maxThreads, 5L, TimeUnit.SECONDS, new SynchronousQueue<>(), new ThreadFactory() {
          private final AtomicInteger counter = new AtomicInteger();
 
          @Override
@@ -55,7 +56,7 @@ public class Dispatcher {
          }
       });
 
-      sequential = new ThreadPoolExecutor(0, 1, 5L, TimeUnit.SECONDS, new LinkedBlockingQueue<>(), new ThreadFactory() {
+      sequential = new TaskThreadPoolExecutor(0, 1, 5L, TimeUnit.SECONDS, new LinkedBlockingQueue<>(), new ThreadFactory() {
          private final AtomicInteger counter = new AtomicInteger();
 
          @Override
@@ -73,7 +74,7 @@ public class Dispatcher {
          }
       });
 
-      urgent = new ThreadPoolExecutor(0, 4, 5L, TimeUnit.SECONDS, new SynchronousQueue<>(), new ThreadFactory() {
+      urgent = new TaskThreadPoolExecutor(0, 4, 5L, TimeUnit.SECONDS, new SynchronousQueue<>(), new ThreadFactory() {
          private final AtomicInteger counter = new AtomicInteger();
 
          @Override
@@ -121,8 +122,15 @@ public class Dispatcher {
     * 
     * If the queue is > overloadThreshold, we will not queue, and will return false.
     */
-   public boolean dispatch(final Runnable r, final int overloadThreshold, final Priority priority) {
-      assert r != null;
+   public boolean dispatch(final Runnable initialRunnable, final int overloadThreshold, final Priority priority) {
+      assert initialRunnable != null;
+
+      final Runnable r = () -> {
+         ContextIdGenerator.clear();
+         initialRunnable.run();
+      };
+
+
       try {
          threadPool.submit(() -> processTask(r));
       } catch (RejectedExecutionException e) {
@@ -153,7 +161,6 @@ public class Dispatcher {
    private void processTask(final Runnable task) {
       TaskContext ctx = TaskContext.pushNew();
       try {
-         ContextIdGenerator.clear();
          task.run();
       } catch (Throwable e) {
          logger.error(e.getMessage(), e);

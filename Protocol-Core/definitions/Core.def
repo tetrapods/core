@@ -89,9 +89,36 @@ public struct MessageHeader
    4: int toChildId
    5: int contractId
    6: int structId
-   7: byte flags        
+   7: byte flags    
+   8: long contextId    
    
    const byte FLAGS_ALTERNATE = 1
+
+public struct CommsLogFileHeader
+   1: StructDescription<list> structs
+   2: string serviceName
+   3: int entityId
+   4: string build
+   5: string host
+
+public struct CommsLogHeader
+   1: long  timestamp
+   2: LogHeaderType type 
+   3: boolean sending // true of sending, false if received
+   4: SessionType sesType
+   5: int sessionId   
+      
+   enum int LogHeaderType.REQUEST      = 1
+   enum int LogHeaderType.RESPONSE     = 2
+   enum int LogHeaderType.MESSAGE      = 3
+   enum int LogHeaderType.EVENT        = 4
+
+   enum int SessionType.UNKNOWN      = 0
+   enum int SessionType.WIRE         = 1
+   enum int SessionType.WEB          = 2
+
+      
+public struct MissingStructDef
       
 ################################ STRUCTURES ###################
 
@@ -269,30 +296,30 @@ admin request Debug @rights(Admin.RIGHTS_CLUSTER_WRITE)
    
    
 public request WebAPI
-   1: string route   // route name
-   2: string headers // json string
-   3: string params  // json string
-   4: string body    // json string
+   1: string route               // route name
+   2: string headers @sensitive  // json string
+   3: string params  @sensitive  // json string
+   4: string body    @sensitive  // json string
    5: string uri
  
 public response WebAPI
-   1: string json
+   1: string json @sensitive
    2: string redirect
 
 internal request DirectConnection
-   1: string token
+   1: string token @sensitive
    2: int entityId
 
 internal response DirectConnection
    1: ServerAddress address
-   2: string token
+   2: string token @sensitive
    
 public request ValidateConnection
    1: int entityId
-   2: string token
+   2: string token @sensitive
 
 public response ValidateConnection
-   1: string token   
+   1: string token @sensitive
    
 public request Dummy // dummy request for RPC load testing
  

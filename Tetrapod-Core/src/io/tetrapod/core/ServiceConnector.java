@@ -185,7 +185,7 @@ public class ServiceConnector implements DirectConnectionRequest.Handler, Valida
       private synchronized void finish(Session ses, String token) {
          assert entityId != 0;
          this.ses = ses;
-         if (token.equals(this.token)) {
+         if (token != null && token.equals(this.token)) {
             ses.setMyEntityId(service.getEntityId());
             ses.setTheirEntityId(entityId);
             ses.setTheirEntityType(Core.TYPE_SERVICE);

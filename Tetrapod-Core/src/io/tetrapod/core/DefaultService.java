@@ -18,6 +18,7 @@ import com.codahale.metrics.Timer.Context;
 
 import ch.qos.logback.classic.LoggerContext;
 import io.netty.channel.socket.SocketChannel;
+import io.tetrapod.core.logging.CommsLogger;
 import io.tetrapod.core.pubsub.*;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.rpc.Error;
@@ -86,6 +87,8 @@ public class DefaultService
             sslContext = Util.createSSLContext(new FileInputStream(Util.getProperty("tetrapod.jks.file", "cfg/tetrapod.jks")),
                   Util.getProperty("tetrapod.jks.pwd", "4pod.dop4").toCharArray());
          }
+
+         CommsLogger.init(this);
       } catch (Exception e) {
          fail(e);
       }
@@ -318,6 +321,7 @@ public class DefaultService
          }
       }
 
+      CommsLogger.shutdown();
       // If JVM doesn't gracefully terminate after 1 minute, explicitly kill the process
       final Thread hitman = new Thread(() -> {
          Util.sleep(Util.ONE_MINUTE);
@@ -357,7 +361,9 @@ public class DefaultService
          public void onSessionStop(Session ses) {
             logger.info("Connection to tetrapod closed");
             onDisconnectedFromCluster();
-            services.clear();
+            if (services != null) {
+               services.clear();
+            }
             resetServiceConnector(false);
             if (!isShuttingDown()) {
                dispatcher.dispatch(3, TimeUnit.SECONDS, () -> connectToCluster(1));
@@ -598,7 +604,7 @@ public class DefaultService
          if (!dispatcher.dispatch(() -> {
             final long dispatchTime = System.nanoTime();
             ContextIdGenerator.setContextId(header.contextId);
-            
+
             Runnable onResult = () -> {
                final long elapsed = System.nanoTime() - dispatchTime;
                stats.recordRequest(header.fromParentId, req, elapsed, async.getErrorCode());
@@ -614,7 +620,7 @@ public class DefaultService
                   if ((getStatus() & Core.STATUS_OVERLOADED) == 0) {
                      logger.warn("Service is overloaded. Dispatch time is {}ms", Util.nanosToMillis(dispatchTime - start));
                   }
-                  // If it took a while to get dispatched, so set STATUS_OVERLOADED flag as a back-pressure signal
+                  // if it took a while to get dispatched, so set STATUS_OVERLOADED flag as a back-pressure signal
                   setStatus(Core.STATUS_OVERLOADED);
                } else {
                   clearStatus(Core.STATUS_OVERLOADED);
@@ -754,7 +760,7 @@ public class DefaultService
    }
 
    public Async sendDirectRequest(Request req) {
-      return clusterClient.getSession().sendRequest(req, Core.DIRECT, (byte) 30);
+      return TaskContext.doPushPopIfNeeded(() -> clusterClient.getSession().sendRequest(req, Core.DIRECT, (byte) 30));
    }
 
    public boolean isServiceExistant(int entityId) {

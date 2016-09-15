@@ -20,6 +20,7 @@ import io.tetrapod.core.registry.*;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.rpc.Error;
 import io.tetrapod.core.storage.*;
+import io.tetrapod.core.tasks.TaskContext;
 import io.tetrapod.core.utils.*;
 import io.tetrapod.protocol.core.*;
 import io.tetrapod.protocol.raft.*;
@@ -579,27 +580,34 @@ public class TetrapodService extends DefaultService
          // set this session in the serviceConnector
          serviceConnector.seedService(info, ctx.session);
       }
-
+      
       logger.info("Registering: {} type={}", info, info.type);
       // execute a raft registration command
       final AsyncResponder responder = new AsyncResponder(ctx);
       cluster.executeCommand(new AddEntityCommand(info), entry -> {
          if (entry != null) {
-            logger.info("Waited for local entityId-{} : {} : {}", entityId, entry, cluster.getCommitIndex());
-            // get the real entity object after we've processed the command
-            final EntityInfo entity = cluster.getEntity(entityId);
+            TaskContext taskCtx = TaskContext.pushNew();
+            ContextIdGenerator.setContextId(ctx.header.contextId);
+            try {
 
-            entity.setSession(ctx.session);
+               logger.info("Waited for local entityId-{} : {} : {}", entityId, entry, cluster.getCommitIndex());
+               // get the real entity object after we've processed the command
+               final EntityInfo entity = cluster.getEntity(entityId);
 
-            // deliver them their entityId immediately to avoid some race conditions with the response
-            ctx.session.sendMessage(new EntityMessage(entity.entityId), Core.UNADDRESSED, 0);
+               entity.setSession(ctx.session);
 
-            // avoid deadlock on raft state
-            if (entity.isService() && entity.entityId != getEntityId()) {
-               entity.queue(() -> subscribeToCluster(ctx.session, entity.entityId, 0));
+               // deliver them their entityId immediately to avoid some race conditions with the response
+               ctx.session.sendMessage(new EntityMessage(entity.entityId), Core.UNADDRESSED, 0);
+
+               // avoid deadlock on raft state
+               if (entity.isService() && entity.entityId != getEntityId()) {
+                  entity.queue(() -> subscribeToCluster(ctx.session, entity.entityId, 0));
+               }
+               responder.respondWith(
+                     new RegisterResponse(entity.entityId, getEntityId(), EntityToken.encode(entity.entityId, entity.reclaimToken)));
+            } finally {
+               taskCtx.pop();
             }
-            responder.respondWith(
-                  new RegisterResponse(entity.entityId, getEntityId(), EntityToken.encode(entity.entityId, entity.reclaimToken)));
 
          } else {
             responder.respondWith(Response.error(ERROR_UNKNOWN));

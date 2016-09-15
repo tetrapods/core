@@ -9,7 +9,20 @@ import org.slf4j.LoggerFactory;
  */
 public class CoreUtil {
 
-
+   /**
+    * Given several arguments, it will return the first one that is not null
+    * @param objects  Objects to test for null
+    * @param <T>  The type that all the objects must conform to
+    * @return  The first non null object, or null of they are all null
+    */
+   public static <T> T coalesce(T ... objects) {
+      for (T obj : objects) {
+         if (obj != null) {
+            return obj;
+         }
+      }
+      return null;
+   }
 
    public static <T extends Throwable> T getThrowableInChain(Throwable t, Class<T> throwableClass) {
       do {

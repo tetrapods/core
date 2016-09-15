@@ -6,26 +6,23 @@ import static io.tetrapod.protocol.core.CoreContract.*;
 import java.io.IOException;
 import java.util.*;
 import java.util.Map.Entry;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.*;
 
 import javax.net.ssl.SSLException;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.slf4j.*;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.*;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.DecoderException;
 import io.netty.util.ReferenceCountUtil;
+import io.tetrapod.core.logging.CommsLogger;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.rpc.Error;
 import io.tetrapod.core.tasks.Task;
 import io.tetrapod.protocol.core.*;
-import io.tetrapod.protocol.raft.AppendEntriesRequest;
 
 /**
  * Manages a tetrapod session
@@ -109,6 +106,10 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
       return name;
    }
 
+   public SessionType getSessionType() {
+      return SessionType.UNKNOWN;
+   }
+
    /**
     * Check to see if this session is still alive and close it, if not
     */
@@ -186,7 +187,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
    }
 
    protected void dispatchRequest(final RequestHeader header, final Request req) {
-      helper.dispatchRequest(header, req, this).handle(res -> sendResponse(res, header.requestId, header.contextId));
+      helper.dispatchRequest(header, req, this).handle(res -> sendResponse(res, header));
    }
 
    public void dispatchMessage(final MessageHeader header, final Message msg) {
@@ -224,7 +225,7 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
                   pendingRes = new Error(ERROR_UNKNOWN);
                }
                if (!pendingHandler.sendResponse(pendingRes)) {
-                  sendResponse(pendingRes, pendingHandler.originalRequestId, pendingHandler.contextId);
+                  sendResponse(pendingRes, pendingHandler.context.header);
                }
             } else {
                logger.debug("Pending response returned from pending handler for {} @ {}", req, toId);
@@ -270,8 +271,9 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
       if (channel.isActive()) {
          pendingRequests.put(header.requestId, async);
 
-         if (!commsLogIgnore(req))
-            commsLog("%s %016X [%d] => %s (to %d)", this, header.contextId, header.requestId, req.dump(), header.toId);
+         CommsLogger.append(this, true, header, req);
+         //         if (!CommsLogger.commsLogIgnore(req))
+         //            commsLog("%s %016X [%d] => %s (to %d)", this, header.contextId, header.requestId, req.dump(), header.toId);
 
          final Object buffer = makeFrame(header, req, ENVELOPE_REQUEST);
          if (buffer != null) {
@@ -283,31 +285,34 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
          async.setResponse(ERROR_CONNECTION_CLOSED);
       }
       return async;
-   } 
-   
-   public void sendResponse(Response res, int requestId, long contextId) {
+   }
+
+   public void sendResponse(Response res, RequestHeader reqHeader) {
       if (res != Response.PENDING) {
-         if (!commsLogIgnore(res))
-            commsLog("%s %016X [%d] => %s", this, contextId, requestId, res.dump());
-         final Object buffer = makeFrame(res, requestId, contextId);
+         final ResponseHeader header = new ResponseHeader(reqHeader.requestId, res.getContractId(), res.getStructId(), reqHeader.contextId);
+         CommsLogger.append(this, true, header, res, reqHeader.structId);
+         //         if (!CommsLogger.commsLogIgnore(res))
+         //            commsLog("%s %016X [%d] => %s", this, contextId, requestId, res.dump());
+         final Object buffer = makeFrame(header, res, ENVELOPE_RESPONSE);
          if (buffer != null) {
             writeFrame(buffer);
          }
       }
    }
 
-   public Object makeFrame(Response res, int requestId, long contextId) {
-      return makeFrame(new ResponseHeader(requestId, res.getContractId(), res.getStructId(), contextId), res, ENVELOPE_RESPONSE);
-   }
+   //   public Object makeFrame(Response res, int requestId, long contextId) {
+   //      return makeFrame(, res, ENVELOPE_RESPONSE);
+   //   }
 
    public void sendAltBroadcastMessage(Message msg, int toAltId) {
       final int myEntityId = getMyEntityId();
       if (myEntityId != 0) {
-         if (!commsLogIgnore(msg))
-            commsLog("%s  [A] => %s (to altId-%d)", this, msg.dump(), toAltId);
-         final Object buffer = makeFrame(
-               new MessageHeader(myEntityId, 0, theirId, toAltId, msg.getContractId(), msg.getStructId(), MessageHeader.FLAGS_ALTERNATE),
-               msg, ENVELOPE_BROADCAST);
+         final MessageHeader header = new MessageHeader(myEntityId, 0, theirId, toAltId, msg.getContractId(), msg.getStructId(),
+               MessageHeader.FLAGS_ALTERNATE, ContextIdGenerator.getContextId());
+         CommsLogger.append(this, true, header, msg);
+         //         if (!CommsLogger.commsLogIgnore(msg))
+         //            commsLog("%s  [A] => %s (to altId-%d)", this, msg.dump(), toAltId);
+         final Object buffer = makeFrame(header, msg, ENVELOPE_BROADCAST);
          if (buffer != null) {
             writeFrame(buffer);
             getDispatcher().messagesSentCounter.mark();
@@ -318,10 +323,11 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
    public void sendTopicBroadcastMessage(Message msg, int toId, int topicId) {
       final int myEntityId = getMyEntityId();
       if (myEntityId != 0) {
-         if (!commsLogIgnore(msg))
-            commsLog("%s  [B] => %s (to TOPIC:%d-#%d)", this, msg.dump(), toId, topicId);
-         final Object buffer = makeFrame(new MessageHeader(myEntityId, topicId, toId, 0, msg.getContractId(), msg.getStructId(), (byte) 0),
-               msg, ENVELOPE_BROADCAST);
+         final MessageHeader header = new MessageHeader(myEntityId, topicId, toId, 0, msg.getContractId(), msg.getStructId(), (byte) 0, ContextIdGenerator.getContextId());
+         CommsLogger.append(this, true, header, msg);
+         //         if (!CommsLogger.commsLogIgnore(msg))
+         //            commsLog("%s  [B] => %s (to TOPIC:%d-#%d)", this, msg.dump(), toId, topicId);
+         final Object buffer = makeFrame(header, msg, ENVELOPE_BROADCAST);
          if (buffer != null) {
             writeFrame(buffer);
             getDispatcher().messagesSentCounter.mark();
@@ -332,11 +338,12 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
    public void sendMessage(Message msg, int toEntityId, int toChildId) {
       final int myEntityId = getMyEntityId();
       if (myEntityId != 0) {
-         if (!commsLogIgnore(msg))
-            commsLog("%s  [M] => %s (to %d.%d)", this, msg.dump(), toEntityId, toChildId);
-         final Object buffer = makeFrame(
-               new MessageHeader(myEntityId, 0, toEntityId, toChildId, msg.getContractId(), msg.getStructId(), (byte) 0), msg,
-               ENVELOPE_MESSAGE);
+         final MessageHeader header = new MessageHeader(myEntityId, 0, toEntityId, toChildId, msg.getContractId(), msg.getStructId(),
+               (byte) 0, ContextIdGenerator.getContextId());
+         CommsLogger.append(this, true, header, msg);
+         //         if (!CommsLogger.commsLogIgnore(msg))
+         //            commsLog("%s  [M] => %s (to %d.%d)", this, msg.dump(), toEntityId, toChildId);
+         final Object buffer = makeFrame(header, msg, ENVELOPE_MESSAGE);
          if (buffer != null) {
             writeFrame(buffer);
             getDispatcher().messagesSentCounter.mark();
@@ -372,21 +379,19 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
 
    public void sendRelayedMessage(MessageHeader header, ByteBuf payload, boolean broadcast) {
       assert header.fromId != 0;
-      if (!commsLogIgnore(header.structId)) {
-         commsLog("%s  [%s] ~> Message:%d %s (to %d.%d)", this, broadcast ? "B" : "M", header.structId, getNameFor(header),
-               header.toParentId, header.toChildId);
-      }
+      CommsLogger.append(this, true, header, payload);
       byte envelope = broadcast ? ENVELOPE_BROADCAST : ENVELOPE_MESSAGE;
       writeFrame(makeFrame(header, payload, envelope));
    }
 
    public Async sendRelayedRequest(RequestHeader header, ByteBuf payload, Session originator, ResponseHandler handler) {
       final Async async = new Async(null, header, originator, handler);
-      int origRequestId = async.header.requestId;
+      //      int origRequestId = async.header.requestId;
       int newRequestId = addPendingRequest(async);
-      if (!commsLogIgnore(header.structId))
-         commsLog("%s %016X [%d/%d] ~> Request:%s", this, header.contextId, newRequestId, origRequestId,
-               StructureFactory.getName(header.contractId, header.structId));
+      CommsLogger.append(this, true, header, payload);
+      //      if (!CommsLogger.commsLogIgnore(header.structId))
+      //         commsLog("%s %016X [%d/%d] ~> Request:%s", this, header.contextId, newRequestId, origRequestId,
+      //               StructureFactory.getName(header.contractId, header.structId));
       // making a new header lets us not worry about synchronizing the change the requestId
       RequestHeader newHeader = new RequestHeader(newRequestId, header.fromParentId, header.fromChildId, header.toId, header.fromType,
             header.timeout, header.version, header.contractId, header.structId, header.contextId);
@@ -397,9 +402,11 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
       return async;
    }
 
-   public void sendRelayedResponse(ResponseHeader header, ByteBuf payload) {
-      if (!commsLogIgnore(header.structId))
-         commsLog("%s %016X [%d] ~> Response:%s", this, header.contextId, header.requestId, StructureFactory.getName(header.contractId, header.structId));
+   public void sendRelayedResponse(ResponseHeader header, Async async, ByteBuf payload) {
+      CommsLogger.append(this, true, header, payload, async.header.structId);
+      //      if (!CommsLogger.commsLogIgnore(header.structId))
+      //         commsLog("%s %016X [%d] ~> Response:%s", this, header.contextId, header.requestId,
+      //               StructureFactory.getName(header.contractId, header.structId));
       writeFrame(makeFrame(header, payload, ENVELOPE_RESPONSE));
    }
 
@@ -526,40 +533,8 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
       return "Unknown";
    }
 
-   public boolean commsLog(String format, Object... args) {
-      if (commsLog.isDebugEnabled()) {
-         for (int i = 0; i < args.length; i++) {
-            if (args[i] == this) {
-               args[i] = String.format("%s:%d", getClass().getSimpleName().substring(0, 4), sessionNum);
-            }
-         }
-         commsLog.debug(String.format(format, args));
-         //logger.debug(String.format(format, args));
-      }
-      return true;
-   }
-
    public String getNameFor(MessageHeader header) {
       return StructureFactory.getName(header.contractId, header.structId);
-   }
-
-   public boolean commsLogIgnore(Structure struct) {
-      return commsLogIgnore(struct.getStructId());
-   }
-
-   public boolean commsLogIgnore(int structId) {
-      if (commsLog.isTraceEnabled())
-         return false;
-      switch (structId) {
-         case ServiceLogsRequest.STRUCT_ID:
-         case ServiceStatsMessage.STRUCT_ID:
-         case DummyRequest.STRUCT_ID:
-         case AppendEntriesRequest.STRUCT_ID:
-         case RaftStatsRequest.STRUCT_ID:
-         case RaftStatsResponse.STRUCT_ID:
-            return true;
-      }
-      return !commsLog.isDebugEnabled();
    }
 
 }

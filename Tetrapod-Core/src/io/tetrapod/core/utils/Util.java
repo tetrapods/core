@@ -753,14 +753,27 @@ public class Util {
       return hasErrorCode(false, t, errorCodes);
    }
 
+   /**
+    * Given a throwable, if it contains an ErrorResponseException in its cause chain, return the errorCode.  Otherwise it will return null;
+    * @param t The throwable to check
+    * @return returns int error code if found otherwise null
+    */
+   public static Integer getErrorCode(Throwable t) {
+      ErrorResponseException ex = getThrowableInChain(t, ErrorResponseException.class);
+      if (ex != null) {
+         return ex.errorCode;
+      }
+      return null;
+   }
+
    private static boolean hasErrorCode(boolean rethrowIFNotFound, Throwable t, int ... errorCodes) {
       if (errorCodes.length == 0) {
          throw new IllegalArgumentException("You must specify at least one error code");
       }
-      ErrorResponseException ex = getThrowableInChain(t, ErrorResponseException.class);
-      if (ex != null) {
-         for (int errorCode : errorCodes) {
-            if (ex.errorCode == errorCode) {
+      Integer errorCode = getErrorCode(t);
+      if (errorCode!= null) {
+         for (int ec : errorCodes) {
+            if (ec == errorCode) {
                return true;
             }
          }
@@ -770,7 +783,6 @@ public class Util {
       }
       return false;
    }
-
 
    @SuppressWarnings("deprecation")
    public static List<Integer> getAccountIdsFromCookiesAndParams(String headers, String params) {
