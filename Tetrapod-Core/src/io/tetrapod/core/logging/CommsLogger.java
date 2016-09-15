@@ -94,6 +94,9 @@ public class CommsLogger {
                } catch (Exception e) {
                   logger.error(e.getMessage(), e);
                }
+               if (commsLog.isDebugEnabled()) {
+                  commsLog.debug("{}", entry);
+               }
             }
             try {
                out.flush();
@@ -176,12 +179,9 @@ public class CommsLogger {
                logger.warn("CommsLog buffer is full. Dropping items!");
             }
          }
-         if (commsLog.isDebugEnabled()) {
-            final String str = entry.toString();
-            commsLog.debug(str);
-            if (LOG_TEXT_CONSOLE) {
-               logger.debug(str);
-            }
+
+         if (LOG_TEXT_CONSOLE) {
+            logger.debug("{}", entry);
          }
       } catch (Throwable t) {
          logger.error(t.getMessage(), t);
@@ -277,7 +277,7 @@ public class CommsLogger {
             return true;
       }
       return !commsLog.isDebugEnabled();
-   } 
+   }
 
    public static List<CommsLogEntry> readLogFile(File file) throws FileNotFoundException, IOException {
       if (file.getName().endsWith(".gz")) {
