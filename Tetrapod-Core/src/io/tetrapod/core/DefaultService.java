@@ -11,7 +11,6 @@ import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.SSLContext;
 
-import io.tetrapod.core.tasks.TaskContext;
 import org.slf4j.*;
 
 import com.codahale.metrics.Timer.Context;
@@ -22,7 +21,7 @@ import io.tetrapod.core.logging.CommsLogger;
 import io.tetrapod.core.pubsub.*;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.rpc.Error;
-import io.tetrapod.core.tasks.Task;
+import io.tetrapod.core.tasks.*;
 import io.tetrapod.core.utils.*;
 import io.tetrapod.protocol.core.*;
 
@@ -321,7 +320,6 @@ public class DefaultService
          }
       }
 
-      CommsLogger.shutdown();
       // If JVM doesn't gracefully terminate after 1 minute, explicitly kill the process
       final Thread hitman = new Thread(() -> {
          Util.sleep(Util.ONE_MINUTE);
@@ -643,8 +641,7 @@ public class DefaultService
                Response res = req.securityCheck(ctx);
                if (res == null && req instanceof TaskDispatcher) {
                   Task<? extends Response> task = ((TaskDispatcher) req).dispatchTask(svc, ctx);
-                  task.thenAccept(async::setResponse)
-                          .exceptionally(ex-> Task.handleException(ctx,ex));
+                  task.thenAccept(async::setResponse).exceptionally(ex -> Task.handleException(ctx, ex));
                } else {
                   if (res == null) {
                      res = req.dispatch(svc, ctx);

@@ -43,8 +43,6 @@ public class CommsLogger {
 
    private static CommsLogger        SINGLETON;
 
-   private volatile boolean          shutdown         = false;
-
    private boolean                   hasGap           = false;
 
    private DefaultService            service;
@@ -66,7 +64,6 @@ public class CommsLogger {
    }
 
    public void doShutdown() {
-      shutdown = true;
       try {
          closeLogFile();
       } catch (IOException e) {
@@ -75,38 +72,41 @@ public class CommsLogger {
    }
 
    private void writerThread() {
-      while (!shutdown) {
+      while (service.isShuttingDown()) {
          // starts a new log file every hour
          final LocalDateTime time = LocalDateTime.now();
-         if (logOpenTime == null || time.getHour() != logOpenTime.getHour() || time.getDayOfYear() != logOpenTime.getDayOfYear()) {
+         if (service.getEntityId() != 0) {
+            if (logOpenTime == null || time.getHour() != logOpenTime.getHour() || time.getDayOfYear() != logOpenTime.getDayOfYear()) {
+               try {
+                  openLogFile();
+               } catch (IOException e) {
+                  logger.error(e.getMessage(), e);
+               }
+            }
+
+            while (!buffer.isEmpty()) {
+               CommsLogEntry entry = null;
+               synchronized (buffer) {
+                  entry = buffer.poll();
+               }
+               try {
+                  entry.write(out);
+               } catch (Exception e) {
+                  logger.error(e.getMessage(), e);
+               }
+            }
             try {
-               openLogFile();
+               out.flush();
             } catch (IOException e) {
                logger.error(e.getMessage(), e);
             }
-         }
-
-         while (!buffer.isEmpty()) {
-            CommsLogEntry entry = null;
             synchronized (buffer) {
-               entry = buffer.poll();
+               hasGap = false;
             }
-            try {
-               entry.write(out);
-            } catch (Exception e) {
-               logger.error(e.getMessage(), e);
-            }
-         }
-         try {
-            out.flush();
-         } catch (IOException e) {
-            logger.error(e.getMessage(), e);
-         }
-         synchronized (buffer) {
-            hasGap = false;
          }
          Util.sleep(100);
       }
+      doShutdown();
    }
 
    private void openLogFile() throws IOException {
@@ -114,15 +114,14 @@ public class CommsLogger {
       if (currentLogFile != null) {
          archiveLogFile();
       }
-      final String prefix = Util.getProperty("APPNAME") + "_" + service.buildName;
-      File logs = new File(Util.getProperty("tetrapod.logs", "logs"), "comms");
+      File logs = new File(Util.getProperty("tetrapod.logs", "logs"), Util.getProperty("APPNAME"));
       LocalDate date = LocalDate.now();
       File dir = new File(logs, String.format("%d-%02d-%02d", date.getYear(), date.getMonthValue(), date.getDayOfMonth()));
       dir.mkdirs();
 
       logOpenTime = LocalDateTime.now();
-      currentLogFile = new File(dir, String.format("%s_%d-%02d-%02d_%02d.comms", prefix, logOpenTime.getYear(), logOpenTime.getMonthValue(),
-            logOpenTime.getDayOfMonth(), logOpenTime.getHour()));
+      currentLogFile = new File(dir, String.format("%d_%d-%02d-%02d_%02d.comms", service.getEntityId(), logOpenTime.getYear(),
+            logOpenTime.getMonthValue(), logOpenTime.getDayOfMonth(), logOpenTime.getHour()));
       out = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(currentLogFile, true)));
 
       CommsLogFileHeader header = new CommsLogFileHeader(StructureFactory.getAllKnownStructures(), service.getShortName(),
@@ -142,9 +141,8 @@ public class CommsLogger {
     * Re-saves current log file as a compressed file
     */
    private void archiveLogFile() throws IOException {
-      final String prefix = Util.getProperty("APPNAME") + "_" + service.buildName;
-      final File gzFile = new File(currentLogFile.getParent(), String.format("%s_%d-%02d-%02d_%02d.comms.gz", prefix, logOpenTime.getYear(),
-            logOpenTime.getMonthValue(), logOpenTime.getDayOfMonth(), logOpenTime.getHour()));
+      final File gzFile = new File(currentLogFile.getParent(), String.format("%d_%d-%02d-%02d_%02d.comms.gz", service.getEntityId(),
+            logOpenTime.getYear(), logOpenTime.getMonthValue(), logOpenTime.getDayOfMonth(), logOpenTime.getHour()));
       try (DataInputStream in = new DataInputStream(new BufferedInputStream(new FileInputStream(currentLogFile)))) {
          @SuppressWarnings("unused")
          int ver = in.readInt();
@@ -279,11 +277,7 @@ public class CommsLogger {
             return true;
       }
       return !commsLog.isDebugEnabled();
-   }
-
-   public static void shutdown() {
-      SINGLETON.doShutdown();
-   }
+   } 
 
    public static List<CommsLogEntry> readLogFile(File file) throws FileNotFoundException, IOException {
       if (file.getName().endsWith(".gz")) {

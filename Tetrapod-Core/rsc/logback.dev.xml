@@ -1,7 +1,7 @@
 <included>
 
    <appender name="LOGFILEPID" class="ch.qos.logback.core.rolling.RollingFileAppender">
-      <file>logs/${PID}/${APPNAME}.log</file>
+      <file>${LOGDIR}/${PID}/${APPNAME}.log</file>
 
       <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
          <fileNamePattern>logs/${PID}/${APPNAME}.%i.log.gz</fileNamePattern>
@@ -19,7 +19,7 @@
    </appender>
    
    <appender name="COMMSFILEPID" class="ch.qos.logback.core.rolling.RollingFileAppender">
-      <file>logs/${PID}/comms.${APPNAME}.log</file>
+      <file>${LOGDIR}/${PID}/comms.${APPNAME}.log</file>
 
       <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
          <fileNamePattern>logs/${PID}/comms.${APPNAME}.%i.log.gz
