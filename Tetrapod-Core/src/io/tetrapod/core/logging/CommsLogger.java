@@ -72,7 +72,7 @@ public class CommsLogger {
    }
 
    private void writerThread() {
-      while (service.isShuttingDown()) {
+      while (!service.isShuttingDown()) {
          // starts a new log file every hour
          final LocalDateTime time = LocalDateTime.now();
          if (service.getEntityId() != 0) {
