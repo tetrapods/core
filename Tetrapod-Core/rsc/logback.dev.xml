@@ -2,7 +2,7 @@
 
 	<appender name="LOGFILEPID"
 		class="ch.qos.logback.core.rolling.RollingFileAppender">
-		<file>${LOGDIR}/${PID}/${APPNAME}.log</file>
+		<file>${LOGDIR}/${PID}/${APPNAME}/current.log</file>
 
 		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
 			<fileNamePattern>${LOGDIR}/${PID}/${APPNAME}/%d/${APPNAME}_%i.log
