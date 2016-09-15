@@ -115,6 +115,7 @@ public class CommsLogger {
          archiveLogFile();
       }
       File logs = new File(Util.getProperty("tetrapod.logs", "logs"), "comms");
+      logs = new File(logs, Util.getProperty("APPNAME" + "_" + service.buildName));
       LocalDate date = LocalDate.now();
       File dir = new File(logs, String.format("%d-%02d-%02d", date.getYear(), date.getMonthValue(), date.getDayOfMonth()));
       dir.mkdirs();
