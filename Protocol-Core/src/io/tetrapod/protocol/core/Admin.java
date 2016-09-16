@@ -121,7 +121,8 @@ public class Admin extends Structure {
       return new Admin();
    }
 
-   protected boolean isSensitive(String fieldName) {
+   @Override
+   public boolean isSensitive(String fieldName) {
       if (fieldName.equals("email")) return true;
       if (fieldName.equals("hash")) return true;
       return false;

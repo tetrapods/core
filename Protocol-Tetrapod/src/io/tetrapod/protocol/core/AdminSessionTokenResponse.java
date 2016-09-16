@@ -86,7 +86,8 @@ public class AdminSessionTokenResponse extends Response {
       return new AdminSessionTokenResponse();
    }
 
-   protected boolean isSensitive(String fieldName) {
+   @Override
+   public boolean isSensitive(String fieldName) {
       if (fieldName.equals("sessionToken")) return true;
       return false;
    }

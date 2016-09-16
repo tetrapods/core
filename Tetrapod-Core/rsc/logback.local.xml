@@ -113,4 +113,5 @@
    <logger name="twitter4j" level="INFO" />  
 
 	<include optional="true" resource="logback.user.xml" />
+
 </included>

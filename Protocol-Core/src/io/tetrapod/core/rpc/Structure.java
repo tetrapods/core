@@ -139,7 +139,7 @@ abstract public class Structure {
       }
    }
    
-   protected boolean isSensitive(String fieldName) {
+   public boolean isSensitive(String fieldName) {
       return false;
    }
 

@@ -27,6 +27,9 @@ package io.tetrapod.core.tasks;
  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import io.tetrapod.core.ServiceException;
+import io.tetrapod.core.utils.CoreUtil;
+
 import java.util.Deque;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -60,6 +63,13 @@ public class TaskContext {
 
    public void setDefaultExecutor(Executor defaultExecutor) {
       this.defaultExecutor = defaultExecutor;
+   }
+
+   public static TaskContext pushNew()
+   {
+       final TaskContext context = new TaskContext();
+       context.push();
+       return context;
    }
 
    /**
@@ -322,6 +332,14 @@ public class TaskContext {
       } else {
          properties.remove(name);
       }
+   }
+
+   public static void set(String name, Object value) {
+      current().setProperty(name, value);
+   }
+
+   public static <T> T get(String name) {
+      return CoreUtil.cast(current().getProperty(name));
    }
 
    protected Map<String, Object> properties() {
