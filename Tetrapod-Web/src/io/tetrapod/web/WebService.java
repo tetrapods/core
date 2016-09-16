@@ -74,7 +74,7 @@ public class WebService extends DefaultService
       logger.info(" ***** READY TO SERVE ***** ");
       try {
          if (isStartingUp()) {
-            servers.add(new Server(Util.getProperty("tetrapod.http.port", DEFAULT_HTTP_PORT), (ch) -> makeWebSession(ch, Util.isLocal()),
+            servers.add(new Server(Util.getProperty("tetrapod.http.port", DEFAULT_HTTP_PORT), (ch) -> makeWebSession(ch, true),
                   dispatcher));
             // create secure port servers, if configured
             if (sslContext != null) {
