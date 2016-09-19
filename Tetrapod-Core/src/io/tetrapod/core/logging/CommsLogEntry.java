@@ -153,20 +153,20 @@ public class CommsLogEntry {
       }
    }
 
-   public boolean matches(long minTime, long maxTime, long contextId) {
+   public boolean matches(long minTime, long maxTime, String contextId) {
       if (header.timestamp >= minTime && header.timestamp <= maxTime) {
          switch (header.type) {
             case MESSAGE: {
                MessageHeader h = (MessageHeader) struct;
-               return contextId == 0 || h.contextId == contextId;
+               return contextId == null || contextId.equals(Long.toHexString(h.contextId));
             }
             case REQUEST: {
                RequestHeader h = (RequestHeader) struct;
-               return contextId == 0 || h.contextId == contextId;
+               return contextId == null || contextId.equals(Long.toHexString(h.contextId));
             }
             case RESPONSE: {
                ResponseHeader h = (ResponseHeader) struct;
-               return contextId == 0 || h.contextId == contextId;
+               return contextId == null || contextId.equals(Long.toHexString(h.contextId));
             }
             case EVENT:
                return false;

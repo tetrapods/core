@@ -1,6 +1,8 @@
 package io.tetrapod.core.logging;
 
 import java.io.*;
+import java.math.BigInteger;
+import java.nio.ByteBuffer;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -20,26 +22,27 @@ public class CommsLogQuery {
 
    public static void main(String args[]) throws FileNotFoundException, IOException {
       if (args.length == 0) {
-         logger.info("USAGE: [-dir /service_logs/] [-c F88A4D122757541F] [-min '2016-09-21 16:00'] [-max '2016-09-21 22:00'] [-last 2]");
+         logger.info("USAGE: [-dir /service_logs/] [-c 0xF88A4D122757541F] [-min '2016-09-21 16:00'] [-max '2016-09-21 22:00'] [-last 2]");
          logger.info("Default time range is last 2 hours");
       }
 
-      File logDir = new File("logs/comms/");
+      File logDir = new File("/service_logs/");
 
-      long contextId = 0;
+      String contextId = null;
       long maxTime = System.currentTimeMillis();
       long minTime = System.currentTimeMillis() - 1000 * 60 * 60 * 2;
       LocalDateTime minDateTime = null;
       LocalDateTime maxDateTime = null;
 
-      int i = 1;
+      int i = 0;
       while (i < args.length) {
          switch (args[i]) {
             case "-dir":
                logDir = new File(args[++i]);
                break;
             case "-c":
-               contextId = Long.parseLong(args[++i], 16);
+               contextId = args[++i];
+               contextId = contextId.toLowerCase();
                break;
             case "-last":
                minTime = System.currentTimeMillis() - 1000 * 60 * 60 * Integer.parseInt(args[++i]);
@@ -60,7 +63,7 @@ public class CommsLogQuery {
          maxDateTime = LocalDateTime.ofInstant(Instant.ofEpochSecond(maxTime / 1000), TimeZone.getDefault().toZoneId());
       }
 
-      logger.info("CommsLogQuery search {} for contextId={} between {} and {}", logDir, contextId, minDateTime, maxDateTime);
+      logger.info("CommsLogQuery search {} for contextId=0x{} between {} and {}", logDir, contextId, minDateTime, maxDateTime);
 
       for (File dir : logDir.listFiles()) {
          if (dir.isDirectory()) {
@@ -85,4 +88,5 @@ public class CommsLogQuery {
       }
 
    }
+
 }
