@@ -40,8 +40,8 @@ public class CommsLogFile {
          } catch (IOException e) {
             // possibly a corrupt section of the file, we'll skip a byte and try again until we find something readable...
             if (!hasGap) {
-               logger.error("Error reading file ...{}" + e.getMessage());
-               logger.error(e.getMessage(), e);
+               logger.error("IOException reading file ... {}", e.getMessage());
+               //logger.error(e.getMessage(), e);
                hasGap = true; // log once per gap
             }
             in.reset();
