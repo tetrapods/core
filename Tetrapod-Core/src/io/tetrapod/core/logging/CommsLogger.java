@@ -114,9 +114,9 @@ public class CommsLogger {
 
    private void openLogFile() throws IOException {
       closeLogFile();
-      if (currentLogFile != null) {
-         archiveLogFile();
-      }
+      //      if (currentLogFile != null) {
+      //         archiveLogFile();
+      //      }
       File logs = new File(Util.getProperty("tetrapod.logs", "logs"), Util.getProperty("APPNAME"));
       LocalDate date = LocalDate.now();
       File dir = new File(logs, String.format("%d-%02d-%02d", date.getYear(), date.getMonthValue(), date.getDayOfMonth()));
@@ -143,16 +143,17 @@ public class CommsLogger {
    /**
     * Re-saves current log file as a compressed file
     */
-   private void archiveLogFile() throws IOException {
-      final File gzFile = new File(currentLogFile.getParent(), String.format("%d_%d-%02d-%02d_%02d.comms.gz", service.getEntityId(),
-            logOpenTime.getYear(), logOpenTime.getMonthValue(), logOpenTime.getDayOfMonth(), logOpenTime.getHour()));
-      try (DataInputStream in = new DataInputStream(new BufferedInputStream(new FileInputStream(currentLogFile)))) {
+   public void archiveLogFile(File file) throws IOException {
+      final File gzFile = new File(file.getParent(), file.getName() + ".gz");
+      try (DataInputStream in = new DataInputStream(new BufferedInputStream(new FileInputStream(file)))) {
          @SuppressWarnings("unused")
          int ver = in.readInt();
          IOStreamDataSource dataIn = IOStreamDataSource.forReading(in);
          CommsLogFileHeader header = new CommsLogFileHeader();
          header.read(dataIn);
-
+         for (StructDescription def : header.structs) {
+            StructureFactory.addIfNew(new StructureAdapter(def));
+         }
          try (DataOutputStream out = new DataOutputStream(new BufferedOutputStream(new GZIPOutputStream(new FileOutputStream(gzFile))))) {
             out.writeInt(LOG_FILE_VERSION);
             IOStreamDataSource dataOut = IOStreamDataSource.forWriting(out);

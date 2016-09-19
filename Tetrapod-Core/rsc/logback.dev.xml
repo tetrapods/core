@@ -5,18 +5,9 @@
 		<file>${LOGDIR}/${PID}/${APPNAME}/current.log</file>
 
 		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-			<fileNamePattern>${LOGDIR}/${PID}/${APPNAME}/%d/${APPNAME}_%i.log
+			<fileNamePattern>${LOGDIR}/${PID}/${APPNAME}/%d/${APPNAME}.log
 			</fileNamePattern>
-			<maxHistory>14</maxHistory>
-			<totalSizeCap>2GB</totalSizeCap>
-			<minIndex>1</minIndex>
-			<maxIndex>99</maxIndex>
 		</rollingPolicy>
-
-		<triggeringPolicy
-			class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
-			<maxFileSize>10MB</maxFileSize>
-		</triggeringPolicy>
 
 		<encoder>
 			<pattern>%d %-5level %24thread{24} - %16logger{0} - %msg%n</pattern>
@@ -28,19 +19,9 @@
 		<file>${LOGDIR}/${PID}/${APPNAME}/comms.log.txt</file>
 
 		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-			<fileNamePattern>${LOGDIR}/${APPNAME}/%d/$comms_%i.log
+			<fileNamePattern>${LOGDIR}/${APPNAME}/%d/comms.log.txt
 			</fileNamePattern>
-			<maxHistory>14</maxHistory>
-			<totalSizeCap>2GB</totalSizeCap>
-			<minIndex>1</minIndex>
-			<maxIndex>5</maxIndex>
 		</rollingPolicy>
-
-		<triggeringPolicy
-			class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
-			<maxFileSize>10MB</maxFileSize>
-		</triggeringPolicy>
-
 		<encoder>
 			<pattern>%d %-5level %24thread{24} - %16logger{0} - %msg%n</pattern>
 		</encoder>
