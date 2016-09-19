@@ -20,11 +20,11 @@ public class CommsLogQuery {
 
    public static void main(String args[]) throws FileNotFoundException, IOException {
       if (args.length == 0) {
-         logger.info("USAGE: dir [-c F88A4D122757541F] [-min '2016-09-21 16:00'] [-max '2016-09-21 22:00'] [-last 2]");
+         logger.info("USAGE: [-dir /service_logs/] [-c F88A4D122757541F] [-min '2016-09-21 16:00'] [-max '2016-09-21 22:00'] [-last 2]");
          logger.info("Default time range is last 2 hours");
       }
 
-      final File logDir = new File(args[0]);
+      File logDir = new File("logs/comms/");
 
       long contextId = 0;
       long maxTime = System.currentTimeMillis();
@@ -35,6 +35,9 @@ public class CommsLogQuery {
       int i = 1;
       while (i < args.length) {
          switch (args[i]) {
+            case "-dir":
+               logDir = new File(args[++i]);
+               break;
             case "-c":
                contextId = Long.parseLong(args[++i], 16);
                break;
@@ -58,19 +61,25 @@ public class CommsLogQuery {
       }
 
       logger.info("CommsLogQuery search {} for contextId={} between {} and {}", logDir, contextId, minDateTime, maxDateTime);
-      final List<File> files = CommsLogger.filesForDateRange(logDir, minDateTime, maxDateTime);
-      for (File f : files) {
-         if (f.exists()) {
-            logger.info("READING FILE = {}", f);
-            try {
-               for (CommsLogEntry e : CommsLogger.readLogFile(f)) {
-                  if (e.matches(minTime, maxTime, contextId)) {
-                     logger.info("{}", e);
+
+      for (File dir : logDir.listFiles()) {
+         if (dir.isDirectory()) {
+            final List<File> files = CommsLogger.filesForDateRange(dir, minDateTime, maxDateTime);
+            for (File f : files) {
+               if (f.exists()) {
+                  logger.info("READING FILE = {}", f);
+                  try {
+                     CommsLogFile file = CommsLogger.readLogFile(f);
+                     for (CommsLogEntry e : file.list) {
+                        if (e.matches(minTime, maxTime, contextId)) {
+                           logger.info("{} {} {}", file.header.host, file.header.serviceName, e);
+                        }
+                     }
+                  } catch (Exception e) {
+                     logger.error("Error Reading {} ", f);
+                     logger.error(e.getMessage(), e);
                   }
                }
-            } catch (Exception e) {
-               logger.error("Error Reading {} ", f);
-               logger.error(e.getMessage(), e);
             }
          }
       }

@@ -280,7 +280,8 @@ public class CommsLogger {
       return !commsLog.isDebugEnabled();
    }
 
-   public static List<CommsLogEntry> readLogFile(File file) throws FileNotFoundException, IOException {
+  
+   public static CommsLogFile readLogFile(File file) throws FileNotFoundException, IOException {
       if (file.getName().endsWith(".gz")) {
          return readCompressedLogFile(file);
       } else {
@@ -288,47 +289,16 @@ public class CommsLogger {
       }
    }
 
-   public static List<CommsLogEntry> readCompressedLogFile(File file) throws FileNotFoundException, IOException {
+   public static CommsLogFile readCompressedLogFile(File file) throws FileNotFoundException, IOException {
       try (DataInputStream in = new DataInputStream(new GZIPInputStream(new BufferedInputStream(new FileInputStream(file))))) {
-         return readLogFile(in);
+         return new CommsLogFile(in);
       }
    }
 
-   public static List<CommsLogEntry> readUncompressedLogFile(File file) throws FileNotFoundException, IOException {
+   public static CommsLogFile readUncompressedLogFile(File file) throws FileNotFoundException, IOException {
       try (DataInputStream in = new DataInputStream(new BufferedInputStream(new FileInputStream(file)))) {
-         return readLogFile(in);
+         return new CommsLogFile(in);
       }
-   }
-
-   public static List<CommsLogEntry> readLogFile(DataInputStream in) throws IOException {
-      final List<CommsLogEntry> list = new ArrayList<>();
-      @SuppressWarnings("unused")
-      int ver = in.readInt();
-      IOStreamDataSource data = IOStreamDataSource.forReading(in);
-      CommsLogFileHeader header = new CommsLogFileHeader();
-      header.read(data);
-      for (StructDescription def : header.structs) {
-         StructureFactory.addIfNew(new StructureAdapter(def));
-      }
-      while (true) {
-         try {
-            in.mark(1024);
-            CommsLogEntry e = CommsLogEntry.read(data);
-            if (e != null) {
-               //logger.info("READING {}", e);
-               list.add(e);
-            }
-         } catch (EOFException e) {
-            break;
-         } catch (IOException e) {
-            // possibly a corrupt section of the file, we'll skip a byte and try again until we find something readable...
-            logger.error(e.getMessage(), e);
-            in.reset();
-            in.skipBytes(1);
-         }
-      }
-
-      return list;
    }
 
    public static List<File> filesForDateRange(File logDir, LocalDateTime minDateTime, LocalDateTime maxDateTime) {
