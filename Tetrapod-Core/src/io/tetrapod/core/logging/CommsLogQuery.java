@@ -63,10 +63,11 @@ public class CommsLogQuery {
          maxDateTime = LocalDateTime.ofInstant(Instant.ofEpochSecond(maxTime / 1000), TimeZone.getDefault().toZoneId());
       }
 
-      logger.info("CommsLogQuery search {} for contextId=0x{} between {} and {}", logDir, contextId, minDateTime, maxDateTime);
+      logger.info("CommsLogQuery search {} for contextId={} between {} and {}", logDir, contextId, minDateTime, maxDateTime);
 
       for (File dir : logDir.listFiles()) {
          if (dir.isDirectory()) {
+            logger.info("Searching dir {}", dir);
             final List<File> files = CommsLogger.filesForDateRange(dir, minDateTime, maxDateTime);
             for (File f : files) {
                if (f.exists()) {
