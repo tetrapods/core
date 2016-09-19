@@ -331,10 +331,8 @@ public class CommsLogger {
       return list;
    }
 
-   public static List<File> filesForDateRange(File logDir, long minTime, long maxTime) {
-      List<File> files = new ArrayList<>();
-      LocalDateTime minDateTime = LocalDateTime.ofInstant(Instant.ofEpochSecond(minTime / 1000), TimeZone.getDefault().toZoneId());
-      LocalDateTime maxDateTime = LocalDateTime.ofInstant(Instant.ofEpochSecond(maxTime / 1000), TimeZone.getDefault().toZoneId());
+   public static List<File> filesForDateRange(File logDir, LocalDateTime minDateTime, LocalDateTime maxDateTime) {
+      final List<File> files = new ArrayList<>();
       LocalDateTime time = minDateTime;
       while (!time.isAfter(maxDateTime)) {
          File dir = new File(logDir, String.format("%d-%02d-%02d", time.getYear(), time.getMonthValue(), time.getDayOfMonth()));
