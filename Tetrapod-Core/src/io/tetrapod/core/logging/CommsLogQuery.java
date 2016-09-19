@@ -65,6 +65,11 @@ public class CommsLogQuery {
 
       logger.info("CommsLogQuery search {} for contextId={} between {} and {}", logDir, contextId, minDateTime, maxDateTime);
 
+      if (!logDir.exists()) {
+         logger.error("{} does not exist", logDir);
+         return;
+      }
+
       for (File dir : logDir.listFiles()) {
          if (dir.isDirectory()) {
             logger.info("Searching dir {}", dir);
