@@ -1,6 +1,7 @@
 java package io.tetrapod.protocol.core
 java outdir "../src"
 javascript out "../../Tetrapod-Web/webContent/protocol/tetrapod.js"
+javascript altOut "tetrapod.js"
 
 // The core tetrapod service
 service Tetrapod @version(1) @id(1) @web(api) @sync
