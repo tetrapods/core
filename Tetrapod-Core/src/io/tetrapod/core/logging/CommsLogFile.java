@@ -25,6 +25,7 @@ public class CommsLogFile {
       for (StructDescription def : header.structs) {
          StructureFactory.addIfNew(new StructureAdapter(def));
       }
+      boolean hasGap = false;
       while (true) {
          try {
             in.mark(1024);
@@ -32,12 +33,17 @@ public class CommsLogFile {
             if (e != null) {
                //logger.debug("READING {}", e);
                list.add(e);
+               hasGap = false;
             }
          } catch (EOFException e) {
             break;
          } catch (IOException e) {
             // possibly a corrupt section of the file, we'll skip a byte and try again until we find something readable...
-            logger.error(e.getMessage(), e);
+            if (!hasGap) {
+               logger.error("Error reading file ...{}" + e.getMessage());
+               logger.error(e.getMessage(), e);
+               hasGap = true; // log once per gap
+            }
             in.reset();
             in.skipBytes(1);
          }

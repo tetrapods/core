@@ -311,43 +311,26 @@ public class CommsLogger {
       // look in directory for each day in our range
       LocalDateTime time = minDateTime;
       while (!time.isAfter(maxDateTime)) {
-         File dir = new File(logDir, String.format("%d-%02d-%02d", time.getYear(), time.getMonthValue(), time.getDayOfMonth()));
-         if (dir.exists()) {
-            // look at all files in dir
-            for (File f : dir.listFiles()) {
-               if (f.isFile() && (f.getName().endsWith(".comms") || f.getName().endsWith(".comms.gz"))) {
-                  String parts[] = f.getName().split("_");
-                  // if the hours put it in range of our query, add it
-                  LocalDateTime t = LocalDateTime.parse(parts[1] + " " + parts[2].substring(0, 2), formatter);
-                  if (!t.isAfter(maxDateTime) && !t.isBefore(minDateTime)) {
-                     files.add(f);
+         try {
+            File dir = new File(logDir, String.format("%d-%02d-%02d", time.getYear(), time.getMonthValue(), time.getDayOfMonth()));
+            if (dir.exists()) {
+               // look at all files in dir
+               for (File f : dir.listFiles()) {
+                  if (f.isFile() && (f.getName().endsWith(".comms") || f.getName().endsWith(".comms.gz"))) {
+                     String parts[] = f.getName().split("_");
+                     // if the hours put it in range of our query, add it
+                     LocalDateTime t = LocalDateTime.parse(parts[1] + " " + parts[2].substring(0, 2), formatter);
+                     if (!t.isAfter(maxDateTime) && !t.isBefore(minDateTime)) {
+                        files.add(f);
+                     }
                   }
                }
             }
+         } finally {
+            time = time.plusDays(1);
          }
-         time = time.plusDays(1);
       }
 
-      //      
-      //     
-      //
-      //      LocalDateTime time = minDateTime;
-      //      while (!time.isAfter(maxDateTime)) {
-      //         File dir = new File(logDir, String.format("%d-%02d-%02d", time.getYear(), time.getMonthValue(), time.getDayOfMonth()));
-      //         File file = new File(dir,
-      //               String.format("%d-%02d-%02d_%02d.comms.gz", time.getYear(), time.getMonthValue(), time.getDayOfMonth(), time.getHour()));
-      //
-      //         if (file.exists()) {
-      //            files.add(file);
-      //         } else {
-      //            file = new File(dir,
-      //                  String.format("%d-%02d-%02d_%02d.comms", time.getYear(), time.getMonthValue(), time.getDayOfMonth(), time.getHour()));
-      //            if (file.exists()) {
-      //               files.add(file);
-      //            }
-      //         }
-      //         time = time.plusHours(1);
-      //      }
       return files;
    }
 }
