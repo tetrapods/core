@@ -19,7 +19,7 @@ public class SubService implements ServiceAPI {
    }
 
    public Response genericRequest(Request r, RequestContext ctx) {
-      logger.error("unhandled request " + r.dump());
+      logger.error("unhandled request {} from {}", r.dump(), ctx.header.dump());
       return new Error(CoreContract.ERROR_UNKNOWN_REQUEST);
    }
 

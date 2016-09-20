@@ -31,6 +31,8 @@ public class CommsLogEntry {
    }
 
    private static Structure readPayload(IOStreamDataSource data, CommsLogHeader header, int contractId, int structId) throws IOException {
+      if (contractId == 0)
+         return null;
       Structure payload = StructureFactory.make(contractId, structId);
       if (payload != null) {
          payload.read(data);
@@ -44,7 +46,7 @@ public class CommsLogEntry {
       CommsLogHeader header = new CommsLogHeader();
       header.read(data);
       if (header.type == null)
-         throw new IOException();
+         throw new IOException("bad data");
       switch (header.type) {
          case MESSAGE: {
             MessageHeader msgHeader = new MessageHeader();
@@ -153,20 +155,20 @@ public class CommsLogEntry {
       }
    }
 
-   public boolean matches(long minTime, long maxTime, long contextId) {
+   public boolean matches(long minTime, long maxTime, String contextId) {
       if (header.timestamp >= minTime && header.timestamp <= maxTime) {
          switch (header.type) {
             case MESSAGE: {
                MessageHeader h = (MessageHeader) struct;
-               return contextId == 0 || h.contextId == contextId;
+               return contextId == null || contextId.equals(Long.toHexString(h.contextId));
             }
             case REQUEST: {
                RequestHeader h = (RequestHeader) struct;
-               return contextId == 0 || h.contextId == contextId;
+               return contextId == null || contextId.equals(Long.toHexString(h.contextId));
             }
             case RESPONSE: {
                ResponseHeader h = (ResponseHeader) struct;
-               return contextId == 0 || h.contextId == contextId;
+               return contextId == null || contextId.equals(Long.toHexString(h.contextId));
             }
             case EVENT:
                return false;

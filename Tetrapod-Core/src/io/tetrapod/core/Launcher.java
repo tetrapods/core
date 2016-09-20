@@ -44,6 +44,7 @@ public class Launcher {
          String appName = serviceClass.substring(serviceClass.lastIndexOf('.') + 1);
          System.setProperty("APPNAME", appName);
          Util.setProperty("APPNAME", appName);
+         System.setProperty("LOGDIR", Util.getProperty("tetrapod.logs","logs")); 
          opts = getOpts(args, 1, defaultOpts(appName));
 
          String host = Util.getProperty("service.host", "localhost");

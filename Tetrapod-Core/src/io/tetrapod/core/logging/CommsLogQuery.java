@@ -1,7 +1,10 @@
 package io.tetrapod.core.logging;
 
 import java.io.*;
+import java.math.BigInteger;
+import java.nio.ByteBuffer;
 import java.time.*;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 import org.slf4j.*;
@@ -13,35 +16,83 @@ public class CommsLogQuery {
       System.setProperty("devMode", "local");
       Util.setProperty("devMode", "local");
    }
-   private static final Logger logger = LoggerFactory.getLogger(CommsLogQuery.class);
+
+   private static final Logger            logger    = LoggerFactory.getLogger(CommsLogQuery.class);
+   private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
    public static void main(String args[]) throws FileNotFoundException, IOException {
-      File logDir = new File(args[0]);
-      long contextId = 0xF88A4D122757541FL;
-      long minTime = System.currentTimeMillis() - 1000 * 60 * 45 * 1;
+      if (args.length == 0) {
+         logger.info("USAGE: [-dir /service_logs/] [-c 0xF88A4D122757541F] [-min '2016-09-21 16:00'] [-max '2016-09-21 22:00'] [-last 2]");
+         logger.info("Default time range is last 2 hours");
+      }
+
+      File logDir = new File("/service_logs/");
+
+      String contextId = null;
       long maxTime = System.currentTimeMillis();
-      LocalDateTime minDateTime = LocalDateTime.ofInstant(Instant.ofEpochSecond(minTime / 1000), TimeZone.getDefault().toZoneId());
-      LocalDateTime maxDateTime = LocalDateTime.ofInstant(Instant.ofEpochSecond(maxTime / 1000), TimeZone.getDefault().toZoneId());
+      long minTime = System.currentTimeMillis() - 1000 * 60 * 60 * 2;
+      LocalDateTime minDateTime = null;
+      LocalDateTime maxDateTime = null;
+
+      int i = 0;
+      while (i < args.length) {
+         switch (args[i]) {
+            case "-dir":
+               logDir = new File(args[++i]);
+               break;
+            case "-c":
+               contextId = args[++i];
+               contextId = contextId.toLowerCase();
+               break;
+            case "-last":
+               minTime = System.currentTimeMillis() - 1000 * 60 * 60 * Integer.parseInt(args[++i]);
+               break;
+            case "-min":
+               minDateTime = LocalDateTime.parse(args[++i], formatter);
+               break;
+            case "-max":
+               maxDateTime = LocalDateTime.parse(args[++i], formatter);
+               break;
+         }
+         i++;
+      }
+      if (minDateTime == null) {
+         minDateTime = LocalDateTime.ofInstant(Instant.ofEpochSecond(minTime / 1000), TimeZone.getDefault().toZoneId());
+      }
+      if (maxDateTime == null) {
+         maxDateTime = LocalDateTime.ofInstant(Instant.ofEpochSecond(maxTime / 1000), TimeZone.getDefault().toZoneId());
+      }
 
       logger.info("CommsLogQuery search {} for contextId={} between {} and {}", logDir, contextId, minDateTime, maxDateTime);
-      List<File> files = CommsLogger.filesForDateRange(logDir, minTime, maxTime);
-      for (File f : files) {
-         if (f.exists()) {
-            logger.info("READING FILE = {}", f);
-            try {
-               for (CommsLogEntry e : CommsLogger.readLogFile(f)) {
-                  if (e.matches(minTime, maxTime, contextId)) {
-                     logger.info("MATCH: {}", e);
-                  } else {
-                     //logger.info("XXXXX: {}", e);
+
+      if (!logDir.exists()) {
+         logger.error("{} does not exist", logDir);
+         return;
+      }
+
+      for (File dir : logDir.listFiles()) {
+         if (dir.isDirectory()) {
+            logger.info("Searching dir {}", dir);
+            final List<File> files = CommsLogger.filesForDateRange(dir, minDateTime, maxDateTime);
+            for (File f : files) {
+               if (f.exists()) {
+                  logger.info("READING FILE = {}", f);
+                  try {
+                     CommsLogFile file = CommsLogger.readLogFile(f);
+                     for (CommsLogEntry e : file.list) {
+                        if (e.matches(minTime, maxTime, contextId)) {
+                           logger.info("{} {} {}", file.header.host, file.header.serviceName, e);
+                        }
+                     }
+                  } catch (Exception e) {
+                     logger.error("Error Reading {} ", f);
+                     logger.error(e.getMessage(), e);
                   }
                }
-            } catch (Exception e) {
-               logger.error("Error Reading {} ", f);
-               logger.error(e.getMessage(), e);
             }
          }
       }
 
    }
+
 }

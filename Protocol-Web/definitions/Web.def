@@ -1,6 +1,7 @@
 java package io.tetrapod.protocol.web
 java outdir "../src" 
 javascript out "../../Tetrapod-Web/webContent/protocol/web.js"
+javascript altOut "web.js,server.js"
 
 service Web @version(1) @id(22) @sync
  
