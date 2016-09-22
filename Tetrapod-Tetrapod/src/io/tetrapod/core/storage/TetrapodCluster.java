@@ -16,6 +16,7 @@ import io.tetrapod.core.pubsub.Publisher;
 import io.tetrapod.core.pubsub.Topic;
 import io.tetrapod.core.registry.EntityInfo;
 import io.tetrapod.core.rpc.*;
+import io.tetrapod.core.tasks.TaskContext;
 import io.tetrapod.core.utils.*;
 import io.tetrapod.protocol.core.*;
 import io.tetrapod.protocol.raft.*;
@@ -163,49 +164,54 @@ public class TetrapodCluster extends Storage
    // FIXME: Add a cleaner listener interface based on command type so we don't need a fugly switch
    @Override
    public void onLogEntryApplied(Entry<TetrapodStateMachine> entry) {
-      commands.mark();
-      final Command<TetrapodStateMachine> command = entry.getCommand();
-      switch (command.getCommandType()) {
-         case SetClusterPropertyCommand.COMMAND_ID:
-            onSetClusterPropertyCommand((SetClusterPropertyCommand) command);
-            break;
-         case DelClusterPropertyCommand.COMMAND_ID:
-            onDelClusterPropertyCommand((DelClusterPropertyCommand) command);
-            break;
-         case SetWebRouteCommand.COMMAND_ID:
-            onSetWebRouteCommand((SetWebRouteCommand) command);
-            break;
-         case DelWebRouteCommand.COMMAND_ID:
-            onDelWebRouteCommand((DelWebRouteCommand) command);
-            break;
-         case AddAdminUserCommand.COMMAND_ID:
-            onAddAdminUserCommand((AddAdminUserCommand) command);
-            break;
-         case DelAdminUserCommand.COMMAND_ID:
-            onDelAdminUserCommand((DelAdminUserCommand) command);
-            break;
-         case ClaimOwnershipCommand.COMMAND_ID:
-            onClaimOwnershipCommand((ClaimOwnershipCommand) command);
-            break;
-         case RetainOwnershipCommand.COMMAND_ID:
-            onRetainOwnershipCommand((RetainOwnershipCommand) command);
-            break;
-         case ReleaseOwnershipCommand.COMMAND_ID:
-            onReleaseOwnershipCommand((ReleaseOwnershipCommand) command);
-            break;
-         case AddEntityCommand.COMMAND_ID:
-            onAddEntityCommand((AddEntityCommand) command);
-            break;
-         case ModEntityCommand.COMMAND_ID:
-            onModEntityCommand((ModEntityCommand) command);
-            break;
-         case DelEntityCommand.COMMAND_ID:
-            onDelEntityCommand((DelEntityCommand) command);
-            break;
-         case RegisterContractCommand.COMMAND_ID:
-            onRegisterContractCommand((RegisterContractCommand) command);
-            break;
-
+      TaskContext taskContext = TaskContext.pushNew();
+      try {
+         ContextIdGenerator.generate();
+         commands.mark();
+         final Command<TetrapodStateMachine> command = entry.getCommand();
+         switch (command.getCommandType()) {
+            case SetClusterPropertyCommand.COMMAND_ID:
+               onSetClusterPropertyCommand((SetClusterPropertyCommand) command);
+               break;
+            case DelClusterPropertyCommand.COMMAND_ID:
+               onDelClusterPropertyCommand((DelClusterPropertyCommand) command);
+               break;
+            case SetWebRouteCommand.COMMAND_ID:
+               onSetWebRouteCommand((SetWebRouteCommand) command);
+               break;
+            case DelWebRouteCommand.COMMAND_ID:
+               onDelWebRouteCommand((DelWebRouteCommand) command);
+               break;
+            case AddAdminUserCommand.COMMAND_ID:
+               onAddAdminUserCommand((AddAdminUserCommand) command);
+               break;
+            case DelAdminUserCommand.COMMAND_ID:
+               onDelAdminUserCommand((DelAdminUserCommand) command);
+               break;
+            case ClaimOwnershipCommand.COMMAND_ID:
+               onClaimOwnershipCommand((ClaimOwnershipCommand) command);
+               break;
+            case RetainOwnershipCommand.COMMAND_ID:
+               onRetainOwnershipCommand((RetainOwnershipCommand) command);
+               break;
+            case ReleaseOwnershipCommand.COMMAND_ID:
+               onReleaseOwnershipCommand((ReleaseOwnershipCommand) command);
+               break;
+            case AddEntityCommand.COMMAND_ID:
+               onAddEntityCommand((AddEntityCommand) command);
+               break;
+            case ModEntityCommand.COMMAND_ID:
+               onModEntityCommand((ModEntityCommand) command);
+               break;
+            case DelEntityCommand.COMMAND_ID:
+               onDelEntityCommand((DelEntityCommand) command);
+               break;
+            case RegisterContractCommand.COMMAND_ID:
+               onRegisterContractCommand((RegisterContractCommand) command);
+               break;
+         }
+      } finally {
+         taskContext.pop();
       }
    }
 
@@ -240,14 +246,20 @@ public class TetrapodCluster extends Storage
    }
 
    private Async sendPeerRequest(Request req, int peerId) {
-      Session ses = getSessionForPeer(peerId);
-      if (ses != null && ses.isConnected()) {
-         return ses.sendRequest(req, Core.DIRECT);
+      TaskContext taskContext = TaskContext.pushNew();
+      try {
+         ContextIdGenerator.generate();
+         Session ses = getSessionForPeer(peerId);
+         if (ses != null && ses.isConnected()) {
+            return ses.sendRequest(req, Core.DIRECT);
+         }
+         logger.info("Not connected to peer {} ({})", peerId);
+         final Async async = new Async(req, null, null);
+         async.setResponse(CoreContract.ERROR_CONNECTION_CLOSED);
+         return async;
+      } finally {
+         taskContext.pop();
       }
-      logger.info("Not connected to peer {} ({})", peerId);
-      final Async async = new Async(req, null, null);
-      async.setResponse(CoreContract.ERROR_CONNECTION_CLOSED);
-      return async;
    }
 
    public Collection<TetrapodPeer> getMembers() {
@@ -581,7 +593,7 @@ public class TetrapodCluster extends Storage
             } catch (IOException ex) {
                logger.error(ex.getMessage(), ex);
             } finally {
-               ses.sendResponse(res, ctx.header.requestId, ctx.header.contextId);
+               ses.sendResponse(res, ctx.header);
             }
          });
          return Response.PENDING;
@@ -649,7 +661,7 @@ public class TetrapodCluster extends Storage
          } catch (Throwable t) {
             logger.error(t.getMessage(), t);
          } finally {
-            ctx.session.sendResponse(res, ctx.header.requestId, ctx.header.contextId);
+            ctx.session.sendResponse(res, ctx.header);
          }
       }
    }

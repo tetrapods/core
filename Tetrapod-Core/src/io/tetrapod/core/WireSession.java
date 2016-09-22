@@ -7,11 +7,13 @@ import io.netty.channel.*;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import io.netty.util.ReferenceCountUtil;
+import io.tetrapod.core.logging.CommsLogger;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.rpc.Error;
 import io.tetrapod.core.serialize.DataSource;
 import io.tetrapod.core.serialize.StructureAdapter;
 import io.tetrapod.core.serialize.datasources.ByteBufDataSource;
+import io.tetrapod.core.tasks.TaskContext;
 import io.tetrapod.protocol.core.*;
 
 import java.io.IOException;
@@ -37,6 +39,10 @@ public class WireSession extends Session {
       channel.pipeline().addLast(this);
    }
 
+   public SessionType getSessionType() {
+      return SessionType.WIRE;
+   }
+
    private synchronized boolean needsHandshake() {
       return needsHandshake;
    }
@@ -44,6 +50,7 @@ public class WireSession extends Session {
    @Override
    public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
       lastHeardFrom.set(System.currentTimeMillis());
+      TaskContext taskContext = TaskContext.pushNew();
       try {
          final ByteBuf in = (ByteBuf) msg;
          final int len = in.readInt() - 1;
@@ -57,6 +64,7 @@ public class WireSession extends Session {
          }
       } finally {
          ReferenceCountUtil.release(msg);
+         taskContext.pop();
       }
    }
 
@@ -136,8 +144,7 @@ public class WireSession extends Session {
             final Structure res = StructureFactory.make(header.contractId, header.structId);
             if (res != null) {
                res.read(reader);
-               if (!commsLogIgnore(async.header.structId))
-                  logged = commsLog("%s %016X  [%d] <- %s", this, header.contextId, header.requestId, res.dump());
+               logged = CommsLogger.append(this, false, header, res, async.header.structId);
                // we dispatch responses as high priority to prevent certain 
                // forms of live-lock when the dispatch thread pool is exhausted
                getDispatcher().dispatchHighPriority(() -> {
@@ -151,26 +158,11 @@ public class WireSession extends Session {
                logger.warn("{} Could not find response structure {}", this, header.structId);
             }
          } else if (relayHandler != null) {
-
-            // HACK: Expensive, for better debug logs. 
-            Response res = null;
-            //            if (logger.isDebugEnabled() && header.structId == 1) {
-            //               res = (Response) StructureFactory.make(async.header.contractId, header.structId);
-            //               if (res != null) {
-            //                  int mark = in.readerIndex();
-            //                  res.read(reader);
-            //                  in.readerIndex(mark);
-            //               }
-            //            }
-
-            if (!commsLogIgnore(async.header.structId))
-               logged = commsLog("%s %016X [%d] <- Response.%s", this, header.contextId, header.requestId,
-                     res == null ? StructureFactory.getName(header.contractId, header.structId) : res.dump());
+            logged = CommsLogger.append(this, false, header, in, async.header.structId);
             relayResponse(header, async, in);
          }
-         if (!logged && !commsLogIgnore(async.header.structId)) {
-            logged = commsLog("%s %016X [%d] <- Response.%s", this, header.contextId, header.requestId,
-                  StructureFactory.getName(header.contractId, header.structId));
+         if (!logged) {
+            CommsLogger.append(this, false, header, in, async.header.structId);
          }
       } else {
          // Typical if the request timed out earlier, and now we've finally received the actual response, it's too late 
@@ -197,29 +189,25 @@ public class WireSession extends Session {
             final Request req = (Request) StructureFactory.make(header.contractId, header.structId);
             if (req != null) {
                req.read(reader);
-               if (!commsLogIgnore(req))
-                  logged = commsLog("%s %016X [%d] <- %s (from %d.%d)", this, header.contextId, header.requestId, req.dump(),
-                        header.fromParentId, header.fromChildId);
+               CommsLogger.append(this, false, header, req);
                dispatchRequest(header, req);
             } else {
                logger.warn("Could not find request structure {}", header.structId);
-               sendResponse(new Error(ERROR_SERIALIZATION), header.requestId, header.contextId);
+               sendResponse(new Error(ERROR_SERIALIZATION), header);
             }
          } catch (ClassCastException e) {
             logger.error(e.getMessage());
             logger.error("Serialization Error on {}", header.dump());
          }
       } else if (relayHandler != null) {
-         if (commsLogIgnore(header.structId)) {
-            logged = commsLog("%s %016X [%d] <- Request.%s (from %d.%d)", this, header.contextId, header.requestId,
-                  StructureFactory.getName(header.contractId, header.structId), header.fromParentId, header.fromChildId);
-         }
+         logged = CommsLogger.append(this, false, header, in);
          relayRequest(header, in);
       }
 
-      if (!logged && !commsLogIgnore(header.structId))
-         logged = commsLog("%s %016X [%d] <- Request.%s (from %d.%d)", this, header.contextId, header.requestId,
-               StructureFactory.getName(header.contractId, header.structId), header.fromParentId, header.fromChildId);
+      if (!logged) {
+         logged = CommsLogger.append(this, false, header, in);
+      }
+
    }
 
    private void readMessage(ByteBuf in, boolean isBroadcast) throws IOException {
@@ -232,10 +220,12 @@ public class WireSession extends Session {
          header.fromId = theirId;
       }
 
-      if (!commsLogIgnore(header.structId)) {
-         commsLog("%s  [%s] <- Message: %s (to %d.%d t%d f%d)", this, isBroadcast ? "B" : "M", getNameFor(header), header.toParentId,
-               header.toChildId, header.topicId, header.flags);
-      }
+      //CommsLogger.append(header, isBroadcast);
+      CommsLogger.append(this, false, header, in);
+      //      if (!CommsLogger.commsLogIgnore(header.structId)) {
+      //         commsLog("%s  [%s] <- Message: %s (to %d.%d t%d f%d)", this, isBroadcast ? "B" : "M", getNameFor(header), header.toParentId,
+      //               header.toChildId, header.topicId, header.flags);
+      //      }
 
       boolean selfDispatch = header.topicId == 0 && header.toChildId == 0 && ((header.flags & MessageHeader.FLAGS_ALTERNATE) == 0)
             && (header.toParentId == myId || header.toParentId == UNADDRESSED);
@@ -289,14 +279,18 @@ public class WireSession extends Session {
 
    @Override
    public void channelActive(final ChannelHandlerContext ctx) throws Exception {
-      writeHandshake();
-      scheduleHealthCheck();
+      TaskContext.doPushPopIfNeeded(()-> {
+         writeHandshake();
+         scheduleHealthCheck();
+      });
    }
 
    @Override
    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-      fireSessionStopEvent();
-      cancelAllPendingRequests();
+      TaskContext.doPushPopIfNeeded(()-> {
+         fireSessionStopEvent();
+         cancelAllPendingRequests();
+      });
    }
 
    private void writeHandshake() {
@@ -354,19 +348,19 @@ public class WireSession extends Session {
       if (ses != null) {
          if (ses.getTheirEntityType() == Core.TYPE_CLIENT) {
             logger.warn("Something's trying to send a request to a client {}", header.dump());
-            sendResponse(new Error(ERROR_SECURITY), header.requestId, header.contextId);
+            sendResponse(new Error(ERROR_SECURITY), header);
          } else {
             ses.sendRelayedRequest(header, in, this, null);
          }
       } else {
          logger.warn("Could not find a relay session for {}", header.dump());
-         sendResponse(new Error(ERROR_SERVICE_UNAVAILABLE), header.requestId, header.contextId);
+         sendResponse(new Error(ERROR_SERVICE_UNAVAILABLE), header);
       }
    }
 
    private void relayResponse(ResponseHeader header, Async async, ByteBuf in) {
       header.requestId = async.header.requestId;
-      async.session.sendRelayedResponse(header, in);
+      async.session.sendRelayedResponse(header, async, in);
    }
 
    public static String dumpBuffer(ByteBuf buf) {

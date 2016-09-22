@@ -1,39 +1,33 @@
 package io.tetrapod.core.serialize.datasources;
 
-import io.tetrapod.core.rpc.Enum_String;
-import io.tetrapod.core.rpc.Flags_int;
-import io.tetrapod.core.rpc.Flags_long;
-import io.tetrapod.core.rpc.Enum_int;
-import io.tetrapod.core.rpc.Structure;
-import io.tetrapod.core.serialize.*;
-                      
 import java.io.IOException;
-import java.lang.reflect.Array;
-import java.lang.reflect.Method;
+import java.lang.reflect.*;
 import java.util.*;
 
+import io.tetrapod.core.rpc.*;
+import io.tetrapod.core.serialize.*;
+
 /**
- * A datasource based on streaming. This is basically the wire protocol although the actual
- * streaming of bytes is left to subclasses.
+ * A datasource based on streaming. This is basically the wire protocol although the actual streaming of bytes is left to subclasses.
  * 
  * @author fortin
  */
 abstract public class StreamDataSource implements DataSource {
 
-   private static final int        TYPE_VAR_INT      = 0;
-   private static final int        TYPE_VAR_LONG     = 1;
-   private static final int        TYPE_LENGTH_DELIM = 2;
-   private static final int        TYPE_FIXED_8BIT   = 3;
-   private static final int        TYPE_FIXED_32BIT  = 4;
-   private static final int        TYPE_FIXED_64BIT  = 5;
-   private static final int        TYPE_NULL         = 6;
+   private static final int     TYPE_VAR_INT      = 0;
+   private static final int     TYPE_VAR_LONG     = 1;
+   private static final int     TYPE_LENGTH_DELIM = 2;
+   private static final int     TYPE_FIXED_8BIT   = 3;
+   private static final int     TYPE_FIXED_32BIT  = 4;
+   private static final int     TYPE_FIXED_64BIT  = 5;
+   private static final int     TYPE_NULL         = 6;
 
-   private static final int        CONTINUE          = 0b1000_0000;
-   private static final int        MASK              = 0b0111_1111;
+   private static final int     CONTINUE          = 0b1000_0000;
+   private static final int     MASK              = 0b0111_1111;
 
-   private int                     lastTagType       = 0;
-   private TempBufferDataSource    tempBuffer        = null;
-   
+   private int                  lastTagType       = 0;
+   private TempBufferDataSource tempBuffer        = null;
+
    @Override
    public int readTag() throws IOException {
       int tagAndType = readVarInt();
@@ -59,7 +53,7 @@ abstract public class StreamDataSource implements DataSource {
 
    @Override
    public byte read_byte(int tag) throws IOException {
-      return (byte)readRawByte();
+      return (byte) readRawByte();
    }
 
    @Override
@@ -69,14 +63,14 @@ abstract public class StreamDataSource implements DataSource {
 
    @Override
    public double read_double(int tag) throws IOException {
-      long res = (long)readRawByte();
-      res |= ((long)readRawByte()) << 8;
-      res |= ((long)readRawByte()) << 16;
-      res |= ((long)readRawByte()) << 24;
-      res |= ((long)readRawByte()) << 32;
-      res |= ((long)readRawByte()) << 40;
-      res |= ((long)readRawByte()) << 48;
-      res |= ((long)readRawByte()) << 56;
+      long res = (long) readRawByte();
+      res |= ((long) readRawByte()) << 8;
+      res |= ((long) readRawByte()) << 16;
+      res |= ((long) readRawByte()) << 24;
+      res |= ((long) readRawByte()) << 32;
+      res |= ((long) readRawByte()) << 40;
+      res |= ((long) readRawByte()) << 48;
+      res |= ((long) readRawByte()) << 56;
       return Double.longBitsToDouble(res);
    }
 
@@ -91,7 +85,7 @@ abstract public class StreamDataSource implements DataSource {
       struct.read(this);
       return struct;
    }
-   
+
    public int[] read_int_array(int tag) throws IOException {
       readVarInt(); // byte length
       int len = readVarInt();
@@ -111,7 +105,7 @@ abstract public class StreamDataSource implements DataSource {
       }
       return list;
    }
-   
+
    public void write(int tag, int[] array) throws IOException {
       writeTag(tag, TYPE_LENGTH_DELIM);
       TempBufferDataSource temp = getTempBuffer();
@@ -122,7 +116,7 @@ abstract public class StreamDataSource implements DataSource {
       writeVarInt(temp.rawCount());
       writeRawBytes(temp.rawBuffer(), 0, temp.rawCount());
    }
-   
+
    public void write_int(int tag, List<Integer> list) throws IOException {
       writeTag(tag, TYPE_LENGTH_DELIM);
       TempBufferDataSource temp = getTempBuffer();
@@ -143,7 +137,7 @@ abstract public class StreamDataSource implements DataSource {
       }
       return array;
    }
-   
+
    public List<Long> read_long_list(int tag) throws IOException {
       readVarInt(); // byte length
       int len = readVarInt();
@@ -164,7 +158,7 @@ abstract public class StreamDataSource implements DataSource {
       writeVarInt(temp.rawCount());
       writeRawBytes(temp.rawBuffer(), 0, temp.rawCount());
    }
-      
+
    public void write_long(int tag, List<Long> list) throws IOException {
       writeTag(tag, TYPE_LENGTH_DELIM);
       TempBufferDataSource temp = getTempBuffer();
@@ -180,12 +174,12 @@ abstract public class StreamDataSource implements DataSource {
       int len = readVarInt();
       return readRawBytes(len);
    }
-   
+
    public List<Byte> read_byte_list(int tag) throws IOException {
       int len = readVarInt();
       List<Byte> list = new ArrayList<>();
       for (int i = 0; i < len; i++) {
-         list.add((byte)readRawByte());
+         list.add((byte) readRawByte());
       }
       return list;
    }
@@ -195,7 +189,7 @@ abstract public class StreamDataSource implements DataSource {
       writeVarInt(array.length);
       writeRawBytes(array);
    }
-   
+
    public void write_byte(int tag, List<Byte> list) throws IOException {
       writeTag(tag, TYPE_LENGTH_DELIM);
       writeVarInt(list.size());
@@ -212,7 +206,7 @@ abstract public class StreamDataSource implements DataSource {
       }
       return array;
    }
-   
+
    public List<Boolean> read_boolean_list(int tag) throws IOException {
       int len = readVarInt();
       List<Boolean> list = new ArrayList<>();
@@ -229,7 +223,7 @@ abstract public class StreamDataSource implements DataSource {
          writeRawByte(array[i] ? 1 : 0);
       }
    }
-   
+
    public void write_boolean(int tag, List<Boolean> list) throws IOException {
       writeTag(tag, TYPE_LENGTH_DELIM);
       writeVarInt(list.size());
@@ -246,7 +240,7 @@ abstract public class StreamDataSource implements DataSource {
       }
       return array;
    }
-   
+
    public List<Double> read_double_list(int tag) throws IOException {
       int len = readVarInt() / 8;
       List<Double> list = new ArrayList<>();
@@ -263,7 +257,7 @@ abstract public class StreamDataSource implements DataSource {
          writeDoubleNoTag(array[i]);
       }
    }
-   
+
    public void write_double(int tag, List<Double> list) throws IOException {
       writeTag(tag, TYPE_LENGTH_DELIM);
       writeVarInt(list.size() * 8);
@@ -281,7 +275,7 @@ abstract public class StreamDataSource implements DataSource {
       }
       return array;
    }
-   
+
    public List<String> read_string_list(int tag) throws IOException {
       readVarInt(); // byte length
       int len = readVarInt();
@@ -302,7 +296,7 @@ abstract public class StreamDataSource implements DataSource {
       writeVarInt(temp.rawCount());
       writeRawBytes(temp.rawBuffer(), 0, temp.rawCount());
    }
-   
+
    public void write_string(int tag, List<String> list) throws IOException {
       writeTag(tag, TYPE_LENGTH_DELIM);
       TempBufferDataSource temp = getTempBuffer();
@@ -318,22 +312,22 @@ abstract public class StreamDataSource implements DataSource {
    public <T extends Structure> T[] read_struct_array(int tag, T struct) throws IOException {
       readVarInt(); // byte length
       int len = readVarInt();
-      T[] array = (T[])Array.newInstance(struct.getClass(), len);
+      T[] array = (T[]) Array.newInstance(struct.getClass(), len);
       for (int i = 0; i < len; i++) {
-         T inst = i == 0 ? struct : (T)struct.make();
+         T inst = i == 0 ? struct : (T) struct.make();
          inst.read(this);
          array[i] = lastWasNull() ? null : inst;
       }
       return array;
    }
-   
+
    @SuppressWarnings("unchecked")
-   public  <T extends Structure> List<T> read_struct_list(int tag, T struct) throws IOException {
+   public <T extends Structure> List<T> read_struct_list(int tag, T struct) throws IOException {
       readVarInt(); // byte length
       int len = readVarInt();
       List<T> list = new ArrayList<>();
       for (int i = 0; i < len; i++) {
-         T inst = i == 0 ? struct : (T)struct.make();
+         T inst = i == 0 ? struct : (T) struct.make();
          inst.read(this);
          list.add(lastWasNull() ? null : inst);
       }
@@ -361,14 +355,14 @@ abstract public class StreamDataSource implements DataSource {
 
    protected void writeDoubleNoTag(double doubleval) throws IOException {
       long value = Double.doubleToRawLongBits(doubleval);
-      writeRawByte((int)(value) & 0xFF);
-      writeRawByte((int)(value >> 8) & 0xFF);
-      writeRawByte((int)(value >> 16) & 0xFF);
-      writeRawByte((int)(value >> 24) & 0xFF);
-      writeRawByte((int)(value >> 32) & 0xFF);
-      writeRawByte((int)(value >> 40) & 0xFF);
-      writeRawByte((int)(value >> 48) & 0xFF);
-      writeRawByte((int)(value >> 56) & 0xFF);
+      writeRawByte((int) (value) & 0xFF);
+      writeRawByte((int) (value >> 8) & 0xFF);
+      writeRawByte((int) (value >> 16) & 0xFF);
+      writeRawByte((int) (value >> 24) & 0xFF);
+      writeRawByte((int) (value >> 32) & 0xFF);
+      writeRawByte((int) (value >> 40) & 0xFF);
+      writeRawByte((int) (value >> 48) & 0xFF);
+      writeRawByte((int) (value >> 56) & 0xFF);
    }
 
    @Override
@@ -412,7 +406,7 @@ abstract public class StreamDataSource implements DataSource {
       writeVarInt(temp.rawCount());
       writeRawBytes(temp.rawBuffer(), 0, temp.rawCount());
    }
-   
+
    public <T extends Structure> void write(int tag, T[] array) throws IOException {
       writeTag(tag, TYPE_LENGTH_DELIM);
       TempBufferDataSource temp = getTempBuffer();
@@ -440,31 +434,31 @@ abstract public class StreamDataSource implements DataSource {
       writeVarInt(temp.rawCount());
       writeRawBytes(temp.rawBuffer(), 0, temp.rawCount());
    }
-   
+
    @SuppressWarnings("unchecked")
    public <T extends Flags_int<T>> T[] read_flags_int_array(int tag, T struct) throws IOException {
       readVarInt(); // byte length
       int len = readVarInt();
-      T[] array = (T[])Array.newInstance(struct.getClass(), len);
+      T[] array = (T[]) Array.newInstance(struct.getClass(), len);
       for (int i = 0; i < len; i++) {
-         T inst = i == 0 ? struct : (T)struct.make();         
+         T inst = i == 0 ? struct : (T) struct.make();
          array[i] = inst.set(readVarInt());
       }
       return array;
    }
-   
+
    @SuppressWarnings("unchecked")
    public <T extends Flags_long<T>> T[] read_flags_long_array(int tag, T struct) throws IOException {
       readVarInt(); // byte length
       int len = readVarInt();
-      T[] array = (T[])Array.newInstance(struct.getClass(), len);
+      T[] array = (T[]) Array.newInstance(struct.getClass(), len);
       for (int i = 0; i < len; i++) {
-         T inst = i == 0 ? struct : (T)struct.make();         
+         T inst = i == 0 ? struct : (T) struct.make();
          array[i] = inst.set(readVarLong());
       }
       return array;
    }
-   
+
    @Override
    public void write(int tag, Flags_int<?>[] array) throws IOException {
       writeTag(tag, TYPE_LENGTH_DELIM);
@@ -476,7 +470,7 @@ abstract public class StreamDataSource implements DataSource {
       writeVarInt(temp.rawCount());
       writeRawBytes(temp.rawBuffer(), 0, temp.rawCount());
    }
-   
+
    @Override
    public void write(int tag, Flags_long<?>[] array) throws IOException {
       writeTag(tag, TYPE_LENGTH_DELIM);
@@ -494,30 +488,30 @@ abstract public class StreamDataSource implements DataSource {
    public <T extends Enum_int<T>> T[] read_enum_int_array(int tag, Class<T> c) throws IOException {
       readVarInt(); // byte length
       int len = readVarInt();
-      T[] array = (T[])Array.newInstance(c, len);
+      T[] array = (T[]) Array.newInstance(c, len);
       try {
          Method m = c.getMethod("from", int.class);
          for (int i = 0; i < len; i++) {
-            array[i] = (T) m.invoke(null, readVarInt());         
+            array[i] = (T) m.invoke(null, readVarInt());
          }
       } catch (Exception e) {
          throw new IOException(e);
       }
       return array;
    }
-   
+
    @Override
    @SuppressWarnings("unchecked")
    public <T extends Enum_String<T>> T[] read_enum_string_array(int tag, Class<T> c) throws IOException {
       readVarInt(); // byte length
       int len = readVarInt();
-      T[] array = (T[])Array.newInstance(c, len);
+      T[] array = (T[]) Array.newInstance(c, len);
       try {
          Method m = c.getMethod("from", String.class);
          for (int i = 0; i < len; i++) {
             String s = read_string(0);
             if (s != null) {
-               array[i] = (T) m.invoke(null, s);         
+               array[i] = (T) m.invoke(null, s);
             }
          }
       } catch (Exception e) {
@@ -525,7 +519,7 @@ abstract public class StreamDataSource implements DataSource {
       }
       return array;
    }
-   
+
    @Override
    public <T extends Enum_int<T>> void write(int tag, T[] array) throws IOException {
       writeTag(tag, TYPE_LENGTH_DELIM);
@@ -671,7 +665,7 @@ abstract public class StreamDataSource implements DataSource {
    protected void writeVarLong(long x) throws IOException {
       boolean keepGoing = true;
       while (keepGoing) {
-         int v = (int)(x & MASK);
+         int v = (int) (x & MASK);
          keepGoing = v != x;
          if (keepGoing) {
             v = v | CONTINUE;
@@ -699,7 +693,7 @@ abstract public class StreamDataSource implements DataSource {
       int shift = 0;
       while (shift < 64) {
          int v = readRawByte();
-         x = x | (((long)(v & MASK)) << shift);
+         x = x | (((long) (v & MASK)) << shift);
          if ((v & CONTINUE) == 0)
             return x;
          shift += 7;
@@ -718,18 +712,18 @@ abstract public class StreamDataSource implements DataSource {
    }
 
    abstract protected void writeRawBytes(byte[] vals, int offset, int count) throws IOException;
-   
+
    protected TempBufferDataSource getTempBuffer() {
-      if (tempBuffer == null) 
+      if (tempBuffer == null)
          tempBuffer = TempBufferDataSource.forWriting();
       tempBuffer.reset();
       return tempBuffer;
    }
-   
+
    private boolean lastWasNull() {
       return lastTagType == TYPE_NULL;
    }
-   
+
    @Override
    public Object getUnderlyingObject() {
       return null;

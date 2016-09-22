@@ -148,4 +148,11 @@ public class WebAPIRequest extends RequestWithResponse<WebAPIResponse> {
       return desc;
    }
 
+   @Override
+   public boolean isSensitive(String fieldName) {
+      if (fieldName.equals("headers")) return true;
+      if (fieldName.equals("params")) return true;
+      if (fieldName.equals("body")) return true;
+      return false;
+   }
 }

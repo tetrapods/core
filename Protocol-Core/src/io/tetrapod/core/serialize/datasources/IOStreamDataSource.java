@@ -3,8 +3,7 @@ package io.tetrapod.core.serialize.datasources;
 import java.io.*;
 
 /**
- * Implement the streaming binary protocol to/from java IOStreams.  Supports
- * read-only, write-only, or read-write streams. 
+ * Implement the streaming binary protocol to/from java IOStreams. Supports read-only, write-only, or read-write streams.
  */
 public class IOStreamDataSource extends StreamDataSource {
 
@@ -28,7 +27,10 @@ public class IOStreamDataSource extends StreamDataSource {
 
    @Override
    protected int readRawByte() throws IOException {
-      return in.read();
+      int v = in.read();
+      if (v == -1)
+         throw new EOFException();
+      return v;
    }
 
    @Override

@@ -112,4 +112,9 @@ public class DirectConnectionRequest extends RequestWithResponse<DirectConnectio
       return desc;
    }
 
+   @Override
+   public boolean isSensitive(String fieldName) {
+      if (fieldName.equals("token")) return true;
+      return false;
+   }
 }

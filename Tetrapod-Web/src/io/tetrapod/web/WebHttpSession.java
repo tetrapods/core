@@ -12,6 +12,7 @@ import java.nio.charset.Charset;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
+import io.tetrapod.core.tasks.TaskContext;
 import org.slf4j.*;
 
 import com.codahale.metrics.Timer;
@@ -25,6 +26,7 @@ import io.netty.handler.codec.http.websocketx.*;
 import io.netty.util.*;
 import io.tetrapod.core.*;
 import io.tetrapod.core.json.*;
+import io.tetrapod.core.logging.CommsLogger;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.rpc.Error;
 import io.tetrapod.core.serialize.datasources.ByteBufDataSource;
@@ -69,30 +71,51 @@ public class WebHttpSession extends WebSession {
 
    @Override
    public void checkHealth() {
-      if (isConnected()) {
-         timeoutPendingRequests();
+      TaskContext taskContext = TaskContext.pushNew();
+      try {
+         if (isConnected()) {
+            timeoutPendingRequests();
+         }
+      } finally {
+         taskContext.pop();
       }
    }
 
    @Override
    public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-      if (msg instanceof FullHttpRequest) {
-         handleHttpRequest(ctx, (FullHttpRequest) msg);
-      } else if (msg instanceof WebSocketFrame) {
-         handleWebSocketFrame(ctx, (WebSocketFrame) msg);
+      TaskContext taskContext = TaskContext.pushNew();
+      try {
+         if (msg instanceof FullHttpRequest) {
+            handleHttpRequest(ctx, (FullHttpRequest) msg);
+         } else if (msg instanceof WebSocketFrame) {
+            handleWebSocketFrame(ctx, (WebSocketFrame) msg);
+         }
+      } finally {
+         taskContext.pop();
       }
    }
 
    @Override
    public void channelActive(final ChannelHandlerContext ctx) throws Exception {
-      fireSessionStartEvent();
-      scheduleHealthCheck();
+      TaskContext taskContext = TaskContext.pushNew();
+      try {
+         fireSessionStartEvent();
+         scheduleHealthCheck();
+      } finally {
+         taskContext.pop();
+      }
+
    }
 
    @Override
    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-      fireSessionStopEvent();
-      cancelAllPendingRequests();
+      TaskContext taskContext = TaskContext.pushNew();
+      try {
+         fireSessionStopEvent();
+         cancelAllPendingRequests();
+      } finally {
+         taskContext.pop();
+      }
    }
 
    public synchronized boolean isWebSocket() {
@@ -387,7 +410,8 @@ public class WebHttpSession extends WebSession {
                }
             }
          } else {
-            ctx.writeAndFlush(makeFrame(res, 0, 0));
+            // a blank response
+            ctx.writeAndFlush(makeFrame(new ResponseHeader(0, 0, 0, 0), res, ENVELOPE_RESPONSE));
          }
          if (cf != null && !keepAlive) {
             cf.addListener(ChannelFutureListener.CLOSE);
@@ -494,17 +518,17 @@ public class WebHttpSession extends WebSession {
                   dispatchRequest(header, (Request) request);
                } else {
                   logger.error("Asked to process a request I can't  deserialize {}", header.dump());
-                  sendResponse(new Error(ERROR_SERIALIZATION), header.requestId, header.contextId);
+                  sendResponse(new Error(ERROR_SERIALIZATION), header);
                }
             } else {
                relayRequest(header, request);
             }
          } else {
-            sendResponse(new Error(ERROR_UNKNOWN_REQUEST), header.requestId, header.contextId);
+            sendResponse(new Error(ERROR_UNKNOWN_REQUEST), header);
          }
       } catch (IOException e) {
          logger.error("Error processing request {}", header.dump());
-         sendResponse(new Error(ERROR_UNKNOWN), header.requestId, header.contextId);
+         sendResponse(new Error(ERROR_UNKNOWN), header);
       }
    }
 
@@ -515,21 +539,21 @@ public class WebHttpSession extends WebSession {
    }
 
    @Override
-   public void sendResponse(Response res, int requestId, long contextId) {
+   public void sendResponse(Response res, RequestHeader reqHeader) {
       if (isWebSocket()) {
-         super.sendResponse(res, requestId, contextId);
+         super.sendResponse(res, reqHeader);
       } else {
          // HACK: for http responses we need to write to the response to the correct ChannelHandlerContext
          if (res != Response.PENDING) {
-            if (!commsLogIgnore(res))
-               commsLog("%s %016X [%d] => %s", this, contextId, requestId, res.dump());
-            final Object buffer = makeFrame(res, requestId, contextId);
+            final ResponseHeader header = new ResponseHeader(reqHeader.requestId, res.getContractId(), res.getStructId(), reqHeader.contextId);
+            CommsLogger.append(this, true, header, res, reqHeader.structId);
+            final Object buffer = makeFrame(header, res, ENVELOPE_RESPONSE);
             if (buffer != null && channel.isActive()) {
-               ChannelHandlerContext ctx = getContext(requestId);
+               ChannelHandlerContext ctx = getContext(reqHeader.requestId);
                if (ctx != null) {
                   ctx.writeAndFlush(buffer);
                } else {
-                  logger.warn("{} Could not find context for {}", this, requestId);
+                  logger.warn("{} Could not find context for {}", this, reqHeader.requestId);
                   writeFrame(buffer);
                }
             }
@@ -538,13 +562,14 @@ public class WebHttpSession extends WebSession {
    }
 
    @Override
-   public void sendRelayedResponse(ResponseHeader header, ByteBuf payload) {
+   public void sendRelayedResponse(ResponseHeader header, Async async, ByteBuf payload) {
       if (isWebSocket()) {
-         super.sendRelayedResponse(header, payload);
+         super.sendRelayedResponse(header, async, payload);
       } else {
+         CommsLogger.append(this, true, header, payload, async.header.structId);
+         //         if (!CommsLogger.commsLogIgnore(header.structId))
+         //            commsLog("%s %016X [%d] ~> Response:%d", this, header.contextId, header.requestId, header.structId);
          // HACK: for http responses we need to write to the response to the correct ChannelHandlerContext
-         if (!commsLogIgnore(header.structId))
-            commsLog("%s %016X [%d] ~> Response:%d", this, header.contextId, header.requestId, header.structId);
          ChannelHandlerContext ctx = getContext(header.requestId);
          final Object buffer = makeFrame(header, payload, ENVELOPE_RESPONSE);
          if (ctx != null) {
@@ -561,7 +586,7 @@ public class WebHttpSession extends WebSession {
          return relayRequest(header, request, ses, null);
       } else {
          logger.debug("Could not find a relay session for {} {}", header.toId, header.contractId);
-         sendResponse(new Error(ERROR_SERVICE_UNAVAILABLE), header.requestId, header.contextId);
+         sendResponse(new Error(ERROR_SERVICE_UNAVAILABLE), header);
          return null;
       }
    }
@@ -572,9 +597,10 @@ public class WebHttpSession extends WebSession {
          super.sendRelayedMessage(header, payload, broadcast);
       } else {
          // queue the message for long poller to retrieve later
-         if (!commsLogIgnore(header.structId)) {
-            commsLog("%s  [M] ~] Message:%d %s (to %d)", this, header.structId, getNameFor(header), header.toChildId);
-         }
+         CommsLogger.append(this, true, header, payload);
+         //         if (!CommsLogger.commsLogIgnore(header.structId)) {
+         //            commsLog("%s  [M] ~] Message:%d %s (to %d)", this, header.structId, getNameFor(header), header.toChildId);
+         //         }
          final LongPollQueue messages = LongPollQueue.getQueue(getTheirEntityId(), false);
          if (messages != null) {
             // FIXME: Need a sensible way to protect against memory gobbling if this queue isn't cleared fast enough
@@ -609,7 +635,7 @@ public class WebHttpSession extends WebSession {
       if (reqs > FLOOD_WARN) {
          // respond with error so client can slow down
          logger.warn("{} flood warning {}/{}", this, header.contractId, header.structId);
-         sendResponse(new Error(ERROR_FLOOD), header.requestId, header.contextId);
+         sendResponse(new Error(ERROR_FLOOD), header);
          return true;
       }
       return false;

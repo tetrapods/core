@@ -1,84 +1,76 @@
 <included>
 
-   <appender name="LOGFILEPID" class="ch.qos.logback.core.rolling.RollingFileAppender">
-      <file>logs/${PID}/${APPNAME}.log</file>
+	<appender name="LOGFILEPID"
+		class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<file>${LOGDIR}/${PID}/${APPNAME}/current.log</file>
 
-      <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
-         <fileNamePattern>logs/${PID}/${APPNAME}.%i.log.gz</fileNamePattern>
-         <minIndex>1</minIndex>
-         <maxIndex>5</maxIndex>
-      </rollingPolicy>
+		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+			<fileNamePattern>${LOGDIR}/${PID}/${APPNAME}/%d/${APPNAME}.log
+			</fileNamePattern>
+		</rollingPolicy>
 
-      <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
-         <maxFileSize>10MB</maxFileSize>
-      </triggeringPolicy>
-      
-      <encoder>
-         <pattern>%d %-5level %24thread{24} - %16logger{0} - %msg%n</pattern>
-      </encoder>
-   </appender>
-   
-   <appender name="COMMSFILEPID" class="ch.qos.logback.core.rolling.RollingFileAppender">
-      <file>logs/${PID}/comms.${APPNAME}.log</file>
+		<encoder>
+			<pattern>%d %-5level %24thread{24} - %16logger{0} - %msg%n</pattern>
+		</encoder>
+	</appender>
 
-      <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
-         <fileNamePattern>logs/${PID}/comms.${APPNAME}.%i.log.gz
-         </fileNamePattern>
-         <minIndex>1</minIndex>
-         <maxIndex>5</maxIndex>
-      </rollingPolicy>
+	<appender name="COMMSFILEPID"
+		class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<file>${LOGDIR}/${PID}/${APPNAME}/comms.log.txt</file>
 
-      <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
-         <maxFileSize>10MB</maxFileSize>
-      </triggeringPolicy>
-      
-      <encoder>
-         <pattern>%d %-5level %24thread{24} - %16logger{0} - %msg%n</pattern>
-      </encoder>
-   </appender>
+		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+			<fileNamePattern>${LOGDIR}/${APPNAME}/%d/comms.log.txt
+			</fileNamePattern>
+		</rollingPolicy>
+		<encoder>
+			<pattern>%d %-5level %24thread{24} - %16logger{0} - %msg%n</pattern>
+		</encoder>
+	</appender>
 
-   <!-- audit admin actions -->
-   <property scope="system" name="AUDIT_DIR" value="logs/audit" />
+	<!-- audit admin actions -->
+	<property scope="system" name="AUDIT_DIR" value="${LOGDIR}/${APPNAME}/audit" />
 
-   <appender name="AUDITFILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-      <file>${AUDIT_DIR}/audit.log</file>
+	<appender name="AUDITFILE"
+		class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<file>${AUDIT_DIR}/audit.log</file>
 
-      <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
-         <fileNamePattern>${AUDIT_DIR}/audit.log.%i.gz
-         </fileNamePattern>
-         <minIndex>1</minIndex>
-         <maxIndex>9</maxIndex>
-      </rollingPolicy>
+		<rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
+			<fileNamePattern>${AUDIT_DIR}/audit.log.%i.gz
+			</fileNamePattern>
+			<minIndex>1</minIndex>
+			<maxIndex>9</maxIndex>
+		</rollingPolicy>
 
-      <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
-         <maxFileSize>50MB</maxFileSize>
-      </triggeringPolicy>
+		<triggeringPolicy
+			class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+			<maxFileSize>50MB</maxFileSize>
+		</triggeringPolicy>
 
-      <encoder>
-         <pattern>[${HOSTNAME}] %-5level %d - %msg%n</pattern>
-      </encoder>
-   </appender>
+		<encoder>
+			<pattern>[${HOSTNAME}] %-5level %d - %msg%n</pattern>
+		</encoder>
+	</appender>
 
-   <!-- audit logger settings -->
-   <logger name="audit" level="INFO" additivity="false">
-      <appender-ref ref="AUDITFILE" />
-   </logger>
-   
-   <root level="DEBUG">
-      <appender-ref ref="LOGFILEPID" />
-      <appender-ref ref="BUFFER" />
-   </root>
+	<!-- audit logger settings -->
+	<logger name="audit" level="INFO" additivity="false">
+		<appender-ref ref="AUDITFILE" />
+	</logger>
 
-   <logger name="comms" level="DEBUG" additivity="false">
-      <!-- additivity false means it does not show up in root -->
-      <appender-ref ref="COMMSFILEPID" />
-   </logger>
-   
-   
-   <logger name="com.rethinkdb.ast" level="INFO" />
-   <logger name="io.netty" level="INFO" />
-   <logger name="twitter4j" level="INFO" />
-   <logger name="com.hazelcast" level="WARN" />
-   <logger name="NodeMulticastListener" level="WARN" />
+	<root level="DEBUG">
+		<appender-ref ref="LOGFILEPID" />
+		<appender-ref ref="BUFFER" />
+	</root>
+
+	<logger name="comms" level="DEBUG" additivity="false">
+		<!-- additivity false means it does not show up in root -->
+		<appender-ref ref="COMMSFILEPID" />
+	</logger>
+
+
+	<logger name="com.rethinkdb.ast" level="INFO" />
+	<logger name="io.netty" level="INFO" />
+	<logger name="twitter4j" level="INFO" />
+	<logger name="com.hazelcast" level="WARN" />
+	<logger name="NodeMulticastListener" level="WARN" />
 
 </included>

@@ -84,11 +84,22 @@ function TP_Core(server) {
       LEVEL_TRACE : 10,
       LEVEL_WARN : 40
    };
+   self.Core.LogHeaderType = {
+      REQUEST : 1,
+      RESPONSE : 2,
+      MESSAGE : 3,
+      EVENT : 4
+   };
    self.Core.RequestStatsSort = {
       COUNT : 1,
       TOTAL_TIME : 2,
       AVERAGE_TIME : 3,
       ERRORS : 4
+   };
+   self.Core.SessionType = {
+      UNKNOWN : 0,
+      WIRE : 1,
+      WEB : 2
    };
    
    self.Core.error = {};
@@ -114,6 +125,9 @@ function TP_Core(server) {
    server.register("struct", "Core", "RequestHeader", 1, 7165109);
    server.register("struct", "Core", "ResponseHeader", 1, 675609);
    server.register("struct", "Core", "MessageHeader", 1, 11760427);
+   server.register("struct", "Core", "CommsLogFileHeader", 1, 11154645);
+   server.register("struct", "Core", "CommsLogHeader", 1, 8830315);
+   server.register("struct", "Core", "MissingStructDef", 1, 14245815);
    server.register("struct", "Core", "ServiceCommand", 1, 5461687);
    server.register("struct", "Core", "ServerAddress", 1, 14893956);
    server.register("struct", "Core", "Admin", 1, 16753598);
