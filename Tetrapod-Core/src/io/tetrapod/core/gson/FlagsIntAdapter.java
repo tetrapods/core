@@ -23,7 +23,7 @@ import java.util.function.Function;
 public class FlagsIntAdapter<T extends Flags_int> implements JsonDeserializer<T>, JsonSerializer<T> {
 
    public static <E extends Flags_int> void register(GsonBuilder builder, Class<E> clz, Function<Integer, E> flagFactory) {
-      builder.registerTypeAdapter(clz, flagFactory);
+      builder.registerTypeAdapter(clz, new FlagsIntAdapter<>(flagFactory));
    }
 
    private Function<Integer, T> flagFactory;

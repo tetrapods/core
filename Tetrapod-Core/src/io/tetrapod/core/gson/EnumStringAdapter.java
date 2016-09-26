@@ -23,8 +23,8 @@ import java.util.Map;
  */
 public class EnumStringAdapter <T extends Enum_String> implements JsonDeserializer<T>, JsonSerializer<T> {
 
-   public static <E extends Enum_int> void register(GsonBuilder builder, E [] values) {
-      builder.registerTypeAdapter(values[0].getClass(), values);
+   public static <E extends Enum_String> void register(GsonBuilder builder, E [] values) {
+      builder.registerTypeAdapter(values[0].getClass(), new EnumStringAdapter<>(values));
    }
 
 

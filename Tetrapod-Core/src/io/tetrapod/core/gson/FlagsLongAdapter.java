@@ -22,8 +22,8 @@ import java.util.function.Function;
  */
 public class FlagsLongAdapter<T extends Flags_long> implements JsonDeserializer<T>, JsonSerializer<T> {
 
-   public static <E extends Flags_int> void register(GsonBuilder builder, Class<E> clz, Function<Integer, E> flagFactory) {
-      builder.registerTypeAdapter(clz, flagFactory);
+   public static <E extends Flags_long> void register(GsonBuilder builder, Class<E> clz, Function<Long, E> flagFactory) {
+      builder.registerTypeAdapter(clz, new FlagsLongAdapter<>(flagFactory));
    }
 
    private Function<Long, T> flagFactory;

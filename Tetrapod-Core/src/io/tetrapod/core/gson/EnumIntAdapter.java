@@ -21,7 +21,7 @@ import java.util.Map;
 public class EnumIntAdapter<T extends Enum_int> implements JsonDeserializer<T>, JsonSerializer<T> {
 
    public static <E extends Enum_int> void register(GsonBuilder builder, E [] values) {
-      builder.registerTypeAdapter(values[0].getClass(), values);
+      builder.registerTypeAdapter(values[0].getClass(),new EnumIntAdapter<>(values));
    }
 
 
