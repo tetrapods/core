@@ -813,7 +813,7 @@ public class DefaultService
 
    @Override
    public Response genericRequest(Request r, RequestContext ctx) {
-      logger.error("unhandled request ( Context: {} ) {} from {}", String.format("%016X", ctx.header.contextId), r.dump(),
+      logger.error("unhandled request ( Context: {} ) {} from {}", String.format("%016x", ctx.header.contextId), r.dump(),
             ctx.header.dump());
       return new Error(CoreContract.ERROR_UNKNOWN_REQUEST);
    }
