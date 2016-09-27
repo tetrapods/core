@@ -8,7 +8,7 @@ import io.tetrapod.core.utils.Util;
 public class ContextIdGenerator {
    public static final Logger  logger     = LoggerFactory.getLogger(ContextIdGenerator.class);
 
-   private static final String CONTEXT_ID = "contextId";
+   public static final String CONTEXT_ID = "contextId";
 
    public static long generate() {
       long ctxId = 0;
