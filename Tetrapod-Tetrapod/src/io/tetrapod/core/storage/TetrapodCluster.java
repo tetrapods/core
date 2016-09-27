@@ -246,7 +246,7 @@ public class TetrapodCluster extends Storage
    }
 
    private Async sendPeerRequest(Request req, int peerId) {
-      TaskContext taskContext = TaskContext.pushNew();
+      final TaskContext taskContext = TaskContext.pushNew();
       try {
          ContextIdGenerator.generate();
          Session ses = getSessionForPeer(peerId);
@@ -255,7 +255,7 @@ public class TetrapodCluster extends Storage
          }
          logger.info("Not connected to peer {} ({})", peerId);
          final Async async = new Async(req, null, null);
-         async.setResponse(CoreContract.ERROR_CONNECTION_CLOSED);
+         getDispatcher().dispatch(() -> async.setResponse(CoreContract.ERROR_CONNECTION_CLOSED));
          return async;
       } finally {
          taskContext.pop();

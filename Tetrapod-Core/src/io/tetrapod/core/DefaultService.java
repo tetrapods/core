@@ -252,6 +252,7 @@ public class DefaultService
             if (!setStatus(status, Core.STATUS_ERRORS | Core.STATUS_WARNINGS)) {
                if (services != null && services.getStatus(entityId) != getStatus()) {
                   if (isConnected()) {
+                     logger.info("Repairing status {} => {}", services.getStatus(entityId), getStatus());
                      sendDirectRequest(new ServiceStatusUpdateRequest(getStatus(), ~Core.STATUS_GONE)).log();
                   }
                }
@@ -669,7 +670,7 @@ public class DefaultService
       return async;
    }
 
-   private Void handleException(Throwable throwable, Async async) {
+   public Void handleException(Throwable throwable, Async async) {
       ErrorResponseException ere = Util.getThrowableInChain(throwable, ErrorResponseException.class);
       if (ere != null && ere.errorCode != ERROR_UNKNOWN) {
          async.setResponse(new Error(ere.errorCode));
