@@ -2,7 +2,7 @@ package io.tetrapod.core.rpc;
 
 import io.tetrapod.core.ServiceException;
 import io.tetrapod.core.Session;
-import io.tetrapod.core.tasks.Task;
+import io.tetrapod.core.tasks.*;
 import io.tetrapod.core.utils.Util;
 import io.tetrapod.protocol.core.CoreContract;
 import io.tetrapod.protocol.core.RequestHeader;
@@ -52,7 +52,8 @@ public class Async {
       return future.exceptionally(throwable -> {
          ErrorResponseException ere = Util.getThrowableInChain(throwable, ErrorResponseException.class);
          if (ere == null || ere.errorCode == CoreContract.ERROR_UNKNOWN) {
-            logger.error("**TASK ERROR** Error executing request task {} Error: {} {}", request.getClass().getSimpleName(), throwable.getMessage(), header.dump());
+            logger.error("**TASK ERROR** Error executing request task {} Error: {} {}", request.getClass().getSimpleName(),
+                  throwable.getMessage(), header.dump());
          }
          throw ServiceException.wrapIfChecked(throwable);
       });
@@ -109,10 +110,12 @@ public class Async {
    public synchronized void handle(ResponseHandler handler) {
       this.handler = handler;
       if (response != null) {
-         if (header != null) {
-            ContextIdGenerator.setContextId(header.contextId);
-         }
-         handler.fireResponse(response, header);
+         TaskContext.doPushPopIfNeeded(() -> {
+            if (header != null) {
+               ContextIdGenerator.setContextId(header.contextId);
+            }
+            handler.fireResponse(response, header);
+         });
       }
    }
 

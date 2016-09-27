@@ -255,7 +255,7 @@ public class TetrapodCluster extends Storage
          }
          logger.info("Not connected to peer {} ({})", peerId);
          final Async async = new Async(req, null, null);
-         getDispatcher().dispatch(() -> async.setResponse(CoreContract.ERROR_CONNECTION_CLOSED));
+         async.setResponse(CoreContract.ERROR_CONNECTION_CLOSED);
          return async;
       } finally {
          taskContext.pop();
