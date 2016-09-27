@@ -42,7 +42,6 @@ class JavaGenerator implements LanguageGenerator {
       outputDir = context.serviceAnnotations.getFirst("java.outdir");
       packageName = context.serviceAnnotations.getFirst("java.package");
       boolean allSync = context.serviceAnnotations.has("sync");
-      boolean someAsync = hasSomeAsync(allSync, context.classes);
       for (File f : getFilename("c").getParentFile().listFiles()) {
          f.delete();
       }
@@ -57,18 +56,6 @@ class JavaGenerator implements LanguageGenerator {
       }
 
       generateContract(context);
-   }
-
-   private boolean hasSomeAsync(boolean allSync, ArrayList<Class> classes) {
-      if (allSync) {
-         return false;
-      }
-      for (Class c : classes) {
-         if (!c.annotations.has("sync")) {
-            return true;
-         }
-      }
-      return false;
    }
 
    private void generateContract(CodeGenContext context) throws IOException, ParseException {

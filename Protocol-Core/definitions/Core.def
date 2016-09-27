@@ -379,6 +379,7 @@ internal struct ServiceLogEntry
    3: long timestamp
    4: string thread
    5: string logger
+   6: string contextId
    
    const byte LEVEL_ALL     = 0
    const byte LEVEL_TRACE   = 10

@@ -174,4 +174,12 @@ public class ServiceCache implements TetrapodContract.Services.API {
       logger.info("{}", sb);
    }
 
+   public int getStatus(int entityId) {
+      Entity e = services.get(entityId);
+      if (e != null) {
+         return e.status;
+      }
+      return 0;
+   }
+
 }

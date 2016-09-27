@@ -246,7 +246,7 @@ public class TetrapodCluster extends Storage
    }
 
    private Async sendPeerRequest(Request req, int peerId) {
-      TaskContext taskContext = TaskContext.pushNew();
+      final TaskContext taskContext = TaskContext.pushNew();
       try {
          ContextIdGenerator.generate();
          Session ses = getSessionForPeer(peerId);

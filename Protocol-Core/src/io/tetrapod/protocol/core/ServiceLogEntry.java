@@ -30,12 +30,13 @@ public class ServiceLogEntry extends Structure {
       defaults();
    }
 
-   public ServiceLogEntry(String msg, byte level, long timestamp, String thread, String logger) {
+   public ServiceLogEntry(String msg, byte level, long timestamp, String thread, String logger, String contextId) {
       this.msg = msg;
       this.level = level;
       this.timestamp = timestamp;
       this.thread = thread;
       this.logger = logger;
+      this.contextId = contextId;
    }   
    
    public String msg;
@@ -43,6 +44,7 @@ public class ServiceLogEntry extends Structure {
    public long timestamp;
    public String thread;
    public String logger;
+   public String contextId;
 
    public final Structure.Security getSecurity() {
       return Security.INTERNAL;
@@ -54,6 +56,7 @@ public class ServiceLogEntry extends Structure {
       timestamp = 0;
       thread = null;
       logger = null;
+      contextId = null;
    }
    
    @Override
@@ -63,6 +66,7 @@ public class ServiceLogEntry extends Structure {
       data.write(3, this.timestamp);
       data.write(4, this.thread);
       data.write(5, this.logger);
+      data.write(6, this.contextId);
       data.writeEndTag();
    }
    
@@ -77,6 +81,7 @@ public class ServiceLogEntry extends Structure {
             case 3: this.timestamp = data.read_long(tag); break;
             case 4: this.thread = data.read_string(tag); break;
             case 5: this.logger = data.read_string(tag); break;
+            case 6: this.contextId = data.read_string(tag); break;
             case Codec.END_TAG:
                return;
             default:
@@ -102,12 +107,13 @@ public class ServiceLogEntry extends Structure {
       // Note do not use this tags in long term serializations (to disk or databases) as
       // implementors are free to rename them however they wish.  A null means the field
       // is not to participate in web serialization (remaining at default)
-      String[] result = new String[5+1];
+      String[] result = new String[6+1];
       result[1] = "msg";
       result[2] = "level";
       result[3] = "timestamp";
       result[4] = "thread";
       result[5] = "logger";
+      result[6] = "contextId";
       return result;
    }
 
@@ -126,6 +132,7 @@ public class ServiceLogEntry extends Structure {
       desc.types[3] = new TypeDescriptor(TypeDescriptor.T_LONG, 0, 0);
       desc.types[4] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
       desc.types[5] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
+      desc.types[6] = new TypeDescriptor(TypeDescriptor.T_STRING, 0, 0);
       return desc;
    }
 
@@ -149,6 +156,8 @@ public class ServiceLogEntry extends Structure {
          return false;
       if (logger != null ? !logger.equals(that.logger) : that.logger != null)
          return false;
+      if (contextId != null ? !contextId.equals(that.contextId) : that.contextId != null)
+         return false;
 
       return true;
    }
@@ -161,6 +170,7 @@ public class ServiceLogEntry extends Structure {
       result = 31 * result + (int) (timestamp ^ (timestamp >>> 32));
       result = 31 * result + (thread != null ? thread.hashCode() : 0);
       result = 31 * result + (logger != null ? logger.hashCode() : 0);
+      result = 31 * result + (contextId != null ? contextId.hashCode() : 0);
       return result;
    }
 

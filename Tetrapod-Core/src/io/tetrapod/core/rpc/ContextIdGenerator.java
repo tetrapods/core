@@ -1,14 +1,14 @@
 package io.tetrapod.core.rpc;
 
+import org.slf4j.*;
+
 import io.tetrapod.core.tasks.TaskContext;
 import io.tetrapod.core.utils.Util;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class ContextIdGenerator {
-   public static final Logger logger   = LoggerFactory.getLogger(ContextIdGenerator.class);
+   public static final Logger  logger     = LoggerFactory.getLogger(ContextIdGenerator.class);
 
-   private static final String CONTEXT_ID = "contextId";
+   public static final String CONTEXT_ID = "contextId";
 
    public static long generate() {
       long ctxId = 0;
@@ -38,6 +38,7 @@ public class ContextIdGenerator {
       }
 
       TaskContext.set(CONTEXT_ID, ctxId);
+      MDC.put(CONTEXT_ID, Long.toHexString(ctxId));
    }
 
    public static void clear() {
@@ -47,6 +48,7 @@ public class ContextIdGenerator {
       }
 
       TaskContext.set(CONTEXT_ID, null);
+      MDC.remove(CONTEXT_ID);
    }
 
 }

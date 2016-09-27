@@ -242,7 +242,7 @@ public class CommsLogEntry {
          }
       }
 
-      return String.format("%s [%016X] [%s-%d] %s %s (%s) %s", time, contextId, ses, header.sessionId, direction, name, details,
+      return String.format("%s [%016x] [%s-%d] %s %s (%s) %s", time, contextId, ses, header.sessionId, direction, name, details,
             payloadDetails);
 
       //return String.format("[%d] %s : %s : %s", header.timestamp, header.type, struct.dump(), ((Structure) payload).dump());
