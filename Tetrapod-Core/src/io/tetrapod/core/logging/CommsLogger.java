@@ -6,8 +6,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.zip.*;
 
-import javax.swing.text.DateFormatter;
-
 import org.slf4j.*;
 
 import io.netty.buffer.ByteBuf;
@@ -278,6 +276,8 @@ public class CommsLogger {
          case AppendEntriesRequest.STRUCT_ID:
          case RaftStatsRequest.STRUCT_ID:
          case RaftStatsResponse.STRUCT_ID:
+         case RetainOwnershipRequest.STRUCT_ID:
+         case RetainOwnershipMessage.STRUCT_ID:
             return true;
       }
       return !commsLog.isDebugEnabled();
