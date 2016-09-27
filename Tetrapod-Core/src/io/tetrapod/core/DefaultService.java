@@ -251,7 +251,9 @@ public class DefaultService
 
             if (!setStatus(status, Core.STATUS_ERRORS | Core.STATUS_WARNINGS)) {
                if (services != null && services.getStatus(entityId) != getStatus()) {
-                  sendDirectRequest(new ServiceStatusUpdateRequest(getStatus(), ~Core.STATUS_GONE)).log();
+                  if (isConnected()) {
+                     sendDirectRequest(new ServiceStatusUpdateRequest(getStatus(), ~Core.STATUS_GONE)).log();
+                  }
                }
             }
 
