@@ -278,6 +278,7 @@ public class CommsLogger {
          case AppendEntriesRequest.STRUCT_ID:
          case RaftStatsRequest.STRUCT_ID:
          case RaftStatsResponse.STRUCT_ID:
+         case RetainOwnershipMessage.STRUCT_ID:
             return true;
       }
       return !commsLog.isDebugEnabled();
