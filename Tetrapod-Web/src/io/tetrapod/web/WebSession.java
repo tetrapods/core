@@ -11,6 +11,7 @@ import io.netty.channel.socket.SocketChannel;
 import io.tetrapod.core.Session;
 import io.tetrapod.core.StructureFactory;
 import io.tetrapod.core.json.JSONObject;
+import io.tetrapod.core.logging.CommsLogger;
 import io.tetrapod.core.rpc.Structure;
 import io.tetrapod.core.serialize.datasources.*;
 import io.tetrapod.protocol.core.*;
@@ -25,6 +26,10 @@ abstract class WebSession extends Session {
       super(channel, helper);
    }
 
+   public SessionType getSessionType() {
+      return SessionType.WEB;
+   }
+
    abstract protected Object makeFrame(JSONObject jo, boolean keepAlive);
 
    protected Structure readRequest(RequestHeader header, JSONObject params) throws IOException {
@@ -35,8 +40,7 @@ abstract class WebSession extends Session {
       }
       request.read(new WebJSONDataSource(params, request.tagWebNames()));
 
-      if (!commsLogIgnore(header.structId))
-         commsLog("%s %016X [%d] <- %s", this, header.contextId, header.requestId, request.dump());
+      CommsLogger.append(this, false, header, request); 
       return request;
    }
 
@@ -93,7 +97,7 @@ abstract class WebSession extends Session {
             jo.put("_contractId", respH.contractId);
             jo.put("_structId", respH.structId);
             jo.put("_requestId", respH.requestId);
-            jo.put("_contextId", String.format("%016X", respH.contextId));
+            jo.put("_contextId", String.format("%016x", respH.contextId));
             break;
 
          case MessageHeader.STRUCT_ID:

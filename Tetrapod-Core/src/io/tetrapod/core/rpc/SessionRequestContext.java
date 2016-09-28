@@ -20,9 +20,9 @@ public class SessionRequestContext extends RequestContext {
    }
 
    @Override
-   public void handlePendingResponse(Response res, int originalRequestId, long contextId) {
+   public void handlePendingResponse(Response res, RequestHeader header) {
       assert res != Response.PENDING;
-      session.sendResponse(res, originalRequestId, contextId);
+      session.sendResponse(res, header);
    }
 
    @Override

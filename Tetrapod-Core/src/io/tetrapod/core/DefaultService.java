@@ -17,10 +17,11 @@ import com.codahale.metrics.Timer.Context;
 
 import ch.qos.logback.classic.LoggerContext;
 import io.netty.channel.socket.SocketChannel;
+import io.tetrapod.core.logging.CommsLogger;
 import io.tetrapod.core.pubsub.*;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.rpc.Error;
-import io.tetrapod.core.tasks.Task;
+import io.tetrapod.core.tasks.*;
 import io.tetrapod.core.utils.*;
 import io.tetrapod.protocol.core.*;
 
@@ -85,6 +86,8 @@ public class DefaultService
             sslContext = Util.createSSLContext(new FileInputStream(Util.getProperty("tetrapod.jks.file", "cfg/tetrapod.jks")),
                   Util.getProperty("tetrapod.jks.pwd", "4pod.dop4").toCharArray());
          }
+
+         CommsLogger.init(this);
       } catch (Exception e) {
          fail(e);
       }
@@ -246,17 +249,12 @@ public class DefaultService
                status |= Core.STATUS_WARNINGS;
             }
 
-            synchronized (this) {
-               if (needsStatusUpdate) {
-                  // if a status update previously failed, we try a hamfisted approach here to clobber-fix everything (except GONE state).
-                  needsStatusUpdate = false;
-                  sendDirectRequest(new ServiceStatusUpdateRequest(getStatus(), ~Core.STATUS_GONE)).handle(res -> {
-                     if (res.isError()) {
-                        needsStatusUpdate = true;
-                     }
-                  });
-               } else {
-                  setStatus(status, Core.STATUS_ERRORS | Core.STATUS_WARNINGS);
+            if (!setStatus(status, Core.STATUS_ERRORS | Core.STATUS_WARNINGS)) {
+               if (services != null && services.getStatus(entityId) != getStatus()) {
+                  if (isConnected()) {
+                     logger.info("Repairing status {} => {}", services.getStatus(entityId), getStatus());
+                     sendDirectRequest(new ServiceStatusUpdateRequest(getStatus(), ~Core.STATUS_GONE)).log();
+                  }
                }
             }
 
@@ -356,7 +354,9 @@ public class DefaultService
          public void onSessionStop(Session ses) {
             logger.info("Connection to tetrapod closed");
             onDisconnectedFromCluster();
-            services.clear();
+            if (services != null) {
+               services.clear();
+            }
             resetServiceConnector(false);
             if (!isShuttingDown()) {
                dispatcher.dispatch(3, TimeUnit.SECONDS, () -> connectToCluster(1));
@@ -493,9 +493,7 @@ public class DefaultService
       setStatus(0, bits);
    }
 
-   private boolean needsStatusUpdate = false;
-
-   protected void setStatus(int bits, int mask) {
+   protected boolean setStatus(int bits, int mask) {
       boolean changed = false;
       synchronized (this) {
          int status = (this.status & ~mask) | bits;
@@ -504,12 +502,9 @@ public class DefaultService
       }
 
       if (changed && clusterClient.isConnected()) {
-         sendDirectRequest(new ServiceStatusUpdateRequest(bits, mask)).handle(res -> {
-            if (res.isError()) {
-               needsStatusUpdate = true;
-            }
-         });
+         sendDirectRequest(new ServiceStatusUpdateRequest(bits, mask)).log();
       }
+      return changed;
    }
 
    @Override
@@ -597,7 +592,7 @@ public class DefaultService
          if (!dispatcher.dispatch(() -> {
             final long dispatchTime = System.nanoTime();
             ContextIdGenerator.setContextId(header.contextId);
-            
+
             Runnable onResult = () -> {
                final long elapsed = System.nanoTime() - dispatchTime;
                stats.recordRequest(header.fromParentId, req, elapsed, async.getErrorCode());
@@ -609,11 +604,11 @@ public class DefaultService
             };
 
             try {
+               // if it took a while to get dispatched, set STATUS_OVERLOADED flag as a back-pressure signal
                if (Util.nanosToMillis(dispatchTime - start) > 2500) {
                   if ((getStatus() & Core.STATUS_OVERLOADED) == 0) {
                      logger.warn("Service is overloaded. Dispatch time is {}ms", Util.nanosToMillis(dispatchTime - start));
                   }
-                  // If it took a while to get dispatched, so set STATUS_OVERLOADED flag as a back-pressure signal
                   setStatus(Core.STATUS_OVERLOADED);
                } else {
                   clearStatus(Core.STATUS_OVERLOADED);
@@ -636,8 +631,7 @@ public class DefaultService
                Response res = req.securityCheck(ctx);
                if (res == null && req instanceof TaskDispatcher) {
                   Task<? extends Response> task = ((TaskDispatcher) req).dispatchTask(svc, ctx);
-                  task.thenAccept(async::setResponse)
-                          .exceptionally(ex-> Task.handleException(ctx,ex));
+                  task.thenAccept(async::setResponse).exceptionally(ex -> Task.handleException(ctx, ex));
                } else {
                   if (res == null) {
                      res = req.dispatch(svc, ctx);
@@ -676,7 +670,7 @@ public class DefaultService
       return async;
    }
 
-   private Void handleException(Throwable throwable, Async async) {
+   public Void handleException(Throwable throwable, Async async) {
       ErrorResponseException ere = Util.getThrowableInChain(throwable, ErrorResponseException.class);
       if (ere != null && ere.errorCode != ERROR_UNKNOWN) {
          async.setResponse(new Error(ere.errorCode));
@@ -753,7 +747,7 @@ public class DefaultService
    }
 
    public Async sendDirectRequest(Request req) {
-      return clusterClient.getSession().sendRequest(req, Core.DIRECT, (byte) 30);
+      return TaskContext.doPushPopIfNeeded(() -> clusterClient.getSession().sendRequest(req, Core.DIRECT, (byte) 30));
    }
 
    public boolean isServiceExistant(int entityId) {
@@ -819,7 +813,8 @@ public class DefaultService
 
    @Override
    public Response genericRequest(Request r, RequestContext ctx) {
-      logger.error("unhandled request " + r.dump());
+      logger.error("unhandled request ( Context: {} ) {} from {}", String.format("%016x", ctx.header.contextId), r.dump(),
+            ctx.header.dump());
       return new Error(CoreContract.ERROR_UNKNOWN_REQUEST);
    }
 

@@ -8,8 +8,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.tetrapod.core.DefaultService;
-import io.tetrapod.core.rpc.Message;
-import io.tetrapod.core.rpc.MessageContext;
+import io.tetrapod.core.rpc.*;
+import io.tetrapod.core.tasks.TaskContext;
 import io.tetrapod.protocol.core.*;
 
 /**
@@ -97,8 +97,14 @@ public class Publisher implements TopicUnsubscribedMessage.Handler, TopicNotFoun
    @Override
    public void messageTopicUnsubscribed(TopicUnsubscribedMessage m, MessageContext ctx) {
       if (m.publisherId == service.getEntityId()) {
-         logger.info("@@@@@ UNSUBSCRIBING DISCONNECTED SUBSCRIBER {}", m.dump());
-         unsubscribe(m.topicId, m.entityId, m.childId, m.all);
+         TaskContext taskContext = TaskContext.pushNew();
+         try {
+            ContextIdGenerator.setContextId(ctx.header.contextId);
+            logger.info("@@@@@ UNSUBSCRIBING DISCONNECTED SUBSCRIBER {}", m.dump());
+            unsubscribe(m.topicId, m.entityId, m.childId, m.all);
+         } finally {
+            taskContext.pop();
+         }
       }
    }
 

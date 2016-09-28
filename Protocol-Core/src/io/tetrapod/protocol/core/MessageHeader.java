@@ -24,7 +24,7 @@ public class MessageHeader extends Structure {
       defaults();
    }
 
-   public MessageHeader(int fromId, int topicId, int toParentId, int toChildId, int contractId, int structId, byte flags) {
+   public MessageHeader(int fromId, int topicId, int toParentId, int toChildId, int contractId, int structId, byte flags, long contextId) {
       this.fromId = fromId;
       this.topicId = topicId;
       this.toParentId = toParentId;
@@ -32,6 +32,7 @@ public class MessageHeader extends Structure {
       this.contractId = contractId;
       this.structId = structId;
       this.flags = flags;
+      this.contextId = contextId;
    }   
    
    public int fromId;
@@ -41,6 +42,7 @@ public class MessageHeader extends Structure {
    public int contractId;
    public int structId;
    public byte flags;
+   public long contextId;
 
    public final Structure.Security getSecurity() {
       return Security.PUBLIC;
@@ -54,6 +56,7 @@ public class MessageHeader extends Structure {
       contractId = 0;
       structId = 0;
       flags = 0;
+      contextId = 0;
    }
    
    @Override
@@ -65,6 +68,7 @@ public class MessageHeader extends Structure {
       data.write(5, this.contractId);
       data.write(6, this.structId);
       data.write(7, this.flags);
+      data.write(8, this.contextId);
       data.writeEndTag();
    }
    
@@ -81,6 +85,7 @@ public class MessageHeader extends Structure {
             case 5: this.contractId = data.read_int(tag); break;
             case 6: this.structId = data.read_int(tag); break;
             case 7: this.flags = data.read_byte(tag); break;
+            case 8: this.contextId = data.read_long(tag); break;
             case Codec.END_TAG:
                return;
             default:
@@ -106,7 +111,7 @@ public class MessageHeader extends Structure {
       // Note do not use this tags in long term serializations (to disk or databases) as
       // implementors are free to rename them however they wish.  A null means the field
       // is not to participate in web serialization (remaining at default)
-      String[] result = new String[7+1];
+      String[] result = new String[8+1];
       result[1] = "fromId";
       result[2] = "topicId";
       result[3] = "toParentId";
@@ -114,6 +119,7 @@ public class MessageHeader extends Structure {
       result[5] = "contractId";
       result[6] = "structId";
       result[7] = "flags";
+      result[8] = "contextId";
       return result;
    }
 
@@ -134,6 +140,7 @@ public class MessageHeader extends Structure {
       desc.types[5] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
       desc.types[6] = new TypeDescriptor(TypeDescriptor.T_INT, 0, 0);
       desc.types[7] = new TypeDescriptor(TypeDescriptor.T_BYTE, 0, 0);
+      desc.types[8] = new TypeDescriptor(TypeDescriptor.T_LONG, 0, 0);
       return desc;
    }
 
@@ -161,6 +168,8 @@ public class MessageHeader extends Structure {
          return false;
       if (flags != that.flags)
          return false;
+      if (contextId != that.contextId)
+         return false;
 
       return true;
    }
@@ -175,6 +184,7 @@ public class MessageHeader extends Structure {
       result = 31 * result + contractId;
       result = 31 * result + structId;
       result = 31 * result + flags;
+      result = 31 * result + (int) (contextId ^ (contextId >>> 32));
       return result;
    }
 

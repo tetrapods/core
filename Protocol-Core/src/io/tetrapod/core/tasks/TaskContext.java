@@ -72,6 +72,7 @@ public class TaskContext {
        return context;
    }
 
+
    /**
     * Adds this execution context to the top of the context stack for the current thread.
     */
@@ -123,7 +124,7 @@ public class TaskContext {
    public static TaskContext current() {
       final Deque<TaskContext> stack = contextStacks.get();
       if (stack == null) {
-         return null;
+         throw new ServiceException("No current task context set.");  //todo: This may be too heavy handed but we want to fail fast where we don't have a context set
       }
       return stack.peekLast();
    }
@@ -341,6 +342,9 @@ public class TaskContext {
    public static <T> T get(String name) {
       return CoreUtil.cast(current().getProperty(name));
    }
+   public static void clear(String name) {
+      current().properties.remove(name);
+   }
 
    protected Map<String, Object> properties() {
       return properties;
@@ -352,5 +356,60 @@ public class TaskContext {
       TaskContext clone = new TaskContext();
       clone.properties().putAll(properties());
       return clone;
+   }
+
+   public static boolean hasCurrent() {
+      final Deque<TaskContext> stack = contextStacks.get();
+      return stack != null && !stack.isEmpty();
+   }
+
+   /**
+    * Surrounds a function in a task context push-pop if there ins't one already established.  This is appropriate for places
+    * where an entire tasks async context should be established on a system
+    *
+    * @param function  The function to wrap in a push-pop
+    * @return  The wrapped runnable
+    */
+   public static <T> T doPushPopIfNeeded(Func0<T> function) {
+      if (hasCurrent()) {
+         return function.apply();
+      } else {
+         TaskContext ctx = TaskContext.pushNew();
+         try {
+            return function.apply();
+         } finally {
+            ctx.pop();
+         }
+      }
+   }
+
+   public static void doPushPopIfNeeded(Runnable runnable) {
+      if (hasCurrent()) {
+         runnable.run();
+      } else {
+         TaskContext ctx = TaskContext.pushNew();
+         try {
+            runnable.run();
+         } finally {
+            ctx.pop();
+         }
+      }
+
+   }
+
+   /**
+    * Wraps a runnable in a push pop, to be executed when the runnable is executed.
+    * @param runnable The runnable to wrap
+    * @return The wrapped runnable
+    */
+   public static Runnable wrapPushPop(Runnable runnable) {
+      return () -> {
+         TaskContext ctx = TaskContext.pushNew();
+         try {
+            runnable.run();
+         } finally {
+            ctx.pop();
+         }
+      };
    }
 }

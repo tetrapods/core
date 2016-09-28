@@ -5,6 +5,7 @@ import io.tetrapod.core.codegen.CodeGenContext.*;
 import io.tetrapod.core.codegen.CodeGenContext.Class;
 
 import java.io.*;
+import java.nio.file.*;
 import java.util.*;
 
 class JavascriptGenerator implements LanguageGenerator {
@@ -19,6 +20,19 @@ class JavascriptGenerator implements LanguageGenerator {
          case "out":
             context.serviceAnnotations.add("javascript.out", new File(f.getParent(), val).getPath());
             break;
+         case "altOut":
+            String jsOut = context.serviceAnnotations.getFirst("javascript.out");
+            String altParent = System.getProperty("altOut", null);
+            if (altParent != null && jsOut != null) {
+               File srcDir = new File(jsOut).toPath().normalize().toFile().getParentFile();
+               File destDir = new File(altParent);
+               for (String s : val.split(",")) {
+                  context.serviceAnnotations.add("javascript.altOut", new File(srcDir, s).getPath());
+                  context.serviceAnnotations.add("javascript.altOut", new File(destDir, s).getPath());
+               }
+            }
+         break;
+            
          default:
             throw new ParseException("unknown javascript option");
       }
@@ -116,6 +130,16 @@ class JavascriptGenerator implements LanguageGenerator {
          }
          file.getParentFile().mkdirs();
          t.expandAndTrim(file);
+      }
+      for (CodeGenContext context : contexts) {
+         List<String> alts = context.serviceAnnotations.get("javascript.altOut");
+         if (alts != null) {
+            for (int i = 0; i < alts.size(); i += 2) {
+               String src = alts.get(i);
+               String dest = alts.get(i+1);
+               Files.copy(Paths.get(src), Paths.get(dest), StandardCopyOption.REPLACE_EXISTING);
+            }
+         }
       }
    }
 

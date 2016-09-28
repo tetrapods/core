@@ -89,6 +89,12 @@ public class WebAPIResponse extends Response {
       return new WebAPIResponse();
    }
 
+   @Override
+   public boolean isSensitive(String fieldName) {
+      if (fieldName.equals("json")) return true;
+      return false;
+   }
+
    public final StructDescription makeDescription() {
       StructDescription desc = new StructDescription();      
       desc.name = "WebAPIResponse";

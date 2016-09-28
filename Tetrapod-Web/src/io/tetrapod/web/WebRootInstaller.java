@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.*;
 
+import io.tetrapod.core.tasks.TaskThreadPoolExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,7 +17,7 @@ import io.tetrapod.protocol.core.WebRootDef;
 public class WebRootInstaller {
    private static final Logger           logger                    = LoggerFactory.getLogger(WebRootInstaller.class);
 
-   private final Executor                webRootSequentialExecutor = new ThreadPoolExecutor(0, 1, 5L, TimeUnit.SECONDS,
+   private final Executor                webRootSequentialExecutor = new TaskThreadPoolExecutor(0, 1, 5L, TimeUnit.SECONDS,
          new LinkedBlockingQueue<>());
 
    private final Map<String, WebRoot>    contentRootMap            = new HashMap<>();

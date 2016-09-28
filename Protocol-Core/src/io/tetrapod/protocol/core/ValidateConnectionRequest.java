@@ -112,4 +112,9 @@ public class ValidateConnectionRequest extends RequestWithResponse<ValidateConne
       return desc;
    }
 
+   @Override
+   public boolean isSensitive(String fieldName) {
+      if (fieldName.equals("token")) return true;
+      return false;
+   }
 }
