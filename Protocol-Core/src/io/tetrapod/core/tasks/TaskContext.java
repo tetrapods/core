@@ -29,6 +29,7 @@ package io.tetrapod.core.tasks;
 
 import io.tetrapod.core.ServiceException;
 import io.tetrapod.core.utils.CoreUtil;
+import org.slf4j.MDC;
 
 import java.util.Deque;
 import java.util.HashSet;
@@ -49,13 +50,21 @@ public class TaskContext {
    private final static ThreadLocal<Deque<TaskContext>> contextStacks = new ThreadLocal<>();
    private final static WeakHashMap<Thread, Deque<TaskContext>> contextStacksMap = new WeakHashMap<>();
    private final static AtomicLong nextId = new AtomicLong(1);
+   private static Set<String> mdcKeys = new HashSet<>();
 
    // human friendly id, for debugging
    private long id = nextId.getAndIncrement();
 
    private ConcurrentHashMap<String, Object> properties = new ConcurrentHashMap<>();
+   private ConcurrentHashMap<String, String> mdcVariables = new ConcurrentHashMap<>();
 
    private Executor defaultExecutor = null;
+
+   public static synchronized void setMdcVariableName(String mdcVariable) {
+      Set<String> keys = new HashSet<>(mdcKeys);
+      keys.add(mdcVariable);
+      mdcKeys = keys;
+   }
 
    public Executor getDefaultExecutor() {
       return defaultExecutor;
@@ -90,6 +99,7 @@ public class TaskContext {
          }
       }
       stack.addLast(this);
+      setMdc();
    }
 
    /**
@@ -108,7 +118,15 @@ public class TaskContext {
             stack.addLast(last);
          }
          throw new IllegalStateException("Invalid execution context stack state: " + stack + " trying to remove: " + this + " but got: " + last);
+      } else {
+         if (!stack.isEmpty()) {
+            stack.getLast().setMdc();
       }
+   }
+   }
+
+   private void setMdc() {
+      MDC.setContextMap(mdcVariables);
    }
 
    @Override
@@ -330,8 +348,22 @@ public class TaskContext {
    public void setProperty(String name, Object value) {
       if (value != null) {
          properties.put(name, value);
+         if (mdcKeys.contains(name)) {
+            mdcVariables.put(name, value.toString());
+            MDC.setContextMap(mdcVariables);
+         }
       } else {
          properties.remove(name);
+         if (mdcVariables.remove(name) != null) {
+            MDC.setContextMap(mdcVariables);
+         }
+      }
+   }
+
+   public void clearProperty(String name) {
+      properties.remove(name);
+      if (mdcVariables.remove(name) != null) {
+         MDC.setContextMap(mdcVariables);
       }
    }
 
@@ -343,7 +375,7 @@ public class TaskContext {
       return CoreUtil.cast(current().getProperty(name));
    }
    public static void clear(String name) {
-      current().properties.remove(name);
+      current().clearProperty(name);
    }
 
    protected Map<String, Object> properties() {
@@ -355,6 +387,7 @@ public class TaskContext {
    public TaskContext clone() {
       TaskContext clone = new TaskContext();
       clone.properties().putAll(properties());
+      clone.mdcVariables.putAll(mdcVariables);
       return clone;
    }
 
