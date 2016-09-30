@@ -1,16 +1,12 @@
 <included>
-      <appender name="LOGFILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-      <file>logs/${APPNAME}.log</file>
+    
+    <appender name="LOGFILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+      <file>${LOGDIR}/${APPNAME}/current.log</file>
 
-      <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
-         <fileNamePattern>logs/${APPNAME}.%i.log.gz</fileNamePattern>
-         <minIndex>1</minIndex>
-         <maxIndex>6</maxIndex>
+      <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+         <fileNamePattern>${LOGDIR}/${APPNAME}/%d/${APPNAME}.log
+         </fileNamePattern>
       </rollingPolicy>
-
-      <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
-         <maxFileSize>30MB</maxFileSize>
-      </triggeringPolicy>
       
       <encoder>
          <pattern>%d %-5level %24thread{24} - %16X{contextId} - %16logger{0} - %msg%n</pattern>
@@ -18,37 +14,25 @@
    </appender>
    
    <appender name="COMMSFILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-      <file>logs/comms.${APPNAME}.log</file>
+       <file>${LOGDIR}/${APPNAME}/comms.log.txt</file>
 
-      <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
-         <fileNamePattern>logs/comms.${APPNAME}.%i.log.gz
+      <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+         <fileNamePattern>${LOGDIR}/${APPNAME}/%d/comms.log.txt
          </fileNamePattern>
-         <minIndex>1</minIndex>
-         <maxIndex>6</maxIndex>
       </rollingPolicy>
-
-      <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
-         <maxFileSize>30MB</maxFileSize>
-      </triggeringPolicy>
-      
+    
       <encoder>
          <pattern>%d %-5level %24thread{24} - %16logger{0} - %msg%n</pattern>
       </encoder>
    </appender>
    
    <appender name="APIFILEPID" class="ch.qos.logback.core.rolling.RollingFileAppender">
-      <file>logs/api.${APPNAME}.log</file>
+      <file>${LOGDIR}/${APPNAME}/api.log</file>
 
-      <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
-         <fileNamePattern>logs/api.${APPNAME}.%i.log.gz
+      <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+         <fileNamePattern>${LOGDIR}/${APPNAME}/%d/api.log
          </fileNamePattern>
-         <minIndex>1</minIndex>
-         <maxIndex>5</maxIndex>
       </rollingPolicy>
-
-      <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
-         <maxFileSize>30MB</maxFileSize>
-      </triggeringPolicy>
 
       <encoder>
          <pattern>%d %-5level %24thread{24} - %16logger{0} - %msg%n</pattern>
