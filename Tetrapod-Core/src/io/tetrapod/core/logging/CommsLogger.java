@@ -219,8 +219,11 @@ public class CommsLogger {
 
    public static boolean append(Session session, boolean sending, RequestHeader header, Structure req) {
       if (ENABLED && !commsLogIgnore(header.structId)) {
-         SINGLETON.append(new CommsLogEntry(new CommsLogHeader(System.currentTimeMillis(), LogHeaderType.REQUEST, sending,
-               session.getSessionType(), session.getSessionNum()), header, req));
+
+         SINGLETON.append(new CommsLogEntry(
+               new CommsLogHeader(System.currentTimeMillis(), LogHeaderType.REQUEST, sending,
+                     session == null ? SessionType.NONE : session.getSessionType(), session == null ? 0 : session.getSessionNum()),
+               header, req));
          return true;
       }
       return false;
@@ -239,8 +242,10 @@ public class CommsLogger {
 
    public static boolean append(Session session, boolean sending, ResponseHeader header, Structure res, int requestStructId) {
       if (ENABLED && !commsLogIgnore(header.structId) && !commsLogIgnore(requestStructId)) {
-         SINGLETON.append(new CommsLogEntry(new CommsLogHeader(System.currentTimeMillis(), LogHeaderType.RESPONSE, sending,
-               session.getSessionType(), session.getSessionNum()), header, res));
+         SINGLETON.append(new CommsLogEntry(
+               new CommsLogHeader(System.currentTimeMillis(), LogHeaderType.RESPONSE, sending,
+                     session == null ? SessionType.NONE : session.getSessionType(), session == null ? 0 : session.getSessionNum()),
+               header, res));
          return true;
       }
       return false;

@@ -614,6 +614,10 @@ public class DefaultService
                   clearStatus(Core.STATUS_OVERLOADED);
                }
 
+               if (fromSession == null) {
+                  CommsLogger.append(null, true, header, req);
+               }
+
                final RequestContext ctx = fromSession != null ? new SessionRequestContext(header, fromSession)
                      : new InternalRequestContext(header, new ResponseHandler() {
                         @Override
@@ -638,6 +642,11 @@ public class DefaultService
                   }
                   if (res != null) {
                      if (res != Response.PENDING) {
+                        if (fromSession == null) {
+                           CommsLogger.append(null, false,
+                                 new ResponseHeader(header.requestId, res.getContractId(), res.getStructId(), header.contextId), res,
+                                 header.structId);
+                        }
                         async.setResponse(res);
                      }
                   } else {
