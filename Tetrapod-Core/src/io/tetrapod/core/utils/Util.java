@@ -820,6 +820,16 @@ public class Util {
       return ids;
    }
 
+   public static <T> T getField(Object object, String fieldName) {
+      try {
+         Field field = object.getClass().getDeclaredField(fieldName);
+         field.setAccessible(true);
+         return cast(field.get(object));
+      } catch (Throwable e) {
+         throw ServiceException.wrapIfChecked(e);
+      }
+   }
+
 
    public interface ValueMaker<K, V> {
       public V make();

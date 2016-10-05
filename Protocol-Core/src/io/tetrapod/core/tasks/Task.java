@@ -110,7 +110,7 @@ public class Task<T> extends CompletableFuture<T> {
    final Executor defaultExecutor;
 
    public Task() {
-      TaskContext context = TaskContext.current();
+      TaskContext context = TaskContext.current(true);
       if (context != null) {
          this.defaultExecutor = context.getDefaultExecutor();
       } else {

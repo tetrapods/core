@@ -139,13 +139,20 @@ public class TaskContext {
     *
     * @return the current context or null if there is none.
     */
-   public static TaskContext current() {
+   public static TaskContext current(boolean nullIfNotSet) {
       final Deque<TaskContext> stack = contextStacks.get();
       if (stack == null) {
+         if (nullIfNotSet) {
+            return null;
+         }
          throw new ServiceException("No current task context set.");  //todo: This may be too heavy handed but we want to fail fast where we don't have a context set
       }
       return stack.peekLast();
    }
+   public static TaskContext current() {
+      return current(false);
+   }
+
 
    /**
     * Enables the application to peek into what is being executed in another thread.

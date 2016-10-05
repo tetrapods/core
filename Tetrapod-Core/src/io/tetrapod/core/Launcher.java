@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import io.tetrapod.core.tasks.Task;
 import io.tetrapod.core.utils.Properties;
 import io.tetrapod.core.utils.Util;
 import io.tetrapod.protocol.core.ServerAddress;
@@ -25,8 +26,39 @@ import io.tetrapod.protocol.core.ServerAddress;
  * </ul>
  */
 public class Launcher {
-   private static Map<String, String> opts         = null;
-   private static String              serviceClass = null;
+   private Map<String, String> opts         = null;
+   private final String              serviceClass;
+   private Service service;
+
+   public Launcher(String serviceClass) {
+      this.serviceClass = serviceClass;
+   }
+
+   public Task<Void> init(String [] args) throws Exception {
+      String appName = serviceClass.substring(serviceClass.lastIndexOf('.') + 1);
+      System.setProperty("APPNAME", appName);
+      Util.setProperty("APPNAME", appName);
+      System.setProperty("LOGDIR", Util.getProperty("tetrapod.logs","logs"));
+      opts = getOpts(args, 1, defaultOpts(appName));
+
+      String host = Util.getProperty("service.host", "localhost");
+      int port = Integer.parseInt(Util.getProperty("service.port", "9901"));
+      if (opts.get("host") != null) {
+         host = opts.get("host");
+      }
+      if (opts.get("port") != null) {
+         port = Integer.parseInt(opts.get("port"));
+      }
+      ServerAddress addr = new ServerAddress(host, port);
+      service = (Service) getClass(serviceClass).newInstance();
+      service.startNetwork(addr, opts.get("token"), opts, this);
+      return service.readyToServe();
+
+   }
+
+   public Service getService() {
+      return service;
+   }
 
    public static void main(String[] args) {
       asyncInit();
@@ -40,31 +72,21 @@ public class Launcher {
          if (args.length < 1)
             usage();
          deleteLogs();
-         serviceClass = args[0];
-         String appName = serviceClass.substring(serviceClass.lastIndexOf('.') + 1);
-         System.setProperty("APPNAME", appName);
-         Util.setProperty("APPNAME", appName);
-         System.setProperty("LOGDIR", Util.getProperty("tetrapod.logs","logs")); 
-         opts = getOpts(args, 1, defaultOpts(appName));
-
-         String host = Util.getProperty("service.host", "localhost");
-         int port = Integer.parseInt(Util.getProperty("service.port", "9901"));
-         if (opts.get("host") != null) {
-            host = opts.get("host");
+         String [] serviceClasses = args[0].split(",");
+         for (String serviceClass : serviceClasses) {
+            Launcher launcher = new Launcher(serviceClass.trim());
+            launcher.init(args);
          }
-         if (opts.get("port") != null) {
-            port = Integer.parseInt(opts.get("port"));
-         }
-         ServerAddress addr = new ServerAddress(host, port);
-         Service service = (Service) getClass(serviceClass).newInstance();
-         service.startNetwork(addr, opts.get("token"), opts);
       } catch (Throwable t) {
          t.printStackTrace();
          usage();
       }
    }
 
-   private static void asyncInit() {
+
+
+
+   public static void asyncInit() {
       try {
          Class<?> asyncClass = Class.forName("com.ea.async.Async");
          Method initMethod = asyncClass.getMethod("init");
@@ -150,7 +172,7 @@ public class Launcher {
       return opts;
    }
 
-   public static void relaunch(String token) throws IOException {
+   public void relaunch(String token) throws IOException {
       opts.put("token", token);
       StringBuilder sb = new StringBuilder();
       sb.append("../current/scripts/launch");
@@ -223,11 +245,11 @@ public class Launcher {
          loadProperties(file, properties);
    }
 
-   public static String getOpt(String key) {
+   public String getOpt(String key) {
       return opts.get(key);
    }
 
-   public static String getAllOpts() {
+   public String getAllOpts() {
       StringBuilder sb = new StringBuilder();
       for (Entry<String, String> e : opts.entrySet()) {
          sb.append(e.getKey());

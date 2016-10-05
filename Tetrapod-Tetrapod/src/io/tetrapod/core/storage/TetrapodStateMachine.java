@@ -167,7 +167,7 @@ public class TetrapodStateMachine extends StorageStateMachine<TetrapodStateMachi
       // reg the structs
       if (info.structs != null) {
          for (StructDescription sd : info.structs) {
-            StructureFactory.add(new StructureAdapter(sd));
+            StructureFactory.addIfNewOrSameType(new StructureAdapter(sd));
          }
       }
       // reg the web routes
