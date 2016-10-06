@@ -212,7 +212,9 @@ define(["knockout", "jquery", "bootbox", "alert", "app", "chart", "modules/build
 
                var text = messages.join("");
                bootbox.dialog({
-                  message: text
+                  title: self.host + ' ' + self.name + ' Service ' + self.entityString() + ' ' + self.build,
+                  message: text,
+                  onEscape: function() {}
                }).find("div.modal-dialog").addClass("service-error-logs-dialog");
             }
          });
