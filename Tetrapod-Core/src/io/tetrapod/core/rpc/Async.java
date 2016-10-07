@@ -60,13 +60,17 @@ public class Async {
       Task<TResp> future = new Task<>();
       handle(resp -> {
          if (resp.isError()) {
-            future.completeExceptionally(new ErrorResponseException(resp.errorCode()));
+            future.completeExceptionally(new ErrorResponseException(resp.errorCode(), getRequestErrorInfo()));
          } else {
             future.complete(Util.cast(resp));
          }
       });
 
       return addLogging(future);
+   }
+
+   private String getRequestErrorInfo() {
+      return "Calling: " + StructureFactory.getName(request.getContractId(), request.getStructId()) + " " + header.dump();
    }
 
    public interface IResponseHandler {
