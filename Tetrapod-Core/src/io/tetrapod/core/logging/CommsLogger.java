@@ -110,10 +110,12 @@ public class CommsLogger {
                   commsLog.info("{}", entry);
                }
             }
-            try {
-               out.flush();
-            } catch (IOException e) {
-               logger.error(e.getMessage(), e);
+            if (out != null) {
+               try {
+                  out.flush();
+               } catch (IOException e) {
+                  logger.error(e.getMessage(), e);
+               }
             }
             synchronized (buffer) {
                hasGap = false;
