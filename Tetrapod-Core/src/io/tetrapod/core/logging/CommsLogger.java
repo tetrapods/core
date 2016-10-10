@@ -4,14 +4,13 @@ import java.io.*;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.zip.*;
+import java.util.zip.GZIPInputStream;
 
 import org.slf4j.*;
 
 import io.netty.buffer.ByteBuf;
 import io.tetrapod.core.*;
 import io.tetrapod.core.rpc.*;
-import io.tetrapod.core.serialize.StructureAdapter;
 import io.tetrapod.core.serialize.datasources.IOStreamDataSource;
 import io.tetrapod.core.utils.Util;
 import io.tetrapod.protocol.core.*;
@@ -34,6 +33,10 @@ public class CommsLogger {
     * For fast local debugging set to true and see all comms logs in the console
     */
    private static boolean            LOG_TEXT_CONSOLE = false;
+
+   private static boolean            LOG_TEXT_FILE    = true;
+
+   private static boolean            LOG_BINARY       = false;
 
    private static final int          LOG_FILE_VERSION = 1;
 
@@ -77,32 +80,42 @@ public class CommsLogger {
          // starts a new log file every hour
          final LocalDateTime time = LocalDateTime.now();
          if (service.getEntityId() != 0) {
-            if (logOpenTime == null || time.getHour() != logOpenTime.getHour() || time.getDayOfYear() != logOpenTime.getDayOfYear()) {
-               try {
-                  openLogFile();
-               } catch (IOException e) {
-                  logger.error(e.getMessage(), e);
+
+            LOG_TEXT_FILE = Util.getProperty("tetrapod.logs.file", true);
+            LOG_TEXT_CONSOLE = Util.getProperty("tetrapod.logs.console", false);
+            LOG_BINARY = Util.getProperty("tetrapod.logs.binary", false);
+
+            if (LOG_BINARY) {
+               if (logOpenTime == null || time.getHour() != logOpenTime.getHour() || time.getDayOfYear() != logOpenTime.getDayOfYear()) {
+                  try {
+                     openLogFile();
+                  } catch (IOException e) {
+                     logger.error(e.getMessage(), e);
+                  }
                }
             }
-
             while (!buffer.isEmpty()) {
                CommsLogEntry entry = null;
                synchronized (buffer) {
                   entry = buffer.poll();
                }
-               try {
-                  entry.write(out);
-               } catch (Exception e) {
-                  logger.error(e.getMessage(), e);
+               if (LOG_BINARY) {
+                  try {
+                     entry.write(out);
+                  } catch (Exception e) {
+                     logger.error(e.getMessage(), e);
+                  }
                }
-               if (commsLog.isDebugEnabled()) {
-                  commsLog.debug("{}", entry);
+               if (LOG_TEXT_FILE) {
+                  commsLog.info("{}", entry);
                }
             }
-            try {
-               out.flush();
-            } catch (IOException e) {
-               logger.error(e.getMessage(), e);
+            if (out != null) {
+               try {
+                  out.flush();
+               } catch (IOException e) {
+                  logger.error(e.getMessage(), e);
+               }
             }
             synchronized (buffer) {
                hasGap = false;
@@ -139,36 +152,6 @@ public class CommsLogger {
       if (out != null) {
          out.close();
       }
-   }
-
-   /**
-    * Re-saves current log file as a compressed file
-    */
-   public void archiveLogFile(File file) throws IOException {
-      final File gzFile = new File(file.getParent(), file.getName() + ".gz");
-      try (DataInputStream in = new DataInputStream(new BufferedInputStream(new FileInputStream(file)))) {
-         @SuppressWarnings("unused")
-         int ver = in.readInt();
-         IOStreamDataSource dataIn = IOStreamDataSource.forReading(in);
-         CommsLogFileHeader header = new CommsLogFileHeader();
-         header.read(dataIn);
-         for (StructDescription def : header.structs) {
-            StructureFactory.addIfNew(new StructureAdapter(def));
-         }
-         try (DataOutputStream out = new DataOutputStream(new BufferedOutputStream(new GZIPOutputStream(new FileOutputStream(gzFile))))) {
-            out.writeInt(LOG_FILE_VERSION);
-            IOStreamDataSource dataOut = IOStreamDataSource.forWriting(out);
-            header.write(dataOut);
-            while (true) {
-               CommsLogEntry.read(dataIn).write(out);
-            }
-         } catch (IOException e) {
-
-         } catch (Exception e) {
-            logger.error(e.getMessage(), e);
-         }
-      }
-
    }
 
    private void append(CommsLogEntry entry) {
