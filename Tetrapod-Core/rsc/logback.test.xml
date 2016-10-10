@@ -1,0 +1,19 @@
+<included>
+
+
+
+   <root level="WARN">
+      <appender-ref ref="STDOUT" />
+      <appender-ref ref="BUFFER" />
+   </root>
+
+
+   <logger name="io.tetrapod.core.web.WebStaticFileHandler" level="INFO" />
+
+   <!--<logger name="com.rethinkdb.ast" level="INFO" />-->
+   <!--<logger name="io.netty" level="INFO" />-->
+   <!--<logger name="twitter4j" level="INFO" />  -->
+
+	<!--<include optional="true" resource="logback.user.xml" />-->
+
+</included>

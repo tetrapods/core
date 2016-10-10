@@ -30,13 +30,12 @@ public class ServiceStats implements TopicUnsubscribedMessage.Handler {
       this.statsTopic = service.publishTopic();
       scheduleUpdate();
       register(requests, "Requests");
-
       Metrics.register(new Gauge<Double>() {
          @Override
          public Double getValue() {
             return requests.getErrorRate();
          }
-      }, this, "errors");
+      }, this, service.getShortName() + "-errors");
 
       service.addMessageHandler(new TopicUnsubscribedMessage(), this);
    }

@@ -464,7 +464,7 @@ public class WebService extends DefaultService
       if (m.info.structs != null) {
          for (StructDescription sd : m.info.structs) {
             if (m.info.contractId != WebContract.CONTRACT_ID) {
-               StructureFactory.add(new StructureAdapter(sd));
+               StructureFactory.addIfNewOrSameType(new StructureAdapter(sd));
             }
          }
       }

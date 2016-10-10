@@ -38,13 +38,13 @@ public class ServiceCache implements TetrapodContract.Services.API {
       services.put(m.entity.entityId, m.entity);
       getServices(m.entity.contractId).add(m.entity);
 
-      logger.info("*** {}", m.dump());
+      logger.debug("*** {}", m.dump());
    }
 
    @Override
    public void messageServiceRemoved(ServiceRemovedMessage m, MessageContext ctx) {
       removeService(m.entityId);
-      logger.info("*** {}", m.dump());
+      logger.debug("*** {}", m.dump());
    }
 
    @Override
@@ -55,7 +55,7 @@ public class ServiceCache implements TetrapodContract.Services.API {
             e.status = m.status;
          }
       }
-      logger.info("*** {}", m.dump());
+      logger.debug("*** {}", m.dump());
    }
 
    private void removeService(int entityId) {
@@ -172,6 +172,14 @@ public class ServiceCache implements TetrapodContract.Services.API {
       }
       sb.append("*******************************************************\n");
       logger.info("{}", sb);
+   }
+
+   public int getStatus(int entityId) {
+      Entity e = services.get(entityId);
+      if (e != null) {
+         return e.status;
+      }
+      return 0;
    }
 
 }

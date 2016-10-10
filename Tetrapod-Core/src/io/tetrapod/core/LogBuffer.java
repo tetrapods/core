@@ -1,5 +1,6 @@
 package io.tetrapod.core;
 
+import io.tetrapod.core.rpc.ContextIdGenerator;
 import io.tetrapod.protocol.core.ServiceLogEntry;
 
 import java.util.*;
@@ -73,7 +74,8 @@ public class LogBuffer extends AppenderBase<ILoggingEvent> {
       if (msg != null && msg.length() > MAX_MESSAGE_LEN) {
          msg = msg.substring(0, MAX_MESSAGE_LEN - 3) + "...";
       }
-      return new ServiceLogEntry(msg, convert(e.getLevel()), e.getTimeStamp(), e.getThreadName(), e.getLoggerName());
+      return new ServiceLogEntry(msg, convert(e.getLevel()), e.getTimeStamp(), e.getThreadName(), e.getLoggerName(),
+            e.getMDCPropertyMap().get(ContextIdGenerator.CONTEXT_ID));
    }
 
    private void logStack(StringBuilder sb, IThrowableProxy proxy) {

@@ -116,6 +116,7 @@ public struct CommsLogHeader
    enum int SessionType.UNKNOWN      = 0
    enum int SessionType.WIRE         = 1
    enum int SessionType.WEB          = 2
+   enum int SessionType.NONE         = 3
 
       
 public struct MissingStructDef
@@ -379,6 +380,7 @@ internal struct ServiceLogEntry
    3: long timestamp
    4: string thread
    5: string logger
+   6: string contextId
    
    const byte LEVEL_ALL     = 0
    const byte LEVEL_TRACE   = 10

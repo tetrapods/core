@@ -21,18 +21,18 @@ public class SessionTest {
       Map<String, String> opts = new HashMap<>();
       TetrapodService pod = new TetrapodService();
       System.setProperty("sql.enabled", "false");
-      pod.startNetwork(null, null, opts);
+      pod.startNetwork(null, null, opts, null);
       while ((pod.getStatus() & Core.STATUS_STARTING) != 0) {
          Util.sleep(100);
       }
 
       Util.sleep(1000);
       TestService svc1 = new TestService();
-      svc1.startNetwork(new ServerAddress("localhost", Core.DEFAULT_SERVICE_PORT), null, opts);
+      svc1.startNetwork(new ServerAddress("localhost", Core.DEFAULT_SERVICE_PORT), null, opts, null);
       assertTrue(svc1.getEntityId() > 0);
 
       TestService svc2 = new TestService();
-      svc2.startNetwork(new ServerAddress("localhost", Core.DEFAULT_SERVICE_PORT), null, opts);
+      svc2.startNetwork(new ServerAddress("localhost", Core.DEFAULT_SERVICE_PORT), null, opts, null);
       Util.sleep(1000);
       assertTrue(svc2.getEntityId() > 0);
 

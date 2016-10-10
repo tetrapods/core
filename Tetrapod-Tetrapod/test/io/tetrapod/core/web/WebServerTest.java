@@ -16,13 +16,13 @@ public class WebServerTest {
       final TetrapodService pod = new TetrapodService();
       Util.setProperty("sql.enabled", "false");
       Map<String, String> opts = new HashMap<>();
-      pod.startNetwork(null, null, opts);
+      pod.startNetwork(null, null, opts, null);
       while ((pod.getStatus() & Core.STATUS_STARTING) != 0) {
          Util.sleep(100);
       }
 
       TestService ident = new TestService();
-      ident.startNetwork(new ServerAddress("localhost", Core.DEFAULT_SERVICE_PORT), null, opts);
+      ident.startNetwork(new ServerAddress("localhost", Core.DEFAULT_SERVICE_PORT), null, opts, null);
 
       Util.sleep(2000);
       ident.shutdown(false);

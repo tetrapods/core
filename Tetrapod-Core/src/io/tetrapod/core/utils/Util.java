@@ -823,7 +823,17 @@ public class Util {
 
    public static int getErrorCodeFromChain(Throwable e) {
       ErrorResponseException ere = getThrowableInChain(e, ErrorResponseException.class);
-      return ere == null? CoreContract.ERROR_UNKNOWN:ere.errorCode;
+      return ere == null ? CoreContract.ERROR_UNKNOWN : ere.errorCode;
+   }
+
+   public static <T> T getField(Object object, String fieldName) {
+      try {
+         Field field = object.getClass().getDeclaredField(fieldName);
+         field.setAccessible(true);
+         return cast(field.get(object));
+      } catch (Throwable e) {
+         throw ServiceException.wrapIfChecked(e);
+      }
    }
 
 

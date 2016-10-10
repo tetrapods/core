@@ -1,14 +1,11 @@
 package io.tetrapod.core.rpc;
 
-import io.tetrapod.core.ServiceException;
-import io.tetrapod.core.Session;
-import io.tetrapod.core.tasks.Task;
-import io.tetrapod.core.utils.Util;
-import io.tetrapod.protocol.core.CoreContract;
-import io.tetrapod.protocol.core.RequestHeader;
+import org.slf4j.*;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import io.tetrapod.core.*;
+import io.tetrapod.core.tasks.*;
+import io.tetrapod.core.utils.Util;
+import io.tetrapod.protocol.core.*;
 
 public class Async {
    public static final Logger logger   = LoggerFactory.getLogger(Async.class);
@@ -52,7 +49,8 @@ public class Async {
       return future.exceptionally(throwable -> {
          ErrorResponseException ere = Util.getThrowableInChain(throwable, ErrorResponseException.class);
          if (ere == null || ere.errorCode == CoreContract.ERROR_UNKNOWN) {
-            logger.error("**TASK ERROR** Error executing request task {} Error: {} {}", request.getClass().getSimpleName(), throwable.getMessage(), header.dump());
+            logger.error("**TASK ERROR** Error executing request task {} Error: {} {}", request.getClass().getSimpleName(),
+                  throwable.getMessage(), header.dump());
          }
          throw ServiceException.wrapIfChecked(throwable);
       });
@@ -62,13 +60,17 @@ public class Async {
       Task<TResp> future = new Task<>();
       handle(resp -> {
          if (resp.isError()) {
-            future.completeExceptionally(new ErrorResponseException(resp.errorCode()));
+            future.completeExceptionally(new ErrorResponseException(resp.errorCode(), getRequestErrorInfo()));
          } else {
             future.complete(Util.cast(resp));
          }
       });
 
       return addLogging(future);
+   }
+
+   private String getRequestErrorInfo() {
+      return "Calling: " + StructureFactory.getName(request.getContractId(), request.getStructId()) + " " + header.dump();
    }
 
    public interface IResponseHandler {
@@ -109,10 +111,12 @@ public class Async {
    public synchronized void handle(ResponseHandler handler) {
       this.handler = handler;
       if (response != null) {
-         if (header != null) {
-            ContextIdGenerator.setContextId(header.contextId);
-         }
-         handler.fireResponse(response, header);
+         TaskContext.doPushPopIfNeeded(() -> {
+            if (header != null) {
+               ContextIdGenerator.setContextId(header.contextId);
+            }
+            handler.fireResponse(response, header);
+         });
       }
    }
 

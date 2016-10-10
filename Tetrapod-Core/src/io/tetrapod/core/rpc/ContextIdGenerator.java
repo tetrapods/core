@@ -1,21 +1,26 @@
 package io.tetrapod.core.rpc;
 
+import org.slf4j.*;
+
 import io.tetrapod.core.tasks.TaskContext;
 import io.tetrapod.core.utils.Util;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class ContextIdGenerator {
-   public static final Logger logger   = LoggerFactory.getLogger(ContextIdGenerator.class);
+   public static final Logger  logger     = LoggerFactory.getLogger(ContextIdGenerator.class);
 
-   private static final String CONTEXT_ID = "contextId";
+   public static final String CONTEXT_ID = "contextId";
+   private static final String CONTEXT_ID_RAW = "contextIdRaw";
+   static {
+      TaskContext.setMdcVariableName(CONTEXT_ID);
+   }
 
    public static long generate() {
       long ctxId = 0;
       while (ctxId == 0) {
          ctxId = Util.random.nextLong();
       }
-      TaskContext.set(CONTEXT_ID, ctxId);
+      TaskContext.set(CONTEXT_ID_RAW, ctxId);
+      TaskContext.set(CONTEXT_ID, Long.toHexString(ctxId));
       return ctxId;
    }
 
@@ -24,7 +29,7 @@ public class ContextIdGenerator {
          logger.error("No task context set so we cannot get a context id", new Throwable());
          return 0;
       }
-      Long ctxId = TaskContext.get(CONTEXT_ID);
+      Long ctxId = TaskContext.get(CONTEXT_ID_RAW);
       if (ctxId == null) {
          ctxId = generate();
       }
@@ -37,7 +42,8 @@ public class ContextIdGenerator {
          return;
       }
 
-      TaskContext.set(CONTEXT_ID, ctxId);
+      TaskContext.set(CONTEXT_ID_RAW, ctxId);
+      TaskContext.set(CONTEXT_ID, Long.toHexString(ctxId));
    }
 
    public static void clear() {
@@ -46,7 +52,8 @@ public class ContextIdGenerator {
          return;
       }
 
-      TaskContext.set(CONTEXT_ID, null);
+      TaskContext.clear(CONTEXT_ID);
+      TaskContext.clear(CONTEXT_ID_RAW);
    }
 
 }

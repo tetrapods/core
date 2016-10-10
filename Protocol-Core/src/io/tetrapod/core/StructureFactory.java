@@ -17,6 +17,20 @@ public class StructureFactory {
       knownStructs.put(key, s);
    }
 
+   /**
+    * This adds the structure if only if its new, or if its replacing a structure with of the same
+    * class.  This allows StructureAdapters to be "upgraded" to their real types but not downgraded.  Helpful if
+    * multiple services happen to share the same memory space (such as when using unit testing framework).
+    * @param s The Structure to add
+    */
+   public static synchronized void addIfNewOrSameType(Structure s) {
+      final long key = makeKey(s.getContractId(), s.getStructId());
+      Structure originalStruct = knownStructs.get(key);
+      if (originalStruct == null || originalStruct.getClass() == s.getClass()) {
+         knownStructs.put(key, s);
+      }
+   }
+
    public static synchronized void addIfNew(Structure s) {
       final long key = makeKey(s.getContractId(), s.getStructId());
       if (!knownStructs.containsKey(key)) {

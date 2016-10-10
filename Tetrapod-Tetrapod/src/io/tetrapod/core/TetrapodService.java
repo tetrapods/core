@@ -69,7 +69,7 @@ public class TetrapodService extends DefaultService
    }
 
    @Override
-   public void startNetwork(ServerAddress address, String token, Map<String, String> otherOpts) throws Exception {
+   public void startNetwork(ServerAddress address, String token, Map<String, String> otherOpts, Launcher launcher) throws Exception {
       logger.info("***** Start Network ***** ");
       logger.info("Joining Cluster: {} {}", address.dump(), otherOpts);
       this.startPaused = otherOpts.get("paused").equals("true");

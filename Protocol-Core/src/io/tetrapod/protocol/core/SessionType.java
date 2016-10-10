@@ -11,6 +11,7 @@ public enum SessionType implements Enum_int<SessionType> {
    UNKNOWN((int)0), 
    WIRE((int)1), 
    WEB((int)2), 
+   NONE((int)3), 
    ;
    
    public static SessionType from(int val) {

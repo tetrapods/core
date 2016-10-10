@@ -58,6 +58,8 @@ public class DefaultService
 
    private final Publisher                 publisher       = new Publisher(this);
    private long                            dependencyCheckLogThreshold;
+   private Launcher                        launcher;
+   private final Task<Void>                readyTask = new Task<>();
 
    public DefaultService() {
       this(null);
@@ -75,6 +77,9 @@ public class DefaultService
       }
       dispatcher = new Dispatcher();
       clusterClient = new Client(this);
+      if (mainContract != null)
+         addContracts(mainContract);
+      this.contract = mainContract;
       stats = new ServiceStats(this);
       addContracts(new CoreContract());
       addPeerContracts(new TetrapodContract());
@@ -116,9 +121,7 @@ public class DefaultService
       buildName = build;
 
       checkHealth();
-      if (mainContract != null)
-         addContracts(mainContract);
-      this.contract = mainContract;
+
    }
 
    /**
@@ -157,7 +160,8 @@ public class DefaultService
    // Service protocol
 
    @Override
-   public void startNetwork(ServerAddress server, String token, Map<String, String> otherOpts) throws Exception {
+   public void startNetwork(ServerAddress server, String token, Map<String, String> otherOpts, Launcher launcher) throws Exception {
+      this.launcher = launcher;
       this.token = token;
       this.startPaused = otherOpts.get("paused").equals("true");
       clusterMembers.addFirst(server);
@@ -169,6 +173,10 @@ public class DefaultService
     */
    public void onReadyToServe() {}
 
+   @Override
+   public Task<Void> readyToServe() {
+      return readyTask;
+   }
    private void onServiceRegistered() {
       registerServiceInformation(this.contract);
       for (SubService subService : subServices) {
@@ -201,7 +209,9 @@ public class DefaultService
                      AdminAuthToken.setSecret(Util.getProperty(AdminAuthToken.SHARED_SECRET_KEY));
                   }
                   onReadyToServe();
+                  readyTask.complete(null);
                } catch (Throwable t) {
+                  readyTask.completeExceptionally(t);
                   fail(t);
                }
                // ok, we're good to go
@@ -242,24 +252,19 @@ public class DefaultService
             }
 
             int status = 0;
-            if (logBuffer.hasErrors()) {
+            if (logBuffer != null && logBuffer.hasErrors()) {
                status |= Core.STATUS_ERRORS;
             }
-            if (logBuffer.hasWarnings()) {
+            if (logBuffer != null && logBuffer.hasWarnings()) {
                status |= Core.STATUS_WARNINGS;
             }
 
-            synchronized (this) {
-               if (needsStatusUpdate) {
-                  // if a status update previously failed, we try a hamfisted approach here to clobber-fix everything (except GONE state).
-                  needsStatusUpdate = false;
-                  sendDirectRequest(new ServiceStatusUpdateRequest(getStatus(), ~Core.STATUS_GONE)).handle(res -> {
-                     if (res.isError()) {
-                        needsStatusUpdate = true;
-                     }
-                  });
-               } else {
-                  setStatus(status, Core.STATUS_ERRORS | Core.STATUS_WARNINGS);
+            if (!setStatus(status, Core.STATUS_ERRORS | Core.STATUS_WARNINGS)) {
+               if (services != null && services.getStatus(entityId) != getStatus()) {
+                  if (isConnected()) {
+                     logger.info("Repairing status {} => {}", services.getStatus(entityId), getStatus());
+                     sendDirectRequest(new ServiceStatusUpdateRequest(getStatus(), ~Core.STATUS_GONE)).log();
+                  }
                }
             }
 
@@ -303,7 +308,9 @@ public class DefaultService
          dispatcher.shutdown();
          setTerminated(true);
          try {
-            Launcher.relaunch(getRelaunchToken());
+            if (launcher != null) {
+               launcher.relaunch(getRelaunchToken());
+            }
          } catch (Exception e) {
             logger.error(e.getMessage(), e);
          }
@@ -498,9 +505,7 @@ public class DefaultService
       setStatus(0, bits);
    }
 
-   private boolean needsStatusUpdate = false;
-
-   protected void setStatus(int bits, int mask) {
+   protected boolean setStatus(int bits, int mask) {
       boolean changed = false;
       synchronized (this) {
          int status = (this.status & ~mask) | bits;
@@ -509,12 +514,9 @@ public class DefaultService
       }
 
       if (changed && clusterClient.isConnected()) {
-         sendDirectRequest(new ServiceStatusUpdateRequest(bits, mask)).handle(res -> {
-            if (res.isError()) {
-               needsStatusUpdate = true;
-            }
-         });
+         sendDirectRequest(new ServiceStatusUpdateRequest(bits, mask)).log();
       }
+      return changed;
    }
 
    @Override
@@ -614,14 +616,18 @@ public class DefaultService
             };
 
             try {
+               // if it took a while to get dispatched, set STATUS_OVERLOADED flag as a back-pressure signal
                if (Util.nanosToMillis(dispatchTime - start) > 2500) {
                   if ((getStatus() & Core.STATUS_OVERLOADED) == 0) {
                      logger.warn("Service is overloaded. Dispatch time is {}ms", Util.nanosToMillis(dispatchTime - start));
                   }
-                  // if it took a while to get dispatched, so set STATUS_OVERLOADED flag as a back-pressure signal
                   setStatus(Core.STATUS_OVERLOADED);
                } else {
                   clearStatus(Core.STATUS_OVERLOADED);
+               }
+
+               if (fromSession == null) {
+                  CommsLogger.append(null, true, header, req);
                }
 
                final RequestContext ctx = fromSession != null ? new SessionRequestContext(header, fromSession)
@@ -648,6 +654,11 @@ public class DefaultService
                   }
                   if (res != null) {
                      if (res != Response.PENDING) {
+                        if (fromSession == null) {
+                           CommsLogger.append(null, false,
+                                 new ResponseHeader(header.requestId, res.getContractId(), res.getStructId(), header.contextId), res,
+                                 header.structId);
+                        }
                         async.setResponse(res);
                      }
                   } else {
@@ -680,7 +691,7 @@ public class DefaultService
       return async;
    }
 
-   private Void handleException(Throwable throwable, Async async) {
+   public Void handleException(Throwable throwable, Async async) {
       ErrorResponseException ere = Util.getThrowableInChain(throwable, ErrorResponseException.class);
       if (ere != null && ere.errorCode != ERROR_UNKNOWN) {
          async.setResponse(new Error(ere.errorCode));
@@ -725,6 +736,13 @@ public class DefaultService
          return serviceConnector.sendRequest(req, Core.UNADDRESSED).asTask();
       }
       return clusterClient.getSession().sendRequest(req, Core.UNADDRESSED, (byte) 30).asTask();
+   }
+   
+   public <TResp extends Response> Task<TResp> sendRequestTask(Request req, int toEntityId) {
+      if (serviceConnector != null) {
+         return serviceConnector.sendRequest(req, toEntityId).asTask();
+      }
+      return clusterClient.getSession().sendRequest(req, toEntityId, (byte) 30).asTask();
    }
 
    public <TResp extends Response, TValue> Task<ResponseAndValue<TResp, TValue>> sendRequestTask(RequestWithResponse<TResp> req,
@@ -823,7 +841,8 @@ public class DefaultService
 
    @Override
    public Response genericRequest(Request r, RequestContext ctx) {
-      logger.error("unhandled request {} from {}", r.dump(), ctx.header.dump());
+      logger.error("unhandled request ( Context: {} ) {} from {}", String.format("%016x", ctx.header.contextId), r.dump(),
+            ctx.header.dump());
       return new Error(CoreContract.ERROR_UNKNOWN_REQUEST);
    }
 
@@ -842,10 +861,12 @@ public class DefaultService
 
    private ServiceAPI getServiceHandler(int contractId, int structId) {
       // this method allows us to have delegate objects that directly handle some contracts
-      if (!Util.isEmpty(subServices) && contractId == contract.getContractId() || !handlesStuct(contract, structId)) {
-         for (SubService subService : subServices) {
-            if (handlesStuct(subService.getContract(), structId))
-               return subService;
+      if (!Util.isEmpty(subServices)) {
+         if (contractId == contract.getContractId() || !handlesStuct(contract, structId)) {
+            for (SubService subService : subServices) {
+               if (handlesStuct(subService.getContract(), structId))
+                  return subService;
+            }
          }
       }
       return this;
@@ -1016,7 +1037,7 @@ public class DefaultService
 
    protected String getStartLoggingMessage() {
       return "*** Start Service ***" + "\n   *** Service name: " + Util.getProperty("APPNAME") + "\n   *** Options: "
-            + Launcher.getAllOpts() + "\n   *** VM Args: " + ManagementFactory.getRuntimeMXBean().getInputArguments().toString();
+            + (launcher!=null?launcher.getAllOpts():"") + "\n   *** VM Args: " + ManagementFactory.getRuntimeMXBean().getInputArguments().toString();
    }
 
    @Override
