@@ -725,6 +725,13 @@ public class DefaultService
       }
       return clusterClient.getSession().sendRequest(req, Core.UNADDRESSED, (byte) 30).asTask();
    }
+   
+   public <TResp extends Response> Task<TResp> sendRequestTask(Request req, int toEntityId) {
+      if (serviceConnector != null) {
+         return serviceConnector.sendRequest(req, toEntityId).asTask();
+      }
+      return clusterClient.getSession().sendRequest(req, toEntityId, (byte) 30).asTask();
+   }
 
    public <TResp extends Response, TValue> Task<ResponseAndValue<TResp, TValue>> sendRequestTask(RequestWithResponse<TResp> req,
          TValue value) {
