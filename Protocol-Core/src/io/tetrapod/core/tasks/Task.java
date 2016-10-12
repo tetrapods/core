@@ -367,7 +367,7 @@ public class Task<T> extends CompletableFuture<T> {
       });
    }
 
-   public static <T extends Response> Task<T> error(int errorCode) {
+   public static <T> Task<T> error(int errorCode) {
       Task<T> task = new Task<T>();
       task.completeExceptionally(new ErrorResponseException(errorCode));
       return task;
