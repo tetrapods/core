@@ -836,6 +836,14 @@ public class Util {
       }
    }
 
+   public static boolean isNumeric(String string) {
+      try {
+         Double.parseDouble(string);
+         return true;
+      } catch (NumberFormatException e) {
+         return false;
+      }
+   }
 
    public interface ValueMaker<K, V> {
       public V make();
