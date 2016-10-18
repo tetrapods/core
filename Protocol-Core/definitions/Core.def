@@ -116,6 +116,7 @@ public struct CommsLogHeader
    enum int SessionType.UNKNOWN      = 0
    enum int SessionType.WIRE         = 1
    enum int SessionType.WEB          = 2
+   enum int SessionType.NONE         = 3
 
       
 public struct MissingStructDef

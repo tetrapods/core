@@ -191,7 +191,7 @@ public class CommsLogEntry {
 
    @Override
    public String toString() {
-      String ses = (header.sesType == SessionType.WEB ? "Http" : "Wire");
+      String ses = header.sesType.name().toLowerCase();
 
       String direction = header.sending ? "->" : "<-";
       long contextId = 0;

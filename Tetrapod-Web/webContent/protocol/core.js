@@ -99,7 +99,8 @@ function TP_Core(server) {
    self.Core.SessionType = {
       UNKNOWN : 0,
       WIRE : 1,
-      WEB : 2
+      WEB : 2,
+      NONE : 3
    };
    
    self.Core.error = {};

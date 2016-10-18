@@ -52,6 +52,7 @@ public class WireSession extends Session {
       lastHeardFrom.set(System.currentTimeMillis());
       TaskContext taskContext = TaskContext.pushNew();
       try {
+         taskContext.setProperty("contractId", myContractId);
          final ByteBuf in = (ByteBuf) msg;
          final int len = in.readInt() - 1;
          final byte envelope = in.readByte();
@@ -353,7 +354,7 @@ public class WireSession extends Session {
             ses.sendRelayedRequest(header, in, this, null);
          }
       } else {
-         logger.warn("Could not find a relay session for {}", header.dump());
+         logger.warn("Could not find a relay session for {}, {}", StructureFactory.getName(header.contractId, header.structId), header.dump());
          sendResponse(new Error(ERROR_SERVICE_UNAVAILABLE), header);
       }
    }

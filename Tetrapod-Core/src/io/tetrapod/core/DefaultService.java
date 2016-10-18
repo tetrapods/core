@@ -58,6 +58,8 @@ public class DefaultService
 
    private final Publisher                 publisher       = new Publisher(this);
    private long                            dependencyCheckLogThreshold;
+   private Launcher                        launcher;
+   private final Task<Void>                readyTask = new Task<>();
 
    public DefaultService() {
       this(null);
@@ -75,6 +77,9 @@ public class DefaultService
       }
       dispatcher = new Dispatcher();
       clusterClient = new Client(this);
+      if (mainContract != null)
+         addContracts(mainContract);
+      this.contract = mainContract;
       stats = new ServiceStats(this);
       addContracts(new CoreContract());
       addPeerContracts(new TetrapodContract());
@@ -116,9 +121,7 @@ public class DefaultService
       buildName = build;
 
       checkHealth();
-      if (mainContract != null)
-         addContracts(mainContract);
-      this.contract = mainContract;
+
    }
 
    /**
@@ -157,7 +160,8 @@ public class DefaultService
    // Service protocol
 
    @Override
-   public void startNetwork(ServerAddress server, String token, Map<String, String> otherOpts) throws Exception {
+   public void startNetwork(ServerAddress server, String token, Map<String, String> otherOpts, Launcher launcher) throws Exception {
+      this.launcher = launcher;
       this.token = token;
       this.startPaused = otherOpts.get("paused").equals("true");
       clusterMembers.addFirst(server);
@@ -169,6 +173,10 @@ public class DefaultService
     */
    public void onReadyToServe() {}
 
+   @Override
+   public Task<Void> readyToServe() {
+      return readyTask;
+   }
    private void onServiceRegistered() {
       registerServiceInformation(this.contract);
       for (SubService subService : subServices) {
@@ -201,7 +209,9 @@ public class DefaultService
                      AdminAuthToken.setSecret(Util.getProperty(AdminAuthToken.SHARED_SECRET_KEY));
                   }
                   onReadyToServe();
+                  readyTask.complete(null);
                } catch (Throwable t) {
+                  readyTask.completeExceptionally(t);
                   fail(t);
                }
                // ok, we're good to go
@@ -242,10 +252,10 @@ public class DefaultService
             }
 
             int status = 0;
-            if (logBuffer.hasErrors()) {
+            if (logBuffer != null && logBuffer.hasErrors()) {
                status |= Core.STATUS_ERRORS;
             }
-            if (logBuffer.hasWarnings()) {
+            if (logBuffer != null && logBuffer.hasWarnings()) {
                status |= Core.STATUS_WARNINGS;
             }
 
@@ -298,7 +308,9 @@ public class DefaultService
          dispatcher.shutdown();
          setTerminated(true);
          try {
-            Launcher.relaunch(getRelaunchToken());
+            if (launcher != null) {
+               launcher.relaunch(getRelaunchToken());
+            }
          } catch (Exception e) {
             logger.error(e.getMessage(), e);
          }
@@ -614,6 +626,10 @@ public class DefaultService
                   clearStatus(Core.STATUS_OVERLOADED);
                }
 
+               if (fromSession == null) {
+                  CommsLogger.append(null, true, header, req);
+               }
+
                final RequestContext ctx = fromSession != null ? new SessionRequestContext(header, fromSession)
                      : new InternalRequestContext(header, new ResponseHandler() {
                         @Override
@@ -638,6 +654,11 @@ public class DefaultService
                   }
                   if (res != null) {
                      if (res != Response.PENDING) {
+                        if (fromSession == null) {
+                           CommsLogger.append(null, false,
+                                 new ResponseHeader(header.requestId, res.getContractId(), res.getStructId(), header.contextId), res,
+                                 header.structId);
+                        }
                         async.setResponse(res);
                      }
                   } else {
@@ -715,6 +736,13 @@ public class DefaultService
          return serviceConnector.sendRequest(req, Core.UNADDRESSED).asTask();
       }
       return clusterClient.getSession().sendRequest(req, Core.UNADDRESSED, (byte) 30).asTask();
+   }
+   
+   public <TResp extends Response> Task<TResp> sendRequestTask(Request req, int toEntityId) {
+      if (serviceConnector != null) {
+         return serviceConnector.sendRequest(req, toEntityId).asTask();
+      }
+      return clusterClient.getSession().sendRequest(req, toEntityId, (byte) 30).asTask();
    }
 
    public <TResp extends Response, TValue> Task<ResponseAndValue<TResp, TValue>> sendRequestTask(RequestWithResponse<TResp> req,
@@ -833,10 +861,12 @@ public class DefaultService
 
    private ServiceAPI getServiceHandler(int contractId, int structId) {
       // this method allows us to have delegate objects that directly handle some contracts
-      if (!Util.isEmpty(subServices) && contractId == contract.getContractId() || !handlesStuct(contract, structId)) {
-         for (SubService subService : subServices) {
-            if (handlesStuct(subService.getContract(), structId))
-               return subService;
+      if (!Util.isEmpty(subServices)) {
+         if (contractId == contract.getContractId() || !handlesStuct(contract, structId)) {
+            for (SubService subService : subServices) {
+               if (handlesStuct(subService.getContract(), structId))
+                  return subService;
+            }
          }
       }
       return this;
@@ -1007,7 +1037,7 @@ public class DefaultService
 
    protected String getStartLoggingMessage() {
       return "*** Start Service ***" + "\n   *** Service name: " + Util.getProperty("APPNAME") + "\n   *** Options: "
-            + Launcher.getAllOpts() + "\n   *** VM Args: " + ManagementFactory.getRuntimeMXBean().getInputArguments().toString();
+            + (launcher!=null?launcher.getAllOpts():"") + "\n   *** VM Args: " + ManagementFactory.getRuntimeMXBean().getInputArguments().toString();
    }
 
    @Override
