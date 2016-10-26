@@ -845,6 +845,14 @@ public class Util {
       }
    }
 
+   public static Integer zeroToNull(int integer) {
+      if (integer == 0) {
+         return null;
+      } else {
+         return integer;
+      }
+   }
+
    public interface ValueMaker<K, V> {
       public V make();
    }
