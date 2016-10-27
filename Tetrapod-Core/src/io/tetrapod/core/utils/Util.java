@@ -830,6 +830,17 @@ public class Util {
       }
    }
 
+   public static int safeStringCompare(String u1, String u2) {
+      if (u1 == null && u2 == null) {
+        return 0;
+      } else if (u1 == null) {
+         return -1;
+      } else if (u2 == null) {
+         return 1;
+      } else {
+         return u1.compareToIgnoreCase(u2);
+      }
+   }
 
    public interface ValueMaker<K, V> {
       public V make();
