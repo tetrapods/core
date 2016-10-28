@@ -222,7 +222,7 @@ public class CommsLogEntry {
             RequestHeader h = (RequestHeader) struct;
             contextId = h.contextId;
             name = getNameFor(h);
-            details = String.format("from %d.%d, requestId=%d", h.fromParentId, h.fromChildId, h.requestId);
+            details = String.format("from %d.%d, to %d, requestId=%d", h.fromParentId, h.fromChildId, h.toId, h.requestId);
             break;
          }
          case RESPONSE: {
