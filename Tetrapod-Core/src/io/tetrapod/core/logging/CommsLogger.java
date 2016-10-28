@@ -111,7 +111,8 @@ public class CommsLogger {
                }
             }
             try {
-               if (out!=null) out.flush();
+               if (out != null)
+                  out.flush();
             } catch (IOException e) {
                logger.error(e.getMessage(), e);
             }
@@ -266,7 +267,7 @@ public class CommsLogger {
          case RetainOwnershipMessage.STRUCT_ID:
             return true;
       }
-      return !commsLog.isDebugEnabled();
+      return !commsLog.isInfoEnabled();
    }
 
    public static CommsLogFile readLogFile(File file) throws FileNotFoundException, IOException {
