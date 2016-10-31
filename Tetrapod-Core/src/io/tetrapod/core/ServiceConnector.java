@@ -14,7 +14,6 @@ import org.slf4j.LoggerFactory;
 
 import io.netty.channel.socket.SocketChannel;
 import io.tetrapod.core.Session.RelayHandler;
-import io.tetrapod.core.logging.CommsLogger;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.rpc.Error;
 import io.tetrapod.core.utils.Util;

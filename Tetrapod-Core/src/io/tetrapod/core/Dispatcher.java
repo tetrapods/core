@@ -3,7 +3,6 @@ package io.tetrapod.core;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.tetrapod.core.rpc.ContextIdGenerator;
-import io.tetrapod.core.tasks.TaskContext;
 import io.tetrapod.core.tasks.TaskThreadPoolExecutor;
 import io.tetrapod.core.utils.Util;
 
