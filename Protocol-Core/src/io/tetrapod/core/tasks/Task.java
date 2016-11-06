@@ -823,7 +823,7 @@ public class Task<T> extends CompletableFuture<T> {
 
 
    public static <T, F extends CompletableFuture<T>, C extends Collection<F>> Task<List<T>> all(C collection) {
-      F cfs[] = Util.cast(collection.toArray());
+      F cfs[] = Util.cast(collection.toArray(new CompletableFuture[collection.size()]));
       return all(cfs);
    }
 

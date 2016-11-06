@@ -861,6 +861,17 @@ public class Util {
       }
    }
 
+   public static <K, V> Map<K,V> toMap(Object ... values) {
+      if ((values.length & 2) != 0) {
+         throw new IllegalArgumentException("values must be an even nubmer");
+      }
+      Map<K, V> map = new HashMap<K, V>();
+      for (int i = 0; i < values.length; i+=2) {
+         map.put(cast(values[i]), cast(values[i+1]));
+      }
+      return map;
+   }
+
    public interface ValueMaker<K, V> {
       public V make();
    }

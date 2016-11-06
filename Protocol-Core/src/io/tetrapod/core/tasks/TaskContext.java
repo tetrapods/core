@@ -452,4 +452,13 @@ public class TaskContext {
          }
       };
    }
+
+   public static <T> T computeIfAbsent(String key, Function<String, T> valueProducer) {
+      T value = get(key);
+      if (value == null) {
+         value = valueProducer.apply(key);
+         set(key, value);
+      }
+      return value;
+   }
 }
