@@ -2,8 +2,6 @@ package io.tetrapod.core.tasks;
 
 import io.tetrapod.core.ServiceException;
 
-import java.io.Closeable;
-import java.io.IOException;
 import java.util.concurrent.Semaphore;
 
 /**

@@ -1,8 +1,6 @@
 package io.tetrapod.core.logging;
 
 import java.io.*;
-import java.math.BigInteger;
-import java.nio.ByteBuffer;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.*;

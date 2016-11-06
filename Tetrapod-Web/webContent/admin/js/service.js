@@ -2,7 +2,8 @@ define(["knockout", "jquery", "bootbox", "alert", "app", "chart", "modules/build
    // static variables
 
    var Core = app.coreConsts;
-
+   var USE_CHARTS = false;
+   
    return Service; // not using new means this returns a constructor function (ie class)
 
    // Service Model
@@ -386,24 +387,26 @@ define(["knockout", "jquery", "bootbox", "alert", "app", "chart", "modules/build
       });
 
       // ////////////////////////////////////// stats graphs ////////////////////////////////////////
-
-      self.latencyChart = new Chart("service-chart-latency-" + self.entityId);
-      self.rpsChart = new Chart("service-chart-rps-" + self.entityId);
-      self.mpsChart = new Chart("service-chart-mps-" + self.entityId);
-      self.counterChart = new Chart("service-chart-counter-" + self.entityId);
-
-      self.latencyChart.series.maxY = 500;
-
-      // updates all charts for this service
-      self.chart = function() {
-         if (!self.removed) {
-            self.latencyChart.updatePlot(60000, self.latency());
-            self.rpsChart.updatePlot(60000, self.rps());
-            self.mpsChart.updatePlot(60000, self.mps());
-            self.counterChart.updatePlot(60000, self.counter());
+      if (USE_CHARTS) {
+         self.latencyChart = new Chart("service-chart-latency-" + self.entityId);
+         self.rpsChart = new Chart("service-chart-rps-" + self.entityId);
+         self.mpsChart = new Chart("service-chart-mps-" + self.entityId);
+         self.counterChart = new Chart("service-chart-counter-" + self.entityId);
+   
+         self.latencyChart.series.maxY = 500;
+   
+         // updates all charts for this service
+         self.chart = function() {
+            if (!self.removed) {
+               self.latencyChart.updatePlot(60000, self.latency());
+               self.rpsChart.updatePlot(60000, self.rps());
+               self.mpsChart.updatePlot(60000, self.mps());
+               self.counterChart.updatePlot(60000, self.counter());
+            }
          }
+      } else {
+         self.chart = function() {};
       }
-
       var LogConsts = app.server.consts['Core'].ServiceLogEntry;
 
       var levels = [LogConsts.LEVEL_ALL, LogConsts.LEVEL_TRACE, LogConsts.LEVEL_DEBUG, LogConsts.LEVEL_INFO, LogConsts.LEVEL_WARN, LogConsts.LEVEL_ERROR, LogConsts.LEVEL_OFF];

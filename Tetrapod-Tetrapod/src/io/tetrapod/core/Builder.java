@@ -128,7 +128,7 @@ public class Builder {
          return false;
       }
       if (name == null || name.trim().isEmpty()) {
-         name = Util.getProperty("build.name", "dev");
+         name = Util.getProperty("build.env", "dev");
       }
       String buildNum = "" + build;
       int rc = Util.runProcess(callback, new File(buildDir, "pullBuild").getPath(), name.trim(), buildNum);

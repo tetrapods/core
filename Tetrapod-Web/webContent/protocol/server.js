@@ -32,7 +32,7 @@ function TP_Server() {
    // public interface
    self.forceLongPolling = false;
    self.commsLog = false;
-   self.commsLogKeepAlives = false;
+   self.showIgnored = false;
    self.register = register;
    self.registerFlag = registerFlag;
    self.addMessageHandler = addMessageHandler;
@@ -378,7 +378,7 @@ function TP_Server() {
 
    function logResponse(result, req) {
       if (self.commsLog) {
-         if (!isKeepAlive(req._contractId, req._structId) || self.commsLogKeepAlives) {
+         if (!ignoreStruct(req._contractId, req._structId) || self.showIgnored) {
             var str = logstamp()  + ' [' + result._requestId + '] <- ' + nameOf(result) + ' '
                   + JSON.stringify(result, dropUnderscored);
             if (result.isError()) {
@@ -407,7 +407,7 @@ function TP_Server() {
 
    function logRequest(req, toId) {
       if (self.commsLog) {
-         if (!isKeepAlive(req._contractId, req._structId) || self.commsLogKeepAlives) {
+         if (!ignoreStruct(req._contractId, req._structId) || self.showIgnored) {
             var toStr = toId == 0 ? " to any" : (toId == 1 ? " to direct" : " to " + toId);
             try {
                console.debug(logstamp() + ' [' + req._requestId + '] => ' + nameOf(req) + ' '
@@ -422,8 +422,10 @@ function TP_Server() {
 
    function logMessage(result) {
       if (self.commsLog) {
-         console.debug(logstamp() + ' [M:' + result._topicId + '] <- ' + nameOf(result) + ' '
-               + JSON.stringify(result, dropUnderscored));
+         if (!ignoreStruct(result._contractId, result._structId) || self.showIgnored) {
+            console.debug(logstamp() + ' [M:' + result._topicId + '] <- ' + nameOf(result) + ' '
+                  + JSON.stringify(result, dropUnderscored));
+         }
       }
    }
 
@@ -554,9 +556,10 @@ function TP_Server() {
       commslog("[socket] error: " + JSON.stringify(event));
    }
 
-   function isKeepAlive(contractId, structId) {
+   function ignoreStruct(contractId, structId) {
       return (contractId == 1 && structId == 5512920) || (contractId == 10 && structId == 15966706)
-            || (contractId == 10 && structId == 10578136);
+            || (contractId == 10 && structId == 10578136) || (contractId == 1 && structId == 469976) 
+            || (contractId == 1 && structId == 15652108) || (contractId == 1 && structId == 13186680);
    }
 
    // ------------------------ long polling fall-back ----------------------------- //

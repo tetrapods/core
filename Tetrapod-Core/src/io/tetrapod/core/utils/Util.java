@@ -866,10 +866,22 @@ public class Util {
          throw new IllegalArgumentException("values must be an even nubmer");
       }
       Map<K, V> map = new HashMap<K, V>();
-      for (int i = 0; i < values.length; i+=2) {
-         map.put(cast(values[i]), cast(values[i+1]));
+      for (int i = 0; i < values.length; i += 2) {
+         map.put(cast(values[i]), cast(values[i + 1]));
       }
       return map;
+   }
+
+   public static int safeStringCompare(String u1, String u2) {
+      if (u1 == null && u2 == null) {
+        return 0;
+      } else if (u1 == null) {
+         return -1;
+      } else if (u2 == null) {
+         return 1;
+      } else {
+         return u1.compareToIgnoreCase(u2);
+      }
    }
 
    public interface ValueMaker<K, V> {
