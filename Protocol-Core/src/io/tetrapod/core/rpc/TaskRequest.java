@@ -1,8 +1,6 @@
 package io.tetrapod.core.rpc;
 
 import io.tetrapod.core.tasks.Task;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public abstract class TaskRequest extends Request implements TaskDispatcher {
 
