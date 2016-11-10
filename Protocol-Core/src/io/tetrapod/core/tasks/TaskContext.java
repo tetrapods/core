@@ -55,7 +55,7 @@ public class TaskContext {
    // human friendly id, for debugging
    private long id = nextId.getAndIncrement();
 
-   private ConcurrentHashMap<String, Object> properties = new ConcurrentHashMap<>();
+   private final ConcurrentHashMap<String, Object> properties = new ConcurrentHashMap<>();
    private ConcurrentHashMap<String, String> mdcVariables = new ConcurrentHashMap<>();
 
    private Executor defaultExecutor = null;
@@ -331,11 +331,17 @@ public class TaskContext {
     * @return an {@code Object} or
     * {@code null} if no property exists matching the given name.
     */
-   public Object getProperty(String name) {
-      if (properties == null) {
-         return null;
+   public <T> T getProperty(String name) {
+      return CoreUtil.cast(properties.get(name));
+   }
+
+   public synchronized <T> T getProperty(String name, Function<String, T> propertyProvider) {
+      T val = CoreUtil.cast(properties.get(name));
+      if (val == null) {
+         val = propertyProvider.apply(name);
+         properties.put(name, val);
       }
-      return properties.get(name);
+      return val;
    }
 
    /**

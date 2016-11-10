@@ -17,10 +17,12 @@ import javax.xml.bind.DatatypeConverter;
 
 import io.netty.handler.codec.http.Cookie;
 import io.netty.handler.codec.http.CookieDecoder;
+import io.tetrapod.core.Contract;
 import io.tetrapod.core.ServiceException;
 import io.tetrapod.core.json.*;
 import io.tetrapod.core.rpc.ErrorResponseException;
 import io.tetrapod.core.rpc.Flags_int;
+import io.tetrapod.core.rpc.Response;
 import io.tetrapod.protocol.core.CoreContract;
 
 /**
@@ -882,6 +884,13 @@ public class Util {
       } else {
          return u1.compareToIgnoreCase(u2);
       }
+   }
+
+   public static String formatError(Response res) {
+      if (res.isError()) {
+         return Contract.getErrorCode(res.errorCode(), res.getContractId()) + " (" + res.errorCode() + ")";
+      }
+      return "";
    }
 
    public interface ValueMaker<K, V> {
