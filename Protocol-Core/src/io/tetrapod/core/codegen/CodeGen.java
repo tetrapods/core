@@ -54,6 +54,7 @@ public class CodeGen {
          services.add("kpi");
          services.add("phone");
          services.add("queue");
+         services.add("queue2");
          services.add("notification");
          services.add("contacts");
          services.add("crm");

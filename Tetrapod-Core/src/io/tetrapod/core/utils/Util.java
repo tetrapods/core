@@ -17,10 +17,13 @@ import javax.xml.bind.DatatypeConverter;
 
 import io.netty.handler.codec.http.Cookie;
 import io.netty.handler.codec.http.CookieDecoder;
+import io.tetrapod.core.Contract;
 import io.tetrapod.core.ServiceException;
 import io.tetrapod.core.json.*;
 import io.tetrapod.core.rpc.ErrorResponseException;
 import io.tetrapod.core.rpc.Flags_int;
+import io.tetrapod.core.rpc.Response;
+import io.tetrapod.protocol.core.CoreContract;
 
 /**
  * A random collection of useful static utility methods
@@ -831,6 +834,11 @@ public class Util {
       return ids;
    }
 
+   public static int getErrorCodeFromChain(Throwable e) {
+      ErrorResponseException ere = getThrowableInChain(e, ErrorResponseException.class);
+      return ere == null ? CoreContract.ERROR_UNKNOWN : ere.errorCode;
+   }
+
    public static <T> T getField(Object object, String fieldName) {
       try {
          Field field = object.getClass().getDeclaredField(fieldName);
@@ -839,6 +847,42 @@ public class Util {
       } catch (Throwable e) {
          throw ServiceException.wrapIfChecked(e);
       }
+   }
+
+   public static boolean isNumeric(String string) {
+      try {
+         Double.parseDouble(string);
+         return true;
+      } catch (NumberFormatException e) {
+         return false;
+      }
+   }
+
+   public static Integer zeroToNull(int integer) {
+      if (integer == 0) {
+         return null;
+      } else {
+         return integer;
+      }
+   }
+
+   public static int nullToZero(Integer integer) {
+      if (integer == null) {
+         return 0;
+      } else {
+         return integer;
+      }
+   }
+
+   public static <K, V> Map<K,V> toMap(Object ... values) {
+      if ((values.length & 2) != 0) {
+         throw new IllegalArgumentException("values must be an even nubmer");
+      }
+      Map<K, V> map = new HashMap<K, V>();
+      for (int i = 0; i < values.length; i += 2) {
+         map.put(cast(values[i]), cast(values[i + 1]));
+      }
+      return map;
    }
 
    public static int safeStringCompare(String u1, String u2) {
@@ -851,6 +895,13 @@ public class Util {
       } else {
          return u1.compareToIgnoreCase(u2);
       }
+   }
+
+   public static String formatError(Response res) {
+      if (res.isError()) {
+         return Contract.getErrorCode(res.errorCode(), res.getContractId()) + " (" + res.errorCode() + ")";
+      }
+      return "";
    }
 
    public interface ValueMaker<K, V> {

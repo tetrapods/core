@@ -901,6 +901,11 @@ public class DefaultService
    public void addMessageHandler(Message k, SubscriptionAPI handler) {
       messageHandlers.add(k, handler);
    }
+   public <T extends Message> void  addMessageHandlerTyped(T type, SubscriptionAPITyped<T> handler) {
+      messageHandlers.add(type, (message, ctx) -> {
+         handler.genericMessage(Util.cast(message), ctx);
+      });
+   }
 
    @Override
    public void messageClusterMember(ClusterMemberMessage m, MessageContext ctx) {

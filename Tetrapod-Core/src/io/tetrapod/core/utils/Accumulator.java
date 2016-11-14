@@ -20,4 +20,8 @@ public class Accumulator {
       return value.get();
    }
 
+   @Override
+   public String toString() {
+      return value.toString();
+   }
 }

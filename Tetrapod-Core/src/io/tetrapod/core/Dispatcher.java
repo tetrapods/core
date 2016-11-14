@@ -3,6 +3,7 @@ package io.tetrapod.core;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.tetrapod.core.rpc.ContextIdGenerator;
+import io.tetrapod.core.tasks.TaskContext;
 import io.tetrapod.core.tasks.TaskThreadPoolExecutor;
 import io.tetrapod.core.utils.Util;
 
@@ -158,11 +159,13 @@ public class Dispatcher {
     * Executes a task and then drains any overflow tasks
     */
    private void processTask(final Runnable task) {
+      TaskContext ctx = TaskContext.pushNew();
       try {
          task.run();
       } catch (Throwable e) {
          logger.error(e.getMessage(), e);
       } finally {
+         ctx.pop();
          processOverflow();
       }
    }
