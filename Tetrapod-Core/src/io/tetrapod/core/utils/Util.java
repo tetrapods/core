@@ -103,6 +103,17 @@ public class Util {
       return items[random(items.length)];
    }
 
+   public static List<Integer> parseIntList(String list) {
+      List<Integer> result = new ArrayList<>();
+      if (!Util.isEmpty(list)) {
+         String[] split = list.split(",");
+         for (String value : split) {
+            result.add(Integer.parseInt(value));
+         }
+      }
+      return result;
+   }
+   
    public static int[] toIntArray(Collection<Integer> list) {
       int[] res = new int[list.size()];
       int i = 0;
