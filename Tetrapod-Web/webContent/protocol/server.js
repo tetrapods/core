@@ -450,9 +450,6 @@ function TP_Server() {
 
       logResponse(result, ctx.request);
 
-      if (ctx.handler) {
-         ctx.handler(result);
-      }
       if (result.isError() && result.errorCode == 10) {
          // 10 is RIGHTS_EXPIRED
          for (var i = 0; i < securityErrorHandlers.length; i++) {
@@ -460,6 +457,11 @@ function TP_Server() {
          }
       }
       delete requestContexts[result._requestId];
+      
+      if (ctx.handler) {
+         ctx.handler(result);
+      }
+
    }
 
    function handleMessage(result) {
