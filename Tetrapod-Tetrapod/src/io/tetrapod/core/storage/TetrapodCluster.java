@@ -298,6 +298,7 @@ public class TetrapodCluster extends Storage
       }
       if (!raft.getLog().isRunning() && !service.isShuttingDown()) {
          service.fail("Raft Log Stopped");
+         service.shutdown(false);
       }
    }
 
