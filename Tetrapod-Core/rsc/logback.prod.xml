@@ -6,6 +6,7 @@
       <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
          <fileNamePattern>${LOGDIR}/${APPNAME}/%d/${APPNAME}.log
          </fileNamePattern>
+         <maxHistory>30</maxHistory>         
       </rollingPolicy>
       
       <encoder>
@@ -19,6 +20,7 @@
       <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
          <fileNamePattern>${LOGDIR}/${APPNAME}/%d/comms.log.txt
          </fileNamePattern>
+         <maxHistory>14</maxHistory>         
       </rollingPolicy>
     
       <encoder>
@@ -32,6 +34,7 @@
       <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
          <fileNamePattern>${LOGDIR}/${APPNAME}/%d/api.log
          </fileNamePattern>
+         <maxHistory>30</maxHistory>                  
       </rollingPolicy>
 
       <encoder>
