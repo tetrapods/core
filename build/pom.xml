@@ -8,6 +8,10 @@
 
    <packaging>pom</packaging>
 
+   <properties>
+       <gson.version>2.7</gson.version>
+   </properties>
+
    <build>
       <sourceDirectory>src</sourceDirectory>
       <testSourceDirectory>test</testSourceDirectory>

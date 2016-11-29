@@ -76,11 +76,7 @@ public class AsyncLock implements AutoCloseable {
       }
    }
    private void release() {
-      //maybe the extra sync is a little heavy handed, but want it in for now to make sure the assert works as expected
-      synchronized (semaphore) {
-         assert semaphore.availablePermits() == 0;
-         semaphore.release();
-      }
+      semaphore.release();
    }
 
    /**
@@ -109,10 +105,8 @@ public class AsyncLock implements AutoCloseable {
     */
    public AsyncLock acquire() {
       try {
-         synchronized (semaphore) {
-            semaphore.acquire();
-            return this;
-         }
+         semaphore.acquire();
+         return this;
       } catch (InterruptedException e) {
          throw ServiceException.wrap(e);
       }
