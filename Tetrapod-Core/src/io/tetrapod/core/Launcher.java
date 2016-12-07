@@ -83,15 +83,13 @@ public class Launcher {
       }
    }
 
-
-
-
    public static void asyncInit() {
       try {
          Class<?> asyncClass = Class.forName("com.ea.async.Async");
          Method initMethod = asyncClass.getMethod("init");
          initMethod.invoke(null);
       } catch (Throwable e) {
+         e.printStackTrace();
       }
    }
 
