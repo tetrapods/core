@@ -267,7 +267,16 @@ public class CommsLogger {
          case RetainOwnershipMessage.STRUCT_ID:
             return true;
       }
+      if (ignore.contains(structId)) {
+         return true;
+      }
       return !commsLog.isInfoEnabled();
+   }
+
+   private static Set<Integer> ignore = new HashSet<Integer>();
+
+   public static void ignore(int structId, int contractId) {
+      ignore.add(structId);
    }
 
    public static CommsLogFile readLogFile(File file) throws FileNotFoundException, IOException {
