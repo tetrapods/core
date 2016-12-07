@@ -2,10 +2,8 @@ package io.tetrapod.core.utils;
 
 import javax.crypto.Mac;
 
-import org.slf4j.*;
-
 import io.netty.handler.codec.base64.Base64Dialect;
-import io.tetrapod.core.rpc.*;
+import io.tetrapod.core.rpc.ErrorResponseException;
 import io.tetrapod.protocol.core.CoreContract;
 
 /**
@@ -14,8 +12,6 @@ import io.tetrapod.protocol.core.CoreContract;
  * TODO : Add support for automatic key rotation, unit tests
  */
 public class AdminAuthToken {
-
-   public static final Logger logger            = LoggerFactory.getLogger(AdminAuthToken.class);
 
    public static final String SHARED_SECRET_KEY = "tetrapod.shared.secret";
 
@@ -29,13 +25,13 @@ public class AdminAuthToken {
    }
 
    public synchronized static boolean setSecret(String secret) {
-      logger.info("Secret = {}", secret);
       return setSecret(AESEncryptor.decodeBase64(secret, Base64Dialect.STANDARD));
    }
 
    /**
-    * Sets the shared secret. Needs to be called before this class is used. Returns false if there is an error which would typically be Java
-    * not having strong crypto available.
+    * Sets the shared secret. Needs to be called before this class is used. Returns false
+    * if there is an error which would typically be Java not having strong crypto
+    * available.
     */
    public synchronized static boolean setSecret(byte[] secret) {
       try {
@@ -95,15 +91,9 @@ public class AdminAuthToken {
    public static void validateAdminToken(int accountId, String adminToken, long requiredRights) {
       final Decoded d = decodeSessionToken(adminToken);
       if (d == null || d.accountId != accountId) {
-
-         logger.info("Bad Account: Decoded = {}, accountId = {}, authToken = {}, adminRightsRequired = {}", d, accountId, adminToken,
-               requiredRights);
-
          throw new ErrorResponseException(CoreContract.ERROR_INVALID_RIGHTS);
       }
       if ((d.rights & requiredRights) != requiredRights) {
-         logger.info("Bad rights: Decoded = {}, accountId = {}, authToken = {}, adminRightsRequired = {}", d, accountId, adminToken,
-               requiredRights);
          throw new ErrorResponseException(CoreContract.ERROR_INVALID_RIGHTS);
       }
    }
