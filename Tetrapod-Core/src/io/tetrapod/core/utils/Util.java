@@ -904,6 +904,10 @@ public class Util {
       return "";
    }
 
+   public static boolean isGreaterThen(Integer left, int right) {
+      return left != null && left > right;
+   }
+
    public interface ValueMaker<K, V> {
       public V make();
    }
