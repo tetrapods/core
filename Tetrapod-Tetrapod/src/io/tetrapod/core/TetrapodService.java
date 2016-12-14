@@ -118,7 +118,8 @@ public class TetrapodService extends DefaultService
       }
    }
 
-   public boolean dependenciesReady() {
+   @Override
+   public boolean dependenciesReady(boolean logIfNotReady) {
       return cluster.isReady();
    }
 
@@ -248,6 +249,7 @@ public class TetrapodService extends DefaultService
    public String getSharedSecret() {
       String secret = Util.getProperty(AdminAuthToken.SHARED_SECRET_KEY);
       if (secret == null) {
+         logger.warn("Creating new Admin Auth Token");
          secret = AuthToken.generateSharedSecret();
          cluster.setClusterProperty(new ClusterProperty(AdminAuthToken.SHARED_SECRET_KEY, true, secret));
       }

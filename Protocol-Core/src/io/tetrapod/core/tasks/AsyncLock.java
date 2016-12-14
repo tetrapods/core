@@ -3,6 +3,8 @@ package io.tetrapod.core.tasks;
 import io.tetrapod.core.ServiceException;
 
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  * This is a lock object that is safe to acquire and release from separate threads, thus is appropriate for async operations.
@@ -13,8 +15,14 @@ import java.util.concurrent.Semaphore;
  */
 public class AsyncLock implements AutoCloseable {
    private final Semaphore semaphore;
+   private final String name;
 
-   public AsyncLock() {
+   /**
+    * Creates an async lock
+    * @param name A name used for logging when there are issues acquire locking
+    */
+   public AsyncLock(String name) {
+      this.name = name;
       this.semaphore = new Semaphore(1, false);
    }
 
@@ -31,7 +39,7 @@ public class AsyncLock implements AutoCloseable {
          T ret = function.apply();
          if (ret instanceof Task) {
             throw new IllegalArgumentException("You must call lockAsync if you want to return a task and expect the " +
-                    "locking semantics to extend across the task chain");
+                    "locking semantics to extend across the task chain:  Lock: " + name);
          }
          return ret;
       } finally {
@@ -76,11 +84,7 @@ public class AsyncLock implements AutoCloseable {
       }
    }
    private void release() {
-      //maybe the extra sync is a little heavy handed, but want it in for now to make sure the assert works as expected
-      synchronized (semaphore) {
-         assert semaphore.availablePermits() == 0;
-         semaphore.release();
-      }
+      semaphore.release();
    }
 
    /**
@@ -108,13 +112,16 @@ public class AsyncLock implements AutoCloseable {
     * @return  This object.  Return value required for try with resources to work but can be ignored
     */
    public AsyncLock acquire() {
+      return acquire(30, TimeUnit.SECONDS);
+   }
+   public AsyncLock acquire(int timeout, TimeUnit timeoutUnits) {
       try {
-         synchronized (semaphore) {
-            semaphore.acquire();
-            return this;
+         if (!semaphore.tryAcquire(timeout, timeoutUnits)) {
+            throw new TimeoutException("Unable to acquire lock in time.  Possible deadlock.  Lock: " + name);
          }
-      } catch (InterruptedException e) {
-         throw ServiceException.wrap(e);
+         return this;
+      } catch (Throwable e) {
+         throw ServiceException.wrapIfChecked(e);
       }
    }
 

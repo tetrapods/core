@@ -54,10 +54,12 @@ public class CodeGen {
          services.add("kpi");
          services.add("phone");
          services.add("queue");
+         services.add("queue2");
          services.add("notification");
          services.add("contacts");
          services.add("crm");
          services.add("apiv1");
+         services.add("stats");
       }
       if (langs.isEmpty()) {
          System.out.println("using defaults for languages");
