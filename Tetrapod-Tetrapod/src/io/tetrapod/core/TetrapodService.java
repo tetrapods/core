@@ -927,7 +927,8 @@ public class TetrapodService extends DefaultService
             for (EntityInfo e : registry.getServices()) {
                if (e.getContractId() == Integer.parseInt(contractId) && e.entityId != getEntityId() && e.host.equals(Util.getHostName())) {
                   sendRequest(new InternalShutdownRequest(), e.entityId).log();
-                  Util.sleep(2500);
+                  logger.debug("Shutting Down Contract " + e.getContractId());
+                  Util.sleep(5000);
                }
             }
          }
