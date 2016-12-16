@@ -920,6 +920,19 @@ public class TetrapodService extends DefaultService
    }
 
    public void shutdownServices() {
+      String[] shutdownOrder = Util.getProperty("tetrapod.shutdownOrder","").split(",");
+
+      if(!Util.isEmpty(shutdownOrder)) {
+         for (String contractId : shutdownOrder) {
+            for (EntityInfo e : registry.getServices()) {
+               if (e.contractId == Integer.parseInt(contractId) && e.entityId != getEntityId() && e.host.equals(Util.getHostName())) {
+                  sendRequest(new InternalShutdownRequest(), e.entityId).log();
+                  Util.sleep(2500);
+               }
+            }
+         }
+      }
+
       for (EntityInfo e : registry.getServices()) {
          if (e.entityId != getEntityId() && e.host.equals(Util.getHostName())) {
             sendRequest(new InternalShutdownRequest(), e.entityId).log();
