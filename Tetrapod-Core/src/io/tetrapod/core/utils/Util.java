@@ -23,6 +23,9 @@ import io.tetrapod.core.json.*;
 import io.tetrapod.core.rpc.ErrorResponseException;
 import io.tetrapod.core.rpc.Flags_int;
 import io.tetrapod.core.rpc.Response;
+import io.tetrapod.core.tasks.Func0;
+import io.tetrapod.core.tasks.ThrowableFunction;
+import io.tetrapod.core.tasks.ThrowableFunction0;
 import io.tetrapod.protocol.core.CoreContract;
 
 /**
@@ -906,6 +909,28 @@ public class Util {
 
    public static boolean isGreaterThen(Integer left, int right) {
       return left != null && left > right;
+   }
+
+   /**
+    * Wraps a function that throws checked exceptions and wraps them in unchecked
+    */
+   public static <R> R wrap(ThrowableFunction0<R> func) {
+      try {
+         return func.apply();
+      } catch (Throwable throwable) {
+         throw ServiceException.wrapIfChecked(throwable);
+      }
+   }
+
+   /**
+    * Wraps a function that throws checked exceptions and wraps them in unchecked
+    */
+   public static <T, R> R wrap(T arg, ThrowableFunction<T, R> func) {
+      try {
+         return func.apply(arg);
+      } catch (Throwable throwable) {
+         throw ServiceException.wrapIfChecked(throwable);
+      }
    }
 
    public interface ValueMaker<K, V> {
