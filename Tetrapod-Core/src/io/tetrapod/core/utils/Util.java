@@ -933,6 +933,12 @@ public class Util {
       }
    }
 
+   public static <T> List<T> asList(T ... items) {
+      List<T> list = new ArrayList<>(items.length);
+      Collections.addAll(list, items);
+      return list;
+   }
+
    public interface ValueMaker<K, V> {
       public V make();
    }
