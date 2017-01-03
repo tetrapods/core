@@ -1057,6 +1057,11 @@ public class JSONObject {
         return this;
     }
 
+    public JSONObject put(String key, JSONArray array) throws JSONException {
+        this.put(key, (Object) array);
+        return this;
+    }
+
     /**
      * Put a key/double pair in the JSONObject.
      *
