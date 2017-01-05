@@ -88,6 +88,10 @@ public class Util {
       return random.nextInt(range);
    }
 
+   public static int random() {
+      return random.nextInt();
+   }
+
    public static String format(String fmt, Object... args) {
       return String.format(fmt.replaceAll("\\{\\}", "%s"), args);
    }
