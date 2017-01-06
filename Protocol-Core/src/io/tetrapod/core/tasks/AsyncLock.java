@@ -9,11 +9,15 @@ import java.util.concurrent.TimeoutException;
 /**
  * This is a lock object that is safe to acquire and release from separate threads, thus is appropriate for async operations.
  * To lock this, you should call one of the lock function if this is single threaded, or lockAsync if you want an
- * entire task chain synchronized.  Alternatively you can use acquire() but this is only recommended in a try-with-resources block
+ * entire task chain synchronized.   You can also call the readLock and readLockAsync methods which allows multiple
+ * concurrent "read" processes to execute but not at the same time as any normal lock is executing.  In other words,
+ * all read locks may execute in parallel -or- a single normal lock.
+ *
  * @author paulm
  *         Created: 9/8/16
  */
-public class AsyncLock implements AutoCloseable {
+public class AsyncLock  {
+   private static final short MAX = Short.MAX_VALUE;
    private final Semaphore semaphore;
    private final String name;
 
@@ -23,7 +27,7 @@ public class AsyncLock implements AutoCloseable {
     */
    public AsyncLock(String name) {
       this.name = name;
-      this.semaphore = new Semaphore(1, false);
+      this.semaphore = new Semaphore(MAX, true);
    }
 
    /**
@@ -34,7 +38,21 @@ public class AsyncLock implements AutoCloseable {
     * @return The return value from the fuction
     */
    public <T> T lock(Func0<T> function) {
-      acquire();
+      return lock(MAX, function);
+   }
+   /**
+    * Use this to wrap a function that returns a value in a in a non-exclusive read lock.  Don't return Tasks through this method.  Use
+    * lockAsync instead.  Multiple read locks can be acquired at the same time, but will be blocked by and will block a 'standard' lock.
+    * @param function   A function you wish to be in a read lock
+    * @param <T> The type of object that is being returned
+    * @return The return value from the fuction
+    */
+   public <T> T readLock(Func0<T> function) {
+      return lock(1, function);
+   }
+
+   private <T> T lock(int permits, Func0<T> function) {
+      acquire(permits);
       try {
          T ret = function.apply();
          if (ret instanceof Task) {
@@ -43,7 +61,7 @@ public class AsyncLock implements AutoCloseable {
          }
          return ret;
       } finally {
-         release();
+         release(permits);
       }
    }
 
@@ -52,11 +70,23 @@ public class AsyncLock implements AutoCloseable {
     * @param runnable  The runnable to execute within the sync
     */
    public void lock(Runnable runnable) {
-      acquire();
+      lock(MAX, runnable);
+   }
+
+   /**
+    * Use this to wrap a runnable in a non-exclusive read lock.  Multiple read locks can be acquired at the
+    * same time, but will be blocked by and will block a 'standard' lock.
+    * @param runnable
+    */
+   public void readLock(Runnable runnable) {
+      lock(1, runnable);
+   }
+   private void lock(int permits, Runnable runnable) {
+      acquire(permits);
       try {
          runnable.run();
       } finally {
-         release();
+         release(permits);
       }
    }
 
@@ -68,33 +98,48 @@ public class AsyncLock implements AutoCloseable {
     * @return  The task that was returned from the function
     */
    public <T> Task<T> lockAsync(Func0<Task<T>> function) {
-      acquire();
-
-      try {
-         return function.apply().thenApply((resp) -> {
-            release();
-            return resp;
-         }).exceptionally(th -> {
-            release();
-            throw ServiceException.wrapIfChecked(th);
-         });
-      } catch (Throwable e) {
-         release();
-         throw ServiceException.wrapIfChecked(e);
-      }
-   }
-   private void release() {
-      semaphore.release();
+      return lockAsync(MAX, function);
    }
 
    /**
-    * @deprecated Don't ever call me!  I should only be called implicity using a try with resources block.  See comments in acquire
-    * @throws RuntimeException
+    * Use this function to get a non exclusive lock across async threads.  Multiple read locks can be acquired at the
+    * same time, but will be blocked by and will block a 'standard' lock.
+    * @param function
+    * @param <T>
+    * @return
     */
-   @Override
-   public void close() throws RuntimeException {
-      release();
+   public <T> Task<T> readLockAsync(Func0<Task<T>> function) {
+      return lockAsync(1, function);
    }
+   public <T> Task<T> lockAsync(boolean readLock, Func0<Task<T>> function) {
+      if (readLock) {
+         return readLockAsync(function);
+      } else {
+         return lockAsync(function);
+      }
+   }
+
+
+   private <T> Task<T> lockAsync(final int permits, Func0<Task<T>> function) {
+      acquire(permits);
+
+      try {
+         return function.apply().thenApply((resp) -> {
+            release(permits);
+            return resp;
+         }).exceptionally(th -> {
+            release(permits);
+            throw ServiceException.wrapIfChecked(th);
+         });
+      } catch (Throwable e) {
+         release(permits);
+         throw ServiceException.wrapIfChecked(e);
+      }
+   }
+   private void release(int permits) {
+      semaphore.release(permits);
+   }
+
 
    /**
     * This allows you to acquire a lock.  This method is only exposed to allow it to work with try with resource block.
@@ -111,12 +156,13 @@ public class AsyncLock implements AutoCloseable {
     *
     * @return  This object.  Return value required for try with resources to work but can be ignored
     */
-   public AsyncLock acquire() {
-      return acquire(30, TimeUnit.SECONDS);
+   private AsyncLock acquire(int permits) {
+      return acquire(permits, 30, TimeUnit.SECONDS);
    }
-   public AsyncLock acquire(int timeout, TimeUnit timeoutUnits) {
+
+   private AsyncLock acquire(int permits, int timeout, TimeUnit timeoutUnits) {
       try {
-         if (!semaphore.tryAcquire(timeout, timeoutUnits)) {
+         if (!semaphore.tryAcquire(permits, timeout, timeoutUnits)) {
             throw new TimeoutException("Unable to acquire lock in time.  Possible deadlock.  Lock: " + name);
          }
          return this;
