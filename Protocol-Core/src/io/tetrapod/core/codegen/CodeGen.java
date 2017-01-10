@@ -39,7 +39,7 @@ public class CodeGen {
          roots.add("../../private/services");
       }
       if (services.isEmpty()) {
-         System.out.println("using defaults for protocols");
+         System.out.println("using defaults for protocols"); 
          services.add("web");
          services.add("org");
          services.add("core");
@@ -60,6 +60,7 @@ public class CodeGen {
          services.add("crm");
          services.add("apiv1");
          services.add("stats");
+         services.add("stress");
       }
       if (langs.isEmpty()) {
          System.out.println("using defaults for languages");
