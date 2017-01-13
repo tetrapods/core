@@ -132,11 +132,6 @@ public class WireSession extends Session {
       header.read(reader);
       final Async async = pendingRequests.remove(header.requestId);
       if (async != null) {
-
-         if (header.structId == 8072638 && myType != TYPE_TETRAPOD) {
-            logger.info("#");
-         }
-
          // Dispatches response to ourselves if we sent the request (fromId == myId) or 
          // if fromId is UNADRESSED this handles the edge case where we are registering 
          // ourselves and so did not yet have an entityId           
