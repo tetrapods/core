@@ -147,8 +147,7 @@ public class WebHttpSession extends WebSession {
          return;
       }
       if (!(frame instanceof TextWebSocketFrame)) {
-         throw new UnsupportedOperationException(
-               String.format("%s frame types not supported", frame.getClass().getName()));
+         throw new UnsupportedOperationException(String.format("%s frame types not supported", frame.getClass().getName()));
       }
 
       String request = ((TextWebSocketFrame) frame).text();
@@ -168,8 +167,7 @@ public class WebHttpSession extends WebSession {
    private void handleHttpRequest(final ChannelHandlerContext ctx, final FullHttpRequest req) throws Exception {
       if (logger.isTraceEnabled()) {
          synchronized (this) {
-            logger.trace(String.format("%s REQUEST[%d] = %s : %s", this, ++reqCounter,
-                  ctx.channel().remoteAddress(), req.getUri()));
+            logger.trace(String.format("%s REQUEST[%d] = %s : %s", this, ++reqCounter, ctx.channel().remoteAddress(), req.uri()));
          }
       }
       // Set the http referrer for this request, if not already set
@@ -184,7 +182,7 @@ public class WebHttpSession extends WebSession {
       }
 
       // see if we need to start a web socket session
-      if (wsLocation != null && wsLocation.equals(req.getUri())) {
+      if (wsLocation != null && wsLocation.equals(req.uri())) {
 
          if (Util.isProduction()) {
             String host = req.headers().get("Host");
@@ -209,19 +207,19 @@ public class WebHttpSession extends WebSession {
          }
       } else {
          final Context metricContext = requestTimes.time();
-         if (!req.getDecoderResult().isSuccess()) {
+         if (!req.decoderResult().isSuccess()) {
             sendHttpResponse(ctx, req, new DefaultFullHttpResponse(HTTP_1_1, BAD_REQUEST));
             return;
          }
 
          // this handles long-polling calls when we fall back to long-polling
          // for browsers with no websockets
-         if (req.getUri().equals("/poll")) {
+         if (req.uri().equals("/poll")) {
             handlePoll(ctx, req);
             return;
          }
          // check for web-route handler
-         final WebRoute route = relayHandler.getWebRoutes().findRoute(req.getUri());
+         final WebRoute route = relayHandler.getWebRoutes().findRoute(req.uri());
          if (route != null) {
             handleWebRoute(ctx, req, route);
          } else {
@@ -242,7 +240,7 @@ public class WebHttpSession extends WebSession {
    }
 
    private void handlePoll(final ChannelHandlerContext ctx, final FullHttpRequest req) throws Exception {
-      logger.debug("{} POLLER: {} keepAlive = {}", this, req.getUri(), HttpHeaders.isKeepAlive(req));
+      logger.debug("{} POLLER: {} keepAlive = {}", this, req.uri(), HttpUtil.isKeepAlive(req));
       final JSONObject params = new JSONObject(getContent(req));
 
       // authenticate this session, if needed
@@ -286,8 +284,8 @@ public class WebHttpSession extends WebSession {
       }
    }
 
-   private void longPoll(final int millis, final LongPollQueue messages, final long startTime,
-         final ChannelHandlerContext ctx, final FullHttpRequest req) {
+   private void longPoll(final int millis, final LongPollQueue messages, final long startTime, final ChannelHandlerContext ctx,
+         final FullHttpRequest req) {
       getDispatcher().dispatch(millis, TimeUnit.MILLISECONDS, () -> {
          if (messages.tryLock()) {
             try {
@@ -300,12 +298,10 @@ public class WebHttpSession extends WebSession {
                      }
                   }
                   logger.debug("{} long poll {} has {} items\n", this, messages.getEntityId(), messages.size());
-                  ctx.writeAndFlush(
-                        makeFrame(new JSONObject().put("messages", arr), HttpHeaders.isKeepAlive(req)));
+                  ctx.writeAndFlush(makeFrame(new JSONObject().put("messages", arr), HttpUtil.isKeepAlive(req)));
                } else {
                   if (System.currentTimeMillis() - startTime > Util.ONE_SECOND * 10) {
-                     ctx.writeAndFlush(makeFrame(new JSONObject().put("messages", new JSONArray()),
-                           HttpHeaders.isKeepAlive(req)));
+                     ctx.writeAndFlush(makeFrame(new JSONObject().put("messages", new JSONArray()), HttpUtil.isKeepAlive(req)));
                   } else {
                      // wait a bit and check again
                      longPoll(50, messages, startTime, ctx, req);
@@ -316,19 +312,18 @@ public class WebHttpSession extends WebSession {
                messages.unlock();
             }
          } else {
-            ctx.writeAndFlush(makeFrame(new JSONObject().put("error", "locked"), HttpHeaders.isKeepAlive(req)));
+            ctx.writeAndFlush(makeFrame(new JSONObject().put("error", "locked"), HttpUtil.isKeepAlive(req)));
          }
       });
    }
 
    // handle a JSON API call
-   private void handleWebRoute(final ChannelHandlerContext ctx, final FullHttpRequest req, final WebRoute route)
-         throws Exception {
+   private void handleWebRoute(final ChannelHandlerContext ctx, final FullHttpRequest req, final WebRoute route) throws Exception {
       final WebContext context = new WebContext(req, route.path);
       final RequestHeader header = context.makeRequestHeader(this, route);
       if (header != null) {
          // final long t0 = System.currentTimeMillis();
-         logger.debug("{} WEB API REQUEST: {} keepAlive = {}", this, req.getUri(), HttpHeaders.isKeepAlive(req));
+         logger.debug("{} WEB API REQUEST: {} keepAlive = {}", this, req.uri(), HttpUtil.isKeepAlive(req));
          header.requestId = requestCounter.incrementAndGet();
          header.fromType = Core.TYPE_WEBAPI;
          header.fromParentId = getMyEntityId();
@@ -347,11 +342,11 @@ public class WebHttpSession extends WebSession {
                // @webapi() generic WebAPIRequest call
                String body = req.content().toString(CharsetUtil.UTF_8);
                if (body == null || body.trim().isEmpty()) {
-                  body = req.getUri();
+                  body = req.uri();
                }
 
                final WebAPIRequest request = new WebAPIRequest(route.path, getHeaders(req).toString(),
-                     context.getRequestParams().toString(), body, req.getUri());
+                     context.getRequestParams().toString(), body, req.uri());
 
                final int toEntityId = relayHandler.getAvailableService(header.contractId);
                if (toEntityId != 0) {
@@ -362,8 +357,7 @@ public class WebHttpSession extends WebSession {
                      logger.info("{} WEB API REQUEST ROUTING TO {} {}", this, toEntityId, header.dump());
                      relayRequest(header, request, ses, handler);
                   } else {
-                     logger.debug("{} Could not find a relay session for {} {}", this, header.toId,
-                           header.contractId);
+                     logger.debug("{} Could not find a relay session for {} {}", this, header.toId, header.contractId);
                      handler.fireResponse(new Error(ERROR_SERVICE_UNAVAILABLE), header);
                   }
                } else {
@@ -394,7 +388,7 @@ public class WebHttpSession extends WebSession {
    }
 
    private void handleWebAPIResponse(final ChannelHandlerContext ctx, final FullHttpRequest req, Response res) {
-      final boolean keepAlive = HttpHeaders.isKeepAlive(req);
+      final boolean keepAlive = HttpUtil.isKeepAlive(req);
       try {
          ChannelFuture cf = null;
          if (res.isError()) {
@@ -446,18 +440,18 @@ public class WebHttpSession extends WebSession {
 
    protected void sendHttpResponse(ChannelHandlerContext ctx, FullHttpRequest req, FullHttpResponse res) {
       // Generate an error page if response getStatus code is not OK (200).
-      if (res.getStatus().code() != 200) {
-         ByteBuf buf = Unpooled.copiedBuffer(res.getStatus().toString(), CharsetUtil.UTF_8);
+      if (res.status().code() != 200) {
+         ByteBuf buf = Unpooled.copiedBuffer(res.status().toString(), CharsetUtil.UTF_8);
          try {
             res.content().writeBytes(buf);
          } finally {
             buf.release();
          }
-         setContentLength(res, res.content().readableBytes());
+         HttpUtil.setContentLength(res, res.content().readableBytes());
       }
       // Send the response and close the connection if necessary.
       ChannelFuture f = ctx.channel().writeAndFlush(res);
-      if (!isKeepAlive(req) || res.getStatus().code() != 200) {
+      if (!HttpUtil.isKeepAlive(req) || res.status().code() != 200) {
          f.addListener(ChannelFutureListener.CLOSE);
       }
    }
@@ -474,10 +468,9 @@ public class WebHttpSession extends WebSession {
          ByteBuf buf = WebContext.makeByteBufResult(payload + '\n');
          HttpResponseStatus status = HttpResponseStatus.valueOf(jo.optInt("__httpStatus", OK.code()));
          FullHttpResponse httpResponse = new DefaultFullHttpResponse(HTTP_1_1, status, buf);
-         httpResponse.headers().set(CONTENT_TYPE, jo.optString("__httpMime", "application/json"));
-         httpResponse.headers().set(CONTENT_LENGTH, httpResponse.content().readableBytes());
-         httpResponse.headers().set(CONNECTION,
-               keepAlive ? HttpHeaders.Values.KEEP_ALIVE : HttpHeaders.Values.CLOSE);
+         httpResponse.headers().set(HttpHeaderNames.CONTENT_TYPE, jo.optString("__httpMime", "application/json"));
+         httpResponse.headers().set(HttpHeaderNames.CONTENT_LENGTH, httpResponse.content().readableBytes());
+         httpResponse.headers().set(HttpHeaderNames.CONNECTION, keepAlive ? HttpHeaderValues.KEEP_ALIVE : HttpHeaderValues.CLOSE);
          if (jo.has("__httpDisposition")) {
             httpResponse.headers().set("Content-Disposition", jo.optString("__httpDisposition"));
          }
@@ -495,8 +488,7 @@ public class WebHttpSession extends WebSession {
       }
    }
 
-   protected Async relayRequest(RequestHeader header, Structure request, Session ses, ResponseHandler handler)
-         throws IOException {
+   protected Async relayRequest(RequestHeader header, Structure request, Session ses, ResponseHandler handler) throws IOException {
       final ByteBuf in = convertToByteBuf(request);
       try {
          return ses.sendRelayedRequest(header, in, this, handler);
@@ -514,8 +506,8 @@ public class WebHttpSession extends WebSession {
 
    private void redirect(String newURL, ChannelHandlerContext ctx) {
       HttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, FOUND);
-      response.headers().set(LOCATION, newURL);
-      response.headers().set(CONNECTION, HttpHeaders.Values.CLOSE);
+      response.headers().set(HttpHeaderNames.LOCATION, newURL);
+      response.headers().set(HttpHeaderNames.CONNECTION, HttpHeaderValues.CLOSE);
       ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
    }
 
@@ -563,8 +555,8 @@ public class WebHttpSession extends WebSession {
          // HACK: for http responses we need to write to the response to the
          // correct ChannelHandlerContext
          if (res != Response.PENDING) {
-            final ResponseHeader header = new ResponseHeader(reqHeader.requestId, res.getContractId(),
-                  res.getStructId(), reqHeader.contextId);
+            final ResponseHeader header = new ResponseHeader(reqHeader.requestId, res.getContractId(), res.getStructId(),
+                  reqHeader.contextId);
             CommsLogger.append(this, true, header, res, reqHeader.structId);
             final Object buffer = makeFrame(header, res, ENVELOPE_RESPONSE);
             if (buffer != null && channel.isActive()) {
