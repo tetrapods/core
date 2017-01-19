@@ -456,9 +456,9 @@ abstract public class Session extends ChannelInboundHandlerAdapter {
    }
 
    public synchronized void setMyEntityId(int entityId) {
-      if (myId != entityId && isConnected()) {
-         logger.debug("{} Setting my Entity {}", this, entityId);
-      }
+      //      if (myId != entityId && isConnected()) {
+      //         logger.debug("{} Setting my Entity {}", this, entityId);
+      //      }
       this.myId = entityId;
    }
 

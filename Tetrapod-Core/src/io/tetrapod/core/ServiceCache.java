@@ -91,6 +91,20 @@ public class ServiceCache implements TetrapodContract.Services.API {
       return null;
    }
 
+   public Entity getRandomAvailableService() {
+      final List<Entity> list = new ArrayList<>(services.values());
+      if (list != null) {
+         final List<Entity> shuffled = new ArrayList<>(list);
+         Collections.shuffle(shuffled);
+         for (Entity e : shuffled) {
+            if (checkAvailable(e)) {
+               return e;
+            }
+         }
+      }
+      return null;
+   }
+
    public Entity getFirstAvailableService(int contractId) {
       final List<Entity> list = getServices(contractId);
       if (list != null) {

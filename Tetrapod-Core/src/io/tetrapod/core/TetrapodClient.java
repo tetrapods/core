@@ -1,19 +1,18 @@
 package io.tetrapod.core;
 
-import io.netty.channel.socket.SocketChannel;
-import io.tetrapod.core.rpc.*;
-import io.tetrapod.core.utils.Util;
-import io.tetrapod.protocol.core.*;
-
-import java.security.cert.CertificateException;
-import java.security.cert.X509Certificate;
+import java.security.cert.*;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.*;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.slf4j.*;
+
+import io.netty.channel.Channel;
+import io.netty.channel.socket.SocketChannel;
+import io.tetrapod.core.rpc.*;
+import io.tetrapod.core.utils.Util;
+import io.tetrapod.protocol.core.*;
 
 /**
  * A base class for implementing a client or bot
@@ -31,11 +30,11 @@ public class TetrapodClient implements SessionFactory, Session.Helper {
 
                                                             @Override
                                                             public void checkClientTrusted(X509Certificate[] chain, String authType)
-                                                                     throws CertificateException {}
+                                                                  throws CertificateException {}
 
                                                             @Override
                                                             public void checkServerTrusted(X509Certificate[] chain, String authType)
-                                                                     throws CertificateException {}
+                                                                  throws CertificateException {}
                                                          };
    public static final Logger        logger              = LoggerFactory.getLogger(TetrapodClient.class);
 
@@ -54,14 +53,18 @@ public class TetrapodClient implements SessionFactory, Session.Helper {
       client = new Client(this);
    }
 
-   public void connect() throws Exception {
+   public Client getClient() {
+      return client;
+   }
+   
+   public Channel connect() throws Exception {
       if (ssl) {
          final SSLContext ctx = SSLContext.getInstance("TLS");
          ctx.init(null, new TrustManager[] { DUMMY_TRUST_MANAGER }, null);
 
          client.enableTLS(ctx);
       }
-      client.connect(address.host, address.port, dispatcher).sync();
+      return client.connect(address.host, address.port, dispatcher).sync().channel(); 
    }
 
    public void addContracts(Contract... contracts) {
@@ -83,7 +86,7 @@ public class TetrapodClient implements SessionFactory, Session.Helper {
     */
    @Override
    public Session makeSession(SocketChannel ch) {
-      final Session ses = new WireSession(ch, this);
+      final Session ses = new WireSession(ch, this); 
       ses.setMyEntityType(Core.TYPE_CLIENT);
       ses.addSessionListener(new Session.Listener() {
          @Override
@@ -118,7 +121,7 @@ public class TetrapodClient implements SessionFactory, Session.Helper {
       return messageHandlers.get(contractId, structId);
    }
 
-   private void register() {
+   protected void register() {
       sendDirectRequest(new RegisterRequest(token, getContractId(), getClientName(), 0, Util.getHostName(), "build")).handle(res -> {
          if (res.isError()) {
             logger.error("Unable to register {}", res.errorCode());
@@ -169,7 +172,7 @@ public class TetrapodClient implements SessionFactory, Session.Helper {
       return "Client";
    }
 
-   private void scheduleReconnect(final int seconds) {
+   protected void scheduleReconnect(final int seconds) {
       dispatcher.dispatch(seconds, TimeUnit.SECONDS, () -> {
          try {
             if (!isConnected()) {
