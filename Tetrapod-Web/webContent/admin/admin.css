@@ -310,8 +310,7 @@ meter {
 }
 
 .prod {
-	background: repeating-linear-gradient(-45deg, yellow, yellow 25%, black 25%, black
-		50%, yellow 50%) top left fixed;
+	background: repeating-linear-gradient(45deg, yellow, yellow 20%, black 30%, black 50%) top fixed;;
 	background-size: 20px 20px;
 	min-height: 20px;
 }
