@@ -1,6 +1,7 @@
 package io.tetrapod.core.tasks;
 
 import io.tetrapod.core.ServiceException;
+import io.tetrapod.core.utils.DiagnosticCommand;
 
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
@@ -137,6 +138,9 @@ public class AsyncLock  {
       }
    }
    private void release(int permits) {
+      if (permits == MAX) {
+         lockingContextId = null;
+      }
       semaphore.release(permits);
    }
 
@@ -163,12 +167,47 @@ public class AsyncLock  {
    private AsyncLock acquire(int permits, int timeout, TimeUnit timeoutUnits) {
       try {
          if (!semaphore.tryAcquire(permits, timeout, timeoutUnits)) {
-            throw new TimeoutException("Unable to acquire lock in time.  Possible deadlock.  Lock: " + name);
+            synchronized (this) {
+               if (System.currentTimeMillis() > lastDump + 5000) {
+                  lastDump = System.currentTimeMillis();
+                  DiagnosticCommand.consoleDump();
+               }
+            }
+
+            if (TaskContext.hasCurrent()) {
+               String myContextId = TaskContext.get("contextId");
+               if (myContextId != null && myContextId.equals(lockingContextId)) {
+                  throw new TimeoutException("Attempt at re-entrant async lock acquire.  Could allow if we decided we wanted to. Lock: " + name + " contextId " + myContextId);
+               }
+            }
+
+            throw new TimeoutException("Unable to acquire lock in time.  Likely a long running lock holder.  Lock: " + name);
+         }
+         if (permits == MAX && TaskContext.hasCurrent()) {
+            lockingContextId = TaskContext.get("contextId"); //slight leak in encapsulation.  This requires contextId set earlier in framework and is passed across process boundaries
          }
          return this;
       } catch (Throwable e) {
          throw ServiceException.wrapIfChecked(e);
       }
+   }
+
+   private String lockingContextId;
+   private volatile long lastDump = 0;
+
+   public static void main(String[] args) {
+
+      TaskContext.wrapPushPop(() -> {
+         TaskContext.set("contextId", "1234");
+         AsyncLock lock = new AsyncLock("hey");
+         Task.runAsync(()-> {
+            lock.lockAsync(()-> {
+                       return lock.lockAsync(Task::done);
+                    }
+            ).join();
+         }).join();
+      }).run();
+
    }
 
 }
