@@ -12,6 +12,7 @@ import java.nio.charset.Charset;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
+import io.netty.handler.codec.http.cors.*;
 import io.tetrapod.core.tasks.TaskContext;
 import org.slf4j.*;
 
@@ -63,6 +64,7 @@ public class WebHttpSession extends WebSession {
 
       ch.pipeline().addLast("codec-http", new HttpServerCodec());
       ch.pipeline().addLast("aggregator", new HttpObjectAggregator(65536));
+      ch.pipeline().addLast("cors", new CorsHandler(CorsConfigBuilder.forAnyOrigin().allowedRequestHeaders("Content-Type").build()));
       ch.pipeline().addLast("api", this);
       ch.pipeline().addLast("deflater", new HttpContentCompressor(6));
       ch.pipeline().addLast("maintenance", new MaintenanceHandler(roots.get("tetrapod")));

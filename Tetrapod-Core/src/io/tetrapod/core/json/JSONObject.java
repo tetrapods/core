@@ -894,6 +894,38 @@ public class JSONObject {
     }
 
     /**
+     * Get an optional Integer value associated with a key, or null if there is no
+     * such key or if the value is not a number. If the value is a string, an
+     * attempt will be made to evaluate it as a number.
+     *
+     * @param key
+     *            A key string.
+     * @return An object which is the value.
+     */
+    public Integer optInteger(String key) {
+        return this.optInteger(key, null);
+    }
+
+    /**
+     * Get an optional Integer value associated with a key, or the default if there
+     * is no such key or if the value is not a number. If the value is a string,
+     * an attempt will be made to evaluate it as a number.
+     *
+     * @param key
+     *            A key string.
+     * @param defaultValue
+     *            The default.
+     * @return An object which is the value.
+     */
+    public Integer optInteger(String key, Integer defaultValue) {
+        try {
+            return this.getInt(key);
+        } catch (Exception e) {
+            return defaultValue;
+        }
+    }
+
+    /**
      * Get an optional JSONArray associated with a key. It returns null if there
      * is no such key, or if its value is not a JSONArray.
      *
