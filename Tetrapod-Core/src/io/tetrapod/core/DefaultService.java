@@ -25,8 +25,8 @@ import io.tetrapod.core.tasks.*;
 import io.tetrapod.core.utils.*;
 import io.tetrapod.protocol.core.*;
 
-public class DefaultService
-      implements Service, Fail.FailHandler, CoreContract.API, SessionFactory, EntityMessage.Handler, TetrapodContract.Cluster.API {
+public class DefaultService implements Service, Fail.FailHandler, CoreContract.API, SessionFactory, EntityMessage.Handler,
+      TetrapodContract.Cluster.API, RequestSender {
 
    private static final Logger             logger          = LoggerFactory.getLogger(DefaultService.class);
 
@@ -59,7 +59,7 @@ public class DefaultService
    private final Publisher                 publisher       = new Publisher(this);
    private long                            dependencyCheckLogThreshold;
    private Launcher                        launcher;
-   private final Task<Void>                readyTask = new Task<>();
+   private final Task<Void>                readyTask       = new Task<>();
 
    public DefaultService() {
       this(null);
@@ -177,6 +177,7 @@ public class DefaultService
    public Task<Void> readyToServe() {
       return readyTask;
    }
+
    private void onServiceRegistered() {
       registerServiceInformation(this.contract);
       for (SubService subService : subServices) {
@@ -737,7 +738,7 @@ public class DefaultService
       }
       return clusterClient.getSession().sendRequest(req, Core.UNADDRESSED, (byte) 30).asTask();
    }
-   
+
    public <TResp extends Response> Task<TResp> sendRequestTask(Request req, int toEntityId) {
       if (serviceConnector != null) {
          return serviceConnector.sendRequest(req, toEntityId).asTask();
@@ -901,7 +902,8 @@ public class DefaultService
    public void addMessageHandler(Message k, SubscriptionAPI handler) {
       messageHandlers.add(k, handler);
    }
-   public <T extends Message> void  addMessageHandlerTyped(T type, SubscriptionAPITyped<T> handler) {
+
+   public <T extends Message> void addMessageHandlerTyped(T type, SubscriptionAPITyped<T> handler) {
       messageHandlers.add(type, (message, ctx) -> {
          handler.genericMessage(Util.cast(message), ctx);
       });
@@ -1042,7 +1044,8 @@ public class DefaultService
 
    protected String getStartLoggingMessage() {
       return "*** Start Service ***" + "\n   *** Service name: " + Util.getProperty("APPNAME") + "\n   *** Options: "
-            + (launcher!=null?launcher.getAllOpts():"") + "\n   *** VM Args: " + ManagementFactory.getRuntimeMXBean().getInputArguments().toString();
+            + (launcher != null ? launcher.getAllOpts() : "") + "\n   *** VM Args: "
+            + ManagementFactory.getRuntimeMXBean().getInputArguments().toString();
    }
 
    @Override
