@@ -40,7 +40,7 @@ abstract class WebSession extends Session {
       }
       request.read(new WebJSONDataSource(params, request.tagWebNames()));
 
-      CommsLogger.append(this, false, header, request); 
+      CommsLogger.append(this, false, header, request);
       return request;
    }
 
@@ -105,6 +105,7 @@ abstract class WebSession extends Session {
             jo.put("_contractId", messH.contractId);
             jo.put("_structId", messH.structId);
             jo.put("_topicId", messH.topicId);
+            jo.put("_contextId", String.format("%016x", messH.contextId));
             break;
       }
       return jo;
