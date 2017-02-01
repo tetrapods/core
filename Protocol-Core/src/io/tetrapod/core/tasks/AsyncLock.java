@@ -171,6 +171,7 @@ public class AsyncLock  {
                if (System.currentTimeMillis() > lastDump + 5000) {
                   lastDump = System.currentTimeMillis();
                   DiagnosticCommand.consoleDump();
+                  DiagnosticCommand.loggerDump();
                }
             }
 
