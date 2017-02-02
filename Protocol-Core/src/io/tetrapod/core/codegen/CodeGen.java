@@ -61,7 +61,7 @@ public class CodeGen {
          services.add("apiv1");
          services.add("stats");
          services.add("stress");
-         services.add("interactives");
+         services.add("interactive");
       }
       if (langs.isEmpty()) {
          System.out.println("using defaults for languages");
