@@ -1,7 +1,5 @@
 package io.tetrapod.web;
 
-import static io.netty.handler.codec.http.HttpHeaders.*;
-import static io.netty.handler.codec.http.HttpHeaders.Names.*;
 import static io.netty.handler.codec.http.HttpResponseStatus.*;
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 import static io.tetrapod.protocol.core.Core.*;
@@ -12,7 +10,6 @@ import java.nio.charset.Charset;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
-import io.tetrapod.core.tasks.TaskContext;
 import org.slf4j.*;
 
 import com.codahale.metrics.Timer;
@@ -22,6 +19,7 @@ import io.netty.buffer.*;
 import io.netty.channel.*;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.http.*;
+import io.netty.handler.codec.http.cors.*;
 import io.netty.handler.codec.http.websocketx.*;
 import io.netty.util.*;
 import io.tetrapod.core.*;
@@ -30,6 +28,7 @@ import io.tetrapod.core.logging.CommsLogger;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.core.rpc.Error;
 import io.tetrapod.core.serialize.datasources.ByteBufDataSource;
+import io.tetrapod.core.tasks.TaskContext;
 import io.tetrapod.core.utils.Util;
 import io.tetrapod.protocol.core.*;
 
@@ -63,6 +62,7 @@ public class WebHttpSession extends WebSession {
 
       ch.pipeline().addLast("codec-http", new HttpServerCodec());
       ch.pipeline().addLast("aggregator", new HttpObjectAggregator(65536));
+      ch.pipeline().addLast("cors", new CorsHandler(CorsConfigBuilder.forAnyOrigin().allowedRequestHeaders("Content-Type").build()));
       ch.pipeline().addLast("api", this);
       ch.pipeline().addLast("deflater", new HttpContentCompressor(6));
       ch.pipeline().addLast("maintenance", new MaintenanceHandler(roots.get("tetrapod")));
