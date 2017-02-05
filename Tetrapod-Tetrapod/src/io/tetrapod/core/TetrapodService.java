@@ -404,7 +404,7 @@ public class TetrapodService extends DefaultService
       cluster.service();
       final long now = System.currentTimeMillis();
       if (now - lastStatsLog > Util.ONE_MINUTE) {
-         registry.logStats(false);
+         //registry.logStats(false);
          lastStatsLog = System.currentTimeMillis();
 
       }

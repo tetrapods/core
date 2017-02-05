@@ -112,11 +112,13 @@ public class AsyncLock  {
    public <T> Task<T> readLockAsync(Func0<Task<T>> function) {
       return lockAsync(1, function);
    }
-   public <T> Task<T> lockAsync(boolean readLock, Func0<Task<T>> function) {
-      if (readLock) {
+   public <T> Task<T> lockAsync(LockMode lockMode, Func0<Task<T>> function) {
+      if (lockMode == LockMode.READ) {
          return readLockAsync(function);
-      } else {
+      } else if (lockMode == LockMode.WRITE){
          return lockAsync(function);
+      } else {
+         return function.apply();
       }
    }
 
@@ -171,6 +173,7 @@ public class AsyncLock  {
                if (System.currentTimeMillis() > lastDump + 5000) {
                   lastDump = System.currentTimeMillis();
                   DiagnosticCommand.consoleDump();
+                  DiagnosticCommand.loggerDump();
                }
             }
 
@@ -190,6 +193,12 @@ public class AsyncLock  {
       } catch (Throwable e) {
          throw ServiceException.wrapIfChecked(e);
       }
+   }
+
+   public enum LockMode {
+      NONE,
+      READ,
+      WRITE
    }
 
    private String lockingContextId;
