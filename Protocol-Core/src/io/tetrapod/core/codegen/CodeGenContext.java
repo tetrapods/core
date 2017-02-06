@@ -135,6 +135,7 @@ class CodeGenContext {
    public boolean                inGlobalScope      = true;
    public Map<String, ClassLike> enums              = new TreeMap<>();
    public Map<String, ClassLike> flags              = new TreeMap<>();
+   public List<String> altParents;
 
    private Map<String, Set<Class>> classesByType = new HashMap<>();
 

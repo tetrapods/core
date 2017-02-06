@@ -12,13 +12,19 @@ import java.util.*;
 public class CodeGen {
 
    public static void main(String[] args) {
-      System.out.println("args: [-root DIR] [-protocol STRING] [-language STRING]");
+      mainImpl(args, new CodeGen());
+   }
+
+   public static void mainImpl(String[] args, CodeGen cg) {
+      System.out.println("args: [-root DIR] [-protocol STRING] [-language STRING] [-altParent STRING]");
       System.out.println("       roots to look in, protocols (eg: chat) to compile, into what languages. there can be many root, protocol, lang arguments");
       System.out.println("       defaults assume you have core and private git repos as sibling folders, and wish to compile everything");
 
       List<String> roots = new ArrayList<>();
       List<String> services = new ArrayList<>();
       List<String> langs = new ArrayList<>();
+      List<String> altParents = new ArrayList<>();
+
       for (int i = 0; i < args.length - 1; i += 2) {
          switch (args[i]) {
             case "-root":
@@ -30,44 +36,25 @@ public class CodeGen {
             case "-language":
                langs.add(args[i+1]);
                break;
+            case "-altParent":
+               altParents.add(args[i+1]);
+               break;
          }
       }
+
       if (roots.isEmpty()) {
-         // ../../core/;../../private/services/ Protocol-Core;Protocol-Identity;Protocol-Chat;Protocol-Email;Protocol-Tetrapod java javascript
-         System.out.println("using defaults for roots");
-         roots.add("../../core");
-         roots.add("../../private/services");
+         roots = cg.getDefaultRoots();
       }
       if (services.isEmpty()) {
-         System.out.println("using defaults for protocols"); 
-         services.add("web");
-         services.add("org");
-         services.add("core");
-         services.add("identity");
-         services.add("chat");
-         services.add("email");
-         services.add("tetrapod");
-         services.add("storage");
-         services.add("raft");
-         services.add("search");
-         services.add("twitter");
-         services.add("kpi");
-         services.add("phone");
-         services.add("queue");
-         services.add("queue2");
-         services.add("notification");
-         services.add("contacts");
-         services.add("crm");
-         services.add("apiv1");
-         services.add("stats");
-         services.add("stress");
-         services.add("interactive");
+         services = cg.getDefaultServices();
       }
       if (langs.isEmpty()) {
-         System.out.println("using defaults for languages");
-         langs.add("java");
-         langs.add("javascript");
+         langs = cg.getDefaultLangs();
       }
+      if (altParents.isEmpty()) {
+         altParents = cg.getAltParents();
+      }
+
       for (String service : services) {
          String folder = null;
          for (String root : roots) {
@@ -80,21 +67,39 @@ public class CodeGen {
          }
          if (folder == null)
             continue;
-         CodeGen cg = new CodeGen();
          for (String lang : langs) {
-            cg.run(folder, lang);
+            cg.run(folder, lang, altParents);
          }
       }
    }
-   
+
+   public List<String> getDefaultLangs() {
+      System.out.println("using defaults for languages");
+      return Arrays.asList("java","javascript");
+   }
+
+   public List<String> getAltParents() {
+      return Collections.emptyList();
+   }
+
+   public List<String> getDefaultServices() {
+      System.out.println("using defaults for protocols");
+      return Arrays.asList("web","core","tetrapod");
+   }
+
+   public List<String> getDefaultRoots() {
+      System.out.println("using defaults for roots");
+      return Collections.singletonList("../../core");
+   }
+
    protected static class TokenizedLine {
       ArrayList<String> parts = new ArrayList<>();
       String comment;
       Annotations annotations = new Annotations();
-      
+
       public boolean isEmpty() { return parts.isEmpty(); }
       public String key() { return parts.get(0); }
-      
+
       public void clear() {
          parts.clear();
          comment = null;
@@ -109,22 +114,22 @@ public class CodeGen {
    private TokenizedLine                  tokenizedLine = new TokenizedLine();
    private StringBuilder                  commentInProgress;
    private File                           currentFile;
-   
+
    private List<CodeGenContext>           contexts = new ArrayList<>();
 
-   public void run(String filename, String language) {
+   public void run(String filename, String language, List<String> altParents) {
       try {
          ArrayList<File> files = new ArrayList<>();
          files.add(new File(filename));
          int ix = 0;
          init(language);
-         
+
          while (ix < files.size()) {
             File file = files.get(ix);
             if (file.isDirectory()) {
                files.addAll(Arrays.asList(file.listFiles()));
             } else {
-               runFile(file, language);
+               runFile(file, language, altParents);
             }
             ix++;
          }
@@ -133,12 +138,13 @@ public class CodeGen {
          e.printStackTrace();
       }
    }
-   
-   private void runFile(File f, String language) {
+
+   private void runFile(File f, String language, List<String> altParents) {
       System.out.println("Generating " + f.getName() + " for " + language);
       try (BufferedReader br = new BufferedReader(new FileReader(f))) {
          currentFile = f;
          context = new CodeGenContext();
+         context.altParents = altParents;
          currentLine = null;
          currentLineNumber = 0;
          commentInProgress = new StringBuilder();

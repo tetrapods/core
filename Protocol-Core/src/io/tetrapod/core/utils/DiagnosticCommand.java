@@ -41,7 +41,10 @@ public interface DiagnosticCommand {
        System.out.println("Thread Dump at " + new Date(System.currentTimeMillis()));
        System.out.println(local.threadPrint());
     }
-
+   static void loggerDump() {
+      logger.info("Thread Dump at " + new Date(System.currentTimeMillis()));
+      logger.info(local.threadPrint());
+   }
     static void dump() {
         String print = local.threadPrint();
         Path path = Paths.get(LocalDateTime.now() + ".dump.txt");
