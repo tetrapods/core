@@ -22,13 +22,14 @@ class JavascriptGenerator implements LanguageGenerator {
             break;
          case "altOut":
             String jsOut = context.serviceAnnotations.getFirst("javascript.out");
-            String altParent = System.getProperty("altOut", null);
-            if (altParent != null && jsOut != null) {
-               File srcDir = new File(jsOut).toPath().normalize().toFile().getParentFile();
-               File destDir = new File(altParent);
-               for (String s : val.split(",")) {
-                  context.serviceAnnotations.add("javascript.altOut", new File(srcDir, s).getPath());
-                  context.serviceAnnotations.add("javascript.altOut", new File(destDir, s).getPath());
+            if (context.altParents != null && !context.altParents.isEmpty() && jsOut != null) {
+               for (String altParent : context.altParents) {
+                  File srcDir = new File(jsOut).toPath().normalize().toFile().getParentFile();
+                  File destDir = new File(altParent);
+                  for (String s : val.split(",")) {
+                     context.serviceAnnotations.add("javascript.altOut", new File(srcDir, s).getPath());
+                     context.serviceAnnotations.add("javascript.altOut", new File(destDir, s).getPath());
+                  }
                }
             }
          break;
