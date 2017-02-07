@@ -44,6 +44,22 @@ class CodeGenContext {
          }
          return structId;
       }
+
+      public String getRoutedQualifier() {
+         String routedQualifier = fields.stream().map(f->f.annotations.getFirst("routed")).filter(s->s!=null).findFirst().orElse(null);
+         if (routedQualifier != null) {
+            if (routedQualifier.equals("")) {
+               return "Routed";
+            } else {
+               return routedQualifier.substring(0,1).toUpperCase() + routedQualifier.substring(1);
+            }
+         }
+         return null;
+      }
+
+      public Field getRoutedField() {
+         return fields.stream().filter(f->f.annotations.has("routed")).findFirst().orElse(null);
+      }
    }
    
    public static class ClassLike  {

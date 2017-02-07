@@ -102,8 +102,19 @@ class JavaGenerator implements LanguageGenerator {
       for (String sub : context.subscriptions)
          t.add("subscriptions", genSubscriptions(context, sub, theClass));
 
+      Map<String, Template> handlerAPIs = new HashMap<>();
       for (Class c : context.classesByType("request")) {
-         t.add("handlers", ", " + c.classname() + ".Handler", "\n");
+         String routedQualifier = c.getRoutedQualifier();
+         if (routedQualifier == null) {
+            t.add("handlers", ", " + c.classname() + ".Handler", "\n");
+         } else {
+
+            String fRoutedQualifier = routedQualifier;
+            String apiName = routedQualifier + "API";
+            Template handlerAPI = handlerAPIs.computeIfAbsent(apiName, (key)->template("routed.api").add("qualifier", fRoutedQualifier));
+            handlerAPI.add("handlers", ", " + c.classname() + ".Handler", "\n" );
+         }
+
          t.add("handlers2", ", " + c.classname() + ".Handler2", "\n");
          String path = c.annotations.getFirst("web");
          if (path != null) {
@@ -124,6 +135,10 @@ class JavaGenerator implements LanguageGenerator {
       for (Class c : context.classes) {
          t.add(c.type + "Adds", template("contract.adds.call").add("class", c.classname()));
       }
+      handlerAPIs.forEach((api, handler)-> {
+         t.add("routedHandlers", handler);
+         t.add("routedAPIs", ", " + api);
+      });
 
       t.add("classcomment", generateComment(context.serviceComment));
       addErrors(context.allErrors, true, context.serviceName, t);
@@ -496,8 +511,12 @@ class JavaGenerator implements LanguageGenerator {
       return "\"" + s + "\"";
    }
 
-   private Template template(String name) throws IOException {
-      return Template.get(getClass(), "/templates/javatemplates/" + name + ".template");
+   private Template template(String name) {
+      try {
+         return Template.get(getClass(), "/templates/javatemplates/" + name + ".template");
+      } catch (IOException e) {
+         throw new RuntimeException(e);
+      }
    }
 
    private void generateFlags(ClassLike c) throws IOException, ParseException {

@@ -15,7 +15,11 @@ public class RaftContract extends Contract {
    public static final int CONTRACT_ID = 16;
    public static final int SUB_CONTRACT_ID = 1;
 
-   public static interface API extends APIHandler
+   public static interface API extends BaseAPI
+      
+      {}
+
+   public static interface BaseAPI extends APIHandler
       , AppendEntriesRequest.Handler
       , InstallSnapshotRequest.Handler
       , IssueCommandRequest.Handler

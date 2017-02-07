@@ -4,7 +4,6 @@ import static io.tetrapod.protocol.core.CoreContract.*;
 
 import java.io.*;
 import java.lang.management.ManagementFactory;
-import java.lang.reflect.Method;
 import java.net.ConnectException;
 import java.security.SecureRandom;
 import java.util.*;
@@ -603,14 +602,15 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
    @Override
    public Async dispatchRequest(final RequestHeader header, final Request req, final Session fromSession) {
       final Async async = new Async(req, header, fromSession);
-      final ServiceAPI svc = getServiceHandler(header.contractId, req.getStructId());
-      if (svc != null) {
+      final ServiceAPI svc2 = getServiceHandler(header.contractId, req.getStructId());
+      if (svc2 != null) {
          final long start = System.nanoTime();
          final Context context = dispatcher.requestTimes.time();
          if (!dispatcher.dispatch(() -> {
+
             final long dispatchTime = System.nanoTime();
             ContextIdGenerator.setContextId(header.contextId);
-
+            Task<ServiceAPI> svcTask = resolveService(svc2, req);
             Runnable onResult = () -> {
                final long elapsed = System.nanoTime() - dispatchTime;
                stats.recordRequest(header.fromParentId, req, elapsed, async.getErrorCode());
@@ -650,27 +650,29 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
                            }
                         }
                      });
-               Response res = req.securityCheck(ctx);
-               if (res == null && req instanceof TaskDispatcher) {
-                  Task<? extends Response> task = ((TaskDispatcher) req).dispatchTask(svc, ctx);
-                  task.thenAccept(async::setResponse).exceptionally(ex -> Task.handleException(ctx, ex));
-               } else {
-                  if (res == null) {
-                     res = req.dispatch(svc, ctx);
-                  }
-                  if (res != null) {
-                     if (res != Response.PENDING) {
-                        if (fromSession == null) {
-                           CommsLogger.append(null, false,
-                                 new ResponseHeader(header.requestId, res.getContractId(), res.getStructId(), header.contextId), res,
-                                 header.structId);
-                        }
-                        async.setResponse(res);
-                     }
+               svcTask.thenAccept(svc -> {
+                  Response res = req.securityCheck(ctx);
+                  if (res == null && req instanceof TaskDispatcher) {
+                     Task<? extends Response> task = ((TaskDispatcher) req).dispatchTask(svc, ctx);
+                     task.thenAccept(async::setResponse).exceptionally(ex -> Task.handleException(ctx, ex));
                   } else {
-                     async.setResponse(new Error(ERROR_UNKNOWN));
+                     if (res == null) {
+                        res = req.dispatch(svc, ctx);
+                     }
+                     if (res != null) {
+                        if (res != Response.PENDING) {
+                           if (fromSession == null) {
+                              CommsLogger.append(null, false,
+                                      new ResponseHeader(header.requestId, res.getContractId(), res.getStructId(), header.contextId), res,
+                                      header.structId);
+                           }
+                           async.setResponse(res);
+                        }
+                     } else {
+                        async.setResponse(new Error(ERROR_UNKNOWN));
+                     }
                   }
-               }
+               }).exceptionally(ex -> Task.handleException(ctx, ex));
             } catch (Throwable e) {
                ErrorResponseException ere = Util.getThrowableInChain(e, ErrorResponseException.class);
                if (ere != null && ere.errorCode != ERROR_UNKNOWN) {
@@ -695,6 +697,23 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
       }
 
       return async;
+   }
+
+   private <T extends ServiceAPI> Task<T> resolveService(T svc, Request req) {
+      if (req instanceof RoutedValueProvider) {
+         return getServiceAPI((RoutedValueProvider) req);
+      } else {
+         return Task.from(svc);
+      }
+   }
+
+   protected <T extends ServiceAPI> Task<T> getServiceAPI(RoutedValueProvider provider) {
+      throw new IllegalStateException("getRouter should be overriden if there is a routed message");
+   }
+
+   @Override
+   public Response requestGetHost(GetHostRequest r, RequestContext ctx) {
+      return Response.SUCCESS;
    }
 
    public Void handleException(Throwable throwable, Async async) {

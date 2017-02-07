@@ -54,6 +54,7 @@ class JavascriptGenerator implements LanguageGenerator {
          String outName = file.getName();
          int ix = outName.indexOf('.');
          outName = outName.substring(0, 1).toUpperCase() + outName.substring(1, ix);
+         outName = outName.replaceAll("-", "_");
          t.add("name", outName);
          for (CodeGenContext context : contexts) {
             String out = context.serviceAnnotations.getFirst("javascript.out");
@@ -63,6 +64,7 @@ class JavascriptGenerator implements LanguageGenerator {
             String contractName = context.serviceName;
             t.add("contractName", contractName);
             String contractId = context.serviceAnnotations.getFirst("id");
+            t.add("contractId", contractId);
             String subContractId = context.serviceAnnotations.getFirst("subId");
             if (subContractId == null) {
                subContractId = "1";
@@ -75,6 +77,12 @@ class JavascriptGenerator implements LanguageGenerator {
                sub.add("contractId", contractId);
                sub.add("subContractId", subContractId);
                sub.add("structId", c.getStructId());
+               String routedQualifier = c.getRoutedQualifier();
+               if (routedQualifier != null) {
+                  sub.add("routerParams", "\""+ c.getRoutedField().name + "\", \"" + routedQualifier +"\"");
+               } else {
+                  sub.add("routerParams", "null, null");
+               }
                t.add("register", sub);
                TreeMap<String, String> fields = new TreeMap<>();
                for (Field f : c.fields) {

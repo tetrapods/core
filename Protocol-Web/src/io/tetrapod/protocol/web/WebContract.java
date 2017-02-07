@@ -15,7 +15,11 @@ public class WebContract extends Contract {
    public static final int CONTRACT_ID = 22;
    public static final int SUB_CONTRACT_ID = 1;
 
-   public static interface API extends APIHandler
+   public static interface API extends BaseAPI
+      
+      {}
+
+   public static interface BaseAPI extends APIHandler
       , ClientSessionsRequest.Handler
       , CloseClientConnectionRequest.Handler
       , GetClientInfoRequest.Handler

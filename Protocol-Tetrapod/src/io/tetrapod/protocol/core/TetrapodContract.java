@@ -39,7 +39,11 @@ public class TetrapodContract extends Contract {
     */
    public static final int PARENT_ID_MASK = 0x7FF00000; 
    
-   public static interface API extends APIHandler
+   public static interface API extends BaseAPI
+      
+      {}
+
+   public static interface BaseAPI extends APIHandler
       , AddServiceInformationRequest.Handler
       , AdminAuthorizeRequest.Handler
       , AdminChangePasswordRequest.Handler

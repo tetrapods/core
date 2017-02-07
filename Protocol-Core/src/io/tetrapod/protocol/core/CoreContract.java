@@ -19,10 +19,15 @@ public class CoreContract extends Contract {
    public static final int CONTRACT_ID = 1;
    public static final int SUB_CONTRACT_ID = 1;
 
-   public static interface API extends APIHandler
+   public static interface API extends BaseAPI
+      
+      {}
+
+   public static interface BaseAPI extends APIHandler
       , DebugRequest.Handler
       , DirectConnectionRequest.Handler
       , DummyRequest.Handler
+      , GetHostRequest.Handler
       , HostInfoRequest.Handler
       , HostStatsRequest.Handler
       , InternalShutdownRequest.Handler
@@ -49,6 +54,7 @@ public class CoreContract extends Contract {
       , DebugRequest.Handler2
       , DirectConnectionRequest.Handler2
       , DummyRequest.Handler2
+      , GetHostRequest.Handler2
       , HostInfoRequest.Handler2
       , HostStatsRequest.Handler2
       , InternalShutdownRequest.Handler2
@@ -99,6 +105,7 @@ public class CoreContract extends Contract {
                   new DebugRequest(),
                   new WebAPIRequest(),
                   new DirectConnectionRequest(),
+                  new GetHostRequest(),
                   new ValidateConnectionRequest(),
                   new DummyRequest(),
                };
@@ -122,6 +129,7 @@ public class CoreContract extends Contract {
                   new HostStatsResponse(),
                   new ServiceErrorLogsResponse(),
                   new WebAPIResponse(),
+                  new GetHostResponse(),
                   new DirectConnectionResponse(),
                   new ValidateConnectionResponse(),
                };

@@ -10,6 +10,8 @@ function TP_{{name}}(server) {
    {{declarations}}
 
    self.{{contractName}} = {};
+   self.{{contractName}}.CONTRACT_ID = {{contractId}};
+   self.{{contractName}}.NAME = "{{contractName}}";
    {{constants}}
    
    self.{{contractName}}.error = {};
