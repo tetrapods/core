@@ -5,6 +5,9 @@ package {{package}};
 import io.*;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.protocol.core.Admin;
+import io.tetrapod.core.RequestClass;
+import io.tetrapod.core.RoutedValueProvider;
+import io.tetrapod.core.tasks.Task;
 {{taskImport}}import io.tetrapod.core.serialize.*;
 import io.tetrapod.protocol.core.TypeDescriptor;
 import io.tetrapod.protocol.core.StructDescription;
@@ -14,7 +17,7 @@ import java.util.concurrent.*;
 
 {{classcomment}}
 @SuppressWarnings("all")
-public class {{class}} extends {{requestGenerics}} {
+public class {{class}} extends {{requestGenerics}} {{routedInterface}} {
 
    {{constants}}
    
@@ -37,6 +40,9 @@ public class {{class}} extends {{requestGenerics}} {
    public final void defaults() {
       {{field-defaults}}
    }
+
+   {{routedAccessor}}
+   {{routedQualifier}}
    
    @Override
    public final void write(DataSource data) throws IOException {
@@ -82,6 +88,12 @@ public class {{class}} extends {{requestGenerics}} {
    public static interface Handler extends ServiceAPI {
       {{responseClassType}} request{{rawname}}({{class}} r, RequestContext ctx);
    }
+
+   public static interface Handler2 {
+      @RequestClass({{class}}.class)
+      Task<{{responseClass}}> {{rawnamePascal}}({{inline-declarations2}});
+   }
+
    
    public final String[] tagWebNames() {
       // Note do not use this tags in long term serializations (to disk or databases) as 

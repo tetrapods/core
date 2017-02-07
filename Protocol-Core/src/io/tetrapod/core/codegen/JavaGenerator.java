@@ -104,6 +104,7 @@ class JavaGenerator implements LanguageGenerator {
 
       for (Class c : context.classesByType("request")) {
          t.add("handlers", ", " + c.classname() + ".Handler", "\n");
+         t.add("handlers2", ", " + c.classname() + ".Handler2", "\n");
          String path = c.annotations.getFirst("web");
          if (path != null) {
             if (path.isEmpty())
@@ -157,6 +158,7 @@ class JavaGenerator implements LanguageGenerator {
       boolean sync = protocolSync || c.annotations.has("sync");
       Template t = template(c.type.toLowerCase());
       t.add("rawname", c.name);
+      t.add("rawnamePascal", c.name.substring(0,1).toLowerCase() + c.name.substring(1));
       t.add("class", c.classname());
       t.add("package", packageName);
       t.add("security", c.security.toUpperCase());
@@ -185,18 +187,36 @@ class JavaGenerator implements LanguageGenerator {
       addConstantValues(c.fields, t);
       addErrors(c.errors, false, serviceName, t);
       if (c.type.equals("request")) {
+         Field routedField = c.fields.stream()
+                 .filter(f->f.annotations.has("routed"))
+                 .findFirst().orElse(null);
          Class resp = getResponse(c, context);
          String typePrefix = sync?"":"Task";
          if (resp != null) {
             t.add("requestGenerics", typePrefix+"RequestWithResponse<" + resp.classname() + ">");
             t.add("responseClassType", sync?"Response":"Task<"+resp.classname()+">");
+            t.add("responseClass", resp.classname());
          } else {
             t.add("requestGenerics", typePrefix+"Request");
             t.add("responseClassType", sync?"Response":"Task<Response>");
+            t.add("responseClass", "Response");
          }
          t.add("genericResponseClassType", sync?"Response":"Task<? extends Response>");
+         t.add("routedInterface", routedField!=null?"implements RoutedValueProvider":"");
+         t.add("routedAccessor", routedField!=null?getRoutedAccessor(routedField):"");
+         t.add("routedQualifier", routedField!=null?getRoutedQualifier(routedField):"");
       }
       t.expandAndTrim(getFilename(c.classname()));
+   }
+
+   private String getRoutedQualifier(Field routedField) {
+      String qualifier = routedField.annotations.getFirst("routed");
+      qualifier = qualifier!=null?qualifier:"";
+      return "public String getRoutedQualifier() {return \""+qualifier.trim()+"\";}";
+   }
+
+   private String getRoutedAccessor(Field routedField) {
+      return "public int getRoutedValue() {return "+routedField.name+";}";
    }
 
    private void addErrors(Collection<Err> errors, boolean globalScope, String serviceName, Template global) throws IOException,
@@ -215,6 +235,7 @@ class JavaGenerator implements LanguageGenerator {
 
    private void addFieldValues(List<Field> fields, Template global) throws ParseException, IOException {
       int instanceFields = 0;
+      long totalInstanceFields = fields.stream().filter(f->!f.isConstant()).count();
       for (Field f : fields) {
          if (f.isConstant())
             continue;
@@ -233,6 +254,7 @@ class JavaGenerator implements LanguageGenerator {
          global.add("field-reads", lines[2]);
          global.add("field-writes", lines[3]);
          global.add("inline-declarations", lines[4], ", ");
+         global.add("inline-declarations2", lines[4], instanceFields==totalInstanceFields?"":", ");
          global.add("inline-initializers", lines[5]);
          global.add("description-fields", template("struct.description").add(sub));
          global.add("struct-equals", makeStructEquals(f, sub));
@@ -408,6 +430,7 @@ class JavaGenerator implements LanguageGenerator {
       t.add("descType", descType + descArray);
       t.add("descContractId", descContractId);
       t.add("descStructId", descStructId);
+      t.add("routed", (f.annotations.has("routed"))?"@Routed ":"");
       return t;
    }
 

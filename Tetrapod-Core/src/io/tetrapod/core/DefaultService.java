@@ -4,6 +4,7 @@ import static io.tetrapod.protocol.core.CoreContract.*;
 
 import java.io.*;
 import java.lang.management.ManagementFactory;
+import java.lang.reflect.Method;
 import java.net.ConnectException;
 import java.security.SecureRandom;
 import java.util.*;
@@ -27,7 +28,7 @@ import io.tetrapod.protocol.core.*;
 
 public class DefaultService implements Service, Fail.FailHandler, CoreContract.API, SessionFactory, EntityMessage.Handler,
       TetrapodContract.Cluster.API, RequestSender {
-
+   private final RequestRouter             router          = new DoNothingRouter();
    private static final Logger             logger          = LoggerFactory.getLogger(DefaultService.class);
 
    protected final Set<Integer>            dependencies    = new HashSet<>();
@@ -122,6 +123,10 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
 
       checkHealth();
 
+   }
+
+   public RequestRouter getRouter() {
+      return router;
    }
 
    /**
@@ -452,7 +457,7 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
       }
    }
 
-   protected void addPeerContracts(Contract... contracts) {
+   public void addPeerContracts(Contract... contracts) {
       for (Contract c : contracts) {
          c.registerPeerStructs();
       }
@@ -711,6 +716,10 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
    }
 
    public Response sendPendingRequest(Request req, PendingResponseHandler handler) {
+      if (req instanceof RoutedValueProvider) {
+         return getRouter().sendPending(req, ((RoutedValueProvider)req).getRoutedValue(), handler);
+      }
+
       if (serviceConnector != null) {
          return serviceConnector.sendPendingRequest(req, Core.UNADDRESSED, handler);
       }
@@ -733,6 +742,10 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
    }
 
    public <TResp extends Response> Task<TResp> sendRequestTask(Request req) {
+      if (req instanceof RoutedValueProvider) {
+         return getRouter().sendTask(req, ((RoutedValueProvider)req).getRoutedValue());
+      }
+
       if (serviceConnector != null) {
          return serviceConnector.sendRequest(req, Core.UNADDRESSED).asTask();
       }
@@ -746,15 +759,12 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
       return clusterClient.getSession().sendRequest(req, toEntityId, (byte) 30).asTask();
    }
 
-   public <TResp extends Response, TValue> Task<ResponseAndValue<TResp, TValue>> sendRequestTask(RequestWithResponse<TResp> req,
-         TValue value) {
-      if (serviceConnector != null) {
-         return serviceConnector.sendRequest(req, Core.UNADDRESSED).asTask(value);
-      }
-      return clusterClient.getSession().sendRequest(req, Core.UNADDRESSED, (byte) 30).asTask(value);
-   }
 
    public <TResp extends Response> Task<TResp> sendRequestTask(RequestWithResponse<TResp> req) {
+      if (req instanceof RoutedValueProvider) {
+         return getRouter().sendTask(req, ((RoutedValueProvider)req).getRoutedValue());
+      }
+
       if (serviceConnector != null) {
          return serviceConnector.sendRequest(req, Core.UNADDRESSED).asTask();
       }
@@ -762,6 +772,9 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
    }
 
    public Async sendRequest(Request req) {
+      if (req instanceof RoutedValueProvider) {
+         return getRouter().send(req, ((RoutedValueProvider)req).getRoutedValue());
+      }
       if (serviceConnector != null) {
          return serviceConnector.sendRequest(req, Core.UNADDRESSED);
       }
@@ -769,6 +782,7 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
    }
 
    public Async sendRequest(Request req, int toEntityId) {
+
       if (serviceConnector != null) {
          return serviceConnector.sendRequest(req, toEntityId);
       }

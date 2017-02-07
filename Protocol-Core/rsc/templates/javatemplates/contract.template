@@ -21,6 +21,11 @@ public class {{class}} extends Contract {
    public static interface API extends APIHandler
       {{handlers}}
       {}
+
+   public static interface API2 extends APIHandler2
+      {{handlers2}}
+      {}
+
    
    private volatile Structure[] requests = null;
 
