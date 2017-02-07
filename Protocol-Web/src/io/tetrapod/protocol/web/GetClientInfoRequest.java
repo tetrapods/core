@@ -5,6 +5,9 @@ package io.tetrapod.protocol.web;
 import io.*;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.protocol.core.Admin;
+import io.tetrapod.core.RequestClass;
+import io.tetrapod.core.RoutedValueProvider;
+import io.tetrapod.core.tasks.Task;
 import io.tetrapod.core.serialize.*;
 import io.tetrapod.protocol.core.TypeDescriptor;
 import io.tetrapod.protocol.core.StructDescription;
@@ -13,7 +16,7 @@ import java.util.*;
 import java.util.concurrent.*;
 
 @SuppressWarnings("all")
-public class GetClientInfoRequest extends RequestWithResponse<GetClientInfoResponse> {
+public class GetClientInfoRequest extends RequestWithResponse<GetClientInfoResponse>  {
 
    public static final int STRUCT_ID = 3498983;
    public static final int CONTRACT_ID = WebContract.CONTRACT_ID;
@@ -36,7 +39,7 @@ public class GetClientInfoRequest extends RequestWithResponse<GetClientInfoRespo
    public final void defaults() {
       clientId = 0;
    }
-   
+
    @Override
    public final void write(DataSource data) throws IOException {
       data.write(1, this.clientId);
@@ -81,7 +84,12 @@ public class GetClientInfoRequest extends RequestWithResponse<GetClientInfoRespo
    public static interface Handler extends ServiceAPI {
       Response requestGetClientInfo(GetClientInfoRequest r, RequestContext ctx);
    }
-   
+
+   public static interface Handler2 {
+      @RequestClass(GetClientInfoRequest.class)
+      Task<GetClientInfoResponse> getClientInfo(int clientId);
+   }
+
    public final String[] tagWebNames() {
       // Note do not use this tags in long term serializations (to disk or databases) as 
       // implementors are free to rename them however they wish.  A null means the field

@@ -20,7 +20,13 @@ public class StorageContract extends Contract {
       , StorageGetRequest.Handler
       , StorageSetRequest.Handler
       {}
-   
+
+   public static interface API2 extends APIHandler2
+      , StorageDeleteRequest.Handler2
+      , StorageGetRequest.Handler2
+      , StorageSetRequest.Handler2
+      {}
+
    private volatile Structure[] requests = null;
 
    public Structure[] getRequests() {

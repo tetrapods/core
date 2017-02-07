@@ -5,6 +5,9 @@ package io.tetrapod.protocol.core;
 import io.*;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.protocol.core.Admin;
+import io.tetrapod.core.RequestClass;
+import io.tetrapod.core.RoutedValueProvider;
+import io.tetrapod.core.tasks.Task;
 import io.tetrapod.core.serialize.*;
 import io.tetrapod.protocol.core.TypeDescriptor;
 import io.tetrapod.protocol.core.StructDescription;
@@ -13,7 +16,7 @@ import java.util.*;
 import java.util.concurrent.*;
 
 @SuppressWarnings("all")
-public class UnlockRequest extends Request {
+public class UnlockRequest extends Request  {
 
    public static final int STRUCT_ID = 426316;
    public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;
@@ -39,7 +42,7 @@ public class UnlockRequest extends Request {
       key = null;
       uuid = null;
    }
-   
+
    @Override
    public final void write(DataSource data) throws IOException {
       data.write(1, this.key);
@@ -86,7 +89,12 @@ public class UnlockRequest extends Request {
    public static interface Handler extends ServiceAPI {
       Response requestUnlock(UnlockRequest r, RequestContext ctx);
    }
-   
+
+   public static interface Handler2 {
+      @RequestClass(UnlockRequest.class)
+      Task<Response> unlock(String key, String uuid);
+   }
+
    public final String[] tagWebNames() {
       // Note do not use this tags in long term serializations (to disk or databases) as 
       // implementors are free to rename them however they wish.  A null means the field

@@ -5,6 +5,9 @@ package io.tetrapod.protocol.web;
 import io.*;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.protocol.core.Admin;
+import io.tetrapod.core.RequestClass;
+import io.tetrapod.core.RoutedValueProvider;
+import io.tetrapod.core.tasks.Task;
 import io.tetrapod.core.serialize.*;
 import io.tetrapod.protocol.core.TypeDescriptor;
 import io.tetrapod.protocol.core.StructDescription;
@@ -13,7 +16,7 @@ import java.util.*;
 import java.util.concurrent.*;
 
 @SuppressWarnings("all")
-public class RegisterRequest extends RequestWithResponse<RegisterResponse> {
+public class RegisterRequest extends RequestWithResponse<RegisterResponse>  {
 
    public static final int STRUCT_ID = 10895179;
    public static final int CONTRACT_ID = WebContract.CONTRACT_ID;
@@ -45,7 +48,7 @@ public class RegisterRequest extends RequestWithResponse<RegisterResponse> {
       host = null;
       referrer = null;
    }
-   
+
    @Override
    public final void write(DataSource data) throws IOException {
       data.write(1, this.name);
@@ -96,7 +99,12 @@ public class RegisterRequest extends RequestWithResponse<RegisterResponse> {
    public static interface Handler extends ServiceAPI {
       Response requestRegister(RegisterRequest r, RequestContext ctx);
    }
-   
+
+   public static interface Handler2 {
+      @RequestClass(RegisterRequest.class)
+      Task<RegisterResponse> register(String name, String build, String host, String referrer);
+   }
+
    public final String[] tagWebNames() {
       // Note do not use this tags in long term serializations (to disk or databases) as 
       // implementors are free to rename them however they wish.  A null means the field

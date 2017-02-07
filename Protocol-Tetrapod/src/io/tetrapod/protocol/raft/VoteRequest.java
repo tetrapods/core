@@ -5,6 +5,9 @@ package io.tetrapod.protocol.raft;
 import io.*;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.protocol.core.Admin;
+import io.tetrapod.core.RequestClass;
+import io.tetrapod.core.RoutedValueProvider;
+import io.tetrapod.core.tasks.Task;
 import io.tetrapod.core.serialize.*;
 import io.tetrapod.protocol.core.TypeDescriptor;
 import io.tetrapod.protocol.core.StructDescription;
@@ -13,7 +16,7 @@ import java.util.*;
 import java.util.concurrent.*;
 
 @SuppressWarnings("all")
-public class VoteRequest extends RequestWithResponse<VoteResponse> {
+public class VoteRequest extends RequestWithResponse<VoteResponse>  {
 
    public static final int STRUCT_ID = 9348108;
    public static final int CONTRACT_ID = RaftContract.CONTRACT_ID;
@@ -48,7 +51,7 @@ public class VoteRequest extends RequestWithResponse<VoteResponse> {
       lastLogIndex = 0;
       lastLogTerm = 0;
    }
-   
+
    @Override
    public final void write(DataSource data) throws IOException {
       data.write(1, this.clusterName);
@@ -101,7 +104,12 @@ public class VoteRequest extends RequestWithResponse<VoteResponse> {
    public static interface Handler extends ServiceAPI {
       Response requestVote(VoteRequest r, RequestContext ctx);
    }
-   
+
+   public static interface Handler2 {
+      @RequestClass(VoteRequest.class)
+      Task<VoteResponse> vote(String clusterName, long term, int candidateId, long lastLogIndex, long lastLogTerm);
+   }
+
    public final String[] tagWebNames() {
       // Note do not use this tags in long term serializations (to disk or databases) as 
       // implementors are free to rename them however they wish.  A null means the field

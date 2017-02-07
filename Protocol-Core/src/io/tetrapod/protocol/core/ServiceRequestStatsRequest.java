@@ -5,6 +5,9 @@ package io.tetrapod.protocol.core;
 import io.*;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.protocol.core.Admin;
+import io.tetrapod.core.RequestClass;
+import io.tetrapod.core.RoutedValueProvider;
+import io.tetrapod.core.tasks.Task;
 import io.tetrapod.core.serialize.*;
 import io.tetrapod.protocol.core.TypeDescriptor;
 import io.tetrapod.protocol.core.StructDescription;
@@ -13,7 +16,7 @@ import java.util.*;
 import java.util.concurrent.*;
 
 @SuppressWarnings("all")
-public class ServiceRequestStatsRequest extends RequestWithResponse<ServiceRequestStatsResponse> {
+public class ServiceRequestStatsRequest extends RequestWithResponse<ServiceRequestStatsResponse>  {
 
    public static final int STRUCT_ID = 16134423;
    public static final int CONTRACT_ID = CoreContract.CONTRACT_ID;
@@ -55,7 +58,7 @@ public class ServiceRequestStatsRequest extends RequestWithResponse<ServiceReque
       minTime = 0;
       sortBy = null;
    }
-   
+
    @Override
    public final void write(DataSource data) throws IOException {
       data.write(1, this.accountId);
@@ -110,7 +113,12 @@ public class ServiceRequestStatsRequest extends RequestWithResponse<ServiceReque
    public static interface Handler extends ServiceAPI {
       Response requestServiceRequestStats(ServiceRequestStatsRequest r, RequestContext ctx);
    }
-   
+
+   public static interface Handler2 {
+      @RequestClass(ServiceRequestStatsRequest.class)
+      Task<ServiceRequestStatsResponse> serviceRequestStats(int accountId, String authToken, String domain, int limit, long minTime, RequestStatsSort sortBy);
+   }
+
    public final String[] tagWebNames() {
       // Note do not use this tags in long term serializations (to disk or databases) as 
       // implementors are free to rename them however they wish.  A null means the field

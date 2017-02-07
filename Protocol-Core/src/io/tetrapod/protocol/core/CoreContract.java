@@ -44,7 +44,33 @@ public class CoreContract extends Contract {
       , ValidateConnectionRequest.Handler
       , WebAPIRequest.Handler
       {}
-   
+
+   public static interface API2 extends APIHandler2
+      , DebugRequest.Handler2
+      , DirectConnectionRequest.Handler2
+      , DummyRequest.Handler2
+      , HostInfoRequest.Handler2
+      , HostStatsRequest.Handler2
+      , InternalShutdownRequest.Handler2
+      , PauseRequest.Handler2
+      , PurgeRequest.Handler2
+      , RebalanceRequest.Handler2
+      , ReleaseExcessRequest.Handler2
+      , ResetServiceErrorLogsRequest.Handler2
+      , RestartRequest.Handler2
+      , ServiceDetailsRequest.Handler2
+      , ServiceErrorLogsRequest.Handler2
+      , ServiceLogsRequest.Handler2
+      , ServiceRequestStatsRequest.Handler2
+      , ServiceStatsSubscribeRequest.Handler2
+      , ServiceStatsUnsubscribeRequest.Handler2
+      , SetCommsLogLevelRequest.Handler2
+      , ShutdownRequest.Handler2
+      , UnpauseRequest.Handler2
+      , ValidateConnectionRequest.Handler2
+      , WebAPIRequest.Handler2
+      {}
+
    private volatile Structure[] requests = null;
 
    public Structure[] getRequests() {

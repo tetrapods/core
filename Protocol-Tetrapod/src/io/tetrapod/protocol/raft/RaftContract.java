@@ -21,7 +21,14 @@ public class RaftContract extends Contract {
       , IssueCommandRequest.Handler
       , VoteRequest.Handler
       {}
-   
+
+   public static interface API2 extends APIHandler2
+      , AppendEntriesRequest.Handler2
+      , InstallSnapshotRequest.Handler2
+      , IssueCommandRequest.Handler2
+      , VoteRequest.Handler2
+      {}
+
    private volatile Structure[] requests = null;
 
    public Structure[] getRequests() {

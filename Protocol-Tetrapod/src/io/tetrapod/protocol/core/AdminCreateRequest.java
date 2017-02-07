@@ -5,6 +5,9 @@ package io.tetrapod.protocol.core;
 import io.*;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.protocol.core.Admin;
+import io.tetrapod.core.RequestClass;
+import io.tetrapod.core.RoutedValueProvider;
+import io.tetrapod.core.tasks.Task;
 import io.tetrapod.core.serialize.*;
 import io.tetrapod.protocol.core.TypeDescriptor;
 import io.tetrapod.protocol.core.StructDescription;
@@ -13,7 +16,7 @@ import java.util.*;
 import java.util.concurrent.*;
 
 @SuppressWarnings("all")
-public class AdminCreateRequest extends Request {
+public class AdminCreateRequest extends Request  {
 
    public static final int STRUCT_ID = 14596683;
    public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;
@@ -48,7 +51,7 @@ public class AdminCreateRequest extends Request {
       password = null;
       rights = 0;
    }
-   
+
    @Override
    public final void write(DataSource data) throws IOException {
       data.write(1, this.accountId);
@@ -101,7 +104,12 @@ public class AdminCreateRequest extends Request {
    public static interface Handler extends ServiceAPI {
       Response requestAdminCreate(AdminCreateRequest r, RequestContext ctx);
    }
-   
+
+   public static interface Handler2 {
+      @RequestClass(AdminCreateRequest.class)
+      Task<Response> adminCreate(int accountId, String authToken, String email, String password, long rights);
+   }
+
    public final String[] tagWebNames() {
       // Note do not use this tags in long term serializations (to disk or databases) as 
       // implementors are free to rename them however they wish.  A null means the field

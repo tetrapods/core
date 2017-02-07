@@ -23,7 +23,16 @@ public class WebContract extends Contract {
       , RegisterRequest.Handler
       , SetAlternateIdRequest.Handler
       {}
-   
+
+   public static interface API2 extends APIHandler2
+      , ClientSessionsRequest.Handler2
+      , CloseClientConnectionRequest.Handler2
+      , GetClientInfoRequest.Handler2
+      , KeepAliveRequest.Handler2
+      , RegisterRequest.Handler2
+      , SetAlternateIdRequest.Handler2
+      {}
+
    private volatile Structure[] requests = null;
 
    public Structure[] getRequests() {
