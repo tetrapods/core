@@ -147,7 +147,11 @@ public class Launcher {
 
    private static Class<?> tryName(String name) throws ClassNotFoundException {
       //      System.out.println("trying " + name);
-      return Class.forName(name);
+      Class<?> c = Class.forName(name);
+      if (!Service.class.isAssignableFrom(c)) {
+         throw new ClassNotFoundException();
+      }
+      return c;
    }
 
    private static void usage() {
