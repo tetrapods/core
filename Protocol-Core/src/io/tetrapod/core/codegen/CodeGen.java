@@ -79,7 +79,8 @@ public class CodeGen {
    }
 
    public List<String> getAltParents() {
-      return Collections.emptyList();
+      System.out.println("using defaults for alt parents");
+      return Collections.singletonList("../../core/Tetrapod-Admin/src/protocol/");
    }
 
    public List<String> getDefaultServices() {
