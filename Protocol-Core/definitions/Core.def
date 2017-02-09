@@ -311,11 +311,11 @@ internal request DirectConnection
    1: string token @sensitive
    2: int entityId
 
-internal request GetHost
+public request GetHost
    1: int entityId
    2: string qualifier
 
-internal response GetHost
+public response GetHost
    1: int hostId
 
 internal response DirectConnection

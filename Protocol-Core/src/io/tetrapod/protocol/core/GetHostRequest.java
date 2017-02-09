@@ -35,7 +35,7 @@ public class GetHostRequest extends RequestWithResponse<GetHostResponse>  {
    public String qualifier;
 
    public final Structure.Security getSecurity() {
-      return Security.INTERNAL;
+      return Security.PUBLIC;
    }
 
    public final void defaults() {

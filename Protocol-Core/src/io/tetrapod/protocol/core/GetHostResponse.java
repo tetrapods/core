@@ -29,7 +29,7 @@ public class GetHostResponse extends Response {
    public int hostId;
 
    public final Structure.Security getSecurity() {
-      return Security.INTERNAL;
+      return Security.PUBLIC;
    }
 
    public final void defaults() {

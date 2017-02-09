@@ -49,6 +49,14 @@ public class StructureFactory {
       Structure c = knownStructs.get(key);
       if (c != null) {
          return c.make();
+      } else {
+         //couldn't find in our contract.  Maybe core contract?
+         key = makeKey(CoreContract.CONTRACT_ID, structId);
+         c = knownStructs.get(key);
+         if (c != null) {
+            return c.make();
+         }
+
       }
       return null;
    }
