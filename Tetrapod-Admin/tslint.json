@@ -1,0 +1,18 @@
+{
+  "rules": {
+    "member-access": false,
+    "no-var-requires": true,
+    "no-conditional-assignment": true,
+    "no-eval": true,
+    "no-unused-expression": true,
+    "class-name": true,
+    "new-parens": true,
+    "switch-default": true,
+    "typedef": [
+      true,
+      "parameter",
+      "member-variable-declaration",
+      "property-declaration"
+    ]
+  }
+}
