@@ -1206,4 +1206,9 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
        */
       Task<T> doTask() throws Throwable;
    }
+
+   @Override
+   public Entity getRandomAvailableService(int contractId) {
+      return services.getRandomAvailableService(contractId);
+   }
 }
