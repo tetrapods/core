@@ -49,6 +49,8 @@ function TP_Server() {
    self.connected = false;
    self.polling = false;
    self.getRequestContract = getRequestContract;
+   self.getRequestContractId = getRequestContractId;
+   self.getRequestInfo = getRequestInfo;
 
    for (var i = 0; i < arguments.length; i++) {
       var p = new arguments[i](self);
@@ -58,11 +60,13 @@ function TP_Server() {
 
    return self;
 
-   function register(type, contractName, structName, contractId, structId) {
+   function register(type, contractName, structName, contractId, structId, routedField, routedQualifier) {
       var map = protocol[type];
       var val = {
          contractId : contractId,
-         structId : structId
+         structId : structId,
+         routedField: routedField,
+         routedQualifier: routedQualifier
       };
       map[contractName + "." + structName] = val;
       if (map[structName]) {
@@ -195,6 +199,16 @@ function TP_Server() {
    }
 
    function getRequestContract(request) {
+      var val = getRequestInfo(request);
+      if (!val) {
+         return;
+      }
+      var name = nameOf(val.contractId, val.structId);
+      var ix = name.indexOf('.');
+      return name.substring(0, ix);
+   }
+
+   function getRequestInfo(request) {
       var val = protocol.request[request];
       if (!val) {
          console.log("unknown request: " + request);
@@ -204,9 +218,15 @@ function TP_Server() {
          console.log("ambiguous request: " + request);
          return;
       }
-      var name = nameOf(val.contractId, val.structId);
-      var ix = name.indexOf('.');
-      return name.substring(0, ix);
+      return val;
+   }
+
+   function getRequestContractId(request) {
+      var val = getRequestInfo(request);
+      if (!val) {
+         return;
+      }
+      return val.contractId;
    }
 
    // dispatch a request
