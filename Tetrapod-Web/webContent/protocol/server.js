@@ -51,6 +51,7 @@ function TP_Server() {
    self.getRequestContract = getRequestContract;
    self.getRequestContractId = getRequestContractId;
    self.getRequestInfo = getRequestInfo;
+   self.isRouted = isRouted;
 
    for (var i = 0; i < arguments.length; i++) {
       var p = new arguments[i](self);
@@ -196,6 +197,16 @@ function TP_Server() {
          return;
       }
       return sendRequest(val.contractId, val.structId, args, toId, requestHandler);
+   }
+
+   function isRouted(request) {
+      var val = getRequestInfo(request);
+      if (!val) {
+         console.error("Unknown request when checking routing: " + request);
+         return false;
+      }
+
+      return val.routedField != null;
    }
 
    function getRequestContract(request) {
