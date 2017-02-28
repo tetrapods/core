@@ -194,7 +194,7 @@ public class WebHttpSession extends WebSession {
             }
          }
 
-         WebSocketServerHandshakerFactory wsFactory = new WebSocketServerHandshakerFactory(wsLocation, null, false);
+         WebSocketServerHandshakerFactory wsFactory = new WebSocketServerHandshakerFactory(wsLocation, null, false, Util.getProperty("web.maxFramePayloadLength",131072));
          synchronized (this) {
             handshaker = wsFactory.newHandshaker(req);
          }
