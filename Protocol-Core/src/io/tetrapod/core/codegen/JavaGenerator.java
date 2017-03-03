@@ -104,14 +104,12 @@ class JavaGenerator implements LanguageGenerator {
 
       Map<String, Template> handlerAPIs = new HashMap<>();
       for (Class c : context.classesByType("request")) {
-         String routedQualifier = c.getRoutedQualifier();
+         String routedQualifier = c.getRoutedQualifierClassName();
          if (routedQualifier == null) {
             t.add("handlers", ", " + c.classname() + ".Handler", "\n");
          } else {
-
-            String fRoutedQualifier = routedQualifier;
             String apiName = routedQualifier + "API";
-            Template handlerAPI = handlerAPIs.computeIfAbsent(apiName, (key)->template("routed.api").add("qualifier", fRoutedQualifier));
+            Template handlerAPI = handlerAPIs.computeIfAbsent(apiName, (key)->template("routed.api").add("qualifier", routedQualifier));
             handlerAPI.add("handlers", ", " + c.classname() + ".Handler", "\n" );
          }
 
