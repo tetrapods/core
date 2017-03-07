@@ -1032,4 +1032,12 @@ public class Util {
       return filenames;
    }
 
+   public static long packLong(int a, int b) {
+      return (((long)a) << 32) | (b & 0xffffffffL);
+   }
+
+   public static int unpackLong(long a, boolean upper) {
+      return upper ? (int)(a >> 32) : (int)a;
+   }
+
 }

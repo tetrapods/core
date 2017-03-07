@@ -852,6 +852,10 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
       return publisher.publish();
    }
 
+   public Topic publishTopic(TopicFactory factory) {
+      return publisher.publish(factory);
+   }
+
    /**
     * Subscribe an entity to the given topic. If once is true, tetrapod won't subscribe them a second time
     */
