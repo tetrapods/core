@@ -11,7 +11,7 @@ define(function() {
       if (exdays != null) {
          var d = new Date();
          d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000));
-         c_value += ";expires=" + exdate.toUTCString()+";secure";
+         c_value += ";expires=" + d.toUTCString()+";secure";
       }
       document.cookie = c_name + "=" + c_value;
    }
