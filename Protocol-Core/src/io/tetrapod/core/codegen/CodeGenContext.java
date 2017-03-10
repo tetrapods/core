@@ -45,7 +45,7 @@ class CodeGenContext {
          return structId;
       }
 
-      public String getRoutedQualifier() {
+      public String getRoutedQualifierClassName() {
          String routedQualifier = fields.stream().map(f->f.annotations.getFirst("routed")).filter(s->s!=null).findFirst().orElse(null);
          if (routedQualifier != null) {
             if (routedQualifier.equals("")) {
@@ -55,6 +55,10 @@ class CodeGenContext {
             }
          }
          return null;
+      }
+
+      public String getRoutedQualifier() {
+         return fields.stream().map(f->f.annotations.getFirst("routed")).filter(s->s!=null).findFirst().orElse(null);
       }
 
       public Field getRoutedField() {
