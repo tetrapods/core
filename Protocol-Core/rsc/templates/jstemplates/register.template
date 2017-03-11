@@ -1,1 +1,1 @@
-server.register("{{type}}", "{{contractClass}}", "{{class}}", {{contractId}}, {{structId}});
+server.register("{{type}}", "{{contractClass}}", "{{class}}", {{contractId}}, {{structId}}, {{routerParams}});

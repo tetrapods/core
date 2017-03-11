@@ -1,5 +1,7 @@
 package io.tetrapod.core.rpc;
 
+import io.tetrapod.protocol.core.Entity;
+
 public interface RequestSender {
 
    Async sendRequest(Request request, int hostId);
@@ -12,4 +14,5 @@ public interface RequestSender {
 
    boolean isServiceExistant(int hostId);
 
+   Entity getRandomAvailableService(int contractId);
 }

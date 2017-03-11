@@ -27,7 +27,7 @@ import io.tetrapod.protocol.core.*;
 
 public class DefaultService implements Service, Fail.FailHandler, CoreContract.API, SessionFactory, EntityMessage.Handler,
       TetrapodContract.Cluster.API, RequestSender {
-
+   private final RequestRouter             router          = new DoNothingRouter();
    private static final Logger             logger          = LoggerFactory.getLogger(DefaultService.class);
 
    protected final Set<Integer>            dependencies    = new HashSet<>();
@@ -122,6 +122,10 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
 
       checkHealth();
 
+   }
+
+   public RequestRouter getRouter() {
+      return router;
    }
 
    /**
@@ -452,7 +456,7 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
       }
    }
 
-   protected void addPeerContracts(Contract... contracts) {
+   public void addPeerContracts(Contract... contracts) {
       for (Contract c : contracts) {
          c.registerPeerStructs();
       }
@@ -598,14 +602,15 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
    @Override
    public Async dispatchRequest(final RequestHeader header, final Request req, final Session fromSession) {
       final Async async = new Async(req, header, fromSession);
-      final ServiceAPI svc = getServiceHandler(header.contractId, req.getStructId());
-      if (svc != null) {
+      final ServiceAPI svc2 = getServiceHandler(header.contractId, req.getStructId());
+      if (svc2 != null) {
          final long start = System.nanoTime();
          final Context context = dispatcher.requestTimes.time();
          if (!dispatcher.dispatch(() -> {
+
             final long dispatchTime = System.nanoTime();
             ContextIdGenerator.setContextId(header.contextId);
-
+            Task<ServiceAPI> svcTask = resolveService(svc2, req);
             Runnable onResult = () -> {
                final long elapsed = System.nanoTime() - dispatchTime;
                stats.recordRequest(header.fromParentId, req, elapsed, async.getErrorCode());
@@ -645,27 +650,29 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
                            }
                         }
                      });
-               Response res = req.securityCheck(ctx);
-               if (res == null && req instanceof TaskDispatcher) {
-                  Task<? extends Response> task = ((TaskDispatcher) req).dispatchTask(svc, ctx);
-                  task.thenAccept(async::setResponse).exceptionally(ex -> Task.handleException(ctx, ex));
-               } else {
-                  if (res == null) {
-                     res = req.dispatch(svc, ctx);
-                  }
-                  if (res != null) {
-                     if (res != Response.PENDING) {
-                        if (fromSession == null) {
-                           CommsLogger.append(null, false,
-                                 new ResponseHeader(header.requestId, res.getContractId(), res.getStructId(), header.contextId), res,
-                                 header.structId);
-                        }
-                        async.setResponse(res);
-                     }
+               svcTask.thenAccept(svc -> {
+                  Response res = req.securityCheck(ctx);
+                  if (res == null && req instanceof TaskDispatcher) {
+                     Task<? extends Response> task = ((TaskDispatcher) req).dispatchTask(svc, ctx);
+                     task.thenAccept(async::setResponse).exceptionally(ex -> Task.handleException(ctx, ex));
                   } else {
-                     async.setResponse(new Error(ERROR_UNKNOWN));
+                     if (res == null) {
+                        res = req.dispatch(svc, ctx);
+                     }
+                     if (res != null) {
+                        if (res != Response.PENDING) {
+                           if (fromSession == null) {
+                              CommsLogger.append(null, false,
+                                      new ResponseHeader(header.requestId, res.getContractId(), res.getStructId(), header.contextId), res,
+                                      header.structId);
+                           }
+                           async.setResponse(res);
+                        }
+                     } else {
+                        async.setResponse(new Error(ERROR_UNKNOWN));
+                     }
                   }
-               }
+               }).exceptionally(ex -> Task.handleException(ctx, ex));
             } catch (Throwable e) {
                ErrorResponseException ere = Util.getThrowableInChain(e, ErrorResponseException.class);
                if (ere != null && ere.errorCode != ERROR_UNKNOWN) {
@@ -692,6 +699,23 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
       return async;
    }
 
+   private <T extends ServiceAPI> Task<T> resolveService(T svc, Request req) {
+      if (req instanceof RoutedValueProvider) {
+         return getServiceAPI((RoutedValueProvider) req);
+      } else {
+         return Task.from(svc);
+      }
+   }
+
+   protected <T extends ServiceAPI> Task<T> getServiceAPI(RoutedValueProvider provider) {
+      throw new IllegalStateException("getRouter should be overriden if there is a routed message");
+   }
+
+   @Override
+   public Response requestGetHost(GetHostRequest r, RequestContext ctx) {
+      return Response.SUCCESS;
+   }
+
    public Void handleException(Throwable throwable, Async async) {
       ErrorResponseException ere = Util.getThrowableInChain(throwable, ErrorResponseException.class);
       if (ere != null && ere.errorCode != ERROR_UNKNOWN) {
@@ -711,6 +735,10 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
    }
 
    public Response sendPendingRequest(Request req, PendingResponseHandler handler) {
+      if (req instanceof RoutedValueProvider) {
+         return getRouter().sendPending(req, ((RoutedValueProvider)req).getRoutedValue(), handler);
+      }
+
       if (serviceConnector != null) {
          return serviceConnector.sendPendingRequest(req, Core.UNADDRESSED, handler);
       }
@@ -733,6 +761,10 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
    }
 
    public <TResp extends Response> Task<TResp> sendRequestTask(Request req) {
+      if (req instanceof RoutedValueProvider) {
+         return getRouter().sendTask(req, ((RoutedValueProvider)req).getRoutedValue());
+      }
+
       if (serviceConnector != null) {
          return serviceConnector.sendRequest(req, Core.UNADDRESSED).asTask();
       }
@@ -746,15 +778,12 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
       return clusterClient.getSession().sendRequest(req, toEntityId, (byte) 30).asTask();
    }
 
-   public <TResp extends Response, TValue> Task<ResponseAndValue<TResp, TValue>> sendRequestTask(RequestWithResponse<TResp> req,
-         TValue value) {
-      if (serviceConnector != null) {
-         return serviceConnector.sendRequest(req, Core.UNADDRESSED).asTask(value);
-      }
-      return clusterClient.getSession().sendRequest(req, Core.UNADDRESSED, (byte) 30).asTask(value);
-   }
 
    public <TResp extends Response> Task<TResp> sendRequestTask(RequestWithResponse<TResp> req) {
+      if (req instanceof RoutedValueProvider) {
+         return getRouter().sendTask(req, ((RoutedValueProvider)req).getRoutedValue());
+      }
+
       if (serviceConnector != null) {
          return serviceConnector.sendRequest(req, Core.UNADDRESSED).asTask();
       }
@@ -762,6 +791,9 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
    }
 
    public Async sendRequest(Request req) {
+      if (req instanceof RoutedValueProvider) {
+         return getRouter().send(req, ((RoutedValueProvider)req).getRoutedValue());
+      }
       if (serviceConnector != null) {
          return serviceConnector.sendRequest(req, Core.UNADDRESSED);
       }
@@ -769,6 +801,7 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
    }
 
    public Async sendRequest(Request req, int toEntityId) {
+
       if (serviceConnector != null) {
          return serviceConnector.sendRequest(req, toEntityId);
       }
@@ -781,6 +814,10 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
 
    public boolean isServiceExistant(int entityId) {
       return services.isServiceExistant(entityId);
+   }
+
+   public void sendMessage(Message msg, long combinedId) {
+      sendMessage(msg, Util.unpackLong(combinedId, true), Util.unpackLong(combinedId, false));
    }
 
    public void sendMessage(Message msg, int toEntityId, int childId) {
@@ -817,6 +854,10 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
 
    public Topic publishTopic() {
       return publisher.publish();
+   }
+
+   public Topic publishTopic(TopicFactory factory) {
+      return publisher.publish(factory);
    }
 
    /**
@@ -1172,5 +1213,10 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
        * @return The Task that contains the response of the service method
        */
       Task<T> doTask() throws Throwable;
+   }
+
+   @Override
+   public Entity getRandomAvailableService(int contractId) {
+      return services.getRandomAvailableService(contractId);
    }
 }

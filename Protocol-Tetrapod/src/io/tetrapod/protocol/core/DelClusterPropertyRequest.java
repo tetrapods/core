@@ -5,6 +5,9 @@ package io.tetrapod.protocol.core;
 import io.*;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.protocol.core.Admin;
+import io.tetrapod.core.RequestClass;
+import io.tetrapod.core.RoutedValueProvider;
+import io.tetrapod.core.tasks.Task;
 import io.tetrapod.core.serialize.*;
 import io.tetrapod.protocol.core.TypeDescriptor;
 import io.tetrapod.protocol.core.StructDescription;
@@ -13,7 +16,7 @@ import java.util.*;
 import java.util.concurrent.*;
 
 @SuppressWarnings("all")
-public class DelClusterPropertyRequest extends Request {
+public class DelClusterPropertyRequest extends Request  {
 
    public static final int STRUCT_ID = 15970020;
    public static final int CONTRACT_ID = TetrapodContract.CONTRACT_ID;
@@ -42,7 +45,7 @@ public class DelClusterPropertyRequest extends Request {
       authToken = null;
       key = null;
    }
-   
+
    @Override
    public final void write(DataSource data) throws IOException {
       data.write(1, this.accountId);
@@ -91,7 +94,12 @@ public class DelClusterPropertyRequest extends Request {
    public static interface Handler extends ServiceAPI {
       Response requestDelClusterProperty(DelClusterPropertyRequest r, RequestContext ctx);
    }
-   
+
+   public static interface Handler2 {
+      @RequestClass(DelClusterPropertyRequest.class)
+      Task<Response> delClusterProperty(int accountId, String authToken, String key);
+   }
+
    public final String[] tagWebNames() {
       // Note do not use this tags in long term serializations (to disk or databases) as 
       // implementors are free to rename them however they wish.  A null means the field

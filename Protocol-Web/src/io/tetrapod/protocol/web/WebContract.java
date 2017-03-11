@@ -15,7 +15,11 @@ public class WebContract extends Contract {
    public static final int CONTRACT_ID = 22;
    public static final int SUB_CONTRACT_ID = 1;
 
-   public static interface API extends APIHandler
+   public static interface API extends BaseAPI
+      
+      {}
+
+   public static interface BaseAPI extends APIHandler
       , ClientSessionsRequest.Handler
       , CloseClientConnectionRequest.Handler
       , GetClientInfoRequest.Handler
@@ -23,7 +27,16 @@ public class WebContract extends Contract {
       , RegisterRequest.Handler
       , SetAlternateIdRequest.Handler
       {}
-   
+
+   public static interface API2 extends APIHandler2
+      , ClientSessionsRequest.Handler2
+      , CloseClientConnectionRequest.Handler2
+      , GetClientInfoRequest.Handler2
+      , KeepAliveRequest.Handler2
+      , RegisterRequest.Handler2
+      , SetAlternateIdRequest.Handler2
+      {}
+
    private volatile Structure[] requests = null;
 
    public Structure[] getRequests() {

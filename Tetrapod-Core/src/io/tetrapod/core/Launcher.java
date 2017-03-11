@@ -3,8 +3,10 @@ package io.tetrapod.core;
 import java.io.*;
 import java.lang.reflect.Method;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.stream.Collectors;
 
 import io.tetrapod.core.tasks.Task;
 import io.tetrapod.core.utils.Properties;
@@ -99,6 +101,7 @@ public class Launcher {
          return tryName(serviceClass);
       } catch (ClassNotFoundException e) {}
 
+      List<String> parts = Util.splitPascalCase(serviceClass);
       // capitalize first letter
       serviceClass = serviceClass.substring(0, 1).toUpperCase() + serviceClass.substring(1);
 
@@ -133,12 +136,22 @@ public class Launcher {
          return tryName("io.tetrapod." + serviceClass.toLowerCase() + "." + serviceClass.toUpperCase() + "Service");
       } catch (ClassNotFoundException | NoClassDefFoundError e) {}
 
+      String pkg = parts.stream().map(String::toLowerCase).collect(Collectors.joining("."));
+      try {
+         return tryName("io.tetrapod." + pkg + "." + serviceClass + "Service");
+      } catch (ClassNotFoundException | NoClassDefFoundError e) {}
+
+
       return null;
    }
 
    private static Class<?> tryName(String name) throws ClassNotFoundException {
       //      System.out.println("trying " + name);
-      return Class.forName(name);
+      Class<?> c = Class.forName(name);
+      if (!Service.class.isAssignableFrom(c)) {
+         throw new ClassNotFoundException();
+      }
+      return c;
    }
 
    private static void usage() {

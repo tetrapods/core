@@ -26,6 +26,7 @@ import io.tetrapod.core.rpc.Response;
 import io.tetrapod.core.tasks.Func0;
 import io.tetrapod.core.tasks.ThrowableFunction;
 import io.tetrapod.core.tasks.ThrowableFunction0;
+import io.tetrapod.core.tasks.ThrowableRunnable;
 import io.tetrapod.protocol.core.CoreContract;
 
 /**
@@ -937,10 +938,32 @@ public class Util {
       }
    }
 
+   public static void wrap(ThrowableRunnable runnable) {
+      try {
+         runnable.run();
+      } catch (Throwable throwable) {
+         throw ServiceException.wrapIfChecked(throwable);
+      }
+   }
+
    public static <T> List<T> asList(T ... items) {
       List<T> list = new ArrayList<>(items.length);
       Collections.addAll(list, items);
       return list;
+   }
+
+   public static List<String> splitPascalCase(String string) {
+      List<String> parts = new ArrayList<>();
+      int lastStart = 0;
+      for (int i = 0; i < string.length(); i++) {
+         String ch = string.substring(i, i+1);
+         if (ch.equals(ch.toUpperCase())) {
+            parts.add(string.substring(lastStart, i));
+            lastStart = i;
+         }
+      }
+      parts.add(string.substring(lastStart));
+      return parts;
    }
 
    public interface ValueMaker<K, V> {
@@ -1007,6 +1030,14 @@ public class Util {
       }
 
       return filenames;
+   }
+
+   public static long packLong(int a, int b) {
+      return (((long)a) << 32) | (b & 0xffffffffL);
+   }
+
+   public static int unpackLong(long a, boolean upper) {
+      return upper ? (int)(a >> 32) : (int)a;
    }
 
 }

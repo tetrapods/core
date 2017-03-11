@@ -86,23 +86,38 @@
       </dependency>
        <dependency>
            <groupId>com.ea.async</groupId>
-           <artifactId>ea-async-maven-plugin</artifactId>
+           <artifactId>ea-async</artifactId>
            <version>1.0.3</version>
        </dependency>
    </dependencies>
     <dependencyManagement>
-        <dependencies>
-            <dependency>
-               <groupId>com.fasterxml.jackson.core</groupId>
-               <artifactId>jackson-databind</artifactId>
-               <version>2.7.3</version>
-            </dependency>
-            <dependency>
-               <groupId>com.fasterxml.jackson.core</groupId>
-               <artifactId>jackson-core</artifactId>
-               <version>2.7.3</version>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
+         <dependencies>
+             <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-core</artifactId>
+                 <version>2.7.3</version>
+             </dependency>
+             <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-annotations</artifactId>
+                 <version>2.7.3</version>
+             </dependency>
+             <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-databind</artifactId>
+                 <version>2.7.3</version>
+             </dependency>
+             <dependency>
+                 <groupId>com.fasterxml.jackson.jaxrs</groupId>
+                 <artifactId>jackson-jaxrs-json-provider</artifactId>
+                 <version>2.6.3</version>
+             </dependency>
+             <dependency>
+                 <groupId>com.fasterxml.jackson.jaxrs</groupId>
+                 <artifactId>jackson-jaxrs-base</artifactId>
+                 <version>2.6.3</version>
+             </dependency>
+         </dependencies>
+     </dependencyManagement>
 
 </project>

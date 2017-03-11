@@ -5,6 +5,9 @@ package io.tetrapod.protocol.web;
 import io.*;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.protocol.core.Admin;
+import io.tetrapod.core.RequestClass;
+import io.tetrapod.core.RoutedValueProvider;
+import io.tetrapod.core.tasks.Task;
 import io.tetrapod.core.serialize.*;
 import io.tetrapod.protocol.core.TypeDescriptor;
 import io.tetrapod.protocol.core.StructDescription;
@@ -13,7 +16,7 @@ import java.util.*;
 import java.util.concurrent.*;
 
 @SuppressWarnings("all")
-public class KeepAliveRequest extends Request {
+public class KeepAliveRequest extends Request  {
 
    public static final int STRUCT_ID = 5512920;
    public static final int CONTRACT_ID = WebContract.CONTRACT_ID;
@@ -30,7 +33,7 @@ public class KeepAliveRequest extends Request {
    public final void defaults() {
       
    }
-   
+
    @Override
    public final void write(DataSource data) throws IOException {
       
@@ -75,7 +78,12 @@ public class KeepAliveRequest extends Request {
    public static interface Handler extends ServiceAPI {
       Response requestKeepAlive(KeepAliveRequest r, RequestContext ctx);
    }
-   
+
+   public static interface Handler2 {
+      @RequestClass(KeepAliveRequest.class)
+      Task<Response> keepAlive();
+   }
+
    public final String[] tagWebNames() {
       // Note do not use this tags in long term serializations (to disk or databases) as 
       // implementors are free to rename them however they wish.  A null means the field

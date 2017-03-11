@@ -5,6 +5,9 @@ package io.tetrapod.protocol.web;
 import io.*;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.protocol.core.Admin;
+import io.tetrapod.core.RequestClass;
+import io.tetrapod.core.RoutedValueProvider;
+import io.tetrapod.core.tasks.Task;
 import io.tetrapod.core.serialize.*;
 import io.tetrapod.protocol.core.TypeDescriptor;
 import io.tetrapod.protocol.core.StructDescription;
@@ -13,7 +16,7 @@ import java.util.*;
 import java.util.concurrent.*;
 
 @SuppressWarnings("all")
-public class CloseClientConnectionRequest extends Request {
+public class CloseClientConnectionRequest extends Request  {
 
    public static final int STRUCT_ID = 3310279;
    public static final int CONTRACT_ID = WebContract.CONTRACT_ID;
@@ -36,7 +39,7 @@ public class CloseClientConnectionRequest extends Request {
    public final void defaults() {
       data = null;
    }
-   
+
    @Override
    public final void write(DataSource data) throws IOException {
       data.write(1, this.data);
@@ -81,7 +84,12 @@ public class CloseClientConnectionRequest extends Request {
    public static interface Handler extends ServiceAPI {
       Response requestCloseClientConnection(CloseClientConnectionRequest r, RequestContext ctx);
    }
-   
+
+   public static interface Handler2 {
+      @RequestClass(CloseClientConnectionRequest.class)
+      Task<Response> closeClientConnection(String data);
+   }
+
    public final String[] tagWebNames() {
       // Note do not use this tags in long term serializations (to disk or databases) as 
       // implementors are free to rename them however they wish.  A null means the field

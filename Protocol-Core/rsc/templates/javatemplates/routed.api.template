@@ -1,0 +1,3 @@
+public static interface {{qualifier}}API extends APIHandler
+   {{handlers}}
+   {}

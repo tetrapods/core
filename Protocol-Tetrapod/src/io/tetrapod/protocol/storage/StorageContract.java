@@ -15,12 +15,22 @@ public class StorageContract extends Contract {
    public static final int CONTRACT_ID = 3;
    public static final int SUB_CONTRACT_ID = 1;
 
-   public static interface API extends APIHandler
+   public static interface API extends BaseAPI
+      
+      {}
+
+   public static interface BaseAPI extends APIHandler
       , StorageDeleteRequest.Handler
       , StorageGetRequest.Handler
       , StorageSetRequest.Handler
       {}
-   
+
+   public static interface API2 extends APIHandler2
+      , StorageDeleteRequest.Handler2
+      , StorageGetRequest.Handler2
+      , StorageSetRequest.Handler2
+      {}
+
    private volatile Structure[] requests = null;
 
    public Structure[] getRequests() {

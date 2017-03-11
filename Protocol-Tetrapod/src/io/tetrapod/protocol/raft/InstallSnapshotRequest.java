@@ -5,6 +5,9 @@ package io.tetrapod.protocol.raft;
 import io.*;
 import io.tetrapod.core.rpc.*;
 import io.tetrapod.protocol.core.Admin;
+import io.tetrapod.core.RequestClass;
+import io.tetrapod.core.RoutedValueProvider;
+import io.tetrapod.core.tasks.Task;
 import io.tetrapod.core.serialize.*;
 import io.tetrapod.protocol.core.TypeDescriptor;
 import io.tetrapod.protocol.core.StructDescription;
@@ -13,7 +16,7 @@ import java.util.*;
 import java.util.concurrent.*;
 
 @SuppressWarnings("all")
-public class InstallSnapshotRequest extends RequestWithResponse<InstallSnapshotResponse> {
+public class InstallSnapshotRequest extends RequestWithResponse<InstallSnapshotResponse>  {
 
    public static final int STRUCT_ID = 5436535;
    public static final int CONTRACT_ID = RaftContract.CONTRACT_ID;
@@ -51,7 +54,7 @@ public class InstallSnapshotRequest extends RequestWithResponse<InstallSnapshotR
       part = 0;
       data = null;
    }
-   
+
    @Override
    public final void write(DataSource data) throws IOException {
       data.write(1, this.term);
@@ -106,7 +109,12 @@ public class InstallSnapshotRequest extends RequestWithResponse<InstallSnapshotR
    public static interface Handler extends ServiceAPI {
       Response requestInstallSnapshot(InstallSnapshotRequest r, RequestContext ctx);
    }
-   
+
+   public static interface Handler2 {
+      @RequestClass(InstallSnapshotRequest.class)
+      Task<InstallSnapshotResponse> installSnapshot(long term, long index, long length, int partSize, int part, byte[] data);
+   }
+
    public final String[] tagWebNames() {
       // Note do not use this tags in long term serializations (to disk or databases) as 
       // implementors are free to rename them however they wish.  A null means the field

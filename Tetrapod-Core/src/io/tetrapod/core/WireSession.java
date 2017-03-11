@@ -31,6 +31,8 @@ public class WireSession extends Session {
    private static final int    WIRE_OPTIONS   = 0x00000000;
    private static final long   LOADED_TIME    = System.currentTimeMillis();
 
+   public  static final int    MAX_BUFFER_SIZE = 1024 * 1024;
+
    private boolean             needsHandshake = true;
 
    public WireSession(SocketChannel channel, WireSession.Helper helper) {
@@ -261,7 +263,7 @@ public class WireSession extends Session {
          payload.write(data);
          buffer.setInt(0, buffer.writerIndex() - 4); // go back and write message length, now that we know it
 
-         if (buffer.writerIndex() > 1024 * 1024) {
+         if (buffer.writerIndex() > MAX_BUFFER_SIZE) {
             throw new RuntimeException("Attempting to write a message > 1mb (" + buffer.writerIndex() + " bytes) " + header.dump());
          }
 

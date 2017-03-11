@@ -19,16 +19,16 @@ public class LockPool {
          locks[i] = new ReentrantLock();
    }
 
-   public synchronized ReentrantLock getLock(int i) {
-      i = Math.abs(i % locks.length);
-      return locks[i];
+   public synchronized ReentrantLock getLock(long i) {
+      int j = (int)Math.abs(i % locks.length);
+      return locks[j];
    }
 
    public synchronized ReentrantLock getLock(String str) {
       return getLock(str.hashCode());
    }
 
-   public ClosableLock acquire(int i) {
+   public ClosableLock acquire(long i) {
       ClosableLock lock = new ClosableLock(getLock(i));
       lock.lock();
       return lock;

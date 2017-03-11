@@ -40,6 +40,12 @@ public class Publisher implements TopicUnsubscribedMessage.Handler, TopicNotFoun
       return topic;
    }
 
+   public Topic publish(TopicFactory factory) {
+      Topic topic = factory.newTopic(this, topicCounter.incrementAndGet());
+      topics.put(topic.topicId, topic);
+      return topic;
+   }
+
    public void subscribe(int topicId, int entityId, int childId, boolean once) {
       final Topic topic = topics.get(topicId);
       if (topic == null) {

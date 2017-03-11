@@ -311,6 +311,13 @@ internal request DirectConnection
    1: string token @sensitive
    2: int entityId
 
+public request GetHost
+   1: int entityId
+   2: string qualifier
+
+public response GetHost
+   1: int hostId
+
 internal response DirectConnection
    1: ServerAddress address
    2: string token @sensitive

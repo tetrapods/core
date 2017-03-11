@@ -39,7 +39,11 @@ public class TetrapodContract extends Contract {
     */
    public static final int PARENT_ID_MASK = 0x7FF00000; 
    
-   public static interface API extends APIHandler
+   public static interface API extends BaseAPI
+      
+      {}
+
+   public static interface BaseAPI extends APIHandler
       , AddServiceInformationRequest.Handler
       , AdminAuthorizeRequest.Handler
       , AdminChangePasswordRequest.Handler
@@ -76,7 +80,45 @@ public class TetrapodContract extends Contract {
       , UnregisterRequest.Handler
       , UnsubscribeOwnershipRequest.Handler
       {}
-   
+
+   public static interface API2 extends APIHandler2
+      , AddServiceInformationRequest.Handler2
+      , AdminAuthorizeRequest.Handler2
+      , AdminChangePasswordRequest.Handler2
+      , AdminChangeRightsRequest.Handler2
+      , AdminCreateRequest.Handler2
+      , AdminDeleteRequest.Handler2
+      , AdminLoginRequest.Handler2
+      , AdminResetPasswordRequest.Handler2
+      , AdminSessionTokenRequest.Handler2
+      , AdminSubscribeRequest.Handler2
+      , ClaimOwnershipRequest.Handler2
+      , ClusterJoinRequest.Handler2
+      , DelClusterPropertyRequest.Handler2
+      , DelWebRootRequest.Handler2
+      , ExecuteBuildCommandRequest.Handler2
+      , GetServiceBuildInfoRequest.Handler2
+      , InternalSetClusterPropertyRequest.Handler2
+      , LockRequest.Handler2
+      , LogRegistryStatsRequest.Handler2
+      , NagiosStatusRequest.Handler2
+      , RaftLeaderRequest.Handler2
+      , RaftStatsRequest.Handler2
+      , RegisterRequest.Handler2
+      , ReleaseOwnershipRequest.Handler2
+      , RetainOwnershipRequest.Handler2
+      , ServiceStatusUpdateRequest.Handler2
+      , ServicesSubscribeRequest.Handler2
+      , ServicesUnsubscribeRequest.Handler2
+      , SetClusterPropertyRequest.Handler2
+      , SetWebRootRequest.Handler2
+      , SnapshotRequest.Handler2
+      , SubscribeOwnershipRequest.Handler2
+      , UnlockRequest.Handler2
+      , UnregisterRequest.Handler2
+      , UnsubscribeOwnershipRequest.Handler2
+      {}
+
    private volatile Structure[] requests = null;
 
    public Structure[] getRequests() {
