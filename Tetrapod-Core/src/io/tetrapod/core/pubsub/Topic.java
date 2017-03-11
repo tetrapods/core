@@ -3,10 +3,11 @@ package io.tetrapod.core.pubsub;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+import io.tetrapod.core.rpc.*;
+import io.tetrapod.core.utils.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.tetrapod.core.rpc.Message;
 import io.tetrapod.protocol.core.*;
 
 public class Topic {
@@ -33,8 +34,8 @@ public class Topic {
       return String.format("Topic-%d", topicId);
    }
    
-   public static long makeKey(int entityId, int childId) {
-      return ((long) entityId << 32) | childId;
+   public static long combinedId(int parentId, int childId) {
+      return Util.packLong(parentId, childId);
    }
 
    public static class Subscriber {
@@ -49,7 +50,7 @@ public class Topic {
       }
 
       public long key() {
-         return makeKey(entityId, childId);
+         return combinedId(entityId, childId);
       }
    }
 
@@ -110,7 +111,7 @@ public class Topic {
    }
 
    public synchronized void subscribe(int entityId, int childId, boolean once) {
-      Subscriber sub = subscribers.get(makeKey(entityId, childId));
+      Subscriber sub = subscribers.get(combinedId(entityId, childId));
       if (sub == null) {
          sub = new Subscriber(entityId, childId, 1);
          subscribers.put(sub.key(), sub);
@@ -139,7 +140,7 @@ public class Topic {
 
    public synchronized void unsubscribe(int entityId, int childId, boolean all) {
       logger.debug("{} unsubscribe {} {}", this, entityId, childId);
-      Subscriber sub = subscribers.get(makeKey(entityId, childId));
+      Subscriber sub = subscribers.get(combinedId(entityId, childId));
       if (sub != null) {
          sub.count--;
          if (sub.count == 0 || all) {

@@ -816,6 +816,10 @@ public class DefaultService implements Service, Fail.FailHandler, CoreContract.A
       return services.isServiceExistant(entityId);
    }
 
+   public void sendMessage(Message msg, long combinedId) {
+      sendMessage(msg, Util.unpackLong(combinedId, true), Util.unpackLong(combinedId, false));
+   }
+
    public void sendMessage(Message msg, int toEntityId, int childId) {
       if (serviceConnector != null
             && (serviceConnector.hasService(toEntityId) || (services != null && services.isServiceExistant(toEntityId)))) {

@@ -33,4 +33,7 @@ abstract public class RequestContext {
       handlePendingResponse(Response.error(errorCode), header);
    }
 
+   public long getCombinedFromId() {
+      return (((long)header.fromParentId) << 32) | (header.fromChildId & 0xffffffffL);
+   }
 }
