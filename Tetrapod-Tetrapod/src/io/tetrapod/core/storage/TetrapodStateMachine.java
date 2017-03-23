@@ -112,12 +112,15 @@ public class TetrapodStateMachine extends StorageStateMachine<TetrapodStateMachi
 
    @Override
    public void loadState(DataInputStream in) throws IOException {
+      // make sure we erase any existing state
       props.clear();
       contracts.clear();
       webRootDefs.clear();
       webRoutes.clear();
       admins.clear();
       owners.clear();
+      entities.clear();
+      ownedItems.clear();
 
       final int fileVersion = in.readInt();
       if (fileVersion > TETRAPOD_STATE_FILE_VERSION) {
